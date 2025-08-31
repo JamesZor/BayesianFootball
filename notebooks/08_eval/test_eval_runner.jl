@@ -22,11 +22,18 @@ matches_activelines = BayesianFootball.process_matches_active_minutes(data_store
 mapping.team
 t1 = "rangers"
 t2 = "celtic"
+
+t1 = "dundee-fc"
+t2 = "dundee-united"
+
+t1 = "aberdeen"
+t2 = "falkirk-fc"
 chain = result.chains_sequence[37]
 
-mp = BayesianFootball.predict_match_ft_ht_chain(t1, t2, chain, mapping)
+mp = BayesianFootball.predict_match_ft_ht_chain(t1, t2, chain, mapping);
 using Statistics
-mean(mp.ft.home)
+
+
 
 mean( 1 ./ mp.ft.home) 
 mean( 1 ./ mp.ft.away) 
@@ -44,6 +51,11 @@ mean( 1 ./ mp.ft.under_25)
 mean( 1 ./ ( 1 .- mp.ft.under_25))
 mean( 1 ./ mp.ft.under_35)
 mean( 1 ./ ( 1 .- mp.ft.under_35))
+
+mean( 1 ./ mp.ft.btts)
+mean( 1 ./ (1 .- mp.ft.btts))
+
+k_cs = Dict( k => mean(1 ./ v) for (k,v) in mp.ft.correct_score)
 
 ## note de construct 
 match_id = rand(target_matches.match_id)
