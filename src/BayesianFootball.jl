@@ -47,6 +47,9 @@ export extract_posterior_samples, extract_samples, predict_match_chain_ft, predi
 # export MatchPredict, MatchHalfChainPredicts
 
 # Evaluation - TODO: Create these files
+# eval - kelly 
+include("./evaluation/kelly.jl")
+export process_matches_kelly, apply_kelly_to_match
 # include("evaluation/diagnostics.jl")
 include("evaluation/metrics.jl")
 

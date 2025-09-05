@@ -284,3 +284,52 @@ module ActiveMinutes
   end
 end 
 
+#################################################
+#  Kelly chains 
+##################################################
+module Kelly
+  const KellyChain = Union{Nothing, Vector{Float64}}
+  # Type aliases matching Results module
+  const CorrectScore = Dict{Union{Tuple{Int,Int}, String}, Vector{Float64}}
+
+  struct Config 
+    market_commission_percent::Number
+    prob_value::Number 
+  end
+  
+  struct MatchHTKelly
+    home::KellyChain
+    draw::KellyChain
+    away::KellyChain
+    correct_score::CorrectScore
+    under_05::KellyChain
+    over_05::KellyChain
+    under_15::KellyChain
+    over_15::KellyChain
+    under_25::KellyChain
+    over_25::KellyChain
+  end
+  
+  struct MatchFTKelly
+    home::KellyChain
+    draw::KellyChain
+    away::KellyChain
+    correct_score::CorrectScore
+    under_05::KellyChain
+    over_05::KellyChain
+    under_15::KellyChain
+    over_15::KellyChain
+    under_25::KellyChain
+    over_25::KellyChain
+    under_35::KellyChain
+    over_35::KellyChain
+    btts_yes::KellyChain
+    btts_no::KellyChain
+  end
+  
+  struct MatchLineKelly
+    ht::MatchHTKelly
+    ft::MatchFTKelly
+  end
+end
+
