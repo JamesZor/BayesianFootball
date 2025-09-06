@@ -561,3 +561,92 @@ function summarize_performance_sharpe(evaluation_cube::Cude.EvaluationCube)
 
     return PerformanceSummary.MatchLinePerformanceSummary(ht_summary, ft_summary)
 end
+
+
+
+
+##############################
+# Cum wealth 
+##############################
+
+module Wealth 
+"""
+A tensor-based structure for tracking cumulative wealth over time for each
+market and c-value threshold.
+"""
+struct WealthCube
+    # 3D Array: (time_idx, market_idx, c_idx) -> bankroll size
+    # The time dimension is N_matches + 1 to include the initial bankroll.
+    wealth::Array{Float64, 3}
+
+    # Dimension Mappings (The "Axes Labels")
+    # match_ids are sorted chronologically to represent the time axis.
+    match_ids_sorted::Vector{Int}
+    markets::Vector{Symbol}
+    c_values::Vector{Float64}
+    market_map::Dict{Symbol, Int}
+
+    function WealthCube(wealth, match_ids_sorted, markets, c_values)
+        market_map = Dict(market => i for (i, market) in enumerate(markets))
+        new(wealth, match_ids_sorted, markets, c_values, market_map)
+    end
+end
+end
+
+using DataFrames
+
+"""
+    calculate_wealth_over_time(evaluation_cube, target_matches; initial_bankroll=100.0)
+
+Simulates bankroll growth over time using proportional Kelly staking.
+(Corrected version to scale stakes by current wealth).
+"""
+function calculate_wealth_over_time(
+    evaluation_cube::Cude.EvaluationCube,
+    target_matches::DataFrame;
+    initial_bankroll::Float64=100.0
+)
+    # --- 1. Chronologically Sort the Matches (No change here) ---
+    id_to_idx = Dict(id => i for (i, id) in enumerate(evaluation_cube.match_ids))
+    sim_matches = filter(row -> haskey(id_to_idx, row.match_id), target_matches)
+    sort!(sim_matches, :match_date)
+    
+    sorted_match_ids = sim_matches.match_id
+    sorted_indices = [id_to_idx[id] for id in sorted_match_ids]
+
+    # --- 2. Get Sorted Stakes and Outcomes (No change here) ---
+    # We get the Kelly fractions (stakes) and 1-unit outcomes, sorted by time
+    sorted_stakes_cube = evaluation_cube.stakes[sorted_indices, :, :]
+    sorted_outcomes_matrix = evaluation_cube.outcomes[sorted_indices, :]
+
+    # --- 3. Simulate Bankroll Growth (Corrected Logic) ---
+    num_sim_matches = length(sorted_match_ids)
+    (num_matches, num_markets, num_cs) = size(evaluation_cube.stakes) # Use original cube for dims
+    
+    wealth_cube = zeros(Float64, num_sim_matches + 1, num_markets, num_cs)
+    wealth_cube[1, :, :] .= initial_bankroll
+    
+    # Loop through time (each match) and update the wealth
+    for t in 1:num_sim_matches
+        # Get the bankroll from the PREVIOUS step
+        previous_wealth = wealth_cube[t, :, :]
+        
+        # Get the Kelly fraction and 1-unit outcome for the CURRENT match
+        kelly_fractions = sorted_stakes_cube[t, :, :]
+        unit_outcomes = reshape(sorted_outcomes_matrix[t, :], (num_markets, 1)) # Reshape for broadcasting
+        
+        # *** THE KEY CORRECTION IS HERE ***
+        # Profit = (Current Wealth * Kelly Fraction) * Outcome_per_unit
+        profit_this_step = (previous_wealth .* kelly_fractions) .* unit_outcomes
+        
+        # New Wealth = Previous Wealth + Profit for this step
+        wealth_cube[t+1, :, :] = previous_wealth + profit_this_step
+    end
+    
+    return Wealth.WealthCube(
+        wealth_cube,
+        sorted_match_ids,
+        evaluation_cube.markets,
+        evaluation_cube.c_values
+    )
+end

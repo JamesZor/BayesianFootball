@@ -24,7 +24,7 @@ matches_kelly = process_matches_kelly(matches_prediction, matches_odds, kelly_co
 #### dev bit 
 include("/home/james/bet_project/models_julia/notebooks/08_eval/kelly_stake_cube_setup.jl")
 
-c_values = 0.01:0.05:0.99
+c_values = 0.01:0.01:0.99
 
 evaluation_cube = build_evaluation_cube(matches_kelly, matches_odds, matches_results, c_values)
 
@@ -386,3 +386,55 @@ correct_score_plot = plot_correct_score_performance(total_summary.ht.correct_sco
 #### other metrics 
 # Calculate the Information Ratio summary
 ir_summary = summarize_performance_ir(evaluation_cube)
+
+plot(evaluation_cube.c_values, ir_summary.ht.home,
+     title="Information Ratio of FT Home Win Market",
+     xlabel="c-value", ylabel="Information Ratio",label="home", legend=true)
+
+plot!(evaluation_cube.c_values, ir_summary.ht.away,
+     title="Information Ratio of FT Home Win Market",
+     xlabel="c-value", ylabel="Information Ratio", label="away",legend=true)
+plot!(evaluation_cube.c_values, ir_summary.ft.draw,
+     title="Information Ratio of FT Home Win Market",
+     xlabel="c-value", ylabel="Information Ratio", label="draw",legend=true)
+
+
+
+plot!(evaluation_cube.c_values, total_summary.ft.home,
+     xlabel="c-value (Risk Appetite)",
+     ylabel="Total ROI",
+     title="Performance of FT Home Win Market",
+     legend=true,
+     label="home",
+    )
+
+sharpe_summary = summarize_performance_sharpe(evaluation_cube)
+# Plot the Sharpe Ratio for the FT Home Win market
+plot(evaluation_cube.c_values, sharpe_summary.ht.home,
+     title="Sharpe Ratio of FT Home Win Market",
+     xlabel="c-value", ylabel="Sharpe Ratio", legend=false)
+
+### cum wealth 
+wealth_cube = calculate_wealth_over_time(evaluation_cube, target_matches, initial_bankroll=100.0)
+
+
+
+# --- Analysis Example: Plotting ---
+# Get the market index for FT Home wins
+market_idx = wealth_cube.market_map[:ht_home]
+
+# Get the indices for a few c-values to compare
+c_idx_low = findfirst(==(0.7), wealth_cube.c_values)
+c_idx_mid = findfirst(==(0.8), wealth_cube.c_values)
+c_idx_high = findfirst(==(0.9), wealth_cube.c_values)
+
+# Extract the wealth curves for these scenarios
+wealth_curve_low_c = wealth_cube.wealth[:, market_idx, c_idx_low]
+wealth_curve_mid_c = wealth_cube.wealth[:, market_idx, c_idx_mid]
+wealth_curve_high_c = wealth_cube.wealth[:, market_idx, c_idx_high]
+
+# Plot the equity curves
+# using Plots
+plot(wealth_curve_low_c, label="c = 0.25", title="FT Home Win Equity Curve", xlabel="Match Number (Time)", ylabel="Bankroll")
+plot!(wealth_curve_mid_c, label="c = 0.5")
+plot!(wealth_curve_high_c, label="c = 0.77")
