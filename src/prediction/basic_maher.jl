@@ -319,6 +319,37 @@ function predict_round_chains(
     )
 end
 
+function predict_target_season_fix(
+    target_matches::AbstractDataFrame,
+    chain_split::TrainedChains,
+    mapping::MappedData 
+  )
+
+    grouped_matches = groupby(target_matches, :round)
+    n_threads = nthreads()
+    
+    # Each thread gets its own dictionary
+    thread_results = Vector{Dict{Int64, Predictions.MatchLinePredictions}}(undef, n_threads)
+    
+    @threads for tid in 1:n_threads
+        local_dict = Dict{Int64, Predictions.MatchLinePredictions}()
+        
+        # Thread tid processes every n_threads-th round
+        for round_idx in tid:n_threads:length(grouped_matches)
+            round_predictions = predict_round_chains(
+                chain_split,
+                grouped_matches[(round=round_idx,)],
+                mapping
+            )
+            merge!(local_dict, round_predictions)
+        end
+        thread_results[tid] = local_dict
+    end
+    # Merge all thread dictionaries
+    return merge(thread_results...)
+end
+
+
 function predict_target_season(
     target_matches::DataFrame,
     results::ExperimentResult,
