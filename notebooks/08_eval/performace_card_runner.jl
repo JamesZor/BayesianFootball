@@ -208,3 +208,62 @@ for group in analysis_groups
     append!(all_results_df_1, group_df)
 end
 
+
+
+####
+c_values = 0.01:0.01:0.99
+analysis_groups = [(name="Total Portfolio", filters=Dict())]
+
+# extra
+matches_prediction_1 =  BayesianFootball.predict_target_season_fix(target_matches, result.chains_sequence[8], mapping)
+matches_kelly_1 = process_matches_kelly(matches_prediction_1, matches_odds, kelly_config)
+#
+
+# matches_kelly comes from your first model
+evaluation_cube_model_A = build_evaluation_cube(matches_kelly, matches_odds, matches_results, c_values)
+
+# matches_kelly_1 comes from your second model
+evaluation_cube_model_B = build_evaluation_cube(matches_kelly_1, matches_odds, matches_results, c_values)
+
+models_to_compare = Dict(
+    "Baseline Model" => evaluation_cube_model_A,
+    "model B" => evaluation_cube_model_B
+    # You can easily add more models here:
+    # "New Feature Model" => evaluation_cube_model_C,
+)
+
+# --- 3. RUN ANALYSIS FOR ALL MODELS ---
+all_models_df = DataFrame()
+
+for (model_name, eval_cube) in models_to_compare
+    println("Running analysis for: $(model_name)...")
+    
+    # Call our reusable function for the current model
+    model_results_df = run_analysis(eval_cube, analysis_groups, target_matches)
+    
+    # Add a column to identify which model these results belong to
+    model_results_df.model_name = fill(model_name, nrow(model_results_df))
+    
+    # Append to the final master DataFrame
+    append!(all_models_df, model_results_df)
+end
+
+comparison_total_profit = filter(row -> row.analysis_name == "Total Portfolio", all_models_df)
+
+
+display(select(comparison_total_profit, :model_name, :total_profit, :max_roi, :max_drawdown))
+
+
+
+
+
+
+# Example 2: See which model performed better on the 'ft_home' market
+comparison_ft_home = filter(row -> occursin("ft_home", row.analysis_name), all_models_df)
+display(select(comparison_ft_home, :model_name, :total_profit, :max_roi, :num_winning_bets, :num_losing_bets))
+
+
+
+# Example 2: See which model performed better on the 'ft_home' market
+comparison_ft_home = filter(row -> occursin("ft_over_05", row.analysis_name), all_models_df)
+display(select(comparison_ft_home, :model_name, :total_staked, :total_profit, :max_roi, :max_sharpe, :max_ir, :num_winning_bets, :num_losing_bets))
