@@ -69,6 +69,51 @@ function train_all_splits(
     )
 end
 
+
+"""
+    train_single_split(training_data, model_config, sample_config, mapping; info="single_split")
+
+Trains a model on a single provided AbstractDataFrame (e.g., a DataFrame or SubDataFrame).
+This is useful for debugging or one-off model runs.
+
+# Arguments
+- `training_data`: The DataFrame/SubDataFrame to train the model on.
+- `model_config`: The configuration defining the model and feature map.
+- `sample_config`: The configuration for MCMC sampling (e.g., number of steps).
+- `mapping`: A pre-computed `MappedData` object. Must be created from the full dataset.
+- `info`: An optional string to describe the split.
+
+# Returns
+- A `TrainedChains` object containing the results of the single training run.
+"""
+function train_single_split(
+    training_data::AbstractDataFrame,
+    model_config::ModelConfig,
+    sample_config::ModelSampleConfig,
+    mapping::MappedData;
+    info::String = "manual_single_split"
+)::TrainedChains
+    
+    println("Starting training for single split: $info")
+    start_time = time()
+
+    # 1. Create the composed training morphism (reusing the core logic)
+    training_morphism = compose_training_morphism(
+        model_config,
+        sample_config,
+        mapping
+    )
+
+    # 2. Apply the morphism directly to the provided data
+    # This is the core of the function, replacing the loop from train_all_splits
+    trained_chains = training_morphism(training_data, info)
+
+    total_time = time() - start_time
+    println("Training completed in $(round(total_time, digits=2)) seconds")
+
+    return trained_chains
+end
+
 """
     sample_basic_maher_model(models, sample_config)
 

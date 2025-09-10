@@ -1,11 +1,17 @@
 # src/models/maher_variants.jl
 # using Turing, Distributions, LinearAlgebra
 
-@model function maher_league_ha_model(
-    home_team_ids, away_team_ids, 
-    home_goals, away_goals, 
-    n_teams, n_leagues, league_ids
-)
+@model function maher_league_ha_model(features)
+    # --- Unpack the required features ---
+    home_team_ids = features.home_team_ids
+    away_team_ids = features.away_team_ids
+    home_goals = features.home_goals # Correct generic name
+    away_goals = features.away_goals # Correct generic name
+    n_teams = features.n_teams
+    n_leagues = features.n_leagues
+    league_ids = features.league_ids
+    # ---
+    #
     # --- Priors (Attack and Defense are the same as the base model) ---
     σ_attack ~ truncated(Normal(0, 1), 0, Inf)
     log_α_raw ~ MvNormal(zeros(n_teams), σ_attack * I)

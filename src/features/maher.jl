@@ -1,5 +1,5 @@
 # Maher model feature extraction
-function feature_map_basic_maher_model(data::SubDataFrame, mapping::MappedData) 
+function feature_map_basic_maher_model(data::AbstractDataFrame, mapping::MappedData) 
     home_teams_id = [mapping.team[team_name] for team_name in data.home_team]
     away_teams_id = [mapping.team[team_name] for team_name in data.away_team]
     leauge_ids = [mapping.league[string(league)] for league in data.tournament_id] 
@@ -23,3 +23,4 @@ function feature_map_basic_maher_model(data::SubDataFrame, mapping::MappedData)
         n_leauges=n_leagues,
     )
 end
+

@@ -4,8 +4,33 @@ function features_morphism(model_config::ModelConfig, mapping::MappedData)
 end
 
 # Morphism: Features -> TuringModels
+# function models_morphism(model_config::ModelConfig)
+#     return features -> begin
+#         ht_model = model_config.model(
+#             features.home_team_ids,
+#             features.away_team_ids,
+#             features.goals_home_ht,
+#             features.goals_away_ht,
+#             features.n_teams
+#         )
+#
+#         ft_model = model_config.model(
+#             features.home_team_ids,
+#             features.away_team_ids,
+#             features.goals_home_ft,
+#             features.goals_away_ft,
+#             features.n_teams
+#         )
+#
+#         BasicMaherModels(ht_model, ft_model)
+#     end
+# end
+
+# Morphism: Features -> TuringModels
 function models_morphism(model_config::ModelConfig)
     return features -> begin
+        
+        # Manually unpack features for the Half-Time model
         ht_model = model_config.model(
             features.home_team_ids,
             features.away_team_ids,
@@ -14,6 +39,7 @@ function models_morphism(model_config::ModelConfig)
             features.n_teams
         )
         
+        # Manually unpack features for the Full-Time model
         ft_model = model_config.model(
             features.home_team_ids,
             features.away_team_ids,
@@ -25,6 +51,32 @@ function models_morphism(model_config::ModelConfig)
         BasicMaherModels(ht_model, ft_model)
     end
 end
+
+# NOTE: Don't pass named dict, turing doesn't like them, get the step size wrong
+# function models_morphism(model_config::ModelConfig)
+#     return features -> begin
+#
+#         # Take all original features and just add/overwrite the goal columns for FT.
+#         ft_features = merge(features, (
+#             home_goals = features.goals_home_ft, 
+#             away_goals = features.goals_away_ft
+#         ))
+#
+#         # Do the same for HT.
+#         ht_features = merge(features, (
+#             home_goals = features.goals_home_ht, 
+#             away_goals = features.goals_away_ht
+#         ))
+#
+#         # The model function is called identically for both,
+#         # receiving a complete and correct set of features.
+#         ht_model = model_config.model(ht_features)
+#         ft_model = model_config.model(ft_features)
+#
+#         BasicMaherModels(ht_model, ft_model)
+#     end
+# end
+#
 
 # TODO: add number of chains to config
 # Morphism: TuringModels -> Chains 
