@@ -24,21 +24,51 @@ struct MappedData
     league::Dict{String, Int} 
 end
 
+##############################
 # CV types
-struct TimeSeriesSplitsConfig 
-    base_seasons::AbstractVector{AbstractString}
-    target_season::AbstractString
-    round_col::Symbol
-end
+##############################
+#
+  """
+      TimeSeriesSplitsConfig
 
-struct TimeSeriesSplits
-    df::DataFrame
-    base_seasons::Vector
-    target_season
-    round_col::Symbol
-    base_indices::Vector{Int}
-    target_rounds::Vector
-end
+  Configuration for time series cross-validation splits.
+
+  # Fields
+  - `base_seasons`: Vector of season strings to use as base training data
+  - `target_seasons`: Vector of season strings to incrementally add
+  - `round_col`: Symbol for the column containing round information
+  """
+  struct TimeSeriesSplitsConfig 
+      base_seasons::AbstractVector{AbstractString}
+      target_seasons::AbstractVector{AbstractString}
+      round_col::Symbol
+  end
+
+
+  """
+      TimeSeriesSplits
+
+  Iterator for time series cross-validation splits.
+
+  # Fields
+  - `df`: The complete DataFrame
+  - `base_seasons`: Vector of base season identifiers
+  - `target_seasons`: Vector of target season identifiers
+  - `round_col`: Symbol for the round column
+  - `base_indices`: Indices of base season rows
+  - `target_rounds_by_season`: Dictionary mapping seasons to their rounds
+  - `target_round_sequence`: Sequence of (season, round) tuples for iteration
+  """
+  struct TimeSeriesSplits
+      df::DataFrame
+      base_seasons::Vector
+      target_seasons::Vector
+      round_col::Symbol
+      base_indices::Vector{Int}
+      target_rounds_by_season::Dict{String, Vector}
+      target_round_sequence::Vector{Tuple{String, Any}}
+  end
+
 
 # Model types
 struct ModelConfig 

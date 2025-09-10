@@ -14,7 +14,10 @@ include("types.jl")
 # Data pipeline
 include("data/loader.jl")
 include("data/mapping.jl") 
+
 include("data/splitting.jl")
+# export TimeSeriesSplitsConfig, TimeSeriesSplits
+export time_series_splits, summarize_splits
 
 # Data Utils 
 include("./data/utils_incidents.jl")
@@ -30,10 +33,14 @@ export get_processed_game_line_odds, process_matches_odds, default_marketodds_co
 # Features
 # include("features/base.jl")  # TODO: Create this file
 include("features/maher.jl")
+include("features/maher_variants.jl")
+export feature_map_maher_league_ha
 
 # Models
 # include("models/base.jl")  # TODO: Create this file
 include("models/maher.jl")
+include("models/maher_variants.jl")
+export maher_league_ha_model
 
 # Training
 include("training/morphisms.jl")
@@ -55,13 +62,15 @@ include("evaluation/metrics.jl")
 
 # Experiments
 include("experiments/runner.jl")
+include("experiments/registry.jl")   # ADD THIS LINE
+
 include("experiments/persistence.jl")  # TODO: Create this file
+export ExperimentRun, prepare_run, save, load_run # ADD THESE
 # include("experiments/comparison.jl")  # TODO: Create this file
 
 # Export main API
 export DataFiles, DataStore
 export MappingFunctions, MappedData, create_list_mapping
-export TimeSeriesSplitsConfig, TimeSeriesSplits, time_series_splits
 export ModelConfig, ModelSampleConfig, ExperimentConfig
 export BasicMaherModels, TrainedChains, ExperimentResult
 export basic_maher_model_raw, feature_map_basic_maher_model
@@ -69,7 +78,7 @@ export run_experiment, train_all_splits
 export create_experiment_config
 
 # experiments/persistence 
-export load_experiment, save_experiment
+# export load_experiment, save_experiment
 
 
 # Nice packages to have

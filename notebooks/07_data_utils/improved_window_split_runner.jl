@@ -22,14 +22,14 @@ end
 include("/home/james/bet_project/models_julia/notebooks/07_data_utils/improved_window_split_setup.jl")
 
 
-cv_config = Splits.TimeSeriesSplitsConfig(
+cv_config = TimeSeriesSplitsConfig(
     ["20/21", "21/22"],           # base seasons
     ["22/23", "23/24", "24/25"],  # multiple target seasons
     :round
 )
 
-splits = Splits.time_series_splits(data_store, cv_config)
-splits_seq = Splits.time_series_splits(data_store, cv_config, :sequential)
+splits = BayesianFootball.time_series_splits(data_store, cv_config)
+splits_seq = BayesianFootball.time_series_splits(data_store, cv_config, :sequential)
 
 Splits.summarize_splits(splits)
 Splits.summarize_splits(splits_seq)

@@ -30,7 +30,7 @@ function train_all_splits(
     )
     
     # Generate splits
-    splits = time_series_splits(data_store, cv_config)
+    splits = time_series_splits(data_store, cv_config, :sequential)
     split_data = collect(splits)
     
     println("Training on $(length(split_data)) splits...")
@@ -53,7 +53,7 @@ function train_all_splits(
     # Hash config for tracking
     config_hash = hash((
         cv_config.base_seasons,
-        cv_config.target_season,
+        cv_config.target_seasons,
         sample_config.steps,
         nameof(model_config.model)
     ))
