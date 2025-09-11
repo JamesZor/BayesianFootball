@@ -55,7 +55,7 @@ include("evaluation/metrics.jl")
 include("experiments/runner.jl")
 include("experiments/registry.jl")   
 include("experiments/persistence.jl") 
-export ExperimentRun, prepare_run, save, load_run 
+export ExperimentRun, prepare_run, save, load_run, save_experiment_metadata
 
 
 

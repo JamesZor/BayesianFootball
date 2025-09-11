@@ -1,3 +1,5 @@
+# src/types.jl
+using DataFrames, Turing, MCMCChains
 # All struct definitions in one place for clarity
 # Data types
 struct DataFiles
@@ -130,52 +132,49 @@ struct ExperimentResult
     total_time::Float64
 end
 
-# TEST: Remove if working
-# # Model types
-# struct ModelConfig 
-#     model::Function 
-#     feature_map::Function
-# end
-#
-# struct BasicMaherModels
-#     ht::Turing.Model
-#     ft::Turing.Model
-# end
-#
-# struct ModelChain 
-#     ht::Chains 
-#     ft::Chains 
-# end
-#
-# # Training types
-# struct ModelSampleConfig
-#     steps::Int 
-#     bar::Bool 
-# end
-#
-# struct TrainedChains
-#     ht::Chains
-#     ft::Chains
-#     round_info::String
-#     n_samples::Int
-# end
-#
-# # Experiment types
-# struct ExperimentConfig
-#     name::String
-#     model_config::ModelConfig
-#     cv_config::TimeSeriesSplitsConfig  
-#     sample_config::ModelSampleConfig
-#     mapping_funcs::MappingFunctions
-# end
+# TEST: Eval testing
+##################################################
+#  NEW: Types for Log-Likelihood Scorecards
+##################################################
+module LogLikelihood
+  const Score = Float64
+  const CorrectScore = Dict{Union{Tuple{Int,Int}, String}, Score}
+  
+  struct MatchHTScores
+    home::Score; draw::Score; away::Score
+    correct_score::CorrectScore
+    under_05::Score; over_05::Score
+    under_15::Score; over_15::Score
+    under_25::Score; over_25::Score
+  end
+  
+  struct MatchFTScores
+    home::Score; draw::Score; away::Score
+    correct_score::CorrectScore
+    under_05::Score; over_05::Score
+    under_15::Score; over_15::Score
+    under_25::Score; over_25::Score
+    under_35::Score; over_35::Score
+    btts_yes::Score; btts_no::Score
+  end
+  
+  struct MatchLineScores
+    ht::MatchHTScores
+    ft::MatchFTScores
+  end
+end
 
-# struct ExperimentResult
-#     chains_sequence::Vector{TrainedChains}
-#     mapping::MappedData
-#     config_hash::UInt64
-#     total_time::Float64
-# end
+##################################################
+#  NEW: Comprehensive Analysis Result Type
+##################################################
+# Forward-declare the PerformanceAnalytics module to resolve dependency
+module PerformanceAnalytics end
 
+struct AnalysisResult
+    model_name::String
+    financial_scorecard::Any # Using Any to avoid circular dependency, will hold PerformanceAnalytics.MarketPerformance
+    log_likelihood_scorecard::LogLikelihood.MatchLineScores
+end
 
 ##################################################
 #  Types market odds match results

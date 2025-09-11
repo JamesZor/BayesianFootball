@@ -1,3 +1,65 @@
+# ver under test TEST:
+# scripts/run_batch.jl
+using BayesianFootball
+using Dates
+
+# --- 1. Setup ---
+const EXPERIMENT_NAME = "scottish_league_initial_test"
+const SAVE_PATH = "./experiments"
+const DATA_PATH = "/home/james/bet_project/football_data/scot_nostats_20_to_24"
+
+println("Loading data...")
+data_files = DataFiles(DATA_PATH)
+data_store = DataStore(data_files)
+
+# Define shared configs for this experiment batch
+cv_config = BayesianFootball.TimeSeriesSplitsConfig(["20/21", "21/22"], ["22/23"], :round)
+sample_config = ModelSampleConfig(10, false)
+mapping_funcs = MappingFunctions(create_list_mapping)
+
+# --- 1.5 SAVE EXPERIMENT METADATA ---
+# This is called once for the entire batch to save shared info.
+save_experiment_metadata(
+    EXPERIMENT_NAME, SAVE_PATH, DATA_PATH, cv_config, sample_config
+)
+
+# --- 2. Define Experiments to Run ---
+experiments_to_run = [
+    (:maher, :basic, "maher_basic"),
+    (:maher, :league_ha, "maher_league_ha")
+]
+
+# --- 3. Execute Workflow ---
+println("\nStarting experiment batch: $EXPERIMENT_NAME")
+for (family, variant, name) in experiments_to_run
+    println("\n" * "="^50)
+    println("🚀 Starting Run: $name")
+    
+    config = create_experiment_config(
+        name, family, variant, cv_config, sample_config, mapping_funcs
+    )
+    
+    run_manager = prepare_run(EXPERIMENT_NAME, config, SAVE_PATH)
+
+    result = train_all_splits(
+        data_store,
+        config.cv_config,
+        config.model_def,
+        config.sample_config,
+        config.mapping_funcs;
+        parallel=true
+    )
+    
+    save(run_manager, result)
+    println("✅ Finished run: $name.")
+end
+
+println("\nBatch finished successfully!")
+
+
+
+
+# older 
 # scripts/run_batch.jl
 using BayesianFootball
 
