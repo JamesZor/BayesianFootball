@@ -1,49 +1,68 @@
 # src/experiments/persistence.jl
-
 using JLD2, JSON, Dates
 using ..BayesianFootball: ExperimentConfig, ExperimentResult
 
 """
     ExperimentRun
 
-A struct to manage all aspects of a single model training execution.
+A struct to manage all aspects of a single model training execution,
+including file paths and metadata.
 """
 struct ExperimentRun
     experiment_name::String
     config::ExperimentConfig
     base_path::String
     run_path::String
+    timestamp::String
 end
 
+"""
+    prepare_run(experiment_name, config, base_path)
+
+Creates a unique, timestamped directory for a new experiment run.
+"""
 function prepare_run(experiment_name::String, config::ExperimentConfig, base_path::String)::ExperimentRun
     model_variant_name = config.name
+    timestamp = Dates.format(now(), "yyyymmdd-HHMMSS")
     
-    run_path = joinpath(base_path, experiment_name, model_variant_name)
+    # Create a unique name for the run folder to avoid overwriting
+    run_folder_name = "$(model_variant_name)_$(timestamp)"
+    
+    run_path = joinpath(base_path, experiment_name, run_folder_name)
     mkpath(run_path)
     
     println("Preparing run in: $run_path")
-    return ExperimentRun(experiment_name, config, base_path, run_path)
+    return ExperimentRun(experiment_name, config, base_path, run_path, timestamp)
 end
 
+"""
+    save(run, result)
+
+Saves the MCMC chains and run metadata to the experiment's directory.
+"""
 function save(run::ExperimentRun, result::ExperimentResult)
+    # Save the chains using JLD2 for efficient storage
     jldsave(joinpath(run.run_path, "chains.jld2"); chains=result.chains_sequence)
 
+    # Create a metadata dictionary with all relevant run information
     metadata = Dict(
         "experiment_name" => run.experiment_name,
         "model_variant_name" => run.config.name,
         "run_path" => run.run_path,
-        "timestamp" => basename(run.run_path),
+        "timestamp" => run.timestamp,
         "total_time_seconds" => result.total_time,
         "config_hash" => result.config_hash,
         "config" => Dict(
-             "model" => String(nameof(run.config.model_config.model)),
-             "feature_map" => String(nameof(run.config.model_config.feature_map)),
-             "base_seasons" => run.config.cv_config.base_seasons,
-             "target_seasons" => run.config.cv_config.target_seasons,
-             "mcmc_steps" => run.config.sample_config.steps
+            # Get the model's type name from the model_def struct
+            "model" => String(nameof(typeof(run.config.model_def))),
+            # The concept of a single feature_map is gone, so we remove it.
+            "base_seasons" => run.config.cv_config.base_seasons,
+            "target_seasons" => run.config.cv_config.target_seasons,
+            "mcmc_steps" => run.config.sample_config.steps
         )
     )
     
+    # Save the metadata as a human-readable JSON file
     open(joinpath(run.run_path, "metadata.json"), "w") do f
         JSON.print(f, metadata, 4)
     end
@@ -51,13 +70,26 @@ function save(run::ExperimentRun, result::ExperimentResult)
     println("✅ Successfully saved run for '$(run.config.name)'.")
 end
 
+"""
+    load_run(path)
+
+Loads the chains and metadata from a specified run directory.
+"""
 function load_run(path::String)
     if !isdir(path)
         error("Directory not found: $path")
     end
     
-    chains = JLD2.load(joinpath(path, "chains.jld2"))["chains"]
-    metadata = JSON.parsefile(joinpath(path, "metadata.json"))
+    chains_path = joinpath(path, "chains.jld2")
+    metadata_path = joinpath(path, "metadata.json")
+
+    if !isfile(chains_path) || !isfile(metadata_path)
+        error("Run directory is incomplete. Missing chains.jld2 or metadata.json in $path")
+    end
+    
+    chains = JLD2.load(chains_path)["chains"]
+    metadata = JSON.parsefile(metadata_path)
     
     return (chains=chains, metadata=metadata)
 end
+

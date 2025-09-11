@@ -16,7 +16,6 @@ include("data/loader.jl")
 include("data/mapping.jl") 
 
 include("data/splitting.jl")
-# export TimeSeriesSplitsConfig, TimeSeriesSplits
 export time_series_splits, summarize_splits
 
 # Data Utils 
@@ -29,29 +28,21 @@ include("./data/utils_market_odds.jl")
 export get_processed_game_line_odds, process_matches_odds, default_marketodds_config 
 
 
-
-# Features
-# include("features/base.jl")  # TODO: Create this file
-include("features/maher.jl")
-include("features/maher_variants.jl")
-export feature_map_maher_league_ha
-
 # Models
-# include("models/base.jl")  # TODO: Create this file
+include("features/core.jl")
 include("models/maher.jl")
 include("models/maher_variants.jl")
-export maher_league_ha_model
+
+
 
 # Training
 include("training/morphisms.jl")
-# include("training/sampling.jl")  # TODO: Create this file
 include("training/pipeline.jl")
 
 # Prediction 
 include("prediction/basic_maher.jl")
 export Predictions
 export extract_posterior_samples, extract_samples, predict_match_chain_ft, predict_match_chain_ht, predict_match_ft_ht_chain, predict_round_chains, predict_target_season
-# export MatchPredict, MatchHalfChainPredicts
 
 # Evaluation - TODO: Create these files
 # eval - kelly 
@@ -62,33 +53,31 @@ include("evaluation/metrics.jl")
 
 # Experiments
 include("experiments/runner.jl")
-include("experiments/registry.jl")   # ADD THIS LINE
+include("experiments/registry.jl")   
+include("experiments/persistence.jl") 
+export ExperimentRun, prepare_run, save, load_run 
 
-include("experiments/persistence.jl")  # TODO: Create this file
-export ExperimentRun, prepare_run, save, load_run # ADD THESE
-# include("experiments/comparison.jl")  # TODO: Create this file
 
-# Export main API
+
+# ============================================================================
+# --- Main API Exports ---
+# ============================================================================
+# Data
 export DataFiles, DataStore
 export MappingFunctions, MappedData, create_list_mapping
-export ModelConfig, ModelSampleConfig, ExperimentConfig
-export BasicMaherModels, TrainedChains, ExperimentResult
-export basic_maher_model_raw, feature_map_basic_maher_model
+
+# Model Definition Protocol
+export AbstractModelDefinition, MaherBasic, MaherLeagueHA
+export build_turing_model, get_required_features # Export the protocol functions
+
+# Training & Experimentation
+export ModelSampleConfig, ExperimentConfig, ExperimentResult, BasicMaherModels, TrainedChains
+export create_master_features # Export the main feature generator
 export run_experiment, train_all_splits
 export create_experiment_config
-
-# experiments/persistence 
-# export load_experiment, save_experiment
-
-
-# Nice packages to have
-
-export DataFrames, Statistics, Plots, Distributions, KernelDensity, Plots, StatsPlots, Turing
-
-
-
-
-# Export any additional functions you need
 export compose_training_morphism
+
+# Utility packages
+export DataFrames, Statistics, Plots, Distributions, KernelDensity, Plots, StatsPlots, Turing
 
 end

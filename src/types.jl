@@ -69,13 +69,26 @@ end
       target_round_sequence::Vector{Tuple{String, Any}}
   end
 
+# ============================================================================
+# --- Model Definition Protocol ---
+# ============================================================================
 
-# Model types
-struct ModelConfig 
-    model::Function 
-    feature_map::Function
-end
+"""
+    AbstractModelDefinition
 
+Abstract supertype for all model definitions. This creates a formal protocol
+where each concrete model must define its feature requirements and how to
+construct itself.
+"""
+abstract type AbstractModelDefinition end
+
+"Basic Maher model with a single home-advantage parameter."
+struct MaherBasic <: AbstractModelDefinition end
+
+"Maher model variant with a separate home-advantage parameter for each league."
+struct MaherLeagueHA <: AbstractModelDefinition end
+
+# --- Unchanged Model Types ---
 struct BasicMaherModels
     ht::Turing.Model
     ft::Turing.Model
@@ -86,7 +99,7 @@ struct ModelChain
     ft::Chains 
 end
 
-# Training types
+# --- Unchanged Training types ---
 struct ModelSampleConfig
     steps::Int 
     bar::Bool 
@@ -99,10 +112,12 @@ struct TrainedChains
     n_samples::Int
 end
 
-# Experiment types
+# ============================================================================
+# --- ExperimentConfig now uses the ModelDefinition protocol ---
+# ============================================================================
 struct ExperimentConfig
     name::String
-    model_config::ModelConfig
+    model_def::AbstractModelDefinition # REPLACES `model_config`
     cv_config::TimeSeriesSplitsConfig  
     sample_config::ModelSampleConfig
     mapping_funcs::MappingFunctions
@@ -114,6 +129,52 @@ struct ExperimentResult
     config_hash::UInt64
     total_time::Float64
 end
+
+# TEST: Remove if working
+# # Model types
+# struct ModelConfig 
+#     model::Function 
+#     feature_map::Function
+# end
+#
+# struct BasicMaherModels
+#     ht::Turing.Model
+#     ft::Turing.Model
+# end
+#
+# struct ModelChain 
+#     ht::Chains 
+#     ft::Chains 
+# end
+#
+# # Training types
+# struct ModelSampleConfig
+#     steps::Int 
+#     bar::Bool 
+# end
+#
+# struct TrainedChains
+#     ht::Chains
+#     ft::Chains
+#     round_info::String
+#     n_samples::Int
+# end
+#
+# # Experiment types
+# struct ExperimentConfig
+#     name::String
+#     model_config::ModelConfig
+#     cv_config::TimeSeriesSplitsConfig  
+#     sample_config::ModelSampleConfig
+#     mapping_funcs::MappingFunctions
+# end
+
+# struct ExperimentResult
+#     chains_sequence::Vector{TrainedChains}
+#     mapping::MappedData
+#     config_hash::UInt64
+#     total_time::Float64
+# end
 
 
 ##################################################
