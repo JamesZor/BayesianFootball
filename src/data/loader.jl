@@ -68,7 +68,8 @@ function DataStore(data_files::DataFiles)
 
     # Define types for the odds DataFrame
     odds_types = Dict(
-        :sofa_match_id => Int64,
+        # FIX: new verison use match_id, older use sofa id 
+        :match_id => Int64,
         :betfair_match_id => Int64,
         :minutes => Int64,
         :timestamp => DateTime,  # Parse as DateTime type
