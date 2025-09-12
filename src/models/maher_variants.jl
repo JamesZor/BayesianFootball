@@ -69,3 +69,35 @@ function build_turing_model(::MaherLeagueHA, features::NamedTuple, home_goals::V
         features.league_ids
     )
 end
+
+
+"""
+Extracts and transforms posterior samples for the MaherLeagueHA model.
+"""
+function extract_posterior_samples(::MaherLeagueHA, chain::Chains)
+    log_α_raw = extract_samples(chain, "log_α_raw")
+    log_β_raw = extract_samples(chain, "log_β_raw")
+    log_γ_leagues = extract_samples(chain, "log_γ_leagues")
+
+    log_α = log_α_raw .- mean(log_α_raw, dims=2)
+    log_β = log_β_raw .- mean(log_β_raw, dims=2)
+
+    return ( α = exp.(log_α), β = exp.(log_β), γ_leagues = exp.(log_γ_leagues) )
+end
+
+"""
+Calculates λ_home and λ_away for a single sample of the MaherLeagueHA model.
+"""
+function get_goal_rates(::MaherLeagueHA, samples::NamedTuple, i::Int, features::NamedTuple)
+    home_idx = features.home_team_ids[1]
+    away_idx = features.away_team_ids[1]
+    league_idx = features.league_ids[1]
+
+    α_h = samples.α[i, home_idx]; β_h = samples.β[i, home_idx]
+    α_a = samples.α[i, away_idx]; β_a = samples.β[i, away_idx]
+    γ = samples.γ_leagues[i, league_idx] # The only different line!
+
+    λ_home = α_h * β_a * γ
+    λ_away = α_a * β_h
+    return (λ_home, λ_away)
+end

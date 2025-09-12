@@ -1,6 +1,7 @@
 # src/models/maher.jl
 
-using Turing, Distributions, LinearAlgebra
+using Turing, Distributions, LinearAlgebra, MCMCChains
+using ..BayesianFootball: AbstractModelDefinition, MaherBasic
 
 # --- 1. The Turing Model Definition (Unchanged) ---
 @model function basic_maher_model_raw(
@@ -64,4 +65,34 @@ function build_turing_model(::MaherBasic, features::NamedTuple, home_goals::V, a
         away_goals,
         features.n_teams
     )
+end
+
+"""
+Extracts and transforms posterior samples for the MaherBasic model.
+"""
+function extract_posterior_samples(::MaherBasic, chain::Chains)
+    log_α_raw = extract_samples(chain, "log_α_raw")
+    log_β_raw = extract_samples(chain, "log_β_raw")
+    log_γ = vec(Array(chain[:log_γ]))
+
+    log_α = log_α_raw .- mean(log_α_raw, dims=2)
+    log_β = log_β_raw .- mean(log_β_raw, dims=2)
+
+    return ( α = exp.(log_α), β = exp.(log_β), γ = exp.(log_γ) )
+end
+
+"""
+Calculates λ_home and λ_away for a single sample of the MaherBasic model.
+"""
+function get_goal_rates(::MaherBasic, samples::NamedTuple, i::Int, features::NamedTuple)
+    home_idx = features.home_team_ids[1]
+    away_idx = features.away_team_ids[1]
+
+    α_h = samples.α[i, home_idx]; β_h = samples.β[i, home_idx]
+    α_a = samples.α[i, away_idx]; β_a = samples.β[i, away_idx]
+    γ = samples.γ[i]
+
+    λ_home = α_h * β_a * γ
+    λ_away = α_a * β_h
+    return (λ_home, λ_away)
 end

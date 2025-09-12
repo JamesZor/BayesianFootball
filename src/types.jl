@@ -26,6 +26,8 @@ struct MappedData
     league::Dict{String, Int} 
 end
 
+
+
 ##############################
 # CV types
 ##############################
@@ -130,6 +132,18 @@ struct ExperimentResult
     mapping::MappedData
     config_hash::UInt64
     total_time::Float64
+end
+
+"""
+    TrainedModel
+
+A container for a fully trained model, bundling the configuration
+and the results (chains and mapping) of an experiment run.
+This is the primary object you'll use for making predictions.
+"""
+struct TrainedModel
+    config::ExperimentConfig
+    result::ExperimentResult
 end
 
 # TEST: Eval testing

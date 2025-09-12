@@ -39,10 +39,12 @@ include("models/maher_variants.jl")
 include("training/morphisms.jl")
 include("training/pipeline.jl")
 
+include("prediction/api.jl") # NEW: Include the generic prediction API
 # Prediction 
-include("prediction/basic_maher.jl")
-export Predictions
-export extract_posterior_samples, extract_samples, predict_match_chain_ft, predict_match_chain_ht, predict_match_ft_ht_chain, predict_round_chains, predict_target_season
+# include("prediction/basic_maher.jl")
+
+# export Predictions
+# export extract_posterior_samples, extract_samples, predict_match_chain_ft, predict_match_chain_ht, predict_match_ft_ht_chain, predict_round_chains, predict_target_season
 
 # Evaluation - TODO: Create these files
 # eval - kelly 
@@ -62,22 +64,46 @@ export ExperimentRun, prepare_run, save, load_run, save_experiment_metadata
 # ============================================================================
 # --- Main API Exports ---
 # ============================================================================
-# Data
-export DataFiles, DataStore
-export MappingFunctions, MappedData, create_list_mapping
 
-# Model Definition Protocol
+# --- Core Types ---
+export DataFiles, DataStore, MappingFunctions, MappedData
+export TrainedModel # NEW: Export our main model container
+
+# --- Model Definition Protocol ---
 export AbstractModelDefinition, MaherBasic, MaherLeagueHA
-export build_turing_model, get_required_features # Export the protocol functions
+export build_turing_model, get_required_features
 
-# Training & Experimentation
-export ModelSampleConfig, ExperimentConfig, ExperimentResult, BasicMaherModels, TrainedChains
-export create_master_features # Export the main feature generator
-export run_experiment, train_all_splits
+# --- Training & Experimentation ---
+export ExperimentConfig, ExperimentResult, TrainedChains
+export create_master_features
+export run_experiment, train_all_splits, time_series_splits
 export create_experiment_config
-export compose_training_morphism
+export prepare_run, save, load_run
+export list_runs, load_model # NEW: Export the user-friendly loading functions
 
-# Utility packages
-export DataFrames, Statistics, Plots, Distributions, KernelDensity, Plots, StatsPlots, Turing
+# --- Prediction ---
+export predict_target_season # NEW: Export the main high-level prediction function
+export Predictions # Export the Predictions module to access its types
 
+# --- Utility packages ---
+export DataFrames, Statistics, Plots, Turing
+
+# # Data
+# export DataFiles, DataStore
+# export MappingFunctions, MappedData, create_list_mapping
+#
+# # Model Definition Protocol
+# export AbstractModelDefinition, MaherBasic, MaherLeagueHA
+# export build_turing_model, get_required_features # Export the protocol functions
+#
+# # Training & Experimentation
+# export ModelSampleConfig, ExperimentConfig, ExperimentResult, BasicMaherModels, TrainedChains
+# export create_master_features # Export the main feature generator
+# export run_experiment, train_all_splits
+# export create_experiment_config
+# export compose_training_morphism
+#
+# # Utility packages
+# export DataFrames, Statistics, Plots, Distributions, KernelDensity, Plots, StatsPlots, Turing
+#
 end

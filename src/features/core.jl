@@ -6,7 +6,7 @@
 Generates a comprehensive NamedTuple of features required by any model in the project.
 This is the single source of truth for feature generation.
 """
-function create_master_features(data::SubDataFrame, mapping::MappedData)
+function create_master_features(data::AbstractDataFrame, mapping::MappedData)
     # Map team and league names to integer IDs
     home_team_ids = [mapping.team[team] for team in data.home_team]
     away_team_ids = [mapping.team[team] for team in data.away_team]

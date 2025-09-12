@@ -1,7 +1,53 @@
 # src/experiments/persistence.jl
+using JLD2, JSON, Dates, DataFrames, Glob
+using ..BayesianFootball: ExperimentConfig, ExperimentResult, TrainedModel
 
-using JLD2, JSON, Dates
-using ..BayesianFootball: ExperimentConfig, ExperimentResult, TimeSeriesSplitsConfig, ModelSampleConfig
+
+
+"""
+    load_model(run_path::String) -> TrainedModel
+
+Loads a saved experiment run from a directory and packages it into a
+convenient `TrainedModel` object, ready for prediction.
+"""
+function load_model(run_path::String)
+    loaded_data = load_run(run_path)
+    return TrainedModel(loaded_data.config, loaded_data.result)
+end
+
+"""
+    list_runs(experiment_path::String)
+
+Scans an experiment directory, reads metadata for each run,
+and returns a DataFrame summarizing them.
+"""
+function list_runs(experiment_path::String)
+    run_paths = glob("*/metadata.json", experiment_path)
+    
+    if isempty(run_paths)
+        println("No completed runs found in: $experiment_path")
+        return DataFrame()
+    end
+    
+    summaries = []
+    for (id, path) in enumerate(run_paths)
+        metadata = JSON.parsefile(path)
+        config = metadata["config"]
+        
+        summary = (
+            id = id,
+            model_name = metadata["model_variant_name"],
+            model_type = config["model"],
+            timestamp = metadata["timestamp"],
+            mcmc_steps = config["mcmc_steps"],
+            path = dirname(path) # Store the path to the run folder
+        )
+        push!(summaries, summary)
+    end
+    
+    return DataFrame(summaries)
+end
+
 
 """
     ExperimentRun
