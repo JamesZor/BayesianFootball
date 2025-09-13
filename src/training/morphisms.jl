@@ -1,14 +1,36 @@
 # src/training/morphisms.jl
 
 # Morphism: TuringModels -> Chains (This function is unchanged)
+# function sampling_morphism(sample_config::ModelSampleConfig)
+#     return models -> begin
+#         ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
+#                           sample_config.steps, 1;
+#                           progress=sample_config.bar)
+#         ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
+#                           sample_config.steps, 1;
+#                           progress=sample_config.bar)
+#         ModelChain(ht_chain, ft_chain)
+#     end
+# end
+
+
+using Base.Threads
+
 function sampling_morphism(sample_config::ModelSampleConfig)
     return models -> begin
-        ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
-                          sample_config.steps, 1;
-                          progress=sample_config.bar)
-        ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
-                          sample_config.steps, 1;
-                          progress=sample_config.bar)
+        # @spawn starts each task on a separate available thread
+        ht_task = @spawn sample(models.ht, NUTS(), MCMCSerial(),
+                                sample_config.steps, 1;
+                                progress=sample_config.bar)
+
+        ft_task = @spawn sample(models.ft, NUTS(), MCMCSerial(),
+                                sample_config.steps, 1;
+                                progress=sample_config.bar)
+
+        # fetch waits for the tasks to finish and gets their results
+        ht_chain = fetch(ht_task)
+        ft_chain = fetch(ft_task)
+
         ModelChain(ht_chain, ft_chain)
     end
 end
@@ -62,110 +84,3 @@ function compose_training_morphism(
         )
     end
 end
-
-
-# Core morphism functions
-# function features_morphism(model_config::ModelConfig, mapping::MappedData)
-#     return data -> model_config.feature_map(data, mapping)
-# end
-#
-# # Morphism: Features -> TuringModels
-# function models_morphism(model_config::ModelConfig)
-#     return features -> begin
-#
-#         # Manually unpack features for the Half-Time model
-#         ht_model = model_config.model(
-#             features.home_team_ids,
-#             features.away_team_ids,
-#             features.goals_home_ht,
-#             features.goals_away_ht,
-#             features.n_teams
-#         )
-#
-#         # Manually unpack features for the Full-Time model
-#         ft_model = model_config.model(
-#             features.home_team_ids,
-#             features.away_team_ids,
-#             features.goals_home_ft,
-#             features.goals_away_ft,
-#             features.n_teams
-#         )
-#
-#         BasicMaherModels(ht_model, ft_model)
-#     end
-# end
-#
-#
-# # src/training/morphisms.jl
-#
-# function models_morphism(model_config::ModelConfig)
-#     return features -> begin
-#
-#         # Check if the features for the league model are present
-#         is_league_model = haskey(features, :league_ids) && haskey(features, :n_leagues)
-#
-#         if is_league_model
-#             # --- Call for League-Specific Models ---
-#             ht_model = model_config.model(
-#                 features.home_team_ids, features.away_team_ids,
-#                 features.goals_home_ht, features.goals_away_ht,
-#                 features.n_teams, features.n_leagues, features.league_ids
-#             )
-#             ft_model = model_config.model(
-#                 features.home_team_ids, features.away_team_ids,
-#                 features.goals_home_ft, features.goals_away_ft,
-#                 features.n_teams, features.n_leagues, features.league_ids
-#             )
-#         else
-#             # --- Call for Basic Models ---
-#             ht_model = model_config.model(
-#                 features.home_team_ids, features.away_team_ids,
-#                 features.goals_home_ht, features.goals_away_ht,
-#                 features.n_teams
-#             )
-#             ft_model = model_config.model(
-#                 features.home_team_ids, features.away_team_ids,
-#                 features.goals_home_ft, features.goals_away_ft,
-#                 features.n_teams
-#             )
-#         end
-#
-#         BasicMaherModels(ht_model, ft_model)
-#     end
-# end
-#
-# # NOTE: Don't pass named dict, turing doesn't like them, get the step size wrong
-#
-# # TODO: add number of chains to config
-# # Morphism: TuringModels -> Chains 
-# function sampling_morphism(sample_config::ModelSampleConfig)
-#     return models -> begin
-#         ht_chain = sample(models.ht, NUTS(), MCMCSerial(), 
-#                          sample_config.steps, 1; 
-#                          progress=sample_config.bar)
-#         ft_chain = sample(models.ft, NUTS(), MCMCSerial(), 
-#                          sample_config.steps, 1;
-#                          progress=sample_config.bar)
-#         ModelChain(ht_chain, ft_chain)
-#     end
-# end
-# # Composed training morphism: SubDataFrame -> TrainedChains
-# function compose_training_morphism(
-#     model_config::ModelConfig,
-#     sample_config::ModelSampleConfig,
-#     mapping::MappedData
-# )
-#     # Compose the morphisms: data -> features -> models -> chains
-#     return (data, info) -> begin
-#         features = features_morphism(model_config, mapping)(data)
-#         models = models_morphism(model_config)(features)
-#         chains = sampling_morphism(sample_config)(models)
-#
-#         TrainedChains(
-#             chains.ht,
-#             chains.ft,
-#             info,
-#             nrow(data)
-#         )
-#     end
-# end
