@@ -1201,3 +1201,118 @@ mean( 1 ./ ( 1 .- m1_2.ht.under_15 ))
 
 mean( 1 ./ m1_2.ht.under_25 )
 mean( 1 ./ ( 1 .- m1_2.ht.under_25 ))
+
+
+
+
+##############################
+####### match day three EFL 
+##############################
+
+using StatsPlots, Distributions, Statistics, Plots
+model_path_maher_ha = "/home/james/bet_project/models_julia/experiments/pipeline_verification_test/maher_league_ha_verification_20250913-173119"
+model_short_path = "/home/james/bet_project/models_julia/experiments/pipeline_verification_test/maher_league_ha_short_20250916-151954"
+
+model = load_model(model_path_maher_ha)
+#### Match 1 
+
+team_name_home = "sheffield-wednesday"
+team_name_away = "grimsby-town"
+leauge_id=2
+
+
+team_id_home = model.result.mapping.team[team_name_home]
+team_id_away = model.result.mapping.team[team_name_away]
+
+match_to_predict = DataFrame(
+    home_team=team_name_home,
+    away_team=team_name_away,
+    tournament_id=leauge_id,
+    home_score_ht=0, away_score_ht=0, home_score=0, away_score=0 # Dummy data
+)
+
+chains_for_round = model.result.chains_sequence[1]
+# 2. Create the features for this single match
+features = BayesianFootball.create_master_features(
+    match_to_predict,
+    model.result.mapping
+)
+
+# 3. Call the prediction function
+m1 = BayesianFootball.predict_match_lines(
+    model.config.model_def,
+    chains_for_round,
+    features,
+    model.result.mapping
+)
+
+mean( 1 ./ m1.ft.home )
+mean( 1 ./ m1.ft.away )
+mean( 1 ./ m1.ft.draw )
+
+
+mean( 1 ./ m1.ft.under_05 )
+mean( 1 ./ ( 1 .- m1.ft.under_05 ))
+
+mean( 1 ./ m1.ft.under_15 )
+mean( 1 ./ ( 1 .- m1.ft.under_15 ))
+
+mean( 1 ./ m1.ft.under_25 )
+mean( 1 ./ ( 1 .- m1.ft.under_25 ))
+
+mean( 1 ./ m1.ft.btts)
+mean( 1 ./ (1 .- m1.ft.btts))
+
+
+
+mean( 1 ./ m1.ht.home )
+mean( 1 ./ m1.ht.away )
+mean( 1 ./ m1.ht.draw )
+
+mean( 1 ./ m1.ht.under_05 )
+mean( 1 ./ ( 1 .- m1.ht.under_05 ))
+
+mean( 1 ./ m1.ht.under_15 )
+mean( 1 ./ ( 1 .- m1.ht.under_15 ))
+
+mean( 1 ./ m1.ht.under_25 )
+mean( 1 ./ ( 1 .- m1.ht.under_25 ))
+
+
+density(1 ./ m1.ft.home, label="maher model", title="FT home p Distributions")
+
+
+mean( m1.ft.λ_h )
+mean( m1.ft.λ_a )
+
+k_cs = Dict( k => mean(1 ./ v) for (k,v) in m1.ft.correct_score)
+sort(collect(k_cs), by = x -> x[2], rev=true)
+
+
+# short learn model 
+
+model_short_path = "/home/james/bet_project/models_julia/experiments/pipeline_verification_test/maher_league_ha_short_20250916-151954"
+
+model1 = load_model(model_short_path)
+
+
+chains_for_round1= model1.result.chains_sequence[1]
+# 2. Create the features for this single match
+features1 = BayesianFootball.create_master_features(
+    match_to_predict,
+    model1.result.mapping
+)
+
+m2 = BayesianFootball.predict_match_lines(
+    model1.config.model_def,
+    chains_for_round1,
+    features1,
+    model1.result.mapping
+)
+
+mean( 1 ./ m2.ft.home )
+mean( 1 ./ m2.ft.away )
+mean( 1 ./ m2.ft.draw )
+
+density(1 ./ m1.ft.home, label="maher model", title="FT home p Distributions")
+density!(1 ./ m2.ft.home, label="maher model short", title="FT home p Distributions")
