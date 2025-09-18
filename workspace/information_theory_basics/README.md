@@ -8,7 +8,81 @@ This task involves researching and implementing basic information theory metrics
 The initial focus will be on metrics like Kullback-Leibler (KL) divergence and entropy.
 
 
+
+## Utilities 
+
+### Vectorized Data Structures
+
+#### 2. Mathematical & Logical Framework
+
+We will define two primary tensors:
+
+-   **`P` (Prediction Tensor):** A 3D tensor to hold the predicted probabilities.
+-   **`R` (Result Tensor):** A 2D tensor to hold the actual match outcomes.
+
+#### Tensor Dimensions
+
+-   **Prediction Tensor `P`**: `(L, K, M)`
+    -   `L`: Number of matches
+    -   `K`: Number of markets (e.g., home win, draw, away win, under 2.5)
+    -   `M`: Number of MCMC chains
+
+-   **Result Tensor `R`**: `(L, K)`
+    -   `L`: Number of matches
+    -   `K`: Number of markets
+
+#### Example: Log-Likelihood Calculation
+
+With this structure, the log-likelihood for a single chain `k` can be calculated as:
+
+$$ \text{LL}_k = \sum_{i=1}^{L} \sum_{j=1}^{K} R_{ij} \log(P_{ijk}) $$
+
+In Julia, this becomes a simple, vectorized operation, avoiding slow loops:
+
+```julia
+# First, average predictions across all chains
+P_mean = mean(P, dims=3)
+
+# Then, calculate the log-likelihood
+log_likelihood = sum(R .* log.(P_mean))
 ```
+
+#### Proposed Data Structures
+
+``` julia 
+struct PredictionTensor
+    # Tensor of shape (matches, markets, chains)
+    probabilities::Array{Float64, 3}
+
+    # Dimension Mappings
+    match_ids::Vector{Int}
+    markets::Vector{Symbol}
+
+    # Mappers for quick lookups
+    match_map::Dict{Int, Int}
+    market_map::Dict{Symbol, Int}
+end
+
+struct ResultTensor
+    # Tensor of shape (matches, markets) with 0s and 1s
+    outcomes::Matrix{Int}
+
+    # Dimension Mappings
+    match_ids::Vector{Int}
+    markets::Vector{Symbol}
+
+    # Mappers for quick lookups
+    match_map::Dict{Int, Int}
+    market_map::Dict{Symbol, Int}
+end
+
+```
+
+
+
+## 
+
+``` bash
 ⚡➜ models_julia (U! main) git stash
 Saved working directory and index state WIP on main: b6fcc76 sampling ht and ft
 ⚡➜ models_julia (! main) git pull 
