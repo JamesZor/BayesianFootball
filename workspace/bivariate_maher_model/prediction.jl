@@ -2,7 +2,7 @@ module BivariatePrediction
 
 using ..BivariateMaher # To get access to logpdf_bivariate_poisson
 using BayesianFootball # For helper functions and types
-using BayesianFootball.Predictions # For the output structs
+# using BayesianFootball.Predictions # For the output structs
 using DataFrames
 using StatsBase
 using MCMCChains
@@ -37,7 +37,7 @@ function predict_bivariate_match_ft(
     mapping::MappedData
 )
     n_samples = size(chain, 1) * size(chain, 3)
-    posterior_samples = BayesianFootball.extract_posterior_samples(model_def, chain)
+    posterior_samples = BayesianFootball.Predictions.extract_posterior_samples(model_def, chain)
 
     # Initialize vectors to store the full posterior for each market
     λ_home = zeros(n_samples)
@@ -85,7 +85,7 @@ function predict_bivariate_match_ft(
     end
 
     # Return the formal struct defined in your types.jl file 
-    return BayesianFootball.MatchFTPredictions(
+    return BayesianFootball.Predictions.MatchFTPredictions(
         λ_home, λ_away, home_win_probs, draw_probs, away_win_probs,
         correct_score, under_05, under_15, under_25, under_35, btts
     )
@@ -144,7 +144,7 @@ function predict_bivariate_match_ht(
     end
     
     # Return the formal HT struct
-    return BayesianFootball.MatchHTPredictions(
+    return BayesianFootball.Predictions.MatchHTPredictions(
         λ_home, λ_away, home_win_probs, draw_probs, away_win_probs,
         correct_score, under_05, under_15, under_25
     )
@@ -163,7 +163,7 @@ function predict_bivariate_match_lines(
 )
     ht_predict = predict_bivariate_match_ht(model_def, round_chains.ht, features, mapping)
     ft_predict = predict_bivariate_match_ft(model_def, round_chains.ft, features, mapping)
-    return BayesianFootball.MatchLinePredictions(ht_predict, ft_predict)
+    return BayesianFootball.Predictions.MatchLinePredictions(ht_predict, ft_predict)
 end
 
 end
