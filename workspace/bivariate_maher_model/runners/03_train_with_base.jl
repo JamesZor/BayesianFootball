@@ -30,9 +30,8 @@ function run_training_instance(model_spec, cv_config, sample_config, data_store,
     println("[Thread $(threadid())] ▶️  STARTING RUN: $(run_name)")
     
     mapping_funcs = BayesianFootball.MappingFunctions(
-        BayesianFootball.create_team_mapping_func,
-        BayesianFootball.create_league_mapping_func
-    )
+        BayesianFootball.create_list_mapping
+  )
 
     config = ExperimentConfig(
         run_name,
