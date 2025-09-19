@@ -26,14 +26,14 @@ mapping_funcs = BayesianFootball.MappingFunctions(BayesianFootball.create_list_m
 
 # --- 3. Define the Bivariate Maher Model Configuration ---
 println("Configuring for the Bivariate Maher model...")
-config_bivariate = create_experiment_config(
+config_bivariate = ExperimentConfig(
     "bivariate_maher_verification",
-    :maher,
-    :bivariate,
+    MaherBivariate(), # Use our new model type
     cv_config,
     sample_config,
     mapping_funcs
 )
+
 
 # --- 4. Training Set Preparation ---
 println("Preparing a single training set...")
