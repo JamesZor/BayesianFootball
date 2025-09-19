@@ -37,7 +37,7 @@ function predict_bivariate_match_ft(
     mapping::MappedData
 )
     n_samples = size(chain, 1) * size(chain, 3)
-    posterior_samples = BayesianFootball.Predictions.extract_posterior_samples(model_def, chain)
+    posterior_samples = BayesianFootball.extract_posterior_samples(model_def, chain)
 
     # Initialize vectors to store the full posterior for each market
     λ_home = zeros(n_samples)
