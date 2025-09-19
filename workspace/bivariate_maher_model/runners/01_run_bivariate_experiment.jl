@@ -44,7 +44,7 @@ mapping = BayesianFootball.MappedData(data_store, config_bivariate.mapping_funcs
 
 # The training morphism needs to be updated to use the bivariate model
 training_morphism = BayesianFootball.compose_training_morphism(
-    BivariateMaher.maher_bivariate_model, # Pass the bivariate model function
+    config_bivariate.model_def,
     config_bivariate.sample_config,
     mapping
 )
