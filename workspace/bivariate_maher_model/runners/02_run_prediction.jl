@@ -34,9 +34,70 @@ match_to_predict = DataFrame(
 )
 
 
+# --- 3. Run Prediction ---
+chains_for_prediction = loaded_model.result.chains_sequence[1]
+features = BayesianFootball.create_master_features(match_to_predict, loaded_model.result.mapping)
+mapping = loaded_model.result.mapping # Get the mapping object
+
+println("\nPredicting match lines using bivariate model...")
+
+# Call the NEW top-level function
+match_predictions = predict_bivariate_match_lines(
+    loaded_model.config.model_def,
+    chains_for_prediction,
+    features,
+    mapping
+)
 
 
+# --- 4. Interpret and Display the Predictions ---
+# You can now access the full distributions for both FT and HT markets
+using StatsBase, Statistics
 
+# Full-Time results
+home_win_prob = mean(match_predictions.ft.home)
+draw_prob = mean(match_predictions.ft.draw)
+away_win_prob = mean(match_predictions.ft.away)
+under_2_5_prob = mean(match_predictions.ft.under_25)
+
+# Half-Time results
+ht_home_win_prob = mean(match_predictions.ht.home)
+ht_draw_prob = mean(match_predictions.ht.draw)
+
+println("\n--- Predicted FT Probability (Posterior Mean) ---")
+println("Home Win: ", round(home_win_prob * 100, digits=1), "%")
+println("Draw:     ", round(draw_prob * 100, digits=1), "%")
+println("Away Win: ", round(away_win_prob * 100, digits=1), "%")
+println("Under 2.5: ", round(under_2_5_prob * 100, digits=1), "%")
+
+println("\n--- Predicted HT Probability (Posterior Mean) ---")
+println("HT Home Win: ", round(ht_home_win_prob * 100, digits=1), "%")
+println("HT Draw:     ", round(ht_draw_prob * 100, digits=1), "%")
+
+
+using Distributions, StatsPlots, Plots
+
+density(1 ./ match_predictions.ft.home, label="home", title="1x2 odds")
+density(1 ./ match_predictions.ft.away, label="away", title="1x2 odds")
+density(1 ./ match_predictions.ft.draw, label="draw", title="1x2 odds")
+
+density(1 ./ match_predictions.ft.under_05, label="05", title="under over")
+density!(1 ./ match_predictions.ft.under_15, label="15", title="under over")
+density!(1 ./ match_predictions.ft.under_25, label="25", title="under over")
+
+mean(1 ./ match_predictions.ft.under_05 )
+mean(1 ./ match_predictions.ft.under_15 )
+mean(1 ./ match_predictions.ft.under_25 )
+mean(1 ./ match_predictions.ft.under_35 )
+
+
+mean( 1 ./ match_predictions.ft.btts)
+
+
+p_cs = Dict( k => mean(v) for (k,v) in match_predictions.ft.correct_score)
+sort(collect(p_cs), by = x -> x[2], rev=true)
+
+cs = Dict( k => mean(1 ./ v) for (k,v) in match_predictions.ft.correct_score)
 ##### older version 
 
 println("Found match: $(match_to_predict.home_team) vs $(match_to_predict.away_team).")

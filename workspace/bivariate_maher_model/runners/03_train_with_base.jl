@@ -37,10 +37,8 @@ cv_splits = [
 ]
 
 # Standard mapping functions
-mapping_funcs = BayesianFootball.MappingFunctions(
-    BayesianFootball.create_team_mapping_func,
-    BayesianFootball.create_league_mapping_func
-)
+mapping_funcs = BayesianFootball.MappingFunctions(BayesianFootball.create_list_mapping)
+
 # Create a global mapping based on all available data
 println("Creating global data mapping...")
 global_mapping = BayesianFootball.MappedData(data_store.matches, mapping_funcs.team_mapping_func, mapping_funcs.league_mapping_func)
