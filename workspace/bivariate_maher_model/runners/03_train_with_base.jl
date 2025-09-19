@@ -99,8 +99,7 @@ cv_splits = [
 # --- 2. Create Global Mapping (Using the correct constructor) ---
 println("Creating global data mapping...")
 mapping_funcs = BayesianFootball.MappingFunctions(
-    BayesianFootball.create_team_mapping_func, 
-    BayesianFootball.create_league_mapping_func
+  BayesianFootball.create_list_mapping
 )
 # This is the correct call, which relies on the constructor defined in your BayesianFootball package
 global_mapping = BayesianFootball.MappedData(data_store, mapping_funcs)
