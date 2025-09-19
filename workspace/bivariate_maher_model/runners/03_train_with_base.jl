@@ -41,7 +41,7 @@ mapping_funcs = BayesianFootball.MappingFunctions(BayesianFootball.create_list_m
 
 # Create a global mapping based on all available data
 println("Creating global data mapping...")
-global_mapping = BayesianFootball.MappedData(data_store.matches, mapping_funcs.team_mapping_func, mapping_funcs.league_mapping_func)
+global_mapping = BayesianFootball.MappedData(data_store.matches, mapping_funcs)
 println("✅ Mapping complete.")
 
 # --- 4. Main Training Loop (Parallelized) ---
