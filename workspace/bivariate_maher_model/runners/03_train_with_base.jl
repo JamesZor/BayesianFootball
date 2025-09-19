@@ -41,7 +41,19 @@ mapping_funcs = BayesianFootball.MappingFunctions(BayesianFootball.create_list_m
 
 # Create a global mapping based on all available data
 println("Creating global data mapping...")
-global_mapping = BayesianFootball.MappedData(data_store.matches, mapping_funcs)
+
+g_cv_config = BayesianFootball.TimeSeriesSplitsConfig(
+    [ "24/25", "25/26"],
+    [],
+    :round
+)
+g_config = create_experiment_config(
+    "maher_basic_verification", :maher, :basic,
+    g_cv_config, sample_config, mapping_funcs
+)
+
+global_mapping = BayesianFootball.MappedData(data_store.matches, g_config.mapping_funcs)
+
 println("✅ Mapping complete.")
 
 # --- 4. Main Training Loop (Parallelized) ---
