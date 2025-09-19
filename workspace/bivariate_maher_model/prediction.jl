@@ -4,6 +4,7 @@ using ..BivariateMaher # To get access to logpdf_bivariate_poisson
 using BayesianFootball
 using DataFrames
 using StatsBase
+using MCMCChains
 
 export predict_bivariate_match_ft
 

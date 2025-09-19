@@ -4,8 +4,8 @@ using Dates
 using JLD2
 
 # Include our experimental modules
-include("../setup.jl")
-include("../prediction.jl")
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/prediction.jl")
 using .BivariateMaher
 using .BivariatePrediction
 
