@@ -33,6 +33,12 @@ match_to_predict = DataFrame(
     home_score_ht=0, away_score_ht=0, home_score=0, away_score=0 # Dummy data
 )
 
+
+
+
+
+##### older version 
+
 println("Found match: $(match_to_predict.home_team) vs $(match_to_predict.away_team).")
 
 # --- 3. Run Prediction ---

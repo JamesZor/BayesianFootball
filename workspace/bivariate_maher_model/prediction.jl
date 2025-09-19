@@ -85,7 +85,7 @@ function predict_bivariate_match_ft(
     end
 
     # Return the formal struct defined in your types.jl file 
-    return MatchFTPredictions(
+    return BayesianFootball.MatchFTPredictions(
         λ_home, λ_away, home_win_probs, draw_probs, away_win_probs,
         correct_score, under_05, under_15, under_25, under_35, btts
     )
@@ -144,7 +144,7 @@ function predict_bivariate_match_ht(
     end
     
     # Return the formal HT struct
-    return MatchHTPredictions(
+    return BayesianFootball.MatchHTPredictions(
         λ_home, λ_away, home_win_probs, draw_probs, away_win_probs,
         correct_score, under_05, under_15, under_25
     )
@@ -163,7 +163,7 @@ function predict_bivariate_match_lines(
 )
     ht_predict = predict_bivariate_match_ht(model_def, round_chains.ht, features, mapping)
     ft_predict = predict_bivariate_match_ft(model_def, round_chains.ft, features, mapping)
-    return MatchLinePredictions(ht_predict, ft_predict)
+    return BayesianFootball.MatchLinePredictions(ht_predict, ft_predict)
 end
 
 end
