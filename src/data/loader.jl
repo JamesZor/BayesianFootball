@@ -118,10 +118,14 @@ function DataStore(data_files::DataFiles)
         types=matches_types, 
         dateformat=Dict(:match_date => dateformat"yyyy-mm-dd"))
     
-    odds = CSV.read(data_files.odds, DataFrame; 
-        types=odds_types, 
-        dateformat=Dict(:timestamp => dateformat"yyyy-mm-dd HH:MM:SS"))
+  # FIX: 
+    # odds = CSV.read(data_files.odds, DataFrame; 
+    #     types=odds_types, 
+    #     dateformat=Dict(:timestamp => dateformat"yyyy-mm-dd HH:MM:SS"))
     
+    odds = CSV.read(data_files.odds, DataFrame; 
+        dateformat=Dict(:timestamp => dateformat"yyyy-mm-dd HH:MM:SS"))
+
     incidents = CSV.read(data_files.incidents, DataFrame; types=incidents_types)
 
     return DataStore(matches, odds, incidents)
