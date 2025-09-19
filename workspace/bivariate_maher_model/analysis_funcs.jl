@@ -4,7 +4,7 @@ using DataFrames
 using Dates
 using Statistics, StatsBase, StatsPlots, Distributions
 
-export load_models_from_paths, generate_predictions, create_odds_dataframe
+export load_models_from_paths, generate_predictions, create_odds_dataframe, plot_odds_distributions
 
 """
     load_models_from_paths(model_paths::Dict{String, String})
@@ -140,6 +140,41 @@ function create_odds_dataframe(predictions::Dict{String, Any})
     
     return df
 end
+
+
+"""
+    plot_odds_distributions(
+        predictions::Dict{String, Any}, 
+        time::Symbol, 
+        market::Symbol; 
+        title_suffix=""
+    )
+
+Plots the density of odds for a specific market from multiple models.
+
+# Arguments
+- `predictions`: Dictionary of `MatchLinePredictions`.
+- `time`: A symbol, either `:ft` or `:ht`.
+- `market`: A symbol for the market (e.g., `:home`, `:draw`, `:btts`, `:under_25`).
+- `title_suffix`: Optional string to add to the plot title.
+"""
+function plot_odds_distributions(predictions::Dict{String, Any}, time::Symbol, market::Symbol; title_suffix="")
+    
+    title = "Odds Distribution for $(uppercase(string(time))) $(uppercase(string(market))) $(title_suffix)"
+    p = plot(title=title, xlabel="Odds", ylabel="Density", legend=:outertopright)
+    
+    for (name, pred) in predictions
+        # Access the correct struct (ft or ht) and then the market vector
+        prob_vector = getfield(getfield(pred, time), market)
+        odds_vector = 1 ./ prob_vector
+        
+        density!(p, odds_vector, label=name)
+    end
+    
+    # display(p)
+    return p
+end
+
 
   
 end
