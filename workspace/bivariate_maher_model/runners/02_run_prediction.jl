@@ -26,10 +26,13 @@ data_store = DataStore(data_files)
 team_name_home = "middlesbrough"
 team_name_away = "west-bromwich-albion"
 
+team_name_home = "st-johnstone"
+team_name_away = "dunfermline-athletic"
+
 match_to_predict = DataFrame(
     home_team=team_name_home,
     away_team=team_name_away,
-    tournament_id=2,
+    tournament_id=55,
     home_score_ht=0, away_score_ht=0, home_score=0, away_score=0 # Dummy data
 )
 
@@ -73,6 +76,12 @@ println("Under 2.5: ", round(under_2_5_prob * 100, digits=1), "%")
 println("\n--- Predicted HT Probability (Posterior Mean) ---")
 println("HT Home Win: ", round(ht_home_win_prob * 100, digits=1), "%")
 println("HT Draw:     ", round(ht_draw_prob * 100, digits=1), "%")
+
+
+
+mean(1 ./ match_predictions.ft.home)
+mean(1 ./ match_predictions.ft.away )
+mean(1 ./ match_predictions.ft.draw )
 
 
 using Distributions, StatsPlots, Plots

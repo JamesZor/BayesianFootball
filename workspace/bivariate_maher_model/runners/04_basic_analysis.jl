@@ -36,7 +36,13 @@ ft_odds = filter(row->row.Time=="FT", odds_df)
 ht_odds = filter(row->row.Time=="HT", odds_df)
 
 
+plot_odds_distributions(predictions, :ft, :home, title_suffix="Home for $team_name_home v $team_name_away ")
+plot_odds_distributions(predictions, :ht, :home, title_suffix="Home for $team_name_home v $team_name_away ")
 
+plot_odds_distributions(predictions, :ft, :away, title_suffix="away for $team_name_home v $team_name_away ")
+
+plot_odds_distributions(predictions, :ft, :under_15, title_suffix="under 15")
+plot_odds_distributions(predictions, :ft, :under_25, title_suffix="under 25")
 ### match 2
 team_name_home = "st-johnstone"
 team_name_away = "dunfermline-athletic"
