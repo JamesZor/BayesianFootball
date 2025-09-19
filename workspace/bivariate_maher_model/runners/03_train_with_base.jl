@@ -1,82 +1,39 @@
 using BayesianFootball
 using DataFrames
 using Dates
-using Base.Threads # Import the Threads module
+using Base.Threads
 
 # --- 1. Setup and Includes ---
-# Include your experimental bivariate model definition
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
-using .BivariateMaher # Use the new module
+using .BivariateMaher
 
-# Constants for the experiment batch
-const EXPERIMENT_GROUP_NAME = "model_comparison_runs_threaded"
+# --- Constants ---
+const EXPERIMENT_GROUP_NAME = "model_comparison"
 const SAVE_PATH = "./experiments"
 const DATA_PATH = "/home/james/bet_project/football/uk_football_data_20_26"
 
-# --- 2. Load Data Once ---
-println("Loading data store...")
-data_files = DataFiles(DATA_PATH)
-data_store = DataStore(data_files)
-println("✅ Data loaded.")
+# ============================================================================
+#  CORE TRAINING FUNCTION
+# ============================================================================
+"""
+    run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
 
-# --- 3. Define Configurations for the Batch Run ---
-
-# MCMC sampling configuration with 2,000 steps
-sample_config = BayesianFootball.ModelSampleConfig(2000, true)
-
-# Define the two model types to be tested
-model_definitions = [
-    (name="maher_basic", def=MaherBasic()),
-    (name="maher_bivariate", def=MaherBivariate())
-]
-
-# Define the two CV splits to be used
-cv_splits = [
-    BayesianFootball.TimeSeriesSplitsConfig(["24/25", "25/26"], [], :round),
-    BayesianFootball.TimeSeriesSplitsConfig(["25/26"], [], :round)
-]
-
-# Standard mapping functions
-mapping_funcs = BayesianFootball.MappingFunctions(BayesianFootball.create_list_mapping)
-
-# Create a global mapping based on all available data
-println("Creating global data mapping...")
-
-g_cv_config = BayesianFootball.TimeSeriesSplitsConfig(
-    [ "24/25", "25/26"],
-    [],
-    :round
-)
-g_config = create_experiment_config(
-    "maher_basic_verification", :maher, :basic,
-    g_cv_config, sample_config, mapping_funcs
-)
-
-global_mapping = BayesianFootball.MappedData(data_store.matches, g_config.mapping_funcs)
-
-println("✅ Mapping complete.")
-
-# --- 4. Main Training Loop (Parallelized) ---
-
-# First, create a collection of all the tasks to run
-tasks = [(m, c) for m in model_definitions for c in cv_splits]
-num_tasks = length(tasks)
-
-println("\n--- Starting Batch Training Run ---")
-println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
-
-# Use Threads.@threads to run the loop in parallel
-@threads for (model_spec, cv_config) in tasks
+Runs a single, complete MCMC training instance for a given model and data configuration.
+"""
+function run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
     
     # --- A. Configure the specific run ---
-    
-    # Create a descriptive name for this specific experiment run
     season_str = join(cv_config.base_seasons, "_")
     run_name = "$(model_spec.name)_seasons_$(replace(season_str, "/" => ""))"
     
-    # Thread-safe logging with threadid
+    # Use threadid for clearer parallel logging
     println("[Thread $(threadid())] ▶️  STARTING RUN: $(run_name)")
     
+    mapping_funcs = BayesianFootball.MappingFunctions(
+        BayesianFootball.create_team_mapping_func,
+        BayesianFootball.create_league_mapping_func
+    )
+
     config = ExperimentConfig(
         run_name,
         model_spec.def,
@@ -85,8 +42,7 @@ println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
         mapping_funcs
     )
 
-    # --- B. Prepare data and training function for this run ---
-    
+    # --- B. Prepare data and training morphism ---
     train_df = filter(row -> row.season in config.cv_config.base_seasons, data_store.matches)
 
     training_morphism = BayesianFootball.compose_training_morphism(
@@ -96,7 +52,6 @@ println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
     )
 
     # --- C. Execute the training ---
-    
     println("[Thread $(threadid())]   Starting MCMC sampling on $(nrow(train_df)) matches for run: $(run_name)")
     start_time = now()
     trained_chains = training_morphism(train_df, "Full History")
@@ -106,20 +61,62 @@ println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
     println("[Thread $(threadid())]   ✅ Training complete for $(run_name) in $(round(run_duration_seconds, digits=1)) seconds.")
 
     # --- D. Package and save the results ---
-    
     result = ExperimentResult(
         [trained_chains],
         global_mapping,
         hash(config),
         run_duration_seconds
     )
-
-    model = TrainedModel(config, result)
-
+    
     run_manager = prepare_run(EXPERIMENT_GROUP_NAME, config, SAVE_PATH)
     save(run_manager, result)
-    println("[Thread $(threadid())]   💾 Model saved successfully for run: $(run_name)")
+    println("[Thread $(threadid())]   💾 Model saved for run: $(run_name)")
     println("[Thread $(threadid())] ✔️  COMPLETED RUN: $(run_name)")
+end
+
+
+# ============================================================================
+#  MAIN SCRIPT EXECUTION
+# ============================================================================
+
+# --- 1. Load Data and Define Configurations ---
+println("Loading data store...")
+data_files = DataFiles(DATA_PATH)
+data_store = DataStore(data_files)
+println("✅ Data loaded.")
+
+sample_config = BayesianFootball.ModelSampleConfig(2000, true)
+
+model_definitions = [
+    (name="maher_basic", def=MaherBasic()),
+    (name="maher_bivariate", def=MaherBivariate())
+]
+
+cv_splits = [
+    BayesianFootball.TimeSeriesSplitsConfig(["24/25", "25/26"], [], :round),
+    BayesianFootball.TimeSeriesSplitsConfig(["25/26"], [], :round)
+]
+
+# --- 2. Create Global Mapping (Using the correct constructor) ---
+println("Creating global data mapping...")
+mapping_funcs = BayesianFootball.MappingFunctions(
+    BayesianFootball.create_team_mapping_func, 
+    BayesianFootball.create_league_mapping_func
+)
+# This is the correct call, which relies on the constructor defined in your BayesianFootball package
+global_mapping = BayesianFootball.MappedData(data_store, mapping_funcs)
+println("✅ Mapping complete.")
+
+
+# --- 3. Create Task List and Run in Parallel ---
+tasks = [(m, c) for m in model_definitions for c in cv_splits]
+num_tasks = length(tasks)
+
+println("\n--- Starting Batch Training Run ---")
+println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
+
+@threads for (model_spec, cv_config) in tasks
+    run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
 end
 
 println("\n--- All training runs completed successfully! ---")
