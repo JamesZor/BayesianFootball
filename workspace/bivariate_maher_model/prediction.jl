@@ -167,3 +167,8 @@ function predict_bivariate_match_lines(
 end
 
 end
+
+
+
+p_cs = Dict( k => mean(1 ./ v) for (k,v) in match_predictions.ft.correct_score)
+sort(collect(p_cs), by = x -> x[2], rev=true)
