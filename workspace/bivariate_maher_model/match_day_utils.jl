@@ -165,7 +165,7 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
       # Get the home team name from the event string "TeamA v TeamB"
       home_team_name = first(split(event_name, " v "))
 
-      for (team_key, odds) in ft_data["Match Odds"]
+      for (team_key, odds) in data["Match Odds"]
           # Convert team_key (which can be a Symbol or String) to a String
           team_name = String(team_key)
           
