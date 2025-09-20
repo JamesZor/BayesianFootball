@@ -52,6 +52,38 @@ MARKET_LIST = [
     :ft_1x2_away
 ]
 
+COMPREHENSIVE_MARKET_LIST = [
+    # Full Time 1x2
+    :ft_1x2_home, :ft_1x2_draw, :ft_1x2_away,
+    
+    # Full Time Over/Under
+    :ft_ou_05_under, :ft_ou_05_over,
+    :ft_ou_15_under, :ft_ou_15_over,
+    :ft_ou_25_under, :ft_ou_25_over,
+    :ft_ou_35_under, :ft_ou_35_over,
+    
+    # Full Time BTTS
+    :ft_btts_yes, :ft_btts_no,
+    
+    # Full Time Correct Score (add as many as you want to track)
+    :ft_cs_0_0, :ft_cs_1_0, :ft_cs_0_1, :ft_cs_1_1, :ft_cs_2_0, :ft_cs_0_2,
+    :ft_cs_2_1, :ft_cs_1_2, :ft_cs_2_2, :ft_cs_3_0, :ft_cs_0_3, :ft_cs_3_1,
+    :ft_cs_1_3, :ft_cs_3_2, :ft_cs_2_3, :ft_cs_3_3,
+#     :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
+
+    # Half Time 1x2
+    :ht_1x2_home, :ht_1x2_draw, :ht_1x2_away,
+    
+    # Half Time Over/Under
+    :ht_ou_05_under, :ht_ou_05_over,
+    :ht_ou_15_under, :ht_ou_15_over,
+    :ht_ou_25_under, :ht_ou_25_over,
+    
+    # Half Time Correct Score
+    :ht_cs_0_0, :ht_cs_1_0, :ht_cs_0_1, :ht_cs_1_1,
+   # :ht_cs_other
+]
+
 println("✅ Setup complete.")
 # --- Step 2: Get Today's Matches ---
 println("\nFetching today's matches for England...")
@@ -61,11 +93,15 @@ todays_matches = get_todays_matches(["england", "scotland"]; cli_path=CLI_PATH)
 display(todays_matches)
 MATCH_OF_INTEREST = "Liverpool v Everton"
 MATCH_OF_INTEREST = "Cardiff v Bradford"
+MATCH_OF_INTEREST = "Brighton v Tottenham"
 LEAGUE_ID = 1 # Assuming Premier League ID for your model
 
 # --- Step 3: Get Live Market Odds for the Selected Match ---
 println("\nFetching live odds for: $MATCH_OF_INTEREST")
 market_book = get_live_market_odds(MATCH_OF_INTEREST, MARKET_LIST; cli_path=CLI_PATH)
+
+market_book = get_live_market_odds(MATCH_OF_INTEREST, COMPREHENSIVE_MARKET_LIST; cli_path=CLI_PATH)
+
 
 println("MarketBook created:")
 println("Markets: ", market_book.markets)
@@ -108,7 +144,93 @@ function generate_prediction_matrix(model, home_team, away_team, league_id, mark
     return PredictionMatrix(market_list, market_map, prob_matrix)
 end
 
+# v2 
+function generate_prediction_matrix(model, home_team, away_team, league_id, market_list)
+    # Generate predictions using your existing function
+    preds_dict = generate_predictions(
+        Dict{String, Any}("temp" => model), 
+        home_team, 
+        away_team, 
+        league_id
+    )
+    preds = preds_dict["temp"]
+    
+    # Get MCMC sample size from one of the prediction vectors
+    num_samples = length(preds.ft.home)
+    market_map = Dict(m => i for (i, m) in enumerate(market_list))
+    num_markets = length(market_list)
+    
+    # Initialize the probability matrix
+    prob_matrix = Matrix{Float64}(undef, num_samples, num_markets)
 
+    # --- Expanded Logic to Populate All Prediction Lines ---
+    for (market, idx) in market_map
+        market_str = String(market)
+        prob_vector = nothing # Default to nothing
+        
+        try
+            if startswith(market_str, "ft_")
+                time_preds = preds.ft
+                # --- FT 1x2 ---
+                if market in (:ft_1x2_home, :ft_1x2_draw, :ft_1x2_away)
+                    field = Symbol(split(market_str, '_')[end])
+                    prob_vector = getfield(time_preds, field)
+                # --- FT Over/Under ---
+                elseif startswith(market_str, "ft_ou_")
+                    parts = split(market_str, '_') # ft, ou, 05, over
+                    field = Symbol(parts[4], "_", parts[3]) # :over_05 or :under_05
+                    base_prob = getfield(time_preds, Symbol("under_", parts[3])) # always get the 'under' prob
+                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
+                # --- FT BTTS ---
+                elseif startswith(market_str, "ft_btts_")
+                    side = split(market_str, '_')[end] # yes or no
+                    base_prob = time_preds.btts
+                    prob_vector = (side == "yes") ? base_prob : (1.0 .- base_prob)
+                # --- FT Correct Score ---
+                elseif startswith(market_str, "ft_cs_")
+                    score_key_str = market_str[7:end]
+                    score_key = if occursin(r"\d_\d", score_key_str)
+                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
+                    elseif score_key_str == "other_home"
+                        "other_home_win"
+                    elseif score_key_str == "other_away"
+                        "other_away_win"
+                    else "other_draw" end
+                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
+                end
+            elseif startswith(market_str, "ht_")
+                time_preds = preds.ht
+                # --- HT 1x2 ---
+                if market in (:ht_1x2_home, :ht_1x2_draw, :ht_1x2_away)
+                    field = Symbol(split(market_str, '_')[end])
+                    prob_vector = getfield(time_preds, field)
+                # --- HT Over/Under ---
+                elseif startswith(market_str, "ht_ou_")
+                    parts = split(market_str, '_')
+                    field = Symbol(parts[4], "_", parts[3])
+                    base_prob = getfield(time_preds, Symbol("under_", parts[3]))
+                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
+                # --- HT Correct Score ---
+                elseif startswith(market_str, "ht_cs_")
+                    score_key_str = market_str[7:end]
+                    score_key = if occursin(r"\d_\d", score_key_str)
+                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
+                    else "any_unquoted" end
+                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
+                end
+            end
+
+            # Assign the found vector or NaN if nothing was found
+            prob_matrix[:, idx] = isnothing(prob_vector) ? fill(NaN, num_samples) : prob_vector
+
+        catch e
+            # If any parsing or field access fails, mark as NaN
+            prob_matrix[:, idx] .= NaN
+        end
+    end
+    
+    return PredictionMatrix(market_list, market_map, prob_matrix)
+end
 
 println("\n✅ PredictionMatrix helper function defined.")
 
@@ -386,6 +508,322 @@ julia> home = filter(row -> row.market==:ft_1x2_home, summary_df)
   34 │ Norwich v Wrexham              ft_1x2_home         2.04        2.99   -31.75
   35 │ Cardiff v Bradford             ft_1x2_home         1.8         3.25   -44.54
 """
+
+using CSV
+using Dates # To create a date-stamped filename
+
+# --- 1. Setup the Output Path ---
+# Define where you want to save the final CSV file.
+# The folder will be created if it doesn't exist.
+OUTPUT_FOLDER = "/home/james/bet_project/models_julia/workspace/bivariate_maher_model/data/"
+mkpath(OUTPUT_FOLDER) # Ensures the directory exists
+
+todays_matches = get_todays_matches(["scotland", "england"]; cli_path=CLI_PATH)
+todays_matches = filter(row -> row.time !="14:00", todays_matches)
+# --- 2. Initialize a list to hold the results ---
+# Each element will be a dictionary representing one row (one match).
+all_match_odds_list = []
+
+println("Starting to fetch market odds for $(nrow(todays_matches)) matches...")
+
+# --- 3. Iterate through each match ---
+for row in eachrow(todays_matches)
+    event = row.event_name
+    println("Fetching odds for: $event")
+    
+    try
+        # Fetch the comprehensive odds using the list defined previously
+        market_book = get_live_market_odds(event, COMPREHENSIVE_MARKET_LIST; cli_path=CLI_PATH)
+        
+        # Create a dictionary for this match's row
+        match_row = Dict{Symbol, Any}()
+        match_row[:event_name] = event
+        match_row[:home_team] = row.home_team
+        match_row[:away_team] = row.away_team
+
+        for i in 1:length(market_book.markets)
+            market_symbol = market_book.markets[i]
+            back_col_name = Symbol(market_symbol, "_back")
+            lay_col_name = Symbol(market_symbol, "_lay")
+            
+            # --- MODIFIED SECTION ---
+            # Get the odds from the market book
+            back_odd = market_book.back_odds[i]
+            lay_odd = market_book.lay_odds[i]
+            
+            # Check if the value is NaN. If it is, use `missing`; otherwise, use the value.
+            match_row[back_col_name] = isnan(back_odd) ? missing : back_odd
+            match_row[lay_col_name] = isnan(lay_odd) ? missing : lay_odd
+        end
+        
+        # Add the completed row to our list
+        push!(all_match_odds_list, match_row)
+        
+    catch e
+        @error "Failed to process match: $event. Error: $e"
+        continue # Move to the next match
+    end
+end
+
+println("\n✅ Finished fetching odds.")
+
+# --- 4. Convert the list of dictionaries into a DataFrame ---
+if !isempty(all_match_odds_list)
+    odds_df = DataFrame(all_match_odds_list)
+
+    # --- 5. Save the DataFrame to a CSV file ---
+    # Create a filename with today's date
+    filename = "market_odds_$(today()).csv"
+    full_path = joinpath(OUTPUT_FOLDER, filename)
+    
+    CSV.write(full_path, odds_df)
+    
+    println("Successfully saved market odds to:")
+    println(full_path)
+    
+    # Display the first few rows and columns of the result
+    display(first(odds_df, 5))
+else
+    println("No odds were successfully fetched. CSV file not created.")
+end
+
+
+
+####
+todays_matches
+
+home_team_model = only(todays_matches[3, [:home_team]])
+away_team_model = only(todays_matches[3, [:away_team]])
+LEAGUE_ID = 54
+
+models_to_run = loaded_models_24_26 
+model_to_run = models_to_run["bivar_24_26"]
+pred_matrix = generate_prediction_matrix(
+    model_to_run,
+    home_team_model,
+    away_team_model,
+    # NOTE: Assuming a single league ID. This would need to be dynamic
+    # if your DataFrame contains matches from multiple leagues.
+    LEAGUE_ID, 
+    COMPREHENSIVE_MARKET_LIST
+)
+
+
+
+odds_df 
+
+# --- 1. Select the Match to Analyze ---
+match_to_analyze_row = todays_matches[3, :]
+event_to_find = match_to_analyze_row.event_name
+
+println("Analyzing Match: $event_to_find")
+
+# --- 2. Extract this Match's Market Odds from the main `odds_df` ---
+match_market_odds = first(filter(row -> row.event_name == event_to_find, odds_df))
+
+# --- 3. Reconstruct a MarketBook and Calculate EV Distributions ---
+# The `calculate_ev_distributions` function needs a `MarketBook` struct, 
+# so we'll quickly rebuild one for our selected match.
+market_map = Dict(m => i for (i, m) in enumerate(COMPREHENSIVE_MARKET_LIST))
+back_odds_vec = [match_market_odds[Symbol(m, "_back")] for m in COMPREHENSIVE_MARKET_LIST]
+lay_odds_vec = [match_market_odds[Symbol(m, "_lay")] for m in COMPREHENSIVE_MARKET_LIST]
+single_match_book = MarketBook(COMPREHENSIVE_MARKET_LIST, market_map, back_odds_vec, lay_odds_vec)
+
+# Now, calculate the full EV distribution using the prediction matrix and the new market book
+ev_dist = calculate_ev_distributions(pred_matrix, single_match_book)
+
+# --- 4. Calculate All Required Statistics ---
+# Convert probability matrix to odds matrix
+odds_matrix = 1 ./ pred_matrix.probabilities
+
+# Calculate stats for the model's odds predictions
+model_mean_odds = mean(odds_matrix, dims=1)'
+model_std_odds = std(odds_matrix, dims=1)'
+
+# Calculate stats for the EV distribution
+mean_evs = mean(ev_dist.ev, dims=1)'
+std_evs = std(ev_dist.ev, dims=1)'
+
+# --- 5. Build the Final Pivoted DataFrame ---
+analysis_list = []
+
+for i in 1:length(COMPREHENSIVE_MARKET_LIST)
+    market_symbol = COMPREHENSIVE_MARKET_LIST[i]
+    
+    market_back = single_match_book.back_odds[i]
+    market_lay = single_match_book.lay_odds[i]
+    
+    # Skip if odds are missing
+    ismissing(market_back) && continue
+    
+    push!(analysis_list, (
+        market = market_symbol,
+        market_back = market_back,
+        market_lay = market_lay,
+        model_mean_odds = round(model_mean_odds[i], digits=2),
+        model_std = round(model_std_odds[i], digits=2),
+        mean_ev = round(mean_evs[i] * 100, digits=2), # As a percentage
+        std_ev = round(std_evs[i] * 100, digits=2)   # As a percentage
+    ))
+end
+
+single_match_df = DataFrame(analysis_list)
+
+println("\n✅ Detailed analysis with EV stats complete for $event_to_find")
+display(single_match_df)
+
+# as a functions 
+
+
+
+"""
+    create_match_analysis_df(
+        match_info::DataFrameRow, 
+        all_market_odds::DataFrame, 
+        model_predictions::PredictionMatrix
+    )
+
+Generates a detailed analysis DataFrame for a single match.
+
+# Arguments
+- `match_info`: A row from the `todays_matches` DataFrame containing event details.
+- `all_market_odds`: The "wide" DataFrame containing market odds for all matches.
+- `model_predictions`: The `PredictionMatrix` object for the specific match.
+
+# Returns
+- A `DataFrame` with rows for each market and columns for market odds, 
+  model predictions (mean/std), and EV stats (mean/std).
+"""
+function create_match_analysis_df(
+    match_info::DataFrameRow, 
+    all_market_odds::DataFrame, 
+    model_predictions::PredictionMatrix
+)
+    event_to_find = match_info.event_name
+
+    # 1. Find the corresponding row in the main odds table
+    match_market_odds_row = first(filter(row -> row.event_name == event_to_find, all_market_odds))
+
+    # 2. Reconstruct a MarketBook to use our helper functions
+    market_list = model_predictions.markets
+    market_map = model_predictions.market_map
+    back_odds_vec = [match_market_odds_row[Symbol(m, "_back")] for m in market_list]
+    lay_odds_vec = [match_market_odds_row[Symbol(m, "_lay")] for m in market_list]
+    single_match_book = MarketBook(market_list, market_map, back_odds_vec, lay_odds_vec)
+
+    # 3. Calculate EV and other statistics
+    ev_dist = calculate_ev_distributions(model_predictions, single_match_book)
+    odds_matrix = 1 ./ model_predictions.probabilities
+    
+    model_mean_odds = mean(odds_matrix, dims=1)'
+    model_std_odds = std(odds_matrix, dims=1)'
+    mean_evs = mean(ev_dist.ev, dims=1)'
+    std_evs = std(ev_dist.ev, dims=1)'
+
+    # 4. Build the final analysis list
+    analysis_list = []
+    for i in 1:length(market_list)
+        market_symbol = market_list[i]
+        market_back = single_match_book.back_odds[i]
+        
+        ismissing(market_back) && continue
+        
+        push!(analysis_list, (
+            market = market_symbol,
+            market_back = market_back,
+            market_lay = single_match_book.lay_odds[i],
+            model_mean_odds = round(model_mean_odds[i], digits=2),
+            model_std = round(model_std_odds[i], digits=2),
+            mean_ev = round(mean_evs[i] * 100, digits=2),
+            std_ev = round(std_evs[i] * 100, digits=2)
+        ))
+    end
+    
+    return DataFrame(analysis_list)
+end
+
+
+# 1. Select a match and generate its prediction matrix (as you did before)
+match_row_to_analyze = todays_matches[2, :]
+home_team = match_row_to_analyze.home_team
+away_team = match_row_to_analyze.away_team
+league = 54 # Example League ID
+
+model_to_run = models_to_run["bivar_24_26"]
+pred_matrix = generate_prediction_matrix(
+    model_to_run,
+    home_team,
+    away_team,
+    league,
+    COMPREHENSIVE_MARKET_LIST
+)
+
+# 2. Call the new function with the required inputs
+#    (assuming `odds_df` is your wide DataFrame of market odds)
+analysis_df = create_match_analysis_df(
+    match_row_to_analyze, 
+    odds_df, 
+    pred_matrix
+)
+
+# 3. Display the result
+display(analysis_df)
+match_row_to_analyze.event_name
+
+
+"""
+julia> display(analysis_df)
+42×7 DataFrame
+ Row │ market          market_back  market_lay  model_mean_odds  model_std  mean_ev  std_ev  
+     │ Symbol          Float64      Float64     Float64          Float64    Float64  Float64 
+─────┼───────────────────────────────────────────────────────────────────────────────────────
+   1 │ ft_1x2_home            2.8         2.82             3.54       0.78   -17.39    17.02
+   2 │ ft_1x2_draw            3.75        3.8              3.71       0.3      1.59     8.04
+   3 │ ft_1x2_away            2.64        2.66             2.36       0.39    14.59    18.08
+   4 │ ft_ou_05_under        20.0        21.0             11.66       3.52    85.75    51.22
+   5 │ ft_ou_05_over          1.05        1.06             1.1        0.03    -4.75     2.69
+   6 │ ft_ou_15_under         5.7         5.8              3.36       0.71    76.75    34.38
+   7 │ ft_ou_15_over          1.21        1.22             1.46       0.13   -16.52     7.3
+   8 │ ft_ou_25_under         2.56        2.6              1.79       0.25    45.28    18.53
+   9 │ ft_ou_25_over          1.63        1.64             2.38       0.42   -29.5     11.8
+  10 │ ft_ou_35_under         1.62        1.65             1.3        0.11    25.32     9.56
+  11 │ ft_ou_35_over          2.52        2.6              4.74       1.32   -42.94    14.87
+  12 │ ft_btts_yes            1.55        1.57             2.13       0.27   -26.0      9.09
+  13 │ ft_btts_no             2.78        2.84             1.94       0.23    45.27    16.3
+  14 │ ft_cs_0_0             20.0        21.0             11.66       3.52    85.75    51.22
+  15 │ ft_cs_1_0             16.0        16.5             10.95       2.45    52.79    31.29
+  16 │ ft_cs_0_1             16.0        16.5              8.53       1.75    94.75    36.65
+  17 │ ft_cs_1_1              8.4         8.6              8.02       0.54     5.21     6.43
+  18 │ ft_cs_2_0             20.0        22.0             21.2        5.97     1.06    25.64
+  19 │ ft_cs_0_2             19.0        19.5             12.79       2.81    55.09    31.26
+  20 │ ft_cs_2_1             12.5        13.0             15.54       2.88   -17.08    13.73
+  21 │ ft_cs_1_2             11.5        12.0             12.03       1.34    -3.33     9.76
+  22 │ ft_cs_2_2             13.0        13.5             23.33       4.9    -42.07    10.93
+  23 │ ft_cs_3_0             36.0        40.0             63.55      27.79   -33.97    25.31
+  24 │ ft_cs_0_3             34.0        36.0             29.48       9.84    26.94    38.34
+  25 │ ft_cs_3_1             23.0        24.0             46.61      17.69   -44.57    18.31
+  26 │ ft_cs_1_3             22.0        23.0             27.75       7.66   -15.34    20.93
+  27 │ ft_cs_3_2             27.0        28.0             70.05      27.55   -56.26    15.08
+  28 │ ft_cs_2_3             28.0        29.0             53.88      17.98   -42.84    17.07
+  29 │ ft_cs_3_3             46.0        50.0            161.85      77.03   -65.83    14.36
+  30 │ ht_1x2_home            3.25        3.35             5.07       1.43   -31.2     17.9
+  31 │ ht_1x2_draw            2.56        2.6              2.41       0.27     7.68    11.83
+  32 │ ht_1x2_away            3.15        3.3              2.83       0.58    15.82    22.54
+  33 │ ht_ou_05_under         4.0         4.2              3.32       0.7     25.7     24.86
+  34 │ ht_ou_05_over          1.32        1.34             1.47       0.14    -9.48     8.2
+  35 │ ht_ou_15_under         1.67        1.69             1.51       0.17    12.2     12.02
+  36 │ ht_ou_15_over          2.44        2.5              3.21       0.78   -19.93    17.57
+  37 │ ht_ou_25_under         1.19        1.2              1.14       0.06     4.88     5.19
+  38 │ ht_ou_25_over          6.0         6.4              9.74       4.21   -28.81    26.14
+  39 │ ht_cs_0_0              4.0         4.1              3.32       0.7     25.7     24.86
+  40 │ ht_cs_1_0              5.6         6.0              7.39       1.67   -20.79    16.07
+  41 │ ht_cs_0_1              5.5         6.2              4.71       0.66    18.89    15.6
+  42 │ ht_cs_1_1              7.6         8.4             10.53       1.85   -25.89    11.41
+
+julia> match_row_to_analyze.event_name
+"Man Utd v Chelsea"
+"""
+
 
 
 
