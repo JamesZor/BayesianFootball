@@ -149,6 +149,55 @@ end
 
 Fetches live odds for an event and populates a MarketBook struct.
 """
+# function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; cli_path::String)
+#     market_map = Dict(market => i for (i, market) in enumerate(market_list))
+#     num_markets = length(market_list)
+#     back_odds = fill(NaN, num_markets)
+#     lay_odds = fill(NaN, num_markets)
+#
+#     json_str = _run_python_cli(cli_path, ["odds", event_name, "-d"])
+#     isnothing(json_str) && return MarketBook(market_list, market_map, back_odds, lay_odds)
+#
+#     data = JSON3.read(json_str)
+#
+#     # --- Corrected Logic ---
+#     # First, check for the "ft" key in the main `data` object
+#     if haskey(data, "ft")
+#         # CORRECT: Define `ft_data` *after* you know the "ft" key exists
+#         ft_data = data.ft
+#
+#         # Now you can safely check for keys within `ft_data`
+#         if haskey(ft_data, "Match Odds")
+#             home_team_name = first(split(event_name, " v "))
+#
+#             # CORRECT: Loop over `ft_data`, not `data`
+#             for (team_key, odds) in ft_data["Match Odds"]
+#                 team_name = String(team_key)
+#
+#                 market_symbol = if team_name == "The Draw"
+#                     :ft_1x2_draw
+#                 elseif team_name == home_team_name
+#                     :ft_1x2_home
+#                 else
+#                     :ft_1x2_away
+#                 end
+#
+#                 if haskey(market_map, market_symbol)
+#                     idx = market_map[market_symbol]
+#                     back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+#                     lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+#                 end
+#             end
+#         end
+#
+#         if haskey(ft_data, "Over/Under 2.5 Goals")
+#             # ... your logic for other markets ...
+#         end
+#     end
+#
+#     return MarketBook(market_list, market_map, back_odds, lay_odds)
+# end
+
 function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; cli_path::String)
     market_map = Dict(market => i for (i, market) in enumerate(market_list))
     num_markets = length(market_list)
@@ -156,24 +205,22 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
     lay_odds = fill(NaN, num_markets)
 
     json_str = _run_python_cli(cli_path, ["odds", event_name, "-d"])
-    isnothing(json_str) && return MarketBook(market_list, market_map, back_odds, lay_odds)
+    if isnothing(json_str) || isempty(json_str)
+        @warn "No odds data returned for $event_name"
+        return MarketBook(market_list, market_map, back_odds, lay_odds)
+    end
 
     data = JSON3.read(json_str)
+    home_team_name = first(split(event_name, " v "))
 
-    # --- Corrected Logic ---
-    # First, check for the "ft" key in the main `data` object
+    # --- Process Full-Time (ft) Markets ---
     if haskey(data, "ft")
-        # CORRECT: Define `ft_data` *after* you know the "ft" key exists
         ft_data = data.ft
 
-        # Now you can safely check for keys within `ft_data`
+        # -- FT Match Odds --
         if haskey(ft_data, "Match Odds")
-            home_team_name = first(split(event_name, " v "))
-
-            # CORRECT: Loop over `ft_data`, not `data`
             for (team_key, odds) in ft_data["Match Odds"]
                 team_name = String(team_key)
-                
                 market_symbol = if team_name == "The Draw"
                     :ft_1x2_draw
                 elseif team_name == home_team_name
@@ -189,12 +236,127 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
                 end
             end
         end
-
-        if haskey(ft_data, "Over/Under 2.5 Goals")
-            # ... your logic for other markets ...
+        
+        # -- FT Over/Under Markets --
+        ou_markets = Dict(
+            "Over/Under 0.5 Goals" => :ou_05, "Over/Under 1.5 Goals" => :ou_15,
+            "Over/Under 2.5 Goals" => :ou_25, "Over/Under 3.5 Goals" => :ou_35
+        )
+        for (market_name, prefix) in ou_markets
+            if haskey(ft_data, market_name)
+                for (selection, odds) in ft_data[market_name]
+                    side = startswith(String(selection), "Over") ? :over : :under
+                    market_symbol = Symbol(:ft_, prefix, :_, side)
+                    if haskey(market_map, market_symbol)
+                        idx = market_map[market_symbol]
+                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                    end
+                end
+            end
         end
-    end
-    
+
+        # -- FT Correct Score --
+        if haskey(ft_data, "Correct Score")
+            for (score, odds) in ft_data["Correct Score"]
+                s_score = String(score)
+                market_symbol = if occursin(r"\d\s-\s\d", s_score)
+                    Symbol(:ft_cs_, replace(s_score, " - " => "_"))
+                elseif s_score == "Any Other Home Win"
+                    :ft_cs_other_home
+                elseif s_score == "Any Other Away Win"
+                    :ft_cs_other_away
+                elseif s_score == "Any Other Draw"
+                    :ft_cs_other_draw
+                else
+                    continue
+                end
+
+                if haskey(market_map, market_symbol)
+                    idx = market_map[market_symbol]
+                    back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                    lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                end
+            end
+        end
+
+        # -- FT Both Teams To Score --
+        if haskey(ft_data, "Both teams to Score?")
+            for (selection, odds) in ft_data["Both teams to Score?"]
+                market_symbol = String(selection) == "Yes" ? :ft_btts_yes : :ft_btts_no
+                 if haskey(market_map, market_symbol)
+                    idx = market_map[market_symbol]
+                    back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                    lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                end
+            end
+        end
+    end # End FT markets
+
+    # --- Process Half-Time (ht) Markets ---
+    if haskey(data, "ht")
+        ht_data = data.ht
+
+        # -- HT Match Odds (Half Time) --
+        if haskey(ht_data, "Half Time")
+            for (team_key, odds) in ht_data["Half Time"]
+                team_name = String(team_key)
+                market_symbol = if team_name == "The Draw"
+                    :ht_1x2_draw
+                elseif team_name == home_team_name
+                    :ht_1x2_home
+                else
+                    :ht_1x2_away
+                end
+
+                if haskey(market_map, market_symbol)
+                    idx = market_map[market_symbol]
+                    back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                    lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                end
+            end
+        end
+
+        # -- HT Over/Under Markets --
+        ht_ou_markets = Dict(
+            "First Half Goals 0.5" => :ou_05, "First Half Goals 1.5" => :ou_15,
+            "First Half Goals 2.5" => :ou_25
+        )
+        for (market_name, prefix) in ht_ou_markets
+            if haskey(ht_data, market_name)
+                for (selection, odds) in ht_data[market_name]
+                    side = startswith(String(selection), "Over") ? :over : :under
+                    market_symbol = Symbol(:ht_, prefix, :_, side)
+                    if haskey(market_map, market_symbol)
+                        idx = market_map[market_symbol]
+                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                    end
+                end
+            end
+        end
+
+        # -- HT Correct Score --
+        if haskey(ht_data, "Half Time Score")
+            for (score, odds) in ht_data["Half Time Score"]
+                s_score = String(score)
+                market_symbol = if occursin(r"\d\s-\s\d", s_score)
+                    Symbol(:ht_cs_, replace(s_score, " - " => "_"))
+                elseif s_score == "Any unquoted"
+                    :ht_cs_other
+                else
+                    continue
+                end
+
+                if haskey(market_map, market_symbol)
+                    idx = market_map[market_symbol]
+                    back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
+                    lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                end
+            end
+        end
+    end # End HT markets
+
     return MarketBook(market_list, market_map, back_odds, lay_odds)
 end
 
