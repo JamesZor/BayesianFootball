@@ -11,6 +11,9 @@ export MarketBook, PredictionMatrix, EVDistribution # Exporting structs for type
 export get_todays_matches, get_live_market_odds, calculate_ev_distributions
 export plot_market_distribution_vs_odds, plot_ev_distributions
 
+
+
+ENV["PYTHONCALL_EXE"] = "home/james/.conda/envs/webscrape"
 # --------------------------------------------------------------------------- #
 # --- 1. CORE DATA STRUCTURES ---
 # --------------------------------------------------------------------------- #
