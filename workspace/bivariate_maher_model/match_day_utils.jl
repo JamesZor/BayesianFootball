@@ -64,11 +64,16 @@ Assumes PythonCall is configured for the 'webscraper' Conda env.
 """
 function _run_python_cli(cli_path::String, args::Vector{String})
     script_path = joinpath(cli_path, "live_odds_cli.py")
-
-    python_exe= "home/james/.conda/envs/webscrape"
-    # We run the command with `cwd` to ensure it can find its mapping files etc.
     python_exe = "/home/james/.conda/envs/webscrape/bin/python"
-    cmd = `$python_exe $script_path $args...`
+
+    # 1. Create a vector containing all parts of the command
+    full_command_vector = [python_exe, script_path]
+    
+    # 2. Append the arguments from the input 'args' vector
+    append!(full_command_vector, args)
+
+    # 3. Create the command object from the vector
+    cmd = Cmd(full_command_vector)
     try
         output = read(setenv(cmd, dir=cli_path), String)
         return output
