@@ -13,7 +13,7 @@ export plot_market_distribution_vs_odds, plot_ev_distributions
 
 
 
-ENV["PYTHONCALL_EXE"] = "home/james/.conda/envs/webscrape"
+# ENV["PYTHONCALL_EXE"] = "home/james/.conda/envs/webscrape"
 # --------------------------------------------------------------------------- #
 # --- 1. CORE DATA STRUCTURES ---
 # --------------------------------------------------------------------------- #
@@ -64,12 +64,11 @@ Assumes PythonCall is configured for the 'webscraper' Conda env.
 """
 function _run_python_cli(cli_path::String, args::Vector{String})
     script_path = joinpath(cli_path, "live_odds_cli.py")
-    # You may need to specify the python executable if PythonCall isn't pre-configured
-    # python_exe = "/path/to/your/conda/envs/webscraper/bin/python"
-    
+
+    python_exe= "home/james/.conda/envs/webscrape"
     # We run the command with `cwd` to ensure it can find its mapping files etc.
-    cmd = `python $script_path $args`
-    
+    python_exe = "/home/james/.conda/envs/webscrape/bin/python"
+    cmd = `$python_exe $script_path $args...`
     try
         output = read(setenv(cmd, dir=cli_path), String)
         return output
