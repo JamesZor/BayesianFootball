@@ -167,7 +167,8 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         # Match Odds
         if haskey(ft_data, "Match Odds")
             for (team, odds) in ft_data["Match Odds"]
-                market_symbol = team == "The Draw" ? :ft_1x2_draw : (occursin(event_name, team) ? :ft_1x2_home : :ft_1x2_away)
+                  # market_symbol = team == "The Draw" ? :ft_1x2_draw : (occursin(event_name, team) ? :ft_1x2_home : :ft_1x2_away)
+                market_symbol = team == "The Draw" ? :ft_1x2_draw : (occursin(String(team), event_name) ? :ft_1x2_home : :ft_1x2_away)
                 if haskey(market_map, market_symbol)
                     idx = market_map[market_symbol]
                     back_odds[idx] = get(odds.back, :price, NaN)
