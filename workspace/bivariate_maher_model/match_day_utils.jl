@@ -1,8 +1,8 @@
 # src/utils/MatchDayUtils.jl
+module MatchDayUtils
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/prediction.jl")
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/analysis_funcs.jl")
-module MatchDayUtils
 
 using .BivariateMaher
 using .BivariatePrediction
@@ -186,61 +186,6 @@ function get_todays_matches(leagues::Vector{String}; cli_path::String)
     end
     return DataFrame(matches)
 end
-
-
-"""
-    get_live_market_odds(event_name::String, market_list::Vector{Symbol}; cli_path::String)
-
-Fetches live odds for an event and populates a MarketBook struct.
-"""
-# function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; cli_path::String)
-#     market_map = Dict(market => i for (i, market) in enumerate(market_list))
-#     num_markets = length(market_list)
-#     back_odds = fill(NaN, num_markets)
-#     lay_odds = fill(NaN, num_markets)
-#
-#     json_str = _run_python_cli(cli_path, ["odds", event_name, "-d"])
-#     isnothing(json_str) && return MarketBook(market_list, market_map, back_odds, lay_odds)
-#
-#     data = JSON3.read(json_str)
-#
-#     # --- Corrected Logic ---
-#     # First, check for the "ft" key in the main `data` object
-#     if haskey(data, "ft")
-#         # CORRECT: Define `ft_data` *after* you know the "ft" key exists
-#         ft_data = data.ft
-#
-#         # Now you can safely check for keys within `ft_data`
-#         if haskey(ft_data, "Match Odds")
-#             home_team_name = first(split(event_name, " v "))
-#
-#             # CORRECT: Loop over `ft_data`, not `data`
-#             for (team_key, odds) in ft_data["Match Odds"]
-#                 team_name = String(team_key)
-#
-#                 market_symbol = if team_name == "The Draw"
-#                     :ft_1x2_draw
-#                 elseif team_name == home_team_name
-#                     :ft_1x2_home
-#                 else
-#                     :ft_1x2_away
-#                 end
-#
-#                 if haskey(market_map, market_symbol)
-#                     idx = market_map[market_symbol]
-#                     back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-#                     lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
-#                 end
-#             end
-#         end
-#
-#         if haskey(ft_data, "Over/Under 2.5 Goals")
-#             # ... your logic for other markets ...
-#         end
-#     end
-#
-#     return MarketBook(market_list, market_map, back_odds, lay_odds)
-# end
 
 function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; cli_path::String)
     market_map = Dict(market => i for (i, market) in enumerate(market_list))
@@ -477,6 +422,93 @@ function plot_ev_distributions(ev_dists::Dict{String, EVDistribution}, market::S
     return p
 end
 
+function generate_prediction_matrix(model, home_team, away_team, league_id, market_list)
+    # Generate predictions using your existing function
+    preds_dict = generate_predictions(
+        Dict{String, Any}("temp" => model), 
+        home_team, 
+        away_team, 
+        league_id
+    )
+    preds = preds_dict["temp"]
+    
+    # Get MCMC sample size from one of the prediction vectors
+    num_samples = length(preds.ft.home)
+    market_map = Dict(m => i for (i, m) in enumerate(market_list))
+    num_markets = length(market_list)
+    
+    # Initialize the probability matrix
+    prob_matrix = Matrix{Float64}(undef, num_samples, num_markets)
+
+    # --- Expanded Logic to Populate All Prediction Lines ---
+    for (market, idx) in market_map
+        market_str = String(market)
+        prob_vector = nothing # Default to nothing
+        
+        try
+            if startswith(market_str, "ft_")
+                time_preds = preds.ft
+                # --- FT 1x2 ---
+                if market in (:ft_1x2_home, :ft_1x2_draw, :ft_1x2_away)
+                    field = Symbol(split(market_str, '_')[end])
+                    prob_vector = getfield(time_preds, field)
+                # --- FT Over/Under ---
+                elseif startswith(market_str, "ft_ou_")
+                    parts = split(market_str, '_') # ft, ou, 05, over
+                    field = Symbol(parts[4], "_", parts[3]) # :over_05 or :under_05
+                    base_prob = getfield(time_preds, Symbol("under_", parts[3])) # always get the 'under' prob
+                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
+                # --- FT BTTS ---
+                elseif startswith(market_str, "ft_btts_")
+                    side = split(market_str, '_')[end] # yes or no
+                    base_prob = time_preds.btts
+                    prob_vector = (side == "yes") ? base_prob : (1.0 .- base_prob)
+                # --- FT Correct Score ---
+                elseif startswith(market_str, "ft_cs_")
+                    score_key_str = market_str[7:end]
+                    score_key = if occursin(r"\d_\d", score_key_str)
+                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
+                    elseif score_key_str == "other_home"
+                        "other_home_win"
+                    elseif score_key_str == "other_away"
+                        "other_away_win"
+                    else "other_draw" end
+                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
+                end
+            elseif startswith(market_str, "ht_")
+                time_preds = preds.ht
+                # --- HT 1x2 ---
+                if market in (:ht_1x2_home, :ht_1x2_draw, :ht_1x2_away)
+                    field = Symbol(split(market_str, '_')[end])
+                    prob_vector = getfield(time_preds, field)
+                # --- HT Over/Under ---
+                elseif startswith(market_str, "ht_ou_")
+                    parts = split(market_str, '_')
+                    field = Symbol(parts[4], "_", parts[3])
+                    base_prob = getfield(time_preds, Symbol("under_", parts[3]))
+                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
+                # --- HT Correct Score ---
+                elseif startswith(market_str, "ht_cs_")
+                    score_key_str = market_str[7:end]
+                    score_key = if occursin(r"\d_\d", score_key_str)
+                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
+                    else "any_unquoted" end
+                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
+                end
+            end
+
+            # Assign the found vector or NaN if nothing was found
+            prob_matrix[:, idx] = isnothing(prob_vector) ? fill(NaN, num_samples) : prob_vector
+
+        catch e
+            # If any parsing or field access fails, mark as NaN
+            prob_matrix[:, idx] .= NaN
+        end
+    end
+    
+    return PredictionMatrix(market_list, market_map, prob_matrix)
+end
+
 
 """
     generate_match_analysis(
@@ -551,13 +583,12 @@ function generate_match_analysis(
 
         # Create a temporary DataFrame for this model's results
         model_df = DataFrame(
-            market = market_list,
+            :market => market_list,
             Symbol(model_name, "_mean_odds") => round.(model_mean_odds, digits=2),
             Symbol(model_name, "_std_odds") => round.(model_std_odds, digits=2),
             Symbol(model_name, "_mean_ev_pct") => round.(mean_evs .* 100, digits=2),
             Symbol(model_name, "_std_ev_pct") => round.(std_evs .* 100, digits=2)
         )
-
         # Join with the final DataFrame
         final_df = leftjoin(final_df, model_df, on = :market)
     end
@@ -587,7 +618,7 @@ overlaid with the live market back/lay odds.
 function plot_multi_model_odds_distribution(
     all_predictions::Dict{String, PredictionMatrix},
     book::MarketBook,
-    market::Symbol
+    market::Symbol,
 )
     # 1. Setup the plot and market lines
     p = plot(
