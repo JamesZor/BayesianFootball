@@ -155,6 +155,23 @@ end
 # --------------------------------------------------------------------------- #
 
 """
+Safely extracts a price from a nested odds dictionary structure.
+Handles cases where the side (:back or :lay) or the price itself is missing or null.
+"""
+function _safe_get_price(odds_obj::Union{PythonCall.Py, Dict}, side::Symbol)
+    # 1. Safely get the details object for the side (:back or :lay)
+    details = get(odds_obj, side, nothing)
+    
+    # 2. If the details object is nothing, we can't proceed. Return NaN.
+    if isnothing(details)
+        return NaN
+    end
+    
+    # 3. If we have a details object, safely get the price from it.
+    return get(details, :price, NaN)
+end
+
+"""
     get_todays_matches(leagues::Vector{String}; cli_path::String)
 
 Fetches today's matches using the Python CLI and returns a structured DataFrame.
@@ -181,9 +198,6 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         # -- FT Match Odds --
         if haskey(ft_data, "Match Odds")
             for (team_key, odds) in ft_data["Match Odds"]
-                #
-                # START FIX: Add check for nothing odds object
-                #
                 if !isnothing(odds)
                     team_name = String(team_key)
                     market_symbol = if team_name == "The Draw"
@@ -196,13 +210,10 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
 
                     if haskey(market_map, market_symbol)
                         idx = market_map[market_symbol]
-                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                        back_odds[idx] = _safe_get_price(odds, :back)
+                        lay_odds[idx] = _safe_get_price(odds, :lay)
                     end
                 end
-                #
-                # END FIX
-                #
             end
         end
         
@@ -214,21 +225,15 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         for (market_name, prefix) in ou_markets
             if haskey(ft_data, market_name)
                 for (selection, odds) in ft_data[market_name]
-                    #
-                    # START FIX: Add check for nothing odds object
-                    #
                     if !isnothing(odds)
                         side = startswith(String(selection), "Over") ? :over : :under
                         market_symbol = Symbol(:ft_, prefix, :_, side)
                         if haskey(market_map, market_symbol)
                             idx = market_map[market_symbol]
-                            back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                            lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                            back_odds[idx] = _safe_get_price(odds, :back)
+                            lay_odds[idx] = _safe_get_price(odds, :lay)
                         end
                     end
-                    #
-                    # END FIX
-                    #
                 end
             end
         end
@@ -236,9 +241,6 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         # -- FT Correct Score --
         if haskey(ft_data, "Correct Score")
             for (score, odds) in ft_data["Correct Score"]
-                #
-                # START FIX: Add check for nothing odds object
-                #
                 if !isnothing(odds)
                     s_score = String(score)
                     market_symbol = if occursin(r"\d\s-\s\d", s_score)
@@ -255,33 +257,24 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
 
                     if haskey(market_map, market_symbol)
                         idx = market_map[market_symbol]
-                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                        back_odds[idx] = _safe_get_price(odds, :back)
+                        lay_odds[idx] = _safe_get_price(odds, :lay)
                     end
                 end
-                #
-                # END FIX
-                #
             end
         end
 
         # -- FT Both Teams To Score --
         if haskey(ft_data, "Both teams to Score?")
             for (selection, odds) in ft_data["Both teams to Score?"]
-                #
-                # START FIX: Add check for nothing odds object
-                #
                 if !isnothing(odds)
                     market_symbol = String(selection) == "Yes" ? :ft_btts_yes : :ft_btts_no
                     if haskey(market_map, market_symbol)
                         idx = market_map[market_symbol]
-                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                        back_odds[idx] = _safe_get_price(odds, :back)
+                        lay_odds[idx] = _safe_get_price(odds, :lay)
                     end
                 end
-                #
-                # END FIX
-                #
             end
         end
     end # End FT markets
@@ -293,9 +286,6 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         # -- HT Match Odds (Half Time) --
         if haskey(ht_data, "Half Time")
             for (team_key, odds) in ht_data["Half Time"]
-                #
-                # START FIX: Add check for nothing odds object
-                #
                 if !isnothing(odds)
                     team_name = String(team_key)
                     market_symbol = if team_name == "The Draw"
@@ -308,13 +298,10 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
 
                     if haskey(market_map, market_symbol)
                         idx = market_map[market_symbol]
-                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                        back_odds[idx] = _safe_get_price(odds, :back)
+                        lay_odds[idx] = _safe_get_price(odds, :lay)
                     end
                 end
-                #
-                # END FIX
-                #
             end
         end
 
@@ -326,21 +313,15 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         for (market_name, prefix) in ht_ou_markets
             if haskey(ht_data, market_name)
                 for (selection, odds) in ht_data[market_name]
-                    #
-                    # START FIX: Add check for nothing odds object
-                    #
                     if !isnothing(odds)
                         side = startswith(String(selection), "Over") ? :over : :under
                         market_symbol = Symbol(:ht_, prefix, :_, side)
                         if haskey(market_map, market_symbol)
                             idx = market_map[market_symbol]
-                            back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                            lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                            back_odds[idx] = _safe_get_price(odds, :back)
+                            lay_odds[idx] = _safe_get_price(odds, :lay)
                         end
                     end
-                    #
-                    # END FIX
-                    #
                 end
             end
         end
@@ -348,9 +329,6 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
         # -- HT Correct Score --
         if haskey(ht_data, "Half Time Score")
             for (score, odds) in ht_data["Half Time Score"]
-                #
-                # START FIX: Add check for nothing odds object
-                #
                 if !isnothing(odds)
                     s_score = String(score)
                     market_symbol = if occursin(r"\d\s-\s\d", s_score)
@@ -363,20 +341,16 @@ function get_live_market_odds(event_name::String, market_list::Vector{Symbol}; c
 
                     if haskey(market_map, market_symbol)
                         idx = market_map[market_symbol]
-                        back_odds[idx] = get(get(odds, :back, Dict()), :price, NaN)
-                        lay_odds[idx] = get(get(odds, :lay, Dict()), :price, NaN)
+                        back_odds[idx] = _safe_get_price(odds, :back)
+                        lay_odds[idx] = _safe_get_price(odds, :lay)
                     end
                 end
-                #
-                # END FIX
-                #
             end
         end
     end # End HT markets
 
     return MarketBook(market_list, market_map, back_odds, lay_odds)
 end
-
 
 
 function get_todays_matches(leagues::Vector{String}; cli_path::String)
