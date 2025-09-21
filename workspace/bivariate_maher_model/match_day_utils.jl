@@ -472,93 +472,6 @@ function plot_ev_distributions(ev_dists::Dict{String, EVDistribution}, market::S
 end
 
 
-function generate_prediction_matrix(model, home_team, away_team, league_id, market_list)
-    # Generate predictions using your existing function
-    preds_dict = generate_predictions(
-        Dict{String, Any}("temp" => model), 
-        home_team, 
-        away_team, 
-        league_id
-    )
-    preds = preds_dict["temp"]
-    
-    # Get MCMC sample size from one of the prediction vectors
-    num_samples = length(preds.ft.home)
-    market_map = Dict(m => i for (i, m) in enumerate(market_list))
-    num_markets = length(market_list)
-    
-    # Initialize the probability matrix
-    prob_matrix = Matrix{Float64}(undef, num_samples, num_markets)
-
-    # --- Expanded Logic to Populate All Prediction Lines ---
-    for (market, idx) in market_map
-        market_str = String(market)
-        prob_vector = nothing # Default to nothing
-        
-        try
-            if startswith(market_str, "ft_")
-                time_preds = preds.ft
-                # --- FT 1x2 ---
-                if market in (:ft_1x2_home, :ft_1x2_draw, :ft_1x2_away)
-                    field = Symbol(split(market_str, '_')[end])
-                    prob_vector = getfield(time_preds, field)
-                # --- FT Over/Under ---
-                elseif startswith(market_str, "ft_ou_")
-                    parts = split(market_str, '_') # ft, ou, 05, over
-                    field = Symbol(parts[4], "_", parts[3]) # :over_05 or :under_05
-                    base_prob = getfield(time_preds, Symbol("under_", parts[3])) # always get the 'under' prob
-                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
-                # --- FT BTTS ---
-                elseif startswith(market_str, "ft_btts_")
-                    side = split(market_str, '_')[end] # yes or no
-                    base_prob = time_preds.btts
-                    prob_vector = (side == "yes") ? base_prob : (1.0 .- base_prob)
-                # --- FT Correct Score ---
-                elseif startswith(market_str, "ft_cs_")
-                    score_key_str = market_str[7:end]
-                    score_key = if occursin(r"\d_\d", score_key_str)
-                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
-                    elseif score_key_str == "other_home"
-                        "other_home_win"
-                    elseif score_key_str == "other_away"
-                        "other_away_win"
-                    else "other_draw" end
-                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
-                end
-            elseif startswith(market_str, "ht_")
-                time_preds = preds.ht
-                # --- HT 1x2 ---
-                if market in (:ht_1x2_home, :ht_1x2_draw, :ht_1x2_away)
-                    field = Symbol(split(market_str, '_')[end])
-                    prob_vector = getfield(time_preds, field)
-                # --- HT Over/Under ---
-                elseif startswith(market_str, "ht_ou_")
-                    parts = split(market_str, '_')
-                    field = Symbol(parts[4], "_", parts[3])
-                    base_prob = getfield(time_preds, Symbol("under_", parts[3]))
-                    prob_vector = (parts[4] == "over") ? (1.0 .- base_prob) : base_prob
-                # --- HT Correct Score ---
-                elseif startswith(market_str, "ht_cs_")
-                    score_key_str = market_str[7:end]
-                    score_key = if occursin(r"\d_\d", score_key_str)
-                        Tuple(parse(Int, i) for i in split(score_key_str, '_'))
-                    else "any_unquoted" end
-                    prob_vector = get(time_preds.correct_score, score_key, fill(NaN, num_samples))
-                end
-            end
-
-            # Assign the found vector or NaN if nothing was found
-            prob_matrix[:, idx] = isnothing(prob_vector) ? fill(NaN, num_samples) : prob_vector
-
-        catch e
-            # If any parsing or field access fails, mark as NaN
-            prob_matrix[:, idx] .= NaN
-        end
-    end
-    
-    return PredictionMatrix(market_list, market_map, prob_matrix)
-end
-
 """
     generate_match_analysis(
         match_info::DataFrameRow,
@@ -587,6 +500,7 @@ function generate_match_analysis(
     all_market_odds::DataFrame,
     models::Dict{String, Any},
     market_list::Vector{Symbol},
+    generate_prediction_matrix::Function
 )
     event_to_find = match_info.event_name
     home_team = match_info.home_team
