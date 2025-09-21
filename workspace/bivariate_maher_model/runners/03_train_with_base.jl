@@ -8,7 +8,7 @@ include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/se
 using .BivariateMaher
 
 # --- Constants ---
-const EXPERIMENT_GROUP_NAME = "model_comparison"
+const EXPERIMENT_GROUP_NAME = "model_comparison_all"
 const SAVE_PATH = "./experiments"
 const DATA_PATH = "/home/james/bet_project/football/uk_football_data_20_26"
 
@@ -92,6 +92,10 @@ model_definitions = [
 ]
 
 cv_splits = [
+    BayesianFootball.TimeSeriesSplitsConfig(["20/21","21/22", "22/23","23/24","24/25", "25/26"], [], :round),
+    BayesianFootball.TimeSeriesSplitsConfig(["21/22", "22/23","23/24","24/25", "25/26"], [], :round),
+    BayesianFootball.TimeSeriesSplitsConfig(["22/23","23/24","24/25", "25/26"], [], :round),
+    BayesianFootball.TimeSeriesSplitsConfig(["23/24","24/25", "25/26"], [], :round),
     BayesianFootball.TimeSeriesSplitsConfig(["24/25", "25/26"], [], :round),
     BayesianFootball.TimeSeriesSplitsConfig(["25/26"], [], :round)
 ]
