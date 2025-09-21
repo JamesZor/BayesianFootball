@@ -10,6 +10,44 @@ using StatsPlots, Distributions
 export MarketBook, PredictionMatrix, EVDistribution # Exporting structs for type access
 export get_todays_matches, get_live_market_odds, calculate_ev_distributions
 export plot_market_distribution_vs_odds, plot_ev_distributions
+export generate_match_analysis, plot_multi_model_odds_distribution
+export CLI_PATH, MARKET_LIST
+
+export fetch_all_market_odds, save_odds_to_csv
+
+const CLI_PATH = "/home/james/bet_project/whatstheodds"
+
+const MARKET_LIST = [
+    # Full Time 1x2
+    :ft_1x2_home, :ft_1x2_draw, :ft_1x2_away,
+    
+    # Full Time Over/Under
+    :ft_ou_05_under, :ft_ou_05_over,
+    :ft_ou_15_under, :ft_ou_15_over,
+    :ft_ou_25_under, :ft_ou_25_over,
+    :ft_ou_35_under, :ft_ou_35_over,
+    
+    # Full Time BTTS
+    :ft_btts_yes, :ft_btts_no,
+    
+    # Full Time Correct Score (add as many as you want to track)
+    :ft_cs_0_0, :ft_cs_1_0, :ft_cs_0_1, :ft_cs_1_1, :ft_cs_2_0, :ft_cs_0_2,
+    :ft_cs_2_1, :ft_cs_1_2, :ft_cs_2_2, :ft_cs_3_0, :ft_cs_0_3, :ft_cs_3_1,
+    :ft_cs_1_3, :ft_cs_3_2, :ft_cs_2_3, :ft_cs_3_3,
+     # :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
+
+    # Half Time 1x2
+    :ht_1x2_home, :ht_1x2_draw, :ht_1x2_away,
+    
+    # Half Time Over/Under
+    :ht_ou_05_under, :ht_ou_05_over,
+    :ht_ou_15_under, :ht_ou_15_over,
+    :ht_ou_25_under, :ht_ou_25_over,
+    
+    # Half Time Correct Score
+    :ht_cs_0_0, :ht_cs_1_0, :ht_cs_0_1, :ht_cs_1_1,
+    # :ht_cs_other
+]
 
 
 
@@ -433,5 +471,267 @@ function plot_ev_distributions(ev_dists::Dict{String, EVDistribution}, market::S
     return p
 end
 
+
+"""
+    generate_match_analysis(
+        match_info::DataFrameRow,
+        all_market_odds::DataFrame,
+        models::Dict{String, Any},
+        market_list::Vector{Symbol},
+        generate_prediction_matrix::Function
+    )
+
+Generates a comprehensive analysis DataFrame and prediction matrices for a single match across multiple models.
+
+# Arguments
+- `match_info`: A row from the `todays_matches` DataFrame.
+- `all_market_odds`: The "wide" DataFrame containing market odds for all matches.
+- `models`: A dictionary mapping model names to loaded model objects.
+- `market_list`: The master list of markets to analyze.
+- `generate_prediction_matrix`: The helper function that converts model output to a PredictionMatrix.
+
+# Returns
+- A `Tuple{DataFrame, Dict{String, PredictionMatrix}}`:
+    1. A `DataFrame` comparing market odds against predictions (mean/std odds, mean/std EV) for each model.
+    2. A `Dict` storing the full `PredictionMatrix` for each model, useful for plotting.
+"""
+function generate_match_analysis(
+    match_info::DataFrameRow,
+    all_market_odds::DataFrame,
+    models::Dict{String, Any},
+    market_list::Vector{Symbol},
+    generate_prediction_matrix::Function
+)
+    event_to_find = match_info.event_name
+    home_team = match_info.home_team
+    away_team = match_info.away_team
+    league_id = 1 # NOTE: Assumes a single league ID for now.
+
+    println("🔬 Starting analysis for: $event_to_find")
+
+    # 1. Reconstruct MarketBook for the specific match
+    match_market_odds_row = first(filter(row -> row.event_name == event_to_find, all_market_odds))
+    market_map = Dict(m => i for (i, m) in enumerate(market_list))
+    back_odds_vec = [match_market_odds_row[Symbol(m, "_back")] for m in market_list]
+    lay_odds_vec = [match_market_odds_row[Symbol(m, "_lay")] for m in market_list]
+    single_match_book = MarketBook(market_list, market_map, back_odds_vec, lay_odds_vec)
+
+    # Base DataFrame with market info, filtered for markets that exist
+    base_df = DataFrame(
+        market = market_list,
+        market_back = single_match_book.back_odds,
+        market_lay = single_match_book.lay_odds
+    )
+    filter!(:market_back => x -> !ismissing(x) && !isnan(x), base_df)
+
+    all_predictions = Dict{String, PredictionMatrix}()
+    final_df = base_df
+
+    # 2. Loop through models, generate predictions, calculate stats, and join
+    for (model_name, model) in models
+        println(" -> Processing model: $model_name")
+
+        # Generate predictions
+        pred_matrix = generate_prediction_matrix(model, home_team, away_team, league_id, market_list)
+        all_predictions[model_name] = pred_matrix
+
+        # Calculate statistics
+        ev_dist = calculate_ev_distributions(pred_matrix, single_match_book)
+        odds_matrix = 1 ./ pred_matrix.probabilities
+
+        model_mean_odds = vec(mean(odds_matrix, dims=1))
+        model_std_odds = vec(std(odds_matrix, dims=1))
+        mean_evs = vec(mean(ev_dist.ev, dims=1))
+        std_evs = vec(std(ev_dist.ev, dims=1))
+
+        # Create a temporary DataFrame for this model's results
+        model_df = DataFrame(
+            market = market_list,
+            Symbol(model_name, "_mean_odds") => round.(model_mean_odds, digits=2),
+            Symbol(model_name, "_std_odds") => round.(model_std_odds, digits=2),
+            Symbol(model_name, "_mean_ev_pct") => round.(mean_evs .* 100, digits=2),
+            Symbol(model_name, "_std_ev_pct") => round.(std_evs .* 100, digits=2)
+        )
+
+        # Join with the final DataFrame
+        final_df = leftjoin(final_df, model_df, on = :market)
+    end
+
+    println("✅ Analysis complete for: $event_to_find")
+    return (final_df, all_predictions, single_match_book)
+end
+
+"""
+    plot_multi_model_odds_distribution(
+        all_predictions::Dict{String, PredictionMatrix},
+        book::MarketBook,
+        market::Symbol
+    )
+
+Plots and compares the odds distributions from multiple models for a single market,
+overlaid with the live market back/lay odds.
+
+# Arguments
+- `all_predictions`: A dictionary mapping model names to their `PredictionMatrix` objects.
+- `book`: The `MarketBook` object for the match.
+- `market`: The symbol of the market to plot (e.g., `:ft_1x2_home`).
+
+# Returns
+- A `Plots.Plot` object.
+"""
+function plot_multi_model_odds_distribution(
+    all_predictions::Dict{String, PredictionMatrix},
+    book::MarketBook,
+    market::Symbol
+)
+    # 1. Setup the plot and market lines
+    p = plot(
+        title="Odds Distribution Comparison for :$market",
+        xlabel="Odds",
+        ylabel="Density",
+        legend=:outertopright
+    )
+
+    market_idx = get(book.market_map, market, 0)
+    if market_idx > 0
+        market_back = book.back_odds[market_idx]
+        market_lay = book.lay_odds[market_idx]
+
+        if !ismissing(market_back) && !isnan(market_back)
+            vline!(p, [market_back], lw=2, ls=:dash, c=:blue, label="Market Back ($market_back)")
+        end
+        if !ismissing(market_lay) && !isnan(market_lay)
+            vline!(p, [market_lay], lw=2, ls=:dash, c=:red, label="Market Lay ($market_lay)")
+        end
+    else
+        @warn "Market :$market not found in MarketBook."
+    end
+
+    # 2. Loop through models and plot their distributions
+    for (model_name, pred_matrix) in all_predictions
+        pred_idx = get(pred_matrix.market_map, market, 0)
+        if pred_idx > 0
+            model_odds_dist = 1 ./ pred_matrix.probabilities[:, pred_idx]
+
+            # Calculate quantile for the back odds to add to the label
+            quantile_str = ""
+            if market_idx > 0 && !ismissing(book.back_odds[market_idx]) && !isnan(book.back_odds[market_idx])
+                back_quantile = round(100 * mean(model_odds_dist .<= book.back_odds[market_idx]); digits=1)
+                quantile_str = " (Back at $back_quantile%)"
+            end
+
+            density!(p, model_odds_dist, label=model_name * quantile_str)
+        else
+             @warn "Market :$market not found for model: $model_name"
+        end
+    end
+
+    return p
+end
+
+"""
+    fetch_all_market_odds(
+        matches_df::DataFrame,
+        market_list::Vector{Symbol};
+        cli_path::String
+    ) -> DataFrame
+
+Fetches live market odds for all matches in a DataFrame and returns them in a single wide-format DataFrame.
+
+# Arguments
+- `matches_df`: A DataFrame with match information, including an `event_name` column.
+- `market_list`: The master list of market symbols to fetch odds for.
+- `cli_path`: The file path to the Python CLI tool.
+
+# Returns
+- A `DataFrame` where each row corresponds to a match and columns represent the back/lay odds for each market.
+"""
+function fetch_all_market_odds(
+    matches_df::DataFrame,
+    market_list::Vector{Symbol};
+    cli_path::String
+)
+    all_match_odds_list = []
+    println("🚀 Starting to fetch market odds for $(nrow(matches_df)) matches...")
+
+    for row in eachrow(matches_df)
+        event = row.event_name
+        println("Fetching odds for: $event")
+
+        try
+            # Fetch the comprehensive odds using the list defined previously
+            market_book = get_live_market_odds(event, market_list; cli_path=cli_path)
+
+            # Create a dictionary for this match's row
+            match_row = Dict{Symbol, Any}()
+            match_row[:event_name] = event
+            match_row[:home_team] = row.home_team
+            match_row[:away_team] = row.away_team
+
+            for i in 1:length(market_book.markets)
+                market_symbol = market_book.markets[i]
+                back_col_name = Symbol(market_symbol, "_back")
+                lay_col_name = Symbol(market_symbol, "_lay")
+
+                back_odd = market_book.back_odds[i]
+                lay_odd = market_book.lay_odds[i]
+
+                # Check if the value is NaN. [cite_start]If it is, use `missing`; otherwise, use the value [cite: 63]
+                match_row[back_col_name] = isnan(back_odd) ? missing : back_odd
+                match_row[lay_col_name] = isnan(lay_odd) ? missing : lay_odd 
+            end
+
+            # Add the completed row to our list
+            push!(all_match_odds_list, match_row)
+
+        catch e
+            @error "Failed to process match: $event. Error: $e"
+            continue # Move to the next match
+        end
+    end
+
+    println("\n✅ Finished fetching odds.")
+    
+    if isempty(all_match_odds_list)
+        return DataFrame()
+    else
+        return DataFrame(all_match_odds_list)
+    end
+end
+
+
+
+"""
+    save_odds_to_csv(odds_df::DataFrame, output_folder::String)
+
+Saves a DataFrame of market odds to a CSV file with a date-stamped name.
+
+# Arguments
+- `odds_df`: The DataFrame containing the market odds.
+- `output_folder`: The path to the directory where the CSV should be saved.
+
+# Returns
+- The full path to the saved file, or `nothing` if the DataFrame was empty.
+"""
+function save_odds_to_csv(odds_df::DataFrame, output_folder::String)
+    if isempty(odds_df)
+         println("No odds were successfully fetched. CSV file not created.")
+        return nothing
+    end
+
+    # Create the folder if it doesn't exist
+    mkpath(output_folder)
+
+    # Create a filename with today's date
+    filename = "market_odds_$(today()).csv"
+    full_path = joinpath(output_folder, filename)
+
+    CSV.write(full_path, odds_df)
+
+    println("✅ Successfully saved market odds to:")
+    println(full_path)
+
+    return full_path
+end
 
 end # end module

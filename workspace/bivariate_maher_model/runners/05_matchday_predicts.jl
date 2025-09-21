@@ -45,7 +45,6 @@ CLI_PATH = "/home/james/bet_project/whatstheodds"
 
 # Define the master list of markets we want to analyze. 
 # The order here is important as it defines the structure of our matrices.
-# NOTE: You would expand this list to include all markets of interest (e.g., :ft_ou_25_over, :ft_btts_yes, etc.)
 MARKET_LIST = [
     :ft_1x2_home,
     :ft_1x2_draw,
@@ -69,7 +68,7 @@ COMPREHENSIVE_MARKET_LIST = [
     :ft_cs_0_0, :ft_cs_1_0, :ft_cs_0_1, :ft_cs_1_1, :ft_cs_2_0, :ft_cs_0_2,
     :ft_cs_2_1, :ft_cs_1_2, :ft_cs_2_2, :ft_cs_3_0, :ft_cs_0_3, :ft_cs_3_1,
     :ft_cs_1_3, :ft_cs_3_2, :ft_cs_2_3, :ft_cs_3_3,
-#     :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
+     # :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
 
     # Half Time 1x2
     :ht_1x2_home, :ht_1x2_draw, :ht_1x2_away,
@@ -81,7 +80,7 @@ COMPREHENSIVE_MARKET_LIST = [
     
     # Half Time Correct Score
     :ht_cs_0_0, :ht_cs_1_0, :ht_cs_0_1, :ht_cs_1_1,
-   # :ht_cs_other
+    # :ht_cs_other
 ]
 
 println("✅ Setup complete.")
@@ -94,6 +93,7 @@ display(todays_matches)
 MATCH_OF_INTEREST = "Liverpool v Everton"
 MATCH_OF_INTEREST = "Cardiff v Bradford"
 MATCH_OF_INTEREST = "Brighton v Tottenham"
+MATCH_OF_INTEREST = "Bournemouth v Newcastle"
 LEAGUE_ID = 1 # Assuming Premier League ID for your model
 
 # --- Step 3: Get Live Market Odds for the Selected Match ---
@@ -252,7 +252,7 @@ for (model_name, model) in models_to_run
         "liverpool", # Assuming model uses 'liverpool'
         "everton",   # Assuming model uses 'everton'
         LEAGUE_ID,
-        MARKET_LIST
+        COMPREHENSIVE_MARKET_LIST
     )
     all_pred_matrices[model_name] = pred_matrix
 
@@ -268,7 +268,7 @@ println("\nGenerating visualizations...")
 
 # Example 1: Plot a single model's odds distribution vs. the market spread
 # Let's inspect the bivariate model
-model_to_plot = "bivar_24_26"
+model_to_plot = "bivar_2526"
 p1 = plot_market_distribution_vs_odds(
     all_pred_matrices[model_to_plot], 
     market_book, 
@@ -390,6 +390,7 @@ display(p2)
 # --- Script to Create a Summary EV DataFrame ---
 
 todays_matches = get_todays_matches(["scotland", "england"]; cli_path=CLI_PATH)
+tm = todays_matches
 tm = filter(row -> row.time=="14:00", todays_matches)
 
 # 1. Select the specific model you want to use for this analysis
@@ -412,7 +413,7 @@ for row in eachrow(tm)
     # --- Get Live Market Odds ---
     # Note: A try-catch block is good practice in case the market for a match isn't available
     try
-        market_book = get_live_market_odds(event, MARKET_LIST; cli_path=CLI_PATH)
+        market_book = get_live_market_odds(event, COMPREHENSIVE_MARKET_LIST; cli_path=CLI_PATH)
         
         # --- Generate Model Predictions ---
         pred_matrix = generate_prediction_matrix(
@@ -422,7 +423,7 @@ for row in eachrow(tm)
             # NOTE: Assuming a single league ID. This would need to be dynamic
             # if your DataFrame contains matches from multiple leagues.
             LEAGUE_ID, 
-            MARKET_LIST
+            COMPREHENSIVE_MARKET_LIST
         )
         
         # --- Calculate Mean Model Odds and Mean EV ---
@@ -509,6 +510,9 @@ julia> home = filter(row -> row.market==:ft_1x2_home, summary_df)
   35 │ Cardiff v Bradford             ft_1x2_home         1.8         3.25   -44.54
 """
 
+
+#### get todays_matches odds 
+
 using CSV
 using Dates # To create a date-stamped filename
 
@@ -591,10 +595,10 @@ end
 
 ####
 todays_matches
-
-home_team_model = only(todays_matches[3, [:home_team]])
-away_team_model = only(todays_matches[3, [:away_team]])
-LEAGUE_ID = 54
+match_number = 1 
+home_team_model = only(todays_matches[match_number, [:home_team]])
+away_team_model = only(todays_matches[match_number, [:away_team]])
+LEAGUE_ID = 1
 
 models_to_run = loaded_models_24_26 
 model_to_run = models_to_run["bivar_24_26"]
@@ -673,8 +677,9 @@ println("\n✅ Detailed analysis with EV stats complete for $event_to_find")
 display(single_match_df)
 
 # as a functions 
-
-
+####################
+# As a functions part 
+####################
 
 """
     create_match_analysis_df(
@@ -744,10 +749,11 @@ end
 
 
 # 1. Select a match and generate its prediction matrix (as you did before)
-match_row_to_analyze = todays_matches[2, :]
+todays_matches
+match_row_to_analyze = todays_matches[match_number, :]
 home_team = match_row_to_analyze.home_team
 away_team = match_row_to_analyze.away_team
-league = 54 # Example League ID
+league = 1 # Example League ID
 
 model_to_run = models_to_run["bivar_24_26"]
 pred_matrix = generate_prediction_matrix(
@@ -767,8 +773,62 @@ analysis_df = create_match_analysis_df(
 )
 
 # 3. Display the result
-display(analysis_df)
+show(analysis_df; vlines = :all )
 match_row_to_analyze.event_name
+
+"""
+julia> match_row_to_analyze.event_name
+"Bournemouth v Newcastle"
+
+bivar_24_26 n
+julia> show(analysis_df; vlines = :all )
+42×7 DataFrame
+│ Row │ market         │ market_back │ market_lay │ model_mean_odds │ model_std │ mean_ev │ std_ev  │
+│     │ Symbol         │ Float64     │ Float64    │ Float64         │ Float64   │ Float64 │ Float64 │
+├─────┼────────────────┼─────────────┼────────────┼─────────────────┼───────────┼─────────┼─────────┤
+│   1 │ ft_1x2_home    │        2.56 │       2.58 │            2.41 │      0.41 │    8.94 │   17.52 │
+│   2 │ ft_1x2_draw    │        3.55 │       3.6  │            3.85 │      0.29 │   -7.3  │    6.96 │
+│   3 │ ft_1x2_away    │        3.0  │       3.05 │            3.32 │      0.68 │   -6.0  │   18.16 │
+│   4 │ ft_ou_05_under │       14.5  │      15.5  │           13.88 │      4.2  │   13.56 │   32.32 │
+│   5 │ ft_ou_05_over  │        1.07 │       1.08 │            1.09 │      0.03 │   -1.38 │    2.39 │
+│   6 │ ft_ou_15_under │        4.3  │       4.5  │            3.8  │      0.83 │   18.1  │   24.14 │
+│   7 │ ft_ou_15_over  │        1.29 │       1.3  │            1.39 │      0.11 │   -6.43 │    7.24 │
+│   8 │ ft_ou_25_under │        2.1  │       2.12 │            1.95 │      0.28 │   10.0  │   15.08 │
+│   9 │ ft_ou_25_over  │        1.89 │       1.9  │            2.15 │      0.34 │  -10.0  │   13.58 │
+│  10 │ ft_ou_35_under │        1.43 │       1.46 │            1.37 │      0.12 │    5.42 │    8.9  │
+│  11 │ ft_ou_35_over  │        3.2  │       3.3  │            4.04 │      1.02 │  -15.91 │   19.92 │
+│  12 │ ft_btts_yes    │        1.7  │       1.73 │            1.97 │      0.22 │  -12.44 │    9.58 │
+│  13 │ ft_btts_no     │        2.36 │       2.42 │            2.09 │      0.25 │   14.44 │   13.31 │
+│  14 │ ft_cs_0_0      │       15.0  │      15.5  │           13.88 │      4.2  │   17.48 │   33.44 │
+│  15 │ ft_cs_1_0      │       10.5  │      11.5  │            9.69 │      1.94 │   12.41 │   21.22 │
+│  16 │ ft_cs_0_1      │       12.5  │      13.0  │           11.78 │      2.77 │   11.6  │   24.6  │
+│  17 │ ft_cs_1_1      │        7.6  │       7.8  │            8.23 │      0.64 │   -7.18 │    6.69 │
+│  18 │ ft_cs_2_0      │       16.0  │      16.5  │           13.89 │      2.93 │   19.96 │   23.42 │
+│  19 │ ft_cs_0_2      │       19.0  │      20.0  │           20.48 │      5.44 │   -1.09 │   24.67 │
+│  20 │ ft_cs_2_1      │       10.5  │      11.5  │           11.8  │      1.26 │  -10.12 │    8.72 │
+│  21 │ ft_cs_1_2      │       12.0  │      13.0  │           14.32 │      2.15 │  -14.49 │   11.82 │
+│  22 │ ft_cs_2_2      │       14.5  │      15.0  │           20.55 │      3.54 │  -27.53 │   11.43 │
+│  23 │ ft_cs_3_0      │       34.0  │      36.0  │           30.63 │     10.14 │   21.88 │   35.96 │
+│  24 │ ft_cs_0_3      │       42.0  │      44.0  │           54.7  │     20.58 │  -13.09 │   30.21 │
+│  25 │ ft_cs_3_1      │       23.0  │      24.0  │           26.05 │      7.15 │   -5.78 │   22.93 │
+│  26 │ ft_cs_1_3      │       27.0  │      28.0  │           38.29 │     11.76 │  -23.47 │   21.18 │
+│  27 │ ft_cs_3_2      │       34.0  │      36.0  │           45.39 │     13.97 │  -18.61 │   22.55 │
+│  28 │ ft_cs_2_3      │       36.0  │      38.0  │           54.99 │     17.77 │  -28.38 │   20.75 │
+│  29 │ ft_cs_3_3      │       70.0  │      75.0  │          121.51 │     50.69 │  -33.25 │   24.91 │
+│  30 │ ht_1x2_home    │        3.2  │       3.3  │            3.55 │      0.83 │   -5.22 │   20.61 │
+│  31 │ ht_1x2_draw    │        2.38 │       2.4  │            2.56 │      0.27 │   -5.92 │    9.77 │
+│  32 │ ht_1x2_away    │        3.6  │       3.7  │            3.42 │      0.85 │   11.07 │   25.4  │
+│  33 │ ht_ou_05_under │        3.35 │       3.45 │            3.9  │      0.97 │   -9.61 │   19.63 │
+│  34 │ ht_ou_05_over  │        1.4  │       1.42 │            1.38 │      0.11 │    2.23 │    8.2  │
+│  35 │ ht_ou_15_under │        1.52 │       1.55 │            1.65 │      0.23 │   -6.24 │   11.81 │
+│  36 │ ht_ou_15_over  │        2.84 │       2.94 │            2.72 │      0.59 │    8.82 │   22.06 │
+│  37 │ ht_ou_25_under │        1.13 │       1.15 │            1.19 │      0.08 │   -4.38 │    6.07 │
+│  38 │ ht_ou_25_over  │        7.8  │       8.6  │            7.35 │      2.79 │   19.97 │   41.91 │
+│  39 │ ht_cs_0_0      │        3.4  │       3.45 │            3.9  │      0.97 │   -8.27 │   19.92 │
+│  40 │ ht_cs_1_0      │        5.1  │       5.5  │            6.03 │      1.21 │  -12.55 │   15.4  │
+│  41 │ ht_cs_0_1      │        5.7  │       6.2  │            5.85 │      1.02 │    0.06 │   15.92 │
+│  42 │ ht_cs_1_1      │        8.4  │       9.2  │            9.07 │      1.15 │   -6.09 │   10.69 │
+"""
 
 
 """
@@ -825,7 +885,59 @@ julia> match_row_to_analyze.event_name
 """
 
 
+"""
 
+julia> display(analysis_df)
+42×7 DataFrame
+ Row │ market          market_back  market_lay  model_mean_odds  model_std  mean_ev  std_ev  
+     │ Symbol          Float64      Float64     Float64          Float64    Float64  Float64 
+─────┼───────────────────────────────────────────────────────────────────────────────────────
+   1 │ ft_1x2_home            2.16        2.2              2.34       0.4     -5.24    15.19
+   2 │ ft_1x2_draw            3.5         3.55             4.02       0.33   -12.37     7.06
+   3 │ ft_1x2_away            3.9         3.95             3.35       0.7     21.27    23.65
+   4 │ ft_ou_05_under        12.5        13.5             16.87       5.99   -17.51    26.2
+   5 │ ft_ou_05_over          1.08        1.09             1.07       0.02     0.87     2.26
+   6 │ ft_ou_15_under         3.7         3.8              4.38       1.13   -10.42    20.83
+   7 │ ft_ou_15_over          1.35        1.37             1.33       0.1      2.32     7.6
+   8 │ ft_ou_25_under         1.91        1.93             2.14       0.38    -8.28    14.71
+   9 │ ft_ou_25_over          2.06        2.1              1.97       0.31     7.08    15.87
+  10 │ ft_ou_35_under         1.37        1.38             1.45       0.16    -4.41     9.81
+  11 │ ft_ou_35_over          3.65        3.7              3.51       0.89    10.32    26.14
+  12 │ ft_btts_yes            1.86        1.88             1.85       0.2      2.02    11.02
+  13 │ ft_btts_no             2.12        2.16             2.26       0.31    -4.28    12.56
+  14 │ ft_cs_0_0             12.5        13.0             16.87       5.99   -17.51    26.2
+  15 │ ft_cs_1_0              8.8         9.2             10.83       2.46   -14.93    17.63
+  16 │ ft_cs_0_1             13.0        13.5             13.46       3.72     3.26    25.77
+  17 │ ft_cs_1_1              7.4         7.6              8.67       0.94   -13.72     8.33
+  18 │ ft_cs_2_0             12.0        12.5             14.31       2.96   -12.8     16.83
+  19 │ ft_cs_0_2             25.0        26.0             21.97       6.23    22.13    31.73
+  20 │ ft_cs_2_1             10.0        11.0             11.48       1.11   -12.16     7.58
+  21 │ ft_cs_1_2             15.5        16.0             14.19       2.07    11.4     14.95
+  22 │ ft_cs_2_2             17.0        17.5             18.84       2.95    -7.74    13.2
+  23 │ ft_cs_3_0             26.0        28.0             29.18       9.33    -2.86    27.54
+  24 │ ft_cs_0_3             70.0        75.0             55.07      20.58    43.29    49.01
+  25 │ ft_cs_3_1             22.0        23.0             23.47       6.33    -0.41    23.06
+  26 │ ft_cs_1_3             44.0        46.0             35.65      10.23    32.81    35.05
+  27 │ ft_cs_3_2             36.0        38.0             38.6       11.84     0.93    27.13
+  28 │ ft_cs_2_3             50.0        55.0             47.45      14.26    14.24    31.71
+  29 │ ft_cs_3_3             90.0        95.0             97.46      39.97     6.5     39.42
+  30 │ ht_1x2_home            2.86        2.92             3.94       0.98   -23.09    18.16
+  31 │ ht_1x2_draw            2.3         2.38             2.64       0.28   -11.95     9.32
+  32 │ ht_1x2_away            4.4         4.6              3.0        0.66    53.25    31.64
+  33 │ ht_ou_05_under         3.1         3.25             4.17       1.02   -21.48    17.79
+  34 │ ht_ou_05_over          1.45        1.47             1.35       0.11     8.27     8.32
+  35 │ ht_ou_15_under         1.44        1.48             1.71       0.24   -14.38    11.32
+  36 │ ht_ou_15_over          3.1         3.25             2.57       0.54    25.67    24.37
+  37 │ ht_ou_25_under         1.11        1.13             1.21       0.09    -7.77     6.21
+  38 │ ht_ou_25_over          9.0         9.8              6.65       2.5     52.17    50.34
+  39 │ ht_cs_0_0              3.05        3.2              4.17       1.02   -22.75    17.51
+  40 │ ht_cs_1_0              4.4         4.8              6.71       1.34   -31.98    12.6
+  41 │ ht_cs_0_1              6.4         7.0              5.49       0.9     19.51    18.1
+  42 │ ht_cs_1_1              9.0         9.8              8.86       1.05     2.84    10.95
+
+julia> match_row_to_analyze.event_name
+"Fulham v Brentford"
+"""
 
 
 """
