@@ -160,15 +160,15 @@ Handles cases where the side (:back or :lay) or the price itself is missing or n
 """
 function _safe_get_price(odds_obj, side::Symbol)
     # 1. Safely get the details object for the side (:back or :lay)
-    details = get(odds_obj, side, nothing)
+    details = get(odds_obj, side, 0)
     
     # 2. If the details object is nothing, we can't proceed. Return NaN.
     if isnothing(details)
-        return NaN
+        return 0
     end
     
     # 3. If we have a details object, safely get the price from it.
-    return get(details, :price, NaN)
+    return get(details, :price, 0)
 end
 
 """
