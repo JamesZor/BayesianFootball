@@ -158,7 +158,7 @@ end
 Safely extracts a price from a nested odds dictionary structure.
 Handles cases where the side (:back or :lay) or the price itself is missing or null.
 """
-function _safe_get_price(odds_obj::Union{PythonCall.Py, Dict}, side::Symbol)
+function _safe_get_price(odds_obj, side::Symbol)
     # 1. Safely get the details object for the side (:back or :lay)
     details = get(odds_obj, side, nothing)
     
