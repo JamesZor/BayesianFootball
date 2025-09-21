@@ -1,15 +1,18 @@
 # src/utils/MatchDayUtils.jl
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/prediction.jl")
 include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/analysis_funcs.jl")
-
 module MatchDayUtils
+
+using .BivariateMaher
+using .BivariatePrediction
+using .Analysis
 
 using PythonCall
 using JSON3
 using DataFrames
 using StatsPlots, Distributions
-using .BivariatePrediction
-using .Analysis
+
 export MarketBook, PredictionMatrix, EVDistribution # Exporting structs for type access
 export get_todays_matches, get_live_market_odds, calculate_ev_distributions
 export plot_market_distribution_vs_odds, plot_ev_distributions
