@@ -1,12 +1,12 @@
 # src/utils/MatchDayUtils.jl
-
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/prediction.jl")
 module MatchDayUtils
 
 using PythonCall
 using JSON3
 using DataFrames
 using StatsPlots, Distributions
-
+using .BivariatePrediction
 export MarketBook, PredictionMatrix, EVDistribution # Exporting structs for type access
 export get_todays_matches, get_live_market_odds, calculate_ev_distributions
 export plot_market_distribution_vs_odds, plot_ev_distributions
@@ -500,7 +500,6 @@ function generate_match_analysis(
     all_market_odds::DataFrame,
     models::Dict{String, Any},
     market_list::Vector{Symbol},
-    generate_prediction_matrix::Function
 )
     event_to_find = match_info.event_name
     home_team = match_info.home_team
