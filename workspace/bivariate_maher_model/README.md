@@ -41,22 +41,22 @@ The model is implemented using `Turing.jl`. Since the Bivariate Poisson is not a
 
 The core model logic is defined in `workspace/bivariate_maher_model/setup.jl`.
 
-1.  **`MaherBivariate` struct:** A type to dispatch our specific model functions[cite: 801].
-2.  **`logpdf_bivariate_poisson(...)`:** A custom function to calculate the log-probability of a given scoreline[cite: 2].
-3.  **Turing `@model`:** The `maher_bivariate_model` function defines the priors for team strengths ($\alpha, \beta$), home advantage ($\delta$), and our new covariance parameter ($\gamma$)[cite: 4]. It uses the custom logpdf function to define the likelihood[cite: 7].
+1.  **`MaherBivariate` struct:** A type to dispatch our specific model functions.
+2.  **`logpdf_bivariate_poisson(...)`:** A custom function to calculate the log-probability of a given scoreline.
+3.  **Turing `@model`:** The `maher_bivariate_model` function defines the priors for team strengths ($\alpha, \beta$), home advantage ($\delta$), and our new covariance parameter ($\gamma$). It uses the custom logpdf function to define the likelihood.
 
 The key line that integrates our custom likelihood is:
 ```julia
 # From setup.jl
-Turing.@addlogprob! logpdf_bivariate_poisson(home_goals[k], away_goals[k], λ, μ, γ) [cite: 7]
+Turing.@addlogprob! logpdf_bivariate_poisson(home_goals[k], away_goals[k], λ, μ, γ) 
 ```
 
 ### Prediction (`prediction.jl`)
 
-The prediction logic in `workspace/bivariate_maher_model/prediction.jl` uses the full MCMC chain (posterior samples) to generate predictions[cite: 13]. For each sample, it:
-1.  Calculates the goal rates $\lambda$ and $\mu$ and retrieves the sampled `γ`[cite: 15].
-2.  Computes the entire score grid probability using `compute_bivariate_xScore`[cite: 11, 12].
-3.  Aggregates these probabilities to derive odds for various markets (1x2, O/U, BTTS, Correct Score)[cite: 20, 21].
+The prediction logic in `workspace/bivariate_maher_model/prediction.jl` uses the full MCMC chain (posterior samples) to generate predictions. For each sample, it:
+1.  Calculates the goal rates $\lambda$ and $\mu$ and retrieves the sampled `γ`.
+2.  Computes the entire score grid probability using `compute_bivariate_xScore`.
+3.  Aggregates these probabilities to derive odds for various markets (1x2, O/U, BTTS, Correct Score).
 
 ---
 
@@ -65,9 +65,9 @@ The prediction logic in `workspace/bivariate_maher_model/prediction.jl` uses the
 Preliminary results from match-day predictions show promising behavior from the bivariate model, particularly in scenarios where goal correlation is expected to be significant.
 
 * **Improved Draw & Low-Score Pricing:** For matches that ended in low-scoring draws, the bivariate model's predictions were often closer to the market odds than the standard independent Maher model.
-    * In the **Bournemouth v Newcastle** match (FT: 0-0) [cite: 690], the `bivar_24_26` model priced a 0-0 draw at **13.88** [cite: 276], closer to the market back price of **14.5** [cite: 276] than the `maher_24_26` model's price of **15.42**[cite: 276].
-    * Similarly, for the **Sunderland v Aston Villa** match (FT: 1-1) [cite: 697], the `bivar_24_26` model priced the draw at **3.45** [cite: 606] (market: 3.4 [cite: 606]) while the Maher model was at **3.56**[cite: 606].
-* **Concordance on Mismatches:** In highly unbalanced matches, such as **Partick v Celtic** (FT: 0-4)[cite: 703], both the bivariate and standard Maher models produced similar odds. This suggests the influence of the `γ` parameter is less pronounced when one team is overwhelmingly dominant. In these cases, the quality and length of the training data proved to be the most critical factor, with models trained on more seasons (`_24_26`) performing significantly better than those with less data (`_2526`)[cite: 351].
+    * In the **Bournemouth v Newcastle** match (FT: 0-0) , the `bivar_24_26` model priced a 0-0 draw at **13.88** , closer to the market back price of **14.5**  than the `maher_24_26` model's price of **15.42**.
+    * Similarly, for the **Sunderland v Aston Villa** match (FT: 1-1) , the `bivar_24_26` model priced the draw at **3.45**  (market: 3.4 ) while the Maher model was at **3.56**.
+* **Concordance on Mismatches:** In highly unbalanced matches, such as **Partick v Celtic** (FT: 0-4), both the bivariate and standard Maher models produced similar odds. This suggests the influence of the `γ` parameter is less pronounced when one team is overwhelmingly dominant. In these cases, the quality and length of the training data proved to be the most critical factor, with models trained on more seasons (`_24_26`) performing significantly better than those with less data (`_2526`).
 
 These findings support the underlying hypothesis: explicitly modeling goal covariance helps capture the dynamics of tight, defensive games more effectively.
 
@@ -77,15 +77,15 @@ These findings support the underlying hypothesis: explicitly modeling goal covar
 
 The scripts and modules in this workspace provide a complete pipeline for daily match analysis.
 
-1.  **Load Models (`analysis_funcs.jl`):** The `load_models_from_paths` function loads the trained Turing model chains from specified experiment directories[cite: 23, 24].
-2.  **Fetch Match Data (`match_day_utils.jl`):** The `get_todays_matches` function runs a Python CLI tool (`whatstheodds`) to scrape today's fixtures and aligns team names using JSON mappings[cite: 750].
-3.  **Get Market Odds (`match_day_utils.jl`):** The `fetch_all_market_odds` function calls the same CLI tool to get live back and lay odds from Betfair for all relevant markets and compiles them into a single, wide-format DataFrame[cite: 789, 790].
-4.  **Generate & Analyze (`match_day_utils.jl`):** The `generate_match_analysis` function is the main orchestrator[cite: 776]. For a given match, it:
-    * Takes the loaded models and the live market odds as input[cite: 774].
-    * Generates a `PredictionMatrix` for each model, containing the full posterior probability distribution for every market[cite: 50, 711].
-    * Calculates the mean model odds, standard deviation, and the mean Expected Value (EV) in percentage terms for every market against the live back odds[cite: 775].
-    * Returns a single, comprehensive DataFrame comparing all models against the market[cite: 775].
-5.  **Visualize (`match_day_utils.jl`):** The `plot_multi_model_odds_distribution` function takes the prediction matrices and plots the density of the model's predicted odds for a specific market, overlaying the live back/lay odds as vertical lines[cite: 782, 784]. This provides a powerful visual diagnostic of model confidence vs. market price.
+1.  **Load Models (`analysis_funcs.jl`):** The `load_models_from_paths` function loads the trained Turing model chains from specified experiment directories.
+2.  **Fetch Match Data (`match_day_utils.jl`):** The `get_todays_matches` function runs a Python CLI tool (`whatstheodds`) to scrape today's fixtures and aligns team names using JSON mappings.
+3.  **Get Market Odds (`match_day_utils.jl`):** The `fetch_all_market_odds` function calls the same CLI tool to get live back and lay odds from Betfair for all relevant markets and compiles them into a single, wide-format DataFrame.
+4.  **Generate & Analyze (`match_day_utils.jl`):** The `generate_match_analysis` function is the main orchestrator. For a given match, it:
+    * Takes the loaded models and the live market odds as input.
+    * Generates a `PredictionMatrix` for each model, containing the full posterior probability distribution for every market.
+    * Calculates the mean model odds, standard deviation, and the mean Expected Value (EV) in percentage terms for every market against the live back odds.
+    * Returns a single, comprehensive DataFrame comparing all models against the market.
+5.  **Visualize (`match_day_utils.jl`):** The `plot_multi_model_odds_distribution` function takes the prediction matrices and plots the density of the model's predicted odds for a specific market, overlaying the live back/lay odds as vertical lines. This provides a powerful visual diagnostic of model confidence vs. market price.
 
 ### Example Usage
 
