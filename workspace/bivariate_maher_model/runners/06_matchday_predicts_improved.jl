@@ -83,6 +83,74 @@ show(comparison_df[:,model_list] , allcols=true, allrows=true, eltypes=false, vl
 show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
 match_to_analyze.event_name
 """
+"""
+
+
+# --- 3. Generate a Comparative Plot ---
+market_to_plot = :ft_1x2_home
+
+p = MatchDayUtils.plot_multi_model_odds_distribution(
+    prediction_matrices,
+    market_book,
+    market_to_plot
+)
+
+xlims!(p, (1, 4))
+ylims!(p, (0, 1.2))
+
+p = MatchDayUtils.plot_multi_model_odds_distribution(
+    prediction_matrices,
+    market_book,
+    :ft_ou_05_under,
+)
+xlims!(p, (1, 20))
+ylims!(p, (0, 0.15))
+
+
+under_odds_row = filter(row -> row.market == :ft_ou_05_under, comparison_df)[1, :]
+bivar_mean_odd = under_odds_row.bivar_2526_mean_odds
+maher_mean_odd = under_odds_row.maher_2526_mean_odds
+
+vline!(p, [bivar_mean_odd], lw=2, c=:purple, ls=:dot, label="Bivar Mean ($bivar_mean_odd)")
+vline!(p, [maher_mean_odd], lw=2, c=:green, ls=:dot, label="Maher Mean ($maher_mean_odd)")
+
+p = MatchDayUtils.plot_multi_model_odds_distribution(
+    prediction_matrices,
+    market_book,
+    :ft_ou_25_under
+)
+
+xlims!(p, (1, 3))
+ylims!(p, (0, 1.7))
+
+under_odds_row = filter(row -> row.market == :ft_ou_25_under, comparison_df)[1, :]
+bivar_mean_odd = under_odds_row.bivar_24_26_mean_odds
+maher_mean_odd = under_odds_row.maher_24_26_mean_odds
+
+vline!(p, [bivar_mean_odd], lw=2, c=:purple, ls=:dot, label="Bivar Mean ($bivar_mean_odd)")
+vline!(p, [maher_mean_odd], lw=2, c=:green, ls=:dot, label="Maher Mean ($maher_mean_odd)")
+
+
+##############################################################
+### match two 
+##############################################################
+todays_matches
+# --- 3. Run the Consolidated Analysis ---
+match_to_analyze = todays_matches[4, :]
+
+
+(comparison_df, prediction_matrices, market_book) = MatchDayUtils.generate_match_analysis(
+    match_to_analyze,
+    odds_df, # Your wide DataFrame of all market odds
+    loaded_models_all,
+    MARKET_LIST # Use your comprehensive or specific market list here
+);
+
+match_to_analyze.event_name
+show(comparison_df[:,model_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
+show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
+
+"""
 julia> match_to_analyze.event_name
 "Bournemouth v Newcastle"
 julia> show(comparison_df[:,model_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
@@ -264,74 +332,9 @@ julia> show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false
 ├─────┼────────────────┼─────────────┼────────────┼────────────────────────┼────────────────────────┼─────────────────────────┼─────────────────────────┤
 │  42 │ ht_cs_1_1      │        8.2  │       9.2  │                  -9.51 │                  -7.71 │                   -8.32 │                   -7.81 │
 └─────┴────────────────┴─────────────┴────────────┴────────────────────────┴────────────────────────┴─────────────────────────┴─────────────────────────┘
-"""
 
 
-# --- 3. Generate a Comparative Plot ---
-market_to_plot = :ft_1x2_home
 
-p = MatchDayUtils.plot_multi_model_odds_distribution(
-    prediction_matrices,
-    market_book,
-    market_to_plot
-)
-
-xlims!(p, (1, 4))
-ylims!(p, (0, 1.2))
-
-p = MatchDayUtils.plot_multi_model_odds_distribution(
-    prediction_matrices,
-    market_book,
-    :ft_ou_05_under,
-)
-xlims!(p, (1, 20))
-ylims!(p, (0, 0.15))
-
-
-under_odds_row = filter(row -> row.market == :ft_ou_05_under, comparison_df)[1, :]
-bivar_mean_odd = under_odds_row.bivar_2526_mean_odds
-maher_mean_odd = under_odds_row.maher_2526_mean_odds
-
-vline!(p, [bivar_mean_odd], lw=2, c=:purple, ls=:dot, label="Bivar Mean ($bivar_mean_odd)")
-vline!(p, [maher_mean_odd], lw=2, c=:green, ls=:dot, label="Maher Mean ($maher_mean_odd)")
-
-p = MatchDayUtils.plot_multi_model_odds_distribution(
-    prediction_matrices,
-    market_book,
-    :ft_ou_25_under
-)
-
-xlims!(p, (1, 3))
-ylims!(p, (0, 1.7))
-
-under_odds_row = filter(row -> row.market == :ft_ou_25_under, comparison_df)[1, :]
-bivar_mean_odd = under_odds_row.bivar_24_26_mean_odds
-maher_mean_odd = under_odds_row.maher_24_26_mean_odds
-
-vline!(p, [bivar_mean_odd], lw=2, c=:purple, ls=:dot, label="Bivar Mean ($bivar_mean_odd)")
-vline!(p, [maher_mean_odd], lw=2, c=:green, ls=:dot, label="Maher Mean ($maher_mean_odd)")
-
-
-##############################################################
-### match two 
-##############################################################
-todays_matches
-# --- 3. Run the Consolidated Analysis ---
-match_to_analyze = todays_matches[4, :]
-
-
-(comparison_df, prediction_matrices, market_book) = MatchDayUtils.generate_match_analysis(
-    match_to_analyze,
-    odds_df, # Your wide DataFrame of all market odds
-    loaded_models_all,
-    MARKET_LIST # Use your comprehensive or specific market list here
-);
-
-match_to_analyze.event_name
-show(comparison_df[:,model_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
-show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
-
-"""
 julia> match_to_analyze.event_name
 "Partick v Celtic"
 
@@ -1063,4 +1066,73 @@ julia> show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false
 ├─────┼────────────────┼─────────────┼────────────┼────────────────────────┼────────────────────────┼─────────────────────────┼─────────────────────────┤
 │  42 │ ht_cs_1_1      │        9.0  │       9.8  │                 -14.7  │                 -12.09 │                  -30.32 │                  -30.1  │
 └─────┴────────────────┴─────────────┴────────────┴────────────────────────┴────────────────────────┴─────────────────────────┴─────────────────────────┘
+
+
+Bournemouth v Newcastle -> ht:0-0, ft:0-0 
+Sunderland v Aston Villa -> ht:0-0, ft: 1-1 
+Bristol City v Oxford Utd -> ht:0-2, ft:1-3 
+Partick v Celtic -> ht:0-2, ft:0-4 
+Arsenal v Man City -> ht:0-1, ft:1-1 
+
+
+
+
+Bournemouth v Newcastle -> ht:0-0, ft:0-0 
+│ Row │ market         │ market_back │ market_lay │ bivar_2526│ maher_2526│ bivar_24_26│ maher_24_26│
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│   2 │ ft_1x2_draw    │        3.5  │       3.55 │      3.59 │      3.71 │       3.85 │       3.95 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│   4 │ ft_ou_05_under │       14.5  │      15.5  │     10.0  │     11.03 │      13.88 │      15.42 │
+│   6 │ ft_ou_15_under │        4.2  │       4.5  │      2.99 │      3.21 │       3.8  │       4.1  │
+│   8 │ ft_ou_25_under │        2.08 │       2.12 │      1.66 │      1.74 │       1.95 │       2.05 │
+│  10 │ ft_ou_35_under │        1.43 │       1.45 │      1.25 │      1.28 │       1.37 │       1.41 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  13 │ ft_btts_no     │        2.4  │       2.42 │      1.77 │      1.84 │       2.09 │       2.18 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  14 │ ft_cs_0_0      │       14.5  │      15.0  │     10.0  │     11.03 │      13.88 │      15.42 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  31 │ ht_1x2_draw    │        2.38 │       2.44 │      2.84 │      2.86 │       2.56 │       2.56 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  33 │ ht_ou_05_under │        3.35 │       3.5  │      5.1  │      5.12 │       3.9  │       3.91 │
+│  35 │ ht_ou_15_under │        1.53 │       1.55 │      1.92 │      1.93 │       1.65 │       1.65 │
+│  37 │ ht_ou_25_under │        1.13 │       1.15 │      1.28 │      1.29 │       1.19 │       1.19 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  39 │ ht_cs_0_0      │        3.25 │       3.45 │      5.1  │      5.12 │       3.9  │       3.91 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+
+
+Sunderland v Aston Villa -> ht:0-0, ft: 1-1 
+
+│ Row │ market         │ market_back │ market_lay │ bivar_2526│ maher_2526│ bivar_24_26│ maher_24_26│
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│   2 │ ft_1x2_draw    │        3.4  │       3.45 │      3.52 │      3.62 │       3.45 │       3.56 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│   8 │ ft_ou_25_under │        1.82 │       1.84 │      1.56 │      1.62 │       1.59 │       1.65 │
+│  10 │ ft_ou_35_under │        1.31 │       1.34 │      1.2  │      1.23 │       1.21 │       1.24 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  12 │ ft_btts_yes    │        1.9  │       1.93 │      2.75 │      2.6  │       2.43 │       2.31 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  17 │ ft_cs_1_1      │        7.2  │       7.4  │      8.39 │      8.38 │       7.77 │       7.84 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  31 │ ht_1x2_draw    │        2.24 │       2.32 │      2.49 │      2.53 │       2.06 │       2.06 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  33 │ ht_ou_05_under │        2.98 │       3.1  │      3.64 │      3.77 │       2.51 │       2.51 │
+│  35 │ ht_ou_15_under │        1.42 │       1.44 │      1.58 │      1.61 │       1.31 │       1.31 │
+│  37 │ ht_ou_25_under │        1.1  │       1.12 │      1.17 │      1.18 │       1.07 │       1.07 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│  39 │ ht_cs_0_0      │        3.05 │       3.1  │      3.64 │      3.77 │       2.51 │       2.51 │
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+
+
+Bristol City v Oxford Utd -> ht:0-2, ft:1-3 
+
+│ Row │ market         │ market_back │ market_lay │ bivar_2526│ maher_2526│ bivar_24_26│ maher_24_26│
+├─────┼────────────────┼─────────────┼────────────┼───────────┼───────────┼────────────┼────────────┤
+│   3 │ ft_1x2_away    │        6.0  │       6.2  │                 5.18 │                 5.04 │                  5.3  │                  5.33 │
+
+│   5 │ ft_ou_05_over  │        1.07 │       1.08 │                 1.09 │                 1.08 │                  1.09 │                  1.08 │
+│   7 │ ft_ou_15_over  │        1.33 │       1.35 │                 1.41 │                 1.37 │                  1.42 │                  1.37 │
+│   9 │ ft_ou_25_over  │        2.0  │       2.04 │                 2.23 │                 2.11 │                  2.26 │                  2.11 │
 """
