@@ -122,9 +122,8 @@ function DataStore(data_files::DataFiles)
 
     # --- FIX: IS HERE ---
     # 1. First, drop any rows that still have a missing round number
-    dropmissing!(matches, :round)
-
-    matches.round = Int.(matches.round)
+    # dropmissing!(matches, :round)
+     # matches.round = Int.(matches.round)
     
   # FIX: 
     # odds = CSV.read(data_files.odds, DataFrame; 

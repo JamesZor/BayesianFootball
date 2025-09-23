@@ -87,7 +87,7 @@ model_definitions = [
     (name="maher_bivariate", def=MaherBivariate())
 ]
 
-cv_config = BayesianFootball.TimeSeriesSplitsConfig([], ["21/22"], :round)
+cv_config = BayesianFootball.TimeSeriesSplitsConfig(["20/21"], :round)
 
 sample_configs_list = [
         BayesianFootball.ModelSampleConfig(10, true),
@@ -105,31 +105,14 @@ mapping_funcs = BayesianFootball.MappingFunctions(
 global_mapping = BayesianFootball.MappedData(data_store, mapping_funcs)
 println("✅ Mapping complete.")
 
-for model_spec in model_definitions
-    for sample_config in sample_configs_list
+tasks = [(m, c) for m in model_definitions for c in sample_configs_list]
+num_tasks = length(tasks)
 
-        # 3. Call the main pipeline function
-        println("▶️  STARTING RUN: $(model_spec.name) with $(sample_config.steps) steps")
-        experiment_result = train_all_splits(
-            data_store,
-            cv_config,
-            model_spec.def,
-            sample_config,
-            mapping_funcs;
-            parallel=true # Use the outer-loop parallelism
-        )
+println("\n--- Starting Batch Training Run ---")
+println("Found $(num_tasks) tasks to run on $(nthreads()) threads. 🚀")
 
-        # 4. Save the complete result
-        # You'll need a way to create a unique name for the run
-        run_name = "$(model_spec.name)_steps_$(sample_config.steps)"
-        config = ExperimentConfig(run_name, model_spec.def, cv_config, sample_config, mapping_funcs)
-        run_manager = prepare_run(EXPERIMENT_GROUP_NAME, config, SAVE_PATH) # Assuming you have this helper
-        
-        save(run_manager, experiment_result)
-        println("✔️  COMPLETED AND SAVED RUN: $(run_name)")
-        
-    end
+@threads for (model_spec, sample_config) in tasks
+    run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
 end
 
 println("\n--- All training runs completed successfully! ---")
-

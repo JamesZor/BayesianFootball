@@ -24,7 +24,7 @@ function train_all_splits(
     
     # Create the composed training morphism
     training_morphism = compose_training_morphism(
-        model_def, # <-- MODIFIED from model_config
+        model_def, 
         sample_config,
         mapping
     )

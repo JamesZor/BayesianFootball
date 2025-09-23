@@ -1,38 +1,38 @@
 # src/training/morphisms.jl
-
-# Morphism: TuringModels -> Chains (This function is unchanged)
-# function sampling_morphism(sample_config::ModelSampleConfig)
-#     return models -> begin
-#         ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
-#                           sample_config.steps, 1;
-#                           progress=sample_config.bar)
-#         ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
-#                           sample_config.steps, 1;
-#                           progress=sample_config.bar)
-#         ModelChain(ht_chain, ft_chain)
-#     end
-# end
-
-
 using Base.Threads
 
+# Morphism: TuringModels -> Chains (This function is unchanged)
 function sampling_morphism(sample_config::ModelSampleConfig)
     return models -> begin
-        # Run sequentially, no @spawn or fetch needed
-        println("  [Thread $(threadid())] Sampling HT model...")
         ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
-                                sample_config.steps, 1;
-                                progress=sample_config.bar)
-
-        println("  [Thread $(threadid())] Sampling FT model...")
+                          sample_config.steps, 1;
+                          progress=sample_config.bar)
         ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
-                                sample_config.steps, 1;
-                                progress=sample_config.bar)
-
+                          sample_config.steps, 1;
+                          progress=sample_config.bar)
         ModelChain(ht_chain, ft_chain)
     end
 end
 
+
+
+# function sampling_morphism(sample_config::ModelSampleConfig)
+#     return models -> begin
+#         # Run sequentially, no @spawn or fetch needed
+#         println("  [Thread $(threadid())] Sampling HT model...")
+#         ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
+#                                 sample_config.steps, 1;
+#                                 progress=sample_config.bar)
+#
+#         println("  [Thread $(threadid())] Sampling FT model...")
+#         ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
+#                                 sample_config.steps, 1;
+#                                 progress=sample_config.bar)
+#
+#         ModelChain(ht_chain, ft_chain)
+#     end
+# end
+#
 # if running a single model 
 # function sampling_morphism(sample_config::ModelSampleConfig)
 #     return models -> begin
