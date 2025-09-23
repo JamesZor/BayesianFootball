@@ -67,12 +67,12 @@ function load_chain_length_experiment(experiment_group_path::String)
                 loaded_model = load_model(full_path)
                 
                 chains = loaded_model.result.chains_sequence[1].ft
-                
+                summary_df = DataFrame(summarystats(chains))
                 model = ChainAnalysisModel(
                     dir_name,
                     chain_length,
                     chains,
-                    summarystats(chains),
+                    summary_df,
                     BayesianFootball.extract_posterior_samples(loaded_model.config.model_def, chains),
                     loaded_model.result.mapping
                 )
