@@ -57,7 +57,7 @@ function DataStore(data_files::DataFiles)
         :home_score_ht => Int64,
         :away_score_ht => Int64,
         :match_date => Date,  # Parse as Date type
-        :round => Int64,
+        :round => Float64,
         :winner_code => Int64,
         :has_xg => Bool,
         :has_stats => Bool,
@@ -117,6 +117,8 @@ function DataStore(data_files::DataFiles)
     matches = CSV.read(data_files.match, DataFrame; 
         types=matches_types, 
         dateformat=Dict(:match_date => dateformat"yyyy-mm-dd"))
+
+    matches.round = Int.(matches.round)
     
   # FIX: 
     # odds = CSV.read(data_files.odds, DataFrame; 
