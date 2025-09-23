@@ -40,7 +40,7 @@ const MARKET_LIST = [
     :ft_cs_0_0, :ft_cs_1_0, :ft_cs_0_1, :ft_cs_1_1, :ft_cs_2_0, :ft_cs_0_2,
     :ft_cs_2_1, :ft_cs_1_2, :ft_cs_2_2, :ft_cs_3_0, :ft_cs_0_3, :ft_cs_3_1,
     :ft_cs_1_3, :ft_cs_3_2, :ft_cs_2_3, :ft_cs_3_3,
-     # :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
+    :ft_cs_other_home, :ft_cs_other_draw, :ft_cs_other_away,
 
     # Half Time 1x2
     :ht_1x2_home, :ht_1x2_draw, :ht_1x2_away,
@@ -51,8 +51,8 @@ const MARKET_LIST = [
     :ht_ou_25_under, :ht_ou_25_over,
     
     # Half Time Correct Score
-    :ht_cs_0_0, :ht_cs_1_0, :ht_cs_0_1, :ht_cs_1_1,
-    # :ht_cs_other
+    :ht_cs_0_0, :ht_cs_1_0, :ht_cs_0_1, :ht_cs_1_1, :ht_cs_2_0, :ht_cs_2_1,
+    :ht_cs_2_2, :ht_cs_0_2, :ht_cs_1_2, :ht_cs_other
 ]
 
 
