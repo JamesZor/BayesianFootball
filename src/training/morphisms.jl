@@ -18,23 +18,41 @@ using Base.Threads
 
 function sampling_morphism(sample_config::ModelSampleConfig)
     return models -> begin
-        # @spawn starts each task on a separate available thread
-        ht_task = @spawn sample(models.ht, NUTS(), MCMCSerial(),
+        # Run sequentially, no @spawn or fetch needed
+        println("  [Thread $(threadid())] Sampling HT model...")
+        ht_chain = sample(models.ht, NUTS(), MCMCSerial(),
                                 sample_config.steps, 1;
                                 progress=sample_config.bar)
 
-        ft_task = @spawn sample(models.ft, NUTS(), MCMCSerial(),
+        println("  [Thread $(threadid())] Sampling FT model...")
+        ft_chain = sample(models.ft, NUTS(), MCMCSerial(),
                                 sample_config.steps, 1;
                                 progress=sample_config.bar)
-
-        # fetch waits for the tasks to finish and gets their results
-        ht_chain = fetch(ht_task)
-        ft_chain = fetch(ft_task)
 
         ModelChain(ht_chain, ft_chain)
     end
 end
 
+# if running a single model 
+# function sampling_morphism(sample_config::ModelSampleConfig)
+#     return models -> begin
+#         # @spawn starts each task on a separate available thread
+#         ht_task = @spawn sample(models.ht, NUTS(), MCMCSerial(),
+#                                 sample_config.steps, 1;
+#                                 progress=sample_config.bar)
+#
+#         ft_task = @spawn sample(models.ft, NUTS(), MCMCSerial(),
+#                                 sample_config.steps, 1;
+#                                 progress=sample_config.bar)
+#
+#         # fetch waits for the tasks to finish and gets their results
+#         ht_chain = fetch(ht_task)
+#         ft_chain = fetch(ft_task)
+#
+#         ModelChain(ht_chain, ft_chain)
+#     end
+# end
+#
 """
     compose_training_morphism(model_def, sample_config, mapping)
 
