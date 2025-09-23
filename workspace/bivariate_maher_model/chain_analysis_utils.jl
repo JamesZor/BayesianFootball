@@ -101,7 +101,7 @@ function get_parameter_samples(model::ChainAnalysisModel, param_symbol::Symbol; 
     if param_symbol in (:α, :β)
         isnothing(team_name) && error("`team_name` must be provided for parameters :α or :β.")
         
-        team_id = get(model.mapping.team_map, team_name, 0)
+        team_id = get(model.mapping.team, team_name, 0)
         team_id == 0 && error("Team '$team_name' not found in model mapping.")
         
         param_matrix = getfield(samples_tuple, param_symbol)
@@ -133,7 +133,7 @@ end
 function tabulate_summary_stats(analysis_models::Dict{Int, ChainAnalysisModel}, param_symbol::Symbol; team_name::Union{String, Nothing}=nothing)
     results = DataFrame(chain_length=Int[], mean=Float64[], std=Float64[], rhat=Float64[], ess_bulk=Float64[])
     param_name_str = if param_symbol in (:α, :β)
-        team_id = analysis_models[first(keys(analysis_models))].mapping.team_map[team_name]
+        team_id = analysis_models[first(keys(analysis_models))].mapping.team[team_name]
         param_letter = param_symbol == :α ? "α" : "β"
         "log_$(param_letter)_raw[$team_id]"
     else
