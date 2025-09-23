@@ -67,7 +67,16 @@ loaded_models_all = load_models_from_paths(models_improved)
 
 # --- 2. Get today's matches ---
 todays_matches = get_todays_matches(["scotland", "england"]; cli_path=CLI_PATH)
+todays_matches = get_todays_matches(["scotland"]; cli_path=CLI_PATH)
 
+####
+# Define your exclusion patterns
+patterns_to_exclude = [" U21", r"\bB\b"]
+# Filter out rows where ANY of the patterns are found
+filter!(todays_matches) do row
+    !any(p -> occursin(p, row.event_name), patterns_to_exclude)
+end
+todays_matches
 
 # --- 3. Fetch all odds using the new function ---
 odds_df = fetch_all_market_odds(
@@ -79,6 +88,8 @@ odds_df = fetch_all_market_odds(
 
 # --- 3. Run the Consolidated Analysis ---
 match_to_analyze = first(todays_matches) # Analyze the first match
+todays_matches
+match_to_analyze = todays_matches[3, :]
 
 
 (comparison_df, prediction_matrices, market_book) = MatchDayUtils.generate_match_analysis(
@@ -118,6 +129,24 @@ model_list_v2 = [
 "bivar_23_26_mean_odds"
 "bivar_24_26_mean_odds"
 "bivar_25_26_mean_odds" 
+# "maher_20_26_mean_odds"
+# "maher_21_26_mean_odds"
+# "maher_22_26_mean_odds"
+# "maher_23_26_mean_odds"
+# "maher_24_26_mean_odds"
+# "maher_25_26_mean_odds" 
+]
+
+
+model_list_v3 = [
+"market"
+"market_back"
+# "bivar_20_26_mean_odds"
+# "bivar_21_26_mean_odds"
+# "bivar_22_26_mean_odds"
+# "bivar_23_26_mean_odds"
+# "bivar_24_26_mean_odds"
+# "bivar_25_26_mean_odds" 
 "maher_20_26_mean_odds"
 "maher_21_26_mean_odds"
 "maher_22_26_mean_odds"
@@ -127,8 +156,8 @@ model_list_v2 = [
 ]
 
 
-
 show(comparison_df[:,model_list_v2] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
+show(comparison_df[:,model_list_v3] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
 show(comparison_df[:,ev_list] , allcols=true, allrows=true, eltypes=false, vlines=:all, hlines=:all)
 match_to_analyze.event_name
 """
