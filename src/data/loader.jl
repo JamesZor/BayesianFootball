@@ -118,6 +118,12 @@ function DataStore(data_files::DataFiles)
         types=matches_types, 
         dateformat=Dict(:match_date => dateformat"yyyy-mm-dd"))
 
+
+
+    # --- FIX: IS HERE ---
+    # 1. First, drop any rows that still have a missing round number
+    dropmissing!(matches, :round)
+
     matches.round = Int.(matches.round)
     
   # FIX: 
