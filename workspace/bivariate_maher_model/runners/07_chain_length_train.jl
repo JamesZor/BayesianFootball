@@ -23,9 +23,7 @@ Runs a single, complete MCMC training instance for a given model and data config
 function run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
     
     # --- A. Configure the specific run ---
-   season_str = join(String(sample_config.steps), "_")
-    run_name = "$(model_spec.name)_seasons_$(replace(season_str, "/" => ""))"
-    
+    run_name = "$(model_spec.name)_steps_$(sample_config.steps)"
     # Use threadid for clearer parallel logging
     println("[Thread $(threadid())] ▶️  STARTING RUN: $(run_name)")
     
