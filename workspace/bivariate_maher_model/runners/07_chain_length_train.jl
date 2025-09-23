@@ -92,8 +92,9 @@ cv_config = BayesianFootball.TimeSeriesSplitsConfig(["20/21"], [], :round)
 sample_configs_list = [
         BayesianFootball.ModelSampleConfig(10, true),
         BayesianFootball.ModelSampleConfig(50, true),
-        # BayesianFootball.ModelSampleConfig(500, true),
-        # BayesianFootball.ModelSampleConfig(1000, true),
+        BayesianFootball.ModelSampleConfig(500, true),
+        BayesianFootball.ModelSampleConfig(1000, true),
+        BayesianFootball.ModelSampleConfig(10_000, true),
 ]
 
 # --- 2. Create Global Mapping (Using the correct constructor) ---
