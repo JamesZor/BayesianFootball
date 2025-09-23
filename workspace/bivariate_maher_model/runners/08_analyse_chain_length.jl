@@ -2,18 +2,26 @@
 using BayesianFootball
 using DataFrames
 using StatsPlots
+using MCMCChains
 
 # --- 1. Setup ---
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/ChainAnalysisUtils.jl")
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/chain_analysis_utils.jl")
 using .ChainAnalysisUtils
 
 # --- 2. Configuration ---
 const EXPERIMENT_PATH = "/home/james/bet_project/models_julia/experiments/bivar_chain_length"
-const TEAM_TO_ANALYZE = "Man City" 
+const TEAM_TO_ANALYZE = "liverpool" 
 const PARAMETER_TO_ANALYZE = :α 
 
 # **ACTION REQUIRED**: Update this path to your long-run reference model
-const REFERENCE_MODEL_PATH = "/home/james/bet_project/models_julia/experiments/bivar_chain_length/maher_bivariate_steps_20000_20250923-154500" # Example path
+const REFERENCE_MODEL_PATH = "/home/james/bet_project/models_julia/experiments/bivar_chain_length/maher_bivariate_steps_10000_20250923-191001" # Example path
+
+
+
+
+include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
+using .BivariateMaher
+
 
 # --- 3. Main Execution ---
 
@@ -45,7 +53,7 @@ show(global_summary_table, allrows=true, allcols=true)
 
 
 # --- D. Individual Parameter Diagnostics ---
-println("\n📈 Generating diagnostic plots for $PARAMETER_TO_ANALYZE ($TEAM_TO_ANALYZE)...")
+println("\nGenerating diagnostic plots for $PARAMETER_TO_ANALYZE ($TEAM_TO_ANALYZE)...")
 summary_table = tabulate_summary_stats(
     all_models, PARAMETER_TO_ANALYZE;
     team_name = (PARAMETER_TO_ANALYZE in (:α, :β) ? TEAM_TO_ANALYZE : nothing)
@@ -67,9 +75,9 @@ if isdir(REFERENCE_MODEL_PATH)
     ref_chains = ref_loaded_model.result.chains_sequence[1].ft
     ref_model = ChainAnalysisModel(
         basename(REFERENCE_MODEL_PATH),
-        20000, # Manually set chain length
+        10000, # Manually set chain length
         ref_chains,
-        summarystats(ref_chains),
+    DataFrame(summarystats(ref_chains)),
         BayesianFootball.extract_posterior_samples(ref_loaded_model.config.model_def, ref_chains),
         ref_loaded_model.result.mapping
     )

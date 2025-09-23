@@ -204,8 +204,8 @@ function _calculate_kl_divergence(p_samples::AbstractVector, q_samples::Abstract
     edges = range(min_val, stop=max_val, length=n_bins + 1)
     
     # 2. Create normalized histograms (probability distributions)
-    p_hist = normalize(fit(Histogram, p_samples, edges), mode=:probability)
-    q_hist = normalize(fit(Histogram, q_samples, edges), mode=:probability)
+    p_hist = StatsBase.normalize(fit(Histogram, p_samples, edges), mode=:probability)
+    q_hist = StatsBase.normalize(fit(Histogram, q_samples, edges), mode=:probability)
     
     # 3. Add smoothing to avoid log(0)
     epsilon = 1e-10
