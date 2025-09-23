@@ -87,7 +87,7 @@ model_definitions = [
     (name="maher_bivariate", def=MaherBivariate())
 ]
 
-cv_config = BayesianFootball.TimeSeriesSplitsConfig([],["20/21"], :round)
+cv_config = BayesianFootball.TimeSeriesSplitsConfig(["20/21"], ["21/22"], :round)
 
 sample_configs_list = [
         BayesianFootball.ModelSampleConfig(10, true),
