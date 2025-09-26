@@ -54,7 +54,7 @@ function compose_training_morphism(
         # 3. Get the model scope to determine which models to build
         # scope = model_scope(model_def)
         # scope = (:HT, :FT)
-        scope = ( :FT )
+        scope = (:HT, :FT )
         
         println("  [Thread $(threadid())] Building model(s) for scope: $scope")
 
