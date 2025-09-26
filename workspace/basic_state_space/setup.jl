@@ -345,10 +345,10 @@ This is the dynamic state-space model with a Negative Binomial likelihood to
 account for overdispersion in goal scoring.
 =#
 @model function ar1_neg_bin_model(
-    home_team_ids::Vector{<:Vector}, 
-    away_team_ids::Vector{<:Vector}, 
-    home_goals::Vector{<:Vector}, 
-    away_goals::Vector{<:Vector}, 
+    home_team_ids::Vector{<:AbstractVector}, 
+    away_team_ids::Vector{<:AbstractVector}, 
+    home_goals::Vector{<:AbstractVector}, 
+    away_goals::Vector{<:AbstractVector}, 
     n_teams::Int, 
     n_rounds::Int
 )
