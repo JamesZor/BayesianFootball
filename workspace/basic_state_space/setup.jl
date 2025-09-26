@@ -423,7 +423,9 @@ account for overdispersion in goal scoring.
         away_ids = away_team_ids[t]
         
         if !isempty(home_ids)
-
+            log_λs = log_α_t[home_ids] .+ log_β_t[away_ids] .+ log_home_adv
+            log_μs = log_α_t[away_ids] .+ log_β_t[home_ids]
+            
             # Define the log-odds for the success probability `p`
             logit_ps_home = log(ϕ) .- log_λs
             logit_ps_away = log(ϕ) .- log_μs
