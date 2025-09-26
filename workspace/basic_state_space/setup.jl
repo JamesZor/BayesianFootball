@@ -427,17 +427,21 @@ account for overdispersion in goal scoring.
             log_μs = log_α_t[away_ids] .+ log_β_t[home_ids]
             
             # Define the log-odds for the success probability `p`
-            logit_ps_home = log(ϕ) .- log_λs
-            logit_ps_away = log(ϕ) .- log_μs
+            # logit_ps_home = log(ϕ) .- log_λs
+            # logit_ps_away = log(ϕ) .- log_μs
+            #
+            # # Use the logistic function (inv_logit) to ensure p is between 0 and 1
+            # ps_home = Turing.logistic.(logit_ps_home)
+            # ps_away = Turing.logistic.(logit_ps_away)
+            #
+            # # Use the (r, p) parameterization, which is more numerically stable
+            # home_goals[t] .~ NegativeBinomial.(ϕ, ps_home)
+            # away_goals[t] .~ NegativeBinomial.(ϕ, ps_away)
 
-            # Use the logistic function (inv_logit) to ensure p is between 0 and 1
-            ps_home = Turing.logistic.(logit_ps_home)
-            ps_away = Turing.logistic.(logit_ps_away)
-
-            # Use the (r, p) parameterization, which is more numerically stable
-            home_goals[t] .~ NegativeBinomial.(ϕ, ps_home)
-            away_goals[t] .~ NegativeBinomial.(ϕ, ps_away)
-
+            log_probs_home = logpdf.(NegativeBinomial.(exp.(log_λs), ϕ), home_goals[t])
+            log_probs_away = logpdf.(NegativeBinomial.(exp.(log_μs), ϕ), away_goals[t])
+            
+            Turing.@addlogprob! sum(log_probs_home) + sum(log_probs_away)
 
         end
     end

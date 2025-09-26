@@ -112,7 +112,10 @@ trained_chains = training_morphism(train_df, "test sample")
 end_time = now()
 run_duration_seconds = Dates.value(end_time - start_time) / 1000
 println("✅ Training complete in $(round(run_duration_seconds, digits=1)) seconds.")
-
+"""
+julia> run_duration_seconds = Dates.value(end_time - start_time) / 1000
+488.078
+"""
 # --- Package and Save Results ---
 result = ExperimentResult(
     [trained_chains], # Stored in a vector to match the expected format [cite: 86]
