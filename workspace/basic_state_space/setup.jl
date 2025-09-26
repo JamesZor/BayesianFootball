@@ -387,7 +387,7 @@ account for overdispersion in goal scoring.
     # --- NEW: Prior for the Negative Binomial dispersion parameter ---
     # A Gamma prior is a good choice for a positive, continuous parameter.
     # This prior is weakly informative and centered around a plausible value.
-    ϕ ~ Gamma(5, 0.1)
+    ϕ ~ Gamma(2, 2)
 
     # --- Latent State Variables (Identical to Poisson model) ---
     initial_α_z ~ MvNormal(zeros(n_teams), I)
