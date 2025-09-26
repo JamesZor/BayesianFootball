@@ -26,5 +26,6 @@ function create_master_features(data::AbstractDataFrame, mapping::MappedData)
         goals_away_ht = data.away_score_ht,
         goals_home_ft = data.home_score,
         goals_away_ft = data.away_score,
+        global_round = data.global_round
     )
 end
