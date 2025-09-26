@@ -321,10 +321,24 @@ function BayesianFootball.build_turing_model(
     grouped = groupby(temp_df, :global_round)
     n_rounds = length(grouped)
 
-    home_team_ids_by_round = [g.home_id for g in grouped]
-    away_team_ids_by_round = [g.away_id for g in grouped]
-    home_goals_by_round = [g.gh for g in grouped]
-    away_goals_by_round = [g.ga for g in grouped]
+    # Pre-allocate nested vectors for the model arguments
+    home_team_ids_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    away_team_ids_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    home_goals_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    away_goals_by_round = Vector{Vector{Int}}(undef, n_rounds)
+
+    # Populate the nested vectors
+    for (i, round_df) in enumerate(grouped)
+        home_team_ids_by_round[i] = round_df.home_id
+        away_team_ids_by_round[i] = round_df.away_id
+        home_goals_by_round[i] = round_df.gh
+        away_goals_by_round[i] = round_df.ga
+    end
+    #
+    # home_team_ids_by_round = [g.home_id for g in grouped]
+    # away_team_ids_by_round = [g.away_id for g in grouped]
+    # home_goals_by_round = [g.gh for g in grouped]
+    # away_goals_by_round = [g.ga for g in grouped]
     
     # Call the new Negative Binomial Turing model
     return ar1_neg_bin_model(
