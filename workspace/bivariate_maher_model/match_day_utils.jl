@@ -12,6 +12,7 @@ using PythonCall
 using JSON3
 using DataFrames
 using StatsPlots, Distributions
+using Dates
 
 export MarketBook, PredictionMatrix, EVDistribution # Exporting structs for type access
 export get_todays_matches, get_live_market_odds, calculate_ev_distributions
