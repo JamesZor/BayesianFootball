@@ -1,8 +1,7 @@
 # workspace/ar1_poisson/prediction.jl
 
 module AR1Prediction
-include("/home/james/bet_project/models_julia/workspace/basic_state_space/setup.jl")
-using .AR1StateSpace
+using ..AR1StateSpace
 using BayesianFootball
 using MCMCChains
 using Statistics
