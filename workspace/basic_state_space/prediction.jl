@@ -304,7 +304,7 @@ function BayesianFootball.extract_posterior_samples(
     mapping::MappedData
 )
     n_samples = size(chain, 1) * size(chain, 3)
-    n_teams = length(mapping.teams) # Corrected from .team to .teams
+    n_teams = length(mapping.team) 
     z_α_flat = BayesianFootball.extract_samples(chain, "z_α")
     n_rounds = size(z_α_flat, 2) ÷ n_teams
     
