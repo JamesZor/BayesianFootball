@@ -1,3 +1,5 @@
+# workspace/basic_state_space/runner/)4_runner_test.jl
+
 using BayesianFootball
 using DataFrames
 using Dates
@@ -45,7 +47,9 @@ sort(filter(row -> row.season=="25/26", data_store.matches), :match_date, rev=fa
 using BayesianFootball
 using DataFrames
 using Dates
-
+using ReverseDiff, Memoization
+Turing.setadbackend(:reversediff)
+Turing.setrdcache(true)
 # --- 1. SETUP AND INCLUDES ---
 
 # Include the new AR(1) model definition from our workspace
@@ -73,7 +77,7 @@ add_global_round_column!(data_store.matches)
 println("✅ Data loaded and preprocessed.")
 
 # --- Define Model and Training Configurations ---
-sample_config = BayesianFootball.ModelSampleConfig(100, true) # 1500 steps, show progress bar
+sample_config = BayesianFootball.ModelSampleConfig(500, true) # 1500 steps, show progress bar
 model_def = AR1PoissonModel()
 run_name = "ar1_poisson_2425_to_2526"
 
@@ -121,3 +125,29 @@ run_manager = prepare_run(EXPERIMENT_GROUP_NAME, config, SAVE_PATH)
 save(run_manager, result)
 println("💾 Model saved successfully for run: $(run_name)")
 println("✔️  COMPLETED RUN.")
+
+
+#### 
+# predict stuff 
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/setup.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/prediction.jl")
+using .AR1StateSpace
+using .AR1Prediction
+
+file_path = "/home/james/bet_project/models_julia/experiments/ar1_poisson_test/ar1_poisson_2425_to_2526_20250926-135921"
+println("Loading model from: $file_path")
+loaded_model = load_model(file_path)
+
+
+model = TrainedModel(config, result)
+
+DataFrame(train_df[301, :])
+
+features = BayesianFootball.create_master_features(DataFrame(train_df[301, :]), result.mapping)
+
+predictions = predict_ar1_match_lines(
+    model.config.model_def,
+    result.chains_sequence[1],
+    features,
+    model.result.mapping
+)

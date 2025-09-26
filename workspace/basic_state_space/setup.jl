@@ -1,3 +1,5 @@
+# workspace/basic_state_space/setup
+
 using DataFrames
 using Dates
 
@@ -49,6 +51,7 @@ function add_global_round_column!(matches_df::DataFrame)
         push!(teams_in_current_round, home_team)
         push!(teams_in_current_round, away_team)
     end
+
 
     # 5. Add the newly created vector as a column to the DataFrame.
     matches_df.global_round = global_rounds
@@ -246,3 +249,5 @@ This is the dynamic state-space model, ported directly from the logic in
 end
 
 end # end module AR1StateSpace
+
+
