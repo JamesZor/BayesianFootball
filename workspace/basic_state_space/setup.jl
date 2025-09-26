@@ -423,14 +423,20 @@ account for overdispersion in goal scoring.
         away_ids = away_team_ids[t]
         
         if !isempty(home_ids)
-            log_λs = log_α_t[home_ids] .+ log_β_t[away_ids] .+ log_home_adv
-            log_μs = log_α_t[away_ids] .+ log_β_t[home_ids]
-            
-            # --- NEW: Negative Binomial Likelihood ---
-            # We use the mean-dispersion parameterization: NegativeBinomial(μ, ϕ)
-            # where μ is the mean and ϕ is the dispersion parameter.
-            home_goals[t] .~ NegativeBinomial.(exp.(log_λs), ϕ)
-            away_goals[t] .~ NegativeBinomial.(exp.(log_μs), ϕ)
+
+            # Define the log-odds for the success probability `p`
+            logit_ps_home = log(ϕ) .- log_λs
+            logit_ps_away = log(ϕ) .- log_μs
+
+            # Use the logistic function (inv_logit) to ensure p is between 0 and 1
+            ps_home = Turing.logistic.(logit_ps_home)
+            ps_away = Turing.logistic.(logit_ps_away)
+
+            # Use the (r, p) parameterization, which is more numerically stable
+            home_goals[t] .~ NegativeBinomial.(ϕ, ps_home)
+            away_goals[t] .~ NegativeBinomial.(ϕ, ps_away)
+
+
         end
     end
 end
