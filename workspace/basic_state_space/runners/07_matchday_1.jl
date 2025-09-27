@@ -2,21 +2,25 @@ using BayesianFootball
 using DataFrames
 using Dates
 using Statistics, StatsBase, StatsPlots, Distributions
+using CSV 
 
 
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/setup.jl")
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/match_day_utils.jl")
+# include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/match_day_utils.jl")
 
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/prediction.jl")
+# include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/analysis_funcs.jl")
+include( "/home/james/bet_project/models_julia/workspace/basic_state_space/matchday_utils_ssm.jl")
 
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/analysis_funcs.jl")
-using .MatchDayUtils 
+
+include( "/home/james/bet_project/models_julia/workspace/basic_state_space/analysis_functions.jl")
+using .MatchDayUtilsSSM
 
 using .AR1NegativeBinomial
 using .AR1NegBiPrediction
 using .AR1StateSpace
 using .AR1Prediction
-using .Analysis
+# using .Analysis
 using .AnalysisSSM
 
 all_model_paths = Dict(
@@ -44,13 +48,14 @@ odds_df = fetch_all_market_odds(
 
 MatchDayUtils.save_odds_to_csv(odds_df, "data/")
 
+odds_df = CSV.read("/home/james/bet_project/models_julia/data/market_odds_2025-09-27.csv", DataFrame, header=1)
 
 loaded_models_all = load_models_from_paths(all_model_paths)
 
 
 match_to_analyze = todays_matches[1, :]
 
-(comparison_df, prediction_matrices, market_book) = MatchDayUtils.generate_match_analysis(
+(comparison_df, prediction_matrices, market_book) = generate_match_analysis(
     match_to_analyze,
     odds_df, # Your wide DataFrame of all market odds
     loaded_models_all,

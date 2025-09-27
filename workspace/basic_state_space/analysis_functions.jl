@@ -58,40 +58,28 @@ function generate_predictions(models::Dict{String, Any}, home_team::String, away
         # Use 'local' to ensure the variable is accessible after the if/else block
         local match_to_predict::DataFrame
 
-        if occursin("ar1", string(model.config.model_def))
-            # --- State Space Model: Requires 'global_round' ---
-            println("-> Detected State Space model. Calculating next round.")
-            
-            chains = model.result.chains_sequence[1]
-            mapping = model.result.mapping
+      # --- State Space Model: Requires 'global_round' ---
+      println("-> Detected State Space model. Calculating next round.")
+      
+      chains = model.result.chains_sequence[1]
+      mapping = model.result.mapping
 
-            posterior_samples = BayesianFootball.extract_posterior_samples(
-                model.config.model_def,
-                chains.ft,
-                mapping
-            )
-            last_training_round = posterior_samples.n_rounds
-            next_round = last_training_round + 1
-            println("   - Predicting for global_round: $next_round")
+      posterior_samples = BayesianFootball.extract_posterior_samples(
+          model.config.model_def,
+          chains.ft,
+          mapping
+      )
+      last_training_round = posterior_samples.n_rounds
+      next_round = last_training_round + 1
+      println("   - Predicting for global_round: $next_round")
 
-            match_to_predict = DataFrame(
-                home_team=home_team,
-                away_team=away_team,
-                tournament_id=league_id,
-                global_round=next_round, # The crucial addition
-                home_score_ht=0, away_score_ht=0, home_score=0, away_score=0
-            )
-        else
-            # --- Static Model: Does not use 'global_round' ---
-            println("-> Detected Static model.")
-            
-            match_to_predict = DataFrame(
-                home_team=home_team,
-                away_team=away_team,
-                tournament_id=league_id,
-                home_score_ht=0, away_score_ht=0, home_score=0, away_score=0
-            )
-        end
+      match_to_predict = DataFrame(
+          home_team=home_team,
+          away_team=away_team,
+          tournament_id=league_id,
+          global_round=next_round, # The crucial addition
+          home_score_ht=0, away_score_ht=0, home_score=0, away_score=0
+      )
 
         # --- Common steps for ALL models ---
         
@@ -114,7 +102,6 @@ function generate_predictions(models::Dict{String, Any}, home_team::String, away
     
     return predictions
 end
-
 
 """
     create_odds_dataframe(predictions::Dict{String, Any})
