@@ -8,6 +8,8 @@ Turing.setrdcache(true)
 
 using .AR1NegBinVectorized
 
+# using .TestModel
+
 
 const EXPERIMENT_GROUP_NAME = "ar1_neg_bi"
 const SAVE_PATH = "./experiments"
@@ -24,6 +26,7 @@ add_global_round_column!(data_store.matches)
 
 sample_config = BayesianFootball.ModelSampleConfig(10, true) # 1500 steps, show progress bar
 model_def = AR1NegBinVectorizedModel()
+# model_def = SimplePoissonModel()
 run_name = "ar1_negbi_vec_test_2425_to_2526"
 
 

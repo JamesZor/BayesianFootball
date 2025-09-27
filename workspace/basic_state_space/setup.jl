@@ -620,7 +620,6 @@ now contains only efficient matrix-vector operations.
 ) where {T}
 
     # --- Priors ---
-    # (This section is unchanged)
     ρ_attack ~ Beta(10, 1.5)
     ρ_defense ~ Beta(10, 1.5)
     μ_log_σ_attack ~ Normal(-2.5, 0.5) 
@@ -634,7 +633,6 @@ now contains only efficient matrix-vector operations.
     σ_log_ϕ ~ Truncated(Normal(-1, 0.5), 0, Inf)
 
     # --- Construct State-Space Matrices Φ and H ---
-    # (This section is unchanged)
     z_log_σ_attack ~ MvNormal(zeros(T, n_teams), I)
     σ_attack = exp.(μ_log_σ_attack .+ z_log_σ_attack .* τ_log_σ_attack)
     z_log_σ_defense ~ MvNormal(zeros(T, n_teams), I)
@@ -647,7 +645,6 @@ now contains only efficient matrix-vector operations.
     H_mat = Diagonal(T.(H_diag))
 
     # --- Latent State ---
-    # 💡 FIX: Use a Vector to store the latent state variables for each step.
     z = Vector{Any}(undef, n_rounds)
 
     # Initial State (t=1)
@@ -658,13 +655,11 @@ now contains only efficient matrix-vector operations.
     z[1] = vcat(α_t1, β_t1, ha_t1, log_ϕ_t1)
     
     # --- Main Time-Series Loop ---
-    # 💡 FIX: Evolve the state sequentially, defining a new random variable z[t] at each step.
     for t in 2:n_rounds
         z[t] ~ MvNormal(Φ_mat * z[t-1], H_mat)
     end
 
     # --- Likelihood Loop ---
-    # (This section is unchanged and will now work correctly)
     for t in 1:n_rounds
         z_t = z[t]
         z_constrained = copy(z_t)
@@ -674,13 +669,260 @@ now contains only efficient matrix-vector operations.
         St = selection_matrices[t]
         if !isempty(St)
             log_rates = St * z_constrained
-            ϕ = exp(z_constrained[end])
+
+            log_ϕ_t = z_constrained[end] # Get log_ϕ directly
             goals_t = goals_by_round[t]
-            log_prob = sum(logpdf_negbin_lograte.(goals_t, log_rates, ϕ))
+            log_prob = sum(logpdf_negbin_lograte.(goals_t, log_rates, log_ϕ_t)) # Pass log_ϕ_t
             Turing.@addlogprob! log_prob
         end
     end
 end
-
-
 end # end module AR1NegBinVectorized
+
+
+module TestModel
+
+using Turing
+using LinearAlgebra
+using Distributions
+using DataFrames
+using BayesianFootball
+using Statistics
+using SparseArrays
+
+export SimplePoissonModel
+
+struct SimplePoissonModel <: AbstractModelDefinition end
+
+function BayesianFootball.get_required_features(::SimplePoissonModel)
+    return (
+        :home_team_ids, :away_team_ids, :n_teams,
+        :global_round, :n_leagues, :league_ids
+    )
+end
+
+function BayesianFootball.build_turing_model(
+    ::SimplePoissonModel,
+    features::NamedTuple,
+    goals_home::Vector{Int},
+    goals_away::Vector{Int}
+)
+    temp_df = DataFrame(
+        global_round = features.global_round, home_id = features.home_team_ids,
+        away_id = features.away_team_ids, league_id = features.league_ids,
+        gh = goals_home, ga = goals_away
+    )
+    
+    grouped = groupby(temp_df, :global_round)
+    n_rounds = length(grouped)
+    n_teams = features.n_teams
+    n_leagues = features.n_leagues
+
+    state_size = 2 * n_teams + n_leagues + 1
+    
+    goals_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    # 💡 CRITICAL FIX: Ensure the matrix type is Float64
+    selection_matrices = Vector{SparseMatrixCSC{Float64, Int}}(undef, n_rounds)
+
+    for (t, round_df) in enumerate(grouped)
+        n_matches_in_round = nrow(round_df)
+        
+        goals_t = Vector{Int}(undef, 2 * n_matches_in_round)
+        for (i, row) in enumerate(eachrow(round_df)); goals_t[2i-1]=row.gh; goals_t[2i]=row.ga; end
+        goals_by_round[t] = goals_t
+
+        # 💡 CRITICAL FIX: Create the sparse matrix with Float64 elements
+        St = spzeros(Float64, 2 * n_matches_in_round, state_size)
+        for (k, match) in enumerate(eachrow(round_df))
+            home_id, away_id, league_id = match.home_id, match.away_id, match.league_id
+            
+            idx_α_home = home_id; idx_α_away = away_id
+            idx_β_home = n_teams + home_id; idx_β_away = n_teams + away_id
+            idx_home_adv = 2 * n_teams + league_id
+            
+            # 💡 CRITICAL FIX: Assign Float64 values (1.0)
+            St[2k-1, idx_α_home] = 1.0; St[2k-1, idx_β_away] = 1.0; St[2k-1, idx_home_adv] = 1.0
+            St[2k, idx_α_away] = 1.0; St[2k, idx_β_home] = 1.0
+        end
+        selection_matrices[t] = St
+    end
+    
+    return minimal_test_turing_model(
+        goals_by_round, selection_matrices, n_teams, n_leagues, n_rounds
+    )
+end
+
+@model function minimal_test_turing_model(
+    goals_by_round::Vector{<:Vector},
+    selection_matrices::Vector{<:SparseMatrixCSC},
+    n_teams::Int, n_leagues::Int, n_rounds::Int, ::Type{T}=Float64
+) where {T}
+    α ~ MvNormal(zeros(T, n_teams), 1.0 * I)
+    β ~ MvNormal(zeros(T, n_teams), 1.0 * I)
+    ha ~ MvNormal(zeros(T, n_leagues), 1.0 * I)
+    dummy_param = 0.0
+    state_vector = vcat(α, β, ha, dummy_param)
+
+    for t in 1:n_rounds
+        St = selection_matrices[t]
+        goals_t = goals_by_round[t]
+        if !isempty(St)
+            log_rates = St * state_vector
+            for i in 1:length(goals_t)
+                goals_t[i] ~ Poisson(exp(log_rates[i]))
+            end
+        end
+    end
+end
+
+end # end module
+
+
+
+module AR1NegBinVectorized
+
+using SpecialFunctions
+using Turing
+using LinearAlgebra
+using Distributions
+using DataFrames
+using BayesianFootball
+using Statistics
+using LogExpFunctions
+
+export AR1NegBinVectorizedModel
+
+# (This helper function is unchanged)
+function logpdf_negbin_lograte(k::Int, log_μ::Real, log_ϕ::Real)
+    log_μ_plus_ϕ = logaddexp(log_μ, log_ϕ)
+    ϕ = exp(log_ϕ)
+    return (
+        loggamma(k + ϕ) - loggamma(k + 1) - loggamma(ϕ) +
+        k * log_μ +
+        ϕ * log_ϕ -
+        (k + ϕ) * log_μ_plus_ϕ
+    )
+end
+
+struct AR1NegBinVectorizedModel <: AbstractModelDefinition end
+
+# 💡 We no longer need the sparse matrix features, matching the working model
+function BayesianFootball.get_required_features(::AR1NegBinVectorizedModel)
+    return (
+        :home_team_ids, :away_team_ids, :n_teams,
+        :global_round, :n_leagues, :league_ids
+    )
+end
+
+# 💡 This function now prepares nested vectors, not sparse matrices
+function BayesianFootball.build_turing_model(
+    ::AR1NegBinVectorizedModel,
+    features::NamedTuple,
+    goals_home::Vector{Int},
+    goals_away::Vector{Int}
+)
+    temp_df = DataFrame(
+        global_round = features.global_round,
+        home_id = features.home_team_ids,
+        away_id = features.away_team_ids,
+        league_id = features.league_ids,
+        gh = goals_home,
+        ga = goals_away
+    )
+    
+    grouped = groupby(temp_df, :global_round)
+    n_rounds = length(grouped)
+
+    home_ids_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    away_ids_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    league_ids_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    home_goals_by_round = Vector{Vector{Int}}(undef, n_rounds)
+    away_goals_by_round = Vector{Vector{Int}}(undef, n_rounds)
+
+    for (i, round_df) in enumerate(grouped)
+        home_ids_by_round[i] = round_df.home_id
+        away_ids_by_round[i] = round_df.away_id
+        league_ids_by_round[i] = round_df.league_id
+        home_goals_by_round[i] = round_df.gh
+        away_goals_by_round[i] = round_df.ga
+    end
+    
+    return ar1_neg_bin_vectorized_model(
+        home_ids_by_round, away_ids_by_round,
+        league_ids_by_round,
+        home_goals_by_round, away_goals_by_round,
+        features.n_teams, features.n_leagues, n_rounds
+    )
+end
+
+
+@model function ar1_neg_bin_vectorized_model(
+    home_team_ids::Vector{<:Vector}, away_team_ids::Vector{<:Vector},
+    league_ids::Vector{<:Vector},
+    home_goals::Vector{<:Vector}, away_goals::Vector{<:Vector},
+    n_teams::Int, n_leagues::Int, n_rounds::Int, ::Type{T}=Float64
+) where {T}
+
+    # Priors (Hierarchical structure is unchanged)
+    ρ_attack ~ Beta(10, 1.5); ρ_defense ~ Beta(10, 1.5)
+    μ_log_σ_attack ~ Normal(-2.5, 0.5); τ_log_σ_attack ~ Truncated(Normal(0, 0.2), 0, Inf)
+    μ_log_σ_defense ~ Normal(-2.5, 0.5); τ_log_σ_defense ~ Truncated(Normal(0, 0.2), 0, Inf)
+    ρ_home_adv ~ Beta(10, 1.5);
+    μ_log_σ_home_adv ~ Normal(-3.0, 0.5); τ_log_σ_home_adv ~ Truncated(Normal(0, 0.2), 0, Inf)
+    ρ_log_ϕ ~ Beta(10, 1.5); σ_log_ϕ ~ Truncated(Normal(-1, 0.5), 0, Inf)
+
+    # State-Space Matrices (Φ and H are still used for the AR(1) evolution)
+    z_log_σ_attack ~ MvNormal(zeros(T, n_teams), I); σ_attack = exp.(μ_log_σ_attack .+ z_log_σ_attack .* τ_log_σ_attack)
+    z_log_σ_defense ~ MvNormal(zeros(T, n_teams), I); σ_defense = exp.(μ_log_σ_defense .+ z_log_σ_defense .* τ_log_σ_defense)
+    z_log_σ_home_adv ~ MvNormal(zeros(T, n_leagues), I); σ_home_adv = exp.(μ_log_σ_home_adv .+ z_log_σ_home_adv .* τ_log_σ_home_adv)
+    phi_diag = vcat(fill(ρ_attack, n_teams), fill(ρ_defense, n_teams), fill(ρ_home_adv, n_leagues), ρ_log_ϕ)
+    Φ_mat = Diagonal(T.(phi_diag))
+    H_diag = vcat(σ_attack.^2, σ_defense.^2, σ_home_adv.^2, σ_log_ϕ^2)
+    H_mat = Diagonal(T.(H_diag))
+
+    # Latent State (AR(1) evolution logic is unchanged)
+    z = Vector{Any}(undef, n_rounds)
+    α_t1 ~ MvNormal(zeros(T, n_teams), 0.5 * I); β_t1 ~ MvNormal(zeros(T, n_teams), 0.5 * I)
+    ha_t1 ~ MvNormal(fill(T(log(1.3)), n_leagues), 0.1 * I); log_ϕ_t1 ~ Normal(T(log(10)), 0.5)
+    z[1] = vcat(α_t1, β_t1, ha_t1, log_ϕ_t1)
+    
+    for t in 2:n_rounds; z[t] ~ MvNormal(Φ_mat * z[t-1], H_mat); end
+
+    # Likelihood Loop (Now using direct indexing)
+    for t in 1:n_rounds
+        z_t = z[t]
+        
+        # Deconstruct the state vector for this time step
+        α_t = @view z_t[1:n_teams]
+        β_t = @view z_t[n_teams+1:2*n_teams]
+        ha_t = @view z_t[2*n_teams+1:2*n_teams+n_leagues]
+        log_ϕ_t = z_t[end]
+
+        # Apply sum-to-zero constraint
+        α_t_constrained = α_t .- mean(α_t)
+        β_t_constrained = β_t .- mean(β_t)
+        
+        home_ids = home_team_ids[t]
+        away_ids = away_team_ids[t]
+        leagues = league_ids[t]
+        
+        if !isempty(home_ids)
+            # 💡 VECTORIZED LIKELIHOOD CALCULATION
+            log_λs = α_t_constrained[home_ids] .+ β_t_constrained[away_ids] .+ ha_t[leagues]
+            log_μs = α_t_constrained[away_ids] .+ β_t_constrained[home_ids]
+
+            # Calculate both log-probabilities
+            log_prob_home = sum(logpdf_negbin_lograte.(home_goals[t], log_λs, log_ϕ_t))
+            log_prob_away = sum(logpdf_negbin_lograte.(away_goals[t], log_μs, log_ϕ_t))
+
+            # Add them together in a single call
+            Turing.@addlogprob! log_prob_home + log_prob_away
+
+
+
+
+        end
+    end
+end
+
+end # end module
