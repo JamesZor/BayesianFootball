@@ -1,5 +1,6 @@
 using Plots 
 using StatsPlots
+using Turing
 
 
 ####
@@ -87,7 +88,6 @@ end
 
 
 
-log_α_centered, log_β_centered = get_centered_parameters(chain, synth_data)
 
 """
     get_team_goal_history(team_number, data)

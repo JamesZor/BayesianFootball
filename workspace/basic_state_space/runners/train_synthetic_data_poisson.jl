@@ -16,6 +16,7 @@ Turing.setrdcache(true)
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_poisson.jl")
 using .AR1Poisson
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/utils.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/plots.jl")
 using .SSMUtils
 
 # Have not added yet
@@ -65,56 +66,6 @@ println("Training complete.")
 
 println("Extracting posterior samples and plotting results...")
 
-# To visualize, we need to reconstruct the time series of alpha and beta
-# This logic is identical to what's in our `extract_posterior_samples` function
-# We are doing it manually here to show the process clearly.
-#
-# n_samples = size(chain, 1) * size(chain, 3)
-# n_teams = synth_data.n_teams
-# n_rounds = synth_data.n_rounds
-#
-# ρ_attack = vec(Array(chain[:ρ_attack]))
-# ρ_defense = vec(Array(chain[:ρ_defense]))
-# μ_log_σ_attack = vec(Array(chain[:μ_log_σ_attack]))
-# τ_log_σ_attack = vec(Array(chain[:τ_log_σ_attack]))
-# z_log_σ_attack = hcat(chain[:z_log_σ_attack]...)
-# σ_attack = exp.(μ_log_σ_attack .+ z_log_σ_attack' .* τ_log_σ_attack)
-# μ_log_σ_defense = vec(Array(chain[:μ_log_σ_defense]))
-# τ_log_σ_defense = vec(Array(chain[:τ_log_σ_defense]))
-# z_log_σ_defense = hcat(chain[:z_log_σ_defense]...)
-# σ_defense = exp.(μ_log_σ_defense .+ z_log_σ_defense' .* τ_log_σ_defense)
-#
-# initial_α_z = hcat(chain[:initial_α_z]...)
-# initial_β_z = hcat(chain[:initial_β_z]...)
-# z_α_flat = hcat(chain[:z_α]...)
-# z_α_mat_reshaped = reshape(z_α_flat, n_teams, n_rounds, n_samples)
-# z_β_flat = hcat(chain[:z_β]...)
-# z_β_mat_reshaped = reshape(z_β_flat, n_teams, n_rounds, n_samples)
-#
-# log_α_raw = Array{Float64, 3}(undef, n_samples, n_teams, n_rounds)
-# log_β_raw = Array{Float64, 3}(undef, n_samples, n_teams, n_rounds)
-#
-# for s in 1:n_samples
-#     log_α_raw_t0 = initial_α_z[:, s] .* sqrt(0.5)
-#     log_β_raw_t0 = initial_β_z[:, s] .* sqrt(0.5)
-#     for t in 1:n_rounds
-#         if t == 1
-#             log_α_raw[s, :, 1] = log_α_raw_t0 .+ z_α_mat_reshaped[:, 1, s] .* σ_attack[s, :]
-#             log_β_raw[s, :, 1] = log_β_raw_t0 .+ z_β_mat_reshaped[:, 1, s] .* σ_defense[s, :]
-#         else
-#             log_α_raw[s, :, t] = ρ_attack[s] * log_α_raw[s, :, t-1] .+ z_α_mat_reshaped[:, t, s] .* σ_attack[s, :]
-#             log_β_raw[s, :, t] = ρ_defense[s] * log_β_raw[s, :, t-1] .+ z_β_mat_reshaped[:, t, s] .* σ_defense[s, :]
-#         end
-#     end
-# end
-#
-# log_α_centered = similar(log_α_raw)
-# log_β_centered = similar(log_β_raw)
-# for s in 1:n_samples, t in 1:n_rounds
-#     log_α_centered[s, :, t] = log_α_raw[s, :, t] .- mean(log_α_raw[s, :, t])
-#     log_β_centered[s, :, t] = log_β_raw[s, :, t] .- mean(log_β_raw[s, :, t])
-# end
-#
 """
     get_raw_parameters(chain_dynamic, data)
 
