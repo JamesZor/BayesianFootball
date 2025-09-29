@@ -40,10 +40,15 @@ function BayesianFootball.build_turing_model(
     grouped = groupby(temp_df, :global_round)
     n_rounds = length(grouped)
 
-    home_ids_by_round = [g.home_id for g in grouped]
-    away_ids_by_round = [g.away_id for g in grouped]
-    home_goals_by_round = [g.gh for g in grouped]
-    away_goals_by_round = [g.ga for g in grouped]
+    # home_ids_by_round = [g.home_id for g in grouped]
+    # away_ids_by_round = [g.away_id for g in grouped]
+    # home_goals_by_round = [g.gh for g in grouped]
+    # away_goals_by_round = [g.ga for g in grouped]
+    home_ids_by_round = [collect(g.home_id) for g in grouped]
+    away_ids_by_round = [collect(g.away_id) for g in grouped]
+    home_goals_by_round = [collect(g.gh) for g in grouped]
+    away_goals_by_round = [collect(g.ga) for g in grouped]
+    
     
     return ar1_poisson_model(
         home_ids_by_round, away_ids_by_round,
@@ -59,8 +64,8 @@ end
 =#
 
 @model function ar1_poisson_model(
-    home_team_ids::Vector{<:Vector}, away_team_ids::Vector{<:Vector}, 
-    home_goals::Vector{<:Vector}, away_goals::Vector{<:Vector}, 
+    home_team_ids::Vector{<:AbstractVector}, away_team_ids::Vector{<:AbstractVector}, 
+    home_goals::Vector{<:AbstractVector}, away_goals::Vector{<:AbstractVector}, 
     n_teams::Int, n_rounds::Int
 )
     ρ_attack ~ Beta(10, 1.5); ρ_defense ~ Beta(10, 1.5)
