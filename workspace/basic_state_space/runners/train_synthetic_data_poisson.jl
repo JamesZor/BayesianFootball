@@ -13,9 +13,9 @@ Turing.setrdcache(true)
 # --- 1. SETUP AND INCLUDES ---
 
 # Include our refactored modules
-include("../models/ar1_poisson.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_poisson.jl")
 using .AR1Poisson
-include("../analysis/utils.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/utils.jl")
 using .SSMUtils
 include("../analysis/plotting.jl")
 using .SSMPlots

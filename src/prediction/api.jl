@@ -268,8 +268,10 @@ function predict_match_lines(
     return Predictions.MatchLinePredictions(ht_predict, ft_predict)
 end
 
+""" place holder for the model module to overstack """ 
+function _predict_match_ft() end 
 
-
+function _predict_match_ht() end 
 
 function predict(
     model::AbstractModelDefinition,
