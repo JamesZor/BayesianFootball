@@ -1,120 +1,11 @@
-# workspace/basic_state_space/runners/train_synthetic_poisson.jl
-using BayesianFootball
-using Turing
-using Plots
-using Statistics
-using DataFrames
+using Plots 
+using StatsPlots
 
-# Performance libraries
-using ReverseDiff, Memoization
-Turing.setadbackend(:reversediff)
-Turing.setrdcache(true)
 
-# --- 1. SETUP AND INCLUDES ---
+####
+# extract poisson basic 
+#####
 
-# Include our refactored modules
-include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_poisson.jl")
-using .AR1Poisson
-include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/utils.jl")
-using .SSMUtils
-
-# Have not added yet
-# include("../analysis/plotting.jl")
-# using .SSMPlots
-
-# --- 2. GENERATE SYNTHETIC DATA ---
-synth_data = generate_synthetic_data(n_teams=10, n_rounds=38)
-
-# Convert the generated data into a DataFrame, which our model pipeline expects
-# This mimics the structure of the real data
-matches_df = DataFrame(
-    global_round = vcat([fill(r, 5) for r in 1:synth_data.n_rounds]...), # 5 matches per round
-    home_team_ids = synth_data.home_team_ids,
-    away_team_ids = synth_data.away_team_ids
-);
-
-# --- 3. TRAIN THE MODEL ---
-
-println("Training AR1 Poisson model on synthetic data...")
-
-# Instantiate the model definition
-model_def = AR1PoissonModel()
-
-# The `build_turing_model` function expects features as a NamedTuple
-features = (
-    global_round = matches_df.global_round,
-    home_team_ids = matches_df.home_team_ids,
-    away_team_ids = matches_df.away_team_ids,
-    n_teams = synth_data.n_teams
-)
-
-# Build the Turing model instance
-turing_model = AR1Poisson.build_turing_model(
-    model_def,
-    features,
-    synth_data.home_goals,
-    synth_data.away_goals
-)
-
-# Sample from the model (using a small number of samples for a quick test)
-chain = sample(turing_model, NUTS(0.65), 100, progress=true)
-
-println("Training complete.")
-
-# --- 4. ANALYZE AND VISUALIZE RESULTS ---
-
-println("Extracting posterior samples and plotting results...")
-
-# To visualize, we need to reconstruct the time series of alpha and beta
-# This logic is identical to what's in our `extract_posterior_samples` function
-# We are doing it manually here to show the process clearly.
-#
-# n_samples = size(chain, 1) * size(chain, 3)
-# n_teams = synth_data.n_teams
-# n_rounds = synth_data.n_rounds
-#
-# ρ_attack = vec(Array(chain[:ρ_attack]))
-# ρ_defense = vec(Array(chain[:ρ_defense]))
-# μ_log_σ_attack = vec(Array(chain[:μ_log_σ_attack]))
-# τ_log_σ_attack = vec(Array(chain[:τ_log_σ_attack]))
-# z_log_σ_attack = hcat(chain[:z_log_σ_attack]...)
-# σ_attack = exp.(μ_log_σ_attack .+ z_log_σ_attack' .* τ_log_σ_attack)
-# μ_log_σ_defense = vec(Array(chain[:μ_log_σ_defense]))
-# τ_log_σ_defense = vec(Array(chain[:τ_log_σ_defense]))
-# z_log_σ_defense = hcat(chain[:z_log_σ_defense]...)
-# σ_defense = exp.(μ_log_σ_defense .+ z_log_σ_defense' .* τ_log_σ_defense)
-#
-# initial_α_z = hcat(chain[:initial_α_z]...)
-# initial_β_z = hcat(chain[:initial_β_z]...)
-# z_α_flat = hcat(chain[:z_α]...)
-# z_α_mat_reshaped = reshape(z_α_flat, n_teams, n_rounds, n_samples)
-# z_β_flat = hcat(chain[:z_β]...)
-# z_β_mat_reshaped = reshape(z_β_flat, n_teams, n_rounds, n_samples)
-#
-# log_α_raw = Array{Float64, 3}(undef, n_samples, n_teams, n_rounds)
-# log_β_raw = Array{Float64, 3}(undef, n_samples, n_teams, n_rounds)
-#
-# for s in 1:n_samples
-#     log_α_raw_t0 = initial_α_z[:, s] .* sqrt(0.5)
-#     log_β_raw_t0 = initial_β_z[:, s] .* sqrt(0.5)
-#     for t in 1:n_rounds
-#         if t == 1
-#             log_α_raw[s, :, 1] = log_α_raw_t0 .+ z_α_mat_reshaped[:, 1, s] .* σ_attack[s, :]
-#             log_β_raw[s, :, 1] = log_β_raw_t0 .+ z_β_mat_reshaped[:, 1, s] .* σ_defense[s, :]
-#         else
-#             log_α_raw[s, :, t] = ρ_attack[s] * log_α_raw[s, :, t-1] .+ z_α_mat_reshaped[:, t, s] .* σ_attack[s, :]
-#             log_β_raw[s, :, t] = ρ_defense[s] * log_β_raw[s, :, t-1] .+ z_β_mat_reshaped[:, t, s] .* σ_defense[s, :]
-#         end
-#     end
-# end
-#
-# log_α_centered = similar(log_α_raw)
-# log_β_centered = similar(log_β_raw)
-# for s in 1:n_samples, t in 1:n_rounds
-#     log_α_centered[s, :, t] = log_α_raw[s, :, t] .- mean(log_α_raw[s, :, t])
-#     log_β_centered[s, :, t] = log_β_raw[s, :, t] .- mean(log_β_raw[s, :, t])
-# end
-#
 """
     get_raw_parameters(chain_dynamic, data)
 
@@ -239,6 +130,9 @@ function get_team_goal_history(team_number::Int, data)
     return goals_scored, goals_conceded
 end
 
+####
+# PLots 
+####
 
 
 """
@@ -306,15 +200,44 @@ function plot_team_dashboard(team_number, data, α_dynamic, β_dynamic)
     return p
 end
 
+"""
+    plot_multiple_dashboards(teams, data, α_dynamic, α_static, β_dynamic, β_static)
 
+Creates a vertical layout of team dashboards for a given list of team IDs.
 
+# Arguments
+- `teams`: A vector of team IDs to plot (e.g., [1, 2, 5]).
+- `data`, `α_dynamic`, etc.: The same arguments required by the single dashboard function.
+"""
+function plot_multiple_dashboards(teams, data, α_dynamic, α_static, β_dynamic, β_static)
+    
+    # Create an empty list to hold each team's dashboard plot
+    plot_list = []
 
-# Now use our plotting function to visualize the results for Team 1
-# This team's attack strength was designed to improve over the season
-team1_plot = plot_team_dashboard(2, synth_data, log_α_centered,  log_β_centered)
-display(team1_plot) # This will show the plot in the REPL or plotting pane
+    # Loop through each requested team ID
+    for team_id in teams
+        # Generate the 2x2 dashboard for the current team
+        p_team = plot_team_dashboard(
+            team_id, 
+            data, 
+            α_dynamic, 
+            α_static, 
+            β_dynamic, 
+            β_static
+        )
+        # Add the generated plot to our list
+        push!(plot_list, p_team)
+    end
 
-# Save the plot
-savefig(team1_plot, "team1_synthetic_recovery.png")
+    # Arrange all the plots in the list into a single column
+    # The layout is (number_of_rows, number_of_columns)
+    # The final size will need to be tall to accommodate all the plots.
+    n_teams = length(teams)
+    final_plot = plot(plot_list..., 
+                      layout = (n_teams, 1), 
+                      size = (1400, 750 * n_teams)
+    )
 
-println("\n✅ Script finished. Plot saved to team1_synthetic_recovery.png")
+    return final_plot
+end
+
