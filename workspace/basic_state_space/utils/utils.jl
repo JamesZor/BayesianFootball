@@ -7,6 +7,7 @@ using Dates
 using Random
 using PrettyTables, Printf, Statistics
 using Plots, StatsPlots, MCMCChains
+using Distributions
 
 export add_global_round_column!, generate_synthetic_data
 
