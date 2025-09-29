@@ -104,106 +104,83 @@ end
 # ===================================================================
 # ## Improved Multi-Season Data Generation Function
 # ===================================================================
-function generate_multi_season_data(;
+function generate_synthetic_multi_season_data(;
     n_teams::Int=10,
     n_seasons::Int=3,
-    rounds_per_season::Int=38,
-    season_to_season_volatility::Float64=0.4,
-    seed::Int=123
+    rounds_per_season::Int=50,
+    season_to_season_volatility::Float64=0.02,
+    seed::Int=42
 )
     Random.seed!(seed)
 
-    # Calculate total number of rounds across all seasons
     total_rounds = n_seasons * rounds_per_season
-
-    # Initialize strength matrices for all rounds
     true_log_α = zeros(n_teams, total_rounds)
     true_log_β = zeros(n_teams, total_rounds)
-
-    # True home advantage parameter (constant)
     true_home_adv = 1.3
     teams = 1:n_teams
-
-    # --- Main Simulation Loop ---
     current_round_index = 0
 
-    # Outer loop: Iterate through each season
     for s in 1:n_seasons
-        # At the start of each season, generate a new trend slope for each team.
-        # This is the core logic for changing dynamics between seasons.
-        # A positive slope means the team improves during this season.
-        # A negative slope means the team declines during this season.
         attack_slopes = rand(Normal(0, season_to_season_volatility), n_teams)
         defense_slopes = rand(Normal(0, season_to_season_volatility), n_teams)
 
-        # Inner loop: Iterate through each round within the current season
         for r in 1:rounds_per_season
             current_round_index += 1
             t = current_round_index
 
             if t == 1
-                # For the very first round, the strength is just the slope
                 true_log_α[:, t] = attack_slopes
                 true_log_β[:, t] = defense_slopes
             else
-                # For subsequent rounds, build upon the previous round's strength
-                # using the slope assigned for the *current season*.
                 true_log_α[:, t] = true_log_α[:, t-1] + attack_slopes
                 true_log_β[:, t] = true_log_β[:, t-1] + defense_slopes
             end
 
-            # Apply the sum-to-zero constraint at every time step for identifiability
             true_log_α[:, t] .-= mean(true_log_α[:, t])
             true_log_β[:, t] .-= mean(true_log_β[:, t])
         end
     end
 
-    # Convert log-space strengths to natural scale for Poisson rate
-    true_α = exp.(true_log_α)
-    true_β = exp.(true_log_β)
-
-    # --- Generate Match Data (similar to original function) ---
-    home_team_ids_all, away_team_ids_all = [], []
-    home_goals_all, away_goals_all = [], []
+    # Initialize flat vectors to store the data for the DataFrame
+    home_team_ids_flat, away_team_ids_flat = Int[], Int[]
+    home_goals_flat, away_goals_flat = Int[], Int[]
+    global_round_flat = Int[]
 
     for t in 1:total_rounds
-        # Create fixtures for the round
         opponents = shuffle(teams)
         home_teams_round = opponents[1:div(n_teams, 2)]
         away_teams_round = opponents[div(n_teams, 2)+1:end]
-
-        home_goals_round, away_goals_round = [], []
 
         for k in 1:length(home_teams_round)
             i = home_teams_round[k]
             j = away_teams_round[k]
 
-            # Calculate Poisson rates using the strengths for the specific round 't'
-            λ = true_α[i, t] * true_β[j, t] * true_home_adv
-            μ = true_α[j, t] * true_β[i, t]
-
-            push!(home_goals_round, rand(Poisson(λ)))
-            push!(away_goals_round, rand(Poisson(μ)))
+            log_λ = log(exp(true_log_α[i, t]) * exp(true_log_β[j, t]) * true_home_adv)
+            log_μ = log(exp(true_log_α[j, t]) * exp(true_log_β[i, t]))
+            
+            # Append data to the flat vectors
+            push!(home_team_ids_flat, i)
+            push!(away_team_ids_flat, j)
+            push!(home_goals_flat, rand(LogPoisson(log_λ)))
+            push!(away_goals_flat, rand(LogPoisson(log_μ)))
+            push!(global_round_flat, t) # Add the current round index
         end
-
-        push!(home_team_ids_all, home_teams_round)
-        push!(away_team_ids_all, away_teams_round)
-        push!(home_goals_all, home_goals_round)
-        push!(away_goals_all, away_goals_round)
     end
 
-    # Return data in a format compatible with downstream processes
     return (
-        home_team_ids=home_team_ids_all,
-        away_team_ids=away_team_ids_all,
-        home_goals=home_goals_all,
-        away_goals=away_goals_all,
+        home_team_ids=home_team_ids_flat,
+        away_team_ids=away_team_ids_flat,
+        home_goals=home_goals_flat,
+        away_goals=away_goals_flat,
+        global_round=global_round_flat, # Return the new vector
         n_teams=n_teams,
-        n_rounds=total_rounds, # Note: this key now refers to total rounds
+        n_rounds=total_rounds,
         true_log_α=true_log_α,
         true_log_β=true_log_β
     )
 end
+
+
 
 """
     generate_test_set(data, true_home_adv)

@@ -134,6 +134,47 @@ end
 # PLots 
 ####
 
+# --- Comparison Plotting Function ---
+
+function plot_compare_a_b(team_number, data, α_dynamic, α_static, β_dynamic, β_static)
+    p = plot(layout=(2, 1), legend=:outertopright, size=(800, 600),
+             titlefontsize=10, tickfontsize=8)
+
+    # --- Alpha (Attack) Plot ---
+    plot!(p[1], 1:data.n_rounds, data.true_log_α[team_number, :],
+        label="True log α", lw=3, color=:black,
+        title="Team $team_number Attack Rating (log α)",
+        ylabel="Attack Parameter")
+
+    plot!(p[1], 1:data.n_rounds, mean(α_dynamic[:, team_number, :], dims=1)',
+        ribbon=std(α_dynamic[:, team_number, :], dims=1)',
+        label="Dynamic Estimate", color=:blue, fillalpha=0.2)
+
+    mean_static_α = mean(α_static[:, team_number])
+    std_static_α = std(α_static[:, team_number])
+    plot!(p[1], 1:data.n_rounds, fill(mean_static_α, data.n_rounds),
+        ribbon=std_static_α,
+        label="Static Estimate", color=:red, linestyle=:dash, lw=2, fillalpha=0.2)
+
+    # --- Beta (Defense) Plot ---
+    plot!(p[2], 1:data.n_rounds, data.true_log_β[team_number, :],
+        label="True log β", lw=3, color=:black,
+        title="Team $team_number Defense Rating (log β)",
+        xlabel="Round", ylabel="Defense Parameter")
+
+    plot!(p[2], 1:data.n_rounds, mean(β_dynamic[:, team_number, :], dims=1)',
+        ribbon=std(β_dynamic[:, team_number, :], dims=1)',
+        label="Dynamic Estimate", color=:blue, fillalpha=0.2)
+
+    mean_static_β = mean(β_static[:, team_number])
+    std_static_β = std(β_static[:, team_number])
+    plot!(p[2], 1:data.n_rounds, fill(mean_static_β, data.n_rounds),
+        ribbon=std_static_β,
+        label="Static Estimate", color=:red, linestyle=:dash, lw=2, fillalpha=0.2)
+    
+    return p
+end
+
 
 """
     plot_team_dashboard(team_number, data, α_dynamic, α_static, β_dynamic, β_static)
@@ -199,6 +240,111 @@ function plot_team_dashboard(team_number, data, α_dynamic, β_dynamic)
     
     return p
 end
+
+"""
+    plot_multiple_dashboards(teams, data, α_dynamic, α_static, β_dynamic, β_static)
+
+Creates a vertical layout of team dashboards for a given list of team IDs.
+
+# Arguments
+- `teams`: A vector of team IDs to plot (e.g., [1, 2, 5]).
+- `data`, `α_dynamic`, etc.: The same arguments required by the single dashboard function.
+"""
+function plot_multiple_dashboards(teams, data, α_dynamic, β_dynamic)
+    
+    # Create an empty list to hold each team's dashboard plot
+    plot_list = []
+
+    # Loop through each requested team ID
+    for team_id in teams
+        # Generate the 2x2 dashboard for the current team
+        p_team = plot_team_dashboard(
+            team_id, 
+            data, 
+            α_dynamic, 
+            β_dynamic, 
+        )
+        # Add the generated plot to our list
+        push!(plot_list, p_team)
+    end
+
+    # Arrange all the plots in the list into a single column
+    # The layout is (number_of_rows, number_of_columns)
+    # The final size will need to be tall to accommodate all the plots.
+    n_teams = length(teams)
+    final_plot = plot(plot_list..., 
+                      layout = (n_teams, 1), 
+                      size = (1400, 750 * n_teams)
+    )
+
+    return final_plot
+end
+
+function plot_team_dashboard(team_number, data, α_dynamic, α_static, β_dynamic, β_static)
+    
+    # 1. Get the goal history for the specified team
+    goals_scored, goals_conceded = get_team_goal_history(team_number, data)
+    
+    # 2. Initialize the 2x2 plot layout
+    # link=:x synchronizes the x-axis across all subplots
+    p = plot(layout=(2, 2), size=(1400, 800), legend=:topleft,
+             titlefontsize=11, tickfontsize=8, link=:x)
+
+    # --- COLUMN 1: ATTACKING PERFORMANCE ---
+    
+    # Plot [1, 1]: Attack Parameter (log α)
+    plot!(p[1, 1], 1:data.n_rounds, data.true_log_α[team_number, :],
+        label="True log α", lw=3, color=:black,
+        title="Team $team_number Attacking Parameter (log α)",
+        ylabel="Parameter Value")
+
+    plot!(p[1, 1], 1:data.n_rounds, mean(α_dynamic[:, team_number, :], dims=1)',
+        ribbon=std(α_dynamic[:, team_number, :], dims=1)',
+        label="Dynamic Estimate", color=:dodgerblue, fillalpha=0.2)
+
+    mean_static_α = mean(α_static[:, team_number])
+    std_static_α = std(α_static[:, team_number])
+    plot!(p[1, 1], 1:data.n_rounds, fill(mean_static_α, data.n_rounds),
+        ribbon=std_static_α,
+        label="Static Estimate", color=:deepskyblue4, linestyle=:dash, lw=2, fillalpha=0.2)
+
+    # Plot [2, 1]: Goals Scored (Bar Chart)
+    bar!(p[2, 1], 1:data.n_rounds, goals_scored,
+         label="Goals Scored", color=:dodgerblue, alpha=0.7,
+         ylabel="Goals",
+         # xlabel="Round", 
+         legend=:topleft,
+         ylims=(0, max(maximum(goals_scored), maximum(goals_conceded)) + 1)
+    )
+
+    # --- COLUMN 2: DEFENSIVE PERFORMANCE ---
+
+    # Plot [1, 2]: Defense Parameter (log β)
+    plot!(p[1, 2], 1:data.n_rounds, data.true_log_β[team_number, :],
+        label="True log β", lw=3, color=:black,
+        title="Team $team_number Defensive Parameter (log β)")
+
+    plot!(p[1, 2], 1:data.n_rounds, mean(β_dynamic[:, team_number, :], dims=1)',
+        ribbon=std(β_dynamic[:, team_number, :], dims=1)',
+        label="Dynamic Estimate", color=:crimson, fillalpha=0.2)
+
+    mean_static_β = mean(β_static[:, team_number])
+    std_static_β = std(β_static[:, team_number])
+    plot!(p[1, 2], 1:data.n_rounds, fill(mean_static_β, data.n_rounds),
+        ribbon=std_static_β,
+        label="Static Estimate", color=:darkred, linestyle=:dash, lw=2, fillalpha=0.2)
+        
+    # Plot [2, 2]: Goals Conceded (Bar Chart)
+    bar!(p[2, 2], 1:data.n_rounds, goals_conceded,
+         label="Goals Conceded", color=:crimson, alpha=0.7,
+         # xlabel="Round",
+         legend=:topleft,
+         ylims=(0, max(maximum(goals_scored), maximum(goals_conceded)) + 1)
+    )
+    
+    return p
+end
+
 
 """
     plot_multiple_dashboards(teams, data, α_dynamic, α_static, β_dynamic, β_static)
