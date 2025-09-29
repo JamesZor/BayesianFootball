@@ -17,12 +17,12 @@ include("/home/james/bet_project/models_julia/workspace/basic_state_space/models
 using .AR1Poisson
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/utils.jl")
 using .SSMUtils
-include("../analysis/plotting.jl")
-using .SSMPlots
+
+# Have not added yet
+# include("../analysis/plotting.jl")
+# using .SSMPlots
 
 # --- 2. GENERATE SYNTHETIC DATA ---
-
-println("Generating synthetic data...")
 synth_data = generate_synthetic_data(n_teams=10, n_rounds=38)
 
 # Convert the generated data into a DataFrame, which our model pipeline expects

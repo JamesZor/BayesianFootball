@@ -74,7 +74,10 @@ function generate_synthetic_data(;
     true_home_adv = 1.3
     
     # --- Generate Match Schedule and Goals ---
-    home_teams = []; away_teams = []; home_goals = []; away_goals = []; rounds = []
+    home_teams = Int[]; away_teams = Int[]
+    home_goals = Int[]; away_goals = Int[]
+    rounds = Int[]
+    
     
     for t in 1:n_rounds
         teams = shuffle(1:n_teams)
