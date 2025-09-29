@@ -92,6 +92,15 @@ struct MaherBasic <: AbstractModelDefinition end
 "Maher model variant with a separate home-advantage parameter for each league."
 struct MaherLeagueHA <: AbstractModelDefinition end
 
+
+"""
+An abstract type for all state-space models in the BayesianFootball framework.
+Models of this type are expected to handle time-series data, typically
+structured by a `:global_round` feature.
+"""
+abstract type AbstractStateSpaceModel <: AbstractModelDefinition end
+
+
 # --- Unchanged Model Types ---
 struct BasicMaherModels
     ht::Turing.Model

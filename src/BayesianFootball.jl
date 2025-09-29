@@ -64,7 +64,8 @@ export ExperimentRun, prepare_run, save, load_run, save_experiment_metadata
 # ============================================================================
 # --- Main API Exports ---
 # ============================================================================
-
+# model 
+export AbstractStateSpaceModel
 # --- Core Types ---
 export DataFiles, DataStore, MappingFunctions, MappedData
 export TrainedModel # NEW: Export our main model container
