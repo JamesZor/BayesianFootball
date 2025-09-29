@@ -1,5 +1,5 @@
 # workspace/basic_state_space/runners/train_synthetic_poisson.jl
-
+using BayesianFootball
 using Turing
 using Plots
 using Statistics

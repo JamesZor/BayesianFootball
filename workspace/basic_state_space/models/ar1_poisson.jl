@@ -28,7 +28,7 @@ function BayesianFootball.get_required_features(::AR1PoissonModel)
 end
 
 function BayesianFootball.build_turing_model(
-    ::AR1PoissonModel,
+    :: AR1PoissonModel,
     features::NamedTuple,
     goals_home::Vector{Int},
     goals_away::Vector{Int}
