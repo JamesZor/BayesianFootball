@@ -779,6 +779,209 @@ end # end module
 
 
 
+module AR1NegativeBinomial_ha
+
+using Turing
+using LinearAlgebra
+using Distributions
+using DataFrames
+using BayesianFootball
+using Statistics # For mean()
+
+export AR1NegativeBinomialHAModel
+
+#=
+--------------------------------------------------------------------------------
+1.  MODEL DEFINITION STRUCT
+--------------------------------------------------------------------------------
+This struct identifies our new dynamic Negative Binomial model.
+=#
+struct AR1NegativeBinomialHAModel <: AbstractModelDefinition end
+
+#=
+--------------------------------------------------------------------------------
+2.  FRAMEWORK INTERFACE IMPLEMENTATION
+--------------------------------------------------------------------------------
+=#
+
+"""
+    get_required_features(::AR1NegativeBinomialModel)
+
+Declares the data features required by this model. It now includes league info.
+"""
+function BayesianFootball.get_required_features(::AR1NegativeBinomialHAModel)
+    return (
+        :home_team_ids,
+        :away_team_ids,
+        :n_teams,
+        :global_round,
+        :league_ids, # <-- NEW
+        :n_leagues   # <-- NEW
+    )
+end
+
+"""
+    build_turing_model(::AR1NegativeBinomialModel, features, goals_home, goals_away)
+
+Constructs the Turing model instance by grouping data by `:global_round`.
+"""
+function BayesianFootball.build_turing_model(
+    ::AR1NegativeBinomialHAModel,
+    features::NamedTuple,
+    goals_home::Vector{Int},
+    goals_away::Vector{Int}
+)
+    temp_df = DataFrame(
+        global_round = features.global_round,
+        home_id = features.home_team_ids,
+        away_id = features.away_team_ids,
+        league_id = features.league_ids, # <-- NEW
+        gh = goals_home,
+        ga = goals_away
+    )
+    
+    grouped = groupby(temp_df, :global_round)
+    n_rounds = length(grouped)
+
+    # Pre-allocate nested vectors for model arguments
+    home_team_ids_by_round = [g.home_id for g in grouped]
+    away_team_ids_by_round = [g.away_id for g in grouped]
+    league_ids_by_round = [g.league_id for g in grouped] # <-- NEW
+    home_goals_by_round = [g.gh for g in grouped]
+    away_goals_by_round = [g.ga for g in grouped]
+    
+    return ar1_neg_bin_model(
+        home_team_ids_by_round,
+        away_team_ids_by_round,
+        league_ids_by_round, # <-- NEW
+        home_goals_by_round,
+        away_goals_by_round,
+        features.n_teams,
+        features.n_leagues, # <-- NEW
+        n_rounds
+    )
+end
+
+#=
+--------------------------------------------------------------------------------
+3.  TURING @MODEL DEFINITION
+--------------------------------------------------------------------------------
+The dynamic state-space model with AR(1) processes for attack, defense,
+home advantage (per league), and the dispersion parameter (phi).
+=#
+@model function ar1_neg_bin_model(
+    home_team_ids::Vector{<:AbstractVector}, 
+    away_team_ids::Vector{<:AbstractVector}, 
+    league_ids::Vector{<:AbstractVector}, # <-- NEW
+    home_goals::Vector{<:AbstractVector}, 
+    away_goals::Vector{<:AbstractVector}, 
+    n_teams::Int, 
+    n_leagues::Int, # <-- NEW
+    n_rounds::Int
+)
+    # --- Priors for Attack/Defense AR(1) Process ---
+    ρ_attack ~ Beta(10, 1.5)
+    ρ_defense ~ Beta(10, 1.5)
+
+    μ_log_σ_attack ~ Normal(-2.5, 0.5) 
+    τ_log_σ_attack ~ Truncated(Normal(0, 0.2), 0, Inf)
+    z_log_σ_attack ~ MvNormal(zeros(n_teams), I)
+    log_σ_attack = μ_log_σ_attack .+ z_log_σ_attack * τ_log_σ_attack
+    σ_attack = exp.(log_σ_attack)
+
+    μ_log_σ_defense ~ Normal(-2.5, 0.5) 
+    τ_log_σ_defense ~ Truncated(Normal(0, 0.2), 0, Inf)
+    z_log_σ_defense ~ MvNormal(zeros(n_teams), I)
+    log_σ_defense = μ_log_σ_defense .+ z_log_σ_defense * τ_log_σ_defense
+    σ_defense = exp.(log_σ_defense)
+
+    # --- NEW: Priors for Home Advantage AR(1) Process (per league) ---
+    ρ_home ~ Beta(10, 1.5)
+    μ_log_σ_home ~ Normal(-3.0, 0.5) # Expect home adv to be less volatile than team strength
+    σ_home = exp(μ_log_σ_home)
+
+    # --- NEW: Priors for log(phi) AR(1) Process (global) ---
+    ρ_phi ~ Beta(10, 1.5)
+    μ_log_σ_phi ~ Normal(-3.0, 0.5) # Expect phi to also be fairly stable
+    σ_phi = exp(μ_log_σ_phi)
+    
+    # --- Latent State Variables ---
+    # Team Strengths
+    initial_α_z ~ MvNormal(zeros(n_teams), I)
+    initial_β_z ~ MvNormal(zeros(n_teams), I)
+    log_α_raw_t0 = initial_α_z * sqrt(0.5)
+    log_β_raw_t0 = initial_β_z * sqrt(0.5)
+    
+    # NEW: Home Advantage (per league)
+    initial_home_z ~ MvNormal(zeros(n_leagues), I)
+    log_home_adv_raw_t0 = log(1.3) .+ initial_home_z .* sqrt(0.1) # Center initial draw around a plausible mean
+
+    # NEW: Log Phi (global)
+    initial_phi_z ~ Normal(0, 1)
+    log_phi_raw_t0 = log(10.0) + initial_phi_z * sqrt(0.1) # Center around a plausible value for phi
+
+    # Innovations
+    z_α ~ MvNormal(zeros(n_teams * n_rounds), I); z_α_mat = reshape(z_α, n_teams, n_rounds)
+    z_β ~ MvNormal(zeros(n_teams * n_rounds), I); z_β_mat = reshape(z_β, n_teams, n_rounds)
+    z_home ~ MvNormal(zeros(n_leagues * n_rounds), I); z_home_mat = reshape(z_home, n_leagues, n_rounds) # <-- NEW
+    z_phi ~ MvNormal(zeros(n_rounds), I) # <-- NEW
+
+    # State containers
+    log_α_raw = Matrix{Real}(undef, n_teams, n_rounds)
+    log_β_raw = Matrix{Real}(undef, n_teams, n_rounds)
+    log_home_adv_raw = Matrix{Real}(undef, n_leagues, n_rounds) # <-- NEW
+    log_phi_raw = Vector{Real}(undef, n_rounds) # <-- NEW
+
+    # --- Main Time-Series Loop ---
+    for t in 1:n_rounds
+        # 1. Evolve the latent states
+        if t == 1
+            log_α_raw[:, 1] = log_α_raw_t0 .+ z_α_mat[:, 1] .* σ_attack
+            log_β_raw[:, 1] = log_β_raw_t0 .+ z_β_mat[:, 1] .* σ_defense
+            log_home_adv_raw[:, 1] = log_home_adv_raw_t0 .+ z_home_mat[:, 1] .* σ_home
+            log_phi_raw[1] = log_phi_raw_t0 + z_phi[1] * σ_phi
+        else
+            log_α_raw[:, t] = ρ_attack * log_α_raw[:, t-1] .+ z_α_mat[:, t] .* σ_attack
+            log_β_raw[:, t] = ρ_defense * log_β_raw[:, t-1] .+ z_β_mat[:, t] .* σ_defense
+            log_home_adv_raw[:, t] = ρ_home * log_home_adv_raw[:, t-1] .+ z_home_mat[:, t] .* σ_home
+            log_phi_raw[t] = ρ_phi * log_phi_raw[t-1] + z_phi[t] * σ_phi
+        end
+
+        # 2. Apply sum-to-zero constraint for identifiability
+        log_α_t = log_α_raw[:, t] .- mean(log_α_raw[:, t])
+        log_β_t = log_β_raw[:, t] .- mean(log_β_raw[:, t])
+        
+        # 3. Connect to data via likelihood
+        home_ids = home_team_ids[t]
+        away_ids = away_team_ids[t]
+        l_ids = league_ids[t]
+        
+        if !isempty(home_ids)
+            # Select the correct home advantage for each match's league
+            log_home_adv_t = log_home_adv_raw[l_ids, t]
+            
+            log_λs = log_α_t[home_ids] .+ log_β_t[away_ids] .+ log_home_adv_t
+            log_μs = log_α_t[away_ids] .+ log_β_t[home_ids]
+            
+            # Use the time-specific dispersion parameter
+            ϕ_t = exp(log_phi_raw[t])
+            
+            logit_ps_home = log(ϕ_t) .- log_λs
+            logit_ps_away = log(ϕ_t) .- log_μs
+
+            ps_home = Turing.logistic.(logit_ps_home)
+            ps_away = Turing.logistic.(logit_ps_away)
+
+            home_goals[t] .~ NegativeBinomial.(ϕ_t, ps_home)
+            away_goals[t] .~ NegativeBinomial.(ϕ_t, ps_away)
+        end
+    end
+end
+
+end # end module AR1NegativeBinomial
+
+
+
 module AR1NegBinVectorized
 
 using SpecialFunctions
