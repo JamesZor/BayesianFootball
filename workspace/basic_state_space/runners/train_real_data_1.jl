@@ -120,7 +120,7 @@ model_definitions = [
 # )
 
 cv_config = BayesianFootball.TimeSeriesSplitsConfig(
-    ["23/24","24/25", "25/26"],
+    ["24/25", "25/26"],
     [],
     :round
 )
