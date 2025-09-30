@@ -65,12 +65,16 @@ function run_training_instance(model_spec, cv_config, sample_config, data_store,
     
     config = ExperimentConfig(run_name, model_spec.def, cv_config, sample_config)
 
+    mapping_funcs = BayesianFootball.MappingFunctions(
+        BayesianFootball.create_list_mapping
+  )
+
     # Prepare data and training morphism
     train_df = filter(row -> row.season in config.cv_config.base_seasons, data_store.matches)
     training_morphism = BayesianFootball.compose_training_morphism(
         config.model_def,
         config.sample_config,
-        global_mapping
+        mapping_funcs
     )
 
     # Execute the training
