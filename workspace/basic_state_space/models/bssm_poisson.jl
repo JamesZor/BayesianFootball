@@ -33,7 +33,6 @@ function BayesianFootball.build_turing_model(
     goals_home::Vector{Int},
     goals_away::Vector{Int}
 )
-    # Group data by round to handle time evolution
     temp_df = DataFrame(
         global_round=features.global_round,
         home_id=features.home_team_ids,
@@ -57,26 +56,21 @@ function BayesianFootball.build_turing_model(
         n_teams::Int,
         n_rounds::Int
     )
-        # Priors for initial state (in log-space)
         μ_att ~ Normal(0, 1)
         μ_def ~ Normal(0, 1)
         σ_att ~ Gamma(2, 0.5)
         σ_def ~ Gamma(2, 0.5)
-        home_adv ~ Normal(0.3, 0.5) # Home advantage
+        home_adv ~ Normal(0.3, 0.5)
 
-        # AR(1) evolution noise
         σ_evo_att ~ Gamma(2, 0.5)
         σ_evo_def ~ Gamma(2, 0.5)
 
-        # Initial latent states (t=0)
         log_attack_t0 ~ MvNormal(fill(μ_att, n_teams), σ_att^2 * I)
         log_defense_t0 ~ MvNormal(fill(μ_def, n_teams), σ_def^2 * I)
 
-        # Latent state variables for all rounds
         log_attack = Matrix{Real}(undef, n_teams, n_rounds)
         log_defense = Matrix{Real}(undef, n_teams, n_rounds)
 
-        # State evolution (AR1 process / Random Walk)
         log_attack[:, 1] ~ MvNormal(log_attack_t0, σ_evo_att^2 * I)
         log_defense[:, 1] ~ MvNormal(log_defense_t0, σ_evo_def^2 * I)
 
@@ -85,24 +79,19 @@ function BayesianFootball.build_turing_model(
             log_defense[:, t] ~ MvNormal(log_defense[:, t-1], σ_evo_def^2 * I)
         end
 
-        # --- LIKELIHOOD (OPTIMIZED) ---
         for t in 1:n_rounds
             n_matches_in_round = length(home_ids[t])
             for m in 1:n_matches_in_round
                 h_team = home_ids[t][m]
                 a_team = away_ids[t][m]
-
                 log_λ_home = log_attack[h_team, t] + log_defense[a_team, t] + home_adv
                 log_λ_away = log_attack[a_team, t] + log_defense[h_team, t]
-
-                # Use LogPoisson for efficiency and stability
                 goals_h[t][m] ~ LogPoisson(log_λ_home)
                 goals_a[t][m] ~ LogPoisson(log_λ_away)
             end
         end
     end
 
-    # Return the instantiated Turing model
     return bssm_model(
         home_ids_by_round,
         away_ids_by_round,
@@ -115,24 +104,44 @@ end
 
 #=
 --------------------------------------------------------------------------------
-3.  PREDICTION LOGIC
-    Note that this part still needs the exp() because we need the actual
-    goal rates (λ) to calculate match probabilities, not the log-rates.
+2.  POSTERIOR EXTRACTION (CORRECTED FUNCTION)
 --------------------------------------------------------------------------------
 =#
+
+function BayesianFootball.extract_posterior_samples(
+    ::BSSMPoissonModel,
+    chain::Chains,
+    ::MappedData
+)
+    # This correctly iterates through all parameters in the chain,
+    # extracts their samples as vectors, and returns them in a NamedTuple.
+    # This is the format the `_predict_match_ft` function expects.
+    param_names = names(chain)
+    samples_dict = Dict{Symbol, Vector}()
+    for p_name in param_names
+        samples_dict[Symbol(p_name)] = vec(Array(chain[p_name]))
+    end
+    return (; samples_dict...) # Convert Dict to NamedTuple
+end
+
+#=
+--------------------------------------------------------------------------------
+3.  PREDICTION LOGIC
+--------------------------------------------------------------------------------
+=#
+
 function get_goal_rates(
     model_def::BSSMPoissonModel,
     posterior_samples::NamedTuple,
     sample_idx::Int,
     features::NamedTuple
 )
-    home_team = features.home_team_id
-    away_team = features.away_team_id
-    last_round = features.last_round_trained 
+    home_team = features.home_team_ids
+    away_team = features.away_team_ids
+    last_round = features.last_round_trained
 
     home_adv = posterior_samples.home_adv[sample_idx]
     
-    # Constructing the parameter names as they appear in the MCMC chain
     att_h_sym = Symbol("log_attack[$(home_team),$(last_round)]")
     def_a_sym = Symbol("log_defense[$(away_team),$(last_round)]")
     att_a_sym = Symbol("log_attack[$(away_team),$(last_round)]")
@@ -143,12 +152,17 @@ function get_goal_rates(
     att_a = posterior_samples[att_a_sym][sample_idx]
     def_h = posterior_samples[def_h_sym][sample_idx]
 
-    # We need the actual rate here for prediction, so exp() is necessary
     λ_home = exp(att_h + def_a + home_adv)
     λ_away = exp(att_a + def_h)
 
     return λ_home, λ_away
 end
+
+#=
+--------------------------------------------------------------------------------
+4.  FULL PREDICTION IMPLEMENTATION
+--------------------------------------------------------------------------------
+=#
 
 function BayesianFootball._predict_match_ft(
     model_def::BSSMPoissonModel,
@@ -165,7 +179,7 @@ function BayesianFootball._predict_match_ft(
     for i in 1:n_samples
         λ_h, λ_a = get_goal_rates(model_def, posterior_samples, i, features)
         λ_home[i]=λ_h; λ_away[i]=λ_a
-        p = BayesianFootball.compute_xScore(λ_h, λ_a, 10) # 10 is max goals
+        p = BayesianFootball.compute_xScore(λ_h, λ_a, 10)
         hda = BayesianFootball.calculate_1x2(p)
         cs = BayesianFootball.calculate_correct_score_dict_ft(p)
         
@@ -173,9 +187,7 @@ function BayesianFootball._predict_match_ft(
         draw_probs[i]=hda.dr
         away_win_probs[i]=hda.aw
         
-        for (key, value) in cs
-            correct_score[key][i]=value
-        end
+        for (key, value) in cs; correct_score[key][i]=value; end
         
         under_05[i]=BayesianFootball.calculate_under_prob(p,0)
         under_15[i]=BayesianFootball.calculate_under_prob(p,1)
@@ -210,9 +222,7 @@ function BayesianFootball._predict_match_ht(
         draw_probs[i]=hda.dr
         away_win_probs[i]=hda.aw
         
-        for (key, value) in cs
-            correct_score[key][i]=value
-        end
+        for (key, value) in cs; correct_score[key][i]=value; end
         
         under_05[i]=BayesianFootball.calculate_under_prob(p,0)
         under_15[i]=BayesianFootball.calculate_under_prob(p,1)
@@ -221,7 +231,5 @@ function BayesianFootball._predict_match_ht(
 
     return BayesianFootball.Predictions.MatchHTPredictions(λ_home, λ_away, home_win_probs, draw_probs, away_win_probs, correct_score, under_05, under_15, under_25)
 end
-
-
 
 end # end module
