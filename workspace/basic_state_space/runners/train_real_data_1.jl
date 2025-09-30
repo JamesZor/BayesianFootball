@@ -120,11 +120,11 @@ model_definitions = [
 # )
 
 cv_config = BayesianFootball.TimeSeriesSplitsConfig(
-    ["24/25", "25/26"],
+    ["23/24","24/25", "25/26"],
     [],
     :round
 )
-sample_config = BayesianFootball.ModelSampleConfig(10, true) # Using 500 samples for a quicker run
+sample_config = BayesianFootball.ModelSampleConfig(500, true) # Using 500 samples for a quicker run
 
 # --- 2. Create Global Mapping ---
 println("Creating global data mapping...")
