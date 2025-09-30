@@ -7,6 +7,7 @@ using Statistics
 using Distributions
 using PrettyTables
 using Printf
+using Turing
 
 export generate_test_set, generate_predictions, evaluate_predictions, display_evaluation_results
 

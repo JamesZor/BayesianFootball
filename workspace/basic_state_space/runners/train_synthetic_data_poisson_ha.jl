@@ -26,7 +26,7 @@ using .SSMUtils
 
 synth_data = generate_synthetic_multi_season_data_ha(
     n_teams=10,
-    n_seasons=3,
+    n_seasons=2,
     rounds_per_season=38,
     season_to_season_volatility=0.02, 
     home_adv_volatility=0.01,
@@ -105,8 +105,8 @@ ar1ha_turing_model = AR1PoissonHA.build_turing_model(
     synth_data.away_goals
 )
 
-ar1_chain = sample(ar1_turing_model, NUTS(0.65), 500, progress=true)
-ar1ha_chain = sample(ar1ha_turing_model, NUTS(0.65), 500, progress=true)
+ar1_chain = sample(ar1_turing_model, NUTS(0.65), 100, progress=true)
+ar1ha_chain = sample(ar1ha_turing_model, NUTS(0.65), 100, progress=true)
 
 # mapping = BayesianFootball.MappedData(
 #     Dict(string(i) => i for i in 1:10),
@@ -203,3 +203,76 @@ comparison_plot = plot_model_comparison(team_to_plot, synth_data, ar1ha_params, 
 
 # Display the plot
 display(comparison_plot)
+
+
+
+
+####
+# testing to use the models predict functins 
+####
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/utils/model_eval_poisson.jl")
+using .ModelEvaluation
+
+dummy_chains = BayesianFootball.TrainedChains(ar1_chain, ar1_chain, "samples", 1)
+dummy_chains_ha = BayesianFootball.TrainedChains(ar1ha_chain, ar1ha_chain, "samples", 1)
+
+test_set_matches = ModelEvaluation.generate_test_set(synth_data)
+test_set_matches = generate_test_set1(synth_data)
+
+match = test_set_matches[1]
+
+mapping = BayesianFootball.MappedData(
+    Dict("Team " * string(i) => i for i in 1:synth_data.n_teams),
+    Dict("League " * string(i) => i for i in 1:synth_data.n_leagues),
+)
+
+predict_df = DataFrame(
+          home_team="Team " * string(match.home_team), # Use string names
+          away_team="Team " * string(match.away_team),
+          tournament_id="League 1",
+          global_round = maximum(synth_data.global_round) + 1,
+          home_score_ht = 0, 
+          away_score_ht = 0, 
+          home_score = 0, 
+          away_score = 0, 
+      )
+
+features = BayesianFootball.create_master_features(predict_df, mapping)
+
+predictions = BayesianFootball.predict(ar1_model_def, dummy_chains, features, mapping)
+# predict not working 
+
+# Extract posterior samples once, using dispatch to call the correct method
+posterior_samples_ft = BayesianFootball.extract_posterior_samples(ar1_model_def, dummy_chains.ft, mapping);
+posterior_samples_ht = BayesianFootball.extract_posterior_samples(ar1_model_def, dummy_chains.ht, mapping);
+
+# Generate FT and HT predictions
+ft_predict = BayesianFootball._predict_match_ft(ar1_model_def, dummy_chains.ft, features, posterior_samples_ft);
+ht_predict = BayesianFootball._predict_match_ht(ar1_model_def, dummy_chains.ht, features, posterior_samples_ht);
+
+m_prediction = BayesianFootball.Predictions.MatchLinePredictions(ht_predict, ft_predict);
+
+mean( m_prediction.ft.home)
+mean( m_prediction.ft.away)
+
+mean( predictions.ft.home)
+mean( predictions.ft.away)
+match
+
+mean( predictions.ft.under_35)
+
+
+
+posterior_samples_ft_ha = BayesianFootball.extract_posterior_samples(ar1ha_model_def, dummy_chains_ha.ft, mapping);
+posterior_samples_ht_ha = BayesianFootball.extract_posterior_samples(ar1ha_model_def, dummy_chains_ha.ht, mapping);
+
+# Generate FT and HT predictions
+ft_predict_ha = BayesianFootball._predict_match_ft(ar1ha_model_def, dummy_chains_ha.ft, features, posterior_samples_ft_ha);
+ht_predict_ha = BayesianFootball._predict_match_ht(ar1ha_model_def, dummy_chains_ha.ht, features, posterior_samples_ht_ha);
+
+m_prediction_ha = BayesianFootball.Predictions.MatchLinePredictions(ht_predict_ha, ft_predict_ha);
+
+
+mean( m_prediction_ha.ft.home)
+mean( m_prediction_ha.ft.away)
+match

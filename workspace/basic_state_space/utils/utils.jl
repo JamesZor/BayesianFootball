@@ -8,6 +8,7 @@ using Random
 using PrettyTables, Printf, Statistics
 using Plots, StatsPlots, MCMCChains
 using Distributions
+using Turing 
 
 export add_global_round_column!, generate_synthetic_data
 
