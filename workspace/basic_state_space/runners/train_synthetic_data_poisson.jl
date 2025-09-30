@@ -58,17 +58,6 @@ plot(
 )
 
 # Convert the generated data into a DataFrame, which our model pipeline expects
-#
-#
-#
-# This mimics the structure of the real data
-#  i dont think we need 
-# matches_df = DataFrame(
-#     global_round = vcat([fill(r, 5) for r in 1:synth_data.n_rounds]...), # 5 matches per round
-#     home_team_ids = synth_data.home_team_ids,
-#     away_team_ids = synth_data.away_team_ids
-# );
-
 matches_df = DataFrame(
     global_round = synth_data.global_round,
     home_team_ids = synth_data.home_team_ids,

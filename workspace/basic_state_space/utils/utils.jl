@@ -180,7 +180,99 @@ function generate_synthetic_multi_season_data(;
     )
 end
 
+function generate_synthetic_multi_season_data_ha(;
+    n_teams::Int=10,
+    n_seasons::Int=3,
+    rounds_per_season::Int=50,
+    season_to_season_volatility::Float64=0.02,
+    home_adv_volatility::Float64=0.01, # New: Control how much HA changes
+    seed::Int=42
+)
+    Random.seed!(seed)
 
+    total_rounds = n_seasons * rounds_per_season
+    
+    # --- Initialize True Parameters ---
+    true_log_α = zeros(n_teams, total_rounds)
+    true_log_β = zeros(n_teams, total_rounds)
+    true_log_home_adv = zeros(total_rounds) # New: HA is now a vector over time
+    
+    teams = 1:n_teams
+    current_round_index = 0
+
+    # --- Simulation Loop ---
+    for s in 1:n_seasons
+        # Generate new slopes for this season for all parameters
+        attack_slopes = rand(Normal(0, season_to_season_volatility), n_teams)
+        defense_slopes = rand(Normal(0, season_to_season_volatility), n_teams)
+        home_adv_slope = rand(Normal(0, home_adv_volatility)) # New
+
+        for r in 1:rounds_per_season
+            current_round_index += 1
+            t = current_round_index
+
+            if t == 1
+                true_log_α[:, t] = attack_slopes
+                true_log_β[:, t] = defense_slopes
+                true_log_home_adv[t] = log(1.3) + home_adv_slope # Start around a plausible value
+            else
+                # Evolve all parameters based on this season's slopes
+                true_log_α[:, t] = true_log_α[:, t-1] + attack_slopes
+                true_log_β[:, t] = true_log_β[:, t-1] + defense_slopes
+                true_log_home_adv[t] = true_log_home_adv[t-1] + home_adv_slope # New
+            end
+
+            # Apply sum-to-zero constraint to team parameters
+            true_log_α[:, t] .-= mean(true_log_α[:, t])
+            true_log_β[:, t] .-= mean(true_log_β[:, t])
+        end
+    end
+
+    # --- Generate Match Data ---
+    home_team_ids_flat, away_team_ids_flat = Int[], Int[]
+    home_goals_flat, away_goals_flat = Int[], Int[]
+    global_round_flat = Int[]
+    # We will assume a single league for this synthetic data
+    league_ids_flat = Int[]
+
+    for t in 1:total_rounds
+        opponents = shuffle(teams)
+        home_teams_round = opponents[1:div(n_teams, 2)]
+        away_teams_round = opponents[div(n_teams, 2)+1:end]
+
+        for k in 1:length(home_teams_round)
+            i = home_teams_round[k]
+            j = away_teams_round[k]
+
+            # ✨ THE KEY CHANGE IS HERE ✨
+            # Use the home advantage value for the specific time step `t`
+            log_λ = true_log_α[i, t] + true_log_β[j, t] + true_log_home_adv[t]
+            log_μ = true_log_α[j, t] + true_log_β[i, t]
+            
+            push!(home_team_ids_flat, i)
+            push!(away_team_ids_flat, j)
+            push!(home_goals_flat, rand(LogPoisson(log_λ)))
+            push!(away_goals_flat, rand(LogPoisson(log_μ)))
+            push!(global_round_flat, t)
+            push!(league_ids_flat, 1) # Assign all to league_id = 1
+        end
+    end
+
+    return (
+        home_team_ids=home_team_ids_flat,
+        away_team_ids=away_team_ids_flat,
+        home_goals=home_goals_flat,
+        away_goals=away_goals_flat,
+        global_round=global_round_flat,
+        league_ids=league_ids_flat, # New
+        n_teams=n_teams,
+        n_leagues=1, # New
+        n_rounds=total_rounds,
+        true_log_α=true_log_α,
+        true_log_β=true_log_β,
+        true_log_home_adv=true_log_home_adv # New
+    )
+end
 
 """
     generate_test_set(data, true_home_adv)

@@ -86,7 +86,122 @@ function get_centered_parameters(chain_dynamic, data)
     return log_α_centered, log_β_centered
 end
 
+### 
 
+using MCMCChains
+using Statistics
+
+"""
+    get_raw_parameters_ha(chain_dynamic, data)
+
+Reconstructs the raw, uncentered posterior trajectories for attack, defense,
+and the dynamic home advantage from a model chain.
+"""
+function get_raw_parameters_ha(chain_dynamic, data)
+    n_samples = size(chain_dynamic, 1) * size(chain_dynamic, 3)
+    n_teams = data.n_teams
+    n_rounds = data.n_rounds
+    n_leagues = data.n_leagues
+
+    # --- 1. Reconstruct Sigmas (Attack, Defense, Home Advantage) ---
+    μ_log_σ_attack = vec(Array(chain_dynamic[:μ_log_σ_attack]))
+    τ_log_σ_attack = vec(Array(chain_dynamic[:τ_log_σ_attack]))
+    z_log_σ_attack = Array(group(chain_dynamic, :z_log_σ_attack))
+    σ_attack_samples = exp.(μ_log_σ_attack .+ z_log_σ_attack .* τ_log_σ_attack)
+
+    μ_log_σ_defense = vec(Array(chain_dynamic[:μ_log_σ_defense]))
+    τ_log_σ_defense = vec(Array(chain_dynamic[:τ_log_σ_defense]))
+    z_log_σ_defense = Array(group(chain_dynamic, :z_log_σ_defense))
+    σ_defense_samples = exp.(μ_log_σ_defense .+ z_log_σ_defense .* τ_log_σ_defense)
+    
+    # NEW: Reconstruct Home Advantage Sigma
+    μ_log_σ_home = vec(Array(chain_dynamic[:μ_log_σ_home]))
+    σ_home_samples = exp.(μ_log_σ_home)
+
+    # --- 2. Reconstruct Raw Trajectories ---
+    ρ_attack = vec(Array(chain_dynamic["ρ_attack"]))
+    ρ_defense = vec(Array(chain_dynamic["ρ_defense"]))
+    ρ_home = vec(Array(chain_dynamic["ρ_home"])) # NEW
+
+    initial_α_z = Array(group(chain_dynamic, :initial_α_z))
+    initial_β_z = Array(group(chain_dynamic, :initial_β_z))
+    initial_home_z = Array(group(chain_dynamic, :initial_home_z)) # NEW
+    
+    z_α = Array(group(chain_dynamic, :z_α))
+    z_β = Array(group(chain_dynamic, :z_β))
+    z_home = Array(group(chain_dynamic, :z_home)) # NEW
+
+    log_α_raw = Array{Float64}(undef, n_samples, n_teams, n_rounds)
+    log_β_raw = Array{Float64}(undef, n_samples, n_teams, n_rounds)
+    log_home_adv_raw = Array{Float64}(undef, n_samples, n_leagues, n_rounds) # NEW
+
+    for s in 1:n_samples
+        z_α_mat_s = reshape(z_α[s, :], n_teams, n_rounds)
+        z_β_mat_s = reshape(z_β[s, :], n_teams, n_rounds)
+        z_home_mat_s = reshape(z_home[s, :], n_leagues, n_rounds) # NEW
+
+        log_α_raw_t0_s = initial_α_z[s, :] * sqrt(0.5)
+        log_β_raw_t0_s = initial_β_z[s, :] * sqrt(0.5)
+        log_home_adv_raw_t0_s = log(1.3) .+ initial_home_z[s, :] * sqrt(0.1) # NEW
+        
+        for t in 1:n_rounds
+            if t == 1
+                log_α_raw[s, :, 1] = log_α_raw_t0_s .+ z_α_mat_s[:, 1] .* σ_attack_samples[s, :]
+                log_β_raw[s, :, 1] = log_β_raw_t0_s .+ z_β_mat_s[:, 1] .* σ_defense_samples[s, :]
+                log_home_adv_raw[s, :, 1] = log_home_adv_raw_t0_s .+ z_home_mat_s[:, 1] .* σ_home_samples[s] # NEW
+            else
+                log_α_raw[s, :, t] = ρ_attack[s] * log_α_raw[s, :, t-1] .+ z_α_mat_s[:, t] .* σ_attack_samples[s, :]
+                log_β_raw[s, :, t] = ρ_defense[s] * log_β_raw[s, :, t-1] .+ z_β_mat_s[:, t] .* σ_defense_samples[s, :]
+                log_home_adv_raw[s, :, t] = ρ_home[s] * log_home_adv_raw[s, :, t-1] .+ z_home_mat_s[:, t] .* σ_home_samples[s] # NEW
+            end
+        end
+    end
+
+    return (
+        log_α_raw = log_α_raw, 
+        log_β_raw = log_β_raw, 
+        log_home_adv_raw = log_home_adv_raw, # NEW
+        σ_attack = σ_attack_samples, 
+        σ_defense = σ_defense_samples
+    )
+end
+
+
+"""
+    get_processed_parameters(chain_dynamic, data)
+
+Takes a model chain, reconstructs the raw parameter trajectories, and returns
+the centered team strengths along with the raw home advantage trajectory.
+"""
+function get_processed_parameters(chain_dynamic, data)
+    # Get all the raw, uncentered parameters
+    raw_params = get_raw_parameters_ha(chain_dynamic, data)
+    log_α_raw = raw_params.log_α_raw
+    log_β_raw = raw_params.log_β_raw
+    log_home_adv_raw = raw_params.log_home_adv_raw # Pass through home advantage
+    
+    n_samples, _, n_rounds = size(log_α_raw)
+    
+    # Center the team-specific results for plotting and identifiability
+    log_α_centered = similar(log_α_raw)
+    log_β_centered = similar(log_β_raw)
+    for s in 1:n_samples, t in 1:n_rounds
+        log_α_centered[s, :, t] = log_α_raw[s, :, t] .- mean(log_α_raw[s, :, t])
+        log_β_centered[s, :, t] = log_β_raw[s, :, t] .- mean(log_β_raw[s, :, t])
+    end
+    
+    # Return all processed parameters
+    return (
+        log_α_centered = log_α_centered,
+        log_β_centered = log_β_centered,
+        log_home_adv_raw = log_home_adv_raw
+    )
+end
+
+
+
+
+###
 
 
 """
@@ -171,6 +286,64 @@ function plot_compare_a_b(team_number, data, α_dynamic, α_static, β_dynamic, 
     plot!(p[2], 1:data.n_rounds, fill(mean_static_β, data.n_rounds),
         ribbon=std_static_β,
         label="Static Estimate", color=:red, linestyle=:dash, lw=2, fillalpha=0.2)
+    
+    return p
+end
+
+function get_centered_parameters_from_static_ha_model(chain_dynamic, data)
+    # This uses the same raw parameter extraction logic
+    raw_params = get_raw_parameters(chain_dynamic, data)
+    log_α_raw = raw_params.log_α_raw
+    log_β_raw = raw_params.log_β_raw
+    
+    n_samples, _, n_rounds = size(log_α_raw)
+    
+    # Center the results
+    log_α_centered = similar(log_α_raw)
+    log_β_centered = similar(log_β_raw)
+    for s in 1:n_samples, t in 1:n_rounds
+        log_α_centered[s, :, t] = log_α_raw[s, :, t] .- mean(log_α_raw[s, :, t])
+        log_β_centered[s, :, t] = log_β_raw[s, :, t] .- mean(log_β_raw[s, :, t])
+    end
+    
+    return (log_α_centered = log_α_centered, log_β_centered = log_β_centered)
+end
+
+function plot_model_comparison(team_number, data, ar1ha_params, ar1_params)
+    p = plot(layout=(2, 1), legend=:outertopright, size=(1000, 700),
+             titlefontsize=11, tickfontsize=8, left_margin=5Plots.mm)
+
+    # --- Alpha (Attack) Plot ---
+    plot!(p[1], 1:data.n_rounds, data.true_log_α[team_number, :],
+          label="True Value", lw=3, color=:black, ls=:dash,
+          title="Team $team_number Attack Rating (log α)",
+          ylabel="Attack Parameter")
+
+    # Plot estimate from the AR1-HA model
+    plot!(p[1], 1:data.n_rounds, vec(mean(ar1ha_params.log_α_centered[:, team_number, :], dims=1)),
+          ribbon=vec(std(ar1ha_params.log_α_centered[:, team_number, :], dims=1)),
+          label="Dynamic HA Model", color=:crimson, fillalpha=0.2, lw=2)
+
+    # Plot estimate from the simple AR1 model
+    plot!(p[1], 1:data.n_rounds, vec(mean(ar1_params.log_α_centered[:, team_number, :], dims=1)),
+          ribbon=vec(std(ar1_params.log_α_centered[:, team_number, :], dims=1)),
+          label="Static HA Model", color=:dodgerblue, fillalpha=0.2, lw=2)
+
+    # --- Beta (Defense) Plot ---
+    plot!(p[2], 1:data.n_rounds, data.true_log_β[team_number, :],
+          label="True Value", lw=3, color=:black, ls=:dash,
+          title="Team $team_number Defense Rating (log β)",
+          xlabel="Global Round", ylabel="Defense Parameter")
+          
+    # Plot estimate from the AR1-HA model
+    plot!(p[2], 1:data.n_rounds, vec(mean(ar1ha_params.log_β_centered[:, team_number, :], dims=1)),
+          ribbon=vec(std(ar1ha_params.log_β_centered[:, team_number, :], dims=1)),
+          label="Dynamic HA Model", color=:crimson, fillalpha=0.2, lw=2)
+
+    # Plot estimate from the simple AR1 model
+    plot!(p[2], 1:data.n_rounds, vec(mean(ar1_params.log_β_centered[:, team_number, :], dims=1)),
+          ribbon=vec(std(ar1_params.log_β_centered[:, team_number, :], dims=1)),
+          label="Static HA Model", color=:dodgerblue, fillalpha=0.2, lw=2)
     
     return p
 end

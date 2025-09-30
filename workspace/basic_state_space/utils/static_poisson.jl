@@ -2,6 +2,8 @@ using Distributions
 using StatsBase
 using Turing
 
+using Turing, Distributions, LinearAlgebra, Random
+
 @model function basic_maher_model(
     home_team_ids, away_team_ids, home_goals, away_goals, n_teams
 )
@@ -31,6 +33,16 @@ function get_maher_inputs(data)
 
   return  home_team_ids_flat, away_team_ids_flat, home_goals_flat, away_goals_flat
 end 
+
+function get_static_parameters(chain_static)
+  log_α_raw_static = Array(group(chain_static, :log_α_raw))
+  log_α_static = log_α_raw_static .- mean(log_α_raw_static, dims=2)
+
+  log_β_raw_static = Array(group(chain_static, :log_β_raw))
+  log_β_static = log_β_raw_static .- mean(log_β_raw_static, dims=2)
+  return log_α_static, log_β_static
+end
+
 
 """
     generate_static_predictions(chain_static, test_set)
