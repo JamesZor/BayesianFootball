@@ -124,7 +124,12 @@ sample_config = BayesianFootball.ModelSampleConfig(10, true) # Using 500 samples
 
 # --- 2. Create Global Mapping ---
 println("Creating global data mapping...")
-global_mapping = BayesianFootball.MappedData(data_store)
+
+mapping_funcs = BayesianFootball.MappingFunctions(
+  BayesianFootball.create_list_mapping
+)
+# This is the correct call, which relies on the constructor defined in your BayesianFootball package
+global_mapping = BayesianFootball.MappedData(data_store, mapping_funcs)
 println("✅ Mapping complete.")
 
 # --- 3. Run Training in Parallel ---
