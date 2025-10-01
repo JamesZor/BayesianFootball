@@ -109,6 +109,7 @@ by using the `model_scope` trait.
 
 using Turing, ReverseDiff # Make sure these are available
 using ReverseDiff, Memoization
+using ADTypes
 
 function compose_training_morphism(
     model_def::AbstractModelDefinition,
@@ -124,11 +125,10 @@ function compose_training_morphism(
         
         println("  [Thread $(threadid())] Building model(s) for scope: $scope")
 
-        # --- FIX: Define the AD backend and samplers ONCE in the main thread ---
-        ad_backend = Turing.AutoReverseDiff(compile=false)
+        # --------------------------------------------------------------------
+        ad_backend = AutoReverseDiff(compile=false) # <-- REMOVE "Turing." PREFIX
         ht_sampler = NUTS(adtype=ad_backend)
         ft_sampler = NUTS(adtype=ad_backend)
-        # --------------------------------------------------------------------
         
         ht_task = nothing
         ft_task = nothing
