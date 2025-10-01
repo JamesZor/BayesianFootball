@@ -108,6 +108,7 @@ by using the `model_scope` trait.
 # end
 
 using Turing, ReverseDiff # Make sure these are available
+using ReverseDiff, Memoization
 
 function compose_training_morphism(
     model_def::AbstractModelDefinition,
