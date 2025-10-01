@@ -8,6 +8,7 @@ using MCMCChains
 using Statistics
 using BayesianFootball
 using LogExpFunctions
+using Random
 
 export AR1NegativeBinomialHAModelLog
 
