@@ -267,3 +267,25 @@ function predict_match_lines(
     ft_predict = predict_match_ft(model_def, round_chains.ft, features, mapping)
     return Predictions.MatchLinePredictions(ht_predict, ft_predict)
 end
+
+""" place holder for the model module to overstack """ 
+function _predict_match_ft() end 
+
+function _predict_match_ht() end 
+
+function predict(
+    model::AbstractModelDefinition,
+    round_chains::TrainedChains,
+    features::NamedTuple,
+    mapping::MappedData
+)
+    # Extract posterior samples once, using dispatch to call the correct method
+    posterior_samples_ft = extract_posterior_samples(model, round_chains.ft, mapping)
+    posterior_samples_ht = extract_posterior_samples(model, round_chains.ht, mapping)
+    
+    # Generate FT and HT predictions
+    ft_predict = _predict_match_ft(model, round_chains.ft, features, posterior_samples_ft)
+    ht_predict = _predict_match_ht(model, round_chains.ht, features, posterior_samples_ht)
+    
+    return Predictions.MatchLinePredictions(ht_predict, ft_predict)
+end

@@ -1,12 +1,17 @@
-# src/utils/MatchDayUtils.jl
-module MatchDayUtils
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/setup.jl")
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/prediction.jl")
-include("/home/james/bet_project/models_julia/workspace/bivariate_maher_model/analysis_funcs.jl")
 
-using .BivariateMaher
-using .BivariatePrediction
-using .Analysis
+module MatchDayUtilsSSM
+
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/setup.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/prediction.jl")
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/analysis_functions.jl")
+
+
+using .AR1NegativeBinomial
+using .AR1NegBiPrediction
+using .AR1StateSpace
+using .AR1Prediction
+
+using .AnalysisSSM
 
 using PythonCall
 using JSON3
