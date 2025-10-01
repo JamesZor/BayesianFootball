@@ -9,6 +9,7 @@ using Statistics
 using BayesianFootball
 using LogExpFunctions
 using Random
+using SpecialFunctions
 
 export AR1NegativeBinomialHAModelLog
 
