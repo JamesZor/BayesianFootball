@@ -282,7 +282,7 @@ function get_goal_rates(
 end
 
 function BayesianFootball._predict_match_ft(
-    model_def::AR1PoissonHAModel,
+    model_def::AR1PoissonHAVectorizedModel,
     chain::Chains,
     features::NamedTuple,
     posterior_samples::NamedTuple
@@ -309,7 +309,7 @@ function BayesianFootball._predict_match_ft(
 end
 
 function BayesianFootball._predict_match_ht(
-    model_def::AR1PoissonHAModel,
+    model_def::AR1PoissonHAVectorizedModel,
     chain::Chains,
     features::NamedTuple,
     posterior_samples::NamedTuple
