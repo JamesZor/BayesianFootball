@@ -11,14 +11,14 @@ using .AnalysisSSM
 
 all_model_paths = Dict(
   "ssm_poiss" => "/home/james/bet_project/models_julia/experiments/ar1_model_comparison/ar1_poisson_ha_20250930-154846",
+  "ssm_neg_bin" => "/home/james/bet_project/models_julia/experiments/ar1_model_comparison/ar1_neg_bin_ha_20251001-134452",
 )
-
 
 
 
 todays_matches = get_todays_matches(["scotland", "england"]; cli_path=CLI_PATH)
 
-patterns_to_exclude = [" U21", r"\bB\b"]
+patterns_to_exclude = [" U21", r"\bB\b", " U19"]
 # Filter out rows where ANY of the patterns are found
 filter!(todays_matches) do row
     !any(p -> occursin(p, row.event_name), patterns_to_exclude)
@@ -43,9 +43,15 @@ loaded_models_all = load_models_from_paths(all_model_paths)
 ##
 
 function print_1x2(predictions)
-println("Home Win: ", round(mean( 1 ./ predictions.ft.home), digits=2),"  |  " ,  round(median( 1 ./ predictions.ft.home), digits=2))
-println("away Win: ", round(mean( 1 ./ predictions.ft.away), digits=2),"  |  " ,  round(median( 1 ./ predictions.ft.away), digits=2))
-println("draw Win: ", round(mean( 1 ./ predictions.ft.draw), digits=2),"  |  " ,  round(median( 1 ./ predictions.ft.draw), digits=2))
+println("Home Win: mean", round(mean( 1 ./ predictions.ft.home), digits=2),"  |  median" ,  round(median( 1 ./ predictions.ft.home), digits=2))
+println("away Win: mean", round(mean( 1 ./ predictions.ft.away), digits=2),"  |  median" ,  round(median( 1 ./ predictions.ft.away), digits=2))
+println("draw Win: mean", round(mean( 1 ./ predictions.ft.draw), digits=2),"  |  median" ,  round(median( 1 ./ predictions.ft.draw), digits=2))
+end
+
+function print_1x2_ht(predictions)
+println("Home Win: mean", round(mean( 1 ./ predictions.ht.home), digits=2),"  | median " ,  round(median( 1 ./ predictions.ht.home), digits=2))
+println("away Win: mean", round(mean( 1 ./ predictions.ht.away), digits=2),"  | median " ,  round(median( 1 ./ predictions.ht.away), digits=2))
+println("draw Win: mean", round(mean( 1 ./ predictions.ht.draw), digits=2),"  |  median" ,  round(median( 1 ./ predictions.ht.draw), digits=2))
 end
 
 
@@ -59,9 +65,11 @@ end
 
 ##
 todays_matches
-match_to_analyze = todays_matches[15, :]
+match_to_analyze = todays_matches[5, :]
 
 m1 = loaded_models_all["ssm_poiss"]
+
+m1 = loaded_models_all["ssm_neg_bin"]
 mapping = m1.result.mapping
 chain = m1.result.chains_sequence[1]
 
@@ -74,7 +82,7 @@ match_to_predict = DataFrame(
     home_team=match_to_analyze.home_team,
     away_team=match_to_analyze.away_team,
     tournament_id=2,
-    global_round = next_round, # Use the calculated next_round
+    global_round = 85, # Use the calculated next_round
     home_score_ht=0, away_score_ht=0, home_score=0, away_score=0
 )
 
