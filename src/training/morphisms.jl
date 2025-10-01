@@ -40,35 +40,98 @@ Composes the entire training pipeline from data to chains using the ModelDefinit
 This version is generalized to handle different model scopes (e.g., :HT, :FT, or both)
 by using the `model_scope` trait.
 """
+# function compose_training_morphism(
+#     model_def::AbstractModelDefinition,
+#     sample_config::ModelSampleConfig,
+#     mapping::MappedData
+# )
+#     # Get the list of required core feature symbols ONCE
+#     required_features = get_required_features(model_def)
+#
+#     # This is the composed function: data -> chains
+#     return (data, info) -> begin
+#         # 1. Generate all possible features from the raw data [cite: 100]
+#         all_features = create_master_features(data, mapping) 
+#
+#         # 2. Filter to get only the core features the model needs [cite: 101]
+#         model_features = (; (k => all_features[k] for k in required_features)...)
+#
+#
+#         # HACK:
+#         # 3. Get the model scope to determine which models to build
+#         # scope = model_scope(model_def)
+#         # scope = (:HT, :FT)
+#         scope = (:HT, :FT )
+#
+#         println("  [Thread $(threadid())] Building model(s) for scope: $scope")
+#
+#         ht_task = nothing
+#         ft_task = nothing
+#
+#         # 4. Conditionally build and sample models in parallel
+#         if :HT in scope
+#             ht_model = build_turing_model(
+#                 model_def,
+#                 model_features,
+#                 all_features.goals_home_ht,
+#                 all_features.goals_away_ht
+#             )
+#             ht_task = @spawn sample(ht_model, NUTS(), MCMCSerial(),
+#                                     sample_config.steps, 1;
+#                                     progress=sample_config.bar)
+#         end
+#
+#         if :FT in scope
+#             ft_model = build_turing_model(
+#                 model_def,
+#                 model_features,
+#                 all_features.goals_home_ft,
+#                 all_features.goals_away_ft
+#             )
+#             ft_task = @spawn sample(ft_model, NUTS(), MCMCSerial(),
+#                                     sample_config.steps, 1;
+#                                     progress=sample_config.bar)
+#         end
+#
+#         # 5. Fetch results, handling cases where a model was not run
+#         ht_chain = isnothing(ht_task) ? nothing : fetch(ht_task)
+#         ft_chain = isnothing(ft_task) ? nothing : fetch(ft_task)
+#
+#         # 6. Package the results (assuming TrainedChains can handle `nothing`)
+#         TrainedChains(
+#             ht_chain,
+#             ft_chain,
+#             info,
+#             nrow(data)
+#         )
+#     end
+# end
+
+using Turing, ReverseDiff # Make sure these are available
+
 function compose_training_morphism(
     model_def::AbstractModelDefinition,
     sample_config::ModelSampleConfig,
     mapping::MappedData
 )
-    # Get the list of required core feature symbols ONCE
     required_features = get_required_features(model_def)
 
-    # This is the composed function: data -> chains
     return (data, info) -> begin
-        # 1. Generate all possible features from the raw data [cite: 100]
-        all_features = create_master_features(data, mapping) 
-
-        # 2. Filter to get only the core features the model needs [cite: 101]
+        all_features = create_master_features(data, mapping)
         model_features = (; (k => all_features[k] for k in required_features)...)
-
-
-        # HACK:
-        # 3. Get the model scope to determine which models to build
-        # scope = model_scope(model_def)
-        # scope = (:HT, :FT)
-        scope = (:HT, :FT )
+        scope = (:HT, :FT)
         
         println("  [Thread $(threadid())] Building model(s) for scope: $scope")
 
+        # --- FIX: Define the AD backend and samplers ONCE in the main thread ---
+        ad_backend = Turing.AutoReverseDiff(compile=false)
+        ht_sampler = NUTS(adtype=ad_backend)
+        ft_sampler = NUTS(adtype=ad_backend)
+        # --------------------------------------------------------------------
+        
         ht_task = nothing
         ft_task = nothing
 
-        # 4. Conditionally build and sample models in parallel
         if :HT in scope
             ht_model = build_turing_model(
                 model_def,
@@ -76,7 +139,8 @@ function compose_training_morphism(
                 all_features.goals_home_ht,
                 all_features.goals_away_ht
             )
-            ht_task = @spawn sample(ht_model, NUTS(), MCMCSerial(),
+            # Pass the pre-built sampler to the spawned task
+            ht_task = @spawn sample(ht_model, ht_sampler, MCMCSerial(),
                                     sample_config.steps, 1;
                                     progress=sample_config.bar)
         end
@@ -88,16 +152,15 @@ function compose_training_morphism(
                 all_features.goals_home_ft,
                 all_features.goals_away_ft
             )
-            ft_task = @spawn sample(ft_model, NUTS(), MCMCSerial(),
+            # Pass the pre-built sampler to the spawned task
+            ft_task = @spawn sample(ft_model, ft_sampler, MCMCSerial(),
                                     sample_config.steps, 1;
                                     progress=sample_config.bar)
         end
 
-        # 5. Fetch results, handling cases where a model was not run
         ht_chain = isnothing(ht_task) ? nothing : fetch(ht_task)
         ft_chain = isnothing(ft_task) ? nothing : fetch(ft_task)
 
-        # 6. Package the results (assuming TrainedChains can handle `nothing`)
         TrainedChains(
             ht_chain,
             ft_chain,
@@ -106,8 +169,6 @@ function compose_training_morphism(
         )
     end
 end
-
-
 
 
 
