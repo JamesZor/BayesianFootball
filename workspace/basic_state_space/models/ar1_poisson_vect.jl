@@ -74,9 +74,16 @@ end
     L_h = LowerTriangular([t >= s ? ρ_home^(t - s) : zero(T) for t in 1:n_rounds, s in 1:n_rounds])
     
     # Evolve initial state + innovations for all teams/leagues and all rounds at once
-    log_α_raw = (L_α * (z_α_mat .* σ_attack .+ log_α_raw_t0))' # Transpose to (n_rounds, n_teams)
-    log_β_raw = (L_β * (z_β_mat .* σ_defense .+ log_β_raw_t0))' # Transpose to (n_rounds, n_teams)
-    log_home_adv_raw = (L_h * (z_home_mat .* σ_home .+ log_home_adv_raw_t0))' # Transpose to (n_rounds, n_leagues)
+    # log_α_raw = (L_α * (z_α_mat .* σ_attack .+ log_α_raw_t0))' # Transpose to (n_rounds, n_teams)
+    # log_β_raw = (L_β * (z_β_mat .* σ_defense .+ log_β_raw_t0))' # Transpose to (n_rounds, n_teams)
+    # log_home_adv_raw = (L_h * (z_home_mat .* σ_home .+ log_home_adv_raw_t0))' # Transpose to (n_rounds, n_leagues)
+    innovations_α = (z_α_mat .* σ_attack .+ log_α_raw_t0)' # Transpose to (n_rounds, n_teams)
+    innovations_β = (z_β_mat .* σ_defense .+ log_β_raw_t0)' # Transpose to (n_rounds, n_teams)
+    innovations_h = (z_home_mat .* σ_home .+ log_home_adv_raw_t0)' # Transpose to (n_rounds, n_leagues)
+
+    log_α_raw = L_α * innovations_α
+    log_β_raw = L_β * innovations_β
+    log_home_adv_raw = L_h * innovations_h
 
     # --- Sum-to-zero Constraint (Vectorized) ---
     log_α_centered = log_α_raw .- mean(log_α_raw, dims=2)
