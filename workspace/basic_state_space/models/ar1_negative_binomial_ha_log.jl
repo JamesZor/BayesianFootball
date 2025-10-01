@@ -18,13 +18,17 @@ export AR1NegativeBinomialHAModelLog
 1.  CUSTOM LOG-NEGATIVE BINOMIAL DISTRIBUTION
 --------------------------------------------------------------------------------
 =#
-
 struct LogNegativeBinomial{T<:Real} <: DiscreteUnivariateDistribution
     logμ::T
     ϕ::T
 end
 
 function Distributions.logpdf(d::LogNegativeBinomial, k::Int)
+    # Guard against invalid parameter values that can cause AD to fail
+    if !isfinite(d.logμ) || !isfinite(d.ϕ) || d.ϕ <= 0
+        return -Inf
+    end
+
     # Numerically stable implementation
     logϕ = log(d.ϕ)
     logp = logϕ - logaddexp(logϕ, d.logμ)
@@ -34,10 +38,15 @@ function Distributions.logpdf(d::LogNegativeBinomial, k::Int)
 end
 
 function Distributions.rand(rng::AbstractRNG, d::LogNegativeBinomial)
+    # Guard against invalid parameter values for random sampling
+    if !isfinite(d.logμ) || !isfinite(d.ϕ) || d.ϕ <= 0
+        return zero(Int) # Or handle as an error
+    end
     μ = exp(d.logμ)
     p = d.ϕ / (d.ϕ + μ)
     return rand(rng, NegativeBinomial(d.ϕ, p))
 end
+
 #=
 --------------------------------------------------------------------------------
 2.  MODEL DEFINITION

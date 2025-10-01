@@ -114,7 +114,7 @@ println("✅ Data loaded and prepared.")
 # Define the models you want to train
 model_definitions = [
     # (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
-    (name="ar1_neg_bin_ha", def=AR1NegativeBinomialHAModel())
+    # (name="ar1_neg_bin_ha", def=AR1NegativeBinomialHAModel())
     (name="ar1_neg_bin_ha_log", def=AR1NegativeBinomialHAModelLog())
 ]
 
