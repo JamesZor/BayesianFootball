@@ -12,10 +12,15 @@ Turing.setrdcache(true)
 
 # --- 1. Includes for Model Definitions ---
 # Make sure these paths are correct for your project structure
-include("../models/ar1_poisson_ha.jl")
+
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_poisson_ha.jl")
 using .AR1PoissonHA
-include("../models/ar1_negative_binomial_ha.jl")
+
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha.jl")
 using .AR1NegativeBinomialHA
+
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha_log.jl")
+using .AR1NegativeBinomialHALog
 
 # --- 2. Constants and Configuration ---
 const EXPERIMENT_GROUP_NAME = "ar1_model_comparison"
@@ -108,8 +113,9 @@ println("✅ Data loaded and prepared.")
 
 # Define the models you want to train
 model_definitions = [
-    (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
+    # (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
     (name="ar1_neg_bin_ha", def=AR1NegativeBinomialHAModel())
+    (name="ar1_neg_bin_ha_log", def=AR1NegativeBinomialHAModelLog())
 ]
 
 # Define the single data configuration for this experiment
@@ -141,8 +147,16 @@ num_tasks = length(model_definitions)
 println("\n--- Starting Batch Training Run ---")
 println("Found $(num_tasks) models to train on $(nthreads()) threads. 🚀")
 
-@threads for model_spec in model_definitions
+for model_spec in model_definitions
     run_training_instance(model_spec, cv_config, sample_config, data_store, global_mapping)
 end
 
 println("\n--- All training runs completed successfully! ---")
+
+
+"""
+[Thread 1]    ✅ Training complete for ar1_neg_bin_ha in 1596.7 seconds.
+ Time: 0:10:17
+Time: 0:15:07
+
+"""

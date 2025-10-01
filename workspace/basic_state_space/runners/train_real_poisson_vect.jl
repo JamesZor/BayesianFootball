@@ -15,6 +15,9 @@ using .AR1PoissonHA
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_poisson_vect.jl")
 using .AR1PoissonHAVectorized 
 
+include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha.jl")
+using .AR1NegativeBinomialHA
+
 # --- 2. Constants and Configuration ---
 const EXPERIMENT_GROUP_NAME = "ar1_vect_test"
 const SAVE_PATH = "./experiments"
@@ -109,7 +112,8 @@ println("✅ Data loaded and prepared.")
 # Define the models you want to train
 model_definitions = [
     # (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
-    (name="ar1_poisson_vect", def=AR1PoissonHAVectorizedModel())
+    (name="ar1_neg_bi_ha", def=AR1NegativeBinomialHAModel()),
+    # (name="ar1_poisson_vect", def=AR1PoissonHAVectorizedModel())
 ]
 
 # Define the single data configuration for this experiment
