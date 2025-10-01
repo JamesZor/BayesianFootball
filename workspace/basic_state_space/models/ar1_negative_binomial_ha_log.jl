@@ -25,8 +25,12 @@ struct LogNegativeBinomial{T<:Real} <: DiscreteUnivariateDistribution
 end
 
 function Distributions.logpdf(d::LogNegativeBinomial, k::Int)
-    p = d.ϕ / (d.ϕ + exp(d.logμ))
-    return loggamma(k + d.ϕ) - loggamma(k + 1) - loggamma(d.ϕ) + k * log(1 - p) + d.ϕ * log(p)
+    # Numerically stable implementation
+    logϕ = log(d.ϕ)
+    logp = logϕ - logaddexp(logϕ, d.logμ)
+    log1mp = d.logμ - logaddexp(logϕ, d.logμ)
+    
+    return loggamma(k + d.ϕ) - loggamma(k + 1) - loggamma(d.ϕ) + k * log1mp + d.ϕ * logp
 end
 
 function Distributions.rand(rng::AbstractRNG, d::LogNegativeBinomial)
@@ -34,8 +38,6 @@ function Distributions.rand(rng::AbstractRNG, d::LogNegativeBinomial)
     p = d.ϕ / (d.ϕ + μ)
     return rand(rng, NegativeBinomial(d.ϕ, p))
 end
-
-
 #=
 --------------------------------------------------------------------------------
 2.  MODEL DEFINITION
