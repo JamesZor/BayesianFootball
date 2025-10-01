@@ -31,15 +31,15 @@ function sampling_morphism(sample_config::ModelSampleConfig)
 end
 
 
-
-"""
-    compose_training_morphism(model_def, sample_config, mapping)
-
-Composes the entire training pipeline from data to chains using the ModelDefinition protocol.
-
-This version is generalized to handle different model scopes (e.g., :HT, :FT, or both)
-by using the `model_scope` trait.
-"""
+#
+# """
+#     compose_training_morphism(model_def, sample_config, mapping)
+#
+# Composes the entire training pipeline from data to chains using the ModelDefinition protocol.
+#
+# This version is generalized to handle different model scopes (e.g., :HT, :FT, or both)
+# by using the `model_scope` trait.
+# """
 # function compose_training_morphism(
 #     model_def::AbstractModelDefinition,
 #     sample_config::ModelSampleConfig,
@@ -107,9 +107,10 @@ by using the `model_scope` trait.
 #     end
 # end
 
-using Turing, ReverseDiff # Make sure these are available
-using ReverseDiff, Memoization
-using ADTypes
+using Base.Threads
+using Turing, ReverseDiff, ADTypes # Ensure all are imported
+
+# ... (other functions) ...
 
 function compose_training_morphism(
     model_def::AbstractModelDefinition,
@@ -123,44 +124,39 @@ function compose_training_morphism(
         model_features = (; (k => all_features[k] for k in required_features)...)
         scope = (:HT, :FT)
         
-        println("  [Thread $(threadid())] Building model(s) for scope: $scope")
+        println("  [Thread $(threadid())] Building model(s) for scope: $scope (Running Serially)")
 
-        # --------------------------------------------------------------------
-        ad_backend = AutoReverseDiff(compile=false) # <-- REMOVE "Turing." PREFIX
-        ht_sampler = NUTS(adtype=ad_backend)
-        ft_sampler = NUTS(adtype=ad_backend)
+        # Define the AD backend once
+        ad_backend = AutoReverseDiff(compile=false)
         
-        ht_task = nothing
-        ft_task = nothing
+        ht_chain = nothing
+        ft_chain = nothing
 
+        # --- MODIFICATION: RUNNING SERIALLY, NO @spawn ---
         if :HT in scope
+            println("    Sampling HT model...")
             ht_model = build_turing_model(
-                model_def,
-                model_features,
-                all_features.goals_home_ht,
-                all_features.goals_away_ht
+                model_def, model_features,
+                all_features.goals_home_ht, all_features.goals_away_ht
             )
-            # Pass the pre-built sampler to the spawned task
-            ht_task = @spawn sample(ht_model, ht_sampler, MCMCSerial(),
-                                    sample_config.steps, 1;
-                                    progress=sample_config.bar)
+            ht_chain = sample(ht_model, NUTS(), MCMCSerial(),
+                              sample_config.steps, 1;
+                              progress=sample_config.bar,
+                              adtype=ad_backend)
         end
 
         if :FT in scope
+            println("    Sampling FT model...")
             ft_model = build_turing_model(
-                model_def,
-                model_features,
-                all_features.goals_home_ft,
-                all_features.goals_away_ft
+                model_def, model_features,
+                all_features.goals_home_ft, all_features.goals_away_ft
             )
-            # Pass the pre-built sampler to the spawned task
-            ft_task = @spawn sample(ft_model, ft_sampler, MCMCSerial(),
-                                    sample_config.steps, 1;
-                                    progress=sample_config.bar)
+            ft_chain = sample(ft_model, NUTS(), MCMCSerial(),
+                              sample_config.steps, 1;
+                              progress=sample_config.bar,
+                              adtype=ad_backend)
         end
-
-        ht_chain = isnothing(ht_task) ? nothing : fetch(ht_task)
-        ft_chain = isnothing(ft_task) ? nothing : fetch(ft_task)
+        # --------------------------------------------------
 
         TrainedChains(
             ht_chain,
