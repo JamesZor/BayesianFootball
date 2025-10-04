@@ -108,6 +108,7 @@ end
 
 # --- 1. Load Data and Define Configurations ---
 println("Loading data store...")
+println(DATA_PATH)
 data_files = DataFiles(DATA_PATH)
 data_store = DataStore(data_files)
 add_global_round_column!(data_store.matches)
@@ -133,7 +134,7 @@ cv_config = BayesianFootball.TimeSeriesSplitsConfig(
 #     :round
 # )
 #
-sample_config = BayesianFootball.ModelSampleConfig(2_000, true) # Using 500 samples for a quicker run
+sample_config = BayesianFootball.ModelSampleConfig(500, true) # Using 500 samples for a quicker run
 
 # --- 2. Create Global Mapping ---
 println("Creating global data mapping...")

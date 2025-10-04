@@ -190,10 +190,10 @@ scot league 2
  "stranraer"
 """
 
-past_round =  next_round -2
+past_round =  next_round - 3
 
-team_name_home = "the-spartans-fc"
-team_name_away = "stirling-albion"
+team_name_home = "east-kilbride"
+team_name_away = "forfar-athletic"
 league_id_to_predict = "57"
 
 match_to_predict = DataFrame(
