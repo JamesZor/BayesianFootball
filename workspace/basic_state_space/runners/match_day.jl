@@ -176,8 +176,27 @@ next_round = last_training_round + 1
 
 sc_l2 = filter(row -> row.tournament_id==57 && row.season_id==77045, df)
 unique(sc_l2.home_team)
+
+sc_l2 = filter(row -> row.tournament_id==57 && row.season=="25/26", df)
+
+
+
+list = unique(df.home_team)
+
+for l in list
+  println(l)
+end
+
+
 """
 scot league 2 
+
+ "stenhousemuir"
+ "alloa-athletic"
+ "east-fife"
+ "kelty-hearts-fc"
+ "montrose"
+
  "annan-athletic"
  "east-kilbride"
  "dumbarton"
@@ -188,6 +207,7 @@ scot league 2
  "stirling-albion"
  "the-spartans-fc"
  "stranraer"
+
 """
 
 past_round =  next_round - 3
