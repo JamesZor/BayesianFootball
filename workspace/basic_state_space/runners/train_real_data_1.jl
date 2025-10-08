@@ -19,13 +19,15 @@ using .AR1PoissonHA
 include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha.jl")
 using .AR1NegativeBinomialHA
 
-include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha_log.jl")
-using .AR1NegativeBinomialHALog
+# not working 
+# include("/home/james/bet_project/models_julia/workspace/basic_state_space/models/ar1_negative_binomial_ha_log.jl")
+# using .AR1NegativeBinomialHALog
 
 # --- 2. Constants and Configuration ---
-const EXPERIMENT_GROUP_NAME = "ar1_model_comparison"
+const EXPERIMENT_GROUP_NAME = "scotland_ar1"
 const SAVE_PATH = "./experiments"
-const DATA_PATH = "/home/james/bet_project/football/uk_football_data_20_26"
+# const DATA_PATH = "/home/james/bet_project/football/uk_football_data_20_26"
+const DATA_PATH = "/home/james/bet_project/football/scotland_football"
 
 # --- 3. Utility Functions ---
 """
@@ -106,6 +108,7 @@ end
 
 # --- 1. Load Data and Define Configurations ---
 println("Loading data store...")
+println(DATA_PATH)
 data_files = DataFiles(DATA_PATH)
 data_store = DataStore(data_files)
 add_global_round_column!(data_store.matches)
@@ -113,23 +116,24 @@ println("✅ Data loaded and prepared.")
 
 # Define the models you want to train
 model_definitions = [
-    # (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
-    # (name="ar1_neg_bin_ha", def=AR1NegativeBinomialHAModel())
-    (name="ar1_neg_bin_ha_log", def=AR1NegativeBinomialHAModelLog())
+    (name="ar1_poisson_ha", def=AR1PoissonHAModel()),
+    (name="ar1_neg_bin_ha", def=AR1NegativeBinomialHAModel())
+    # (name="ar1_neg_bin_ha_log", def=AR1NegativeBinomialHAModelLog())
 ]
 
 # Define the single data configuration for this experiment
-# cv_config = BayesianFootball.TimeSeriesSplitsConfig(
-#     ["20/21", "21/22", "22/23", "23/24", "24/25", "25/26"],
-#     [],
-#     :round
-# )
-
 cv_config = BayesianFootball.TimeSeriesSplitsConfig(
-    ["24/25", "25/26"],
+    ["20/21", "21/22", "22/23", "23/24", "24/25", "25/26"],
     [],
     :round
 )
+
+# cv_config = BayesianFootball.TimeSeriesSplitsConfig(
+#     ["24/25", "25/26"],
+#     [],
+#     :round
+# )
+#
 sample_config = BayesianFootball.ModelSampleConfig(500, true) # Using 500 samples for a quicker run
 
 # --- 2. Create Global Mapping ---
