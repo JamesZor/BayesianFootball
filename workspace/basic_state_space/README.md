@@ -10,6 +10,9 @@ This work is heavily inspired by the methodologies presented in the academic pap
 
 
 # Look at Rangers' Draw and the Aftermath
+
+![alt text](https://github.com/JamesZor/models_julia/blob/7-feat-basic-state-space-models/rangers_falkirk_performance.pnghttps://github.com/JamesZor/models_julia/blob/7-feat-basic-state-space-models/rangers_falkirk_performance.png)
+
 When Rangers, a titan of Scottish football, drew 1-1 with newly-promoted Falkirk, the result sent shockwaves that ended with the manager's dismissal.
 On the surface, it looked like a classic "giant-killing" upset.
 But was it really a surprise? I had a hunch that the data might tell a different story.
