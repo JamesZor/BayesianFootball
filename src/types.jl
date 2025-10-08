@@ -91,14 +91,32 @@ struct MaherBasic <: AbstractModelDefinition end
 
 "Maher model variant with a separate home-advantage parameter for each league."
 struct MaherLeagueHA <: AbstractModelDefinition end
+#HACK:
+# """
+# An abstract type for all state-space models in the BayesianFootball framework.
+# Models of this type are expected to handle time-series data, typically
+# structured by a `:global_round` feature.
+# """
+# abstract type AbstractStateSpaceModel <: AbstractModelDefinition end
+#
 
 
-"""
-An abstract type for all state-space models in the BayesianFootball framework.
-Models of this type are expected to handle time-series data, typically
-structured by a `:global_round` feature.
-"""
-abstract type AbstractStateSpaceModel <: AbstractModelDefinition end
+# --- MODEL HIERARCHY --- pre game models 
+
+# 1. Top-level abstract type for all football models
+abstract type AbstractFootballModel end
+
+# 2. Differentiate between pre-game and in-game models
+abstract type AbstractPreGameModel <: AbstractFootballModel end
+abstract type AbstractInGameModel <: AbstractFootballModel end # For future work
+
+# 3. Specific type for your State-Space Models (SSM)
+abstract type AbstractStateSpaceModel <: AbstractPreGameModel end
+
+# 4. Model families based on their likelihood
+abstract type AbstractPoissonSSM <: AbstractStateSpaceModel end
+abstract type AbstractNegativeBinomialSSM <: AbstractStateSpaceModel end
+
 
 
 # --- Unchanged Model Types ---

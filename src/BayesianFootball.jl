@@ -33,6 +33,9 @@ include("features/core.jl")
 include("models/maher.jl")
 include("models/maher_variants.jl")
 
+# pre game ssm 
+include("models/pregame/ar1_poisson_ha.jl")
+include("models/pregame/ar1_negative_binomial_ha.jl")
 
 
 # Training
