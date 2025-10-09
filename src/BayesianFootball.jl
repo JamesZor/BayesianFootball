@@ -79,7 +79,7 @@ export build_turing_model, get_required_features
 
 # --- Training & Experimentation ---
 export ExperimentConfig, ExperimentResult, TrainedChains
-export create_master_features
+export create_master_features, add_global_round_column!
 export run_experiment, train_all_splits, time_series_splits
 export create_experiment_config
 export prepare_run, save, load_run
