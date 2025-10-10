@@ -29,3 +29,34 @@ function create_master_features(data::AbstractDataFrame, mapping::MappedData)
         global_round = data.global_round
     )
 end
+
+
+
+# --- 3. Utility Functions ---
+"""
+    add_global_round_column!(matches_df::DataFrame)
+
+Adds a `:global_round` column in-place to the DataFrame.
+"""
+function add_global_round_column!(matches_df::DataFrame)
+    sort!(matches_df, :match_date)
+    num_matches = nrow(matches_df)
+    global_rounds = Vector{Int}(undef, num_matches)
+    global_round_counter = 1
+    teams_in_current_round = Set{String}()
+
+    for (i, row) in enumerate(eachrow(matches_df))
+        home_team, away_team = row.home_team, row.away_team
+        if home_team in teams_in_current_round || away_team in teams_in_current_round
+            global_round_counter += 1
+            empty!(teams_in_current_round)
+        end
+        global_rounds[i] = global_round_counter
+        push!(teams_in_current_round, home_team, away_team)
+    end
+    
+    matches_df.global_round = global_rounds
+    println("✅ Successfully added `:global_round` column. Found $(global_round_counter) unique time steps.")
+    return matches_df
+end
+
