@@ -1,0 +1,4 @@
+tournament_id,season_id,season,match_id,tournament_slug,home_team,away_team,home_score,away_score,home_score_ht,away_score_ht,match_date,round,winner_code,has_xg,has_stats,match_hour,match_dayofweek,match_month
+54,41957,22/23,10387456,premiership,motherwell,heart-of-midlothian,2.0,0.0,1.0,0.0,2023-02-19,26.0,1.0,False,True,12,6,2
+54,41957,22/23,10387457,premiership,ross-county,motherwell,0.0,2.0,0.0,0.0,2023-03-04,28.0,2.0,False,True,15,5,3
+54,41957,22/23,10387461,premiership,st-johnstone,ross-county,0.0,0.0,0.0,0.0,2022-09-17,8.0,3.0,False,True,15,5,9
