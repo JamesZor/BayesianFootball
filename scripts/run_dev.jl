@@ -11,10 +11,8 @@ using Revise
 using BayesianFootball
 
 # --- Example Usage of the Data Module ---
-
 # Define the path to your data (adjust if necessary)
 # You might need to go up one level from the scripts directory
-data_path = "data/scotland" 
 data_path = BayesianFootball.Data.DataPaths.scotland
 
 # Create DataFiles and DataStore objects
@@ -33,3 +31,9 @@ catch e
     println("An error occurred: ", e)
     println("\nPlease ensure the data path is correct and the CSV files exist.")
 end
+
+
+
+# --- Example Usage of the Feature Module ---
+
+f = BayesianFootball.Features.create_features(data_store)
