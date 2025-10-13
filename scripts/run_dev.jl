@@ -37,3 +37,12 @@ end
 # --- Example Usage of the Feature Module ---
 
 f = BayesianFootball.Features.create_features(data_store)
+
+
+# --- Example Usage of the pregame model Module ---
+
+    model = BayesianFootball.Models.PreGame.PregameModel(
+        BayesianFootball.Models.PreGame.Poisson(),
+        BayesianFootball.Models.PreGame.AR1(),
+        true
+    )
