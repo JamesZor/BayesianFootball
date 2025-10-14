@@ -6,7 +6,7 @@ module PreGameComponents
 
 using ..PreGameInterfaces
 
-export PoissonGoal, NegativeBinomial, AR1, RandomWalk
+export PoissonGoal, NegativeBinomial, AR1, RandomWalk, Static
 
 # --- Component Types ---
 
@@ -17,6 +17,7 @@ struct NegativeBinomial <: GoalDistribution end
 # Time Dynamics
 struct AR1 <: TimeDynamic end
 struct RandomWalk <: TimeDynamic end
+struct Static <: TimeDynamic end 
 
 end
 

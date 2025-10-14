@@ -41,8 +41,42 @@ f = BayesianFootball.Features.create_features(data_store)
 
 # --- Example Usage of the pregame model Module ---
 
-    model = BayesianFootball.Models.PreGame.PregameModel(
-        BayesianFootball.Models.PreGame.Poisson(),
-        BayesianFootball.Models.PreGame.AR1(),
-        true
-    )
+model = BayesianFootball.Models.PreGame.PregameModel(
+    BayesianFootball.Models.PreGame.PoissonGoal(),
+    BayesianFootball.Models.PreGame.AR1(),
+    true
+)
+
+model_1 = BayesianFootball.Models.PreGame.PregameModel(
+    BayesianFootball.Models.PreGame.PoissonGoal(),
+    BayesianFootball.Models.PreGame.Static(),
+    true
+)
+
+
+# --- 2. Define a Model ---
+static_model = BayesianFootball.Models.PreGame.PregameModel(
+  BayesianFootball.Models.PreGame.PoissonGoal(),
+  BayesianFootball.Models.PreGame.Static(),
+  true
+)
+
+
+feature_set = f
+# --- 3. Build the Turing Model ---
+# This calls our API to create the actual @model block
+turing_model = BayesianFootball.Models.PreGame.build_turing_model(static_model, feature_set)
+println("✅ Turing model built successfully.")
+
+# --- 4. Sample from the Model ---
+using Turing
+# We use the NUTS sampler, a standard choice for this kind of model.
+# We'll run it for 1000 iterations: 200 for warmup and 800 for sampling.
+chain = sample(turing_model, NUTS(0.65), 10)
+println("✅ Sampling complete!")
+
+# --- 5. Inspect the Results ---
+println("\n--- MCMC Chain Summary ---")
+# Printing the 'chain' object gives a nice summary of the posterior distributions
+# for all the parameters in our model.
+println(chain)

@@ -7,7 +7,7 @@ using DataFrames, CSV, Dates
 using InlineStrings
 
 
-export load_default_datastore
+export load_default_datastore, DataStore
 
 
 # abstracts 

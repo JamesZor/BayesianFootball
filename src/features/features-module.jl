@@ -1,53 +1,57 @@
 """
-This module is responsible for feature engineering. It takes a DataStore
-and transforms the raw data into a format suitable for modeling.
+This module is responsible for transforming raw data from a DataStore
+into a model-ready FeatureSet.
 """
 module Features
 
 using DataFrames
-using ..Data # Use the Data module from the parent BayesianFootball module
+using ..Data: DataStore
 
-export create_features
+export FeatureSet, create_features
 
-# --- Constants ---
-
-# Define the columns from the raw matches data that are needed for feature engineering
-const MATCHES_FEATURE_COLS = [
-    :match_id,
-    :season_id,
-    :match_date,
-    :home_team,
-    :away_team,
-    :home_score,
-    :away_score
+# --- Constants for required columns ---
+const REQUIRED_MATCH_COLS = [
+    :home_team, :away_team, :home_score, :away_score, :match_date
 ]
 
-# --- Structs ---
-#
-# Define a struct to hold the engineered features
+# --- Struct Definition ---
+"""
+    FeatureSet
+
+A container for all data needed by a model. This struct is now focused
+on the grouped data required by dynamic models.
+
+# Fields
+- `matches_df::DataFrame`: The main DataFrame with added features.
+- `team_map::Dict{String, Int}`: A mapping from team names to integer IDs.
+- `n_teams::Int`: The total number of unique teams.
+- `n_rounds::Int`: The total number of unique global rounds.
+- `round_home_ids::Vector{Vector{Int}}`: A vector where each element is a vector of home team IDs for that round.
+- `round_away_ids::Vector{Vector{Int}}`: A vector where each element is a vector of away team IDs for that round.
+- `round_home_goals::Vector{Vector{Int}}`: A vector for home goals, grouped by round.
+- `round_away_goals::Vector{Vector{Int}}`: A vector for away goals, grouped by round.
+"""
 struct FeatureSet
-    data::DataFrame
-    team_to_id::Dict{String, Int}
-    id_to_team::Dict{Int, String}
+    matches_df::DataFrame
+    team_map::Dict{String, Int}
     n_teams::Int
+    n_rounds::Int
+    round_home_ids::Vector{Vector{Int}}
+    round_away_ids::Vector{Vector{Int}}
+    round_home_goals::Vector{Vector{Int}}
+    round_away_goals::Vector{Vector{Int}}
 end
 
+
 # --- Private Helper Functions ---
-
-"""
-    _add_global_round_column!(matches_df::DataFrame)
-
-Adds a `:global_round` column in-place to the provided DataFrame.
-This is a private helper function intended to be used on a copy of the data.
-"""
-function _add_global_round_column!(matches_df::DataFrame)
-    sort!(matches_df, :match_date)
-    num_matches = nrow(matches_df)
+function _add_global_round_column(matches_df::DataFrame)
+    df = sort(matches_df, :match_date)
+    num_matches = nrow(df)
     global_rounds = Vector{Int}(undef, num_matches)
     global_round_counter = 1
     teams_in_current_round = Set{String}()
 
-    for (i, row) in enumerate(eachrow(matches_df))
+    for (i, row) in enumerate(eachrow(df))
         home_team, away_team = row.home_team, row.away_team
         if home_team in teams_in_current_round || away_team in teams_in_current_round
             global_round_counter += 1
@@ -57,45 +61,40 @@ function _add_global_round_column!(matches_df::DataFrame)
         push!(teams_in_current_round, home_team, away_team)
     end
     
-    matches_df.global_round = global_rounds
-    return matches_df
+    df.global_round = global_rounds
+    return df
 end
 
+# --- Main API Function ---
+function create_features(data_store::DataStore)::FeatureSet
+    # 1. Start with the matches data and drop any rows with missing scores.
+    #    This is the key fix to ensure clean data for the models.
+    matches_df = dropmissing(data_store.matches, [:home_score, :away_score])
 
-# --- Public API ---
+    # 2. Select only the necessary columns
+    matches_df = select(matches_df, REQUIRED_MATCH_COLS)
 
-"""
-    create_features(data_store::DataStore)
+    # 3. Add the global_round column
+    matches_df = _add_global_round_column(matches_df)
 
-Takes a DataStore object and creates features for modeling.
+    # 4. Create team-to-integer mappings
+    all_teams = unique(vcat(matches_df.home_team, matches_df.away_team))
+    team_map = Dict(team_name => i for (i, team_name) in enumerate(all_teams))
+    n_teams = length(team_map)
 
-This function creates a copy of the matches data and then adds new
-feature columns, such as team IDs and a global round counter.
-"""
-function create_features(data_store::Data.DataStore)
-    # Select only the necessary columns and create a copy to work with.
-    matches_df = select(data_store.matches, MATCHES_FEATURE_COLS; copycols=true)
+    # 5. Create data structures for DYNAMIC models (grouped by round)
+    grouped = groupby(matches_df, :global_round)
+    n_rounds = length(grouped)
+    round_home_ids = [ [team_map[name] for name in g.home_team] for g in grouped]
+    round_away_ids = [ [team_map[name] for name in g.away_team] for g in grouped]
+    round_home_goals = [g.home_score for g in grouped]
+    round_away_goals = [g.away_score for g in grouped]
 
-    # --- Feature Pipeline ---
-    # 1. Add the global round column
-    _add_global_round_column!(matches_df)
-
-    # 2. Create team ID mappings
-    home_teams = unique(matches_df.home_team)
-    away_teams = unique(matches_df.away_team)
-    all_teams = sort(unique(vcat(home_teams, away_teams)))
-
-    team_to_id = Dict(team => i for (i, team) in enumerate(all_teams))
-    id_to_team = Dict(i => team for (i, team) in enumerate(all_teams))
-    n_teams = length(all_teams)
-
-    # 3. Add the new ID columns to the DataFrame
-    matches_df.home_team_id = [team_to_id[team] for team in matches_df.home_team]
-    matches_df.away_team_id = [team_to_id[team] for team in matches_df.away_team]
-
-    return FeatureSet(matches_df, team_to_id, id_to_team, n_teams)
+    # 6. Return the completed FeatureSet
+    return FeatureSet(
+        matches_df, team_map, n_teams, n_rounds,
+        round_home_ids, round_away_ids, round_home_goals, round_away_goals
+    )
 end
 
-
 end
-
