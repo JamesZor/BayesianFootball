@@ -22,51 +22,51 @@ end
 #= 
 -------- helper functions ----------------
 =#
-
-function _prepare_data(model::PregameModel, feature_set) 
-    # Prepare all data variants; the model will use what it needs.
-    data = (
-        n_teams=feature_set.n_teams,
-        n_rounds=feature_set.n_rounds,
-        r_home_ids=feature_set.round_home_ids,
-        r_away_ids=feature_set.round_away_ids,
-        r_home_goals=feature_set.round_home_goals,
-        r_away_goals=feature_set.round_away_goals,
-        f_home_ids=vcat(feature_set.round_home_ids...),
-        f_away_ids=vcat(feature_set.round_away_ids...),
-        f_home_goals=vcat(feature_set.round_home_goals...),
-        f_away_goals=vcat(feature_set.round_away_goals...)
-    )
-  return data
-end
-
-
+#
+# function _prepare_data(model::PregameModel, feature_set) 
+#     # Prepare all data variants; the model will use what it needs.
+#     data = (
+#         n_teams=feature_set.n_teams,
+#         n_rounds=feature_set.n_rounds,
+#         r_home_ids=feature_set.round_home_ids,
+#         r_away_ids=feature_set.round_away_ids,
+#         r_home_goals=feature_set.round_home_goals,
+#         r_away_goals=feature_set.round_away_goals,
+#         f_home_ids=vcat(feature_set.round_home_ids...),
+#         f_away_ids=vcat(feature_set.round_away_ids...),
+#         f_home_goals=vcat(feature_set.round_home_goals...),
+#         f_away_goals=vcat(feature_set.round_away_goals...)
+#     )
+#   return data
+# end
+#
+#
 #= 
 -------- api functions ----------------
 =#
 
-function build_turing_model(model::PregameModel{<:GoalDistribution, Static}, feature_set)
-
-    data = _prepare_data(model, feature_set)
-
-    @model function static_model(n_teams, home_ids, away_ids, home_goals, away_goals)
-        # 1. Priors (unchanged)
-        priors ~ to_submodel(TuringHelpers.static_priors(n_teams, model.home_advantage))
-        
-        # 2. Identifiability (unchanged)
-        log_α = priors.log_α_raw .- mean(priors.log_α_raw)
-        log_β = priors.log_β_raw .- mean(priors.log_β_raw)
-        
-        # 3. Calculate Rates (unchanged)
-        log_λs, log_μs = TuringHelpers.calculate_goal_rates(log_α, log_β, priors.home_adv, home_ids, away_ids)
-        
-        # 4. Add the likelihood (THIS IS THE KEY)
-       _n ~ to_submodel(TuringHelpers.add_likelihood(model.distribution, home_goals, away_goals, log_λs, log_μs))
-    end
-
-    return static_model(data.n_teams, data.f_home_ids, data.f_away_ids, data.f_home_goals, data.f_away_goals)
-end
-
+# function build_turing_model(model::PregameModel{<:GoalDistribution, Static}, feature_set)
+#
+#     data = _prepare_data(model, feature_set)
+#
+#     @model function static_model(n_teams, home_ids, away_ids, home_goals, away_goals)
+#         # 1. Priors (unchanged)
+#         priors ~ to_submodel(TuringHelpers.static_priors(n_teams, model.home_advantage))
+#
+#         # 2. Identifiability (unchanged)
+#         log_α = priors.log_α_raw .- mean(priors.log_α_raw)
+#         log_β = priors.log_β_raw .- mean(priors.log_β_raw)
+#
+#         # 3. Calculate Rates (unchanged)
+#         log_λs, log_μs = TuringHelpers.calculate_goal_rates(log_α, log_β, priors.home_adv, home_ids, away_ids)
+#
+#         # 4. Add the likelihood (THIS IS THE KEY)
+#        _n ~ to_submodel(TuringHelpers.add_likelihood(model.distribution, home_goals, away_goals, log_λs, log_μs))
+#     end
+#
+#     return static_model(data.n_teams, data.f_home_ids, data.f_away_ids, data.f_home_goals, data.f_away_goals)
+# end
+#
 
 # function build_turing_model(model::PregameModel, feature_set)
 #

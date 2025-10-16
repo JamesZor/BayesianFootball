@@ -5,9 +5,28 @@ for the main model defined in the API.
 module TuringHelpers
 
 using Turing, Distributions, LinearAlgebra, Statistics
-using ..PreGameInterfaces, ..PreGameComponents
+using ..PreGameInterfaces 
 
-export static_priors, ar1_dynamics, poisson_likelihood, negative_binomial_likelihood_goal
+export prepare_data
+
+function prepare_data(model::AbstractPregameModel, feature_set) 
+    # Prepare all data variants; the model will use what it needs.
+    data = (
+        n_teams=feature_set.n_teams,
+        n_rounds=feature_set.n_rounds,
+        r_home_ids=feature_set.round_home_ids,
+        r_away_ids=feature_set.round_away_ids,
+        r_home_goals=feature_set.round_home_goals,
+        r_away_goals=feature_set.round_away_goals,
+        f_home_ids=vcat(feature_set.round_home_ids...),
+        f_away_ids=vcat(feature_set.round_away_ids...),
+        f_home_goals=vcat(feature_set.round_home_goals...),
+        f_away_goals=vcat(feature_set.round_away_goals...)
+    )
+  return data
+end
+
+
 
 # --- PRIORS SUBMODEL (Static) ---
 @model function static_priors(n_teams::Int, has_home_advantage::Bool)
@@ -52,38 +71,38 @@ function calculate_goal_rates(log_α, log_β, log_home_adv, home_ids, away_ids)
 end
 
 
-
-# --- LIKELIHOOD SUBMODEL (Poisson) ---
-@model function add_likelihood(::PoissonGoal, goals_home, goals_away, log_λs, log_μs)
-    for i in eachindex(goals_home)
-        goals_home[i] ~ LogPoisson(log_λs[i])
-        goals_away[i] ~ LogPoisson(log_μs[i])
-    end
-  return nothing
-end
-
-# --- LIKELIHOOD SUBMODEL (Negative Binomial) ---
-@model function add_likelihood(::NegativeBinomialGoal, goals_home, goals_away, log_λs, log_μs)
-    # 1. DEFINE THE PRIOR FOR THE NEW PARAMETER
-  # ϕ ∈ (0, 1)
-    # ϕ ~ Exponential(1.0)
-    ϕ ~ Gamma(1.2, 1.0)
-
-    # pre compute
-    λs = exp.(log_λs)
-    μs = exp.(log_μs)
-
-    p_home = ϕ ./ (ϕ .+ λs)
-    p_away = ϕ ./ (ϕ .+ μs)
-
-
-    for i in eachindex(goals_home)
-    goals_home[i] ~ NegativeBinomial(ϕ, p_home[i])
-    goals_away[i] ~ NegativeBinomial(ϕ, p_away[i])
-    end
-
-  return nothing
-  
-end
+#
+# # --- LIKELIHOOD SUBMODEL (Poisson) ---
+# @model function add_likelihood(::PoissonGoal, goals_home, goals_away, log_λs, log_μs)
+#     for i in eachindex(goals_home)
+#         goals_home[i] ~ LogPoisson(log_λs[i])
+#         goals_away[i] ~ LogPoisson(log_μs[i])
+#     end
+#   return nothing
+# end
+#
+# # --- LIKELIHOOD SUBMODEL (Negative Binomial) ---
+# @model function add_likelihood(::NegativeBinomialGoal, goals_home, goals_away, log_λs, log_μs)
+#     # 1. DEFINE THE PRIOR FOR THE NEW PARAMETER
+#   # ϕ ∈ (0, 1)
+#     # ϕ ~ Exponential(1.0)
+#     ϕ ~ Gamma(1.2, 1.0)
+#
+#     # pre compute
+#     λs = exp.(log_λs)
+#     μs = exp.(log_μs)
+#
+#     p_home = ϕ ./ (ϕ .+ λs)
+#     p_away = ϕ ./ (ϕ .+ μs)
+#
+#
+#     for i in eachindex(goals_home)
+#     goals_home[i] ~ NegativeBinomial(ϕ, p_home[i])
+#     goals_away[i] ~ NegativeBinomial(ϕ, p_away[i])
+#     end
+#
+#   return nothing
+#
+# end
 
 end

@@ -117,3 +117,61 @@ dynamic_poisson_model = BayesianFootball.Models.PreGame.PregameModel(
 dynamic_nb_model = PregameModel(NegativeBinomial(), AR1(), true)
 turing_model_2 = build_turing_model(dynamic_nb_model, feature_set)
 chain_2 = sample(turing_model_2, NUTS(), 100)
+
+
+
+
+
+#######
+using Revise
+
+# Load your package
+using BayesianFootball
+using Turing
+
+# --- Prepare Data (this part is unchanged) ---
+println("--- Loading data and features ---")
+data_store = BayesianFootball.Data.load_default_datastore()
+feature_set = BayesianFootball.Features.create_features(data_store)
+
+# --- NEW, SIMPLER WORKFLOW ---
+println("\n--- Running the Static Poisson Model ---")
+
+# 1. Instantiate the concrete model struct
+static_poisson = BayesianFootball.Models.PreGame.StaticPoisson()
+
+# 2. Build the Turing model by calling the dispatched method
+turing_model_1 = BayesianFootball.Models.PreGame.build_turing_model(static_poisson, feature_set)
+println("✅ Static Poisson model built.")
+
+# 3. Sample
+chain_1 = sample(turing_model_1, NUTS(), 10)
+println(chain_1)
+
+
+println("\n--- Running the Static Simplex Poisson Model ---")
+
+# 1. Instantiate the new model struct
+static_simplex_poisson = BayesianFootball.Models.PreGame.StaticSimplexPoisson()
+
+# 2. Build the model
+turing_model_4 = BayesianFootball.Models.PreGame.build_turing_model(static_simplex_poisson, feature_set)
+println("✅ Static Simplex Poisson model built.")
+
+# 3. Sample
+chain_4 = sample(turing_model_4, NUTS(), 10)
+println(chain_4)
+
+
+println("\n--- Running the Hierarchical Simplex Poisson Model ---")
+
+# 1. Instantiate the new model struct
+simplex_poisson = BayesianFootball.Models.PreGame.HierarchicalSimplexPoisson()
+
+# 2. Build the model
+turing_model_3 = BayesianFootball.Models.PreGame.build_turing_model(simplex_poisson, feature_set)
+println("✅ Hierarchical Simplex Poisson model built.")
+
+# 3. Sample
+chain_3 = sample(turing_model_3, NUTS(), 10)
+println(chain_3)
