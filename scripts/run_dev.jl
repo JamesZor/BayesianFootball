@@ -35,7 +35,7 @@ end
 
 
 # --- Example Usage of the Feature Module ---
-
+data_store = BayesianFootball.Data.load_default_datastore()
 f = BayesianFootball.Features.create_features(data_store)
 
 
@@ -80,3 +80,40 @@ println("\n--- MCMC Chain Summary ---")
 # Printing the 'chain' object gives a nice summary of the posterior distributions
 # for all the parameters in our model.
 println(chain)
+
+
+# This now works out-of-the-box
+using Turing
+data_store = BayesianFootball.Data.load_default_datastore()
+feature_set = BayesianFootball.Features.create_features(data_store)
+
+# --- 1. Define Models ---
+static_poisson_model = BayesianFootball.Models.PreGame.PregameModel(
+  BayesianFootball.Models.PreGame.PoissonGoal(),
+  BayesianFootball.Models.PreGame.Static(),
+  true
+)
+
+# --- 2. Build and Sample ---
+turing_model_1 = BayesianFootball.Models.PreGame.build_turing_model(static_poisson_model, feature_set)
+chain_1 = sample(turing_model_1, NUTS(), 10)
+
+
+static_nb_model = BayesianFootball.Models.PreGame.PregameModel(
+  BayesianFootball.Models.PreGame.NegativeBinomialGoal(),
+  BayesianFootball.Models.PreGame.Static(),
+  true
+)
+
+# --- 2. Build and Sample ---
+turing_model_2 = BayesianFootball.Models.PreGame.build_turing_model(static_nb_model, feature_set)
+chain_1 = sample(turing_model_2, NUTS(), 10)
+
+dynamic_poisson_model = BayesianFootball.Models.PreGame.PregameModel(
+  BayesianFootball.Models.PreGame.PoissonGoal(),
+  BayesianFootball.Models.PreGame.Static(),
+  true
+)
+dynamic_nb_model = PregameModel(NegativeBinomial(), AR1(), true)
+turing_model_2 = build_turing_model(dynamic_nb_model, feature_set)
+chain_2 = sample(turing_model_2, NUTS(), 100)
