@@ -29,8 +29,8 @@ function build_turing_model(model::StaticSimplexPoisson, feature_set)
 
         factor = 1.0/n_teams
         
-        log_α = log_α_scale .* ( log_α_raw .- factor)
-        log_β = log_β_scale .* ( log_β_raw .- factor)
+        log_α := log_α_scale .* ( log_α_raw .- factor)
+        log_β := log_β_scale .* ( log_β_raw .- factor)
 
         # --- Calculate Goal Rates ---
         log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
