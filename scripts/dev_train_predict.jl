@@ -29,7 +29,7 @@ turing_model_2 = BayesianFootball.Models.PreGame.build_turing_model(static_simpl
 
 ## training 
 
-training_method_nuts = BayesianFootball.Sampling.NUTSMethod(n_samples=2_000, n_chains=2, n_warmup=20)
+training_method_nuts = BayesianFootball.Sampling.NUTSMethod(n_samples=2_000, n_chains=2, n_warmup=500)
 
 
 chain_simple = BayesianFootball.Sampling.train(turing_model_1, training_method_nuts)

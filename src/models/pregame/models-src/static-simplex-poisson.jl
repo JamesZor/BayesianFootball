@@ -83,6 +83,7 @@ function build_turing_model(model::StaticSimplexPoisson, feature_set)
         end 
       
         return nothing
+    end
 
     # Return an instance of the Turing model with the data
     return static_poisson_model(data.n_teams, data.f_home_ids, data.f_away_ids, data.f_home_goals, data.f_away_goals)
