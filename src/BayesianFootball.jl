@@ -11,9 +11,13 @@ include("features/features-module.jl")
 include("models/models-module.jl")
 
 include("./sampling/sampling-module.jl")
+include("./predictions/markets.jl")
+include("./predictions/calculations.jl")
+
+include("./predictions/prediction-module.jl")
 
 include("./experiments/experiment-module.jl")
 
-export Data, Features, Models, AbstractFootballModel, Sampling, Experiments
+export Data, Features, Models, AbstractFootballModel, Sampling, Experiments, Predictions, Markets, Calculations
 
 end

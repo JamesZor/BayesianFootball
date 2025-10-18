@@ -14,6 +14,17 @@ data_store = BayesianFootball.Data.load_default_datastore()
 model =  Models.PreGame.StaticPoisson()
 splitter = Experiments.StaticSplit(["24/25"])
 sampler_config = Sampling.NUTSMethod(1000, 2, 100)
+markets = Predictions.get_standard_markets()
+calculations_set = Set{Predictions.Calculations.AbstractCalculation}([
+    Predictions.Calculations.CalcProbability() 
+    # You could add others here, e.g.:
+    # Predictions.Calculations.CalcExpectedValue()
+])
+
+prediction_config = Predictions.PredictionConfig(
+    markets,
+    calculations_set
+)
 
 
 exp1 = Experiments.Experiment(
@@ -31,7 +42,7 @@ exp1 = Experiments.Experiment(
 
 
 
-# 2. Define an Experiment (your "Config")
+# 2. Define an Experiment (your "Config")14
 exp1 = Experiment(
     name = "StaticPoisson_ExpandingWindow_22-23",
     model = BayesianFootball.Models.PreGame.StaticPoisson(),
