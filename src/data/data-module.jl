@@ -9,6 +9,10 @@ using InlineStrings
 
 export load_default_datastore, DataStore
 
+# splitting 
+include("./splitting.jl")
+export TimeSeriesSplits
+
 
 # abstracts 
 struct DataFiles

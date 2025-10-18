@@ -10,9 +10,10 @@ include("features/features-module.jl")
 
 include("models/models-module.jl")
 
-
 include("./sampling/sampling-module.jl")
 
-export Data, Features, Models, AbstractFootballModel, Sampling
+include("./experiments/experiment-module.jl")
+
+export Data, Features, Models, AbstractFootballModel, Sampling, Experiments
 
 end
