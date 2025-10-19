@@ -24,6 +24,6 @@ end
 
 # Export the model structs to be used in scripts
 using .Implementations
-export StaticPoisson, HierarchicalSimplexPoisson, build_turing_model
+export StaticPoisson, StaticSimplexPoisson, HierarchicalSimplexPoisson, build_turing_model, predict
 
 end

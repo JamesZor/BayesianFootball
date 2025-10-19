@@ -3,6 +3,7 @@ module Sampling
 using Turing
 using Optimization      # Required for MAP
 using OptimizationOptimJL # Required for MAP
+using ReverseDiff, Memoization
 
 export AbstractTrainingMethod, NUTSMethod, ADVIMethod, MAPMethod, train
 

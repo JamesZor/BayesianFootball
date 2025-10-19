@@ -9,7 +9,7 @@ using ..TuringHelpers
 
 
 # Export the concrete model struct and its build function
-export StaticSimplexPoisson, build_turing_model
+export StaticSimplexPoisson, build_turing_model, predict
 
 # 1. DEFINE A CONCRETE STRUCT FOR THE MODEL
 struct StaticSimplexPoisson <: AbstractPregameModel end
@@ -44,8 +44,12 @@ struct StaticSimplexPoisson <: AbstractPregameModel end
 
     if !ismissing(home_goals)
         # --- TRAINING CASE ---
-        home_goals ~ arraydist(LogPoisson.(log_λs))
-        away_goals ~ arraydist(LogPoisson.(log_μs))
+        for i in eachindex(home_goals)
+          home_goals[i] ~ LogPoisson(log_λs[i])
+          away_goals[i] ~ LogPoisson(log_μs[i])
+        end
+        # home_goals ~ arraydist(LogPoisson.(log_λs))
+        # away_goals ~ arraydist(LogPoisson.(log_μs))
     else
     #     # --- PREDICTION CASE ---
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))

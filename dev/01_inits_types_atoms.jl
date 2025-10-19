@@ -54,7 +54,7 @@ model = Models.PreGame.StaticPoisson()
 splitter = Experiments.StaticSplit(["24/25"])
 
 # Sampler Config (Config_s)
-sampler_config = Sampling.NUTSMethod(500, 2, 50)
+sampler_config = Sampling.NUTSMethod(1000, 2, 50)
 
 # The full Experiment object
 exp1 = Experiments.Experiment(
@@ -66,6 +66,21 @@ exp1 = Experiments.Experiment(
 
 println("Experiment configured: $(exp1.name)")
 
+
+# Model 2 (M)
+model2 = Models.PreGame.StaticSimplexPoisson()
+
+
+
+# The full Experiment object
+exp2 = Experiments.Experiment(
+    "StaticSimplexPoisson_TestRun",
+    model2,
+    splitter,
+    sampler_config,
+)
+
+println("Experiment configured: $(exp2.name)")
 
 # ============================================================================
 # PHASE 2: EXECUTE THE MORPHISMS (THE PIPELINE STEPS)
@@ -96,9 +111,16 @@ println("✅ Success! Built training model instance.")
 # --- Step 3: Morphism g: (F_i, M, Config_s) -> C_params ---
 # Run the sampler to get the posterior parameter chains.
 println("\n[Step 3: Morphism g] Calling Sampling.train to get C_params...")
+
+using ReverseDiff, Memoization
+Turing.setadbackend(:reversediff)
+Turing.setrdcache(true)
+
+
 chains_params = Sampling.train(turing_model, exp1.sampler_config)
 println("✅ Success! Sampling complete. C_params (parameter chains) created.")
 display(chains_params)
+
 
 # --- Step 4: Build PREDICTION Model ---
 # Create the model instance conditioned on the parameters we just sampled.
@@ -147,7 +169,7 @@ chains_goals = Turing.predict(turing_pred_model, chains_params)
 println("✅ Success! Goal prediction complete. C_goals (goal chains) created.")
 display(chains_goals)
 
-id = 303
+id = 311
 
 df_to_predict[id, :]
 
