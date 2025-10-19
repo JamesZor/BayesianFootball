@@ -1,5 +1,5 @@
 # --- Model File: static-poisson.jl ---
-
+using DataFrames
 using Turing
 using LinearAlgebra
 using ..PreGameInterfaces # Use the abstract type
@@ -34,18 +34,11 @@ struct StaticPoisson <: AbstractPregameModel end
         #   away_goals[i] ~ LogPoisson(log_μs[i])
         # end
         home_goals ~ arraydist(LogPoisson.(Log_λs))
-        home_goals ~ arraydist(LogPoisson.(Log_μs))
+        away_goals ~ arraydist(LogPoisson.(Log_μs))
     else
+    #     # --- PREDICTION CASE ---
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
         predicted_away_goals ~ arraydist(LogPoisson.(log_μs))
-    #     # --- PREDICTION CASE ---
-    #     # We use `T` to help Turing infer the return type
-    #     predicted_home_goals = Vector{T}(undef, length(home_ids))
-    #     predicted_away_goals = Vector{T}(undef, length(home_ids))
-    #
-    #     for i in eachindex(home_ids)
-    #         predicted_home_goals[i] ~ LogPoisson(log_λs[i])
-    #         predicted_away_goals[i] ~ LogPoisson(log_μs[i])
     end
     #
     return nothing
@@ -105,60 +98,18 @@ function build_turing_model(model::StaticPoisson, n_teams::Int, home_ids::Vector
     )
 end
 
-# # NEW: The main API function that returns a Turing model
-# """
-# Builds the Turing model for training or prediction.
-#
-# - To train: Pass the `feature_set` from training data.
-# """
-# function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
-#     # This is the "TRAINING" model
-#     data = _prepare_data(feature_set)
-#     return static_poisson_model(data.n_teams, data.f_home_ids, data.f_away_ids, 
-#                                 data.f_home_goals, data.f_away_goals)
-# end
-#
-#
-# function predict(model::StaticPoisson, data_to_predict, chains::Chains) 
-#   features = _prepare_data(data_to_predict, :predict)
-#
-#   model = static_poisson_model(features.n_teams, features.f_home_ids, features.f_away_ids, 
-#                               missing, missing)
-#
-#   # 2. Set up for parallel execution
-#   n_samples = length(chains)
-#   n_threads = Threads.nthreads()
-#   # Create an array to hold the prediction chains from each thread
-#   split_chains = Vector{Chains}(undef, n_threads)
-#
-#   # 3. Use a threaded loop to run predict on chunks of the chain
-#   Threads.@threads for i in 1:n_threads
-#       # Divide the samples among the threads
-#       range = i:n_threads:n_samples
-#
-#       # Each thread predicts using only its subset of the original chain
-#       # This is the key step!
-#       split_chains[i] = predict(model, chains[range])
-#   end
-#
-#   # 4. Concatenate the results from all threads into a single chain
-#   # need to concrete all the treads chains
-#   prediction_chain_multi = chainscat(split_chains...)
-#
-#   return prediction_chain_multi
-#
-# end 
-#
-#
-# function build_turing_model(model::StaticPoisson, chains::Chains, feature_set_to_predict_on::FeatureSet)
-#     # This is the "PREDICTION" model
-#     data = _prepare_data(feature_set_to_predict_on)
-#     return static_poisson_model(data.n_teams, data.f_home_ids, data.f_away_ids, 
-#                                 missing, missing) | chains
-# end
-#
-#
-#
-#
-#
-#
+
+"""
+    predict(model::StaticPoisson, data_to_predict::DataFrame, feature_set::FeatureSet)
+
+TBW
+"""
+function predict(model::StaticPoisson, df_to_predict::DataFrame, feature_set::FeatureSet)
+  team_map = feature_set.team_map 
+  n_teams = feature_set.n_teams
+  home_ids_to_predict = [team_map[name] for name in df_to_predict.home_team]
+  away_ids_to_predict = [team_map[name] for name in df_to_predict.away_team]
+  turing_pred_model = build_turing_model(model, n_teams, home_ids_to_predict, away_ids_to_predict)
+  chains_goals = Turing.predict(turing_pred_model)
+  return chains_goals
+end 

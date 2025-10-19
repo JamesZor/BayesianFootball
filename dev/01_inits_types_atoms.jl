@@ -147,11 +147,77 @@ chains_goals = Turing.predict(turing_pred_model, chains_params)
 println("✅ Success! Goal prediction complete. C_goals (goal chains) created.")
 display(chains_goals)
 
-id = 300
+id = 303
 
 df_to_predict[id, :]
 
 describe(chains_goals[Symbol("predicted_home_goals[$id]")])
 describe(chains_goals[Symbol("predicted_away_goals[$id]")])
 
-df_to_predict
+
+
+using Plots
+using StatsBase # For the countmap function
+gr() # Using the default gr() backend for plots
+
+# --- 1. Get Your Data ---
+# This assumes you've already run your model and have chains_goals
+# id = 300 (from your code)
+
+# Extract the vectors of predicted goals
+# We use vec() to ensure they are 1D Vectors, 
+# regardless of how MCMCChains stores them (e.g., as an N x 1 matrix)
+home_samples = vec(chains_goals[Symbol("predicted_home_goals[$id]")])
+away_samples = vec(chains_goals[Symbol("predicted_away_goals[$id]")])
+
+# --- 2. Define Plot Range ---
+# We'll plot scores from 0 up to max_goals
+max_goals = 6
+goal_range = 0:max_goals
+ticks = 0:max_goals # Ticks for the plot axes
+
+# --- 3. Count Score Occurrences ---
+# Combine the samples into a vector of (home, away) tuples
+score_pairs = tuple.(Int.(home_samples), Int.(away_samples))
+
+# Use countmap to get a dictionary of: (home, away) => count
+score_counts_map = countmap(score_pairs)
+
+# --- 4. Build Probability Matrix ---
+total_samples = length(home_samples)
+score_probabilities = zeros(Float64, length(goal_range), length(goal_range))
+
+# Loop through the count map and fill our probability matrix
+for ((home_g, away_g), count) in score_counts_map
+    # Check if the score is within our plotting range
+    if (home_g <= max_goals) && (away_g <= max_goals)
+        # Add 1 for 1-based Julia indexing (0 goals -> index 1)
+        score_probabilities[home_g + 1, away_g + 1] = count / total_samples
+    end
+end
+
+# --- 5. Create Annotations (Optional, but recommended) ---
+# This adds the probability text (e.g., "10.5%") to each cell
+annotations = [
+    text(
+        string(round(p * 100, digits=1), "%"), 
+        8, # Font size
+        p > 0.1 ? :black : :white # Text color (black for light cells, white for dark)
+    ) 
+    for p in score_probabilities
+]
+
+# --- 6. Plot the Heatmap ---
+heatmap(
+    ticks,                  # x-axis values (Away Goals)
+    ticks,                  # y-axis values (Home Goals)
+    score_probabilities,    # The 2D probability data
+    xlabel = "Away Goals",
+    ylabel = "Home Goals",
+    title = "Score Probability Heatmap (Match $id)",
+    color = :viridis,       # Colormap
+    aspect_ratio = :equal,  # Make cells square
+    series_annotations = annotations,
+    xlim=(0,6),
+    ylim=(0,6)
+)
