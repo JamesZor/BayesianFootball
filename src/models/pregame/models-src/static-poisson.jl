@@ -12,7 +12,7 @@ export StaticPoisson, build_turing_model, predict
 struct StaticPoisson <: AbstractPregameModel end
 
 # NEW: The main @model block, isolated
-@model function static_poisson_model(n_teams, home_ids, away_ids, 
+@model function static_poisson_model_train(n_teams, home_ids, away_ids, 
                                     home_goals, away_goals, ::Type{T} = Float64) where {T}
         # --- Priors ---
         log_α_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
@@ -27,20 +27,32 @@ struct StaticPoisson <: AbstractPregameModel end
         log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
         log_μs = log_α[away_ids] .+ log_β[home_ids]
 
-    if !ismissing(home_goals)
         # --- TRAINING CASE ---
         for i in eachindex(home_goals)
           home_goals[i] ~ LogPoisson(log_λs[i])
           away_goals[i] ~ LogPoisson(log_μs[i])
         end
-        # home_goals ~ arraydist(LogPoisson.(log_λs))
-        # away_goals ~ arraydist(LogPoisson.(log_μs))
-    else
-    #     # --- PREDICTION CASE ---
+    return nothing
+end
+
+
+@model function static_poisson_model_predict(n_teams, home_ids, away_ids, 
+                                    home_goals, away_goals, ::Type{T} = Float64) where {T}
+        # --- Priors ---
+        log_α_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
+        log_β_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
+        home_adv ~ Normal(log(1.3), 0.2)
+
+        # --- Identifiability Constraint ---
+        log_α := log_α_raw .- mean(log_α_raw) # using := to added to track vars,
+        log_β := log_β_raw .- mean(log_β_raw)
+
+        # --- Calculate Goal Rates ---
+        log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
+        log_μs = log_α[away_ids] .+ log_β[home_ids]
+
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
         predicted_away_goals ~ arraydist(LogPoisson.(log_μs))
-    end
-    #
     return nothing
 end
 
@@ -72,7 +84,7 @@ function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
     # This helper function flattens the round-based data from the FeatureSet
     data = TuringHelpers.prepare_data(model, feature_set)
     
-    return static_poisson_model(
+    return static_poisson_model_train(
         data.n_teams, 
         data.f_home_ids, 
         data.f_away_ids, 
@@ -89,7 +101,7 @@ Builds the Turing model for the **prediction phase**.
 It takes team IDs directly, as goals are unknown.
 """
 function build_turing_model(model::StaticPoisson, n_teams::Int, home_ids::Vector{Int}, away_ids::Vector{Int})
-    return static_poisson_model(
+    return static_poisson_model_predict(
         n_teams,
         home_ids,
         away_ids,
@@ -104,12 +116,12 @@ end
 
 TBW
 """
-function predict(model::StaticPoisson, df_to_predict::DataFrame, feature_set::FeatureSet)
+function predict(model::StaticPoisson, df_to_predict::DataFrame, feature_set::FeatureSet, chains::Chains)
   team_map = feature_set.team_map 
   n_teams = feature_set.n_teams
   home_ids_to_predict = [team_map[name] for name in df_to_predict.home_team]
   away_ids_to_predict = [team_map[name] for name in df_to_predict.away_team]
   turing_pred_model = build_turing_model(model, n_teams, home_ids_to_predict, away_ids_to_predict)
-  chains_goals = Turing.predict(turing_pred_model)
+  chains_goals = Turing.predict(turing_pred_model, chains)
   return chains_goals
 end 
