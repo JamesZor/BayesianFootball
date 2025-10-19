@@ -17,8 +17,12 @@ struct StaticSimplexPoisson <: AbstractPregameModel end
 
 @model function static_simplex_poisson_model(n_teams, home_ids, away_ids, home_goals, away_goals)
     # --- Priors ---
-      log_α_scale ~ Normal(0, 10)
-      log_β_scale ~ Normal(0, 10)
+      # # log_α_scale ~ Normal(0, 10)
+      # # log_β_scale ~ Normal(0, 10)
+      # log_α_scale ~ Truncated(Normal(0, 1.5), 0, Inf)
+      # log_β_scale ~ Truncated(Normal(0, 1.5), 0, Inf)
+      log_α_scale ~ LogNormal(0, 1)
+      log_β_scale ~ LogNormal(0, 1)
       home_adv ~ Normal(log(1.3), 0.2)
 
       # --- Non-Centered Parameterization for Identifiability ---
@@ -43,13 +47,13 @@ struct StaticSimplexPoisson <: AbstractPregameModel end
       log_μs = log_α[away_ids] .+ log_β[home_ids]
 
     if !ismissing(home_goals)
-        # --- TRAINING CASE ---
-        for i in eachindex(home_goals)
-          home_goals[i] ~ LogPoisson(log_λs[i])
-          away_goals[i] ~ LogPoisson(log_μs[i])
-        end
-        # home_goals ~ arraydist(LogPoisson.(log_λs))
-        # away_goals ~ arraydist(LogPoisson.(log_μs))
+        # # --- TRAINING CASE ---
+        # for i in eachindex(home_goals)
+        #   home_goals[i] ~ LogPoisson(log_λs[i])
+        #   away_goals[i] ~ LogPoisson(log_μs[i])
+        # end
+        home_goals ~ arraydist(LogPoisson.(log_λs))
+        away_goals ~ arraydist(LogPoisson.(log_μs))
     else
     #     # --- PREDICTION CASE ---
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
