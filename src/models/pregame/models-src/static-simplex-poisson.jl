@@ -15,7 +15,7 @@ export StaticSimplexPoisson, build_turing_model
 struct StaticSimplexPoisson <: AbstractPregameModel end
 # 2. DEFINE THE TURING MODEL LOGIC
 
-@model function static_poisson_model(n_teams, home_ids, away_ids, home_goals, away_goals)
+@model function static_simplex_poisson_model(n_teams, home_ids, away_ids, home_goals, away_goals)
     # --- Priors ---
       log_α_scale ~ Normal(0, 10)
       log_β_scale ~ Normal(0, 10)
@@ -66,7 +66,7 @@ function build_turing_model(model::StaticSimplexPoisson, feature_set::FeatureSet
     # This helper function flattens the round-based data from the FeatureSet
     data = TuringHelpers.prepare_data(model, feature_set)
     
-    return static_poisson_model(
+    return static_simplex_poisson_model(
         data.n_teams, 
         data.f_home_ids, 
         data.f_away_ids, 
@@ -83,7 +83,7 @@ Builds the Turing model for the **prediction phase**.
 It takes team IDs directly, as goals are unknown.
 """
 function build_turing_model(model::StaticSimplexPoisson, n_teams::Int, home_ids::Vector{Int}, away_ids::Vector{Int})
-    return static_poisson_model(
+    return static_simplex_poisson_model(
         n_teams,
         home_ids,
         away_ids,
