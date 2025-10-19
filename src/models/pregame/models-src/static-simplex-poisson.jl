@@ -44,8 +44,8 @@ struct StaticSimplexPoisson <: AbstractPregameModel end
 
     if !ismissing(home_goals)
         # --- TRAINING CASE ---
-        home_goals ~ arraydist(LogPoisson.(Log_λs))
-        away_goals ~ arraydist(LogPoisson.(Log_μs))
+        home_goals ~ arraydist(LogPoisson.(log_λs))
+        away_goals ~ arraydist(LogPoisson.(log_μs))
     else
     #     # --- PREDICTION CASE ---
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
