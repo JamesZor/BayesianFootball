@@ -17,8 +17,6 @@ struct StaticSimplexPoisson <: AbstractPregameModel end
 
 @model function static_simplex_poisson_model(n_teams, home_ids, away_ids, home_goals, away_goals)
     # --- Priors ---
-      # # log_α_scale ~ Normal(0, 10)
-      # # log_β_scale ~ Normal(0, 10)
       # log_α_scale ~ Truncated(Normal(0, 1.5), 0, Inf)
       # log_β_scale ~ Truncated(Normal(0, 1.5), 0, Inf)
       log_α_scale ~ LogNormal(0, 1)
@@ -106,13 +104,13 @@ end
 
 TBW
 """
-function predict(model::StaticSimplexPoisson, df_to_predict::DataFrame, feature_set::FeatureSet)
+function predict(model::StaticSimplexPoisson, df_to_predict::DataFrame, feature_set::FeatureSet, chains::Chains)
   team_map = feature_set.team_map 
   n_teams = feature_set.n_teams
   home_ids_to_predict = [team_map[name] for name in df_to_predict.home_team]
   away_ids_to_predict = [team_map[name] for name in df_to_predict.away_team]
   turing_pred_model = build_turing_model(model, n_teams, home_ids_to_predict, away_ids_to_predict)
-  chains_goals = Turing.predict(turing_pred_model)
+  chains_goals = Turing.predict(turing_pred_model, chains)
   return chains_goals
 end 
 

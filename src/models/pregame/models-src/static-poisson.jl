@@ -56,6 +56,20 @@ end
 
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
         predicted_away_goals ~ arraydist(LogPoisson.(log_μs))
+
+# # --- PREDICTION CASE (THE HACK) ---
+#
+#         # 1. Calculate the deterministic values
+#         lambdas = exp.(log_λs)
+#         mus = exp.(log_μs)
+#
+#         # 2. "Sample" them from a Dirac distribution
+#         # This tricks Turing.predict() into saving them.
+#         lambda ~ arraydist(Dirac.(lambdas))
+#         mu ~ arraydist(Dirac.(mus))
+#
+
+
     return nothing
 end
 
