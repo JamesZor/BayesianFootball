@@ -7,6 +7,7 @@ It includes the interfaces and all concrete model implementations.
 """
 module PreGame
 
+using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
 # Shared abstract types for all pre-game models
 include("interfaces.jl")
 # Shared, reusable likelihood functions

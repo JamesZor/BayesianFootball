@@ -6,8 +6,8 @@ module TuringHelpers
 
 using Turing, Distributions, LinearAlgebra, Statistics
 using ..PreGameInterfaces 
-using ....Features: FeatureSet  # <--- ADD THIS LINE
-
+using ...Features: FeatureSet  # <--- ADD THIS LINE
+using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
 export prepare_data
 
 function prepare_data(model::AbstractPregameModel, feature_set) 

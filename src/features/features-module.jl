@@ -6,8 +6,7 @@ module Features
 
 using DataFrames
 using ..Data: DataStore
-using ..Models: AbstractFootballModel
-
+using ..TypesInterfaces: AbstractFootballModel
 export FeatureSet, create_features
 
 # --- Constants for required columns ---

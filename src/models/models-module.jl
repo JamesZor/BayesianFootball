@@ -4,8 +4,8 @@ into a single, organized unit. It defines the highest-level abstract type.
 """
 module Models
 
-# This is the highest-level abstract type for all models in the package.
-abstract type AbstractFootballModel end
+using ..TypesInterfaces
+using ..Features
 
 # --- Include and export sub-modules ---
 include("pregame/pregame-module.jl")
