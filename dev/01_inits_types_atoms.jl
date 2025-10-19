@@ -1110,3 +1110,227 @@ summary_df = DataFrame(results)
 
 println("\n--- Backtest Summary vs. Confidence Level ---")
 println(summary_df)
+
+
+
+using Plots
+
+# X-axis will be the confidence level (e.g., 97.5%)
+x_axis = summary_df.confidence .* 100
+
+# --- Plot 1: ROI vs. Confidence ---
+p_roi = plot(
+    x_axis, 
+    [summary_df.roi_p1, summary_df.roi_p2],
+    label = ["Model 1 ROI" "Model 2 ROI"],
+    xlabel = "Confidence Threshold % (One-Sided)",
+    ylabel = "ROI %",
+    title = "ROI vs. Bet Confidence Threshold",
+    legend = :topleft,
+    lw = 2, # line width
+    markershape = :circle
+)
+
+# --- Plot 2: Number of Bets vs. Confidence ---
+p_bets = plot(
+    x_axis, 
+    [summary_df.n_bets_p1, summary_df.n_bets_p2],
+    label = ["Model 1 # Bets" "Model 2 # Bets"],
+    xlabel = "Confidence Threshold % (One-Sided)",
+    ylabel = "Total Number of Bets",
+    title = "Number of Bets vs. Confidence",
+    legend = :topright,
+    lw = 2,
+    markershape = :circle
+)
+
+# --- Combine and display ---
+plot(p_roi, p_bets, layout = (2, 1), size = (800, 700))
+
+
+using Plots
+
+# Ensure your DataFrame is named summary_df
+# summary_df = DataFrame(results) 
+
+# X-axis will be the confidence level (e.g., 97.5%)
+x_axis = summary_df.confidence .* 100
+
+# --- Plot 1: ROI vs. Confidence ---
+p_roi = plot(
+    x_axis, 
+    [summary_df.roi_p1, summary_df.roi_p2],
+    label = ["Model 1 ROI" "Model 2 ROI"],
+    xlabel = "Confidence Threshold % (One-Sided)",
+    ylabel = "ROI %",
+    title = "ROI vs. Bet Confidence Threshold",
+    legend = :topleft,
+    lw = 2, # line width
+    markershape = :circle,
+    xticks = x_axis
+)
+
+# --- Plot 2: Total Profit vs. Confidence ---
+p_profit = plot(
+    x_axis, 
+    [summary_df.p1_profit, summary_df.p2_profit],
+    label = ["Model 1 Profit" "Model 2 Profit"],
+    xlabel = "Confidence Threshold % (One-Sided)",
+    ylabel = "Total Profit (Units)",
+    title = "Total Profit vs. Confidence",
+    legend = :topleft,
+    lw = 2,
+    markershape = :circle,
+    xticks = x_axis
+)
+
+# --- Plot 3: Number of Bets vs. Confidence ---
+p_bets = plot(
+    x_axis, 
+    [summary_df.n_bets_p1, summary_df.n_bets_p2],
+    label = ["Model 1 # Bets" "Model 2 # Bets"],
+    xlabel = "Confidence Threshold % (One-Sided)",
+    ylabel = "Total Number of Bets",
+    title = "Number of Bets vs. Confidence",
+    legend = :topright,
+    lw = 2,
+    markershape = :circle,
+    yscale = :log10,  # Use a log scale for bets, as it changes a lot
+    xticks = x_axis
+)
+
+# --- Combine and display ---
+plot(p_roi, p_profit, p_bets, layout = (3, 1), size = (800, 1000), dpi=150)
+
+
+
+
+# 1. Define the quantile and the corresponding column name
+q = 0.025
+p1_col = Symbol("p1_odds_q_$(replace(string(q), "." => "_"))") # :p1_odds_q_0_025
+
+# 2. Filter the DataFrame
+# The logic is:
+# 1. The result must be known (!ismissing(row.winning))
+# 2. The model's upper-bound odds must be less than the market odds
+bets_p1_q025 = filter(row -> 
+    !ismissing(row.winning) && row[p1_col] < row.market_odds, 
+    q_comparison_df
+)
+
+# 3. (Optional) Select the most important columns to view
+println(select(
+    bets_p1_q025, 
+    :match_id, 
+    :model_market_name, 
+    :market_odds, 
+    p1_col,  # Model's upper-bound odds
+    :p1_mean_odds,
+    :winning
+))
+
+println("\nTotal bets found: $(nrow(bets_p1_q025))")
+
+
+# Profit Function for Laying
+
+"""
+Profit Strategy: High-Confidence Lay Bet
+Bet 1 unit if model_lower_odds > market_odds.
+Profit is +1 if bet wins (outcome doesn't happen, winning=false)
+Profit is -(market_odds - 1) if bet loses (outcome happens, winning=true)
+"""
+function calculate_profit_lay(model_lower_odds, market_odds, winning)
+    # 1. Check for value
+    if ismissing(winning) || model_lower_odds <= market_odds
+        return 0.0 # No value, no bet
+    end
+    
+    # 2. We placed a lay bet. Check the result.
+    if winning == true
+        # Bet lost (the outcome happened)
+        return -(market_odds - 1.0)
+    else
+        # Bet won (the outcome didn't happen)
+        return 1.0
+    end
+end
+
+using DataFrames, Statistics
+
+# We need symmetric quantiles. Your list already has these!
+# e.g., 0.1 pairs with 0.9, 0.2 pairs with 0.8, etc.
+# We'll test 90%, 80%, 70%, 60%, 50% confidence.
+quantiles_to_test = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+# (Assuming `q_comparison_df` and `calculate_profit_ci` still exist)
+
+trading_results = []
+for q_back in quantiles_to_test
+    # 1. Define the symmetric quantiles
+    q_lay = 1.0 - q_back
+    
+    # 2. Get the column names for this confidence level
+    # (Rounding to handle 0.7 + 0.3 = 0.999... float issues)
+    q_back_str = replace(string(round(q_back, digits=3)), "." => "_")
+    q_lay_str = replace(string(round(q_lay, digits=3)), "." => "_")
+
+    p1_back_col = Symbol("p1_odds_q_$(q_back_str)")
+    p1_lay_col = Symbol("p1_odds_q_$(q_lay_str)")
+    p2_back_col = Symbol("p2_odds_q_$(q_back_str)")
+    p2_lay_col = Symbol("p2_odds_q_$(q_lay_str)")
+
+    # 3. Calculate profit vectors for all bets
+    profit_p1_back = calculate_profit_ci.(q_comparison_df[!, p1_back_col], q_comparison_df.market_odds, q_comparison_df.winning)
+    profit_p1_lay  = calculate_profit_lay.(q_comparison_df[!, p1_lay_col], q_comparison_df.market_odds, q_comparison_df.winning)
+    
+    profit_p2_back = calculate_profit_ci.(q_comparison_df[!, p2_back_col], q_comparison_df.market_odds, q_comparison_df.winning)
+    profit_p2_lay  = calculate_profit_lay.(q_comparison_df[!, p2_lay_col], q_comparison_df.market_odds, q_comparison_df.winning)
+    
+    # --- 4. Summarize Model 1 ---
+    n_bets_p1_back = count(profit_p1_back .!= 0)
+    n_bets_p1_lay  = count(profit_p1_lay .!= 0)
+    total_profit_p1_back = sum(profit_p1_back)
+    total_profit_p1_lay  = sum(profit_p1_lay)
+    
+    # Calculate ROI (Return on *Capital*, not just stake)
+    # For laying, the "staked" amount is the liability
+    liability_p1 = [w ? (m - 1) : 1.0 for (w, m) in zip(q_comparison_df.winning, q_comparison_df.market_odds)]
+    staked_p1_back = n_bets_p1_back # 1 unit per bet
+    staked_p1_lay  = sum(liability_p1[profit_p1_lay .!= 0]) # Liability is your stake
+    
+    roi_p1_back = staked_p1_back > 0 ? (total_profit_p1_back / staked_p1_back) * 100 : 0
+    roi_p1_lay  = staked_p1_lay > 0 ? (total_profit_p1_lay / staked_p1_lay) * 100 : 0
+    
+    # --- 5. Summarize Model 2 ---
+    n_bets_p2_back = count(profit_p2_back .!= 0)
+    n_bets_p2_lay  = count(profit_p2_lay .!= 0)
+    total_profit_p2_back = sum(profit_p2_back)
+    total_profit_p2_lay  = sum(profit_p2_lay)
+    
+    liability_p2 = [w ? (m - 1) : 1.0 for (w, m) in zip(q_comparison_df.winning, q_comparison_df.market_odds)]
+    staked_p2_back = n_bets_p2_back
+    staked_p2_lay  = sum(liability_p2[profit_p2_lay .!= 0])
+    
+    roi_p2_back = staked_p2_back > 0 ? (total_profit_p2_back / staked_p2_back) * 100 : 0
+    roi_p2_lay  = staked_p2_lay > 0 ? (total_profit_p2_lay / staked_p2_lay) * 100 : 0
+
+    # --- 6. Store Combined Results ---
+    push!(trading_results, (
+        confidence = (1.0 - q_back * 2) * 100, # e.g., 1.0 - 0.1*2 = 80% CI
+        n_bets_p1_back = n_bets_p1_back,
+        n_bets_p1_lay = n_bets_p1_lay,
+        total_profit_p1 = total_profit_p1_back + total_profit_p1_lay,
+        roi_p1_back = roi_p1_back,
+        roi_p1_lay = roi_p1_lay,
+        
+        n_bets_p2_back = n_bets_p2_back,
+        n_bets_p2_lay = n_bets_p2_lay,
+        total_profit_p2 = total_profit_p2_back + total_profit_p2_lay,
+        roi_p2_back = roi_p2_back,
+        roi_p2_lay = roi_p2_lay,
+    ))
+end
+
+trading_summary_df = DataFrame(trading_results)
+println(trading_summary_df)
