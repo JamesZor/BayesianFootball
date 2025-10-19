@@ -33,8 +33,8 @@ struct StaticPoisson <: AbstractPregameModel end
         #   home_goals[i] ~ LogPoisson(log_λs[i])
         #   away_goals[i] ~ LogPoisson(log_μs[i])
         # end
-        home_goals ~ arraydist(LogPoisson.(Log_λs))
-        away_goals ~ arraydist(LogPoisson.(Log_μs))
+        home_goals ~ arraydist(LogPoisson.(log_λs))
+        away_goals ~ arraydist(LogPoisson.(log_μs))
     else
     #     # --- PREDICTION CASE ---
         predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
