@@ -28,10 +28,13 @@ struct StaticPoisson <: AbstractPregameModel end
         log_μs = log_α[away_ids] .+ log_β[home_ids]
 
         # --- TRAINING CASE ---
-        for i in eachindex(home_goals)
-          home_goals[i] ~ LogPoisson(log_λs[i])
-          away_goals[i] ~ LogPoisson(log_μs[i])
-        end
+        # for i in eachindex(home_goals)
+        #   home_goals[i] ~ LogPoisson(log_λs[i])
+        #   away_goals[i] ~ LogPoisson(log_μs[i])
+        # end
+
+        home_goals ~ arraydist(LogPoisson.(log_λs))
+        away_goals ~ arraydist(LogPoisson.(log_μs))
     return nothing
 end
 
