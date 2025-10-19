@@ -14,6 +14,7 @@ include("turing_helpers.jl")
 
 # Directory for concrete model implementations
 module Implementations
+    using ....Features: FeatureSet 
     # Each model is now in its own self-contained file
     include("./models-src/static-poisson.jl")
     include("./models-src/static-simplex-poisson.jl")

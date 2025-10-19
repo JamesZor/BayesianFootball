@@ -14,6 +14,7 @@ data_store = BayesianFootball.Data.load_default_datastore()
 model =  Models.PreGame.StaticPoisson()
 splitter = Experiments.StaticSplit(["24/25"])
 sampler_config = Sampling.NUTSMethod(1000, 2, 100)
+
 markets = Predictions.get_standard_markets()
 calculations_set = Set{Predictions.Calculations.AbstractCalculation}([
     Predictions.Calculations.CalcProbability() 
@@ -26,18 +27,24 @@ prediction_config = Predictions.PredictionConfig(
     calculations_set
 )
 
+exp1 = Experiments.Experiment(
+    "StaticPoisson_ExpandingWindow_22-23",
+    model,
+    splitter,
+    sampler_config,
+    prediction_config
+)
+
+
 
 exp1 = Experiments.Experiment(
-    name = "StaticPoisson_ExpandingWindow_22-23",
+    "StaticPoisson_ExpandingWindow_22-23",
     model = BayesianFootball.Models.PreGame.StaticPoisson(),
     splitter = Experiments.StaticSplit(
     ),
     sampler_config = BayesianFootball.Sampling.NUTSMethod(n_samples=1000, n_chains=2, n_warmup=500),
-    prediction_config = PredictionConfig(
-        markets = [:1x2, :over_25, :btts],
-        calculate_ev = true,
-        calculate_kelly = false
-    )
+    prediction_config = prediction_config
+    
 )
 
 

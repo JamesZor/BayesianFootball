@@ -6,9 +6,10 @@ module BayesianFootball
 # abstract type AbstractFootballModel end
 # Include the source code for the Data submodule
 include("data/data-module.jl")
+include("models/models-module.jl")
+
 include("features/features-module.jl")
 
-include("models/models-module.jl")
 
 include("./sampling/sampling-module.jl")
 include("./predictions/markets.jl")

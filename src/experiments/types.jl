@@ -23,23 +23,12 @@ struct ExpandingWindowCV <: AbstractSplitter
 end
 
 
-"""
-Defines what to predict (your Config_p).
-"""
-struct PredictionConfig
-    markets::Vector{Symbol} # e.g., [:1x2, :over_under_25, :btts]
-    calculate_ev::Bool
-    calculate_kelly::Bool
-end
-
-
 # --- MODIFIED: Experiment struct ---
 struct Experiment
     name::String
-    model::AbstractFootballModel        # Your M
-    splitter::AbstractSplitter        # <-- REPLACES FeatureConfig
-    sampler_config::AbstractTrainingMethod  # Your Config_s
-    prediction_config::PredictionConfig # Your Config_p
+    model::AbstractFootballModel
+    splitter::AbstractSplitter 
+    sampler_config::AbstractTrainingMethod
 end
 
 

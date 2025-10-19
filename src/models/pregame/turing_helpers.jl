@@ -6,6 +6,7 @@ module TuringHelpers
 
 using Turing, Distributions, LinearAlgebra, Statistics
 using ..PreGameInterfaces 
+using ....Features: FeatureSet  # <--- ADD THIS LINE
 
 export prepare_data
 

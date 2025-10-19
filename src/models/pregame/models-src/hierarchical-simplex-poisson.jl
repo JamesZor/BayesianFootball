@@ -12,7 +12,7 @@ struct HierarchicalSimplexPoisson <: AbstractPregameModel end
 
 # 2. DEFINE THE TURING MODEL LOGIC
 # This implementation closely follows the provided Stan model
-function build_turing_model(model::HierarchicalSimplexPoisson, feature_set)
+function build_turing_model(model::HierarchicalSimplexPoisson, feature_set::FeatureSet)
 
    data = TuringHelpers.prepare_data(model, feature_set)
 

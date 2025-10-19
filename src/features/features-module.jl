@@ -6,6 +6,7 @@ module Features
 
 using DataFrames
 using ..Data: DataStore
+using ..Models: AbstractFootballModel
 
 export FeatureSet, create_features
 
@@ -96,5 +97,39 @@ function create_features(data_store::DataStore)::FeatureSet
         round_home_ids, round_away_ids, round_home_goals, round_away_goals
     )
 end
+
+
+function create_features(model::AbstractFootballModel, data::DataFrame)::FeatureSet
+
+    matches_df = dropmissing(data, [:home_score, :away_score])
+
+    # 2. Select only the necessary columns
+    matches_df = select(matches_df, REQUIRED_MATCH_COLS)
+    # 3. Add the global_round column
+    matches_df = _add_global_round_column(matches_df)
+
+    # 4. Create team-to-integer mappings
+    all_teams = unique(vcat(matches_df.home_team, matches_df.away_team))
+    team_map = Dict(team_name => i for (i, team_name) in enumerate(all_teams))
+    n_teams = length(team_map)
+
+    # 5. Create data structures for DYNAMIC models (grouped by round)
+    grouped = groupby(matches_df, :global_round)
+    n_rounds = length(grouped)
+    round_home_ids = [ [team_map[name] for name in g.home_team] for g in grouped]
+    round_away_ids = [ [team_map[name] for name in g.away_team] for g in grouped]
+    round_home_goals = [g.home_score for g in grouped]
+    round_away_goals = [g.away_score for g in grouped]
+
+    # 6. Return the completed FeatureSet
+    return FeatureSet(
+        matches_df, team_map, n_teams, n_rounds,
+        round_home_ids, round_away_ids, round_home_goals, round_away_goals
+    )
+end
+
+
+
+
 
 end
