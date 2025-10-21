@@ -19,17 +19,14 @@ println("✅ DataStore loaded with $(nrow(data_store.matches)) matches.\n")
 
 
 
-#=
 # --- 2. Define the experiment parameters ---
 # We define the model (M) and how to split the data.
 println("--- 2. Defining experiment parameters ---")
 model = BayesianFootball.Models.PreGame.StaticPoisson();
 splitter = BayesianFootball.Experiments.StaticSplit(["24/25"]); # Using a small season for speed
-sampler_config = BayesianFootball.Sampling.NUTSMethod(200, 2, 100); # Short run for testing
+sampler_config = BayesianFootball.Sampling.NUTSMethod(10, 2, 1); # Short run for testing
 println("✅ Experiment parameters defined for model: $(typeof(model))\n")
-=#
 
-#=
 # --- 3. Create the Global Vocabulary (G) ---
 # MORPHISM: G_map: D x M -> G
 # This runs *once* on the entire DataStore.
@@ -41,18 +38,14 @@ for key in keys(vocabulary.mappings)
     println("  - :$key")
 end
 println("Number of teams in vocabulary: ", vocabulary.mappings[:n_teams], "\n")
-=#
 
-#=
 # --- 4. Get a single data split (D_i) ---
 # In a real experiment, the ExperimentRunner would loop over these.
 # Here, we manually create one for demonstration.
 println("--- 4. Creating a data split (D_i) ---")
 train_df = filter(row -> row.season in splitter.train_seasons, data_store.matches);
 println("✅ Created a data split (D_i) with $(nrow(train_df)) matches.\n")
-=#
 
-#=
 # --- 5. Create the FeatureSet for the split (F_i) ---
 # MORPHISM: f_i: D_i x G x M -> F_i
 # This uses the global vocabulary (G) to transform the specific split (D_i).
@@ -64,17 +57,13 @@ for key in keys(feature_set.data)
     println("  - :$key")
 end
 println()
-=#
 
-#=
 # --- 6. Build the Turing Model ---
 # This step uses the data in the FeatureSet (F_i) to instantiate the @model block.
 println("--- 6. Building Turing model instance ---")
-turing_model = BayesianFootball.Models.build_turing_model(model, feature_set);
+turing_model = BayesianFootball.Models.PreGame.build_turing_model(model, feature_set);
 println("✅ Turing model instance created.\n")
-=#
 
-#=
 # --- 7. Train the Model (Sample) ---
 # MORPHISM: g: F_i x M x Config_s -> C
 # This is the main MCMC sampling step.
@@ -82,7 +71,6 @@ println("--- 7. Training model (sampling) ---")
 println("⏳ Starting sampling... (This might take a moment)")
 chains = BayesianFootball.Sampling.train(turing_model, sampler_config);
 println("✅ Sampling complete! Chains (C) created.\n")
-=#
 
 #=
 # --- 8. Inspect the Results ---
@@ -95,3 +83,17 @@ display(chains)
 # using StatsPlots
 # plot(chains, :home_adv)
 =#
+
+
+# --- 9. predict ---
+
+df_to_predict = first(train_df, 5)
+
+predictions = Models.PreGame.predict(model, df_to_predict, vocabulary, chains)
+
+p1 = predictions
+
+
+id = 1
+describe(p1[Symbol("predicted_home_goals[$id]")])
+describe(p1[Symbol("predicted_away_goals[$id]")])

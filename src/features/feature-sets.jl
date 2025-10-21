@@ -55,7 +55,7 @@ function create_features(
     F_data = Dict{Symbol, Any}() # This will hold the data for the FeatureSet
     
     # --- 1. Copy global info from G to F_i, asserting types for stability ---
-    team_map = G[:team_map]::Dict{String, Int}
+    team_map = G[:team_map]::Dict{<:AbstractString, Int}
     n_teams = G[:n_teams]::Int
     F_data[:team_map] = team_map
     F_data[:n_teams] = n_teams

@@ -17,13 +17,13 @@ include("features/features-module.jl")
 
 # 5. The rest of the modules depend on the core modules above.
 include("sampling/sampling-module.jl")
-# include("./predictions/markets.jl")
-# include("./predictions/calculations.jl")
+include("./predictions/markets.jl")
+include("./predictions/calculations.jl")
 include("./predictions/prediction-module.jl")
 include("./experiments/experiment-module.jl")
 
 # Export the main modules and key functions/types for users
-export Data, Features, Models, Sampling, Experiments, Predictions
+export Data, Features, Models, Sampling, Experiments, Predictions, Markets, Calculations
 export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 
 end

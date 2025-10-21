@@ -2,12 +2,13 @@
 
 module ExperimentRunner
 
-using ..ExperimentTypes
-using ..Data
-using ..Data.Splitting
-using ..Features
-using ..Models
-using ..Sampling
+# using ..ExperimentTypes
+using ...Data
+# using ...Data.Splitting
+using ...Features
+using ...Models
+using ...Sampling
+using .Experiment
 using Turing, DataFrames
 using JLD2, JSON3, ProgressMeter
 

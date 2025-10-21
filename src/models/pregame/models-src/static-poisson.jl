@@ -4,6 +4,7 @@ using Turing
 using LinearAlgebra
 using ..PreGameInterfaces # Use the abstract type
 using ..TuringHelpers
+using ...TypesInterfaces
 using Base.Threads
 
 # Export the concrete model struct and its build function
@@ -103,10 +104,10 @@ function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
     
     return static_poisson_model_train(
         data.n_teams, 
-        data.f_home_ids, 
-        data.f_away_ids, 
-        data.f_home_goals, 
-        data.f_away_goals
+        data.flat_home_ids, 
+        data.flat_away_ids, 
+        data.flat_home_goals, 
+        data.flat_away_goals
     )
 end
 
@@ -129,16 +130,29 @@ end
 
 
 """
-    predict(model::StaticPoisson, data_to_predict::DataFrame, feature_set::FeatureSet)
+    predict(model::StaticPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
 
-TBW
+Generates posterior predictive samples for new data.
+
+This function uses the global `Vocabulary` to map team names from the `df_to_predict`
+DataFrame to the integer IDs that the trained model understands.
 """
-function predict(model::StaticPoisson, df_to_predict::DataFrame, feature_set::FeatureSet, chains::Chains)
-  team_map = feature_set.team_map 
-  n_teams = feature_set.n_teams
-  home_ids_to_predict = [team_map[name] for name in df_to_predict.home_team]
-  away_ids_to_predict = [team_map[name] for name in df_to_predict.away_team]
+function predict(model::StaticPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
+  # To get the team_map and n_teams, we now access the dictionary within the Vocabulary
+  team_map = vocabulary.mappings[:team_map]
+  n_teams = vocabulary.mappings[:n_teams]
+  
+  # Filter out any matches where one of the teams was not in the original training vocabulary
+  valid_df = filter(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), df_to_predict)
+  
+  if nrow(valid_df) < nrow(df_to_predict)
+      println("Warning: Some matches were dropped from prediction because they contained teams not in the vocabulary.")
+  end
+
+  home_ids_to_predict = [team_map[name] for name in valid_df.home_team]
+  away_ids_to_predict = [team_map[name] for name in valid_df.away_team]
+  
   turing_pred_model = build_turing_model(model, n_teams, home_ids_to_predict, away_ids_to_predict)
   chains_goals = Turing.predict(turing_pred_model, chains)
   return chains_goals
-end 
+end

@@ -7,8 +7,9 @@ module TuringHelpers
 
 using Turing, Distributions, LinearAlgebra, Statistics
 using ..PreGameInterfaces 
-using ...Features: FeatureSet
-using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
+# using ...Features: FeatureSet
+# using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
+using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel, FeatureSet # <-- ADD FeatureSet HERE
 export prepare_data
 
 """

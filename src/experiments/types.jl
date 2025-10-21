@@ -1,6 +1,11 @@
 # src/experiments/types.jl
 
+# Add imports for types used in this file
+using ..Models: AbstractFootballModel
+using ..Sampling: AbstractTrainingMethod
 
+# Export the types you want to be public
+export AbstractSplitter, StaticSplit, ExpandingWindowCV, Experiment
 
 abstract type AbstractSplitter end
 
@@ -30,6 +35,4 @@ struct Experiment
     splitter::AbstractSplitter 
     sampler_config::AbstractTrainingMethod
 end
-
-
 
