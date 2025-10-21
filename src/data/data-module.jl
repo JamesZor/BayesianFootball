@@ -10,9 +10,13 @@ using InlineStrings
 export load_default_datastore, DataStore
 
 # splitting 
-include("./splitting.jl")
 export TimeSeriesSplits
 
+# --- INCLUDE PREPROCESSING FIRST ---
+include("./pre-processing.jl")
+using .DataPreprocessing
+# --- EXPORT PREPROCESSING FUNCTIONS ---
+export add_match_week_column, add_global_round_column
 
 # abstracts 
 struct DataFiles
@@ -166,5 +170,7 @@ end
 function load_default_datastore() 
   return DataStore(DataFiles( DataPaths.scotland))
 end
+
+include("./splitting.jl")
 
 end
