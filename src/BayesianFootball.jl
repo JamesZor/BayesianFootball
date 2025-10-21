@@ -1,29 +1,29 @@
 module BayesianFootball
 
-# Using DataFrames, CSV, and Dates from the Data module
-# using DataFrames, CSV, Dates
-
-include( "./types-interfaces.jl")
-
+# The order of includes is critical to resolve dependencies.
+# 1. Interfaces contains all shared types and contracts. It has no local dependencies.
+include("./types-interfaces.jl")
 using .TypesInterfaces
 
-
-# abstract type AbstractFootballModel end
-# Include the source code for the Data submodule
+# 2. Data is self-contained.
 include("data/data-module.jl")
-include("features/features-module.jl")
+
+# 3. Models depends only on TypesInterfaces for its contracts.
 include("models/models-module.jl")
 
+# 4. Features depends on Data, TypesInterfaces, and the concrete model types from Models.
+# This is now safe because Models is loaded first.
+include("features/features-module.jl")
 
-
-include("./sampling/sampling-module.jl")
-include("./predictions/markets.jl")
-include("./predictions/calculations.jl")
-
+# 5. The rest of the modules depend on the core modules above.
+include("sampling/sampling-module.jl")
+# include("./predictions/markets.jl")
+# include("./predictions/calculations.jl")
 include("./predictions/prediction-module.jl")
-
 include("./experiments/experiment-module.jl")
 
-export Data, Features, Models, AbstractFootballModel, Sampling, Experiments, Predictions, Markets, Calculations
+# Export the main modules and key functions/types for users
+export Data, Features, Models, Sampling, Experiments, Predictions
+export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 
 end
