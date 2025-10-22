@@ -168,11 +168,27 @@ feature_sets_static = BayesianFootball.Features.create_features(
 )
 
 
-
+### ---- Samping explore 
 
 sampler_config = Sampling.NUTSMethod(100, 4, 50)
 
 turing_model = Models.PreGame.build_turing_model(model, feature_sets_static[1][1])
 chains_params = Sampling.train(turing_model, sampler_config)
 
+describe(chains_params)
 
+
+ df_to_predict = last(temp_data_store.matches, 5)
+
+
+predictions = Models.PreGame.predict(model, df_to_predict, vocabulary, chains_params)
+
+p1 = predictions
+
+id = 5
+df_to_predict[id, :]
+
+describe(p1[Symbol("predicted_home_goals[$id]")])
+describe(p1[Symbol("predicted_away_goals[$id]")])
+
+filter( row -> row.match_id==df_to_predict[id, :match_id], data_store.odds)[:, [:market_name, :choice_name, :choice_group, :decimal_odds, :winning]]
