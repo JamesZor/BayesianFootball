@@ -4,13 +4,19 @@ using DataFrames
 using Base.Iterators: collect
 
 export AbstractSplitter, StaticSplit, ExpandingWindowCV, create_data_splits
-# (Keep TimeSeriesSplits struct and constructor as they are)
 
 # --- 1. SPLITTER TYPES (Unchanged) ---
 abstract type AbstractSplitter end
-struct StaticSplit <: AbstractSplitter
+
+ struct StaticSplit <: AbstractSplitter
     train_seasons::Vector{String}
+      round_col::Union{Symbol, AbstractVector{Symbol}}
 end
+
+function StaticSplit(; train_seasons::Vector{String}, round_col = Symbol[])
+    return StaticSplit(train_seasons, round_col)
+end
+
 struct ExpandingWindowCV <: AbstractSplitter
     base_seasons::Vector{String}
     target_seasons::Vector{String}

@@ -34,7 +34,7 @@ println("✅ (G) Global Vocabulary created. $(vocabulary.mappings[:n_teams]) tea
 println("\n--- PHASE 2: Testing Data Split Pipeline ---") #
 
 # --- Define Splitter Configs (Config_s) ---
-splitter_static = BayesianFootball.Data.StaticSplit(["23/24"]) #
+splitter_static = BayesianFootball.Data.StaticSplit(train_seasons =["23/24"]) #
 splitter_cv = BayesianFootball.Data.ExpandingWindowCV( #
   ["22/23"], # Base
   ["23/24"], # Target
@@ -98,13 +98,6 @@ splitter_config = BayesianFootball.Data.ExpandingWindowCV( #
   :sequential #
 )
 
-splitter_config = splitters_to_test[2]
-
-
-println("\n" * "="^40)
-println("Testing Splitter: $(typeof(splitter_config))")
-println("="^40)
-
 # --- 1. MORPHISM h_1: D x Config_s -> D_1:N ---
 # Now returns Vector{Tuple{SubDataFrame, String}}
 data_splits_vector = BayesianFootball.Data.create_data_splits(data_store, splitter_config)
@@ -124,7 +117,7 @@ temp_data_store = BayesianFootball.Data.DataStore(
 # Now create the splits using the preprocessed data
 data_splits_vector_mw = BayesianFootball.Data.create_data_splits(temp_data_store, splitter_config)
 println("Created $(length(data_splits_vector_mw)) splits using :match_week.")
-
+data_splits_static= BayesianFootball.Data.create_data_splits(temp_data_store, splitter_static)
 
 println("\n--- Inspecting First 5 Splits ---")
 for i in 1:min(5, length(data_splits_vector_mw))
@@ -153,3 +146,24 @@ if length(data_splits_vector_mw) >= 3
     println("Min match_date in Split 3: $(minimum(split3_view.match_date))")
     println("Max match_date in Split 3: $(maximum(split3_view.match_date))")
 end
+
+
+# (Assuming data_splits_vector, vocabulary, and model are already defined)
+
+println("\n--- PHASE 3: Applying Feature Creation (using overloaded method) ---")
+
+# Simply call the overloaded method directly with the vector of splits
+feature_sets_vector = BayesianFootball.Features.create_features(
+    data_splits_vector_mw,
+    vocabulary,
+    model,
+    splitter_config
+)
+
+feature_sets_static = BayesianFootball.Features.create_features(
+    data_splits_static,
+    vocabulary,
+    model,
+    splitter_static
+)
+

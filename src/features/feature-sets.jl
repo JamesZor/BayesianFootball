@@ -62,59 +62,60 @@
 
 # --- Main API Functions ---
 
-"""
-    create_features(data_split::DataFrame, vocabulary::Vocabulary, model::AbstractFootballModel)
-
-Creates a FeatureSet (F_i) for a specific data split (D_i)
-using the pre-computed global Vocabulary (G). This is your `f_i: D_i x G x M -> F_i`.
-"""
-function create_features(
-    data_split::DataFrame, 
-    vocabulary::Vocabulary, 
-    model::AbstractFootballModel
-)::FeatureSet
-    
-    G = vocabulary.mappings
-    F_data = Dict{Symbol, Any}() # This will hold the data for the FeatureSet
-    
-    # --- 1. Copy global info from G to F_i, asserting types for stability ---
-    team_map = G[:team_map]::Dict{<:AbstractString, Int}
-    n_teams = G[:n_teams]::Int
-    F_data[:team_map] = team_map
-    F_data[:n_teams] = n_teams
-
-    # --- 2. Process D_i (the data split) ---
-    matches_df = dropmissing(data_split, [:home_score, :away_score])
-    
-    # Filter out matches with teams not present in the global vocabulary
-    filter!(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df)
-    
-    matches_df = _add_global_round_column(matches_df)
-    F_data[:matches_df] = matches_df
-
-    # --- 3. Build split-specific data (F_i) ---
-    grouped = groupby(matches_df, :global_round)
-    F_data[:n_rounds] = length(grouped)
-    
-    F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in grouped]
-    F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in grouped]
-    F_data[:round_home_goals] = [g.home_score for g in grouped]
-    F_data[:round_away_goals] = [g.away_score for g in grouped]
-    
-    F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
-    F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
-    F_data[:flat_home_goals] = vcat(F_data[:round_home_goals]...)
-    F_data[:flat_away_goals] = vcat(F_data[:round_away_goals]...)
-
-    # --- 4. Add model-specific data ---
-    # This is where you would add logic for a new model type, e.g.:
-    # if model isa HierarchicalModel 
-    #   league_map = G[:league_map]::Dict{String, Int}
-    #   F_data[:flat_league_ids] = [league_map[r.tournament_slug] for r in eachrow(matches_df)]
-    # end
-    
-    return FeatureSet(F_data)
-end
+# """
+#     create_features(data_split::DataFrame, vocabulary::Vocabulary, model::AbstractFootballModel)
+#
+# Creates a FeatureSet (F_i) for a specific data split (D_i)
+# using the pre-computed global Vocabulary (G). This is your `f_i: D_i x G x M -> F_i`.
+# """
+# function create_features(
+#     data_split::DataFrame, 
+#     vocabulary::Vocabulary, 
+#     model::AbstractFootballModel
+# )::FeatureSet
+#
+#     G = vocabulary.mappings
+#     F_data = Dict{Symbol, Any}() # This will hold the data for the FeatureSet
+#
+#     # --- 1. Copy global info from G to F_i, asserting types for stability ---
+#     team_map = G[:team_map]::Dict{<:AbstractString, Int}
+#     n_teams = G[:n_teams]::Int
+#     F_data[:team_map] = team_map
+#     F_data[:n_teams] = n_teams
+#
+#     # --- 2. Process D_i (the data split) ---
+#     matches_df = dropmissing(data_split, [:home_score, :away_score])
+#
+#     # Filter out matches with teams not present in the global vocabulary
+#     filter!(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df)
+#
+#     # matches_df = _add_global_round_column(matches_df)
+#     F_data[:matches_df] = matches_df
+#
+#     # --- 3. Build split-specific data (F_i) ---
+#     grouped = groupby(matches_df, :global_round)
+#     F_data[:n_rounds] = length(grouped)
+#
+#     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in grouped]
+#     F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in grouped]
+#     F_data[:round_home_goals] = [g.home_score for g in grouped]
+#     F_data[:round_away_goals] = [g.away_score for g in grouped]
+#
+#     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
+#     F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
+#     F_data[:flat_home_goals] = vcat(F_data[:round_home_goals]...)
+#     F_data[:flat_away_goals] = vcat(F_data[:round_away_goals]...)
+#
+#     # --- 4. Add model-specific data ---
+#     # This is where you would add logic for a new model type, e.g.:
+#     # if model isa HierarchicalModel 
+#     #   league_map = G[:league_map]::Dict{String, Int}
+#     #   F_data[:flat_league_ids] = [league_map[r.tournament_slug] for r in eachrow(matches_df)]
+#     # end
+#
+#     return FeatureSet(F_data)
+# end
+#
 
 """
     create_features(data_split::AbstractDataFrame, vocabulary::Vocabulary, model::AbstractFootballModel) # <-- CHANGE HERE
@@ -123,9 +124,11 @@ Creates a FeatureSet (F_i) for a specific data split (D_i)
 using the pre-computed global Vocabulary (G). This is your `f_i: D_i x G x M -> F_i`.
 """
 function create_features(
-    data_split::AbstractDataFrame, # <-- CHANGE HERE to AbstractDataFrame
+    data_split::AbstractDataFrame,
     vocabulary::Vocabulary,
-    model::AbstractFootballModel
+    model::AbstractFootballModel,
+    splitter_config::AbstractSplitter
+
 )::FeatureSet
     
     G = vocabulary.mappings
@@ -147,14 +150,14 @@ function create_features(
 
     # Filter out matches with teams not present in the global vocabulary
     # Use view=true for efficiency if matches_df_filtered is already a SubDataFrame or you don't need a copy
-    matches_df_teams_filtered = filter(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df_filtered, view=!(matches_df_filtered isa SubDataFrame))
+    matches_df= filter(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df_filtered, view=!(matches_df_filtered isa SubDataFrame))
 
     # Add global round (this function now returns a *new* DataFrame copy)
-    matches_df = _add_global_round_column(matches_df_teams_filtered)
+    # matches_df = _add_global_round_column(matches_df_teams_filtered)
     F_data[:matches_df] = matches_df # Store the processed DataFrame
 
     # --- Build split-specific data (F_i) ---
-    grouped = groupby(matches_df, :global_round)
+    grouped = groupby(matches_df, splitter_config.round_col)
     F_data[:n_rounds] = length(grouped)
    
     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in grouped] #
@@ -171,4 +174,34 @@ function create_features(
     # ... (no changes needed here)
 
     return FeatureSet(F_data)
+end
+
+
+"""
+    create_features(data_splits_vector::Vector{Tuple{<:AbstractDataFrame, String}}, vocabulary::Vocabulary, model::AbstractFootballModel)
+
+Applies the feature creation process to each data split in the input vector,
+returning a vector of (FeatureSet, metadata) tuples.
+"""
+function create_features(
+    data_splits_vector::Vector{<:Tuple{<:AbstractDataFrame, String}}, # More general Tuple type
+    vocabulary::Vocabulary,
+    model::AbstractFootballModel,
+    splitter_config::AbstractSplitter
+)::Vector{Tuple{FeatureSet, String}}
+
+    feature_sets_vector = [
+        begin
+            fs = create_features( # Call the existing single-split method
+                data_split_view, # D_i (SubDataFrame or DataFrame)
+                vocabulary,      # G
+                model,            # M
+                splitter_config,
+            )
+            (fs, split_metadata) # Return tuple (F_i, metadata)
+        end
+        for (data_split_view, split_metadata) in data_splits_vector
+    ]
+
+    return feature_sets_vector
 end
