@@ -167,3 +167,12 @@ feature_sets_static = BayesianFootball.Features.create_features(
     splitter_static
 )
 
+
+
+
+sampler_config = Sampling.NUTSMethod(100, 4, 50)
+
+turing_model = Models.PreGame.build_turing_model(model, feature_sets_static[1][1])
+chains_params = Sampling.train(turing_model, sampler_config)
+
+
