@@ -205,4 +205,35 @@ training_config_limited = TrainingConfig(sampler_conf, strategy_parallel_limited
 training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf, strategy_parallel_custom)
 
 # Then run:
+
 results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
+
+
+
+### extraction 
+
+r = results[1][1]
+
+
+a1 = vec(r[Symbol("log_α[1]")]);
+b1 = vec(r[Symbol("log_β[1]")]);
+a2 = vec(r[Symbol("log_α[2]")]);
+b2 = vec(r[Symbol("log_β[2]")]);
+h = vec(r[Symbol("home_adv")]);
+
+l1 = a1 .+ b2 .+ h 
+l2 = a2 .+ b1 
+
+using StatsPlots
+
+density(l1, label="home")
+density!(l2, label="away")
+
+for i in vocabulary.mappings[:team_map]
+  if i[2] == 2
+    println(i)
+  end 
+end 
+
+
+
