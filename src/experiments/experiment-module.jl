@@ -4,7 +4,7 @@ module Experiments
 
 # imports
 using ..Models: AbstractFootballModel
-using ..Sampling: AbstractTrainingMethod
+# using ..Sampling: AbstractTrainingMethod
 using ..Predictions: PredictionConfig
 using ..Data: AbstractSplitter
 
@@ -20,7 +20,7 @@ struct Experiment
     name::String
     model::AbstractFootballModel
     splitter::AbstractSplitter 
-    sampler_config::AbstractTrainingMethod
+    # sampler_config::AbstractTrainingMethod
 end
 
 

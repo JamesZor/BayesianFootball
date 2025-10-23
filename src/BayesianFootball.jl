@@ -1,29 +1,39 @@
+# src/BayesianFootball.jl
+
 module BayesianFootball
 
-# The order of includes is critical to resolve dependencies.
-# 1. Interfaces contains all shared types and contracts. It has no local dependencies.
-include("./types-interfaces.jl")
+# 1. Interfaces contains all shared types and contracts.
+include("./types-interfaces.jl") #
 using .TypesInterfaces
 
 # 2. Data is self-contained.
-include("data/data-module.jl")
+include("data/data-module.jl") #
 
-# 3. Models depends only on TypesInterfaces for its contracts.
-include("models/models-module.jl")
+# 3. Models depends only on TypesInterfaces.
+include("models/models-module.jl") #
 
-# 4. Features depends on Data, TypesInterfaces, and the concrete model types from Models.
-# This is now safe because Models is loaded first.
-include("features/features-module.jl")
+# 4. Features depends on Data, TypesInterfaces, and Models.
+include("features/features-module.jl") #
 
-# 5. The rest of the modules depend on the core modules above.
-include("sampling/sampling-module.jl")
-include("./predictions/markets.jl")
-include("./predictions/calculations.jl")
-include("./predictions/prediction-module.jl")
-include("./experiments/experiment-module.jl")
+# 5. Samplers provides core sampling algorithms.
+include("samplers/samplers-module.jl") # *** ADDED RENAMED MODULE ***
+
+# 6. Training orchestrates the training process using Models, Features, Samplers.
+include("training/training-module.jl") # *** ADDED NEW MODULE ***
+
+# 7. Other modules
+include("./predictions/markets.jl") #
+include("./predictions/calculations.jl") #
+include("./predictions/prediction-module.jl") #
+include("./experiments/experiment-module.jl") #
 
 # Export the main modules and key functions/types for users
-export Data, Features, Models, Sampling, Experiments, Predictions, Markets, Calculations
+# *** UPDATED EXPORTS ***
+export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations 
 export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
+
+# Maybe export core config types too?
+export NUTSConfig, ADVIConfig, MAPConfig # From Samplers
+export TrainingConfig, Independent, SequentialPriorUpdate # From Training
 
 end
