@@ -177,6 +177,8 @@
 #     return FeatureSet(F_data)
 # end
 
+
+#TODO: remove = team maps, n_teams, etc  as in Vocabulary
 function create_features(
     data_split::AbstractDataFrame,
     vocabulary::Vocabulary,
