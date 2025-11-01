@@ -25,7 +25,7 @@ println("✅ (G) Global Vocabulary created. $(vocabulary.mappings[:n_teams]) tea
 # Preprocess the entire DataFrame first for this test
 # split the season into two 
 
-data_store.matches.half_cat =  ifelse.( data_store.matches.match_month .∈ Ref([7,8,9,10,11,12]), true, false)
+data_store.matches.half_cat =  ifelse.( data_store.matches.match_month .∈ Ref([7,8,9,10,11,12]), true, false);
 
 
 splitter_config = BayesianFootball.Data.ExpandingWindowCV( #
@@ -191,7 +191,7 @@ feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary
 
 # --- Phase 3: Define Training Configuration ---
 # Sampler Config (Choose one)
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=50, n_chains=2, n_warmup=50) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=200, n_chains=2, n_warmup=100) # Use renamed struct
 # sampler_conf = ADVIConfig(n_iterations=10000)
 # sampler_conf = MAPConfig()
 
@@ -201,18 +201,22 @@ strategy_parallel_limited = Independent(parallel=true)
 # Explicitly set a limit (e.g., if NUTS uses 2 chains, maybe allow 4 concurrent splits on 8 threads)
 strategy_parallel_custom = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 
-training_config_limited = TrainingConfig(sampler_conf, strategy_parallel_limited)
+# training_config_limited = TrainingConfig(sampler_conf, strategy_parallel_limited)
 training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf, strategy_parallel_custom)
 
 # Then run:
 
 results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
 
-
+# save and load 
+using JLD2
+JLD2.save_object("training_results.jld2", results)
+results = JLD2.load_object("training_results.jld2")
 
 ### extraction 
+using Statistics
 
-r = results[1][1]
+r = results[2][1]
 
 
 a1 = vec(r[Symbol("log_α[1]")]);
@@ -221,8 +225,11 @@ a2 = vec(r[Symbol("log_α[2]")]);
 b2 = vec(r[Symbol("log_β[2]")]);
 h = vec(r[Symbol("home_adv")]);
 
-l1 = a1 .+ b2 .+ h 
-l2 = a2 .+ b1 
+l1 = a1 .+ b2 .+ h ;
+l2 = a2 .+ b1 ;
+
+
+mean(l1)
 
 using StatsPlots
 
