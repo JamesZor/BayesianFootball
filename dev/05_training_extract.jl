@@ -277,3 +277,585 @@ println("Odds (BTTS): $odds_btts_yes (Yes) / $odds_btts_no (No)")
 #= 
 --- Version 2 testing 
 =# 
+
+using Distributions
+using Statistics
+using DataFrames
+using Turing
+
+"""
+Extracts the posterior chains for λ (home rate) and μ (away rate)
+for a specific match.
+"""
+function get_rate_chains(chains::Chains, h_id::Int, a_id::Int)
+    # Extract parameter chains
+    a_h = vec(chains[Symbol("log_α[$h_id]")])
+    b_h = vec(chains[Symbol("log_β[$h_id]")])
+    a_a = vec(chains[Symbol("log_α[$a_id]")])
+    b_a = vec(chains[Symbol("log_β[$a_id]")])
+    h = vec(chains[Symbol("home_adv")])
+
+    # Calculate goal rate chains
+    # λ = Home team's (h_id) attack + Away team's (a_id) defense + home adv
+    λs = exp.(a_h .+ b_a .+ h)
+    # μ = Away team's (a_id) attack + Home team's (h_id) defense
+    μs = exp.(a_a .+ b_h)
+    
+    return λs, μs
+end
+
+"""
+Calculates the full posterior chain for 1, X, and 2 probabilities.
+"""
+function calculate_1x2_chains(λs::Vector{Float64}, μs::Vector{Float64}; max_goals=8)
+    n_samples = length(λs)
+    home_dists = Poisson.(λs)
+    away_dists = Poisson.(μs)
+    
+    # Pre-calculate all pdfs needed
+    # pdfs_home[k+1] will be the chain P(H=k)
+    pdfs_home = [pdf.(home_dists, k) for k in 0:max_goals]
+    pdfs_away = [pdf.(away_dists, k) for k in 0:max_goals]
+
+    # Init chains for the probabilities
+    p_home_win_chain = zeros(n_samples)
+    p_draw_chain = zeros(n_samples)
+    p_away_win_chain = zeros(n_samples)
+
+    for h in 0:max_goals
+        for a in 0:max_goals
+            # p_score_chain is a vector of P(H=h, A=a) for each MCMC sample
+            p_score_chain = pdfs_home[h+1] .* pdfs_away[a+1]
+            
+            if h > a
+                p_home_win_chain .+= p_score_chain
+            elseif h == a
+                p_draw_chain .+= p_score_chain
+            else # a > h
+                p_away_win_chain .+= p_score_chain
+            end
+        end
+    end
+    
+    return (p_home = p_home_win_chain, p_draw = p_draw_chain, p_away = p_away_win_chain)
+end
+
+"""
+Calculates the full posterior chain for Over/Under probabilities for a given line.
+"""
+function calculate_ou_chains(λs::Vector{Float64}, μs::Vector{Float64}, line::Float64)
+    total_rates_chain = λs .+ μs
+    total_goal_dists = Poisson.(total_rates_chain)
+    
+    threshold = floor(Int, line) # e.g., 2 for line=2.5
+    
+    p_under_chain = cdf.(total_goal_dists, threshold)
+    p_over_chain = 1.0 .- p_under_chain
+            
+    return (p_over = p_over_chain, p_under = p_under_chain)
+end
+
+"""
+Calculates the full posterior chain for BTTS probabilities.
+"""
+function calculate_btts_chains(λs::Vector{Float64}, μs::Vector{Float64})
+    home_dists = Poisson.(λs)
+    away_dists = Poisson.(μs)
+    
+    # P(Home > 0)
+    p_home_scores_chain = 1.0 .- pdf.(home_dists, 0)
+    # P(Away > 0)
+    p_away_scores_chain = 1.0 .- pdf.(away_dists, 0)
+    
+    p_btts_yes_chain = p_home_scores_chain .* p_away_scores_chain
+    p_btts_no_chain = 1.0 .- p_btts_yes_chain
+    
+    return (p_yes = p_btts_yes_chain, p_no = p_btts_no_chain)
+end
+
+"""
+Summarizes a probability chain into its key statistics.
+"""
+function summarize_prob_chain(chain::Vector{Float64}, prefix::String)
+    return (
+        Symbol(prefix, "_prob_mean") => mean(chain),
+        Symbol(prefix, "_prob_median") => median(chain),
+        Symbol(prefix, "_prob_q025") => quantile(chain, 0.025),
+        Symbol(prefix, "_prob_q975") => quantile(chain, 0.975),
+        Symbol(prefix, "_odds_mean") => 1.0 / mean(chain) # Model's decimal odds
+    )
+end
+
+
+## ---- prepare market odds 
+
+function pivot_market_odds(odds_df::DataFrame)
+    
+    # --- 1X2 Full Time ---
+    odds_1x2 = filter(row -> row.market_group == "1X2" && row.market_name == "Full time", odds_df)
+    pivot_1x2 = unstack(odds_1x2, [:match_id], :choice_name, :decimal_odds)
+    # Handle missing columns if a market wasn't offered (e.g., "X" is missing)
+    for c in ["1", "X", "2"]
+        if !hasproperty(pivot_1x2, c)
+            pivot_1x2[!, c] = missing
+        end
+    end
+    rename!(pivot_1x2, "1" => :market_odds_1, "X" => :market_odds_X, "2" => :market_odds_2)
+    
+    # --- O/U 2.5 ---
+    odds_ou25 = filter(row -> row.market_group == "Match goals" && row.choice_group == 2.5, odds_df)
+    pivot_ou25 = unstack(odds_ou25, [:match_id], :choice_name, :decimal_odds)
+    for c in ["Over", "Under"]
+        if !hasproperty(pivot_ou25, c)
+            pivot_ou25[!, c] = missing
+        end
+    end
+    rename!(pivot_ou25, "Over" => :market_odds_O25, "Under" => :market_odds_U25)
+
+    # --- BTTS ---
+    odds_btts = filter(row -> row.market_group == "Both teams to score", odds_df)
+    pivot_btts = unstack(odds_btts, [:match_id], :choice_name, :decimal_odds)
+     for c in ["Yes", "No"]
+        if !hasproperty(pivot_btts, c)
+            pivot_btts[!, c] = missing
+        end
+    end
+    rename!(pivot_btts, "Yes" => :market_odds_BTTS_Y, "No" => :market_odds_BTTS_N)
+
+    # --- Join all pivoted markets ---
+    market_odds_df = leftjoin(pivot_1x2, pivot_ou25, on = :match_id)
+    market_odds_df = leftjoin(market_odds_df, pivot_btts, on = :match_id)
+    
+    return market_odds_df
+end
+
+# --- Create this DataFrame once ---
+market_odds_df = pivot_market_odds(ds.odds)
+
+
+
+
+### ------ 3 - main prediction loop 
+
+team_map = vocabulary.mappings[:team_map]
+all_predictions = [] # This will hold a DataFrame from each split
+
+# results[1] was trained to predict split_col=1 (week 37)
+# results[2] was trained to predict split_col=2 (week 38)
+# etc.
+
+i = 1
+
+chains = results[i][1]
+
+df_to_predict = data_splits[i].test.matches
+
+df_to_predict = filter( row -> row.split_col == i+1, ds.matches)
+
+
+match_predictions = [] # Store NamedTuples
+
+for row in eachrow(df_to_predict)
+    try
+        h_id = team_map[row.home_team]
+        a_id = team_map[row.away_team]
+        
+        # --- Get Bayesian posteriors ---
+        λs, μs = get_rate_chains(chains, h_id, a_id)
+        
+        # --- Calculate prob chains ---
+        p_1x2_chains = calculate_1x2_chains(λs, μs)
+        p_ou25_chains = calculate_ou_chains(λs, μs, 2.5)
+        # You can add more lines here
+        p_ou15_chains = calculate_ou_chains(λs, μs, 1.5)
+        p_btts_chains = calculate_btts_chains(λs, μs)
+        
+        # --- Summarize all chains ---
+        summaries_1 = summarize_prob_chain(p_1x2_chains.p_home, "1")
+        summaries_X = summarize_prob_chain(p_1x2_chains.p_draw, "X")
+        summaries_2 = summarize_prob_chain(p_1x2_chains.p_away, "2")
+        
+        summaries_O25 = summarize_prob_chain(p_ou25_chains.p_over, "O25")
+        summaries_U25 = summarize_prob_chain(p_ou25_chains.p_under, "U25")
+        
+        summaries_O15 = summarize_prob_chain(p_ou15_chains.p_over, "O15")
+        summaries_U15 = summarize_prob_chain(p_ou15_chains.p_under, "U15")
+        
+        summaries_BTTS_Y = summarize_prob_chain(p_btts_chains.p_yes, "BTTS_Y")
+        summaries_BTTS_N = summarize_prob_chain(p_btts_chains.p_no, "BTTS_N")
+        
+        # --- Combine into one NamedTuple ---
+        # We store match info, results, and all summaries
+        result_tuple = (
+            match_id = row.match_id,
+            split = i,
+            home_team = row.home_team,
+            away_team = row.away_team,
+            home_score = row.home_score,
+            away_score = row.away_score,
+            summaries_1...,
+            summaries_X...,
+            summaries_2...,
+            summaries_O25...,
+            summaries_U25...,
+            summaries_O15...,
+            summaries_U15...,
+            summaries_BTTS_Y...,
+            summaries_BTTS_N...
+        )
+        
+        push!(match_predictions, result_tuple)
+        
+    catch e
+        println("Error processing match $(row.match_id): $e")
+        # This could happen if a team wasn't in the vocabulary (though your split logic should prevent this)
+    end
+end
+
+
+
+all_predictions = [] # This will hold a DataFrame from each split
+push!(all_predictions, DataFrame(match_predictions))
+
+predictions_df = vcat(all_predictions...)
+
+final_analysis_df = leftjoin(predictions_df, market_odds_df, on = :match_id)
+
+
+
+
+# 1. Add outcome and P&L columns for analysis
+analysis_df = copy(final_analysis_df) # Work on a copy
+
+# --- Define winners ---
+analysis_df.winner_1 = analysis_df.home_score .> analysis_df.away_score
+analysis_df.winner_X = analysis_df.home_score .== analysis_df.away_score
+analysis_df.winner_2 = analysis_df.home_score .< analysis_df.away_score
+analysis_df.winner_O25 = (analysis_df.home_score .+ analysis_df.away_score) .> 2.5
+analysis_df.winner_BTTS_Y = (analysis_df.home_score .> 0) .& (analysis_df.away_score .> 0)
+
+# --- Calculate value (our_prob * market_odds) ---
+# We use the mean of the posterior as our probability estimate
+analysis_df.value_1 = analysis_df[!, "1_prob_mean"] .* analysis_df.market_odds_1
+analysis_df.value_X = analysis_df.X_prob_mean .* analysis_df.market_odds_X
+analysis_df.value_2 = analysis_df[!, "2_prob_mean"] .* analysis_df.market_odds_2
+analysis_df.value_O25 = analysis_df.O25_prob_mean .* analysis_df.market_odds_O25
+analysis_df.value_BTTS_Y = analysis_df.BTTS_Y_prob_mean .* analysis_df.market_odds_BTTS_Y
+
+# --- Simulate strategy and plot ROI vs. 'c' (value threshold) ---
+
+thresholds_to_test = 1.0:0.01:1.20 # Test c from 1.0 (any edge) to 1.2 (20% edge)
+roi_results = []
+
+# We'll just test backing the home team for this example
+for c in thresholds_to_test
+    
+    # Find rows where we would place a bet (and market odds exist)
+    bets_df = filter(row -> !ismissing(row.value_1) && row.value_1 > c, analysis_df)
+    
+    n_bets = nrow(bets_df)
+    
+    if n_bets == 0
+        push!(roi_results, (c = c, n_bets = 0, total_staked = 0, total_return = 0, roi = 0.0))
+        continue
+    end
+    
+    # Calculate returns (assuming 1 unit stake)
+    # If we win, we get market_odds_1 back. If we lose, we get 0.
+    bets_df.pnl = bets_df.winner_1 .* (bets_df.market_odds_1) .- 1.0
+    
+    total_staked = n_bets
+    total_return = sum(bets_df.winner_1 .* bets_df.market_odds_1)
+    
+    # ROI = (Total Return - Total Staked) / Total Staked
+    roi = (total_return - total_staked) / total_staked
+    
+    push!(roi_results, (c = c, n_bets = n_bets, total_staked = total_staked, total_return = total_return, roi = roi))
+end
+
+roi_df = DataFrame(roi_results)
+# display(roi_df)
+
+# You can now plot this!
+using Plots
+plot(roi_df.c, roi_df.roi, label="Home Win ROI",
+     xlabel="Value Threshold (c)", ylabel="ROI",
+     title="Betting Strategy Performance")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+
+
+team_map = vocabulary.mappings[:team_map]
+all_predictions = [] # This will hold a DataFrame from each split
+
+
+
+for i in 1:length(results)
+    
+    # 1. Get the trained model chains for this split
+    # Assuming one chain group per split, hence results[i][1]
+    chains = results[i][1]
+    
+    # 2. Get the matches we need to predict (the test set)
+    # We use data_splits to get the original DataFrame rows
+    df_to_predict = filter( row -> row.split_col == i, ds.matches)
+    
+    if isempty(df_to_predict)
+        println("Skipping split $i, no test matches.")
+        continue
+    end
+    
+    split_num = minimum(df_to_predict.split_col)
+    println("Processing predictions for split $split_num...")
+    
+    # 3. Iterate each match, calculate probabilities, and store
+    match_predictions = [] # Store NamedTuples
+    
+    for row in eachrow(df_to_predict)
+        try
+            h_id = team_map[row.home_team]
+            a_id = team_map[row.away_team]
+            
+            # --- Get Bayesian posteriors ---
+            λs, μs = get_rate_chains(chains, h_id, a_id)
+            
+            # --- Calculate prob chains ---
+            p_1x2_chains = calculate_1x2_chains(λs, μs)
+            p_ou25_chains = calculate_ou_chains(λs, μs, 2.5)
+            # You can add more lines here
+            p_ou15_chains = calculate_ou_chains(λs, μs, 1.5)
+            p_btts_chains = calculate_btts_chains(λs, μs)
+            
+            # --- Summarize all chains ---
+            summaries_1 = summarize_prob_chain(p_1x2_chains.p_home, "1")
+            summaries_X = summarize_prob_chain(p_1x2_chains.p_draw, "X")
+            summaries_2 = summarize_prob_chain(p_1x2_chains.p_away, "2")
+            
+            summaries_O25 = summarize_prob_chain(p_ou25_chains.p_over, "O25")
+            summaries_U25 = summarize_prob_chain(p_ou25_chains.p_under, "U25")
+            
+            summaries_O15 = summarize_prob_chain(p_ou15_chains.p_over, "O15")
+            summaries_U15 = summarize_prob_chain(p_ou15_chains.p_under, "U15")
+            
+            summaries_BTTS_Y = summarize_prob_chain(p_btts_chains.p_yes, "BTTS_Y")
+            summaries_BTTS_N = summarize_prob_chain(p_btts_chains.p_no, "BTTS_N")
+            
+            # --- Combine into one NamedTuple ---
+            # We store match info, results, and all summaries
+            result_tuple = (
+                match_id = row.match_id,
+                split = split_num,
+                home_team = row.home_team,
+                away_team = row.away_team,
+                home_score = row.home_score,
+                away_score = row.away_score,
+                summaries_1...,
+                summaries_X...,
+                summaries_2...,
+                summaries_O25...,
+                summaries_U25...,
+                summaries_O15...,
+                summaries_U15...,
+                summaries_BTTS_Y...,
+                summaries_BTTS_N...
+            )
+            
+            push!(match_predictions, result_tuple)
+            
+        catch e
+            println("Error processing match $(row.match_id): $e")
+            # This could happen if a team wasn't in the vocabulary (though your split logic should prevent this)
+        end
+    end
+    
+    # 4. Convert this split's predictions to a DataFrame and add to our list
+    if !isempty(match_predictions)
+        push!(all_predictions, DataFrame(match_predictions))
+    end
+end
+
+# 5. Combine all splits into one master DataFrame
+if !isempty(all_predictions)
+    predictions_df = vcat(all_predictions...)
+    
+    # 6. Join our predictions with the market odds
+    final_analysis_df = leftjoin(predictions_df, market_odds_df, on = :match_id)
+    
+    println("Successfully created final_analysis_df with $(nrow(final_analysis_df)) predictions.")
+else
+    println("No predictions were generated.")
+end
+
+
+# --- You now have your master DataFrame: final_analysis_df ---
+ display(first(final_analysis_df, 5))
+
+
+
+# 1. Add outcome and P&L columns for analysis
+analysis_df = copy(final_analysis_df) # Work on a copy
+
+# --- Define winners ---
+analysis_df.winner_1 = analysis_df.home_score .> analysis_df.away_score
+analysis_df.winner_X = analysis_df.home_score .== analysis_df.away_score
+analysis_df.winner_2 = analysis_df.home_score .< analysis_df.away_score
+analysis_df.winner_O25 = (analysis_df.home_score .+ analysis_df.away_score) .> 2.5
+analysis_df.winner_BTTS_Y = (analysis_df.home_score .> 0) .& (analysis_df.away_score .> 0)
+
+# --- Calculate value (our_prob * market_odds) ---
+# We use the mean of the posterior as our probability estimate
+analysis_df.value_1 = analysis_df[!, "1_prob_mean"] .* analysis_df.market_odds_1
+analysis_df.value_X = analysis_df.X_prob_mean .* analysis_df.market_odds_X
+analysis_df.value_2 = analysis_df[!, "2_prob_mean"] .* analysis_df.market_odds_2
+analysis_df.value_O25 = analysis_df.O25_prob_mean .* analysis_df.market_odds_O25
+analysis_df.value_BTTS_Y = analysis_df.BTTS_Y_prob_mean .* analysis_df.market_odds_BTTS_Y
+
+# --- Simulate strategy and plot ROI vs. 'c' (value threshold) ---
+
+thresholds_to_test = 1.0:0.01:1.20 # Test c from 1.0 (any edge) to 1.2 (20% edge)
+roi_results = []
+
+# We'll just test backing the home team for this example
+for c in thresholds_to_test
+    
+    # Find rows where we would place a bet (and market odds exist)
+    bets_df = filter(row -> !ismissing(row.value_1) && row.value_1 > c, analysis_df)
+    
+    n_bets = nrow(bets_df)
+    
+    if n_bets == 0
+        push!(roi_results, (c = c, n_bets = 0, total_staked = 0, total_return = 0, roi = 0.0))
+        continue
+    end
+    
+    # Calculate returns (assuming 1 unit stake)
+    # If we win, we get market_odds_1 back. If we lose, we get 0.
+    bets_df.pnl = bets_df.winner_1 .* (bets_df.market_odds_1) .- 1.0
+    
+    total_staked = n_bets
+    total_return = sum(bets_df.winner_1 .* bets_df.market_odds_1)
+    
+    # ROI = (Total Return - Total Staked) / Total Staked
+    roi = (total_return - total_staked) / total_staked
+    
+    push!(roi_results, (c = c, n_bets = n_bets, total_staked = total_staked, total_return = total_return, roi = roi))
+end
+
+roi_df = DataFrame(roi_results)
+# display(roi_df)
+
+# You can now plot this!
+using Plots
+plot(roi_df.c, roi_df.roi, label="Home Win ROI",
+     xlabel="Value Threshold (c)", ylabel="ROI",
+     title="Betting Strategy Performance")
+
+
+
+##
+
+# (You already ran the winner and value calculations for 1, X, 2, O25, BTTS_Y)
+
+# --- 1. Define the missing winners ---
+analysis_df.winner_U25 = .!analysis_df.winner_O25
+analysis_df.winner_BTTS_N = .!analysis_df.winner_BTTS_Y
+
+# --- 2. Calculate value for the missing markets ---
+analysis_df.value_U25 = analysis_df.U25_prob_mean .* analysis_df.market_odds_U25
+analysis_df.value_BTTS_N = analysis_df.BTTS_N_prob_mean .* analysis_df.market_odds_BTTS_N
+
+# --- 3. Calculate P&L for EVERY potential bet ---
+# P&L = (return if win) - (stake of 1)
+# We multiply by the boolean 'winner' column (true=1, false=0).
+analysis_df.pnl_1 = (analysis_df.winner_1 .* analysis_df.market_odds_1) .- 1.0
+analysis_df.pnl_X = (analysis_df.winner_X .* analysis_df.market_odds_X) .- 1.0
+analysis_df.pnl_2 = (analysis_df.winner_2 .* analysis_df.market_odds_2) .- 1.0
+
+analysis_df.pnl_O25 = (analysis_df.winner_O25 .* analysis_df.market_odds_O25) .- 1.0
+analysis_df.pnl_U25 = (analysis_df.winner_U25 .* analysis_df.market_odds_U25) .- 1.0
+
+analysis_df.pnl_BTTS_Y = (analysis_df.winner_BTTS_Y .* analysis_df.market_odds_BTTS_Y) .- 1.0
+analysis_df.pnl_BTTS_N = (analysis_df.winner_BTTS_N .* analysis_df.market_odds_BTTS_N) .- 1.0
+
+# --- 4. See the results per-match ---
+# This now shows the P&L for every line, for every match.
+# A 'missing' P&L just means the odds were missing and no bet could be placed.
+println("--- P&L Breakdown per Match (example) ---")
+display(
+    select(
+        analysis_df, 
+        :match_id, 
+        :value_1, :pnl_1, 
+        :value_X, :pnl_X, 
+        :value_O25, :pnl_O25
+    )
+)
+
+
+# 1. Define the columns we want to stack
+value_cols = ["value_1", "value_X", "value_2", "value_O25", "value_U25", "value_BTTS_Y", "value_BTTS_N"]
+pnl_cols = ["pnl_1", "pnl_X", "pnl_2", "pnl_O25", "pnl_U25", "pnl_BTTS_Y", "pnl_BTTS_N"]
+
+# Define ID columns to keep (add :league or :tournament_id if you have it)
+id_cols = [:match_id, :home_team, :away_team] 
+
+# 2. Stack the value columns
+df_value_long = stack(analysis_df, value_cols, id_cols, 
+                      variable_name=:bet_type, value_name=:value)
+
+# 3. Stack the P&L columns
+df_pnl_long = stack(analysis_df, pnl_cols, id_cols, 
+                    variable_name=:bet_type, value_name=:pnl)
+
+# 4. Clean up the 'bet_type' names (e.g., "value_1" -> "1")
+df_value_long.bet_type = replace.(df_value_long.bet_type, "value_" => "")
+df_pnl_long.bet_type = replace.(df_pnl_long.bet_type, "pnl_" => "")
+
+# 5. Join them into one master 'bets' DataFrame
+bets_analysis_df = innerjoin(df_value_long, df_pnl_long, 
+                             on = [:match_id, :home_team, :away_team, :bet_type])
+
+println("\n--- Tidy Bets DataFrame ---")
+display(first(bets_analysis_df, 14)) # Show first 2 matches (7 markets each)
+
+
+# Filter for all bets with a 5% edge (c = 1.05)
+value_bets = filter(row -> !ismissing(row.value) && row.value > 1.05, bets_analysis_df)
+
+println("\n--- Value Bets (c > 1.05) ---")
+display(value_bets)
+
+# --- Breakdown by Bet Type ---
+println("\n--- ROI Breakdown by Bet Type (c > 1.05) ---")
+roi_by_bet_type = combine(groupby(value_bets, :bet_type)) do df
+    n_bets = nrow(df)
+    total_pnl = sum(skipmissing(df.pnl))
+    roi = total_pnl / n_bets
+    return (n_bets = n_bets, total_pnl = total_pnl, roi = roi)
+end
+
+display(roi_by_bet_type)
+
+# --- Breakdown by Match ---
+println("\n--- P&L Breakdown by Match (c > 1.05) ---")
+roi_by_match = combine(groupby(value_bets, [:match_id, :home_team, :away_team])) do df
+    n_bets_on_match = nrow(df) # Num value bets found for this match
+    total_pnl_on_match = sum(skipmissing(df.pnl))
+    return (n_bets_on_match = n_bets_on_match, total_pnl_on_match = total_pnl_on_match)
+end
+
+display(roi_by_match)
