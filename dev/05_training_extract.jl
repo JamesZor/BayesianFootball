@@ -99,14 +99,254 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
     results
 )
 
-# `all_oos_results` will contain the merged predictions for
-# splits 1, 2, and 3.
+
+##############################
+# --- odds and predict 
+##############################
+
+using Base.Threads
+using Distributions
+using Statistics
+
+"""
+Helper function:
+Calculates 1X2 probabilities for a SINGLE pair of goal-rate parameters.
+"""
+function _calculate_1x2_from_params(λ::Float64, μ::Float64, max_goals::Int=10)
+    
+    # Create distributions for this one MCMC sample
+    home_dist = Poisson(λ)
+    away_dist = Poisson(μ)
+    
+    p_home_win = 0.0
+    p_draw = 0.0
+    p_away_win = 0.0
+
+    for h in 0:max_goals
+        for a in 0:max_goals
+            # P(H=h, A=a) = P(H=h) * P(A=a)
+            p_score = pdf(home_dist, h) * pdf(away_dist, a)
+            
+            if h > a
+                p_home_win += p_score
+            elseif h == a
+                p_draw += p_score
+            else # a > h
+                p_away_win += p_score
+            end
+        end
+    end
+    
+    # Note: These will sum to < 1.0 due to max_goals truncation,
+    # but we can re-normalize them for a cleaner 1X2 probability.
+    total_p = p_home_win + p_draw + p_away_win
+    
+    return (
+        home = p_home_win / total_p,
+        draw = p_draw / total_p,
+        away = p_away_win / total_p
+    )
+end
+
+function compute_1x2_distributions_threaded(λs::AbstractVector, μs::AbstractVector, max_goals::Int=10)
+    
+    n_samples = length(λs)
+    
+    # Pre-allocate thread-safe output vectors
+    p_home_vec = zeros(n_samples)
+    p_draw_vec = zeros(n_samples)
+    p_away_vec = zeros(n_samples)
+    
+    # Use @threads to split the loop across your available cores
+    @threads for i in 1:n_samples
+        # Note: No need to index λs[i], the loop does it
+        λ_i = λs[i]
+        μ_i = μs[i]
+        
+        # Call the original (fast) inner-loop function
+        probs = _calculate_1x2_from_params(λ_i, μ_i, max_goals)
+        
+        # Write to the pre-allocated vectors
+        # This is safe because each thread writes to a different index `i`
+        p_home_vec[i] = probs.home
+        p_draw_vec[i] = probs.draw
+        p_away_vec[i] = probs.away
+    end
+    
+    return (
+        p_home_dist = p_home_vec,
+        p_draw_dist = p_draw_vec,
+        p_away_dist = p_away_vec
+    )
+end
 
 
 
 
 
+# 1. Get the parameter chains for your match (you already have this)
+#    This is based on your extract_parameters function [cite: 14]
+match_id = rand(keys(all_oos_results))
+λ_h_chain, λ_a_chain = all_oos_results[match_id]
 
+filter(row -> row.match_id==match_id, ds.matches)
+
+# 2. Compute the 1X2 probability distributions
+prob_dists = compute_1x2_distributions_threaded(λ_h_chain, λ_a_chain)
+
+# 3. Convert probability distributions to odds distributions
+odds_home_dist = 1.0 ./ prob_dists.p_home_dist;
+odds_draw_dist = 1.0 ./ prob_dists.p_draw_dist;
+odds_away_dist = 1.0 ./ prob_dists.p_away_dist;
+
+# --- 4. Now analyze the distributions! ---
+
+using StatsPlots
+
+# Get the market odds for this match (example)
+market_odds = filter(row -> row.match_id == match_id, ds.odds)
+market_home_odds = market_odds.decimal_odds[1]
+market_draw_odds = market_odds.decimal_odds[2]
+market_away_odds = market_odds.decimal_odds[3]
+
+# A. Plot your model's distribution against the market
+density(odds_home_dist, label="Model Home Odds Distribution", xlims=(0, 10))
+vline!([market_home_odds], label="Market Odds (Bet365)", color=:red, lw=2)
+
+density(odds_away_dist, label="Model Home Odds Distribution", xlims=(0, 10))
+vline!([market_away_odds], label="Market Odds (Bet365)", color=:red, lw=2)
+
+density(odds_draw_dist, label="Model Draw Odds Distribution", xlims=(0, 10))
+vline!([market_draw_odds], label="Market Odds (Bet365)", color=:red, lw=2)
+
+
+# B. Get your 50% (or 90%) Bayesian Credible Interval
+# This is what you asked for!
+mean_odds = mean(odds_home_dist)
+interval_50 = quantile(odds_home_dist, [0.25, 0.75])
+interval_90 = quantile(odds_home_dist, [0.05, 0.95])
+
+
+mean_odds = mean(odds_away_dist)
+interval_50 = quantile(odds_away_dist, [0.25, 0.75])
+interval_90 = quantile(odds_away_dist, [0.05, 0.95])
+
+
+mean_odds = mean(odds_draw_dist)
+interval_50 = quantile(odds_draw_dist, [0.25, 0.75])
+interval_90 = quantile(odds_draw_dist, [0.05, 0.95])
+
+
+
+println("--- Home Win Analysis for Match $match_id ---")
+println("Market Odds: $market_home_odds")
+println("Model Mean Odds: $mean_odds")
+println("Model 50% Interval: $interval_50")
+println("Model 90% Interval: $interval_90")
+
+# C. Calculate a "Value" probability
+# What's the probability that our model thinks the "true" odds
+# are lower (i.e., higher probability) than the market's odds?
+p_value = mean(odds_home_dist .< market_home_odds)
+
+println("Probability (Model < Market): $p_value")
+
+
+####
+# 1. Get the probability distributions (which you already have)
+
+# 2. Get the market-implied probabilities (example)
+market_prob_home = 1.0 / 1.45
+market_prob_draw = 1.0 / 4.20
+market_prob_away = 1.0 / 5.75
+
+# 3. Calculate P_value (the probability your model finds an edge)
+#    This is the core of the Bayesian strategy
+p_value_home = mean(prob_dists.p_home_dist .> market_prob_home)
+p_value_draw = mean(prob_dists.p_draw_dist .> market_prob_draw)
+p_value_away = mean(prob_dists.p_away_dist .> market_prob_away)
+
+println("P(Value Home): $p_value_home")
+println("P(Value Draw): $p_value_draw")
+println("P(Value Away): $p_value_away")
+
+
+
+# We'll do this just for the Draw bet, which we identified as value
+market_odds_draw = 4.20
+
+# 1. Calculate the distribution of the edge
+edge_dist_draw = (prob_dists.p_draw_dist .* market_odds_draw) .- 1.0 ; 
+
+# 2. Calculate the distribution of the Kelly fraction
+#    (We only care about positive edge)
+kelly_dist_draw = [e > 0 ? e / market_odds_draw : 0.0 for e in edge_dist_draw];
+
+# 3. A conservative staking strategy
+#    (Don't bet the mean, bet a fraction of it, e.g., 25% "Fractional Kelly")
+mean_kelly_stake = mean(kelly_dist_draw)
+your_stake = 0.25 * mean_kelly_stake
+
+println("Mean Kelly Stake for Draw: $(mean_kelly_stake * 100)% of bankroll")
+println("Our Conservative Stake: $(your_stake * 100)% of bankroll")
+
+
+
+market_odds_home =market_home_odds
+edge_dist_home = (prob_dists.p_home_dist .* market_odds_home) .- 1.0 ; 
+
+# 2. Calculate the distribution of the Kelly fraction
+#    (We only care about positive edge)
+kelly_dist_home = [e > 0 ? e / market_odds_home : 0.0 for e in edge_dist_home];
+
+# 3. A conservative staking strategy
+#    (Don't bet the mean, bet a fraction of it, e.g., 25% "Fractional Kelly")
+mean_kelly_stake_home = mean(kelly_dist_home)
+your_stake_home = 0.25 * mean_kelly_stake_home
+
+println("Mean Kelly Stake for home: $(mean_kelly_stake_home * 100)% of bankroll")
+println("Our Conservative Stake: $(your_stake_home * 100)% of bankroll")
+
+
+
+
+market_odds_away =market_away_odds
+edge_dist_away = (prob_dists.p_away_dist .* market_odds_away) .- 1.0 ;
+
+# 2. Calculate the distribution of the Kelly fraction
+#    (We only care about positive edge)
+kelly_dist_away = [e > 0 ? e / market_odds_away : 0.0 for e in edge_dist_away];
+
+# 3. A conservative staking strategy
+#    (Don't bet the mean, bet a fraction of it, e.g., 25% "Fractional Kelly")
+mean_kelly_stake_away = mean(kelly_dist_away)
+your_stake_away = 0.25 * mean_kelly_stake_away
+
+println("Mean Kelly Stake for away: $(mean_kelly_stake_away * 100)% of bankroll")
+println("Our Conservative Stake: $(your_stake_away * 100)% of bankroll")
+
+
+# Your confidence threshold
+CONFIDENCE_THRESHOLD = 0.60
+
+p_value_home = mean(prob_dists.p_home_dist .> (1/market_odds_home))
+p_value_draw = mean(prob_dists.p_draw_dist .> (1/market_odds_draw))
+p_value_away = mean(prob_dists.p_away_dist .> (1/market_odds_away))
+
+
+if p_value_home > CONFIDENCE_THRESHOLD
+    # This code will NOT run for this match
+    println("Betting on Home!")
+    mean_stake = mean(kelly_dist_home) 
+elseif p_value_draw > CONFIDENCE_THRESHOLD
+    # This code will NOT run for this match
+    println("Betting on Draw!")
+elseif p_value_away > CONFIDENCE_THRESHOLD
+     # This code will NOT run for this match
+    println("Betting on Away!")
+else
+    println("No value found on this match. NO BET.")
+end
 
 
 using StatsPlots
@@ -148,14 +388,19 @@ function compute_score_matrix(λs::AbstractVector, μs::AbstractVector, max_goal
     return prob_matrix
 end
 
+id1 = rand(keys(all_oos_results))
+filter( row -> row.match_id==id1, ds.matches)
+filter( row -> row.match_id==id1, ds.odds)
+
 # --- Get the Score Matrix ---
 # This matrix now contains the final predicted probabilities for each score
-score_matrix = compute_score_matrix(λs, μs, 6)
+
+score_matrix = compute_score_matrix(all_oos_results[id1]... , 6)
 
 # Example: Probability of 2-1
 # (Remember 1-based indexing: [h+1, a+1])
-p_2_1 = score_matrix[2 + 1, 1 + 1]
-println("Probability of 2-1: $p_2_1")
+p_2_2 = score_matrix[2 + 1, 2 + 1]
+println("Probability of 2-1: $p_2_2, $(1 / p_2_1)")
 
 # Example: Probability of 0-0
 p_0_0 = score_matrix[0 + 1, 0 + 1]
