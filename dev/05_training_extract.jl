@@ -49,55 +49,65 @@ training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf,
 
 # Then run:
 
-results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
+# results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
 
 # save and load 
 using JLD2
-JLD2.save_object("training_results.jld2", results)
+# JLD2.save_object("training_results.jld2", results)
+
 results = JLD2.load_object("training_results.jld2")
 
 
+### create an extraction functions this is deconstructed
 
-### extraction 
-using Statistics
-
-# get chain set 1 
+# inputs
 r = results[1][1]
-# get matches for 2 
-mp = filter( row -> row.split_col == 2, ds.matches)
+mp = filter( row -> row.split_col == 1, ds.matches)
+
+BayesianFootball.Models.PreGame.extract_parameters(model, mp, vocabulary, r)
+
+# --- This logic is now OUTSIDE your function ---
+
+# 1. Define the column you want to split on
+#    (You can change this to :round, :week, etc. later)
+split_col_name = :split_col
+
+# 2. Get all unique split keys (e.g., [0, 1, 2, 3])
+all_splits = sort(unique(ds.matches[!, split_col_name]))
+
+# 3. Define the splits you want to *predict* (e.g., [1, 2, 3])
+#    We skip the first key (0), as it was for training the first model
+prediction_split_keys = all_splits[2:end] 
+
+# 4. Group the data ONCE
+grouped_matches = groupby(ds.matches, split_col_name)
+
+# 5. Create the vector of DataFrames (as efficient SubDataFrame views)
+#    This is the new argument for your function
+dfs_to_predict = [
+    grouped_matches[(; split_col_name => key)] 
+    for key in prediction_split_keys
+]
 
 
-mp[1, :]
+# --- 6. Call your new function ---
+# It's now much cleaner and more flexible
+all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    dfs_to_predict,  # Pass in the pre-split vector
+    vocabulary,
+    results
+)
 
-filter( row -> row.match_id==only(mp[1,[:match_id]]), ds.odds) 
-
-
-h_id = vocabulary.mappings[:team_map][only(mp[1, [:home_team]])]
-a_id = vocabulary.mappings[:team_map][only(mp[1, [:away_team]])]
-
-a_h = vec(r[Symbol("log_α[$h_id]")]);
-b_h = vec(r[Symbol("log_β[$h_id]")]);
-a_a = vec(r[Symbol("log_α[$a_id]")]);
-b_a = vec(r[Symbol("log_β[$a_id]")]);
-h = vec(r[Symbol("home_adv")]);
+# `all_oos_results` will contain the merged predictions for
+# splits 1, 2, and 3.
 
 
-l1 = a_h .+ b_a .+ h ;
-l2 = a_a .+ b_h ;
 
 
-# These are your chains from the model
-l1 = vec(r[Symbol("log_α[$h_id]")]) .+ vec(r[Symbol("log_β[$a_id]")]) .+ vec(r[Symbol("home_adv")]);
-l2 = vec(r[Symbol("log_α[$a_id]")]) .+ vec(r[Symbol("log_β[$h_id]")]);
 
-# λs is a chain of 'n_samples' home goal rates
-λs = exp.(l1);
 
-# μs is a chain of 'n_samples' away goal rates
-μs = exp.(l2);
 
-mean(l1)
-mean(l2)
 
 using StatsPlots
 

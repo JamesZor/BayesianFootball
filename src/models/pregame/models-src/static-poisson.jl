@@ -156,3 +156,44 @@ function predict(model::StaticPoisson, df_to_predict::DataFrame, vocabulary::Voc
   chains_goals = Turing.predict(turing_pred_model, chains)
   return chains_goals
 end
+
+
+
+"""
+Extracts the predicted parameters (λ_h, λ_a) for each match.
+
+Arguments:
+- 'model'
+- `chains`: A single result from your model (e.g., results[1][1]),
+       containing parameters like `home_adv`, `log_α`, `log_β`.
+- `df_to_predict`: A DataFrame (or similar) of matches to predict,
+       containing `home_team`, `away_team`, and `match_id`.
+- `vocabulary`: An object containing the team-to-index mappings.
+"""
+function extract_parameters(model::StaticPoisson, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
+    
+    ValueType = NamedTuple{(:λ_h, :λ_a), Tuple{AbstractVector{Float64}, AbstractVector{Float64}}}
+    # 2. Allocate memory for outputs
+    extraction_dict = Dict{Int64, ValueType}()
+
+    # 3. Extract and define main parameters (constant for all matches)
+    home_adv = vec(chains[Symbol("home_adv")])
+
+    # 4. Iterate over each row in the filtered match data
+    for row in eachrow(df_to_predict)
+        # 5. Find the team IDs from the vocabulary
+        h_id = vocabulary.mappings[:team_map][row.home_team]
+        a_id = vocabulary.mappings[:team_map][row.away_team]
+
+        # 6. Calculate the parameters for this specific match
+        λ_h = exp.(vec(chains[Symbol("log_α[$h_id]")]) .+ vec(chains[Symbol("log_β[$a_id]")]) .+ home_adv)
+        λ_a = exp.(vec(chains[Symbol("log_α[$a_id]")]) .+ vec(chains[Symbol("log_β[$h_id]")]));
+
+        # 7. Store the results in the dictionary
+        # The key is the match_id, the value is the NamedTuple
+        extraction_dict[Int(row.match_id)] = (; λ_h, λ_a)
+    end
+
+    return extraction_dict
+end
+
