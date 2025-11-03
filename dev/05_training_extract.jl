@@ -106,23 +106,13 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
 
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
-
-function predict_market(:Poisson,  market_type::BayesianFootball.Markets.Market1X2,  λ_h::AbstractVector, λ_a::AbstractVector) 
-
-  computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
-
-  return ( home = computed_1x2.p_home_dist, draw=computed_1x2.p_draw_dist, away=computed_1x2.p_away_dist)
-
-end 
-
-
 function predict_market(
     model::BayesianFootball.TypesInterfaces.AbstractPoissonModel,
     market::BayesianFootball.Markets.Market1X2, 
     λ_h, λ_a
 )
   computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
-  return ( home = computed_1x2.p_home_dist, draw=computed_1x2.p_draw_dist, away=computed_1x2.p_away_dist)
+  return NamedTuple{(:Home, :Draw, :Away)}((computed_1x2.p_home_dist, computed_1x2.p_draw_dist, computed_1x2.p_away_dist))
 end
 
 function predict_market(
@@ -133,6 +123,112 @@ function predict_market(
   println("Not implemented yet")
 
 end
+
+
+function predict_market(
+    model::BayesianFootball.TypesInterfaces.AbstractPoissonModel,
+    market::BayesianFootball.Markets.MarketOverUnder, 
+    λ_h, λ_a
+)
+
+    total_rates_chain = λ_h .+ λ_a
+    total_goal_dists = Poisson.(total_rates_chain)
+    
+    threshold = floor(Int, market.line) # e.g., 2 for line=2.5
+    
+    p_under_chain = cdf.(total_goal_dists, threshold)
+    p_over_chain = 1.0 .- p_under_chain
+
+
+    line_str = replace(string(market.line), "." => "")
+            
+    # e.g., over_key = :over_15
+    over_key = Symbol("over_", line_str)
+    under_key = Symbol("under_", line_str)
+    
+    return NamedTuple{(over_key, under_key)}((p_over_chain, p_under_chain))
+end
+
+
+
+
+"""
+Calculates the full posterior chain for BTTS probabilities.
+"""
+function predict_market(
+    model::BayesianFootball.TypesInterfaces.AbstractPoissonModel,
+    market::BayesianFootball.Markets.MarketBTTS, 
+    λ_h, λ_a
+)
+    home_dists = Poisson.(λ_h)
+    away_dists = Poisson.(λ_a)
+    
+    # P(Home > 0)
+    p_home_scores_chain = 1.0 .- pdf.(home_dists, 0)
+    # P(Away > 0)
+    p_away_scores_chain = 1.0 .- pdf.(away_dists, 0)
+    
+    p_btts_yes_chain = p_home_scores_chain .* p_away_scores_chain
+    p_btts_no_chain = 1.0 .- p_btts_yes_chain
+    
+  return NamedTuple{(:BTTS_yes, :BTTS_no)}((p_btts_yes_chain, p_btts_no_chain))
+end
+
+
+
+match_id = rand(keys(all_oos_results))
+
+filter(row -> row.match_id==match_id, ds.matches)
+market_odds = filter(row -> row.match_id == match_id, ds.odds)
+
+# 1. Get the parameters for this match
+params = all_oos_results[match_id]; 
+# 2. Create a "generator" that calls predict_market for each market
+market_results_generator = (
+    predict_market(model, market, params...) for market in predict_config.markets
+);
+
+# 3. "Reduce" the generator by applying `merge` to all its elements
+#    `init = (;)` ensures it works even if the config is empty.
+match_predict = reduce(merge, market_results_generator; init = (;) );
+
+# 1. Initialize your dictionary to store the odds
+match_odds = Dict{Symbol, Float64}();
+
+# 2. Iterate using `pairs()`
+match_odds = Dict(key => mean(1 ./ value) for (key, value) in pairs(match_predict));
+match_odds 
+
+
+##
+
+a1 = collect(predict_config.markets)
+a = a1[5]
+
+match_id = rand(keys(all_oos_results))
+all_oos_results[match_id]
+
+p_1x2 = predict_market(model, a, all_oos_results[match_id]...)
+p_uo_05 = predict_market(model, a, all_oos_results[match_id]...)
+p_btts = predict_market(model, a, all_oos_results[match_id]...)
+
+struct test_neg <: BayesianFootball.TypesInterfaces.AbstractNegBinModel end 
+t_neg = test_neg()
+
+predict_market(t_neg, a, all_oos_results[match_id]...)
+
+filter(row -> row.match_id==match_id, ds.matches)
+
+market_odds = filter(row -> row.match_id == match_id, ds.odds)
+mean( 1 ./ p_1x2.home)
+mean( 1 ./ p_1x2.draw)
+mean( 1 ./ p_1x2.away)
+
+mean( 1 ./ p_uo_05.under ) 
+mean( 1 ./ p_uo_05.over  ) 
+
+mean( 1 ./ p_btts[:BTTS_yes])
+mean( 1 ./ p_btts[:BTTS_no])
 
 
 ##############################
