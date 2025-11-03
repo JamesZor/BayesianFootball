@@ -6,10 +6,11 @@ This module contains helper functions and submodels for Turing.jl.
 module TuringHelpers
 
 using Turing, Distributions, LinearAlgebra, Statistics
-using ..PreGameInterfaces 
+# using ..PreGameInterfaces 
 # using ...Features: FeatureSet
 # using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
 using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel, FeatureSet # <-- ADD FeatureSet HERE
+# using ..AbstractFootballModel, ..AbstractPregameModel
 export prepare_data
 
 """

@@ -116,6 +116,25 @@ function predict_market(:Poisson,  market_type::BayesianFootball.Markets.Market1
 end 
 
 
+function predict_market(
+    model::BayesianFootball.TypesInterfaces.AbstractPoissonModel,
+    market::BayesianFootball.Markets.Market1X2, 
+    λ_h, λ_a
+)
+  computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
+  return ( home = computed_1x2.p_home_dist, draw=computed_1x2.p_draw_dist, away=computed_1x2.p_away_dist)
+end
+
+function predict_market(
+    model::BayesianFootball.TypesInterfaces.AbstractNegBinModel,
+    market::BayesianFootball.Markets.Market1X2, 
+    λ_h, λ_a
+)
+  println("Not implemented yet")
+
+end
+
+
 ##############################
 # --- odds and predict 
 ##############################

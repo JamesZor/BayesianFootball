@@ -2,15 +2,15 @@
 using DataFrames
 using Turing
 using LinearAlgebra
-using ..PreGameInterfaces # Use the abstract type
-using ..TuringHelpers
-using ...TypesInterfaces
+# using ..PreGameInterfaces # Use the abstract type
+# using ..TuringHelpers
+# using ...TypesInterfaces
 using Base.Threads
 
 # Export the concrete model struct and its build function
 export StaticPoisson, build_turing_model, predict
 
-struct StaticPoisson <: AbstractPregameModel end
+struct StaticPoisson <: AbstractPoissonModel end
 
 # NEW: The main @model block, isolated
 @model function static_poisson_model_train(n_teams, home_ids, away_ids, 

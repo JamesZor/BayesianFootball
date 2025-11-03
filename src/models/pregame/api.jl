@@ -3,7 +3,7 @@ Defines the main `PregameModel` struct and the user-facing API functions.
 """
 module PreGame
 
-using ..PreGameInterfaces, ..PreGameComponents, ..TuringHelpers
+using ..PreGameComponents, ..TuringHelpers
 using Turing, DataFrames, Statistics
 
 export PregameModel, build_turing_model, required_features,

@@ -7,10 +7,10 @@ module PreGame
 
 # This module also only depends on the central interfaces.
 # The '...' goes up two levels from PreGame -> Models -> BayesianFootball to find TypesInterfaces.
-using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel, FeatureSet
+using ...TypesInterfaces
 
 # Shared abstract types are now in the main interfaces file.
-include("interfaces.jl")
+# include("interfaces.jl")
 # Shared, reusable likelihood functions
 include("turing_helpers.jl")
 
@@ -18,9 +18,7 @@ include("turing_helpers.jl")
 module Implementations
     # It also only needs TypesInterfaces for its contracts.
     # '....' goes up three levels from Implementations -> PreGame -> Models -> BayesianFootball
-    using ....TypesInterfaces: FeatureSet, Vocabulary
-
-
+    using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary
     # Each model is now in its own self-contained file
     include("./models-src/static-poisson.jl")
     include("./models-src/static-simplex-poisson.jl")

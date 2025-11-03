@@ -2,7 +2,7 @@ module TypesInterfaces
 
 using DataFrames
 
-export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel
+export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPregameModel, AbstractInflatedDiagonalPoissonModel, AbstractNegBinModel
 export Vocabulary, FeatureSet, required_mapping_keys
 
 # This is the highest-level type
@@ -11,6 +11,11 @@ abstract type AbstractFootballModel end
 # Sub-types
 abstract type AbstractPregameModel <: AbstractFootballModel end
 abstract type AbstractInGameModel <: AbstractFootballModel end
+
+abstract type AbstractPoissonModel <: AbstractPregameModel end
+abstract type AbstractNegBinModel <: AbstractPregameModel end
+abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
+
 
 # --- Flexible Feature Structs ---
 # By defining these here, both Models and Features can use them without depending on each other.
