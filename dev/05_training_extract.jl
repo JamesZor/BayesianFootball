@@ -196,14 +196,114 @@ match_predict = reduce(merge, market_results_generator; init = (;) );
 match_odds = Dict{Symbol, Float64}();
 
 # 2. Iterate using `pairs()`
-match_odds = Dict(key => mean(1 ./ value) for (key, value) in pairs(match_predict));
+model_odds = Dict(key => mean(1 ./ value) for (key, value) in pairs(match_predict));
 match_odds 
+
+
+
+#### get market odds
+
+
+market_odds = filter(row ->
+                     row.match_id == match_id &&
+                     row.market_name == "Full time" && 
+                     row.market_group == "1X2"
+                     , ds.odds)
+
+market_odds = subset(ds.odds,
+                     :match_id => ByRow(==(match_id)),
+                     :market_name => ByRow(==("Full time")),
+                     :market_group => ByRow(==("1X2"))
+                    )
+
+
+function get_market(
+    match_id::Int64,
+    market::BayesianFootball.Markets.Market1X2,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Full time")),
+                       :market_group => ByRow(==("1X2"))
+                      )
+    # 2. Create a mapping from choice_name to decimal_odds
+    # This creates: Dict("1" => 13.0, "X" => 10.0, "2" => 1.13)
+    odds_map = Dict(market_odds.choice_name .=> market_odds.decimal_odds)
+
+    return (; home=odds_map["1"],
+              draw=odds_map["X"],
+              away=odds_map["2"])
+end
+
+function get_market(
+    match_id::Int64,
+    market::BayesianFootball.Markets.MarketOverUnder,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Match goals")),
+                       :choice_group => ByRow(isequal(market.line))
+                      )
+
+
+    odds_map = Dict(market_odds.choice_name .=> market_odds.decimal_odds)
+
+    line_str = replace(string(market.line), "." => "")
+    # e.g., over_key = :over_15
+    over_key = Symbol("over_", line_str)
+    under_key = Symbol("under_", line_str)
+    
+  return NamedTuple{(over_key, under_key)}((odds_map["Over"], odds_map["Under"]))
+
+end
+
+
+function get_market(
+    match_id::Int64,
+    market::BayesianFootball.Markets.MarketBTTS,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Both teams to score")),
+                      )
+
+
+    odds_map = Dict(market_odds.choice_name .=> market_odds.decimal_odds)
+
+    yes_key = Symbol("btts_yes")
+    no_key = Symbol("btts_no")
+    
+  return NamedTuple{(yes_key, no_key)}((odds_map["Yes"], odds_map["No"]))
+
+end
+
+
+
+get_market(match_id, m_1x2, ds.odds)
+
+get_market(match_id, m_under_05, ds.odds)
+
+get_market(match_id, m_btts, ds.odds)
+
+
+market_odds_generator = (
+    get_market(match_id, market, ds.odds) for market in predict_config.markets
+);
+
+match_odds = reduce(merge, market_odds_generator; init = (;) );
+match_odds
+
 
 
 ##
 
 a1 = collect(predict_config.markets)
-a = a1[5]
+m_1x2 = a1[1]
+m_under_05 = a1[2]
+m_btts = a1[5]
 
 match_id = rand(keys(all_oos_results))
 all_oos_results[match_id]
