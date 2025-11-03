@@ -9,5 +9,4 @@ using ...TypesInterfaces: AbstractFootballModel, AbstractPregameModel
 
 export AbstractPregameModel
 
-
 end

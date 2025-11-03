@@ -23,8 +23,8 @@ Defines what to predict (your Config_p).
 struct PredictionConfig
     # A list of markets to calculate, e.g. [Market1X2(), MarketOverUnder(2.5)]
     markets::AbstractSet{AbstractMarket}
-    # A list of calculations to perform, e.g. [CalcProbability(), CalcExpectedValue()]
-    calculations::AbstractSet{AbstractCalculation}
+    # # A list of calculations to perform, e.g. [CalcProbability(), CalcExpectedValue()]
+    # calculations::AbstractSet{AbstractCalculation}
 end
 
 

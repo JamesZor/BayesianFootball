@@ -101,6 +101,22 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
 
 
 ##############################
+# ---  predict 
+##############################
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+
+function predict_market(:Poisson,  market_type::BayesianFootball.Markets.Market1X2,  λ_h::AbstractVector, λ_a::AbstractVector) 
+
+  computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
+
+  return ( home = computed_1x2.p_home_dist, draw=computed_1x2.p_draw_dist, away=computed_1x2.p_away_dist)
+
+end 
+
+
+##############################
 # --- odds and predict 
 ##############################
 
@@ -148,7 +164,7 @@ function _calculate_1x2_from_params(λ::Float64, μ::Float64, max_goals::Int=10)
     )
 end
 
-function compute_1x2_distributions_threaded(λs::AbstractVector, μs::AbstractVector, max_goals::Int=10)
+function compute_1x2_distributions(λs::AbstractVector, μs::AbstractVector, max_goals::Int=10)
     
     n_samples = length(λs)
     
