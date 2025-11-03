@@ -112,7 +112,7 @@ function predict_market(
     λ_h, λ_a
 )
   computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
-  return NamedTuple{(:Home, :Draw, :Away)}((computed_1x2.p_home_dist, computed_1x2.p_draw_dist, computed_1x2.p_away_dist))
+  return NamedTuple{(:home, :draw, :away)}((computed_1x2.p_home_dist, computed_1x2.p_draw_dist, computed_1x2.p_away_dist))
 end
 
 function predict_market(
@@ -171,26 +171,40 @@ function predict_market(
     p_btts_yes_chain = p_home_scores_chain .* p_away_scores_chain
     p_btts_no_chain = 1.0 .- p_btts_yes_chain
     
-  return NamedTuple{(:BTTS_yes, :BTTS_no)}((p_btts_yes_chain, p_btts_no_chain))
+  return NamedTuple{(:btts_yes, :btts_no)}((p_btts_yes_chain, p_btts_no_chain))
 end
 
+function predict_market(
+    model::BayesianFootball.TypesInterfaces.AbstractPoissonModel,
+    predict_config::BayesianFootball.Predictions.PredictionConfig,
+    λ_h::AbstractVector{Float64},
+    λ_a::AbstractVector{Float64}
+    )
 
+    market_results_generator = (
+        predict_market(model, market, λ_h, λ_a) for market in predict_config.markets
+    )
+  match_predict = reduce(merge, market_results_generator; init = (;) );
+  return match_predict
+
+end 
 
 match_id = rand(keys(all_oos_results))
+
 
 filter(row -> row.match_id==match_id, ds.matches)
 market_odds = filter(row -> row.match_id == match_id, ds.odds)
 
-# 1. Get the parameters for this match
-params = all_oos_results[match_id]; 
-# 2. Create a "generator" that calls predict_market for each market
-market_results_generator = (
-    predict_market(model, market, params...) for market in predict_config.markets
-);
 
-# 3. "Reduce" the generator by applying `merge` to all its elements
-#    `init = (;)` ensures it works even if the config is empty.
-match_predict = reduce(merge, market_results_generator; init = (;) );
+
+p_match = predict_market(model, predict_config, all_oos_results[match_id]...)
+
+
+struct test_neg <: BayesianFootball.TypesInterfaces.AbstractNegBinModel end 
+t_neg = test_neg()
+
+predict_market(t_neg, a, all_oos_results[match_id]...)
+
 
 # 1. Initialize your dictionary to store the odds
 match_odds = Dict{Symbol, Float64}();
@@ -203,20 +217,6 @@ match_odds
 
 #### get market odds
 
-
-market_odds = filter(row ->
-                     row.match_id == match_id &&
-                     row.market_name == "Full time" && 
-                     row.market_group == "1X2"
-                     , ds.odds)
-
-market_odds = subset(ds.odds,
-                     :match_id => ByRow(==(match_id)),
-                     :market_name => ByRow(==("Full time")),
-                     :market_group => ByRow(==("1X2"))
-                    )
-
-
 function get_market(
     match_id::Int64,
     market::BayesianFootball.Markets.Market1X2,
@@ -227,8 +227,6 @@ function get_market(
                        :market_name => ByRow(==("Full time")),
                        :market_group => ByRow(==("1X2"))
                       )
-    # 2. Create a mapping from choice_name to decimal_odds
-    # This creates: Dict("1" => 13.0, "X" => 10.0, "2" => 1.13)
     odds_map = Dict(market_odds.choice_name .=> market_odds.decimal_odds)
 
     return (; home=odds_map["1"],
@@ -280,55 +278,197 @@ function get_market(
 
 end
 
+function get_market(
+  match_id::Int64,
+  predict_config::BayesianFootball.Predictions.PredictionConfig,
+  df_odds::AbstractDataFrame 
+  )
+
+  market_odds_generator = (
+    get_market(match_id, market, df_odds) for market in predict_config.markets
+  )
+
+  match_odds = reduce(merge, market_odds_generator; init = (;) );
+
+  return match_odds
+end
+
+match_odds = get_market(match_id, predict_config, ds.odds)
 
 
-get_market(match_id, m_1x2, ds.odds)
-
-get_market(match_id, m_under_05, ds.odds)
-
-get_market(match_id, m_btts, ds.odds)
 
 
-market_odds_generator = (
-    get_market(match_id, market, ds.odds) for market in predict_config.markets
-);
-
-match_odds = reduce(merge, market_odds_generator; init = (;) );
-match_odds
-
-
-
-##
-
-a1 = collect(predict_config.markets)
-m_1x2 = a1[1]
-m_under_05 = a1[2]
-m_btts = a1[5]
+#####
+# strategy 
+#####
 
 match_id = rand(keys(all_oos_results))
-all_oos_results[match_id]
 
-p_1x2 = predict_market(model, a, all_oos_results[match_id]...)
-p_uo_05 = predict_market(model, a, all_oos_results[match_id]...)
-p_btts = predict_market(model, a, all_oos_results[match_id]...)
+subset( ds.matches, 
+       :match_id => ByRow(isequal(match_id))
+       )
 
-struct test_neg <: BayesianFootball.TypesInterfaces.AbstractNegBinModel end 
-t_neg = test_neg()
 
-predict_market(t_neg, a, all_oos_results[match_id]...)
+p_match = predict_market(model, predict_config, all_oos_results[match_id]...);
+match_odds = get_market(match_id, predict_config, ds.odds)
 
-filter(row -> row.match_id==match_id, ds.matches)
 
-market_odds = filter(row -> row.match_id == match_id, ds.odds)
-mean( 1 ./ p_1x2.home)
-mean( 1 ./ p_1x2.draw)
-mean( 1 ./ p_1x2.away)
 
-mean( 1 ./ p_uo_05.under ) 
-mean( 1 ./ p_uo_05.over  ) 
+b = keys(p_match)
+b2 = keys(match_odds)
 
-mean( 1 ./ p_btts[:BTTS_yes])
-mean( 1 ./ p_btts[:BTTS_no])
+
+model_odds = NamedTuple(key => round(mean(1 ./ value), digits=2) for (key, value) in pairs(p_match))
+
+
+"""
+    parse_market_key(key::Symbol)
+
+Helper function to split a market symbol like :over_25 or :btts_yes
+into a (market_group, market_choice) tuple.
+"""
+function parse_market_key(key::Symbol)
+    s_key = string(key)
+
+    if s_key == "home"
+        return ("1x2", "home")
+    elseif s_key == "draw"
+        return ("1x2", "draw")
+    elseif s_key == "away"
+        return ("1x2", "away")
+    elseif startswith(s_key, "over_")
+        choice = replace(s_key, "over_" => "")
+        choice_str = string(parse(Int, choice) / 10) # "25" -> "2.5"
+        return ("over", choice_str)
+    elseif startswith(s_key, "under_")
+        choice = replace(s_key, "under_" => "")
+        choice_str = string(parse(Int, choice) / 10) # "25" -> "2.5"
+        return ("under", choice_str)
+    elseif startswith(s_key, "btts_")
+        choice = replace(s_key, "btts_" => "")
+        return ("btts", choice)
+    else
+        return ("unknown", s_key)
+    end
+end
+
+using DataFrames
+using Statistics
+
+"""
+    find_positive_ev_bets(match_id, p_match, match_odds; stake_size=1.0, tau=0.0)
+
+Processes a single match to find positive EV bets that exceed a given threshold 'tau'.
+"""
+function find_positive_ev_bets(match_id::Int, 
+                             p_match::NamedTuple, 
+                             match_odds::NamedTuple; 
+                             stake_size::Float64 = 1.0,
+                             tau::Float64 = 0.0) # <-- Your new threshold parameter
+
+    # 1. Calculate the model's fair odds
+    # model_odds = NamedTuple(key => mean(1 ./ value) for (key, value) in pairs(p_match))
+
+    # 2. Define the structure for our bet records
+    bet_records = @NamedTuple{
+        match_id::Int, 
+        market_group::String, 
+        market_choice::String, 
+        stake::Float64,
+        model_odd::Float64,   # <-- Added for analysis
+        bookie_odd::Float64,  # <-- Added for analysis
+        ev::Float64,          # <-- Added for analysis (the "edge")
+        tau::Float64          # <-- Your requested column
+    }[]
+
+    # 3. Iterate over all markets
+    for market_key in keys(match_odds)
+        
+        if !haskey(model_odds, market_key)
+            continue
+        end
+
+        model_prob = round( mean( p_match[market_key]), digits=2)
+        bookie_odd = match_odds[market_key]
+
+        # 4. Calculate EV (the "edge")
+        ev = ( model_prob * bookie_odd) -1 
+
+        # 5. Apply the new condition with the threshold 'tau'
+        if ev > tau
+            # Parse the market key
+            market_group, market_choice = parse_market_key(market_key)
+
+            # 6. Add the bet to our records
+            push!(bet_records, (
+                match_id = match_id,
+                market_group = market_group,
+                market_choice = market_choice,
+                stake = stake_size,
+                model_odd = round( 1 / model_prob, digits=2) ,
+                bookie_odd = bookie_odd,
+                ev = round(ev, digits=4),
+                tau = tau
+            ))
+        end
+    end
+
+    return DataFrame(bet_records)
+end
+
+
+
+
+
+bets_df_low_tau = find_positive_ev_bets(match_id, p_match, match_odds, tau = 0.0)
+
+using ProgressMeter # Recommended for a nice progress bar
+all_bets_list = DataFrame[]
+
+@showprogress "Processing matches..." for (match_id, oos_data) in all_oos_results
+        
+        try
+            # --- This is your logic per match ---
+            
+            # A. Get model predictions (p_match)
+            #    'oos_data...' expands the NamedTuple (λ_h, λ_a)
+            #    into arguments for the function.
+            p_match = predict_market(model, predict_config, oos_data...)
+            
+            # B. Get bookmaker odds
+            match_odds = get_market(match_id, predict_config, ds.odds)
+
+            # C. Find positive EV bets
+            #    (Using the 'v2' version you preferred, which averages probabilities)
+            bets_df = find_positive_ev_bets(
+                match_id, 
+                p_match, 
+                match_odds, 
+                tau = 0.0
+            )
+
+            # D. Add the results to our list (only if bets were found)
+            if !isempty(bets_df)
+                push!(all_bets_list, bets_df)
+            end
+            
+            # --- End of per-match logic ---
+
+        catch e
+            # This is important! If one match fails (e.g., missing odds),
+            # this will log the warning and continue the loop.
+            @warn "Could not process match $match_id: $e"
+        end
+end 
+final_bets_df = vcat(all_bets_list...)
+
+final_bets_df
+
+
+
+
+
+
 
 
 ##############################
