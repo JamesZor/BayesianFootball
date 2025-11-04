@@ -104,6 +104,9 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
 # ---  predict 
 ##############################
 
+using Distributions
+using Statistics
+
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
 function predict_market(
@@ -111,6 +114,79 @@ function predict_market(
     market::BayesianFootball.Markets.Market1X2, 
     λ_h, λ_a
 )
+
+          """
+          Helper function:
+          Calculates 1X2 probabilities for a SINGLE pair of goal-rate parameters.
+          """
+          function _calculate_1x2_from_params(λ::Float64, μ::Float64, max_goals::Int=10)
+              
+              # Create distributions for this one MCMC sample
+              home_dist = Poisson(λ)
+              away_dist = Poisson(μ)
+              
+              p_home_win = 0.0
+              p_draw = 0.0
+              p_away_win = 0.0
+
+              for h in 0:max_goals
+                  for a in 0:max_goals
+                      # P(H=h, A=a) = P(H=h) * P(A=a)
+                      p_score = pdf(home_dist, h) * pdf(away_dist, a)
+                      
+                      if h > a
+                          p_home_win += p_score
+                      elseif h == a
+                          p_draw += p_score
+                      else # a > h
+                          p_away_win += p_score
+                      end
+                  end
+              end
+              
+              # Note: These will sum to < 1.0 due to max_goals truncation,
+              # but we can re-normalize them for a cleaner 1X2 probability.
+              total_p = p_home_win + p_draw + p_away_win
+              
+              return (
+                  home = p_home_win / total_p,
+                  draw = p_draw / total_p,
+                  away = p_away_win / total_p
+              )
+          end
+
+          function compute_1x2_distributions(λs::AbstractVector, μs::AbstractVector, max_goals::Int=10)
+              
+              n_samples = length(λs)
+              
+              # Pre-allocate thread-safe output vectors
+              p_home_vec = zeros(n_samples)
+              p_draw_vec = zeros(n_samples)
+              p_away_vec = zeros(n_samples)
+              
+              # Use @threads to split the loop across your available cores
+              for i in 1:n_samples
+                  # Note: No need to index λs[i], the loop does it
+                  λ_i = λs[i]
+                  μ_i = μs[i]
+                  
+                  # Call the original (fast) inner-loop function
+                  probs = _calculate_1x2_from_params(λ_i, μ_i, max_goals)
+                  
+                  # Write to the pre-allocated vectors
+                  # This is safe because each thread writes to a different index `i`
+                  p_home_vec[i] = probs.home
+                  p_draw_vec[i] = probs.draw
+                  p_away_vec[i] = probs.away
+              end
+              
+              return (
+                  p_home_dist = p_home_vec,
+                  p_draw_dist = p_draw_vec,
+                  p_away_dist = p_away_vec
+              )
+          end
+
   computed_1x2 = compute_1x2_distributions(λ_h, λ_a, 10)
   return NamedTuple{(:home, :draw, :away)}((computed_1x2.p_home_dist, computed_1x2.p_draw_dist, computed_1x2.p_away_dist))
 end
@@ -211,6 +287,7 @@ match_odds = Dict{Symbol, Float64}();
 
 # 2. Iterate using `pairs()`
 model_odds = Dict(key => mean(1 ./ value) for (key, value) in pairs(match_predict));
+model_odds
 match_odds 
 
 
@@ -295,6 +372,86 @@ end
 
 match_odds = get_market(match_id, predict_config, ds.odds)
 
+#####
+# market results
+#####
+
+function get_market_results(
+    match_id::Int64,
+    market::BayesianFootball.Markets.Market1X2,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Full time")),
+                       :market_group => ByRow(==("1X2"))
+                      )
+    odds_map = Dict(market_odds.choice_name .=> market_odds.winning)
+
+    return (; home=odds_map["1"],
+              draw=odds_map["X"],
+              away=odds_map["2"])
+end
+
+
+function get_market_results(
+    match_id::Int64,
+    market::BayesianFootball.Markets.MarketOverUnder,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Match goals")),
+                       :choice_group => ByRow(isequal(market.line))
+                      )
+
+
+    odds_map = Dict(market_odds.choice_name .=> market_odds.winning)
+
+    line_str = replace(string(market.line), "." => "")
+    # e.g., over_key = :over_15
+    over_key = Symbol("over_", line_str)
+    under_key = Symbol("under_", line_str)
+    
+  return NamedTuple{(over_key, under_key)}((odds_map["Over"], odds_map["Under"]))
+end
+
+function get_market_results(
+    match_id::Int64,
+    market::BayesianFootball.Markets.MarketBTTS,
+    df_odds::AbstractDataFrame
+) 
+    market_odds = subset(df_odds,
+                       :match_id => ByRow(==(match_id)),
+                       :market_name => ByRow(==("Both teams to score")),
+                      )
+
+
+    odds_map = Dict(market_odds.choice_name .=> market_odds.winning)
+
+    yes_key = Symbol("btts_yes")
+    no_key = Symbol("btts_no")
+    
+  return NamedTuple{(yes_key, no_key)}((odds_map["Yes"], odds_map["No"]))
+
+end
+
+
+function get_market_results(
+  match_id::Int64,
+  predict_config::BayesianFootball.Predictions.PredictionConfig,
+  df_odds::AbstractDataFrame 
+  )
+
+  market_odds_generator = (
+    get_market_results(match_id, market, df_odds) for market in predict_config.markets
+  )
+
+  match_odds = reduce(merge, market_odds_generator; init = (;) );
+
+  return match_odds
+end
+
 
 
 
@@ -311,7 +468,7 @@ subset( ds.matches,
 
 p_match = predict_market(model, predict_config, all_oos_results[match_id]...);
 match_odds = get_market(match_id, predict_config, ds.odds)
-
+match_results = get_market_results(match_id, predict_config, ds.odds)
 
 
 b = keys(p_match)
@@ -352,77 +509,71 @@ function parse_market_key(key::Symbol)
     end
 end
 
-using DataFrames
-using Statistics
+function compute_ev_bets(
+              match_id::Int,
+              match_probs::NamedTuple,
+              match_odds::NamedTuple,
+              match_results::NamedTuple,
+              model_name::String
+              ) 
 
-"""
-    find_positive_ev_bets(match_id, p_match, match_odds; stake_size=1.0, tau=0.0)
-
-Processes a single match to find positive EV bets that exceed a given threshold 'tau'.
-"""
-function find_positive_ev_bets(match_id::Int, 
-                             p_match::NamedTuple, 
-                             match_odds::NamedTuple; 
-                             stake_size::Float64 = 1.0,
-                             tau::Float64 = 0.0) # <-- Your new threshold parameter
-
-    # 1. Calculate the model's fair odds
-    # model_odds = NamedTuple(key => mean(1 ./ value) for (key, value) in pairs(p_match))
-
-    # 2. Define the structure for our bet records
     bet_records = @NamedTuple{
         match_id::Int, 
+        model_name::String,
         market_group::String, 
         market_choice::String, 
         stake::Float64,
-        model_odd::Float64,   # <-- Added for analysis
-        bookie_odd::Float64,  # <-- Added for analysis
-        ev::Float64,          # <-- Added for analysis (the "edge")
-        tau::Float64          # <-- Your requested column
+        model_odd::Float64, 
+        bookie_odd::Float64,
+        ev::Float64,
+        winning::Bool
     }[]
 
     # 3. Iterate over all markets
     for market_key in keys(match_odds)
         
-        if !haskey(model_odds, market_key)
+        if !haskey(match_probs, market_key)
             continue
         end
 
-        model_prob = round( mean( p_match[market_key]), digits=2)
+        model_prob = round( mean( match_probs[market_key]), digits=2)
         bookie_odd = match_odds[market_key]
 
         # 4. Calculate EV (the "edge")
         ev = ( model_prob * bookie_odd) -1 
 
-        # 5. Apply the new condition with the threshold 'tau'
-        if ev > tau
-            # Parse the market key
-            market_group, market_choice = parse_market_key(market_key)
+        # Parse the market key
+        market_group, market_choice = parse_market_key(market_key)
 
-            # 6. Add the bet to our records
-            push!(bet_records, (
-                match_id = match_id,
-                market_group = market_group,
-                market_choice = market_choice,
-                stake = stake_size,
-                model_odd = round( 1 / model_prob, digits=2) ,
-                bookie_odd = bookie_odd,
-                ev = round(ev, digits=4),
-                tau = tau
-            ))
-        end
+        # 6. Add the bet to our records
+        push!(bet_records, (
+            match_id = match_id,
+            model_name = model_name,
+            market_group = market_group,
+            market_choice = market_choice,
+            stake = 1,
+            model_odd = round( 1 / model_prob, digits=2) ,
+            bookie_odd = bookie_odd,
+            ev = round(ev, digits=4),
+            winning=match_results[market_key]
+        ))
     end
 
     return DataFrame(bet_records)
-end
+end 
 
 
 
 
 
-bets_df_low_tau = find_positive_ev_bets(match_id, p_match, match_odds, tau = 0.0)
+compute_ev_bets( match_id, p_match, match_odds, match_results, "basic_poisson")
 
-using ProgressMeter # Recommended for a nice progress bar
+
+
+
+
+using ProgressMeter 
+
 all_bets_list = DataFrame[]
 
 @showprogress "Processing matches..." for (match_id, oos_data) in all_oos_results
@@ -430,23 +581,16 @@ all_bets_list = DataFrame[]
         try
             # --- This is your logic per match ---
             
-            # A. Get model predictions (p_match)
-            #    'oos_data...' expands the NamedTuple (λ_h, λ_a)
-            #    into arguments for the function.
-            p_match = predict_market(model, predict_config, oos_data...)
+            match_probs = predict_market(model, predict_config, oos_data...)
             
             # B. Get bookmaker odds
             match_odds = get_market(match_id, predict_config, ds.odds)
 
+            match_results = get_market_results(match_id, predict_config, ds.odds)
             # C. Find positive EV bets
             #    (Using the 'v2' version you preferred, which averages probabilities)
-            bets_df = find_positive_ev_bets(
-                match_id, 
-                p_match, 
-                match_odds, 
-                tau = 0.0
-            )
 
+            bets_df = compute_ev_bets( match_id, match_probs, match_odds, match_results, "basic_poisson")
             # D. Add the results to our list (only if bets were found)
             if !isempty(bets_df)
                 push!(all_bets_list, bets_df)
@@ -465,9 +609,419 @@ final_bets_df = vcat(all_bets_list...)
 final_bets_df
 
 
+ev_bets = subset(
+      final_bets_df,
+:ev => ByRow(>(0.0))
+)
+# Create a copy so we don't modify your original ev_bets
+analysis_df = copy(ev_bets)
+
+# Add the profit column
+analysis_df.profit = ifelse.(analysis_df.winning, analysis_df.bookie_odd .- 1.0, -1.0);
 
 
 
+grouped_analysis = combine(
+    groupby(analysis_df, [:market_group, :market_choice]),
+    
+    # --- Bet Counts ---
+    nrow => :n_bets,
+    :winning => sum => :n_winning,
+    
+    # --- ROI and Profit ---
+    # ROI = Total Profit / Total Stake.
+    # Since Total Stake = n_bets * 1.0, ROI = sum(profit) / n_bets,
+    # which is simply the mean of the profit column.
+    :profit => mean => :roi,
+    :profit => sum => :total_profit,
+    
+    # --- Mean EV ---
+    :ev => mean => :mean_ev,
+    
+    # --- Mean Odds ---
+    :bookie_odd => mean => :mean_bookie_odd,
+    
+    # --- Conditional Means (Winning Bets) ---
+    # This syntax takes the :ev and :winning columns
+    # and finds the mean of :ev where :winning is true.
+    [:ev, :winning] => ((ev, w) -> mean(ev[w])) => :mean_ev_winning,
+    [:bookie_odd, :winning] => ((o, w) -> mean(o[w])) => :mean_odds_winning,
+
+    # --- Conditional Means (Losing Bets) ---
+    # We use .!w to select the non-winning rows
+    [:ev, :winning] => ((ev, w) -> mean(ev[.!w])) => :mean_ev_losing,
+    [:bookie_odd, :winning] => ((o, w) -> mean(o[.!w])) => :mean_odds_losing
+)
+
+
+
+
+
+"""
+Computes EV bets for a *list* of quantiles.
+"""
+function compute_ev_bets_quantile(
+              match_id::Int,
+              match_probs::NamedTuple,
+              match_odds::NamedTuple,
+              match_results::NamedTuple,
+              model_name::String,
+              quantiles_to_test::AbstractVector{Float64} # NEW argument
+              ) 
+
+    # NEW: Add `quantile` to the NamedTuple definition
+    bet_records = @NamedTuple{
+        match_id::Int, 
+        model_name::String,
+        market_group::String, 
+        market_choice::String, 
+        quantile::Float64, # NEW column
+        stake::Float64,
+        model_odd::Float64, 
+        bookie_odd::Float64,
+        ev::Float64,
+        winning::Bool
+    }[]
+
+    # 3. Iterate over all markets
+    for market_key in keys(match_odds)
+        
+        if !haskey(match_probs, market_key)
+            continue
+        end
+
+        bookie_odd = match_odds[market_key]
+        posterior_samples = match_probs[market_key]
+        market_group, market_choice = parse_market_key(market_key)
+
+        # NEW: Inner loop over the quantiles
+        for q in quantiles_to_test
+            # 4. Calculate prob and EV based on the quantile
+            model_prob = round(quantile(posterior_samples, q), digits=2)
+            ev = (model_prob * bookie_odd) - 1 
+
+            # 6. Add the bet to our records
+            push!(bet_records, (
+                match_id = match_id,
+                model_name = model_name,
+                market_group = market_group,
+                market_choice = market_choice,
+                quantile = q, # Add the quantile value
+                stake = 1, # Stake is still 1.0 for this analysis
+                model_odd = round(1 / model_prob, digits=2),
+                bookie_odd = bookie_odd,
+                ev = round(ev, digits=4),
+                winning = match_results[market_key]
+            ))
+        end
+    end
+
+    return DataFrame(bet_records)
+end
+
+
+using ProgressMeter 
+
+# --- NEW: Define the quantiles you want to test ---
+# 0.05 = 95% confident the prob is *at least* this
+# 0.10 = 90% confident
+# 0.25 = 75% confident
+# 0.50 = Median / 50% confident
+quantiles_to_test = [0.05, 0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+
+all_bets_list = DataFrame[]
+
+@showprogress "Processing matches..." for (match_id, oos_data) in all_oos_results
+        
+        try
+            # --- This is your logic per match ---
+            
+            match_probs = predict_market(model, predict_config, oos_data...)
+            match_odds = get_market(match_id, predict_config, ds.odds)
+            match_results = get_market_results(match_id, predict_config, ds.odds)
+            
+            # --- NEW: Call the new function ---
+            bets_df = compute_ev_bets_quantile(
+                match_id, match_probs, match_odds, match_results,
+                "basic_poisson", quantiles_to_test
+            )
+            
+            if !isempty(bets_df)
+                push!(all_bets_list, bets_df)
+           end
+            
+        catch e
+            @warn "Could not process match $match_id: $e"
+        end
+end 
+
+# This vcat works exactly the same
+final_bets_df = vcat(all_bets_list...)
+
+
+# This step is identical:
+ev_bets = subset(
+      final_bets_df,
+      :ev => ByRow(>(0.0))
+)
+
+# This step is also identical:
+analysis_df = copy(ev_bets)
+analysis_df.profit = ifelse.(analysis_df.winning, analysis_df.bookie_odd .- 1.0, -1.0);
+
+
+# --- NEW: Add :quantile to the groupby ---
+grouped_analysis = combine(
+    groupby(analysis_df, [:quantile, :market_group, :market_choice]), # <-- CHANGED
+    
+    # --- All of these aggregations are the same ---
+    nrow => :n_bets,
+    :winning => sum => :n_winning,
+    :profit => mean => :roi,
+    :profit => sum => :total_profit,
+    :ev => mean => :mean_ev,
+    :bookie_odd => mean => :mean_bookie_odd,
+    [:ev, :winning] => ((ev, w) -> mean(ev[w])) => :mean_ev_winning,
+    [:bookie_odd, :winning] => ((o, w) -> mean(o[w])) => :mean_odds_winning,
+    [:ev, :winning] => ((ev, w) -> mean(ev[.!w])) => :mean_ev_losing,
+    [:bookie_odd, :winning] => ((o, w) -> mean(o[.!w])) => :mean_odds_losing
+)
+
+# --- Now you can sort and see the difference! ---
+# Sort by quantile (most conservative first), then by market
+sort!(grouped_analysis, [:quantile, :market_group, :market_choice])
+
+sort(grouped_analysis, :roi, rev=true)
+
+sort(subset( grouped_analysis, :market_group => ByRow(isequal("btts"))), :roi, rev=true)
+
+
+
+
+# This is our "Strategy" definition
+# We will only bet if the quantile is 0.35
+STRATEGY_QUANTILE = 0.4
+
+# We will only bet on these markets
+STRATEGY_MARKETS = [
+    ("1x2", "home"),
+    ("under", "1.5"),
+    ("under", "2.5"),
+    ("under", "3.5"),
+    ("btts", "no")
+]
+
+# --- Step 1: Set your Kelly Fraction (0.5 = Half Kelly) ---
+KELLY_FRACTION = 0.5
+
+# --- Step 2: Start with all bets that had positive EV ---
+# We use 'analysis_df' from your code
+kelly_df = copy(analysis_df)
+
+# --- Step 3: Apply our "Go-Live" Strategy Filter ---
+# A. Filter by our chosen quantile
+kelly_df = subset(kelly_df, :quantile => ByRow(==(STRATEGY_QUANTILE)))
+
+# B. Filter by our chosen markets
+# (This is a bit more complex, but a loop is fine here)
+is_strategy_bet = map(eachrow(kelly_df)) do row
+    (row.market_group, row.market_choice) in STRATEGY_MARKETS
+end
+kelly_df = kelly_df[is_strategy_bet, :]
+
+
+# --- Step 4: Calculate the Kelly Stake ---
+# 'p' is the model's probability *at our chosen quantile*
+# 'b' is the profit on a 1-unit bet (bookie_odd - 1)
+# 'q' is the probability of losing (1 - p)
+
+# Get 'p' (which is just model_odd = 1/p)
+kelly_df.p_model = 1.0 ./ kelly_df.model_odd
+
+# Get 'b'
+kelly_df.b_odds = kelly_df.bookie_odd .- 1.0
+
+# Get 'q'
+kelly_df.q_model = 1.0 .- kelly_df.p_model
+
+# Calculate Full Kelly Fraction (f)
+# f = (p*b - q) / b
+kelly_df.f_full_kelly = ( (kelly_df.p_model .* kelly_df.b_odds) .- kelly_df.q_model ) ./ kelly_df.b_odds
+
+# Calculate our final, fractional Kelly stake
+# We also use max(0, f) to ensure stake is never negative (if p=0 or b=0)
+kelly_df.stake = max.(0, kelly_df.f_full_kelly .* KELLY_FRACTION)
+
+# Clean up (optional)
+kelly_df = select(kelly_df,
+    :match_id, :market_group, :market_choice, :quantile, :winning,
+    :bookie_odd, :model_odd, :ev, :p_model, :b_odds, :stake
+)
+
+println("Selected $(nrow(kelly_df)) bets based on our strategy.")
+
+
+
+
+
+# --- Step 1: Recalculate profit ---
+# Profit is now a function of our variable stake
+kelly_df.profit = ifelse.(
+    kelly_df.winning,
+    kelly_df.stake .* kelly_df.b_odds,  # Win amount
+    -kelly_df.stake                     # Loss amount
+);
+
+# --- Step 2: Run the final analysis ---
+# We don't group this time, we just get the grand total
+# (or you could group by market_group again if you wish)
+
+total_profit = sum(kelly_df.profit)
+total_staked = sum(kelly_df.stake)
+roi = total_profit / total_staked
+n_bets = nrow(kelly_df)
+
+println("--- Kelly Strategy Results (Fraction = $KELLY_FRACTION) ---")
+println("Total Bets:     $n_bets")
+println("Total Staked:   $(round(total_staked, digits=2)) units")
+println("Total Profit:   $(round(total_profit, digits=2)) units")
+println("ROI:            $(round(roi * 100, digits=2))%")
+
+
+
+
+
+#= 
+
+julia> println("Total Bets:     $n_bets")
+Total Bets:     81
+
+julia> println("Total Staked:   $(round(total_staked, digits=2)) units")
+Total Staked:   4.05 units
+
+julia> println("Total Profit:   $(round(total_profit, digits=2)) units")
+Total Profit:   0.29 units
+
+julia> println("ROI:            $(round(roi * 100, digits=2))%")
+ROI:            7.06%
+
+=#
+
+
+"""
+Runs the Kelly staking and profit calculation for a *list* of quantiles.
+
+Arguments:
+- `analysis_df`: Your DataFrame of all EV > 0 bets, with all quantiles.
+- `quantiles_to_test`: A vector like [0.1, 0.25, 0.35, 0.5]
+- `strategy_markets`: Your list of ("market", "choice") tuples.
+- `kelly_fraction`: Your risk fraction (e.g., 0.5 for Half Kelly).
+
+Returns:
+A single DataFrame containing all *strategy-approved* bets,
+with Kelly stake and profit calculated for each one.
+"""
+function analyze_kelly_strategy(
+    analysis_df::DataFrame,
+    quantiles_to_test::AbstractVector{Float64},
+    strategy_markets::AbstractVector,
+    kelly_fraction::Float64
+)
+    
+    # This will hold the results from each quantile loop
+    all_kelly_bets = DataFrame[]
+
+    for q in quantiles_to_test
+        # --- 1. Filter by this loop's quantile ---
+        # We start with all positive EV bets
+        quantile_df = subset(analysis_df, :quantile => ByRow(==(q)))
+
+        # --- 2. Filter by our chosen markets ---
+        is_strategy_bet = map(eachrow(quantile_df)) do row
+            (row.market_group, row.market_choice) in strategy_markets
+        end
+        strategy_df = quantile_df[is_strategy_bet, :]
+
+        # If this quantile + market combo had no bets, skip
+        if isempty(strategy_df)
+            continue
+        end
+
+        # We must use copy() here to add new columns
+        kelly_bets_for_q = copy(strategy_df)
+
+        # --- 3. Calculate Kelly Stake (same as your code) ---
+        kelly_bets_for_q.p_model = 1.0 ./ kelly_bets_for_q.model_odd
+        kelly_bets_for_q.b_odds = kelly_bets_for_q.bookie_odd .- 1.0
+        kelly_bets_for_q.q_model = 1.0 .- kelly_bets_for_q.p_model
+        
+        # Calculate Full Kelly Fraction (f)
+        f_full_kelly = (
+            (kelly_bets_for_q.p_model .* kelly_bets_for_q.b_odds) .- kelly_bets_for_q.q_model
+        ) ./ kelly_bets_for_q.b_odds
+        
+        # Calculate our final, fractional Kelly stake
+        kelly_bets_for_q.stake = max.(0, f_full_kelly .* kelly_fraction)
+
+        # --- 4. Calculate final profit ---
+        kelly_bets_for_q.profit = ifelse.(
+            kelly_bets_for_q.winning,
+            kelly_bets_for_q.stake .* kelly_bets_for_q.b_odds, # Win amount
+            -kelly_bets_for_q.stake                            # Loss amount
+        )
+
+        # --- 5. Add this quantile's results to our list ---
+        push!(all_kelly_bets, kelly_bets_for_q)
+    end
+
+    if isempty(all_kelly_bets)
+        @warn "No bets matched the strategy for any quantile."
+        return DataFrame() # Return an empty DataFrame
+    end
+
+    # Combine all results into one big DataFrame
+    return vcat(all_kelly_bets...)
+end
+
+
+
+quantiles_to_test = [0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+
+# Define your strategy (can be the same as before)
+STRATEGY_MARKETS = [
+    ("1x2", "home"),
+    ("under", "1.5"),
+    ("under", "2.5"),
+    ("under", "3.5"),
+    ("btts", "no")
+]
+
+KELLY_FRACTION = 0.5 # Half Kelly
+
+# --- 2. Run the Full Analysis ---
+full_kelly_results_df = analyze_kelly_strategy(
+    analysis_df,
+    quantiles_to_test,
+    STRATEGY_MARKETS,
+    KELLY_FRACTION
+)
+
+# Group by quantile AND market
+kelly_grouped_analysis = combine(
+    groupby(full_kelly_results_df, [:quantile, :market_group, :market_choice]),
+    nrow => :n_bets,
+    :stake => sum => :total_staked,
+    :profit => sum => :total_profit
+)
+
+# Calculate ROI (Profit / Total Staked)
+kelly_grouped_analysis.roi = kelly_grouped_analysis.total_profit ./ kelly_grouped_analysis.total_staked
+
+# Sort to see the best-performing strata
+sort!(kelly_grouped_analysis, :roi, rev=true)
+
+println("--- Kelly Strategy Breakdown by Market & Quantile ---")
+println(kelly_grouped_analysis)
 
 
 
