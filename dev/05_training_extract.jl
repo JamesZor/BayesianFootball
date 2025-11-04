@@ -990,10 +990,18 @@ quantiles_to_test = [0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
 # Define your strategy (can be the same as before)
 STRATEGY_MARKETS = [
     ("1x2", "home"),
+    ("1x2", "away"),
+    ("1x2", "draw"),
     ("under", "1.5"),
     ("under", "2.5"),
     ("under", "3.5"),
-    ("btts", "no")
+    ("under", "4.5"),
+    ("over", "1.5"),
+    ("over", "2.5"),
+    ("over", "3.5"),
+    ("over", "4.5"),
+    ("btts", "no"),
+    ("btts", "yes")
 ]
 
 KELLY_FRACTION = 0.5 # Half Kelly
@@ -1022,6 +1030,284 @@ sort!(kelly_grouped_analysis, :roi, rev=true)
 
 println("--- Kelly Strategy Breakdown by Market & Quantile ---")
 println(kelly_grouped_analysis)
+
+
+full_kelly_results_df
+
+# Your full_kelly_results_df has the Kelly 'stake' and 'profit'
+# We will now add the 'fixed_stake' and 'fixed_profit'
+# (We need a copy to add columns)
+comparison_df = copy(full_kelly_results_df)
+
+# Add the 'fixed_profit' column
+# b_odds = bookie_odd - 1.0 (already calculated)
+comparison_df.fixed_profit = ifelse.(
+    comparison_df.winning,
+    comparison_df.b_odds, # Win amount (1.0 * b_odds)
+    -1.0                  # Loss amount (-1.0)
+);
+
+strategy_comparison = combine(
+    groupby(comparison_df, :quantile),
+    
+    # --- Counts ---
+    nrow => :n_bets,
+    nrow => :fixed_total_staked, # <-- THE FIX: Just get the row count again
+    
+    # --- Kelly Strategy Aggregates ---
+    :stake => sum => :kelly_total_staked,
+    :profit => sum => :kelly_total_profit,
+    
+    # --- Fixed Strategy Aggregates ---
+    :fixed_profit => sum => :fixed_total_profit
+)
+
+# --- The rest of your code is perfect ---
+
+# Calculate ROI for both
+strategy_comparison.kelly_roi = strategy_comparison.kelly_total_profit ./ strategy_comparison.kelly_total_staked
+strategy_comparison.fixed_roi = strategy_comparison.fixed_total_profit ./ strategy_comparison.fixed_total_staked
+
+# Sort by the quantile for a clean view
+sort!(strategy_comparison, :quantile)
+
+println(strategy_comparison)
+
+function simulate_bankroll(df, initial_bankroll, kelly_fraction)
+    
+    current_bankroll = initial_bankroll
+    bankroll_history = [initial_bankroll]
+
+    # Make sure bets are sorted by time!
+    sorted_df = sort(df, :match_id) 
+    
+    for row in eachrow(sorted_df)
+        # 1. Calculate the 'true' Kelly stake based on *current* bankroll
+        #    f = (p*b - q) / b
+        p = row.p_model
+        b = row.b_odds
+        q = 1 - p
+        
+        f_full_kelly = (p*b - q) / b
+        f_fractional = max(0, f_full_kelly * kelly_fraction)
+        
+        stake = current_bankroll * f_fractional
+        
+        # 2. Calculate the profit or loss from this one bet
+        if row.winning
+            profit = stake * b
+        else
+            profit = -stake
+        end
+        
+        # 3. Update the bankroll
+        current_bankroll = current_bankroll + profit
+        push!(bankroll_history, current_bankroll)
+    end
+    
+    return bankroll_history
+end
+
+# --- How to use it ---
+# 1. Filter your df for ONE strategy
+strategy_df = subset(comparison_df, :quantile => ByRow(==(0.45)))
+
+# 2. Run the simulation
+initial_bankroll = 100.0
+kelly_history = simulate_bankroll(strategy_df, initial_bankroll, 0.5) # 0.5 = Half Kelly
+
+# 3. You can now plot 'kelly_history' to see your bankroll grow/shrink
+using Plots
+plot(kelly_history)
+
+
+
+# 1. Select only the columns we need from ds.matches
+match_dates_df = select(ds.matches, :match_id, :match_date)
+
+# 2. Join this with your full results DataFrame
+# This adds the 'match_date' column to every bet
+all_bets_with_dates = leftjoin(
+    full_kelly_results_df,
+    match_dates_df,
+    on = :match_id
+)
+
+# 3. Sort by date. This is the crucial step you identified.
+# This is now our master, time-ordered DataFrame of all strategy-approved bets.
+sort!(all_bets_with_dates, :match_date)
+
+
+
+"""
+Simulates bankroll growth over time, tracking a separate, independent
+bankroll for each market in the DataFrame.
+
+Assumes the input DataFrame is already sorted by date.
+"""
+function simulate_grouped_bankrolls(
+    strategy_df::DataFrame,
+    initial_bankroll::Float64,
+    kelly_fraction::Float64
+)
+    # This Dict will store the *current* bankroll for each market
+    # e.g., "1x2/home" => 105.3
+    bankrolls = Dict{String, Float64}()
+
+    # This Dict will store the *full history* for plotting
+    # e.g., "1x2/home" => [100.0, 101.2, 99.8, ...]
+    histories = Dict{String, Vector{Float64}}()
+
+    # Loop through every bet in our time-sorted strategy
+    for row in eachrow(strategy_df)
+        
+        # 1. Identify the market for this bet
+        market_key = "$(row.market_group)/$(row.market_choice)"
+
+        # 2. Initialize this market if it's the first time we've seen it
+        if !haskey(bankrolls, market_key)
+            bankrolls[market_key] = initial_bankroll
+            histories[market_key] = [initial_bankroll] # Start with the initial value
+        end
+
+        # 3. Get the *current* bankroll for this specific market
+        current_bankroll = bankrolls[market_key]
+
+        # 4. Calculate the stake based on *this market's* current bankroll
+        # (This is the same Kelly calculation as before)
+        p = row.p_model
+        b = row.b_odds
+        q = 1.0 - p
+        
+        f_full_kelly = (p * b - q) / b
+        f_fractional = max(0, f_full_kelly * kelly_fraction)
+        
+        stake = current_bankroll * f_fractional
+
+        # 5. Calculate profit/loss
+        if row.winning
+            profit = stake * b
+        else
+            profit = -stake
+        end
+
+        # 6. Update this market's bankroll and history
+        new_bankroll = current_bankroll + profit
+        bankrolls[market_key] = new_bankroll
+        push!(histories[market_key], new_bankroll)
+    end
+
+    return histories
+end
+
+
+
+
+# --- 1. Define Your Inputs ---
+quantiles_to_test = [0.1, 0.25, 0.35, 0.4, 0.45, 0.5]
+KELLY_FRACTION = 0.5 # Half Kelly
+INITIAL_BANKROLL = 100.0
+
+# This will store all simulation results
+# Key = Quantile, Value = Dict of market histories
+all_simulations = Dict{Float64, Dict{String, Vector{Float64}}}()
+
+println("Running bankroll simulations for each quantile...")
+
+# --- 2. The Main Loop ---
+for q in quantiles_to_test
+    
+    # Get all strategy bets for this *one* quantile
+    # (This uses the master, time-sorted DataFrame)
+    strategy_df = subset(all_bets_with_dates, :quantile => ByRow(==(q)))
+
+    if isempty(strategy_df)
+        @warn "No bets found for quantile = $q. Skipping."
+        continue
+    end
+
+    # Run the new grouped simulation
+    simulations_for_q = simulate_grouped_bankrolls(
+        strategy_df,
+        INITIAL_BANKROLL,
+        KELLY_FRACTION
+    )
+    
+    # Store the results
+    all_simulations[q] = simulations_for_q
+end
+
+println("Simulations complete!")
+
+
+
+# 1. Get the simulation results for the 0.4 quantile
+results_for_q_0_4 = all_simulations[0.5]
+
+# 2. Get the history vectors for each market
+pnl_1x2_home = results_for_q_0_4["1x2/home"]
+pnl_under_2_5 = results_for_q_0_4["under/2.5"]
+pnl_btts_no = results_for_q_0_4["btts/no"]
+# ... etc.
+
+# 3. You can now pass these vectors to any plotting library
+plot(
+    [pnl_1x2_home, pnl_under_2_5, pnl_btts_no],
+    label = ["1x2/home" "under/2.5" "btts/no"]
+)
+
+##
+
+# 1. GET YOUR MASTER DATASET (from previous step)
+match_dates_df = select(ds.matches, :match_id, :match_date)
+all_bets_with_dates = leftjoin(
+    full_kelly_results_df, # Your DataFrame of all strategy-approved bets
+    match_dates_df,
+    on = :match_id
+)
+sort!(all_bets_with_dates, :match_date)
+
+# 2. DEFINE YOUR SIMULATION PARAMETERS
+quantiles_to_test = [0.1, 0.25, 0.35, 0.4, 0.45, 0.5] # Your choice
+KELLY_FRACTION = 0.5  # Half Kelly
+INITIAL_BANKROLL = 100.0
+
+# 3. RUN THE SIMULATION
+all_simulations = Dict{Float64, Dict{String, Vector{Float64}}}()
+
+@showprogress "Running bankroll simulations..." for q in quantiles_to_test
+    
+    strategy_df = subset(all_bets_with_dates, :quantile => ByRow(==(q)))
+    if isempty(strategy_df); continue; end
+
+    simulations_for_q = simulate_grouped_bankrolls(
+        strategy_df,
+        INITIAL_BANKROLL,
+        KELLY_FRACTION
+    )
+    all_simulations[q] = simulations_for_q
+end
+
+println("Simulations complete!")
+
+using Plots
+
+# Let's analyze the q=0.4 strategy
+results_for_q_0_4 = all_simulations[0.4]
+
+# Create a new plot
+p = plot(title = "P&L for Quantile = 0.4 (Half Kelly)", xlabel = "Number of Bets", ylabel = "Bankroll (units)")
+
+# Add a line for each market
+for (market_key, bankroll_history) in results_for_q_0_4
+    plot!(p, bankroll_history, label=market_key, linewidth=2)
+end
+
+# Display the plot
+display(p)
+
+# You can now save this plot
+# savefig(p, "pnl_plot_q0_4.png")
 
 
 
