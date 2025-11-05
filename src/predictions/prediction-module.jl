@@ -36,6 +36,9 @@ end
 
 
 include("./pregame/predict-abstractpoisson.jl")
+include("./markets-helpers.jl")
+
+end 
 
 #
 # # --- This is your helper function from scripts/dev_train_predict.jl ---
@@ -134,4 +137,3 @@ include("./pregame/predict-abstractpoisson.jl")
 #     return "btts_yes" #
 # end
 #
-end # module Predictions

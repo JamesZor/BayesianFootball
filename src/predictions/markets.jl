@@ -1,6 +1,6 @@
 module Markets
 
-export AbstractMarket, Market1X2, MarketOverUnder, MarketBTTS, get_standard_markets
+export AbstractMarket, Market1X2, MarketOverUnder, MarketBTTS, get_standard_markets, market_keys
 
 abstract type AbstractMarket end
 
@@ -16,6 +16,21 @@ struct MarketBTTS <: AbstractMarket end
 # struct MarketAsianHandicap <: AbstractMarket
 #     line::Float64
 # end
+
+
+"""
+Returns a NamedTuple containing the keys to be used for a given market's outcomes.
+This centralizes the key logic.
+"""
+market_keys(::Market1X2) = (home=:home, draw=:draw, away=:away)
+market_keys(::MarketBTTS) = (yes=:btts_yes, no=:btts_no)
+
+function market_keys(market::MarketOverUnder)
+    line_str = replace(string(market.line), "." => "")
+    over_key = Symbol("over_", line_str)
+    under_key = Symbol("under_", line_str)
+    return (over=over_key, under=under_key)
+end
 
 """
 Returns a standard set of common markets for prediction.
