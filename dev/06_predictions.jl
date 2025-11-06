@@ -903,6 +903,13 @@ bankroll_df = simulate_compounding_growth(
     min_roi_to_bet = 0.0     # We want to bet on all positive ROI markets
 )
 
+bankroll_df_scaled = simulate_compounding_growth(
+    model_df,
+    robust_strategies_df,
+    min_roi_to_bet = 0.0,
+    kelly_scalar = 0.1  # <-- HERE IS THE FIX
+)
+
 # 2. See the results
 println(bankroll_df)
 
@@ -930,7 +937,8 @@ for strategy_row in eachrow(profitable_markets_df)
     bankroll_df = simulate_compounding_growth(
         model_df,
         single_market_strategy_map, # Pass in the 1-row strategy
-        min_roi_to_bet = 0.0
+        min_roi_to_bet = 0.0,
+        kelly_scalar = 0.1  # <-- HERE IS THE FIX
     )
     
     # 5. Store the result and print the summary
@@ -944,6 +952,46 @@ end
 
 # You can now access the full simulation for a market, e.g.:
 # println(all_market_simulations[:away])
+
+function find_optimal_scalar(
+    model_df, 
+    strategy_map_df;
+    scalar_range = 0.02:0.02:0.5 # Test from 2% to 50% Kelly
+)
+    
+    println("--- Finding Optimal Kelly Scalar ---")
+    best_scalar = 0.0
+    best_final_bankroll = 0.0
+
+    for scalar in scalar_range
+        
+        sim_df = simulate_compounding_growth(
+            model_df,
+            strategy_map_df,
+            min_roi_to_bet = 0.0,
+            kelly_scalar = scalar
+        )
+        
+        final_bankroll = isempty(sim_df) ? 0.0 : last(sim_df.bankroll)
+        
+        println("Scalar: $(round(scalar, digits=2)) -> Final Bankroll: $(round(final_bankroll, digits=3))")
+        
+        if final_bankroll > best_final_bankroll
+            best_final_bankroll = final_bankroll
+            best_scalar = scalar
+        end
+    end
+    
+    println("\n--- Optimal Result ---")
+    println("Best Scalar: $best_scalar")
+    println("Best Final Bankroll: $(round(best_final_bankroll, digits=3))")
+    
+    return (best_scalar, best_final_bankroll)
+end
+
+# --- Run the Optimization ---
+# This will test 24 different scalar values and find the best one
+find_optimal_scalar(model_df, robust_strategies_df)
 
 ##############################
 # --- Metrics
