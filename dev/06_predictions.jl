@@ -102,7 +102,6 @@ predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball
 # get an id 
 
 match_id = rand(keys(all_oos_results))
-p_match =
 
 match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, all_oos_results[match_id]...)
 
@@ -113,6 +112,354 @@ match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, d
 match_results = BayesianFootball.Predictions.get_market_results(match_id, predict_config, ds.odds)
 
 market_odds = subset( ds.odds, :match_id => ByRow(isequal(match_id)))
+
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+
+
+##############################
+# --- Kelly 
+##############################
+
+"""
+Calculates the optimal Kelly criterion fraction to bet.
+
+# Arguments
+- `decimal_odds`: The decimal odds offered by the bookmaker (e.g., 2.5, 3.0).
+- `probability`: Your estimated true probability of the event occurring (e.g., 0.45).
+
+# Returns
+- `f`: The fraction of your bankroll to bet (from 0.0 to 1.0).
+  A value of 0.0 means the bet has no value (p < 1/decimal_odds).
+"""
+function kelly_fraction(decimal_odds, probability)
+    # 1. Get p (probability of winning) and q (probability of losing)
+    p = probability
+    q = 1.0 - p
+
+    # 2. Get b (net odds) from the decimal odds
+    # b = profit from a 1-unit bet
+    b = decimal_odds - 1.0
+
+    # 3. Handle invalid odds
+    if b <= 0.0
+        return 0.0  # Bet has no profit potential or is invalid
+    end
+
+    # 4. Calculate the Kelly fraction: f = p - (q / b)
+    f = p - (q / b)
+
+    # 5. A negative fraction means "don't bet"
+    return max(0.0, f)
+end
+
+function get_confidence(kelly_dist; cutoff = 0.0)
+    return mean(kelly_dist .> cutoff)
+end
+
+h = kelly_fraction.(match_odds.home, match_predict.home);
+a = kelly_fraction.(match_odds.away, match_predict.away);
+d = kelly_fraction.(match_odds.draw, match_predict.draw);
+
+
+kelly_value(a, 0.0)
+kelly_value(h, 0.0)
+kelly_value(d, 0.0)
+
+
+a_positive = a[a .> 0.0]
+recommended_stake_away = median(a_positive)
+
+using StatsPlots
+
+density(a, label="away")
+density!(h, label="home")
+density!(d, label="draw")
+
+mean(h)
+median(h)
+
+kelly_fraction(match_odds.away, median(match_predict.away))
+kelly_fraction(match_odds.away, mean(match_predict.away))
+
+
+####
+
+function get_confidence(kelly_dist; cutoff = 0.0)
+    return mean(kelly_dist .> cutoff)
+end
+
+function get_positive_median(kelly_dist)
+    positive_stakes = kelly_dist[kelly_dist .> 0.0]
+    return isempty(positive_stakes) ? 0.0 : median(positive_stakes)
+end
+
+# 2. Define a function to process all matches
+function generate_backtest_data(model, all_oos_results, predict_config, ds, model_name::String)
+    
+    # Use a Vector of NamedTuples for performance.
+    # It's much faster than pushing to a DataFrame.
+    bet_data_rows = []
+    
+    println("Processing $(length(all_oos_results)) matches for $model_name...")
+    
+    for match_id in keys(all_oos_results)
+        
+        # A. Get data for this match
+        match_predict = BayesianFootball.Predictions.predict_market(
+            model, predict_config, all_oos_results[match_id]...
+        )
+        match_odds = BayesianFootball.Predictions.get_market(
+            match_id, predict_config, ds.odds
+        )
+        match_results = BayesianFootball.Predictions.get_market_results(
+            match_id, predict_config, ds.odds
+        )
+        
+        # B. Iterate over every market for this match
+        for market_key in keys(match_predict)
+            
+            p_dist = match_predict[market_key]
+            decimal_odds = match_odds[market_key]
+            result = match_results[market_key]
+            
+            # C. Skip if we don't have odds for this market
+            if isnothing(decimal_odds) || ismissing(decimal_odds) || decimal_odds <= 1.0
+                continue
+            end
+            
+            # D. This is the core: get the Kelly distribution
+            f_dist = kelly_fraction.(decimal_odds, p_dist)
+            
+            # E. Pre-calculate all our "ingredients"
+            row = (
+                match_id = match_id,
+                model_name = model_name,
+                market = market_key,
+                decimal_odds = decimal_odds,
+                was_winner = result,
+                
+                # Model's raw probability
+                p_median = median(p_dist),
+                
+                # Kelly distribution summaries (our "decision" stats)
+                conf_0 = get_confidence(f_dist, cutoff=0.0),
+                stake_median = get_positive_median(f_dist),
+                
+                # Optional: higher-confidence checks
+                conf_1pct = get_confidence(f_dist, cutoff=0.01)
+            )
+            
+            push!(bet_data_rows, row)
+        end
+    end
+    
+    # F. Convert to DataFrame and join with match info
+    # This is the "master" DataFrame
+    bet_df = DataFrame(bet_data_rows)
+    
+    # Join with ds.matches to get league, date, etc.
+    match_info = unique(ds.matches[:, [:match_id, :tournament_slug, :season, :match_date]], :match_id)
+    
+    master_df = leftjoin(bet_df, match_info, on = :match_id)
+    
+    return master_df
+end
+
+
+master_df_v1 = generate_backtest_data(model, all_oos_results, predict_config, ds, "basic_poisson")
+
+
+# part 2 
+using DataFramesMeta, Statistics
+
+# This struct is a good practice for passing many parameters
+struct Strategy
+    conf_thresh::Float64
+    stake_thresh::Float64
+    stake_type::Symbol  # :stake_median
+    model_name::String
+end
+
+function analyze_strategy(df::AbstractDataFrame, strategy::Strategy)
+    
+    # 1. Filter for the bets this strategy would have placed
+   bets_placed = @subset(df,
+    :model_name .== strategy.model_name,           # Add a dot
+    :conf_0 .> strategy.conf_thresh,               # Add a dot
+    $(strategy.stake_type) .> strategy.stake_thresh # Add $ and a dot
+)
+    
+    if isempty(bets_placed)
+        return (num_bets=0, roi=0.0, profit=0.0, win_rate=0.0, avg_odds=0.0)
+    end
+
+    # 2. Calculate profit and loss for those bets
+    # We use the stake amount (e.g., :stake_median) to size the bet
+    bets_placed.profit = @. ifelse(
+        bets_placed.was_winner,
+        bets_placed[!, strategy.stake_type] * (bets_placed.decimal_odds - 1),
+        -bets_placed[!, strategy.stake_type]
+    )
+    
+    # 3. Aggregate metrics
+    total_staked = sum(bets_placed[!, strategy.stake_type])
+    total_profit = sum(bets_placed.profit)
+    roi = total_profit / total_staked
+    
+    return (
+        num_bets = nrow(bets_placed),
+        roi = roi,
+        profit = total_profit,
+        win_rate = mean(bets_placed.was_winner),
+        avg_odds = mean(bets_placed.decimal_odds)
+    )
+end
+
+dff = subset( master_df_v1, :market => ByRow(isequal(:home)))
+mean(dff.was_winner)
+
+# Assume `all_models_df` is loaded from Phase 1
+all_models_df = master_df_v1
+
+s = Strategy(0.7, 0.005, :stake_median, "basic_poisson")
+metrics = analyze_strategy(all_models_df, s)
+
+# --- Experiment 1: Find optimal confidence threshold for "Model_v1" ---
+println("--- Model_v1 Threshold Test ---")
+for conf in 0.0:0.02:0.99
+    s = Strategy(conf, 0.005, :stake_median, "basic_poisson")
+    metrics = analyze_strategy(all_models_df, s)
+    
+    println("Conf: $conf | Bets: $(metrics.num_bets) | ROI: $(round(metrics.roi, digits=3))")
+end
+
+# Output might be:
+# Conf: 0.5 | Bets: 1205 | ROI: 0.051
+# Conf: 0.55 | Bets: 980 | ROI: 0.062
+# Conf: 0.60 | Bets: 750 | ROI: 0.075  <-- Looks promising
+
+# --- Experiment 2: Compare models at the "optimal" threshold ---
+println("\n--- Model Comparison at 60% Confidence ---")
+s_v1 = Strategy(0.60, 0.005, :stake_median, "basic_poisson")
+# s_v2 = Strategy(0.60, 0.005, :stake_median, "Model_v2")
+
+metrics_v1 = analyze_strategy(all_models_df, s_v1)
+# metrics_v2 = analyze_strategy(all_models_df, s_v2)
+
+println("Model_v1 ROI: $(metrics_v1.roi) on $(metrics_v1.num_bets) bets")
+# println("Model_v2 ROI: $(metrics_v2.roi) on $(metrics_v2.num_bets) bets")
+
+
+# --- Experiment 3: Group by market (as you asked) ---
+println("\n--- Market Breakdown for Model_v1 ---")
+strategy_df = @subset(all_models_df,
+    :model_name .== "basic_poisson",
+    :conf_0 .> 0.60,
+    :stake_median .> 0.005
+)
+
+# This is the power of DataFrames:
+grouped_results = groupby(strategy_df, :market)
+
+# We can now analyze each market just like we did the whole group
+# (This is more complex, but `combine` is the function you'd use)
+for (key, group) in pairs(grouped_results)
+    s = Strategy(0.7, 0.005, :stake_median, "basic_poisson")
+    # We pass the *sub-dataframe* for just that market
+    metrics = analyze_strategy(group, s) 
+    
+    if metrics.roi > 0.0
+        println("Market: $(key.market) | Bets: $(metrics.num_bets) | ROI: $(round(metrics.roi, digits=3))")
+    end
+end
+
+# Output:
+# Market: :home | Bets: 150 | ROI: 0.081
+# Market: :away | Bets: 132 | ROI: 0.102
+# Market: :over_25 | Bets: 95 | ROI: -0.050 <-- Clearly shows a weak market!
+
+using DataFrames, DataFramesMeta, Statistics
+
+# (Your existing analyze_strategy and Strategy struct are needed)
+
+"""
+Finds the optimal thresholds for a single market by grid searching.
+"""
+function find_best_market_strategy(market_df::AbstractDataFrame;
+                                   model_name::String,
+                                   min_bets::Int = 5, # Our key constraint
+                                   conf_range = 0.05:0.05:0.95,
+                                   stake_range = 0.00:0.005:0.20)
+    
+    best_roi = 0.0
+    best_strategy = (conf=0.0, stake=0.0)
+    best_metrics = (num_bets=0, roi=0.0)
+    
+    # Grid search
+    for conf in conf_range
+        for stake in stake_range
+            
+            s = Strategy(conf, stake, :stake_median, model_name)
+            
+            # Analyze this specific (conf, stake) combo
+            metrics = analyze_strategy(market_df, s)
+            
+            # --- This is the core logic ---
+            # Is this ROI better than our current best?
+            # AND does it meet our minimum bet constraint?
+            if (metrics.roi > best_roi) && (metrics.num_bets >= min_bets)
+                best_roi = metrics.roi
+                best_strategy = (conf=conf, stake=stake)
+                best_metrics = metrics
+            end
+        end
+    end
+    
+    # If no strategy was found (e.g., all ROIs were negative or 0 bets)
+    # return "disabled" thresholds
+    if best_roi == -Inf
+        return (
+            market = market_df.market[1],
+            opt_conf_thresh = Inf, # "Disable" this market
+            opt_stake_thresh = Inf,
+            best_roi = 0.0,
+            num_bets = 0
+        )
+    end
+    
+    return (
+        market = market_df.market[1],
+        opt_conf_thresh = best_strategy.conf,
+        opt_stake_thresh = best_strategy.stake,
+        best_roi = best_metrics.roi,
+        num_bets = best_metrics.num_bets
+    )
+end
+
+
+# 1. Filter for the model you want to optimize
+model_df = @subset(all_models_df, :model_name .== "basic_poisson")
+
+# 2. Group by market
+grouped_by_market = groupby(model_df, :market)
+
+# 3. Apply (combine) our "finder" function to each group
+# We use a do-block for clarity
+strategy_portfolio = combine(grouped_by_market) do market_group
+    
+    # Pass each sub-dataframe (one for each market)
+    # into our optimization function
+    find_best_market_strategy(market_group,
+                              model_name="basic_poisson",
+                              min_bets=5, 
+                             conf_range = 0.05:0.05:0.95,
+                             stake_range = 0.0)
+end
+
+println(strategy_portfolio)
+
+sort(strategy_portfolio, :best_roi, rev=true)
 
 
 ##############################
