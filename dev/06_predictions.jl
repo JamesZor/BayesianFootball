@@ -32,6 +32,10 @@ split_map = Dict(37 => 1, 38 => 2, 39 => 3)
 ds.matches.split_col = get.(Ref(split_map), ds.matches.match_week, 0);
 
 
+# large v2 
+ds.matches.split_col = max.(0, ds.matches.match_week .- 14);
+
+
 
 
 
@@ -53,9 +57,11 @@ training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf,
 # Then run:
 # results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
 # save and load 
-# JLD2.save_object("training_results.jld2", results)
+#
+# JLD2.save_object("training_results_large.jld2", results)
 
-results = JLD2.load_object("training_results.jld2")
+# results = JLD2.load_object("training_results.jld2")
+results = JLD2.load_object("training_results_large.jld2")
 
 
 ### get out of sample data - chains 
@@ -217,7 +223,7 @@ function generate_backtest_data(model, all_oos_results, predict_config, ds, mode
         )
         
         # B. Iterate over every market for this match
-        for market_key in keys(match_predict)
+        for market_key in keys(match_odds)
             
             p_dist = match_predict[market_key]
             decimal_odds = match_odds[market_key]
@@ -256,6 +262,93 @@ function generate_backtest_data(model, all_oos_results, predict_config, ds, mode
     
     # F. Convert to DataFrame and join with match info
     # This is the "master" DataFrame
+    bet_df = DataFrame(bet_data_rows)
+    
+    # Join with ds.matches to get league, date, etc.
+    match_info = unique(ds.matches[:, [:match_id, :tournament_slug, :season, :match_date]], :match_id)
+    
+    master_df = leftjoin(bet_df, match_info, on = :match_id)
+    
+    return master_df
+end
+
+
+# v2 to avoid missing odds 
+
+function generate_backtest_data(model, all_oos_results, predict_config, ds, model_name::String)
+    
+    bet_data_rows = []
+    
+    println("Processing $(length(all_oos_results)) matches for $model_name...")
+    
+    for match_id in keys(all_oos_results)
+        
+        # We must declare these vars outside the try block to use them after
+        local match_predict, match_odds, match_results
+        
+        try
+            # A. Get data for this match
+            match_predict = BayesianFootball.Predictions.predict_market(
+                model, predict_config, all_oos_results[match_id]...
+            )
+            match_odds = BayesianFootball.Predictions.get_market(
+                match_id, predict_config, ds.odds
+            )
+            match_results = BayesianFootball.Predictions.get_market_results(
+                match_id, predict_config, ds.odds
+            )
+        catch e
+            if e isa KeyError
+                # This match is missing data (e.g., the "Over" key)
+                # Print a warning and skip this match_id
+                println("SKIPPING match_id $match_id: Could not find key $(e.key).")
+                continue # This jumps to the next iteration of the outer loop
+            else
+                # It's a different error, so we should stop and see it
+                rethrow(e)
+            end
+        end
+        
+        # B. Iterate over every market for this match
+        # This code is only reached if the 'try' block succeeded
+        for market_key in keys(match_odds)
+            
+            p_dist = match_predict[market_key]
+            decimal_odds = match_odds[market_key]
+            result = match_results[market_key]
+            
+            # C. Skip if we don't have odds for this market
+            if isnothing(decimal_odds) || ismissing(decimal_odds) || decimal_odds <= 1.0
+                continue
+            end
+            
+            # D. This is the core: get the Kelly distribution
+            f_dist = kelly_fraction.(decimal_odds, p_dist)
+            
+            # E. Pre-calculate all our "ingredients"
+            row = (
+                match_id = match_id,
+                model_name = model_name,
+                market = market_key,
+                decimal_odds = decimal_odds,
+                was_winner = result,
+                
+                # Model's raw probability
+                p_median = median(p_dist),
+                
+                # Kelly distribution summaries (our "decision" stats)
+                conf_0 = get_confidence(f_dist, cutoff=0.0),
+                stake_median = get_positive_median(f_dist),
+                
+                # Optional: higher-confidence checks
+                conf_1pct = get_confidence(f_dist, cutoff=0.01)
+            )
+            
+            push!(bet_data_rows, row)
+        end
+    end
+    
+    # F. Convert to DataFrame and join with match info
     bet_df = DataFrame(bet_data_rows)
     
     # Join with ds.matches to get league, date, etc.
@@ -461,6 +554,396 @@ println(strategy_portfolio)
 
 sort(strategy_portfolio, :best_roi, rev=true)
 
+grouped_by_market = groupby(model_df, [:market, :tournament_slug])
+
+
+# Your grouped_by_market is already defined
+# grouped_by_market = groupby(model_df, [:market, :tournament_slug])
+
+# Use combine with a 'do' block to run calculations on each group
+market_metrics_df = combine(grouped_by_market) do df
+    
+    # 1. Number of bets
+    n_bets = nrow(df)
+    
+    # Handle empty groups to avoid division by zero
+    if n_bets == 0
+        return (
+            n_bets = 0,
+            n_wins = 0,
+            win_ratio = 0.0,
+            total_profit = 0.0,
+            roi = 0.0
+        )
+    end
+    
+    # 2. Number of winning bets
+    n_wins = sum(df.was_winner)
+    
+    # 3. Win ratio
+    win_ratio = n_wins / n_bets
+    
+    # 4. Calculate ROI (Return on Investment)
+    # We assume a 1-unit stake on every bet.
+    # If win: profit = decimal_odds - 1
+    # If loss: profit = -1
+    profit_vec = ifelse.(df.was_winner, df.decimal_odds .- 1.0, -1.0)
+    
+    # Sum up all profits
+    total_profit = sum(profit_vec)
+    
+    # ROI = Total Profit / Total Stakes
+    # Since total stakes = n_bets * 1 unit, we just divide by n_bets
+    roi = total_profit / n_bets
+    
+    # Return a NamedTuple of our new metrics.
+    # DataFrames.jl will turn this into columns.
+    return (
+        n_bets = n_bets,
+        n_wins = n_wins,
+        win_ratio = win_ratio,
+        total_profit = total_profit,
+        roi = roi
+    )
+end
+
+# Optional: Sort by the most profitable groups
+sort!(market_metrics_df, :roi, rev=true)
+
+# Display the result
+println(market_metrics_df)
+
+
+###
+using DataFrames, DataFramesMeta, Statistics
+
+# --- 1. Your Helper Struct & Functions (from your notes) ---
+
+struct Strategy
+    conf_thresh::Float64
+    stake_thresh::Float64
+    stake_type::Symbol  # :stake_median
+    model_name::String
+end
+
+function analyze_strategy(df::AbstractDataFrame, strategy::Strategy)
+    
+    # 1. Filter for the bets this strategy would have placed
+    bets_placed = @subset(df,
+        :model_name .== strategy.model_name,
+        :conf_0 .> strategy.conf_thresh,
+        $(strategy.stake_type) .> strategy.stake_thresh
+    )
+    
+    if isempty(bets_placed)
+        return (num_bets=0, roi=-Inf, profit=0.0, win_rate=0.0, avg_odds=0.0)
+    end
+
+    # 2. Calculate profit and loss for those bets
+    # We use the stake amount (e.g., :stake_median) to size the bet
+    profit_vec = @. ifelse(
+        bets_placed.was_winner,
+        bets_placed[!, strategy.stake_type] * (bets_placed.decimal_odds - 1),
+        -bets_placed[!, strategy.stake_type]
+    )
+    
+    # 3. Aggregate metrics
+    total_staked = sum(bets_placed[!, strategy.stake_type])
+    total_profit = sum(profit_vec)
+    
+    # Handle case where total_staked is zero
+    if total_staked == 0.0
+         return (num_bets=0, roi=-Inf, profit=0.0, win_rate=0.0, avg_odds=0.0)
+    end
+    
+    roi = total_profit / total_staked
+    
+    return (
+        num_bets = nrow(bets_placed),
+        roi = roi,
+        profit = total_profit,
+        win_rate = mean(bets_placed.was_winner),
+        avg_odds = mean(bets_placed.decimal_odds)
+    )
+end
+
+"""
+Finds the optimal thresholds for a single market by grid searching.
+"""
+function find_best_market_strategy(market_df::AbstractDataFrame;
+                                   model_name::String,
+                                   min_bets::Int = 10, # Increased for more reliability
+                                   conf_range = 0.05:0.05:0.95,
+                                   stake_range = 0.00:0.005:0.10) # Smaller range
+    
+    best_roi = -Inf # Start at -Inf so any profit is better
+    best_strategy = (conf=0.0, stake=0.0)
+    best_metrics = (num_bets=0, roi=0.0)
+    
+    # Grid search
+    for conf in conf_range
+        for stake in stake_range
+            
+            s = Strategy(conf, stake, :stake_median, model_name)
+            
+            # Analyze this specific (conf, stake) combo
+            metrics = analyze_strategy(market_df, s)
+            
+            # --- This is the core logic ---
+            # Is this ROI better than our current best?
+            # AND does it meet our minimum bet constraint?
+            if (metrics.roi > best_roi) && (metrics.num_bets >= min_bets)
+                best_roi = metrics.roi
+                best_strategy = (conf=conf, stake=stake)
+                best_metrics = metrics
+            end
+        end
+    end
+    
+    # If no strategy was found (e.g., all ROIs were negative or 0 bets)
+    if best_roi == -Inf
+        return (
+            market = market_df.market[1],
+            opt_conf_thresh = Inf, # "Disable" this market
+            opt_stake_thresh = Inf,
+            best_roi = 0.0,
+            num_bets = 0
+        )
+    end
+    
+    return (
+        market = market_df.market[1], # Get the market name from the group
+        opt_conf_thresh = best_strategy.conf,
+        opt_stake_thresh = best_strategy.stake,
+        best_roi = best_metrics.roi,
+        num_bets = best_metrics.num_bets
+    )
+end
+
+# --- 2. Your Data (Assuming 'model_df' and 'grouped_by_market') ---
+# model_df = master_df_v1 
+# grouped_by_market = groupby(model_df, [:market, :tournament_slug])
+
+
+# --- 3. The Solution: Apply the Grid Search to Each Group ---
+
+println("Finding optimal strategies for all groups...")
+
+# Define the model and constraints you want to test
+MODEL_TO_TEST = "basic_poisson"
+MIN_BETS_CONSTRAINT = 10 # Only find strategies with at least 10 bets
+
+# This is the magic!
+# It runs `find_best_market_strategy` on each 'df' in your 'grouped_by_market'
+optimal_strategies_df = combine(grouped_by_market) do df
+    find_best_market_strategy(
+        df,
+        model_name = MODEL_TO_TEST,
+        min_bets = MIN_BETS_CONSTRAINT,
+        conf_range = 0.05:0.05:0.95,
+         stake_range = 0.0)
+end
+
+# Sort to see the most profitable market/league strategies
+sort!(optimal_strategies_df, :best_roi, rev=true)
+
+println("--- Optimal Strategy Map ---")
+println(optimal_strategies_df)
+
+
+# 1. Create large, robust groups
+grouped_by_market_global = groupby(model_df, :market)
+
+# 2. Re-run your optimization with a *much* higher constraint
+MIN_BETS_CONSTRAINT = 100 # Find strategies that work over 100+ bets
+
+robust_strategies_df = combine(grouped_by_market_global) do df
+    find_best_market_strategy(
+        df,
+        model_name = "basic_poisson",
+        min_bets = MIN_BETS_CONSTRAINT,
+        conf_range = 0.05:0.05:0.95,
+        stake_range = 0.0:0.01:0.0  # Keep your smart 1D optimization
+    )
+end
+
+# 3. View the new, more realistic results
+sort!(robust_strategies_df, :best_roi, rev=true)
+println(robust_strategies_df)
+
+
+####
+"""
+Runs a compounding bankroll simulation based on a strategy map.
+
+# Arguments
+- `model_df`: The master DataFrame of all possible bets.
+- `strategy_map_df`: Your `robust_strategies_df` DataFrame.
+- `min_roi_to_bet`: Only include markets from the map with an ROI > this value.
+- `initial_bankroll`: The starting bankroll (e.g., 1.0 unit).
+"""
+function simulate_compounding_growth(
+    model_df::AbstractDataFrame, 
+    strategy_map_df::AbstractDataFrame;
+    min_roi_to_bet::Float64 = 0.0,
+    initial_bankroll::Float64 = 1.0,
+    kelly_scalar::Float64 = 1.0  
+)
+    
+    # --- 1. Create the Strategy Map (a Dict for fast lookups) ---
+    # We only want to bet on markets that were profitable in our test!
+    profitable_strategies = @subset(strategy_map_df, :best_roi .> min_roi_to_bet)
+    
+    # Convert to a Dict: :market => opt_conf_thresh
+    strategy_map = Dict(
+        row.market => row.opt_conf_thresh for row in eachrow(profitable_strategies)
+    )
+    
+    if isempty(strategy_map)
+        println("Warning: No profitable strategies found with min_roi > $min_roi_to_bet")
+        return DataFrame(date=Date[], bankroll=Float64[])
+    end
+
+    println("Simulating with $(length(strategy_map)) profitable markets...")
+    
+    # --- 2. Filter the master list for *only* bets we would place ---
+    
+    # This is much faster than filtering the whole DataFrame
+    bets_to_place_rows = []
+    for row in eachrow(model_df)
+        # Check if this market is in our strategy
+        conf_thresh = get(strategy_map, row.market, Inf) # Inf means "don't bet"
+        
+        # Check if the bet passes our confidence threshold
+        if row.conf_0 > conf_thresh
+            push!(bets_to_place_rows, row)
+        end
+    end
+    
+    if isempty(bets_to_place_rows)
+        println("Warning: Strategy found no bets to place.")
+        return DataFrame(date=Date[], bankroll=Float64[])
+    end
+    
+    bets_to_place = DataFrame(bets_to_place_rows)
+    
+    # --- 3. Sort by date ---
+    # This is essential for a "wealth over time" simulation
+    sort!(bets_to_place, :match_date)
+
+    # --- 4. Run the compounding simulation loop ---
+    bankroll = initial_bankroll
+    bankroll_history = []
+    
+    # Add an initial point for plotting
+    push!(bankroll_history, (
+        date = minimum(bets_to_place.match_date) - Day(1),
+        bankroll = initial_bankroll,
+        bet_num = 0
+    ))
+
+    for (i, row) in enumerate(eachrow(bets_to_place))
+
+        stake_fraction_full = row.stake_median
+        
+        # Get stake fraction from the Kelly median
+        stake_fraction = stake_fraction_full * kelly_scalar
+        
+        # Ensure stake is not too large (e.g., cap at 20% of bankroll)
+        stake_fraction = min(stake_fraction, 0.2) 
+        
+        actual_stake = bankroll * stake_fraction
+
+        # Don't allow a bet to ruin the bankroll
+        if actual_stake >= bankroll
+            actual_stake = bankroll * 0.99 # Bet 99%
+        end
+
+        # Calculate profit/loss and update bankroll
+        if row.was_winner
+            profit = actual_stake * (row.decimal_odds - 1.0)
+            bankroll += profit
+        else
+            loss = actual_stake
+            bankroll -= loss
+        end
+        
+        # Stop if we are ruined
+        if bankroll <= 0.0
+            bankroll = 0.0
+            push!(bankroll_history, (
+                date = row.match_date, 
+                bankroll = 0.0,
+                bet_num = i
+            ))
+            break # Stop the simulation
+        end
+
+        # Save the new bankroll value after the bet
+        push!(bankroll_history, (
+            date = row.match_date, 
+            bankroll = bankroll,
+            bet_num = i
+        ))
+    end
+    
+    println("Simulation complete. Placed $(nrow(bets_to_place)) bets.")
+    println("Initial bankroll: $initial_bankroll")
+    println("Final bankroll: $(round(bankroll, digits=2))")
+    
+    return DataFrame(bankroll_history)
+end
+
+using Dates
+# 1. Run the simulation
+# We set `min_roi_to_bet = 0.0` to include all 7 profitable markets
+bankroll_df = simulate_compounding_growth(
+    model_df,                # Your master DataFrame
+    robust_strategies_df,    # Your strategy map
+    min_roi_to_bet = 0.0     # We want to bet on all positive ROI markets
+)
+
+# 2. See the results
+println(bankroll_df)
+
+
+# 1. Get a list of the profitable markets to test
+profitable_markets_df = @subset(robust_strategies_df, :best_roi .> 0.0)
+
+# 2. Create a dictionary to hold all the resulting DataFrames
+all_market_simulations = Dict{Symbol, DataFrame}()
+
+println("--- Running Per-Market Simulations (Full Kelly) ---")
+
+for strategy_row in eachrow(profitable_markets_df)
+    
+    market_name = strategy_row.market
+    market_roi = strategy_row.best_roi
+    
+    # 3. Create a temporary, 1-row DataFrame for the strategy
+    # This tells the simulation function to *only* bet on this one market
+    single_market_strategy_map = DataFrame(strategy_row)
+
+    println("Simulating market: $market_name (OOS ROI: $(round(market_roi*100, digits=1))%)")
+    
+    # 4. Run the *exact same* simulation function as before
+    bankroll_df = simulate_compounding_growth(
+        model_df,
+        single_market_strategy_map, # Pass in the 1-row strategy
+        min_roi_to_bet = 0.0
+    )
+    
+    # 5. Store the result and print the summary
+    all_market_simulations[market_name] = bankroll_df
+    
+    # Get the final bankroll from the last row
+    final_bankroll = isempty(bankroll_df) ? 0.0 : last(bankroll_df.bankroll)
+    println("  -> Final Bankroll: $(round(final_bankroll, digits=3))\n")
+    
+end
+
+# You can now access the full simulation for a market, e.g.:
+# println(all_market_simulations[:away])
 
 ##############################
 # --- Metrics
