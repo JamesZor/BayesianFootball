@@ -200,6 +200,8 @@ function get_positive_median(kelly_dist)
     return isempty(positive_stakes) ? 0.0 : median(positive_stakes)
 end
 
+
+# v1 - had been improved below
 # 2. Define a function to process all matches
 function generate_backtest_data(model, all_oos_results, predict_config, ds, model_name::String)
     
@@ -415,8 +417,8 @@ mean(dff.was_winner)
 # Assume `all_models_df` is loaded from Phase 1
 all_models_df = master_df_v1
 
-s = Strategy(0.7, 0.005, :stake_median, "basic_poisson")
-metrics = analyze_strategy(all_models_df, s)
+# s = Strategy(0.7, 0.005, :stake_median, "basic_poisson")
+# metrics = analyze_strategy(all_models_df, s)
 
 # --- Experiment 1: Find optimal confidence threshold for "Model_v1" ---
 println("--- Model_v1 Threshold Test ---")
@@ -754,6 +756,18 @@ println(optimal_strategies_df)
 # 1. Create large, robust groups
 grouped_by_market_global = groupby(model_df, :market)
 
+
+
+## test 
+# 1. Get the vector of match IDs (your code is correct)
+mask = subset(ds.matches, :tournament_id => ByRow(isequal(54))).match_id
+# 2. Subset model_df to keep rows where :match_id IS IN the mask
+df_in_mask = subset(model_df, :match_id => ByRow(in(mask)))
+
+grouped_by_market_global = groupby(df_in_mask, :market)
+
+grouped_by_market_global = groupby(model_df, [:market, :tournament_slug])
+
 # 2. Re-run your optimization with a *much* higher constraint
 MIN_BETS_CONSTRAINT = 100 # Find strategies that work over 100+ bets
 
@@ -770,6 +784,53 @@ end
 # 3. View the new, more realistic results
 sort!(robust_strategies_df, :best_roi, rev=true)
 println(robust_strategies_df)
+
+#=
+# without top league ( scottish pl ) 
+julia> println(robust_strategies_df)
+15×5 DataFrame
+ Row │ market    opt_conf_thresh  opt_stake_thresh  best_roi     num_bets 
+     │ Symbol    Float64          Float64           Float64      Int64    
+─────┼────────────────────────────────────────────────────────────────────
+   1 │ over_35              0.1                0.0   0.0302184        106
+   2 │ over_25              0.05               0.0   0.0288288        118
+   3 │ over_15              0.1                0.0   0.0091187        102
+   4 │ btts_yes             0.05               0.0   0.00686831       109
+   5 │ draw               Inf                Inf     0.0                0
+   6 │ over_05            Inf                Inf     0.0                0
+   7 │ btts_no              0.15               0.0  -0.030039         108
+   8 │ under_15             0.2                0.0  -0.0460552        100
+   9 │ under_45             0.05               0.0  -0.0461105        118
+  10 │ home                 0.05               0.0  -0.0486298        121
+  11 │ over_45              0.1                0.0  -0.0546463        106
+  12 │ under_35             0.05               0.0  -0.0796503        121
+  13 │ away                 0.1                0.0  -0.133093         103
+  14 │ under_25             0.05               0.0  -0.182812         122
+  15 │ under_05             0.05               0.0  -0.431173         109
+
+# with top league scottish pl 
+julia> println(robust_strategies_df)
+15×5 DataFrame
+ Row │ market    opt_conf_thresh  opt_stake_thresh  best_roi     num_bets 
+     │ Symbol    Float64          Float64           Float64      Int64    
+─────┼────────────────────────────────────────────────────────────────────
+   1 │ away                 0.6                0.0   0.11908          114
+   2 │ over_25              0.15               0.0   0.0392629        362
+   3 │ over_15              0.5                0.0   0.0366276        121
+   4 │ under_35             0.75               0.0   0.0297232        111
+   5 │ over_35              0.15               0.0   0.0265944        349
+   6 │ over_05              0.2                0.0   0.0127666        203
+   7 │ home                 0.1                0.0   0.00484031       440
+   8 │ under_15             0.75               0.0  -0.00273327       116
+   9 │ under_45             0.7                0.0  -0.0167387        116
+  10 │ btts_no              0.75               0.0  -0.0287006        131
+  11 │ over_45              0.15               0.0  -0.0346528        323
+  12 │ btts_yes             0.05               0.0  -0.0891045        408
+  13 │ under_25             0.7                0.0  -0.122127         158
+  14 │ draw                 0.05               0.0  -0.358193         372
+  15 │ under_05             0.3                0.0  -0.433909         238
+
+=# 
 
 
 ####
@@ -894,20 +955,126 @@ function simulate_compounding_growth(
     return DataFrame(bankroll_history)
 end
 
+
+# v2 
+function simulate_compounding_growth(
+    model_df::AbstractDataFrame,  
+    strategy_map_df::AbstractDataFrame;
+    min_roi_to_bet::Float64 = 0.0,
+    initial_bankroll::Float64 = 1.0,
+    kelly_scalar::Float64 = 1.0  
+)
+    
+    # --- 1. Create the Strategy Map (a Dict for fast lookups) ---
+    profitable_strategies = @subset(strategy_map_df, :best_roi .> min_roi_to_bet)
+    
+    # --- FIX 1: Use a Tuple key (league, market) ---
+    strategy_map = Dict(
+        (row.tournament_slug, row.market) => row.opt_conf_thresh 
+        for row in eachrow(profitable_strategies)
+    )
+    
+    if isempty(strategy_map)
+        println("Warning: No profitable strategies found with min_roi > $min_roi_to_bet")
+        return DataFrame(date=Date[], bankroll=Float64[])
+    end
+
+    println("Simulating with $(length(strategy_map)) profitable markets...")
+    
+    # --- 2. Filter the master list for *only* bets we would place ---
+    
+    bets_to_place_rows = []
+    for row in eachrow(model_df)
+        
+        # --- FIX 2: Create the same Tuple key to look up ---
+        key = (row.tournament_slug, row.market)
+        conf_thresh = get(strategy_map, key, Inf) # Inf means "don't bet"
+        
+        # Check if the bet passes our confidence threshold
+        if row.conf_0 > conf_thresh
+            push!(bets_to_place_rows, row)
+        end
+    end
+    
+    if isempty(bets_to_place_rows)
+        println("Warning: Strategy found no bets to place.")
+        return DataFrame(date=Date[], bankroll=Float64[])
+    end
+    
+    bets_to_place = DataFrame(bets_to_place_rows)
+    
+    # --- 3. Sort by date ---
+    sort!(bets_to_place, :match_date)
+
+    # --- 4. Run the compounding simulation loop (no changes needed here) ---
+    bankroll = initial_bankroll
+    bankroll_history = []
+    
+    push!(bankroll_history, (
+        date = minimum(bets_to_place.match_date) - Day(1),
+        bankroll = initial_bankroll,
+        bet_num = 0
+    ))
+
+    for (i, row) in enumerate(eachrow(bets_to_place))
+        stake_fraction_full = row.stake_median
+        stake_fraction = stake_fraction_full * kelly_scalar
+        stake_fraction = min(stake_fraction, 0.2) 
+        
+        actual_stake = bankroll * stake_fraction
+
+        if actual_stake >= bankroll
+            actual_stake = bankroll * 0.99 
+        end
+
+        if row.was_winner
+            profit = actual_stake * (row.decimal_odds - 1.0)
+            bankroll += profit
+        else
+            loss = actual_stake
+            bankroll -= loss
+        end
+        
+        if bankroll <= 0.0
+            bankroll = 0.0
+            push!(bankroll_history, (
+                date = row.match_date, 
+                bankroll = 0.0,
+                bet_num = i
+            ))
+            break 
+        end
+
+        push!(bankroll_history, (
+            date = row.match_date, 
+            bankroll = bankroll,
+            bet_num = i
+        ))
+    end
+    
+    println("Simulation complete. Placed $(nrow(bets_to_place)) bets.")
+    println("Initial bankroll: $initial_bankroll")
+    println("Final bankroll: $(round(bankroll, digits=2))")
+    
+    return DataFrame(bankroll_history)
+end
+
+
+
 using Dates
 # 1. Run the simulation
 # We set `min_roi_to_bet = 0.0` to include all 7 profitable markets
-bankroll_df = simulate_compounding_growth(
-    model_df,                # Your master DataFrame
-    robust_strategies_df,    # Your strategy map
-    min_roi_to_bet = 0.0     # We want to bet on all positive ROI markets
-)
+# bankroll_df = simulate_compounding_growth(
+#     model_df,                # Your master DataFrame
+#     robust_strategies_df,    # Your strategy map
+#     min_roi_to_bet = 0.0     # We want to bet on all positive ROI markets
+# )
 
 bankroll_df_scaled = simulate_compounding_growth(
     model_df,
     robust_strategies_df,
     min_roi_to_bet = 0.0,
-    kelly_scalar = 0.1  # <-- HERE IS THE FIX
+    kelly_scalar = 0.12 
 )
 
 # 2. See the results
@@ -922,23 +1089,24 @@ all_market_simulations = Dict{Symbol, DataFrame}()
 
 println("--- Running Per-Market Simulations (Full Kelly) ---")
 
-for strategy_row in eachrow(profitable_markets_df)
+for strategy_row in eachrow(robust_strategies_df)
     
     market_name = strategy_row.market
+    market_leauge = strategy_row.tournament_slug
     market_roi = strategy_row.best_roi
     
     # 3. Create a temporary, 1-row DataFrame for the strategy
     # This tells the simulation function to *only* bet on this one market
     single_market_strategy_map = DataFrame(strategy_row)
 
-    println("Simulating market: $market_name (OOS ROI: $(round(market_roi*100, digits=1))%)")
+    println("Simulating market: $market_leauge - $market_name (OOS ROI: $(round(market_roi*100, digits=1))%)")
     
     # 4. Run the *exact same* simulation function as before
     bankroll_df = simulate_compounding_growth(
         model_df,
         single_market_strategy_map, # Pass in the 1-row strategy
         min_roi_to_bet = 0.0,
-        kelly_scalar = 0.1  # <-- HERE IS THE FIX
+        kelly_scalar = 0.34  # <-- HERE IS THE FIX
     )
     
     # 5. Store the result and print the summary
