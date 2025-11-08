@@ -957,3 +957,600 @@ bb = combine(groupby(final_report, :market)) do g
 end;
 
 sort(bb, :final_wealth, rev=true)
+
+
+
+
+
+####
+unique_matches = unique(master_df[:, [:match_id, :match_date]])
+println("Total unique matches found: $(nrow(unique_matches))")
+
+# Find the 70% split index
+n_total_matches = nrow(unique_matches)
+n_train_matches = round(Int, n_total_matches * 0.5)
+
+# Get the set of match_ids for the training data
+# A 'Set' is much faster for filtering than an array
+train_ids = Set(unique_matches[1:n_train_matches, :match_id])
+
+
+# Filter the main DataFrame based on the Set of IDs
+train_df = filter(row -> row.match_id in train_ids, master_df)
+test_df = filter(row -> !(row.match_id in train_ids), master_df)
+
+# --- Verification ---
+println("Total rows in master_df: $(nrow(master_df))")
+println("Rows in train_df (70%): $(nrow(train_df))")
+println("Rows in test_df (30%): $(nrow(test_df))")
+println("Total rows accounted for: $(nrow(train_df) + nrow(test_df))")
+
+
+# 1. Define the grid of fractions you want to test
+fraction_grid = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
+all_best_strategies = []
+
+# 2. Loop over the grid
+for frac in fraction_grid
+    
+    # Run analysis ONLY on train_df
+    report = analyze_strategy_performance(
+        train_df, 
+        grouping_cols=[:market],
+        kelly_fraction=frac
+    )
+    
+    # Find the best Calmar strategy for each market
+    best_calmar_for_this_fraction = combine(groupby(report, :market)) do g
+        g[argmax(g.calmar_ratio), :]
+    end
+    
+    best_calmar_for_this_fraction.kelly_fraction .= frac
+    push!(all_best_strategies, best_calmar_for_this_fraction)
+end
+
+# 3. Combine all results
+final_report = vcat(all_best_strategies...)
+
+# 4. Get our final "Rule Book"
+# We find the best (threshold, fraction) pair for each market,
+# based *only* on the training data.
+strategy_rules = combine(groupby(final_report, :market)) do g
+    g[argmax(g.calmar_ratio), :]
+end
+
+# 5. Filter for only the profitable strategies
+final_portfolio_rules = filter(row -> row.calmar_ratio > 0 && row.bet_count > 0, strategy_rules)
+
+println("--- Final Strategy Rules (found from 70% train data) ---")
+println(final_portfolio_rules[:, [:market, :kelly_threshold, :kelly_fraction, :calmar_ratio]])
+
+
+"""
+Runs a full portfolio backtest on a new dataset,
+using a pre-defined set of strategy rules.
+"""
+function run_portfolio_backtest(
+    test_data::DataFrame, 
+    rules::DataFrame;
+    conflict_groups = [
+        [:home, :draw, :away],
+        [:over_05, :under_05],
+        [:over_15, :under_15],
+        [:over_25, :under_25],
+        [:over_35, :under_35],
+        [:over_45, :under_45],
+        [:btts_yes, :btts_no]
+    ]
+)
+    
+    # Create a Dict for fast rule lookup
+    # e.g., :home => (threshold=0.25, fraction=0.02)
+    rule_dict = Dict(
+        row.market => (
+            threshold = row.kelly_threshold, 
+            fraction = row.kelly_fraction
+        )
+        for row in eachrow(rules)
+    )
+
+    wealth = 1.0
+    wealth_series = [1.0]
+    
+    # Loop over each match *day* (or just match_id if sorted)
+    # We must group by match_id to handle conflicts
+    for match_group in groupby(test_data, :match_id)
+        
+        total_stake_for_this_match = 0.0
+        bets_to_make = [] # Store potential bets
+
+        # 1. Check all rows for this match (home, away, etc.)
+        for row in eachrow(match_group)
+            market = row.market
+            
+            # Check if we have a rule for this market
+            if haskey(rule_dict, market)
+                rule = rule_dict[market]
+                
+                # Check if the stake beats our threshold
+                if row.positive_median_thresh > rule.threshold
+                    push!(bets_to_make, (
+                        market = market,
+                        stake = row.positive_median_thresh,
+                        fraction = rule.fraction,
+                        odds = row.odds,
+                        winner = row.winner
+                    ))
+                end
+            end
+        end
+        
+        if isempty(bets_to_make)
+            push!(wealth_series, wealth) # Bankroll didn't change
+            continue
+        end
+
+        # 2. Resolve Conflicts
+        final_bets = []
+        for group in conflict_groups
+            conflicting_bets = filter(b -> b.market in group, bets_to_make)
+            
+            if length(conflicting_bets) > 1
+                # Rule: Pick the one with the highest *raw stake*
+                best_bet = argmax(b -> b.stake, conflicting_bets)
+                push!(final_bets, best_bet)
+            elseif length(conflicting_bets) == 1
+                push!(final_bets, conflicting_bets[1])
+            end
+        end
+        
+        # Add non-conflicting bets (e.g., if a group has btts_yes but not btts_no)
+        non_conflicting = filter(
+            b -> !any(g -> b.market in g, conflict_groups), 
+            bets_to_make
+        )
+        append!(final_bets, non_conflicting)
+
+        # 3. Place the final, non-conflicting bets
+        for bet in final_bets
+            # Stake is the median_stake * optimal_fraction
+            stake = bet.stake * bet.fraction
+            stake_amount = wealth * stake
+            
+            if stake_amount > wealth # Safety check
+                stake_amount = wealth
+            end
+
+            if bet.winner
+                wealth += stake_amount * (bet.odds - 1.0)
+            else
+                wealth -= stake_amount
+            end
+            
+            if wealth <= 0.0
+                wealth = 0.0
+                break # Bankroll busted
+            end
+        end
+        
+        push!(wealth_series, wealth)
+        if wealth == 0.0
+             # Fill rest of series with 0
+            append!(wealth_series, zeros(nrow(test_data) - length(wealth_series) + 1))
+            break
+        end
+    end
+    
+    # 4. Calculate final metrics for the *test* period
+    final_wealth = last(wealth_series)
+    max_dd = calculate_max_drawdown(wealth_series)
+    geo_profit = final_wealth - 1.0
+    calmar_ratio = max_dd > 0 ? geo_profit / max_dd : (geo_profit > 0 ? Inf : 0.0)
+    
+    return (
+        final_wealth = final_wealth,
+        max_drawdown_pct = max_dd,
+        calmar_ratio = calmar_ratio,
+        wealth_series = wealth_series
+    )
+end
+
+
+
+out_of_sample_results = run_portfolio_backtest(
+    test_df, 
+    final_portfolio_rules
+)
+
+println("--- Out-of-Sample Test Results (on 30% unseen data) ---")
+println("Final Wealth: $(out_of_sample_results.final_wealth)")
+println("Max Drawdown: $(round(out_of_sample_results.max_drawdown_pct * 100, digits=2))%")
+println("Calmar Ratio: $(out_of_sample_results.calmar_ratio)")
+
+
+
+println("--- Starting Out-of-Sample Test (Per-Market) ---")
+
+# We will store the 8 independent backtest results here
+all_market_test_results = []
+
+for rule in eachrow(final_portfolio_rules)
+    market = rule.market
+    threshold = rule.kelly_threshold
+    fraction = rule.kelly_fraction
+
+    println("Testing :$(market) (thresh=$(threshold), frac=$(fraction))...")
+
+    # 1. Filter the test_df for *only* the rows that match this one strategy
+    market_test_data = filter(
+        row -> row.market == market && row.kelly_threshold == threshold, 
+        test_df
+    )
+
+    if isempty(market_test_data)
+        println("  -> No data found for this rule in the test set. Skipping.")
+        continue
+    end
+
+    # 2. Run the backtest for *only* this market's data
+    #    We pass its specific, optimal kelly_fraction
+    market_report = analyze_strategy_performance(
+        market_test_data, 
+        grouping_cols=[:market],
+        kelly_fraction=fraction
+    )
+    
+    # 3. Add the fraction back in for clarity
+    market_report.kelly_fraction .= fraction
+    
+    push!(all_market_test_results, market_report)
+end
+
+println("...Testing complete.")
+
+# 4. Combine all 8 results into one final report
+if isempty(all_market_test_results)
+    println("No results found. Did the test set have any matching data?")
+else
+    out_of_sample_report = vcat(all_market_test_results...)
+
+    # 5. Sort by Calmar Ratio to see what *actually* worked
+    sort!(out_of_sample_report, :calmar_ratio, rev=true)
+    
+    println(out_of_sample_report)
+end
+
+
+
+using Parsers
+using ParseUtil
+
+"""
+Parses a fractional odds string (e.g., "19/10") into a decimal value (e.g., 2.9).
+Returns 0.0 if parsing fails (e.g., for "SP", missing, or "1").
+"""
+function parse_fractional_to_decimal(s::AbstractString)
+    parts = split(s, '/')
+    
+    # Must be exactly two parts (numerator and denominator)
+    if length(parts) != 2
+        return 0.0
+    end
+    
+    try
+        n = parse(Float64, parts[1])
+        d = parse(Float64, parts[2])
+        
+        # Avoid division by zero
+        if d == 0.0
+            return 0.0
+        end
+        
+        # Convert from fractional (e.g., 1.9) to decimal (e.g., 2.9)
+        return (n / d) + 1.0
+    catch e
+        # This will catch errors if parts[1] or parts[2] are not valid numbers (e.g., "SP")
+        return 0.0
+    end
+end
+
+
+# Make a deep copy to avoid changing your original data
+ds_odds_initial = deepcopy(ds.odds)
+
+# Convert the initial fractional string to a decimal
+ds_odds_initial.initial_decimal = parse_fractional_to_decimal.(ds_odds_initial.initial_fractional_value)
+
+# Filter out rows where parsing failed or odds were 0
+filter!(row -> row.initial_decimal > 1.0, ds_odds_initial)
+
+# --- THIS IS THE "TRICK" ---
+# Overwrite the `decimal_odds` column with our new initial odds.
+# Your `get_market` function will now read this column,
+# thinking it's the final odds.
+ds_odds_initial.decimal_odds = ds_odds_initial.initial_decimal
+
+println("Original odds count: $(nrow(ds.odds))")
+println("New initial odds count: $(nrow(ds_odds_initial))")
+
+# 1. Create your master DataFrame using the MODIFIED ds
+#    (I'm assuming 'ds' is a container object you pass to the function)
+
+ds = BayesianFootball.Data.DataStore(
+    df,
+    ds_odds_initial,
+    data_store.incidents
+)
+
+df_all_matches_initial = run_full_oos_analysis(
+    all_oos_results, 
+    model, 
+    predict_config, 
+    ds, 
+    threshold_range=0.0:0.02:0.9 # Or your original range
+)
+
+# 2. Add your match info
+master_df_initial = leftjoin(df_all_matches_initial, match_info, on = :match_id)
+
+# 3. Create Train/Test Split
+sort!(master_df_initial, :match_date)
+unique_matches_initial = unique(master_df_initial[:, [:match_id, :match_date]])
+n_total_initial = nrow(unique_matches_initial)
+n_train_initial = round(Int, n_total_initial * 0.7)
+train_ids_initial = Set(unique_matches_initial[1:n_train_initial, :match_id])
+
+train_df_initial = filter(row -> row.match_id in train_ids_initial, master_df_initial)
+test_df_initial = filter(row -> !(row.match_id in train_ids_initial), master_df_initial)
+
+# 4. Find Optimal Rules (on train data)
+# ... (run your grid search on train_df_initial) ...
+# ... (this finds your new 'final_portfolio_rules_initial') ...
+
+fraction_grid = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
+all_best_strategies = []
+
+# 2. Loop over the grid
+for frac in fraction_grid
+    
+    # Run analysis ONLY on train_df
+    report = analyze_strategy_performance(
+        train_df_initial, 
+        grouping_cols=[:market],
+        kelly_fraction=frac
+    )
+    
+    # Find the best Calmar strategy for each market
+    best_calmar_for_this_fraction = combine(groupby(report, :market)) do g
+        g[argmax(g.calmar_ratio), :]
+    end
+    
+    best_calmar_for_this_fraction.kelly_fraction .= frac
+    push!(all_best_strategies, best_calmar_for_this_fraction)
+end
+
+# 3. Combine all results
+final_report = vcat(all_best_strategies...)
+
+# 4. Get our final "Rule Book"
+# We find the best (threshold, fraction) pair for each market,
+# based *only* on the training data.
+strategy_rules = combine(groupby(final_report, :market)) do g
+    g[argmax(g.calmar_ratio), :]
+end
+
+# 5. Filter for only the profitable strategies
+final_portfolio_rules_initial = filter(row -> row.calmar_ratio > 0 && row.bet_count > 0, strategy_rules)
+
+println("--- Final Strategy Rules (found from 70% train data) ---")
+println(final_portfolio_rules_initial[:, [:market, :kelly_threshold, :kelly_fraction, :calmar_ratio]])
+
+
+# 5. Run the Out-of-Sample Backtest (on test data)
+out_of_sample_results_initial = run_portfolio_backtest(
+    test_df_initial, 
+    final_portfolio_rules_initial
+)
+
+# 6. CHECK THE RESULTS
+println("--- FINAL BACKTEST (AGAINST OPENING LINE) ---")
+println(out_of_sample_results_initial)
+
+
+println("--- Out-of-Sample Test Results (on 30% unseen data) ---")
+println("Final Wealth: $(out_of_sample_results_initial.final_wealth)")
+println("Max Drawdown: $(round(out_of_sample_results_initial.max_drawdown_pct * 100, digits=2))%")
+println("Calmar Ratio: $(out_of_sample_results_initial.calmar_ratio)")
+
+println("--- Starting Out-of-Sample Test (Per-Market) ---")
+
+# We will store the 8 independent backtest results here
+all_market_test_results = []
+
+for rule in eachrow(final_portfolio_rules_initial)
+    market = rule.market
+    threshold = rule.kelly_threshold
+    fraction = rule.kelly_fraction
+
+    println("Testing :$(market) (thresh=$(threshold), frac=$(fraction))...")
+
+    # 1. Filter the test_df for *only* the rows that match this one strategy
+    market_test_data = filter(
+        row -> row.market == market && row.kelly_threshold == threshold, 
+        test_df
+    )
+
+    if isempty(market_test_data)
+        println("  -> No data found for this rule in the test set. Skipping.")
+        continue
+    end
+
+    # 2. Run the backtest for *only* this market's data
+    #    We pass its specific, optimal kelly_fraction
+    market_report = analyze_strategy_performance(
+        market_test_data, 
+        grouping_cols=[:market],
+        kelly_fraction=fraction
+    )
+    
+    # 3. Add the fraction back in for clarity
+    market_report.kelly_fraction .= fraction
+    
+    push!(all_market_test_results, market_report)
+end
+
+println("...Testing complete.")
+
+# 4. Combine all 8 results into one final report
+if isempty(all_market_test_results)
+    println("No results found. Did the test set have any matching data?")
+else
+    out_of_sample_report = vcat(all_market_test_results...)
+
+    # 5. Sort by Calmar Ratio to see what *actually* worked
+    sort!(out_of_sample_report, :calmar_ratio, rev=true)
+    
+    println(out_of_sample_report)
+end
+
+
+"""
+Runs a full portfolio backtest on a new dataset,
+using a pre-defined set of strategy rules.
+Can optionally override the fractions in the rules.
+"""
+function run_portfolio_backtest(
+    test_data::DataFrame, 
+    rules::DataFrame;
+    global_kelly_fraction::Union{Nothing, Number} = nothing, # <-- NEW
+    conflict_groups = [
+        [:home, :draw, :away],
+        [:over_05, :under_05],
+        [:over_15, :under_15],
+        [:over_25, :under_25],
+        [:over_35, :under_35],
+        [:over_45, :under_45],
+        [:btts_yes, :btts_no]
+    ]
+)
+    
+    # Create a Dict for fast rule lookup
+    rule_dict = Dict(
+        row.market => (
+            threshold = row.kelly_threshold, 
+            fraction = row.kelly_fraction # This is the "default" fraction
+        )
+        for row in eachrow(rules)
+    )
+
+    wealth = 1.0
+    wealth_series = [1.0]
+    
+    for match_group in groupby(test_data, :match_id)
+        
+        bets_to_make = [] # Store potential bets
+
+        # 1. Check all rows for this match
+        for row in eachrow(match_group)
+            market = row.market
+            
+            if haskey(rule_dict, market)
+                rule = rule_dict[market]
+                
+                if row.positive_median_thresh > rule.threshold
+                    
+                    # --- NEW LOGIC ---
+                    # Use the rule's fraction, *unless* a global one is provided
+                    final_fraction = isnothing(global_kelly_fraction) ? rule.fraction : global_kelly_fraction
+                    # --- END NEW LOGIC ---
+
+                    push!(bets_to_make, (
+                        market = market,
+                        stake = row.positive_median_thresh,
+                        fraction = final_fraction, # <-- Use the new variable
+                        odds = row.odds,
+                        winner = row.winner
+                    ))
+                end
+            end
+        end
+        
+        if isempty(bets_to_make)
+            push!(wealth_series, wealth) 
+            continue
+        end
+
+        # 2. Resolve Conflicts (Code is identical)
+        final_bets = []
+        for group in conflict_groups
+            conflicting_bets = filter(b -> b.market in group, bets_to_make)
+            
+            if length(conflicting_bets) > 1
+                best_bet = argmax(b -> b.stake, conflicting_bets)
+                push!(final_bets, best_bet)
+            elseif length(conflicting_bets) == 1
+                push!(final_bets, conflicting_bets[1])
+            end
+        end
+        
+        non_conflicting = filter(
+            b -> !any(g -> b.market in g, conflict_groups), 
+            bets_to_make
+        )
+        append!(final_bets, non_conflicting)
+
+        # 3. Place the final, non-conflicting bets (Code is identical)
+        for bet in final_bets
+            stake = bet.stake * bet.fraction
+            stake_amount = wealth * stake
+            
+            if stake_amount > wealth 
+                stake_amount = wealth
+            end
+
+            if bet.winner
+                wealth += stake_amount * (bet.odds - 1.0)
+            else
+                wealth -= stake_amount
+            end
+            
+            if wealth <= 0.0
+                wealth = 0.0
+                break 
+            end
+        end
+        
+        push!(wealth_series, wealth)
+        if wealth == 0.0
+            append!(wealth_series, zeros(nrow(test_data) - length(wealth_series) + 1))
+            break
+        end
+    end
+    
+    # 4. Calculate final metrics
+    final_wealth = last(wealth_series)
+    max_dd = calculate_max_drawdown(wealth_series)
+    geo_profit = final_wealth - 1.0
+    calmar_ratio = max_dd > 0 ? geo_profit / max_dd : (geo_profit > 0 ? Inf : 0.0)
+    
+    return (
+        final_wealth = final_wealth,
+        max_drawdown_pct = max_dd,
+        calmar_ratio = calmar_ratio,
+        wealth_series = wealth_series
+    )
+end
+
+
+# Run the backtest on the 30% test_df,
+# using the 8 rules, but overriding with a safe global fraction
+sane_results = run_portfolio_backtest(
+    test_df_initial, 
+    final_portfolio_rules_initial,
+    global_kelly_fraction = 0.2  # <-- Tame the bull!
+)
+
+println("--- FINAL SANE Backtest (5% Global Fraction) ---")
+println("Final Wealth: $(sane_results.final_wealth)")
+println("Max Drawdown: $(round(sane_results.max_drawdown_pct * 100, digits=2))%")
+println("Calmar Ratio: $(sane_results.calmar_ratio)")
