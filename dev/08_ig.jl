@@ -724,6 +724,10 @@ end
 
 #### above doesnt work 
 
+
+#### working or something 
+
+
 using Statistics
 using Logging
 using DataFrames
@@ -1232,3 +1236,132 @@ else
     println("\n--- 📊 FINAL LSG THRESHOLD REPORT (Sorted by Accuracy) ---")
     println(final_lsg_threshold_report)
 end
+
+
+
+##### testing ig diff 
+
+function calculate_pnl(stake::Number, odds::Number, winner::Bool)
+    if stake <= 0.0
+        return 0.0 # No bet was placed
+    end
+    
+    if winner
+        return stake * (odds - 1.0) # Profit
+    else
+        return -stake # Loss
+    end
+end
+
+
+
+using DataFrames
+using Statistics
+
+# (This assumes 'binary_ig_report', 'ds', 'parse_fractional_to_decimal', 
+#  and 'calculate_pnl' are all loaded in your session)
+
+# --- 1. Define Our Trading Rule ---
+const TRADE_TRIGGER = 0.121  # The minimum 'abs_disagreement' we found
+const MARKET_TO_TEST = :over_25
+const MARKET_GROUP_STR = "Match goals" # From your ds.odds
+const CHOICE_GROUP_FLOAT = 2.5        # From your ds.odds
+
+# --- 2. Get Our 31 "Winner" Signals ---
+# These are the 31 rows we identified
+trade_signals = filter(binary_ig_report) do row
+    row.market == MARKET_TO_TEST &&
+    abs(row.perceived_edge) > TRADE_TRIGGER
+end
+
+println("Found $(nrow(trade_signals)) trade signals to test...")
+
+# --- 3. Filter ds.odds for just the markets we care about ---
+# This makes the lookup much faster
+odds_to_check = filter(ds.odds) do row
+    !ismissing(row.winning) &&
+    row.market_group == MARKET_GROUP_STR &&
+    row.choice_group == CHOICE_GROUP_FLOAT
+end
+
+# Group by match_id for fast lookups
+grouped_odds = groupby(odds_to_check, :match_id)
+
+# --- 4. Loop Through Our Signals and Calculate PnL ---
+pnl_results = []
+
+for signal in eachrow(trade_signals)
+    match_id = signal.match_id
+    
+    # Find the odds for this specific match
+    if !haskey(grouped_odds, (match_id=match_id,))
+        println("  - ⚠️ WARNING: No odds found for match $(match_id). Skipping.")
+        continue
+    end
+    
+    match_odds_df = grouped_odds[(match_id=match_id,)]
+    
+    # Determine which way to bet (Over or Under)
+    bet_direction = (signal.p_model_mean > signal.p_open) ? "Over" : "Under"
+    
+    # Find the row for that specific bet
+    bet_row = filter(row -> row.choice_name == bet_direction, match_odds_df)
+    
+    if isempty(bet_row)
+        println("  - ⚠️ WARNING: No '$bet_direction' odds found for match $(match_id). Skipping.")
+        continue
+    end
+    
+    bet = first(bet_row)
+    
+    # --- Get the data for our PnL calculation ---
+    stake = 1.0 # Use a 1-unit flat stake for simplicity
+    
+    # We MUST use the initial odds
+    odds = parse_fractional_to_decimal(bet.initial_fractional_value)
+    
+    # The actual outcome!
+    winner = bet.winning::Bool
+    
+    # Calculate the PnL for this one bet
+    pnl = calculate_pnl(stake, odds, winner)
+    
+    push!(pnl_results, (
+        match_id = match_id,
+        bet_on = bet_direction,
+        odds_paid = odds,
+        winner = winner,
+        pnl = pnl
+    ))
+end
+
+# --- 5. Report The Final Results ---
+results_df = DataFrame(pnl_results)
+
+if isempty(results_df)
+    println("No valid bets were found to calculate PnL.")
+else
+    total_pnl = sum(results_df.pnl)
+    n_wins = sum(results_df.winner)
+    n_bets = nrow(results_df)
+    win_rate = n_wins / n_bets
+    avg_odds = mean(results_df.odds_paid)
+    
+    println("\n--- 📊 SIMPLE PnL BACKTEST (1-Unit Stakes) ---")
+    println("Market:             :$(MARKET_TO_TEST)")
+    println("Trigger:            abs(perceived_edge) > $(TRADE_TRIGGER)")
+    println("-------------------------------------------------")
+    println("Total Bets Placed:  $(n_bets)")
+    println("Total Wins:         $(n_wins)")
+    println("Total Losses:       $(n_bets - n_wins)")
+    println("Win Rate:           $(round(win_rate * 100, digits=2))%")
+    println("Average Odds Paid:  $(round(avg_odds, digits=2))")
+    println("\nTotal PnL:          $(round(total_pnl, digits=3)) units")
+    println("ROI:                $(round((total_pnl / n_bets) * 100, digits=2))%")
+    
+    println("\n--- Full Bet List ---")
+    # println(results_df)
+end
+
+
+## overfitting so running a split test 
