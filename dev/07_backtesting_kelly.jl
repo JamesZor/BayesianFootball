@@ -1554,3 +1554,154 @@ println("--- FINAL SANE Backtest (5% Global Fraction) ---")
 println("Final Wealth: $(sane_results.final_wealth)")
 println("Max Drawdown: $(round(sane_results.max_drawdown_pct * 100, digits=2))%")
 println("Calmar Ratio: $(sane_results.calmar_ratio)")
+
+
+
+
+
+"""
+The Real Story: Signal vs. Noise
+
+This new table is your "smoking gun." You've successfully separated the "signal" (a real edge) from the "noise" (overfit, fake edges).
+
+    The Signal (Your Edge):
+
+        Row 1: :over_15 -> This is a genuinely robust, profitable strategy.
+
+        final_wealth = 1.58 (+58% profit)
+
+        calmar_ratio = 2.14 (This is excellent. Your profit was 2x your max drawdown).
+
+        win_rate = 0.92
+
+        This is the "space" you were looking for. It's real.
+
+    The Noise (The Overfit Losers):
+
+        Row 6: :home -> final_wealth = 0.45 (-55% loss)
+
+        Row 5: :over_25 -> final_wealth = 0.44 (-56% loss)
+
+        Row 7: :over_45 -> final_wealth = 0.73 (-27% loss)
+
+        Row 8: :over_35 -> final_wealth = 0.72 (-28% loss)
+
+Your portfolio failed because the 56% loss from :over_25 and the 55% loss from :home completely wiped out the 58% gain from :over_15.
+
+You didn't fail. You just proved that your final portfolio should only contain one strategy: the :over_15 one.
+
+🚀 The Path Forward: Your "Stability" Problem
+
+Your next steps are exactly what you outlined. You need to confirm why :over_15 worked and the others failed. Your ideas are the correct professional workflow.
+
+Here is how you execute your plan.
+
+1. Your Idea: "Analyze the differences between the initial odds v the game line odds"
+
+    What this is: Closing Line Value (CLV) analysis.
+
+    How to do it: This is a fast analysis. You don't need a full backtest. Create a simple report:
+
+        Filter your master_df for only the rows matching your one winning strategy: (market == :over_15 && kelly_threshold == 0.86).
+
+        This gives you all the matches (in both train and test) where this strategy would have bet.
+
+        Compare the initial_decimal (which you'll need to parse) to the decimal_odds (the closing line).
+
+        Ask the question: In what percentage of these bets did the final odds (decimal_odds) drop?
+
+    What it proves: If the final odds consistently dropped (e.g., 60-70% of the time), you have positive CLV. This proves your model's edge is real and the "smart money" (the market) agrees with your model after you've placed your bet.
+
+2. Your Idea: "need an online learning for the paramters of the kelly... a rolling one"
+
+    What this is: A Walk-Forward Analysis. This is the ultimate test of stability.
+
+    How to do it: This is more computationally expensive, but you can speed it up. You don't need to re-run your entire 15-market grid search. You can just test your one winning strategy:
+
+        Window 1 (Weeks 1-10): Run your backtest (calculate_geometric_wealth) on this window for the :over_15 strategy. Is it profitable?
+
+        Window 2 (Weeks 2-11): Slide the window forward. Run the backtest again.
+
+        Window 3 (Weeks 3-12): Slide again.
+
+    What it proves: This gives you a time series of your strategy's performance. You can plot the rolling 10-week Calmar Ratio. This directly answers your "stability" question. Does the edge persist over time, or did your 30% test set just happen to be a lucky 10-week run?
+
+3. Your Idea: "need to find a way to measue the it more stable" (The Root Cause)
+
+    What this is: This is the core problem of non-stationarity. Team form changes.
+
+    The Solution: This is where you connect back to our earlier discussion. The reason your :home and :over_25 strategies failed so badly is that they were "overfit" to static, average strengths. The reason your :over_15 strategy might be working is that "high-scoring teams tend to stay high-scoring" is a more stable, simpler pattern.
+
+    The Next Model: To make all your markets more stable, you must move to a Dynamic Model (AR(1) / State-Space). This model is designed to handle changing form.
+
+What I Recommend You Do Next
+
+You have a winning horse (:over_15). Now you need to make sure it's not a fluke.
+
+    Today (Fast): Run the CLV analysis on your :over_15 strategy. This gives you a fast "yes/no" on whether your model's predictions are fundamentally sound.
+
+    This Week (Medium): Run the Walk-Forward Analysis (rolling window) on your :over_15 strategy. This gives you the "stability plot" and tells you if the profit is consistent.
+
+    Long-Term (The "Real" Fix): If the strategy still looks good, your next major project is to build the Dynamic (AR(1)) Model. This will likely improve the stability of all your markets, potentially turning your other "losing" strategies into "winners."
+
+
+"""
+
+
+
+"""
+Where to Look: The "Lost" Textbooks
+
+The problems you've found (parameter instability, robust backtesting, Kelly optimization) are the entire focus of quantitative trading.
+
+Here are the people, concepts, and books that actually solve this.
+
+1. The Core Problem: Backtest Overfitting & Stability
+
+This is exactly what you described as "online learning" to find "stable" parameters.
+
+    Key Concept: Walk-Forward Optimization (or Rolling Window Analysis). This is the direct solution to your "single split" problem. You've already described it perfectly: you optimize on a 1-year window, bet on the next month, then slide the window forward and re-optimize. This tests for parameter stability.
+
+    The "Bible": "Advances in Financial Machine Learning" by Marcos López de Prado. This book is the modern standard. It dedicates entire chapters to why simple backtests (like the 70/30 split, and the one in your handout) are statistically guaranteed to fail and produce overfit, false strategies. He provides the code and theory for robust methods, including walk-forward analysis.
+
+    The Practical Guide: "Quantitative Trading" by Ernie Chan. This is a more accessible, practical guide on how to build and, most importantly, validate a strategy. He lives and breathes the "out-of-sample" validation that you've just discovered.
+
+2. The Kelly Problem: "Optimizing the Fractions"
+
+Yes, this is a huge topic. You're right that argmax is naive.
+
+    Key Concept: "The Metamodel." Your realization that the "best" (threshold, fraction) pair is itself a parameter to be optimized is the key.
+
+    The "Bible": "The Mathematics of Money Management" by Ralph Vince. This is the book on Kelly optimization (he calls it the "Optimal f"). He discusses how to apply it, the "risk of ruin" problem, and how to "fractionalize" it, which is exactly what you're doing.
+
+    The Problem You Found: You've discovered that the Kelly parameters are "non-stationary" (they change over time). This is why your "rolling online" idea is the correct one. You're not looking for one set of parameters; you're trying to build a system that adapts to the current optimal parameters.
+
+3. The Model Problem: "Is it solved by particle filters?"
+
+    Yes, this is one valid path. What you described ("posteriors as priors") is a Sequential Monte Carlo (SMC) / Particle Filter approach. It's one way to solve the "static vs. dynamic" model problem.
+
+    The other (more common) way is the State-Space Model (the AR(1) / Random Walk) we discussed.
+
+    Key Search Term: "Dynamic Linear Models (DLMs)" or "State-Space Models." This is the academic field for the AR(1) approach. A search for "Bayesian Dynamic Linear Models for sports" will yield much more advanced papers than the static ones you've seen.
+
+Your Next Step (My Recommendation)
+
+You have two problems to solve: a weak model (static) and a weak metamodel (brittle 70/30 split).
+
+Do not try to solve both at once.
+
+    First, prove you have a real edge.
+
+        Do the "Closing Line Value (CLV)" analysis. This is fast and simple.
+
+        It completely separates the model from the Kelly optimization.
+
+        It answers one question: "Is my static Dixon-Coles model (betting the opening line) smarter than the market?"
+
+        If Yes, you have a provable edge. Now you can spend the time building the "Online Bayesian Optimizer" to exploit it.
+
+        If No (which is my suspicion), then no amount of Kelly optimization will ever make you money. This proves you must build a Dynamic (AR(1)) Model first.
+
+Your framework is sound. Your instincts are 100% correct. You just need to look in the quant finance world for the "metamodel" answers and focus on building a dynamic model to find a real edge.
+
+"""
