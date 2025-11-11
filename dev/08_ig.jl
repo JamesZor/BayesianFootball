@@ -671,6 +671,30 @@ function run_binary_ig_analysis(
 end
 
 
+ds_odds_initial = deepcopy(ds.odds)
+
+# 2. Convert the initial fractional string to a decimal
+# (This uses the `parse_fractional_to_decimal` function from our previous chat)
+ds_odds_initial.initial_decimal = parse_fractional_to_decimal.(ds_odds_initial.initial_fractional_value)
+
+# 3. Filter out rows where parsing failed (odds <= 1.0)
+filter!(row -> row.initial_decimal > 1.0, ds_odds_initial)
+
+# 4. --- THIS IS THE TRICK ---
+# Overwrite the `decimal_odds` column with our new initial odds.
+ds_odds_initial.decimal_odds = ds_odds_initial.initial_decimal
+
+# 5. Create the new DataStore for "opening lines"
+ds_initial = BayesianFootball.Data.DataStore(
+    ds.matches,
+    ds_odds_initial,
+    ds.incidents
+)
+
+println("Created ds_initial with $(nrow(ds_initial.odds)) opening odds.")
+
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 # 1. Define the markets you want to isolate
 markets_to_test = [
     # 1x2 Markets
@@ -1239,7 +1263,8 @@ end
 
 
 
-##### testing ig diff 
+##### testing ig diff #
+binary_ig_report.perceived_edge = binary_ig_report.p_model_mean .- binary_ig_report.p_open
 
 function calculate_pnl(stake::Number, odds::Number, winner::Bool)
     if stake <= 0.0
@@ -1262,7 +1287,7 @@ using Statistics
 #  and 'calculate_pnl' are all loaded in your session)
 
 # --- 1. Define Our Trading Rule ---
-const TRADE_TRIGGER = 0.121  # The minimum 'abs_disagreement' we found
+const TRADE_TRIGGER = 0.08  # The minimum 'abs_disagreement' we found
 const MARKET_TO_TEST = :over_25
 const MARKET_GROUP_STR = "Match goals" # From your ds.odds
 const CHOICE_GROUP_FLOAT = 2.5        # From your ds.odds
@@ -1363,5 +1388,38 @@ else
     # println(results_df)
 end
 
+#=
+
+--- 📊 SIMPLE PnL BACKTEST (1-Unit Stakes) ---
+Market:             :over_25
+Trigger:            abs(perceived_edge) > 0.121
+-------------------------------------------------
+Total Bets Placed:  198
+Total Wins:         101
+Total Losses:       97
+Win Rate:           51.01%
+Average Odds Paid:  2.17
+
+Total PnL:          25.704 units
+ROI:                12.98%
+
+--- Full Bet List ---
+
+=#
 
 ## overfitting so running a split test 
+#=
+198×5 DataFrame
+ Row │ match_id  bet_on  odds_paid  winner  pnl       
+     │ Int64     String  Float64    Bool    Float64   
+─────┼────────────────────────────────────────────────
+   1 │ 12476679  Under     1.7        true   0.7
+   2 │ 12476487  Under     1.8        true   0.8
+   3 │ 12476507  Under     2.05       true   1.05
+   4 │ 13314047  Under     2.15      false  -1.0
+   5 │ 12476816  Under     2.25       true   1.25
+   6 │ 12476709  Under     2.0        true   1.0
+   7 │ 13055147  Under     3.4        true   2.4
+   8 │ 12476574  Under     2.2       false  -1.0
+   9 │ 12476738  Under     1.65       true   0.65
+=# 

@@ -497,6 +497,7 @@ best_risk_strategies = combine(groupby(risk_report, :market)) do g
     # Find the row with the maximum Calmar ratio within that group
     g[argmax(g.calmar_ratio), :]
 end
+
 # println(best_risk_strategies)
 
 
