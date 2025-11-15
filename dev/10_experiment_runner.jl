@@ -18,14 +18,13 @@ vocabulary = BayesianFootball.Features.create_vocabulary(data_store, model)
 
 
 # ---  Define Training Configuration ---
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=10, n_chains=1, n_warmup=0) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=600, n_chains=2, n_warmup=100) # Use renamed struct
 # Explicitly set a limit (e.g., if NUTS uses 2 chains, maybe allow 4 concurrent splits on 8 threads)
 strategy_parallel_custom = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4) 
 training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf, strategy_parallel_custom)
 
-# seasons_to_train = ["20/21","21/22","22/23","23/24","24/25"]
+seasons_to_train = ["20/21","21/22","22/23","23/24","24/25"]
 
-seasons_to_train = ["20/21","21/22"]
 
 for season_str in seasons_to_train
 
