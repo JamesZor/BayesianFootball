@@ -217,7 +217,6 @@ end
 
 # --- kelly signal dev 
 
-key_i = rand(keys(kf))
 
 kelly_positive( kf[:home], 0.02)
 kelly_decision_rule( kf[:home], 0.02, 0.5)
@@ -349,49 +348,365 @@ function calculate_calmar_ratio(equity_curve::Vector{Float64})::Float64
     return total_return / max_drawdown
 end
 
+"""
+NEW objective function to optimize for Win/Loss Percentage.
+It calculates the win rate *only* on the bets that are
+actually placed by the strategy.
+"""
+function objective_function_win_pct(params, p_unused)
+    c, b, f = params
+    
+    # Basic bounds check (optional but good practice)
+    if c < 0.0 || b < 0.0 || b > 1.0 || f <= 0.0 || f > 1.0
+        return Inf # Penalize invalid parameters
+    end
+
+    total_bets_placed = 0
+    total_wins = 0
+
+    # Iterate through all matches to see which ones we bet on
+    for match in market_data
+        # Calculate the stake based on our parameters
+        # We only care if the stake is > 0, not its size.
+        stake = kelly_strategy(match.k_dist, c, b, f)
+        
+        # Check if the strategy decided to bet
+        if stake > 0.0
+            total_bets_placed += 1
+            
+            # Check if the bet was a winner
+            # match.result is a Bool (true/false)
+            if match.result == true
+                total_wins += 1
+            end
+        end
+    end
+
+    # Calculate the win percentage
+    win_percentage = if total_bets_placed == 0
+        0.0 # No bets placed = 0% win rate.
+    else
+        total_wins / total_bets_placed
+    end
+
+    # We want to MAXIMIZE win_percentage,
+    # so we return the NEGATIVE value for the minimizer.
+    return -win_percentage
+end
+
+# --- Helper Functions for Sortino Ratio ---
+
+"""
+Calculates a simple mean. (Use Statistics.mean if you have it)
+"""
+function simple_mean(vec::AbstractVector{<:Number})
+    if isempty(vec)
+        return 0.0
+    end
+    return sum(vec) / length(vec)
+end
+
+"""
+Converts a cumulative equity curve into a list of 
+per-period fractional returns (e.g., [1.0, 1.1, 1.05] -> [0.1, -0.045])
+"""
+function get_returns(equity_curve::Vector{Float64})
+    if length(equity_curve) < 2
+        return Float64[]
+    end
+    
+    returns = Vector{Float64}(undef, length(equity_curve) - 1)
+    
+    for i in 2:length(equity_curve)
+        old_val = equity_curve[i-1]
+        new_val = equity_curve[i]
+        
+        if old_val <= 0.0 # We are at ruin, no more returns
+            # Set subsequent returns to 0, or just break
+            returns[i-1] = 0.0 
+        else
+            returns[i-1] = (new_val / old_val) - 1.0
+        end
+    end
+    return returns
+end
 
 
+"""
+Calculates the Sortino Ratio from a geometric equity curve.
+We use a target return of 0.0.
+"""
+function calculate_sortino_ratio(equity_curve::Vector{Float64}; target_return::Float64 = 0.0)::Float64
+    if length(equity_curve) < 2
+        return -1e9 # Penalize
+    end
+
+    # 1. Get the list of per-period returns
+    # This list will include 0.0 returns for "no bet" periods
+    returns = get_returns(equity_curve)
+    
+    if isempty(returns)
+        return 0.0 # No returns, no risk, no score
+    end
+
+    # 2. Calculate average return
+    avg_return = simple_mean(returns)
+    
+    # 3. Calculate Downside Deviation
+    downside_sum_of_squares = 0.0
+    
+    for r in returns
+        if r < target_return
+            # We only care about returns *below* our target
+            downside_sum_of_squares += (r - target_return)^2
+        end
+    end
+
+    # The deviation is the sum of squares / N (total periods)
+    # This correctly penalizes strategies that lose infrequently
+    # but heavily.
+    downside_deviation = sqrt(downside_sum_of_squares / length(returns))
+
+    if downside_deviation == 0.0
+        # No downside returns at all. This is a perfect strategy.
+        return avg_return > target_return ? 1e9 : 0.0 # Huge score if profitable
+    end
+
+    # 4. Calculate Sortino Ratio
+    sortino_ratio = (avg_return - target_return) / downside_deviation
+
+    if !isfinite(sortino_ratio)
+        return -1e9 # Penalize
+    end
+
+    # Penalize negative-return strategies to help the optimizer
+    if avg_return <= target_return
+         return sortino_ratio * 10.0 # Make it a large negative number
+    end
+
+    return sortino_ratio
+end
+
+"""
+NEW objective function to optimize for the Sortino Ratio.
+"""
+function objective_function_sortino(params, p_unused)
+    c, b, f = params
+    
+    if c < 0.0 || b < 0.0 || b > 1.0 || f <= 0.0 || f > 1.0
+        return Inf # Return a "very bad" score
+    end
+
+    # 1. Generate stakes
+    stakes = Vector{Float64}(undef, length(market_data))
+    odds_list = Vector{Float64}(undef, length(market_data))
+    results_list = Vector{Bool}(undef, length(market_data))
+
+    for (i, match) in enumerate(market_data)
+        stakes[i] = kelly_strategy(match.k_dist, c, b, f)
+        odds_list[i] = match.odds
+        results_list[i] = match.result
+    end
+    
+    # 2. Calculate the equity curve
+    equity_curve = calculate_equity_curve(stakes, odds_list, results_list)
+    
+    # 3. Calculate the final score
+    score = calculate_sortino_ratio(equity_curve)
+
+    if !isfinite(score)
+        return Inf # "Very bad"
+    end
+
+    # We want to MAXIMIZE Sortino, so we return the NEGATIVE score
+    return -score
+end
+
+
+# (This function was also used for Sortino)
+function simple_mean(vec::AbstractVector{<:Number})
+    if isempty(vec)
+        return 0.0
+    end
+    return sum(vec) / length(vec)
+end
+
+"""
+Finds all distinct peak-to-trough drawdown periods in an equity curve.
+Returns a vector of the drawdowns (e.g., [0.1, 0.05, 0.2] for 10%, 5%, 20% drawdowns).
+"""
+function get_all_drawdowns(equity_curve::Vector{Float64})::Vector{Float64}
+    if length(equity_curve) < 2
+        return Float64[]
+    end
+
+    drawdowns = Float64[]
+    peak = equity_curve[1]
+    current_trough = equity_curve[1]
+
+    for value in equity_curve[2:end]
+        if value > peak
+            # We hit a new peak, so the previous drawdown (if any) is over.
+            if current_trough < peak && peak > 0.0
+                dd = (peak - current_trough) / peak
+                push!(drawdowns, dd)
+            end
+            
+            # Start the new period
+            peak = value
+            current_trough = value
+        else
+            # We are at or below the peak, update the trough
+            current_trough = min(current_trough, value)
+        end
+    end
+
+    # Handle the final drawdown period after the loop ends
+    if current_trough < peak && peak > 0.0
+        dd = (peak - current_trough) / peak
+        push!(drawdowns, dd)
+    end
+    
+    # Handle ruin case (100% drawdown)
+    if any(v -> v == 0.0, equity_curve) && (isempty(drawdowns) || maximum(drawdowns) < 1.0)
+         push!(drawdowns, 1.0)
+    end
+
+    return drawdowns
+end
+
+
+"""
+Calculates the Sterling Ratio (Total Return / Average Drawdown).
+"""
+function calculate_sterling_ratio(equity_curve::Vector{Float64})::Float64
+    if isempty(equity_curve) || equity_curve[1] <= 0.0
+        return -1e9 # Penalize
+    end
+
+    # 1. Total Geometric Return
+    total_return = (equity_curve[end] / equity_curve[1]) - 1.0
+
+    # 2. Get all drawdowns
+    drawdowns = get_all_drawdowns(equity_curve)
+
+    # --- Scoring ---
+    if total_return <= 0.0
+        return total_return * 10.0 # Penalize
+    end
+
+    if isempty(drawdowns) || simple_mean(drawdowns) == 0.0
+        # No drawdowns, perfect score
+        return 1e9 
+    end
+    
+    avg_drawdown = simple_mean(drawdowns)
+
+    return total_return / avg_drawdown
+end
+
+
+"""
+Calculates the Burke Ratio (Total Return / Sqrt(Sum of Drawdowns^2)).
+"""
+function calculate_burke_ratio(equity_curve::Vector{Float64})::Float64
+    if isempty(equity_curve) || equity_curve[1] <= 0.0
+        return -1e9 # Penalize
+    end
+
+    # 1. Total Geometric Return
+    total_return = (equity_curve[end] / equity_curve[1]) - 1.0
+
+    # 2. Get all drawdowns
+    drawdowns = get_all_drawdowns(equity_curve)
+
+    # --- Scoring ---
+    if total_return <= 0.0
+        return total_return * 10.0 # Penalize
+    end
+
+    if isempty(drawdowns)
+        # No drawdowns, perfect score
+        return 1e9
+    end
+
+    # 3. Calculate denominator
+    sum_of_squares = sum(dd^2 for dd in drawdowns)
+    
+    if sum_of_squares == 0.0
+         return 1e9 # Perfect score
+    end
+
+    denominator = sqrt(sum_of_squares)
+    return total_return / denominator
+end
+
+
+
+"""
+Objective function to optimize for the Sterling Ratio.
+"""
+function objective_function_sterling(params, p_unused)
+    c, b, f = params
+    
+    if c < 0.0 || b < 0.0 || b > 1.0 || f <= 0.0 || f > 1.0
+        return Inf 
+    end
+
+    # 1. Generate stakes
+    stakes = [kelly_strategy(m.k_dist, c, b, f) for m in market_data]
+    odds_list = [m.odds for m in market_data]
+    results_list = [m.result for m in market_data]
+    
+    # 2. Calculate the equity curve
+    equity_curve = calculate_equity_curve(stakes, odds_list, results_list)
+    
+    # 3. Calculate the final score
+    score = calculate_sterling_ratio(equity_curve)
+
+    if !isfinite(score)
+        return Inf
+    end
+
+    return -score # MAXIMIZE Sterling Ratio
+end
+
+
+"""
+Objective function to optimize for the Burke Ratio.
+"""
+function objective_function_burke(params, p_unused)
+    c, b, f = params
+    
+    if c < 0.0 || b < 0.0 || b > 1.0 || f <= 0.0 || f > 1.0
+        return Inf
+    end
+
+    # 1. Generate stakes
+    stakes = [kelly_strategy(m.k_dist, c, b, f) for m in market_data]
+    odds_list = [m.odds for m in market_data]
+    results_list = [m.result for m in market_data]
+    
+    # 2. Calculate the equity curve
+    equity_curve = calculate_equity_curve(stakes, odds_list, results_list)
+    
+    # 3. Calculate the final score
+    score = calculate_burke_ratio(equity_curve)
+
+    if !isfinite(score)
+        return Inf
+    end
+
+    return -score # MAXIMIZE Burke Ratio
+end
+
+###
 
 HomeMarketData = @NamedTuple{
     k_dist::Vector{Float64}, # Kelly distribution
     odds::Float64,           # Opening odds
     result::Bool             # Did the home team win?
 }
-
-home_market_data = HomeMarketData[]
-
-println("--- Starting Data Pre-processing ---")
-predict_config = BayesianFootball.Predictions.PredictionConfig(BayesianFootball.Markets.get_standard_markets())
-processed_count = 0
-error_count = 0
-
-for match_id in keys(all_oos_results)
-    try
-        r1 = all_oos_results[match_id]
-        match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, r1...)
-        match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
-        match_results = BayesianFootball.Predictions.get_market_results(match_id, predict_config, ds.odds)
-
-        if :home ∉ keys(match_odds) || :home ∉ keys(match_predict) || match_odds.home <= 1.0
-            continue
-        end
-        
-        k_dist_home = kelly_fraction(match_odds.home, match_predict.home)
-
-        push!(home_market_data, (
-            k_dist = k_dist_home,
-            odds = match_odds.home,
-            result = match_results.home
-        ))
-        processed_count += 1
-    catch e
-        error_count += 1
-    end
-end
-
-println("--- Pre-processing Complete ---")
-println("Successfully processed $(processed_count) matches.")
-println("Skipped $(error_count) matches due to errors or missing data.")
 
 
 # --- 3. Pre-process Data (Modified for :under_25) ---
@@ -407,20 +722,18 @@ MarketData = @NamedTuple{
 }
 
 
-market_data = MarketData[] # <-- Generic name
 
 println("--- Starting Data Pre-processing for: $(TARGET_MARKET) ---")
 predict_config = BayesianFootball.Predictions.PredictionConfig(BayesianFootball.Markets.get_standard_markets())
 processed_count = 0
 error_count = 0
-
-
-
+market_data = MarketData[] # <-- Generic name
 for match_id in keys(all_oos_results)
     try
         r1 = all_oos_results[match_id]
         match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, r1...)
-        match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
+        # match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
+        match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, ds.odds)
         match_results = BayesianFootball.Predictions.get_market_results(match_id, predict_config, ds.odds)
 
 
@@ -498,13 +811,17 @@ println("\n--- Starting Optimization.jl ---")
 # 1. Define the function for the optimizer
 #    We explicitly state there is No Automatic Differentiation (NoAD)
 #    because our function is a complex, non-differentiable backtest.
-opt_func = OptimizationFunction(objective_function, SciMLBase.NoAD())
 
+# opt_func = OptimizationFunction(objective_function, SciMLBase.NoAD())
+# opt_func = OptimizationFunction(objective_function_win_pct, SciMLBase.NoAD())
+# opt_func = OptimizationFunction(objective_function_sortino, SciMLBase.NoAD())
+opt_func = OptimizationFunction(objective_function_sterling, SciMLBase.NoAD())
+opt_func = OptimizationFunction(objective_function_burke, SciMLBase.NoAD())
 # 2. Define search space and initial guess
 #    [c,     b,     f]
-u0 = [0.01,  0.5,   0.2]  # Initial guess (c, b, f)
-lower_bounds = [0.0,   0.5,   0.0001]
-upper_bounds = [0.1,   0.6,   0.2]
+u0 = [0.01,  0.5,   0.1]  # Initial guess (c, b, f)
+lower_bounds = [0.0,   0.5,   0.0]
+upper_bounds = [0.2,   0.6,   0.2]
 
 # 3. Create the OptimizationProblem
 prob = OptimizationProblem(
@@ -552,9 +869,178 @@ println("Final Calmar (re-calculated): $final_calmar")
 println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
 println("Final Bankroll (starting from 1.0): $(final_curve[end])")
 
+
+#= 
+# calmer ration 
+--- Final Backtest with Optimal Params ---
+
+julia> c_opt, b_opt, f_opt = best_params
+3-element Vector{Float64}:
+ 0.006766780047802295
+ 0.51695544614808
+ 0.19993751549615882
+
+julia> stakes_opt = [kelly_strategy(m.k_dist, c_opt, b_opt, f_opt) for m in market_data];
+
+julia> odds_opt = [m.odds for m in market_data];
+
+julia> results_opt = [m.result for m in market_data];
+
+julia> final_curve = calculate_equity_curve(stakes_opt, odds_opt, results_opt);
+
+julia> final_calmar = calculate_calmar_ratio(final_curve)
+62.94943921607101
+
+julia> println("Final Calmar (re-calculated): $final_calmar")
+Final Calmar (re-calculated): 62.94943921607101
+
+julia> println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
+Total Bets Placed: 178 / 514
+
+julia> println("Final Bankroll (starting from 1.0): $(final_curve[end])")
+Final Bankroll (starting from 1.0): 20.63592553218873
+
+
+### win pct opt
+--- Final Backtest with Optimal Params ---
+
+julia> c_opt, b_opt, f_opt = best_params
+3-element Vector{Float64}:
+ 0.026242489334867926
+ 0.5002810934044016
+ 0.10072990143426294
+
+julia> stakes_opt = [kelly_strategy(m.k_dist, c_opt, b_opt, f_opt) for m in market_data];
+
+julia> odds_opt = [m.odds for m in market_data];
+
+julia> results_opt = [m.result for m in market_data];
+
+julia> final_curve = calculate_equity_curve(stakes_opt, odds_opt, results_opt);
+
+julia> final_calmar = calculate_calmar_ratio(final_curve)
+24.550545535961007
+
+julia> 
+
+julia> println("Final Calmar (re-calculated): $final_calmar")
+Final Calmar (re-calculated): 24.550545535961007
+
+julia> println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
+Total Bets Placed: 171 / 514
+
+julia> println("Final Bankroll (starting from 1.0): $(final_curve[end])")
+Final Bankroll (starting from 1.0): 5.1666750508924135
+
+julia> 
+
+julia> plot(final_curve, title="Optimal Equity Curve", label="Bankroll", legend=:topleft)
+
+
+### sortino_ratio 
+
+
+--- Final Backtest with Optimal Params ---
+
+julia> c_opt, b_opt, f_opt = best_params
+3-element Vector{Float64}:
+ 0.009208363890064655
+ 0.511276827006579
+ 0.00023248241896002192
+
+julia> stakes_opt = [kelly_strategy(m.k_dist, c_opt, b_opt, f_opt) for m in market_data];
+
+julia> odds_opt = [m.odds for m in market_data];
+
+julia> results_opt = [m.result for m in market_data];
+
+julia> final_curve = calculate_equity_curve(stakes_opt, odds_opt, results_opt);
+
+julia> final_calmar = calculate_calmar_ratio(final_curve)
+9.912280632943942
+
+julia> println("Final Calmar (re-calculated): $final_calmar")
+Final Calmar (re-calculated): 9.912280632943942
+
+julia> println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
+Total Bets Placed: 178 / 514
+
+julia> println("Final Bankroll (starting from 1.0): $(final_curve[end])")
+Final Bankroll (starting from 1.0): 1.0040978424701088
+
+
+
+#### Sterling 
+--- Final Backtest with Optimal Params ---
+
+julia> c_opt, b_opt, f_opt = best_params
+3-element Vector{Float64}:
+ 0.002431739385395072
+ 0.5008297266854782
+ 0.19935580525696847
+
+julia> stakes_opt = [kelly_strategy(m.k_dist, c_opt, b_opt, f_opt) for m in market_data];
+
+julia> odds_opt = [m.odds for m in market_data];
+
+julia> results_opt = [m.result for m in market_data];
+
+julia> final_curve = calculate_equity_curve(stakes_opt, odds_opt, results_opt);
+
+julia> final_calmar = calculate_calmar_ratio(final_curve)
+61.89332770760149
+
+julia> println("Final Calmar (re-calculated): $final_calmar")
+Final Calmar (re-calculated): 61.89332770760149
+
+julia> println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
+Total Bets Placed: 184 / 514
+
+julia> println("Final Bankroll (starting from 1.0): $(final_curve[end])")
+Final Bankroll (starting from 1.0): 20.25769013218774
+
+
+## Burke ration 
+
+--- Final Backtest with Optimal Params ---
+
+julia> c_opt, b_opt, f_opt = best_params
+3-element Vector{Float64}:
+ 0.013678552316016763
+ 0.5024920202729628
+ 0.19999746081092082
+
+julia> stakes_opt = [kelly_strategy(m.k_dist, c_opt, b_opt, f_opt) for m in market_data];
+
+julia> odds_opt = [m.odds for m in market_data];
+
+julia> results_opt = [m.result for m in market_data];
+
+julia> final_curve = calculate_equity_curve(stakes_opt, odds_opt, results_opt);
+
+julia> final_calmar = calculate_calmar_ratio(final_curve)
+63.058933380127854
+
+julia> println("Final Calmar (re-calculated): $final_calmar")
+Final Calmar (re-calculated): 63.058933380127854
+
+julia> println("Total Bets Placed: $(count(s -> s > 0, stakes_opt)) / $(length(stakes_opt))")
+Total Bets Placed: 178 / 514
+
+julia> println("Final Bankroll (starting from 1.0): $(final_curve[end])")
+Final Bankroll (starting from 1.0): 20.675201526504544
+
+
+
+
+=# 
+
 # If you have Plots.jl, you can uncomment this
 using Plots
 plot(final_curve, title="Optimal Equity Curve", label="Bankroll", legend=:topleft)
+
+
+
 
 
 #### sens 
@@ -626,6 +1112,75 @@ for (i, c) in enumerate(c_range)
     println() # New line for the next row
 end
 
+function print_sensitivity_analysis_table(c_range, f_range, b_fixed) 
+
+      calmar_grid = zeros(length(c_range), length(f_range))
+
+      println("--- Starting Sensitivity Analysis (v1, b=0.5) ---")
+      println("Mapping $(length(calmar_grid)) parameter combinations...")
+
+      # --- 3. Run the Grid Search (Nested Loop) ---
+
+      for (i, c) in enumerate(c_range)
+          for (j, f) in enumerate(f_range)
+              
+              # 1. Define the parameter set [c, b, f]
+              params = [c, b_fixed, f]
+              
+              # 2. Call your original 3-parameter objective function
+              #    (This function must be defined in your session)
+              negative_calmar = objective_function(params, nothing)
+              
+              # 3. Store the *positive* Calmar
+              actual_calmar = -negative_calmar
+              if actual_calmar < -1.0 # This was a negative return
+                   actual_calmar /= 10.0 # Revert the penalty
+              end
+
+              calmar_grid[i, j] = actual_calmar
+          end
+      end
+
+      # Print header row (f values)
+      @printf "c_th - f |"
+      for f in f_range
+          @printf "%8.2f" f
+      end
+      println("\n" * "-"^90) # Separator
+
+      # Print each row (c_thresh) and the Calmar scores
+      for (i, c) in enumerate(c_range)
+          @printf "  %0.3f  |" c # Print c with 3 decimal places
+          for j in 1:length(f_range)
+              score = calmar_grid[i, j]
+              if score <= 0.0
+                  @printf "%8s" "----"
+              else
+                  @printf "%8.2f" score
+              end
+          end
+          println() # New line for the next row
+      end
+end 
+
+
+
+
+c_range = LinRange(0.0, 0.2, 11)
+
+# Test Kelly Fractions (f) from 5% to 50% in 10 steps
+f_range = LinRange(0.05, 0.5, 10)
+
+# *** Your Fixed Parameter ***
+b_fixed = 0.4
+
+
+print_sensitivity_analysis_table(c_range, f_range, b_fixed)
+
+
+
+
+#### ++++
 
 # --- 1. Define Your WFO Structure ---
 n_total_matches = length(market_data)

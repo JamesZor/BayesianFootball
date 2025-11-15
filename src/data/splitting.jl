@@ -1,7 +1,7 @@
 # src/data/splitting.jl
 
 using DataFrames
-using Base.Iterators: collect
+using Base: collect
 
 export AbstractSplitter, StaticSplit, ExpandingWindowCV, create_data_splits
 
