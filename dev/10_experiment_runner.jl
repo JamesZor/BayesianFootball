@@ -55,7 +55,7 @@ for season_str in seasons_to_train
     results = BayesianFootball.Training.train(model, training_config_custom, feature_sets)
 
     ## save 
-    save_season_name_str = save_dir * "s_" * replace(season_str, "/" => "_")
+    save_season_name_str = save_dir * "s_" * replace(season_str, "/" => "_") * ".jld2"
     
     JLD2.save_object(save_season_name_str, results)
 
