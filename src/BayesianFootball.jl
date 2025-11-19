@@ -26,6 +26,7 @@ include("./predictions/markets.jl") #
 include("./predictions/calculations.jl") #
 include("./predictions/prediction-module.jl") #
 include("./experiments/experiment-module.jl") #
+include( "./signals/signals-module.jl")
 
 # Export the main modules and key functions/types for users
 # *** UPDATED EXPORTS ***

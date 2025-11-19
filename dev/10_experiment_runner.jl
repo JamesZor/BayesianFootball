@@ -90,59 +90,8 @@ ds = BayesianFootball.Data.DataStore(
 )
 
 # here we want to use the open line odds
-
-
-"""
-Parses a fractional odds string (e.g., "19/10") into a decimal value (e.g., 2.9).
-Returns 0.0 if parsing fails (e.g., for "SP", missing, or "1").
-"""
-function parse_fractional_to_decimal(s::AbstractString)
-    parts = split(s, '/')
-    
-    # Must be exactly two parts (numerator and denominator)
-    if length(parts) != 2
-        return 0.0
-    end
-    
-    try
-        n = parse(Float64, parts[1])
-        d = parse(Float64, parts[2])
-        
-        # Avoid division by zero
-        if d == 0.0
-            return 0.0
-        end
-        
-        # Convert from fractional (e.g., 1.9) to decimal (e.g., 2.9)
-        return (n / d) + 1.0
-    catch e
-        # This will catch errors if parts[1] or parts[2] are not valid numbers (e.g., "SP")
-        return 0.0
-    end
-end
-
-
-ds_odds_initial = deepcopy(ds.odds)
-
-# Convert the initial fractional string to a decimal
-ds_odds_initial.initial_decimal = parse_fractional_to_decimal.(ds_odds_initial.initial_fractional_value)
-
-# Filter out rows where parsing failed or odds were 0
-filter!(row -> row.initial_decimal > 1.0, ds_odds_initial)
-
-# --- THIS IS THE "TRICK" ---
-# Overwrite the `decimal_odds` column with our new initial odds.
-# Your `get_market` function will now read this column,
-# thinking it's the final odds.
-ds_odds_initial.initial_decimal = round.(ds_odds_initial.initial_decimal, digits=2)
-
-# create new data store.
-ds = BayesianFootball.Data.DataStore(
-    df,
-    ds_odds_initial,
-    data_store.incidents
-)
-
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(data_store)
+ds = data_store
 
 
 split_col_name = :split_col

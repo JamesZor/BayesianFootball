@@ -12,12 +12,6 @@ export load_default_datastore, DataStore
 # splitting 
 export TimeSeriesSplits
 
-# --- INCLUDE PREPROCESSING FIRST ---
-include("./pre-processing.jl")
-using .DataPreprocessing
-# --- EXPORT PREPROCESSING FUNCTIONS ---
-export add_match_week_column, add_global_round_column
-
 # abstracts 
 struct DataFiles
     base_dir::String
@@ -114,6 +108,14 @@ const ODDS_COLS_TYPES = Dict(
     :winning => Bool,
     :decimal_odds => Float64
 )
+
+
+# --- INCLUDE PREPROCESSING FIRST ---
+include("./pre-processing.jl")
+using .DataPreprocessing
+# --- EXPORT PREPROCESSING FUNCTIONS ---
+export add_match_week_column, add_global_round_column
+
 
 
 ##############################
