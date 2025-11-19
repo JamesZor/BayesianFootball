@@ -199,6 +199,7 @@ model_odds = Dict(key => median(1 ./ value) for (key, value) in pairs(match_pred
 model_odds
 
 closing_match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, ds.odds)
+match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, ds.odds)
 match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
 match_results = BayesianFootball.Predictions.get_market_results(match_id, predict_config, ds.odds)
 
@@ -732,8 +733,8 @@ for match_id in keys(all_oos_results)
     try
         r1 = all_oos_results[match_id]
         match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, r1...)
-        # match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
-        match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, ds.odds)
+        match_odds = BayesianFootball.Predictions.get_market_opening_lines(match_id, predict_config, ds.odds)
+        # match_odds = BayesianFootball.Predictions.get_market(match_id, predict_config, ds.odds)
         match_results = BayesianFootball.Predictions.get_market_results(match_id, predict_config, ds.odds)
 
 
@@ -812,7 +813,7 @@ println("\n--- Starting Optimization.jl ---")
 #    We explicitly state there is No Automatic Differentiation (NoAD)
 #    because our function is a complex, non-differentiable backtest.
 
-# opt_func = OptimizationFunction(objective_function, SciMLBase.NoAD())
+opt_func = OptimizationFunction(objective_function, SciMLBase.NoAD())
 # opt_func = OptimizationFunction(objective_function_win_pct, SciMLBase.NoAD())
 # opt_func = OptimizationFunction(objective_function_sortino, SciMLBase.NoAD())
 opt_func = OptimizationFunction(objective_function_sterling, SciMLBase.NoAD())
