@@ -94,6 +94,21 @@ BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(data_sto
 ds = data_store
 
 
+## imporved 
+ds_all = BayesianFootball.Data.DataPreprocessing.add_split_col_match_week(data_store, 14)
+
+
+split_col_name = :split_col
+all_splits = sort(unique(ds_all.matches[!, split_col_name]))
+prediction_split_keys = all_splits[2:end] 
+grouped_matches = groupby(ds_all.matches, split_col_name)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_name => key)] 
+    for key in prediction_split_keys
+]
+
+
 split_col_name = :split_col
 all_splits = sort(unique(ds.matches[!, split_col_name]))
 prediction_split_keys = all_splits[2:end] 
@@ -113,6 +128,72 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
     vocabulary,
     results
 )
+
+
+####
+#
+
+ds_all = BayesianFootball.Data.DataPreprocessing.add_split_col_match_week(data_store, 14)
+
+seasons_to_process = ["20/21", "21/22", "22/23", "23/24", "24/25"]
+all_season_results = [] # Container for results
+
+for season_str in seasons_to_process
+    println("Loading results for: $season_str")
+
+    # --- A. Load the Training Results ---
+    # Construct the filename exactly as you saved it
+    file_name = "s_" * replace(season_str, "/" => "_") * ".jld2"
+    load_path = joinpath(save_dir, file_name)
+
+    if !isfile(load_path)
+        println("Warning: File not found for $season_str. Skipping.")
+        continue
+    end
+
+    training_results = JLD2.load_object(load_path)
+
+    # --- B. Get the Data for this specific Season ---
+    # We simply filter the pre-calculated ds_all
+    season_matches = filter(row -> row.season == season_str, ds_all.matches)
+
+    # --- C. Prepare the Prediction Chunks ---
+    # 1. Identify unique split keys (excluding 0 if that's the warmup period)
+    split_keys = sort(unique(season_matches.split_col))
+    prediction_keys = filter(k -> k > 0, split_keys) # Filter out 0 (warmup)
+    
+    # 2. Group the matches for fast access
+    grouped_season = groupby(season_matches, :split_col)
+
+    # 3. Create the Vector of DataFrames expected by extract_parameters
+    # We iterate through keys to ensure the order matches the training logic
+    dfs_to_predict = [grouped_season[(split_col=k,)] for k in prediction_keys]
+
+    # --- D. Extract Parameters ---
+    # Assuming this returns a DataFrame
+    season_params = BayesianFootball.Models.PreGame.extract_parameters(
+        model,
+        dfs_to_predict, 
+        vocabulary,
+        training_results
+    )
+
+    # Optional: Add a column to track which season this belongs to
+    # (useful if extract_parameters doesn't include the season column)
+    # season_params.season_id .= season_str
+    
+    push!(all_season_results, season_params)
+end
+
+# --- E. Combine into one Master DataFrame ---
+if !isempty(all_season_results)
+    final_results_df = vcat(all_season_results...)
+    println("Successfully extracted parameters for $(length(all_season_results)) seasons.")
+else
+    println("No results found.")
+end
+
+all_params = reduce(merge, final_results_df)
 
 
 #### kelly functions 
