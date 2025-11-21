@@ -764,6 +764,17 @@ end
 
 
 full_tear_sheet(df_perf)
+over = 
+over = filter(row -> row.market == :over_25, df_perf)
+full_tear_sheet(over)
+
+draw = filter(row -> row.market == :draw, df_perf)
+full_tear_sheet(draw)
+
+home = filter(row -> row.market == :home, other_data);
+full_tear_sheet(home)
+
+
 
 pl_data = filter(row -> row.league_id == 54, df_perf)
 other_data = filter(row -> row.league_id != 54, df_perf)
@@ -773,11 +784,27 @@ println("\n=== PREMIER LEAGUE (Over 2.5) ===")
 pl_over = filter(row -> row.market == :over_25, pl_data)
 other_over = filter(row -> row.market == :over_25, other_data)
 
+
+pl_under = filter(row -> row.market == :under_25, pl_data)
+other_under = filter(row -> row.market == :under_25, other_data)
+
+
 println("\n=== OTHER LEAGUES (Over 2.5) ===")
 other_over = filter(row -> row.market == :over_25, other_data)
-summarize_performance(other_over)
+# summarize_performance(other_over)
 full_tear_sheet(other_over)
 calc_ece(other_over)
+
+full_tear_sheet(other_under)
+calc_ece(other_under)
+
+full_tear_sheet(pl_over)
+calc_ece(pl_over)
+
+
+
+
+
 
 """
 14 │  9398869         57          31  over_25    0.441785     0.430804      12.0         1.8      true  0.816933    0.311604    1.
@@ -785,6 +812,67 @@ calc_ece(other_over)
 
 
 """
+
+subset(ds.odds, :match_id => ByRow(isequal(9398869)))
+
+# Check for odds that are clearly wrong for an Over 2.5 market
+bad_data = filter(row -> row.odds_open > 5.0, df_perf)
+println("Found $(nrow(bad_data)) suspicious matches.")
+println(bad_data[:, [:match_id, :league_id, :odds_open, :odds_close, :outcome]])
+
+
+names(df_perf)
+a = df_perf.odds_close .- df_perf.odds_open
+describe(a)
+histogram(a)
+
+function is_sane_market(row; max_prob_shift=0.20)
+    # 1. Hard Cap (Sanity)
+    # No legitimate pre-game football market should have odds > 500 or < 1.01
+    if row.odds_open > 100.0 || row.odds_close > 100.0 || row.odds_open < 1.01
+        return false
+    end
+
+    # 2. Calculate Implied Probabilities
+    p_open = 1.0 / row.odds_open
+    p_close = 1.0 / row.odds_close
+
+    # 3. Calculate the "Real" Shift
+    prob_diff = abs(p_open - p_close)
+
+    # 4. The Filter
+    # If the market implied probability changed by more than 20%, 
+    # it is likely a data error (e.g., 1.50 -> 3.00 is a 17% shift).
+    # A shift of 20% (0.20) covers almost all legitimate team news drifts.
+    if prob_diff > max_prob_shift
+        return false
+    end
+
+    return true
+end
+
+# --- Apply and Check ---
+
+df_clean = filter(is_sane_market, df_perf)
+
+println("Original Rows: $(nrow(df_perf))")
+println("Cleaned Rows:  $(nrow(df_clean))")
+
+# Visualizing the cleanup
+# We expect the massive outliers (-24, +30) to be gone
+drift_clean = df_clean.odds_close .- df_clean.odds_open
+describe(drift_clean)
+
+full_tear_sheet(df_perf)
+full_tear_sheet(df_clean)
+
+compare_calibration(df_clean)
+
+over = filter(row -> row.market == :over_25, df_perf);
+full_tear_sheet(over)
+
+over_clean = filter(row -> row.market == :over_25, df_clean);
+full_tear_sheet(over_clean)
 
 
 
