@@ -93,9 +93,697 @@ all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
     results
 )
 
+
+#################################################
+# Dev area v2  kelly util 
+#################################################
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+match_id = rand(keys(all_oos_results))
+r1 =  all_oos_results[match_id]
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, r1...);
+
+
+model_odds = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict));
+model_odds
+
+open, close, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
+open[:over_25]
+close[:over_25]
+model_odds[:over_25]
+results[:over_25]
+
+using StatsPlots
+kell = BayesianFootball.Signals.kelly_fraction(open[:home], match_predict[:home])
+
+BayesianFootball.Signals.kelly_positive(kell, 0.0)
+
+density(kell)
+
+using Optim, Statistics
+
+"""
+Calculates the Optimal 'Shrunken' Kelly Stake using the full posterior.
+Implements the logic of Baker & McHale (2013) Eq. 2 via Monte Carlo.
+"""
+function optimize_bayesian_kelly(chain_probs::Vector{Float64}, offered_odds::Float64)
+    # b in the paper is "fractional odds" (Decimal Odds - 1)
+    b = offered_odds - 1.0
+    
+    # The Utility Function (Log Growth)
+    # If we bet fraction 'f', and the result is Win (1) or Loss (0):
+    # Wealth grows by (1 + b*f) on Win
+    # Wealth shrinks to (1 - f) on Loss
+    function expected_utility(f)
+        # Constraint: We cannot bet more than we have, or negative amounts
+        if f < 0.0 || f >= 1.0
+            return -Inf 
+        end
+
+        # We calculate the utility for EVERY sample in the chain
+        # "p" is one sample from your posterior (e.g., 0.54)
+        utilities = [
+            p * log(1 + b * f) + (1 - p) * log(1 - f) 
+            for p in chain_probs
+        ]
+        
+        # We want to Maximize the MEAN utility across the chain
+        # (Optim minimizes by default, so we return negative mean)
+        return -mean(utilities)
+    end
+
+    # Optimization: Find 'f' between 0.0 and 0.99 that maximizes utility
+    # We use a simple bounded search
+    result = optimize(expected_utility, 0.0, 0.99)
+    
+    optimal_f = Optim.minimizer(result)
+    
+    return optimal_f
+end
+
+
+# v2 
+
+"""
+Calculates the Optimal Shrinkage Factor 'k' using the Baker & McHale (2013) 
+Bootstrap/Resampling method (Eq. 2).
+
+This simulates the penalty of acting on noisy probability estimates.
+"""
+function optimize_bayesian_kelly_v2(chain_probs::AbstractVector, offered_odds::Number)
+    b = offered_odds - 1.0
+    
+    # 1. We treat the Mean of the posterior as the "Ground Truth" for this simulation
+    p_true = mean(chain_probs)
+    
+    # If the mean suggests no bet, we can't shrink what doesn't exist.
+    s_mean = kelly_fraction(offered_odds, p_true)
+    if s_mean <= 1e-6
+        return 0.0
+    end
+
+    # 2. We generate the "Naive" bets we would have made for every sample in the chain.
+    # Ideally, we calculate s*(q) for every q.
+    # This represents the variability of our decision making process.
+    naive_bets = [kelly_fraction(offered_odds, q) for q in chain_probs]
+
+    # 3. Objective Function: 
+    # Find k such that if we shrink ALL our naive bets by k, 
+    # we maximize growth against the "p_true".
+    function objective(k)
+        utility_sum = 0.0
+        n = length(naive_bets)
+        
+        for s_q in naive_bets
+            # The bet we actually place is the Naive Bet * Shrinkage k
+            actual_stake = k * s_q
+            
+            # Constraint check
+            if actual_stake >= 0.999 
+                return Inf 
+            elseif actual_stake < 0.0
+                actual_stake = 0.0
+            end
+            
+            # CRITICAL STEP:
+            # We evaluate the utility of this stake against p_true (The Mean).
+            # We do NOT evaluate against q. 
+            # This measures: "How bad is it if I bet s_q when the truth is actually p_true?"
+            
+            u = p_true * log(1.0 + b * actual_stake) + (1.0 - p_true) * log(1.0 - actual_stake)
+            utility_sum += u
+        end
+        
+        return -(utility_sum / n)
+    end
+
+    # Optimize k between 0.0 (full shrinkage) and 1.0 (no shrinkage)
+    # Baker & McHale prove k* is always < 1 when uncertainty exists
+    res = optimize(objective, 0.0, 1.0)
+    best_k = Optim.minimizer(res)
+    
+    # Return the FINAL bet size (s_mean * k)
+    # We apply the optimal shrinkage to our best estimate.
+    return s_mean * best_k
+end
+
+function calc_analytical_shrinkage(chain_probs, offered_odds)
+    # 1. Stats from Chain
+    p_mean = mean(chain_probs)
+    p_var  = var(chain_probs) # This is sigma^2
+    b = offered_odds - 1.0
+    
+    # 2. Standard Kelly (using Mean)
+    s_star = ((b + 1) * p_mean - 1) / b
+    
+    if s_star <= 0
+        return 0.0 # No edge
+    end
+
+    # 3. Baker & McHale Eq. 5 (Shrinkage Factor)
+    # k = s^2 / (s^2 + term * sigma^2)
+    term = ((b + 1) / b)^2
+    k_factor = (s_star^2) / (s_star^2 + term * p_var)
+    
+    # 4. Final Shrunken Bet
+    return s_star * k_factor
+end
+
+
+# --- The Display Function ---
+
+"""
+Calculates the Standard Kelly Fraction using a point estimate (Plug-in approach).
+"""
+function kelly_fraction(decimal_odds::Number, probability::Number)
+    if decimal_odds <= 1.0 return 0.0 end
+    return max(0.0, probability - ((1.0 - probability) / (decimal_odds - 1.0)))
+end
+
+using Statistics, Printf, Optim, Dates
+
+function display_kelly_bits(predict, open_odds_set, close_odds_set, results, symbol)
+    # 1. Extract Data
+    if !haskey(predict, symbol) || !haskey(open_odds_set, symbol)
+        println("Symbol :$symbol not found in data.")
+        return
+    end
+
+    chain = predict[symbol]
+    o_odds = open_odds_set[symbol]
+    c_odds = close_odds_set[symbol] # Optional: handle if missing
+    outcome = haskey(results, symbol) ? results[symbol] : "Pending"
+
+    # 2. Basic Stats
+    n_samples = length(chain)
+    p_mean = mean(chain)
+    p_std  = std(chain)
+    p_median = median(chain)
+    
+    # 3. Market Context
+    implied_prob = 1.0 / o_odds
+    edge_mean = (p_mean * o_odds) - 1.0
+    
+    # 4. Kelly Calculations
+   # A. Raw (Plug-in)
+    k_raw = kelly_fraction(o_odds, p_mean)
+
+    # B. Analytical (Baker McHale Eq 5)
+    k_approx = calc_analytical_shrinkage(chain, o_odds)
+
+    # C. Bayes Optimal (Integral)
+    raw_bayes = optimize_bayesian_kelly_v2(chain, o_odds)
+    
+    k_bayes = raw_bayes < 0.0001 ? 0.0 : raw_bayes
+
+    # Shrinkage Ratio
+    s_ratio = k_raw > 0 ? (k_bayes / k_raw) : 0.0
+
+    # --- PRINT OUTPUT ---
+    
+    printstyled("══════════════════════════════════════════════════════\n", color=:blue)
+    printstyled(@sprintf(" MARKET ANALYSIS: :%s \n", symbol), bold=true, color=:white)
+    printstyled("══════════════════════════════════════════════════════\n", color=:blue)
+    
+    println("Outcome:           ", outcome ? "WIN" : "LOSS")
+    @printf("Open Odds :        %.3f  (Implied: %.1f%%)\n", o_odds, implied_prob*100)
+    @printf("Close Odds:        %.3f  (Implied: %.1f%%)  \n", c_odds, (1 / c_odds) *100)
+    @printf("Model Odds: (mean) %.3f\n", 1 / p_mean )
+    println()
+    
+    printstyled("--- Model Posterior (MCMC) ---\n", color=:cyan)
+    @printf("Mean Prob:         %.1f%%  (Edge: %.2f%%)\n", p_mean*100, edge_mean*100)
+    @printf("Uncertainty (σ):   %.3f\n", p_std)
+    @printf("90%% CI:            [%.1f%% - %.1f%%]\n", quantile(chain, 0.05)*100, quantile(chain, 0.95)*100)
+    println()
+    
+    printstyled("--- Kelly Strategy Comparison ---\n", color=:yellow)
+    
+    # Helper to print bars
+    function print_bar(label, val, raw_val)
+        bar_len = Int(round(val * 40)) # Scale: 100% = 40 chars
+        bar = repeat("█", bar_len)
+        reduction = raw_val > 0 ? (1.0 - (val/raw_val)) * 100 : 0.0
+        @printf("%-18s | %5.2f%% %s", label, val*100, bar)
+        if reduction > 0.1
+            @printf(" (Shrunk %.1f%%)", reduction)
+        end
+        println()
+    end
+
+    print_bar("Raw (Plug-in)", k_raw, k_raw)
+    print_bar("Analytical (Eq5)", k_approx, k_raw)
+    print_bar("Bayes Optimal", k_bayes, k_raw)
+
+    println()
+    
+    # Interpretation
+    if k_bayes > 0.0
+        # We have a positive bet
+        if s_ratio < 0.5
+             # Bayes suggests shrinking by more than 50%
+             printstyled("Advice: Bet with Caution. High uncertainty detected.\n", color=:yellow)
+        else
+             printstyled("Advice: Value Identified. Bet suggested.\n", color=:green)
+        end
+    elseif k_raw > 0.0 && k_bayes == 0.0
+        # Raw says yes, Bayes says no
+        printstyled("Advice: NO BET. Uncertainty eliminates the edge.\n", color=:light_red)
+    else
+        # No edge
+        printstyled("Advice: NO BET. No value.\n", color=:red)
+    end
+    printstyled("══════════════════════════════════════════════════════\n", color=:blue)
+end
+
+display_kelly_bits(match_predict, open, close, results, :over_25) 
+display_kelly_bits(match_predict, open, close, results, :under_25) 
+display_kelly_bits(match_predict, open, close, results, :over_15) 
+display_kelly_bits(match_predict, open, close, results, :under_15) 
+display_kelly_bits(match_predict, open, close, results, :home) 
+display_kelly_bits(match_predict, open, close, results, :away) 
+
+display_kelly_bits(match_predict, open, close, results, :over_05) 
+display_kelly_bits(match_predict, open, close, results, :under_05) 
+
+
+display_kelly_bits(match_predict, open, close, results, :over_35) 
+display_kelly_bits(match_predict, open, close, results, :under_35) 
+
+
+display_kelly_bits(match_predict, open, close, results, :btts_yes) 
+display_kelly_bits(match_predict, open, close, results, :btts_no) 
+
+keys(match_predict)
+
+mean(kell)
+describe(kell)
+mean(match_predict[:home])
+
+
+
+
+open[:under_25]
+close[:under_25]
+model_odds[:under_25]
+results[:under_25]
+
+
+kell = BayesianFootball.Signals.kelly_fraction(open[:under_25], match_predict[:under_25]);
+density(kell)
+describe(kell)
+optimize_bayesian_kelly(match_predict[:under_25], open[:under_25])
+calc_analytical_shrinkage(match_predict[:under_25], open[:under_25])
+
+BayesianFootball.Signals.kelly_fraction(open[:under_25],mean(match_predict[:under_25]))
+
+
+#################################################
+#  dev cts 
+#################################################
+
+
+using DataFrames, Statistics, Optim, ProgressMeter
+
+# --- 1. Helper Functions (The Math) ---
+
+"""Standard Plug-in Kelly"""
+function kelly_fraction(decimal_odds::Number, probability::Number)
+    if decimal_odds <= 1.0 return 0.0 end
+    return max(0.0, probability - ((1.0 - probability) / (decimal_odds - 1.0)))
+end
+
+"""Baker-McHale Eq 5 (Analytical Approx)"""
+function calc_analytical_shrinkage(chain_probs::AbstractVector, offered_odds::Number)
+    p_mean = mean(chain_probs)
+    p_var = var(chain_probs)
+    b = offered_odds - 1.0
+    s_star = ((b + 1) * p_mean - 1) / b
+    if s_star <= 0 return 0.0 end
+    term = ((b + 1) / b)^2
+    k_factor = (s_star^2) / (s_star^2 + term * p_var)
+    return s_star * k_factor
+end
+
+"""Baker-McHale Eq 2 (Bayesian Bootstrap Optimization)"""
+function optimize_bayesian_kelly_v3(chain_probs::AbstractVector, offered_odds::Number)
+    b = offered_odds - 1.0
+    p_true = mean(chain_probs)
+    s_mean = kelly_fraction(offered_odds, p_true)
+    
+    # PERFORMANCE OPTIMIZATION: 
+    # If there is no edge in the mean, there is no need to optimize shrinkage.
+    if s_mean <= 0.0 return 0.0 end
+
+    # Pre-calculate naive bets for the chain
+    naive_bets = [kelly_fraction(offered_odds, q) for q in chain_probs]
+
+    function objective(k)
+        utility_sum = 0.0
+        n = length(naive_bets)
+        for s_q in naive_bets
+            actual_stake = k * s_q
+            if actual_stake >= 0.999 return Inf end
+            if actual_stake < 0.0 actual_stake = 0.0 end
+            
+            # Utility evaluated against the Mean (p_true)
+            u = p_true * log(1.0 + b * actual_stake) + (1.0 - p_true) * log(1.0 - actual_stake)
+            utility_sum += u
+        end
+        return -(utility_sum / n)
+    end
+
+    res = optimize(objective, 0.0, 1.0)
+    best_k = Optim.minimizer(res)
+    return s_mean * best_k
+end
+
+# --- 2. The DataFrame Generator ---
+
+function generate_kelly_analysis_df(
+    model, 
+    predict_config, 
+    oos_results::Dict, 
+    data_store::BayesianFootball.Data.DataStore
+)
+    rows = []
+    skipped_matches = 0
+    
+    # Pre-fetch match metadata for faster lookup
+    meta_lookup = Dict(r.match_id => (league_id=r.tournament_id, match_week=r.match_week) 
+                       for r in eachrow(data_store.matches))
+
+    # List of markets to process (explicitly filters for what you asked)
+    # Or use keys(preds) to get everything available
+    target_markets = [:over_05, :under_05, :btts_yes, :btts_no, :over_35, :under_35, 
+                      :over_45, :under_45, :over_15, :under_15, :over_25, :under_25, 
+                      :home, :draw, :away]
+
+    @showprogress desc="Calculating Kelly Strategies..." for (match_id, params) in oos_results
+        
+        # --- 1. Data Fetching ---
+        local open_odds, close_odds, results
+        try
+            open_odds, close_odds, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, data_store.odds)
+        catch e
+            skipped_matches += 1
+            continue 
+        end
+
+        # --- 2. Prediction ---
+        preds = BayesianFootball.Predictions.predict_market(model, predict_config, params...)
+        meta = get(meta_lookup, match_id, (league_id="Unknown", match_week=0))
+
+        # --- 3. Market Iteration ---
+        for market in keys(preds)
+            # Skip if not in our target list (optional, remove if you want ALL markets)
+            if !(market in target_markets) continue end
+
+            if haskey(open_odds, market) && haskey(results, market)
+                
+                # Inputs
+                chain = getproperty(preds, market)
+                o_open = getproperty(open_odds, market)
+                # Handle missing close odds
+                o_close = haskey(close_odds, market) ? getproperty(close_odds, market) : missing
+                outcome = getproperty(results, market)
+                
+                # Stats
+                prob_mean = mean(chain)
+                prob_std = std(chain)
+                
+                # --- KELLY CALCULATIONS ---
+                
+                # A. Raw / Plug-in
+                k_raw = kelly_fraction(o_open, prob_mean)
+                
+                # B. Analytical (Eq 5) - Fast Approx
+                k_analytical = calc_analytical_shrinkage(chain, o_open)
+                
+                # C. Bayes Optimal (Eq 2) - Slow Integration
+                # Only run if we have a raw edge, otherwise it's 0.0 anyway
+                k_bayes = 0.0
+                if k_raw > 0.0
+                     k_bayes = optimize_bayesian_kelly_v3(chain, o_open)
+                end
+
+                # Push Row
+                push!(rows, (;
+                    match_id = match_id,
+                    tournament_id = meta.league_id,
+                    match_week = meta.match_week,
+                    market = market,
+                    
+                    # Odds Data
+                    odds_open = o_open,
+                    odds_close = o_close,
+                    prob_model = prob_mean,
+                    prob_sigma = prob_std,
+                    
+                    # Result
+                    result = outcome,
+                    
+                    # Kelly Fractions (0.0 to 1.0)
+                    kelly_raw = k_raw,
+                    kelly_analytical = k_analytical,
+                    kelly_bayes = k_bayes,
+                    
+                    # Metadata for filtering
+                    edge = (prob_mean * o_open) - 1.0
+                ))
+            end
+        end
+    end
+
+    if skipped_matches > 0
+        println("⚠️ Warning: Skipped $skipped_matches matches due to missing odds.")
+    end
+
+    return DataFrame(rows)
+end
+
+
+
+function calculate_equity_curve_v1(df::DataFrame; bankroll=1000.0, max_stake=1.0)
+    # We create new columns for the running bankroll of each strategy
+    # Sort by date or match_id to ensure correct time series
+    sdf = sort(df, :match_week) 
+    
+    # Initialize bankrolls
+    curr_raw = bankroll
+    curr_anal = bankroll
+    curr_bayes = bankroll
+    curr_flat = bankroll
+    
+    # History vectors
+    hist_raw = Float64[]
+    hist_anal = Float64[]
+    hist_bayes = Float64[]
+    hist_flat = Float64[]
+    
+    for row in eachrow(sdf)
+        odds = row.odds_open
+        # Outcome: 1.0 if Win, -1.0 if Loss
+        r_mult = row.result ? (odds - 1.0) : -1.0
+        
+        # --- Strategy 1: Raw Kelly ---
+        # Cap stake at max_stake (e.g., 5%)
+        s_raw = min(row.kelly_raw, max_stake) * curr_raw
+        curr_raw += s_raw * r_mult
+        
+        # --- Strategy 2: Analytical Shrinkage ---
+        s_anal = min(row.kelly_analytical, max_stake) * curr_anal
+        curr_anal += s_anal * r_mult
+        
+        # --- Strategy 3: Bayes Optimal ---
+        s_bayes = min(row.kelly_bayes, max_stake) * curr_bayes
+        curr_bayes += s_bayes * r_mult
+
+        # --- Strategy 4: Flat Stake (e.g. 1% if edge > 0) ---
+        s_flat = (row.edge > 0) ? (curr_flat * 0.01) : 0.0
+        curr_flat += s_flat * r_mult
+        
+        push!(hist_raw, curr_raw)
+        push!(hist_anal, curr_anal)
+        push!(hist_bayes, curr_bayes)
+        push!(hist_flat, curr_flat)
+    end
+    
+    # Return a summary DataFrame for plotting
+    return DataFrame(
+        idx = 1:length(hist_raw),
+        raw_bank = hist_raw,
+        analytical_bank = hist_anal,
+        bayes_bank = hist_bayes,
+        flat_bank = hist_flat
+    )
+end
+
+
+
+"""
+Calculates the Maximum Drawdown (MDD) of a time series.
+Returns a negative percentage (e.g., -0.45 for a 45% drop).
+"""
+function calculate_mdd(curve::Vector{Float64})
+    peak = curve[1]
+    max_drawdown = 0.0
+    
+    for val in curve
+        if val > peak
+            peak = val
+        end
+        dd = (val - peak) / peak
+        if dd < max_drawdown
+            max_drawdown = dd
+        end
+    end
+    return max_drawdown
+end
+
+function display_equity_summary(equity_df::DataFrame; initial_bank=100.0)
+    strategies = [
+        (:raw_bank, "Raw Kelly"),
+        (:analytical_bank, "Analytical (Eq5)"),
+        (:bayes_bank, "Bayes Optimal"),
+        (:flat_bank, "Flat Stake")
+    ]
+
+    printstyled("══════════════════════════════════════════════════════════════════════\n", color=:blue)
+    printstyled(" STRATEGY PERFORMANCE SUMMARY \n", bold=true, color=:white)
+    printstyled("══════════════════════════════════════════════════════════════════════\n", color=:blue)
+    
+    # Header
+    @printf("%-18s | %-10s | %-10s | %-10s | %-10s\n", 
+        "Strategy", "Final", "ROI %", "Min Bank", "Max DD %")
+    println("-"^70)
+
+    for (col_sym, label) in strategies
+        if !hasproperty(equity_df, col_sym) continue end
+        
+        curve = equity_df[!, col_sym]
+        
+        # Metrics
+        final_val = curve[end]
+        roi = (final_val - initial_bank) / initial_bank
+        min_val = minimum(curve)
+        mdd = calculate_mdd(curve) # This will be negative
+
+        # Formatting Colors
+        roi_color = roi >= 0 ? :green : :red
+        
+        # Render
+        printstyled(@sprintf("%-18s | ", label), color=:white)
+        printstyled(@sprintf("%10.2f | ", final_val), color=:white)
+        printstyled(@sprintf("%9.2f%% | ", roi * 100), color=roi_color)
+        
+        # Highlight Risk of Ruin scenarios (Min Bank < 20% of start)
+        min_color = min_val < (initial_bank * 0.2) ? :red : :white
+        printstyled(@sprintf("%10.2f | ", min_val), color=min_color)
+        
+        # Highlight severe drawdowns (> 50%)
+        dd_color = mdd < -0.5 ? :red : :yellow
+        printstyled(@sprintf("%9.2f%%\n", mdd * 100), color=dd_color)
+    end
+    printstyled("══════════════════════════════════════════════════════════════════════\n", color=:blue)
+    
+    # Contextual Analysis based on your specific data patterns
+    best_strat = strategies[argmax([equity_df[end, s[1]] for s in strategies])][2]
+    
+    println()
+    printstyled("Analysis:\n", color=:cyan, bold=true)
+    println(" • Winner: The '$best_strat' strategy ended with the highest wealth.")
+    
+    # Check for Overconfidence
+    raw_mdd = calculate_mdd(equity_df.raw_bank)
+    if raw_mdd < -0.70
+        printstyled(" • WARNING: Raw Kelly suffered a $(round(raw_mdd*100, digits=1))% drawdown.\n", color=:light_red)
+        println("   This indicates your model probabilities are likely overconfident/uncalibrated.")
+        println("   The 'Shrinkage' methods (Bayes/Analytical) are successfully buffering this risk.")
+    end
+end
+
+
+# 1. Generate the detailed data
+df_analysis = generate_kelly_analysis_df(model, predict_config, all_oos_results, ds)
+
+# 2. Inspect a specific market type (e.g., Home Wins)
+home_only = filter(row -> row.market == :away , df_analysis)
+
+# 3. Run the simulation on just Home bets
+equity = calculate_equity_curve_v1(home_only, bankroll=100.0, max_stake=0.2)
+
+# 4. Plot
+using StatsPlots
+plot(equity.idx, equity.raw_bank, label="Raw Kelly", lw=2)
+plot!(equity.idx, equity.bayes_bank, label="Bayes Shrunk", lw=2)
+
+
+plot!(equity.idx, equity.flat_bank, label="Flat Stake", lw=2, linestyle=:dash)
+
+
+describe(equity[:, [:raw_bank, :analytical_bank, :bayes_bank, :flat_bank]])
+
+display_equity_summary(equity)
+
+
+# 
+function plot_bet_size_distribution(df_analysis::DataFrame)
+    # Filter only bets where Raw Kelly > 0 (Active bets)
+    active_bets = filter(r -> r.kelly_raw > 0, df_analysis)
+    
+    p = density(active_bets.kelly_raw, label="Raw Bet Size", fill=true, alpha=0.3, color=:red)
+    density!(p, active_bets.kelly_bayes, label="Bayes Bet Size", fill=true, alpha=0.3, color=:blue)
+    
+    title!(p, "Effect of Parameter Uncertainty on Bet Sizing")
+    xlabel!(p, "Fraction of Bankroll")
+    return p
+end
+
+# Run this:
+plot_bet_size_distribution(df_analysis)
+
+function plot_equity_curves(equity_df::DataFrame; title="Kelly Strategy Performance")
+    
+    # Ensure we are sorted by time/index
+    sort!(equity_df, :idx)
+    
+    # We plot on a Log Scale often for Kelly, but Linear is better for detecting Ruin
+    p = plot(
+        equity_df.idx, 
+        equity_df.flat_bank, 
+        label="Flat Stake", 
+        lw=2, 
+        color=:grey, 
+        linestyle=:dash,
+        legend=:topleft,
+        title=title,
+        xlabel="Bets Placed",
+        ylabel="Bankroll (Currency)"
+    )
+    
+    # Add Raw Kelly
+    plot!(p, equity_df.idx, equity_df.raw_bank, label="Raw Kelly", color=:red, lw=1.5)
+    
+    # Add Bayes/Shrunken
+    # We can see how closely it hugs the Raw line vs the Flat line
+    plot!(p, equity_df.idx, equity_df.bayes_bank, label="Bayes Optimal", color=:blue, lw=2)
+    
+    # Highlight the "Ruin" line (usually 0 or a low threshold)
+    hline!(p, [0], color=:black, label="")
+
+    return p
+end
+
+p = plot_equity_curves(equity)
+
 #################################################
 # Dev area 
 #################################################
+
 
 # here we want to use the open line odds
 
