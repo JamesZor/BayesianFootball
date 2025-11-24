@@ -711,23 +711,21 @@ end
 df_analysis = generate_kelly_analysis_df(model, predict_config, all_oos_results, ds)
 
 # 2. Inspect a specific market type (e.g., Home Wins)
-home_only = filter(row -> row.market == :away , df_analysis)
-
+home_only = filter(row -> row.market == :draw , df_analysis)
 # 3. Run the simulation on just Home bets
 equity = calculate_equity_curve_v1(home_only, bankroll=100.0, max_stake=0.2)
+display_equity_summary(equity[1:50, :])
 
 # 4. Plot
 using StatsPlots
-plot(equity.idx, equity.raw_bank, label="Raw Kelly", lw=2)
-plot!(equity.idx, equity.bayes_bank, label="Bayes Shrunk", lw=2)
 
-
-plot!(equity.idx, equity.flat_bank, label="Flat Stake", lw=2, linestyle=:dash)
+plot(equity.idx[1:50], equity.raw_bank[1:50], label="Raw Kelly", lw=2)
+plot!(equity.idx[1:50], equity.bayes_bank[1:50], label="Bayes Shrunk", lw=2)
+plot!(equity.idx[1:50], equity.flat_bank[1:50], label="Flat Stake", lw=2, linestyle=:dash)
 
 
 describe(equity[:, [:raw_bank, :analytical_bank, :bayes_bank, :flat_bank]])
 
-display_equity_summary(equity)
 
 
 # 
