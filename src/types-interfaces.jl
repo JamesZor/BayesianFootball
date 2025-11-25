@@ -3,6 +3,7 @@ module TypesInterfaces
 using DataFrames
 
 export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPregameModel, AbstractInflatedDiagonalPoissonModel, AbstractNegBinModel
+export AbstractDixonColesModel
 export Vocabulary, FeatureSet, required_mapping_keys
 
 # This is the highest-level type
@@ -13,6 +14,7 @@ abstract type AbstractPregameModel <: AbstractFootballModel end
 abstract type AbstractInGameModel <: AbstractFootballModel end
 
 abstract type AbstractPoissonModel <: AbstractPregameModel end
+abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
 

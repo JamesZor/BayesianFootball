@@ -6,6 +6,7 @@ module Models
 # Models now ONLY depends on the central TypesInterfaces module for its contracts
 # and shared structs. It has NO dependency on Features.
 using ..TypesInterfaces
+using ..MyDistributions
 
 # --- Include and export sub-modules ---
 include("pregame/pregame-module.jl")

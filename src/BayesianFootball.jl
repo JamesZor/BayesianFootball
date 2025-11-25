@@ -6,6 +6,10 @@ module BayesianFootball
 include("./types-interfaces.jl") #
 using .TypesInterfaces
 
+include("./MyDistributions/MyDistributions-module.jl")
+export MyDistributions
+
+
 # 2. Data is self-contained.
 include("data/data-module.jl") #
 
@@ -36,6 +40,8 @@ export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 # Maybe export core config types too?
 export NUTSConfig, ADVIConfig, MAPConfig # From Samplers
 export TrainingConfig, Independent, SequentialPriorUpdate # From Training
+
+# 
 
 
 # --- ADDED DEV HELPERS ---

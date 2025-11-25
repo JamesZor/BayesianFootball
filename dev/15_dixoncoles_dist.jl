@@ -257,3 +257,16 @@ println("\nBias Analysis:")
 println("λ Bias: ", round(est_λ - true_λ, digits=4))
 println("μ Bias: ", round(est_μ - true_μ, digits=4))
 println("(Note: The Independent model forces ρ=0, ignoring the correlation)")
+
+
+using StatsPlots 
+density(chain[:λ], label="λ DC")
+density!(chain_indep[:λ], label="λ DP")
+density!(chain[:μ], label="μ DC")
+density!(chain_indep[:μ], label="μ DP")
+
+density(chain[:ρ], label="DC")
+density!(chain_indep[:λ], label="DP")
+
+
+### 

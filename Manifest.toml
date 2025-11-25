@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "9eeef976bc39f2db3f08a7ce8e07d14b5b3dc08e"
+project_hash = "93449f96dc825915a6fefceff5bc35b18ba10889"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "ProgressMeter", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "Turing"]
+deps = ["CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "ProgressMeter", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "Turing"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
