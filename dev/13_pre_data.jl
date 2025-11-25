@@ -15,7 +15,6 @@ BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(data_sto
 
 odds = data_store.odds
 
-decimal_odds  initial_decimal 
 odds.open_close_ratio = ( odds.decimal_odds .- odds.initial_decimal ) ./ odds.decimal_odds
 
 
