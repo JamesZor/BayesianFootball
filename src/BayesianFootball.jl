@@ -37,4 +37,10 @@ export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 export NUTSConfig, ADVIConfig, MAPConfig # From Samplers
 export TrainingConfig, Independent, SequentialPriorUpdate # From Training
 
+
+# --- ADDED DEV HELPERS ---
+include("./dev_helpers/dev-helpers.jl")
+# --- EXPORT HELPER ---
+export load_scottish_data
+
 end
