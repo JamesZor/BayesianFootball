@@ -2,7 +2,7 @@ using DataFrames
 using Turing
 using LinearAlgebra
 using Base.Threads
-
+using ...MyDistributions: DixonColes
 
 export StaticDixonColes, build_turing_model, predict
 
@@ -18,8 +18,8 @@ struct StaticDixonColes <: AbstractDixonColesModel end
     ρ         ~ Uniform(-0.3, 0.3)
 
     # Identifiability
-    log_α = log_α_raw .- mean(log_α_raw)
-    log_β = log_β_raw .- mean(log_β_raw)
+    log_α := log_α_raw .- mean(log_α_raw)
+    log_β := log_β_raw .- mean(log_β_raw)
 
     # Rates
     log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
@@ -32,7 +32,7 @@ struct StaticDixonColes <: AbstractDixonColesModel end
 end
 
 
-function build_turing_model(model::DixonColesModel, feature_set::FeatureSet)
+function build_turing_model(model::StaticDixonColes, feature_set::FeatureSet)
     data = TuringHelpers.prepare_data(model, feature_set)
     # Stack home/away goals into 2xN matrix for arraydist
     obs_matrix = stack([data.flat_home_goals, data.flat_away_goals], dims=1)
@@ -51,7 +51,7 @@ end
 Extracts the posterior samples for Home Expected Goals (λ_h), Away Expected Goals (λ_a), 
 and the Correlation Coefficient (ρ) for each match in the dataframe.
 """
-function extract_parameters(model::DixonColesModel, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
+function extract_parameters(model::StaticDixonColes, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
     
     # 1. Define the Output Type
     # We return a NamedTuple containing vectors of samples for each parameter

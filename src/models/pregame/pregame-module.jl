@@ -18,11 +18,12 @@ include("turing_helpers.jl")
 module Implementations
     # It also only needs TypesInterfaces for its contracts.
     # '....' goes up three levels from Implementations -> PreGame -> Models -> BayesianFootball
-    using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary
+    using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary, AbstractDixonColesModel
     # Each model is now in its own self-contained file
     include("./models-src/static-poisson.jl")
     include("./models-src/static-simplex-poisson.jl")
     include("./models-src/hierarchical-simplex-poisson.jl")
+    include("./models-src/static-dixoncoles.jl")
 
 
     # --- Your "wrapper" function ---
@@ -71,6 +72,38 @@ module Implementations
     end
 
 
+    function extract_parameters(
+        model::StaticDixonColes,
+        dfs_to_predict::AbstractVector, 
+        vocabulary::Vocabulary,
+        results_vector::AbstractVector
+    )
+        PredictionValue = NamedTuple{(:λ_h, :λ_a, :ρ), Tuple{AbstractVector{Float64}, AbstractVector{Float64}, AbstractVector{Float64}}}
+
+        # 1. Allocate memory for the *combined* output dictionary
+        full_extraction_dict = Dict{Int64, PredictionValue}()
+
+        # 2. Iterate through the results and dataframes in parallel
+        #    `zip` stops at the shortest vector, which perfectly handles
+        #    the case where `results` has one extra model.
+        for (result_tuple, df_for_this_split) in zip(results_vector, dfs_to_predict)
+            
+            # 3. Get the chains for this iteration
+            chains = result_tuple[1]
+
+            # 4. Call the *original* "inner" function
+            #    This dispatches to your first method
+            single_split_dict = extract_parameters(model, df_for_this_split, vocabulary, chains)
+
+            # 5. Merge the results into the main dictionary
+            merge!(full_extraction_dict, single_split_dict)
+        end
+        
+        return full_extraction_dict
+    end
+
+
+
 
 
 
@@ -81,6 +114,7 @@ end
 using .Implementations
 using .Implementations: extract_parameters
 export StaticPoisson, StaticSimplexPoisson, HierarchicalSimplexPoisson
+export StaticDixonColes
 export build_turing_model, predict, extract_parameters
 
 # This is where we define the specific methods for our contract.
