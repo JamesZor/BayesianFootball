@@ -13,9 +13,9 @@ save_dir = "dev_exp/simple_dixon/"
 
 
 data_store = BayesianFootball.Data.load_default_datastore()
+model = BayesianFootball.Models.PreGame.StaticDixonColes()
 vocabulary = BayesianFootball.Features.create_vocabulary(data_store, model)
 
-model = BayesianFootball.Models.PreGame.StaticDixonColes()
 
 
 # sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=600, n_chains=2, n_warmup=100) # Use renamed struct
