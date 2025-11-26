@@ -8,7 +8,7 @@ module Features
 using DataFrames
 using ..Data
 # Features depends on the central interfaces for types...
-using ..TypesInterfaces: AbstractFootballModel, Vocabulary, FeatureSet
+using ..TypesInterfaces: AbstractFootballModel, Vocabulary, FeatureSet, AbstractGRWPoissonModel
 # ...and on Models for the concrete model types and their contract methods.
 using ..Models: required_mapping_keys
 

@@ -4,6 +4,7 @@ using DataFrames
 
 export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPregameModel, AbstractInflatedDiagonalPoissonModel, AbstractNegBinModel
 export AbstractDixonColesModel
+export AbstractGRWPoissonModel
 export Vocabulary, FeatureSet, required_mapping_keys
 
 # This is the highest-level type

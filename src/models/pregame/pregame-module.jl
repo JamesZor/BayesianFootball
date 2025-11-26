@@ -18,12 +18,14 @@ include("turing_helpers.jl")
 module Implementations
     # It also only needs TypesInterfaces for its contracts.
     # '....' goes up three levels from Implementations -> PreGame -> Models -> BayesianFootball
-    using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary, AbstractDixonColesModel
+    using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary, AbstractDixonColesModel, AbstractGRWPoissonModel
     # Each model is now in its own self-contained file
     include("./models-src/static-poisson.jl")
     include("./models-src/static-simplex-poisson.jl")
     include("./models-src/hierarchical-simplex-poisson.jl")
     include("./models-src/static-dixoncoles.jl")
+
+    include("./models-src/grw-poisson.jl")
 
 
     # --- Your "wrapper" function ---
@@ -115,6 +117,7 @@ using .Implementations
 using .Implementations: extract_parameters
 export StaticPoisson, StaticSimplexPoisson, HierarchicalSimplexPoisson
 export StaticDixonColes
+export GRWPoisson
 export build_turing_model, predict, extract_parameters
 
 # This is where we define the specific methods for our contract.
