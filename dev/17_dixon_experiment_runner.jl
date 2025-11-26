@@ -20,7 +20,7 @@ vocabulary = BayesianFootball.Features.create_vocabulary(data_store, model)
 
 # sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=600, n_chains=2, n_warmup=100) # Use renamed struct
 
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=10, n_chains=2, n_warmup=0) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=200, n_chains=2, n_warmup=100) # Use renamed struct
 strategy_parallel_custom = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4) 
 training_config_custom  = BayesianFootball.Training.TrainingConfig(sampler_conf, strategy_parallel_custom)
 
