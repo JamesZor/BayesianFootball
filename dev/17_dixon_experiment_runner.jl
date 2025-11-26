@@ -363,3 +363,180 @@ end
 
 
 plot_model_internals(r_dixon, r_poisson, match_id, title_text="| Arbroath vs Kelty Hearts")
+
+
+using DataFrames, PrettyTables, Statistics
+
+function compare_probabilities(model_dixon, model_poisson, match_id, predicted_df_dixon, predicted_df_poisson)
+    
+    # 1. Get the specific match data
+    r_dixon = predicted_df_dixon[match_id]
+    rho_val = mean(r_dixon.ρ) 
+    
+    println("------------------------------------------------")
+    println("DIXON-COLES DIAGNOSTIC | Match ID: $match_id")
+    println("------------------------------------------------")
+    println("Correlation Parameter (ρ): $(round(rho_val, digits=4))")
+    
+    if abs(rho_val) < 0.05
+        printstyled("ℹ Low Correlation: Dixon-Coles is acting almost exactly like Poisson.\n", color=:yellow)
+    else
+        printstyled("✓ Significant Correlation: DC is adjusting low scores.\n", color=:green)
+    end
+    println()
+    
+    # 2. Compare the Expected Goals (The "Engine")
+    lambda_h_d = mean(r_dixon.λ_h)
+    lambda_a_d = mean(r_dixon.λ_a)
+    
+    lambda_h_p = mean(predicted_df_poisson[match_id].λ_h)
+    lambda_a_p = mean(predicted_df_poisson[match_id].λ_a)
+
+    data = [
+        "Home Exp. Goals (λ_h)" lambda_h_p lambda_h_d (lambda_h_d - lambda_h_p);
+        "Away Exp. Goals (λ_a)" lambda_a_p lambda_a_d (lambda_a_d - lambda_a_p)
+    ]
+    
+    # FIX: Pass headers as the second argument (Positional), not as a keyword
+    headers = ["Metric", "Poisson", "Dixon-Coles", "Diff"]
+    pretty_table(data, headers)
+    
+    println("\nConclusion:")
+    if abs(lambda_h_d - lambda_h_p) < 0.1
+        println("The models have nearly identical opinions on team strength.")
+        println("The failure was not the distribution choice (Poisson vs DC),")
+        println("but the rating of the teams themselves.")
+    end
+end
+using DataFrames, PrettyTables, Statistics
+
+function compare_probabilities(model_dixon, model_poisson, match_id, predicted_df_dixon, predicted_df_poisson)
+    
+    # 1. Get the specific match data
+    r_dixon = predicted_df_dixon[match_id]
+    rho_val = mean(r_dixon.ρ) 
+    
+    println("------------------------------------------------")
+    println("DIXON-COLES DIAGNOSTIC | Match ID: $match_id")
+    println("------------------------------------------------")
+    println("Correlation Parameter (ρ): $(round(rho_val, digits=4))")
+    
+    if abs(rho_val) < 0.05
+        printstyled("ℹ Low Correlation: Dixon-Coles is acting almost exactly like Poisson.\n", color=:yellow)
+    else
+        printstyled("✓ Significant Correlation: DC is adjusting low scores.\n", color=:green)
+    end
+    println()
+    
+    # 2. Compare the Expected Goals (The "Engine")
+    lambda_h_d = mean(r_dixon.λ_h)
+    lambda_a_d = mean(r_dixon.λ_a)
+    
+    lambda_h_p = mean(predicted_df_poisson[match_id].λ_h)
+    lambda_a_p = mean(predicted_df_poisson[match_id].λ_a)
+
+    # FIX: Use a DataFrame. This avoids the Matrix/Header syntax ambiguity.
+    df_compare = DataFrame(
+        Metric = ["Home Exp. Goals (λ_h)", "Away Exp. Goals (λ_a)"],
+        Poisson = [lambda_h_p, lambda_a_p],
+        DixonColes = [lambda_h_d, lambda_a_d],
+        Diff = [(lambda_h_d - lambda_h_p), (lambda_a_d - lambda_a_p)]
+    )
+    
+    # PrettyTables handles DataFrames automatically
+    pretty_table(df_compare)
+    
+    println("\nConclusion:")
+    if abs(lambda_h_d - lambda_h_p) < 0.1
+        println("The models have nearly identical opinions on team strength.")
+        println("The failure was not the distribution choice (Poisson vs DC),")
+        println("but the rating of the teams themselves.")
+    end
+end
+
+
+# Usage:
+compare_probabilities(model, model_pos, match_id, oos_dixon, oos_poisson)
+
+
+
+using DataFrames, Dates, Printf
+
+"""
+    check_recent_form(match_id, matches_df)
+
+Prints the last 6 games for Home and Away teams leading up to the target match
+to visually check for form drifts that the Static model missed.
+"""
+function check_recent_form(match_id, matches_df)
+    # 1. Get Target Match Details
+    target = subset(matches_df, :match_id => ByRow(==(match_id)))
+    if nrow(target) == 0
+        println("Match ID not found.")
+        return
+    end
+    
+    t_date = target.match_date[1]
+    h_team = target.home_team[1]
+    a_team = target.away_team[1]
+    
+    println("---------------------------------------------------------")
+    printstyled(" FORM GUIDE: $h_team vs $a_team \n", bold=true, color=:white)
+    println(" Target Match Date: $t_date")
+    println("---------------------------------------------------------")
+    
+    # 2. Define Helper to get last N games
+    function get_last_n(team, date, N=6)
+        # Find games where team played either home or away, BEFORE target date
+        mask = ((matches_df.home_team .== team) .| (matches_df.away_team .== team)) .& 
+               (matches_df.match_date .< date)
+        
+        hist = sort(matches_df[mask, :], :match_date, rev=true)
+        return first(hist, N)
+    end
+
+    # 3. Print Home Team Form
+    h_form = get_last_n(h_team, t_date)
+    printstyled("\n HOME: $h_team (Last 6)\n", color=:cyan)
+    println(" Date       | Opponent        | Result | Scored | Conceded")
+    println("------------|-----------------|--------|--------|----------")
+    
+    for row in eachrow(h_form)
+        is_home = row.home_team == h_team
+        opp = is_home ? row.away_team : row.home_team
+        scr = is_home ? row.home_score : row.away_score
+        conc = is_home ? row.away_score : row.home_score
+        res = scr > conc ? "W" : (scr == conc ? "D" : "L")
+        
+        # Color code result
+        c = res == "W" ? :green : (res == "D" ? :yellow : :red)
+        
+        @printf(" %s | %-15s | ", row.match_date, first(opp, 15))
+        printstyled("$res     ", color=c)
+        @printf("| %d      | %d\n", scr, conc)
+    end
+
+    # 4. Print Away Team Form
+    a_form = get_last_n(a_team, t_date)
+    printstyled("\n AWAY: $a_team (Last 6)\n", color=:magenta)
+    println(" Date       | Opponent        | Result | Scored | Conceded")
+    println("------------|-----------------|--------|--------|----------")
+    
+    for row in eachrow(a_form)
+        is_home = row.home_team == a_team
+        opp = is_home ? row.away_team : row.home_team
+        scr = is_home ? row.home_score : row.away_score
+        conc = is_home ? row.away_score : row.home_score
+        res = scr > conc ? "W" : (scr == conc ? "D" : "L")
+        
+        c = res == "W" ? :green : (res == "D" ? :yellow : :red)
+        
+        @printf(" %s | %-15s | ", row.match_date, first(opp, 15))
+        printstyled("$res     ", color=c)
+        @printf("| %d      | %d\n", scr, conc)
+    end
+    println()
+end
+
+
+check_recent_form(match_id, ds.matches)

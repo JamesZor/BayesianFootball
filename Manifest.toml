@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "76d41c5716529a20a7665a4ecbea55951011bd62"
+project_hash = "f57f69d9b0fd7c19a923d4e1077e3c7f385c370f"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "Turing"]
+deps = ["CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "Turing"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
@@ -1719,9 +1719,9 @@ version = "1.5.0"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "REPL", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "6b8e2f0bae3f678811678065c09571c1619da219"
+git-tree-sha1 = "c5a07210bd060d6a8491b0ccdee2fa0235fc00bf"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "3.1.0"
+version = "3.1.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
