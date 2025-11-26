@@ -67,3 +67,299 @@ println("Finished season $season_str.")
 
 end 
 
+
+
+season_to_load = seasons_to_train[1]
+
+season_to_load_str = save_dir * "s_" * replace(season_to_load, "/" => "_") * ".jld2"
+
+results_dixon = JLD2.load_object(season_to_load_str)
+
+results_poisson = JLD2.load_object("training_results_large.jld2")
+
+df = filter(row -> row.season==season_to_load, data_store.matches)
+# we want to get the last 4 weeks - so added the game weeks
+df = BayesianFootball.Data.add_match_week_column(df)
+df.split_col = max.(0, df.match_week .- 14);
+
+ds = BayesianFootball.Data.DataStore(
+    df,
+    data_store.odds,
+    data_store.incidents
+)
+
+# here we want to use the open line odds
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(data_store)
+ds = data_store
+
+split_col_name = :split_col
+all_splits = sort(unique(ds.matches[!, split_col_name]))
+prediction_split_keys = all_splits[2:end] 
+grouped_matches = groupby(ds.matches, split_col_name)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_name => key)] 
+    for key in prediction_split_keys
+]
+
+oos_dixon = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    dfs_to_predict,  # Pass in the pre-split vector
+    vocabulary,
+    results_dixon
+)
+
+
+model_pos = BayesianFootball.Models.PreGame.StaticPoisson()
+oos_poisson = BayesianFootball.Models.PreGame.extract_parameters(
+    model_pos,
+    dfs_to_predict,  # Pass in the pre-split vector
+    vocabulary,
+    results_poisson
+)
+
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+
+
+
+match_id = rand(keys(oos_dixon))
+r_dixon =  oos_dixon[match_id]
+r_poisson =  oos_poisson[match_id]
+
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+
+match_predict_dixon = BayesianFootball.Predictions.predict_market(model, predict_config, r_dixon...);
+match_predict_poisson = BayesianFootball.Predictions.predict_market(model_pos, predict_config, r_poisson...);
+
+model_odds_dixon = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_dixon));
+model_odds_dixon
+
+
+model_odds_poisson = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_poisson));
+model_odds_poisson
+
+
+open, close, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
+
+
+using StatsPlots
+sym = :over_25
+density( match_predict_dixon[sym], label="dixon")
+density!( match_predict_poisson[sym], label="poisson")
+
+
+sym = :draw
+BayesianFootball.Signals.bayesian_kelly(match_predict_dixon, open)
+BayesianFootball.Signals.bayesian_kelly(match_predict_poisson, open)
+
+
+
+
+######
+
+
+using Statistics
+using Printf
+
+"""
+    summarize_chain(chain, market_odds)
+
+Helper to calculate probability, fair odds, and edge from a posterior chain.
+"""
+function summarize_chain(chain, market_odds)
+    # Calculate Model Probability (Post. Mean)
+    model_prob = mean(chain)
+    
+    # Calculate Implied Probability from Market
+    implied_prob = 1.0 / market_odds
+    
+    # Calculate Fair Odds (1 / Model Prob)
+    model_odds = model_prob > 0 ? 1.0 / model_prob : Inf
+    
+    # Calculate Edge (Expected Value)
+    # EV = (Probability * Decimal Odds) - 1
+    ev = (model_prob * market_odds) - 1.0
+    
+    return model_prob, model_odds, ev, implied_prob
+end
+
+"""
+    print_model_comparison(symbol, predict_dixon, predict_poisson, open_odds, close_odds, result, kelly_dixon, kelly_poisson)
+
+Displays a detailed comparison block for a single market symbol (e.g., :home, :over_25).
+"""
+function print_model_comparison(symbol::Symbol, 
+                                pred_dixon, pred_poisson, 
+                                open_odds, close_odds, result,
+                                kelly_dixon, kelly_poisson)
+
+    # 1. Check if symbol exists in all datasets
+    if !haskey(open_odds, symbol) || !haskey(pred_dixon, symbol)
+        return # Skip if data missing
+    end
+
+    # 2. Get Market Context
+    o_odds = open_odds[symbol]
+    c_odds = close_odds[symbol]
+    outcome_str = result[symbol] ? "WIN" : "LOSS"
+    outcome_color = result[symbol] ? :green : :red
+
+    # 3. Calculate Stats for Both Models
+    prob_d, odds_d, edge_d, imp_p = summarize_chain(pred_dixon[symbol], o_odds)
+    prob_p, odds_p, edge_p, _     = summarize_chain(pred_poisson[symbol], o_odds)
+
+    # 4. Get Kelly Stakes (Handle cases where kelly returns 0.0 or missing)
+    k_d = get(kelly_dixon, symbol, 0.0)
+    k_p = get(kelly_poisson, symbol, 0.0)
+
+    # --- RENDER OUTPUT ---
+    printstyled("──────────────────────────────────────────────────────────────\n", color=:light_black)
+    printstyled(@sprintf(" MARKET: :%-10s ", symbol), bold=true, color=:white)
+    printstyled("RESULT: ", color=:white)
+    printstyled("$outcome_str\n", bold=true, color=outcome_color)
+    
+    # Market Info
+    @printf(" Market Open: %6.3f (Imp: %4.1f%%) | Close: %6.3f\n", o_odds, imp_p*100, c_odds)
+    println()
+
+    # Comparison Header
+    printstyled(@sprintf(" %-12s | %-10s | %-10s | %-8s | %-8s\n", "Model", "Prob", "Fair Odds", "Edge", "Kelly"), color=:light_blue)
+    println(" " * "-"^60)
+
+    # Row: Dixon-Coles
+    # Color code the edge: Green if > 0, Red if < 0
+    d_color = edge_d > 0 ? :green : :light_black
+    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Dixon-Coles", prob_d*100, odds_d), color=:white)
+    printstyled(@sprintf("%+5.1f%%", edge_d*100), color=d_color)
+    printstyled(@sprintf("   | %5.2f%%\n", k_d*100), color=(k_d > 0 ? :yellow : :light_black))
+
+    # Row: Poisson
+    p_color = edge_p > 0 ? :green : :light_black
+    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Poisson", prob_p*100, odds_p), color=:white)
+    printstyled(@sprintf("%+5.1f%%", edge_p*100), color=p_color)
+    printstyled(@sprintf("   | %5.2f%%\n", k_p*100), color=(k_p > 0 ? :yellow : :light_black))
+    println()
+end
+
+"""
+    compare_all_markets(match_id, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+
+Main function to loop through standard markets and display the dashboard.
+"""
+function compare_all_markets(match_id, 
+                             pred_dixon, pred_poisson, 
+                             open, close, results, 
+                             kelly_dixon, kelly_poisson;
+                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
+    
+    printstyled("\n══════════════════════════════════════════════════════════════\n", color=:magenta)
+    printstyled(@sprintf(" BAYESIAN MODEL COMPARISON | MATCH ID: %d \n", match_id), bold=true, color=:white)
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+
+    for sym in markets
+        print_model_comparison(sym, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+    end
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+end
+
+
+##
+#
+match_id = rand(keys(oos_dixon))
+r_dixon =  oos_dixon[match_id]
+r_poisson =  oos_poisson[match_id]
+
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+
+match_predict_dixon = BayesianFootball.Predictions.predict_market(model, predict_config, r_dixon...);
+match_predict_poisson = BayesianFootball.Predictions.predict_market(model_pos, predict_config, r_poisson...);
+
+model_odds_dixon = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_dixon));
+model_odds_dixon
+
+
+model_odds_poisson = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_poisson));
+model_odds_poisson
+
+
+open, close, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
+
+
+# 1. Calculate Kelly for both (you already did this in your history)
+kelly_dixon_res   = BayesianFootball.Signals.bayesian_kelly(match_predict_dixon, open)
+kelly_poisson_res = BayesianFootball.Signals.bayesian_kelly(match_predict_poisson, open)
+
+# 2. Run the Comparison Dashboard
+# You can customize the `markets` list to see just what you care about
+compare_all_markets(
+    match_id, 
+    match_predict_dixon, 
+    match_predict_poisson, 
+    open, 
+    close, 
+    results, 
+    kelly_dixon_res, 
+    kelly_poisson_res;
+    markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes, :btts_no]
+)
+
+
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+###
+using StatsPlots, Measures
+
+"""
+    plot_model_internals(r_dixon, r_poisson, match_id; title_text="")
+
+Visualizes the posterior distributions of the Expected Goals (Lambda) 
+to understand why the models disagree with the market.
+"""
+function plot_model_internals(r_dixon, r_poisson, match_id; title_text="")
+    
+    # 1. Extract Lambdas
+    # r_dixon/poisson are NamedTuples: (λ_h=..., λ_a=..., ρ=...)
+    d_lh, d_la = r_dixon.λ_h, r_dixon.λ_a
+    p_lh, p_la = r_poisson.λ_h, r_poisson.λ_a
+    
+    # 2. Setup Layout
+    l = @layout [a b; c]
+    
+    # --- PLOT A: Home Expected Goals (λ_h) ---
+    p1 = density(d_lh, label="Dixon (Home)", color=:blue, fill=true, alpha=0.2, linewidth=2)
+    density!(p1, p_lh, label="Poisson (Home)", color=:cyan, linestyle=:dash, linewidth=2)
+    title!(p1, "Home Attack Strength (λ_h)")
+    xlabel!(p1, "Expected Goals")
+    ylabel!(p1, "Density")
+    
+    # --- PLOT B: Away Expected Goals (λ_a) ---
+    p2 = density(d_la, label="Dixon (Away)", color=:red, fill=true, alpha=0.2, linewidth=2)
+    density!(p2, p_la, label="Poisson (Away)", color=:orange, linestyle=:dash, linewidth=2)
+    title!(p2, "Away Attack Strength (λ_a)")
+    xlabel!(p2, "Expected Goals")
+    
+    # --- PLOT C: Expected Goal Difference (λ_h - λ_a) ---
+    # This acts as a proxy for the Handicap / Match Winner confidence
+    d_diff = d_lh .- d_la
+    p_diff = p_lh .- p_la
+    
+    p3 = density(d_diff, label="Dixon Margin", color=:purple, fill=true, alpha=0.2, linewidth=2)
+    density!(p3, p_diff, label="Poisson Margin", color=:magenta, linestyle=:dash, linewidth=2)
+    
+    # Add a vertical line at 0 (Draw line)
+    vline!(p3, [0.0], color=:black, label="Draw Line", linewidth=1.5)
+    
+    title!(p3, "Expected Goal Difference (Home - Away)")
+    xlabel!(p3, "< Away Wins   |   Home Wins >")
+    
+    # Final Plot Construction
+    plot(p1, p2, p3, layout=l, size=(1000, 700), margin=5mm,
+         plot_title="Model Internals Match ID: $match_id $title_text")
+end
+
+
+plot_model_internals(r_dixon, r_poisson, match_id, title_text="| Arbroath vs Kelty Hearts")
