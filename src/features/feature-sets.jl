@@ -1,13 +1,13 @@
 # src/features/feature-sets.jl 
 
 # 1. Define the hook (Default behavior: do nothing)
-function apply_model_specific_logic(model::AbstractFootballModel, df::DataFrame)
+function apply_model_specific_logic(model::AbstractStaticPoissonModel, df::DataFrame)
     return df
 end
 
 # 2. Define the hook for GRW (Behavior: Sort by time)
 # Note: You need to ensure AbstractGRWPoissonModel is available here or use a specific concrete type
-function apply_model_specific_logic(model::AbstractGRWPoissonModel, df::DataFrame)
+function apply_model_specific_logic(model::AbstractDynamicPoissonModel, df::DataFrame)
     # Sort by season and date to ensure time flows forward
     return sort(df, [:season, :match_date])
 end

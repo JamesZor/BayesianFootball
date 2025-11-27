@@ -4,7 +4,9 @@ using DataFrames
 
 export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPregameModel, AbstractInflatedDiagonalPoissonModel, AbstractNegBinModel
 export AbstractDixonColesModel
-export AbstractGRWPoissonModel
+
+export AbstractStaticPoissonModel, AbstractDynamicPoissonModel
+# export AbstractGRWPoissonModel
 export Vocabulary, FeatureSet, required_mapping_keys
 
 # This is the highest-level type
@@ -15,11 +17,16 @@ abstract type AbstractPregameModel <: AbstractFootballModel end
 abstract type AbstractInGameModel <: AbstractFootballModel end
 
 abstract type AbstractPoissonModel <: AbstractPregameModel end
+
+abstract type AbstractStaticPoissonModel <: AbstractPoissonModel end 
+abstract type AbstractDynamicPoissonModel <: AbstractPoissonModel end 
+
+
+
 abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
 
-abstract type AbstractGRWPoissonModel <: AbstractPregameModel end
 
 
 # --- Flexible Feature Structs ---

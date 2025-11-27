@@ -10,7 +10,7 @@ using Base.Threads
 # Export the concrete model struct and its build function
 export StaticPoisson, build_turing_model, predict
 
-struct StaticPoisson <: AbstractPoissonModel end
+struct StaticPoisson <: AbstractStaticPoissonModel end
 
 # NEW: The main @model block, isolated
 @model function static_poisson_model_train(n_teams, home_ids, away_ids, 

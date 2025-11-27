@@ -5,9 +5,9 @@ using LinearAlgebra
 using Statistics
 # using ...TypesInterfaces: required_mapping_keys
 
-export GRWPoisson, build_turing_model, predict, extract_parameters
+export GRWPoisson, build_turing_model, predict, extract_parameters, extract_trends
 
-struct GRWPoisson <: AbstractGRWPoissonModel end 
+struct GRWPoisson <: AbstractDynamicPoissonModel end 
 
 # function required_mapping_keys(::AbstractGRWPoissonModel)
 #     return [:team_map, :n_teams]
@@ -157,4 +157,72 @@ end
 
 function predict(model::GRWPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
     return extract_parameters(model, df_to_predict, vocabulary, chains)
+end
+
+"""
+    extract_trends(model::GRWPoisson, vocabulary::Vocabulary, chains::Chains)
+
+Extracts the evolution of Attack and Defense strengths over time for all teams.
+Returns a DataFrame with columns: `[:team, :round, :att, :def]`.
+"""
+function extract_trends(model::GRWPoisson, vocabulary::Vocabulary, chains::Chains)
+    n_teams = vocabulary.mappings[:n_teams]
+    team_map = vocabulary.mappings[:team_map]
+    
+    # Create a reverse map (Int -> String) to get names back
+    id_to_team = Dict(v => k for (k, v) in team_map)
+    
+    # 1. Detect number of rounds from the chain keys
+    # We look for the highest index T in "att_hist[1, T]"
+    all_keys = string.(names(chains))
+    max_round = 0
+    for k in all_keys
+        m = match(r"att_hist\[\d+,\s*(\d+)\]", k)
+        if !isnothing(m)
+            r = parse(Int, m.captures[1])
+            max_round = max(max_round, r)
+        end
+    end
+    
+    if max_round == 0
+        @warn "No 'att_hist' variables found. Did you add 'att_hist := att' to your model?"
+        return DataFrame()
+    end
+
+    # 2. Pre-allocate vectors for the DataFrame
+    # (n_teams * n_rounds) rows
+    total_rows = n_teams * max_round
+    teams_col = Vector{String}(undef, total_rows)
+    rounds_col = Vector{Int}(undef, total_rows)
+    att_col   = Vector{Float64}(undef, total_rows)
+    def_col   = Vector{Float64}(undef, total_rows)
+    
+    idx = 1
+    # 3. Iterate and Extract
+    for t in 1:max_round
+        for i in 1:n_teams
+            # Construct symbol names, e.g., :att_hist[1, 1]
+            sym_att = Symbol("att_hist[$i, $t]")
+            sym_def = Symbol("def_hist[$i, $t]")
+            
+            # Extract the mean of the posterior samples
+            # You could also grab quantiles here if you want error bars
+            att_val = mean(vec(chains[sym_att]))
+            def_val = mean(vec(chains[sym_def]))
+            
+            teams_col[idx] = id_to_team[i]
+            rounds_col[idx] = t
+            att_col[idx]   = att_val
+            def_col[idx]   = def_val
+            
+            idx += 1
+        end
+    end
+    
+    return DataFrame(
+        team = teams_col,
+        round = rounds_col,
+        att = att_col,
+        def = def_col
+    )
 end
