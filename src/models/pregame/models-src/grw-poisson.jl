@@ -19,71 +19,144 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
 @model function grw_poisson_model_train(n_teams, n_rounds, 
                                       flat_home_ids, flat_away_ids, 
                                       flat_home_goals, flat_away_goals, 
-                                      time_indices) # <--- NEW ARGUMENT
+                                      time_indices) 
     
-    # --- Hyperparameters ---
+    # --- 1. Hyperparameters ---
+    # Standard deviations for the random walk steps
     σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
     σ_def ~ Truncated(Normal(0, 0.05), 0, Inf)
     home_adv ~ Normal(log(1.3), 0.2)
 
-    # --- State Containers ---
-    att_raw = Matrix{Real}(undef, n_teams, n_rounds)
-    def_raw = Matrix{Real}(undef, n_teams, n_rounds)
-    att = Matrix{Real}(undef, n_teams, n_rounds)
-    def = Matrix{Real}(undef, n_teams, n_rounds)
+    # --- 2. Non-Centered Random Walk Generation ---
+    # A. Initial States (Round 1)
+    # Sample from Standard Normal, then scale by 0.5 (initial variance)
+    # shape: (n_teams,)
+    z_att_init ~ filldist(Normal(0, 1), n_teams)
+    z_def_init ~ filldist(Normal(0, 1), n_teams)
 
-    # --- Initial State (Round 1) ---
-    att_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
-    def_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
-    att[:, 1] = att_raw[:, 1] .- mean(att_raw[:, 1])
-    def[:, 1] = def_raw[:, 1] .- mean(def_raw[:, 1])
+    # B. Innovations (Steps for Round 2..T)
+    # We sample ALL steps at once. Shape: (n_teams, n_rounds - 1)
+    z_att_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
+    z_def_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
 
-    # --- Random Walk Dynamics (Round 2..T) ---
-    for t in 2:n_rounds
-        att_raw[:, t] ~ MvNormal(att[:, t-1], σ_att * I)
-        def_raw[:, t] ~ MvNormal(def[:, t-1], σ_def * I)
-        att[:, t] = att_raw[:, t] .- mean(att_raw[:, t])
-        def[:, t] = def_raw[:, t] .- mean(def_raw[:, t])
-    end
+    # C. Deterministic Reconstruction (The "Matt Trick")
+    # We construct the trajectory using cumulative sums.
+    # We concatenate the Initial State with the scaled steps.
+    
+    # Scale the standard normals by the actual sigmas
+    scaled_steps_att = z_att_steps .* σ_att
+    scaled_steps_def = z_def_steps .* σ_def
+    
+    # Reconstruct the raw random walk
+    # hcat connects the initial state (col 1) with the steps (cols 2..T)
+    # cumsum adds them up along the time dimension (dims=2)
+    att_raw = cumsum(hcat(z_att_init .* 0.5, scaled_steps_att), dims=2)
+    def_raw = cumsum(hcat(z_def_init .* 0.5, scaled_steps_def), dims=2)
 
-    # --- LIKELIHOOD (Vectorized) ---
-    # We no longer loop over rounds. We calculate everything in one massive batch.
-    # This is much friendlier to the AD engine.
-    
-    # 1. Gather parameters for every match based on time_indices
-    # We use view/indexing to pull the correct parameter for the correct time t
-    
-    # Note: Turing might struggle with CartesianIndex broadcasting for some backends.
-    # A manual comprehension or loop for rate calculation is often safer and still fast.
-    
-    # Constructing the rates:
-    # log_λ[i] = home_adv + att[home_id[i], time[i]] + def[away_id[i], time[i]]
-    
-    # We can do this efficiently:
-    n_matches = length(flat_home_goals)
-    log_λs = Vector{Real}(undef, n_matches)
-    log_μs = Vector{Real}(undef, n_matches)
-    
-    for i in 1:n_matches
-        t = time_indices[i]
-        h = flat_home_ids[i]
-        a = flat_away_ids[i]
-        
-        log_λs[i] = home_adv + att[h, t] + def[a, t]
-        log_μs[i] = att[a, t] + def[h, t]
-    end
+    # --- 3. Zero-Sum Constraint (Centering) ---
+    # Enforce mean(att) = 0 and mean(def) = 0 at every time step t
+    # We subtract the column means from every row
+    att = att_raw .- mean(att_raw, dims=1)
+    def = def_raw .- mean(def_raw, dims=1)
 
-    # 2. Observe
+    # --- 4. Likelihood (Fully Vectorized) ---
+    # We use the time_indices to pull the correct strength for every match
+    # flat_home_ids and time_indices are vectors of length n_matches
+    
+    # Note on indexing: ReverseDiff loves simple indexing.
+    # We extract the specific team/time strength for every single match.
+    
+    att_h_flat = view(att, CartesianIndex.(flat_home_ids, time_indices))
+    def_a_flat = view(def, CartesianIndex.(flat_away_ids, time_indices))
+    att_a_flat = view(att, CartesianIndex.(flat_away_ids, time_indices))
+    def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
+
+    # Calculate Log-Rates
+    log_λs = home_adv .+ att_h_flat .+ def_a_flat
+    log_μs = att_a_flat .+ def_h_flat
+
+    # Observe
     flat_home_goals ~ arraydist(LogPoisson.(log_λs))
     flat_away_goals ~ arraydist(LogPoisson.(log_μs))
     
-    # --- TRACKING ---
+    # --- 5. Tracking ---
+    # We track the centered parameters for post-processing
     att_hist := att
     def_hist := def
 
     return nothing
 end
 
+
+
+# @model function grw_poisson_model_train(n_teams, n_rounds, 
+#                                       flat_home_ids, flat_away_ids, 
+#                                       flat_home_goals, flat_away_goals, 
+#                                       time_indices) # <--- NEW ARGUMENT
+#
+#     # --- Hyperparameters ---
+#     σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
+#     σ_def ~ Truncated(Normal(0, 0.05), 0, Inf)
+#     home_adv ~ Normal(log(1.3), 0.2)
+#
+#     # --- State Containers ---
+#     att_raw = Matrix{Real}(undef, n_teams, n_rounds)
+#     def_raw = Matrix{Real}(undef, n_teams, n_rounds)
+#     att = Matrix{Real}(undef, n_teams, n_rounds)
+#     def = Matrix{Real}(undef, n_teams, n_rounds)
+#
+#     # --- Initial State (Round 1) ---
+#     att_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+#     def_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+#     att[:, 1] = att_raw[:, 1] .- mean(att_raw[:, 1])
+#     def[:, 1] = def_raw[:, 1] .- mean(def_raw[:, 1])
+#
+#     # --- Random Walk Dynamics (Round 2..T) ---
+#     for t in 2:n_rounds
+#         att_raw[:, t] ~ MvNormal(att[:, t-1], σ_att * I)
+#         def_raw[:, t] ~ MvNormal(def[:, t-1], σ_def * I)
+#         att[:, t] = att_raw[:, t] .- mean(att_raw[:, t])
+#         def[:, t] = def_raw[:, t] .- mean(def_raw[:, t])
+#     end
+#
+#     # --- LIKELIHOOD (Vectorized) ---
+#     # We no longer loop over rounds. We calculate everything in one massive batch.
+#     # This is much friendlier to the AD engine.
+#
+#     # 1. Gather parameters for every match based on time_indices
+#     # We use view/indexing to pull the correct parameter for the correct time t
+#
+#     # Note: Turing might struggle with CartesianIndex broadcasting for some backends.
+#     # A manual comprehension or loop for rate calculation is often safer and still fast.
+#
+#     # Constructing the rates:
+#     # log_λ[i] = home_adv + att[home_id[i], time[i]] + def[away_id[i], time[i]]
+#
+#     # We can do this efficiently:
+#     n_matches = length(flat_home_goals)
+#     log_λs = Vector{Real}(undef, n_matches)
+#     log_μs = Vector{Real}(undef, n_matches)
+#
+#     for i in 1:n_matches
+#         t = time_indices[i]
+#         h = flat_home_ids[i]
+#         a = flat_away_ids[i]
+#
+#         log_λs[i] = home_adv + att[h, t] + def[a, t]
+#         log_μs[i] = att[a, t] + def[h, t]
+#     end
+#
+#     # 2. Observe
+#     flat_home_goals ~ arraydist(LogPoisson.(log_λs))
+#     flat_away_goals ~ arraydist(LogPoisson.(log_μs))
+#
+#     # --- TRACKING ---
+#     att_hist := att
+#     def_hist := def
+#
+#     return nothing
+# end
+#
 # @model function grw_poisson_model_train(n_teams, n_rounds, round_home_ids, round_away_ids, 
 #                                       round_home_goals, round_away_goals) 
 #
