@@ -3,40 +3,30 @@ using DataFrames
 using Turing
 using LinearAlgebra
 using Statistics
-
-# Using your interfaces
-# using ..PreGameInterfaces
-# using ..TuringHelpers
-# using ...TypesInterfaces
+# using ...TypesInterfaces: required_mapping_keys
 
 export GRWPoisson, build_turing_model, predict, extract_parameters
 
-"""
-    GRWPoisson
-
-A Gaussian Random Walk Poisson model. 
-Team attack and defense strengths evolve over time via a random walk.
-"""
 struct GRWPoisson <: AbstractGRWPoissonModel end 
 
+# function required_mapping_keys(::AbstractGRWPoissonModel)
+#     return [:team_map, :n_teams]
+# end
+
 # ==============================================================================
-# TURING MODEL DEFINITION
+# TURING MODEL
 # ==============================================================================
 
 @model function grw_poisson_model_train(n_teams, n_rounds, round_home_ids, round_away_ids, 
                                       round_home_goals, round_away_goals) 
     
     # --- Hyperparameters ---
-    # Volatility (Standard Deviation of the drift)
-    # We keep priors tight as football ratings don't fluctuate wildly week-to-week
     σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
     σ_def ~ Truncated(Normal(0, 0.05), 0, Inf)
-    
-    # Home Advantage (Constant over time)
     home_adv ~ Normal(log(1.3), 0.2)
 
-    # --- State Matrices [n_teams x n_rounds] ---
-    # We define these as matrices to hold the history
+    # --- State Containers ---
+    # We use a standard matrix to build the state step-by-step
     att = Matrix{Real}(undef, n_teams, n_rounds)
     def = Matrix{Real}(undef, n_teams, n_rounds)
 
@@ -44,41 +34,41 @@ struct GRWPoisson <: AbstractGRWPoissonModel end
     att_raw_1 ~ MvNormal(zeros(n_teams), 0.5 * I)
     def_raw_1 ~ MvNormal(zeros(n_teams), 0.5 * I)
     
-    # Center to ensure identifiability (sum of ratings = 0)
+    # Center and assign
     att[:, 1] = att_raw_1 .- mean(att_raw_1)
     def[:, 1] = def_raw_1 .- mean(def_raw_1)
 
     # --- Random Walk Dynamics (Round 2..T) ---
     for t in 2:n_rounds
-        # Sample step from previous state
-        # We use a temporary variable for the 'raw' step before centering
+        # Sample step
         att_step ~ MvNormal(att[:, t-1], σ_att * I)
         def_step ~ MvNormal(def[:, t-1], σ_def * I)
 
-        # Center the new state
+        # Center and assign
         att[:, t] = att_step .- mean(att_step)
         def[:, t] = def_step .- mean(def_step)
     end
 
-    # --- Likelihood (Observation) ---
-    # Iterate over rounds to match the vector-of-vectors data structure
+    # --- Likelihood ---
     for t in 1:n_rounds
-        # Retrieve data for this specific round
         h_ids = round_home_ids[t]
         a_ids = round_away_ids[t]
-        h_goals = round_home_goals[t]
-        a_goals = round_away_goals[t]
         
-        # Calculate rates using the parameters for time 't'
-        # Broadcasting extracts the specific team parameters for the matches in this round
+        # Calculate Rates using the current time step t
         log_λs = home_adv .+ att[h_ids, t] .+ def[a_ids, t]
         log_μs = att[a_ids, t] .+ def[h_ids, t]
         
-        # Vectorized likelihood for this round
-        h_goals ~ arraydist(LogPoisson.(log_λs))
-        a_goals ~ arraydist(LogPoisson.(log_μs))
+        # Observation (Direct indexing on argument to avoid "missing" error)
+        round_home_goals[t] ~ arraydist(LogPoisson.(log_λs))
+        round_away_goals[t] ~ arraydist(LogPoisson.(log_μs))
     end
     
+    # --- TRACKING (The User's Request) ---
+    # We use := to explicitly store the full matrices in the chain.
+    # This makes 'att_hist' and 'def_hist' appear in the results.
+    att_hist := att
+    def_hist := def
+
     return nothing
 end
 
@@ -86,23 +76,15 @@ end
 # API IMPLEMENTATION
 # ==============================================================================
 
-"""
-    build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
-
-Builds the Turing model for the **training phase**.
-"""
 function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
-    # We access the data dictionary directly from the FeatureSet
-    # The GRW model needs the structure (Vector of Vectors) which FeatureSet provides natively
     data = feature_set.data
-    
     return grw_poisson_model_train(
-        data[:n_teams],
-        data[:n_rounds],
+        data[:n_teams]::Int,
+        data[:n_rounds]::Int,
         data[:round_home_ids],
         data[:round_away_ids],
-        data[:round_home_goals],
-        data[:round_away_goals]
+        collect.(data[:round_home_goals]), 
+        collect.(data[:round_away_goals])
     )
 end
 
@@ -110,31 +92,39 @@ end
     extract_parameters(model::GRWPoisson, df_to_predict, vocabulary, chains)
 
 Extracts parameters for prediction. 
-For a GRW model, this assumes we are predicting *future* matches (out-of-sample),
-so it retrieves the parameters from the **last observed round** in the training data.
+Uses the 'att_hist' and 'def_hist' variables we explicitly tracked with :=
 """
 function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
     
     ValueType = NamedTuple{(:λ_h, :λ_a), Tuple{AbstractVector{Float64}, AbstractVector{Float64}}}
     extraction_dict = Dict{Int64, ValueType}()
 
-    # 1. Determine the last round index 'T' from the chains
-    # We search the chain names for "att[1, T]" to find the max T.
+    # 1. Determine the last available round 'T' in the chains
+    # We look for keys like "att_hist[1, T]"
     all_keys = string.(names(chains))
-    # Regex to find 'att[1, T]'
-    rounds_found = Int[]
+    
+    # Regex to capture T from "att_hist[team_id, T]"
+    # Note: Turing formats matrix keys as "var[row,col]"
+    # We find the maximum 'col' index.
+    max_round = 0
     for k in all_keys
-        m = match(r"att\[1,\s*(\d+)\]", k)
+        m = match(r"att_hist\[\d+,\s*(\d+)\]", k)
         if !isnothing(m)
-            push!(rounds_found, parse(Int, m.captures[1]))
+            r = parse(Int, m.captures[1])
+            if r > max_round
+                max_round = r
+            end
         end
     end
-    T_max = isempty(rounds_found) ? 1 : maximum(rounds_found)
+    
+    # Fallback if regex fails (e.g. if n_rounds=1, sometimes it formats differently or we just assume 1)
+    T_final = max_round > 0 ? max_round : 1
+    # println("Debug: Extracting GRW parameters for T=$T_final")
 
-    # 2. Extract global parameters
+    # 2. Extract Home Advantage
     home_adv = vec(chains[Symbol("home_adv")])
 
-    # 3. Iterate over matches to predict
+    # 3. Predict for each match
     for row in eachrow(df_to_predict)
         if !haskey(vocabulary.mappings[:team_map], row.home_team) || !haskey(vocabulary.mappings[:team_map], row.away_team)
             continue
@@ -143,12 +133,17 @@ function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame,
         h_id = vocabulary.mappings[:team_map][row.home_team]
         a_id = vocabulary.mappings[:team_map][row.away_team]
 
-        # 4. Use parameters from the FINAL round (T_max)
-        # We assume a Random Walk forecast: E[θ_{T+1}] = θ_T
-        att_h = vec(chains[Symbol("att[$h_id, $T_max]")])
-        att_a = vec(chains[Symbol("att[$a_id, $T_max]")])
-        def_h = vec(chains[Symbol("def[$h_id, $T_max]")])
-        def_a = vec(chains[Symbol("def[$a_id, $T_max]")])
+        # 4. Retrieve parameters for the LAST time step (T_final)
+        # Construct the exact symbol name for the chain
+        sym_att_h = Symbol("att_hist[$h_id, $T_final]")
+        sym_att_a = Symbol("att_hist[$a_id, $T_final]")
+        sym_def_h = Symbol("def_hist[$h_id, $T_final]")
+        sym_def_a = Symbol("def_hist[$a_id, $T_final]")
+
+        att_h = vec(chains[sym_att_h])
+        att_a = vec(chains[sym_att_a])
+        def_h = vec(chains[sym_def_h])
+        def_a = vec(chains[sym_def_a])
 
         # 5. Calculate Rates
         λ_h = exp.(att_h .+ def_a .+ home_adv)
@@ -160,23 +155,6 @@ function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame,
     return extraction_dict
 end
 
-"""
-    predict(model::GRWPoisson, df_to_predict, vocabulary, chains)
-
-Wrapper for prediction that calculates goals based on extracted parameters.
-"""
 function predict(model::GRWPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
-    # Since Turing.predict requires the exact model structure (including time steps),
-    # and we often want to predict 'next' games not in the training set,
-    # we manually generate samples using the extracted rates.
-    
-    params_dict = extract_parameters(model, df_to_predict, vocabulary, chains)
-    
-    # We'll just return the rates or sample from them. 
-    # To match the StaticPoisson return type (Chains), we might need to conform.
-    # However, usually for backtesting we just need the lambdas.
-    # If you strictly need goal samples for the backtester:
-    
-    # (Implementation dependent on your specific backtesting loop requirements)
-    return params_dict
+    return extract_parameters(model, df_to_predict, vocabulary, chains)
 end

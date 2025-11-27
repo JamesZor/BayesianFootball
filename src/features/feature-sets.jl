@@ -69,68 +69,6 @@ end
 
 
 
-# #TODO: remove = team maps, n_teams, etc  as in Vocabulary
-# function create_features(
-#     data_split::AbstractDataFrame,
-#     vocabulary::Vocabulary,
-#     model::AbstractFootballModel,
-#     splitter_config::AbstractSplitter
-# )::FeatureSet
-#
-#     G = vocabulary.mappings
-#     F_data = Dict{Symbol, Any}()
-#
-#     team_map = G[:team_map]::Dict{<:AbstractString, Int}
-#     n_teams = G[:n_teams]::Int
-#     F_data[:team_map] = team_map
-#     F_data[:n_teams] = n_teams
-#
-#     # --- Process D_i (the data split) ---
-#     matches_df_with_missing = data_split
-#
-#     # Filter rows with missing scores
-#     matches_df_filtered = filter(row -> !ismissing(row.home_score) && !ismissing(row.away_score), matches_df_with_missing)
-#
-#     # Filter rows with teams not in vocabulary
-#     # Important: Make a copy *here* if data_split was a view,
-#     # as we will modify the columns next.
-#     matches_df_teams_filtered = filter(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df_filtered, view=false) # view=false ensures we get a mutable copy
-#
-#     # --- Convert Score Columns to Int --- ## <--- NEW STEP ##
-#     # Since we've filtered missings, we can safely convert.
-#     # The `Int.(...)` broadcasts the Int conversion element-wise.
-#     matches_df_teams_filtered.home_score = Int.(matches_df_teams_filtered.home_score)
-#     matches_df_teams_filtered.away_score = Int.(matches_df_teams_filtered.away_score)
-#
-#     # Now matches_df has columns of type Vector{Int} for scores
-#     matches_df = matches_df_teams_filtered
-#     F_data[:matches_df] = matches_df # Store the processed DataFrame
-#
-#     # --- Build split-specific data (F_i) ---
-#     # Group by the specified round column
-#     grouped = groupby(matches_df, splitter_config.round_col)
-#     F_data[:n_rounds] = length(grouped)
-#
-#     # Extract team IDs (these are already Int)
-#     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in grouped]
-#     F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in grouped]
-#
-#     # Extract goals (these will now be Int)
-#     F_data[:round_home_goals] = [g.home_score for g in grouped]
-#     F_data[:round_away_goals] = [g.away_score for g in grouped]
-#
-#     # Flatten the vectors (the element types will be preserved as Int)
-#     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
-#     F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
-#     F_data[:flat_home_goals] = vcat(F_data[:round_home_goals]...) # Should now be Vector{Int}
-#     F_data[:flat_away_goals] = vcat(F_data[:round_away_goals]...) # Should now be Vector{Int}
-#
-#     # --- Add model-specific data ---
-#     # ... (no changes needed here)
-#
-#     return FeatureSet(F_data)
-# end
-#
 """
     create_features(data_splits_vector::Vector{Tuple{<:AbstractDataFrame, String}}, vocabulary::Vocabulary, model::AbstractFootballModel)
 
