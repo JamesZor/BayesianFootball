@@ -47,6 +47,7 @@ function create_features(
     # --- Build split-specific data (F_i) ---
     # Ensure we respect the sort order when grouping
     grouped = groupby(matches_df, splitter_config.round_col, sort=true)
+    # 2. Automatically get the correct number of rounds (e.g., 38)
     F_data[:n_rounds] = length(grouped)
 
     # Extract team IDs (these are already Int)

@@ -16,9 +16,10 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
 # ==============================================================================
 # TURING MODEL
 # ==============================================================================
-
-@model function grw_poisson_model_train(n_teams, n_rounds, round_home_ids, round_away_ids, 
-                                      round_home_goals, round_away_goals) 
+@model function grw_poisson_model_train(n_teams, n_rounds, 
+                                      flat_home_ids, flat_away_ids, 
+                                      flat_home_goals, flat_away_goals, 
+                                      time_indices) # <--- NEW ARGUMENT
     
     # --- Hyperparameters ---
     σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
@@ -26,65 +27,168 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
     home_adv ~ Normal(log(1.3), 0.2)
 
     # --- State Containers ---
-    # We use a standard matrix to build the state step-by-step
+    att_raw = Matrix{Real}(undef, n_teams, n_rounds)
+    def_raw = Matrix{Real}(undef, n_teams, n_rounds)
     att = Matrix{Real}(undef, n_teams, n_rounds)
     def = Matrix{Real}(undef, n_teams, n_rounds)
 
     # --- Initial State (Round 1) ---
-    att_raw_1 ~ MvNormal(zeros(n_teams), 0.5 * I)
-    def_raw_1 ~ MvNormal(zeros(n_teams), 0.5 * I)
-    
-    # Center and assign
-    att[:, 1] = att_raw_1 .- mean(att_raw_1)
-    def[:, 1] = def_raw_1 .- mean(def_raw_1)
+    att_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+    def_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+    att[:, 1] = att_raw[:, 1] .- mean(att_raw[:, 1])
+    def[:, 1] = def_raw[:, 1] .- mean(def_raw[:, 1])
 
     # --- Random Walk Dynamics (Round 2..T) ---
     for t in 2:n_rounds
-        # Sample step
-        att_step ~ MvNormal(att[:, t-1], σ_att * I)
-        def_step ~ MvNormal(def[:, t-1], σ_def * I)
-
-        # Center and assign
-        att[:, t] = att_step .- mean(att_step)
-        def[:, t] = def_step .- mean(def_step)
+        att_raw[:, t] ~ MvNormal(att[:, t-1], σ_att * I)
+        def_raw[:, t] ~ MvNormal(def[:, t-1], σ_def * I)
+        att[:, t] = att_raw[:, t] .- mean(att_raw[:, t])
+        def[:, t] = def_raw[:, t] .- mean(def_raw[:, t])
     end
 
-    # --- Likelihood ---
-    for t in 1:n_rounds
-        h_ids = round_home_ids[t]
-        a_ids = round_away_ids[t]
-        
-        # Calculate Rates using the current time step t
-        log_λs = home_adv .+ att[h_ids, t] .+ def[a_ids, t]
-        log_μs = att[a_ids, t] .+ def[h_ids, t]
-        
-        # Observation (Direct indexing on argument to avoid "missing" error)
-        round_home_goals[t] ~ arraydist(LogPoisson.(log_λs))
-        round_away_goals[t] ~ arraydist(LogPoisson.(log_μs))
-    end
+    # --- LIKELIHOOD (Vectorized) ---
+    # We no longer loop over rounds. We calculate everything in one massive batch.
+    # This is much friendlier to the AD engine.
     
-    # --- TRACKING (The User's Request) ---
-    # We use := to explicitly store the full matrices in the chain.
-    # This makes 'att_hist' and 'def_hist' appear in the results.
+    # 1. Gather parameters for every match based on time_indices
+    # We use view/indexing to pull the correct parameter for the correct time t
+    
+    # Note: Turing might struggle with CartesianIndex broadcasting for some backends.
+    # A manual comprehension or loop for rate calculation is often safer and still fast.
+    
+    # Constructing the rates:
+    # log_λ[i] = home_adv + att[home_id[i], time[i]] + def[away_id[i], time[i]]
+    
+    # We can do this efficiently:
+    n_matches = length(flat_home_goals)
+    log_λs = Vector{Real}(undef, n_matches)
+    log_μs = Vector{Real}(undef, n_matches)
+    
+    for i in 1:n_matches
+        t = time_indices[i]
+        h = flat_home_ids[i]
+        a = flat_away_ids[i]
+        
+        log_λs[i] = home_adv + att[h, t] + def[a, t]
+        log_μs[i] = att[a, t] + def[h, t]
+    end
+
+    # 2. Observe
+    flat_home_goals ~ arraydist(LogPoisson.(log_λs))
+    flat_away_goals ~ arraydist(LogPoisson.(log_μs))
+    
+    # --- TRACKING ---
     att_hist := att
     def_hist := def
 
     return nothing
 end
 
+# @model function grw_poisson_model_train(n_teams, n_rounds, round_home_ids, round_away_ids, 
+#                                       round_home_goals, round_away_goals) 
+#
+#     # --- Hyperparameters ---
+#     σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
+#     σ_def ~ Truncated(Normal(0, 0.05), 0, Inf)
+#     home_adv ~ Normal(log(1.3), 0.2)
+#
+#     # --- State Containers ---
+#     # att_raw/def_raw: The unconstrained random variables sampled by Turing
+#     att_raw = Matrix{Real}(undef, n_teams, n_rounds)
+#     def_raw = Matrix{Real}(undef, n_teams, n_rounds)
+#
+#     # att/def: The centered states used for calculation (Identifiability constrained)
+#     att = Matrix{Real}(undef, n_teams, n_rounds)
+#     def = Matrix{Real}(undef, n_teams, n_rounds)
+#
+#     # --- Initial State (Round 1) ---
+#     # We sample into the first column of the raw matrix
+#     att_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+#     def_raw[:, 1] ~ MvNormal(zeros(n_teams), 0.5 * I)
+#
+#     # Center
+#     att[:, 1] = att_raw[:, 1] .- mean(att_raw[:, 1])
+#     def[:, 1] = def_raw[:, 1] .- mean(def_raw[:, 1])
+#
+#     # --- Random Walk Dynamics (Round 2..T) ---
+#     for t in 2:n_rounds
+#         # FIX: We index the LHS (att_raw[:, t]) so each step has a unique variable name
+#         att_raw[:, t] ~ MvNormal(att[:, t-1], σ_att * I)
+#         def_raw[:, t] ~ MvNormal(def[:, t-1], σ_def * I)
+#
+#         # Center
+#         att[:, t] = att_raw[:, t] .- mean(att_raw[:, t])
+#         def[:, t] = def_raw[:, t] .- mean(def_raw[:, t])
+#     end
+#
+#     # --- Likelihood ---
+#     for t in 1:n_rounds
+#         h_ids = round_home_ids[t]
+#         a_ids = round_away_ids[t]
+#
+#         # Calculate Rates using the current time step t
+#         log_λs = home_adv .+ att[h_ids, t] .+ def[a_ids, t]
+#         log_μs = att[a_ids, t] .+ def[h_ids, t]
+#
+#         # Observation
+#         round_home_goals[t] ~ arraydist(LogPoisson.(log_λs))
+#         round_away_goals[t] ~ arraydist(LogPoisson.(log_μs))
+#     end
+#
+#     # --- TRACKING ---
+#     # Save the full history matrices to the chain
+#     att_hist := att
+#     def_hist := def
+#
+#     return nothing
+# end
+#
 # ==============================================================================
 # API IMPLEMENTATION
 # ==============================================================================
+#
+# function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
+#     data = feature_set.data
+#     return grw_poisson_model_train(
+#         data[:n_teams]::Int,
+#         data[:n_rounds]::Int,
+#         data[:round_home_ids],
+#         data[:round_away_ids],
+#         collect.(data[:round_home_goals]), 
+#         collect.(data[:round_away_goals])
+#     )
+# end
+#
 
 function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
     data = feature_set.data
+    
+    # 1. Flatten the IDs and Goals
+    # We can rely on the 'flat_*' keys if they exist and are sorted correctly.
+    # However, to be safe and ensure alignment with the round structure, we re-flatten here.
+    
+    flat_home_ids = vcat(data[:round_home_ids]...)
+    flat_away_ids = vcat(data[:round_away_ids]...)
+    flat_home_goals = vcat(collect.(data[:round_home_goals])...) # Collect + Flatten
+    flat_away_goals = vcat(collect.(data[:round_away_goals])...)
+    
+    # 2. Create the Time Index Vector
+    # If Round 1 has 10 games, we push '1' ten times.
+    # If Round 2 has 8 games, we push '2' eight times.
+    time_indices = Int[]
+    for (t, round_matches) in enumerate(data[:round_home_ids])
+        n_matches_in_round = length(round_matches)
+        append!(time_indices, fill(t, n_matches_in_round))
+    end
+
     return grw_poisson_model_train(
         data[:n_teams]::Int,
         data[:n_rounds]::Int,
-        data[:round_home_ids],
-        data[:round_away_ids],
-        collect.(data[:round_home_goals]), 
-        collect.(data[:round_away_goals])
+        flat_home_ids,
+        flat_away_ids,
+        flat_home_goals,
+        flat_away_goals,
+        time_indices  # <--- NEW INPUT
     )
 end
 
