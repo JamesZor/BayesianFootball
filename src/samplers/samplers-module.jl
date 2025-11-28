@@ -63,7 +63,14 @@ function run_sampler(turing_model, config::NUTSConfig)
         config.n_samples, 
         config.n_chains, #
         progress=true,
-        adtype = AutoReverseDiff(; compile=true)
+        adtype = AutoReverseDiff(; compile=true),
+
+          # --- THE FIX ---
+        # This tells Turing: "Don't pick random numbers between -2 and 2."
+        # "Pick random numbers between -0.001 and 0.001."
+        # This ensures your cumsum starts near 0, preventing the 485-million-goal explosion.
+        init_params = rand(length(turing_model)) .* 0.001
+
     )
     return chain
 end

@@ -3,6 +3,24 @@ using BayesianFootball
 using DataFrames
 using Statistics
 
+
+# --- HPC OPTIMIZATION START ---
+using ThreadPinning
+using LinearAlgebra
+
+# 1. Pin Julia threads to physical cores (8 cores on your 5800X)
+# This prevents threads from jumping between cores and thrashing the cache.
+pinthreads(:cores)
+
+# 2. Force BLAS (Matrix Math) to be single-threaded
+# Since NUTS runs 4 chains in parallel, we don't want each chain 
+# trying to spawn 8 more threads for matrix multiplication.
+BLAS.set_num_threads(1) 
+
+# Verify the setup (Optional, prints to console)
+println("Threads pinned to: ", threadinfo())
+println("BLAS Threads: ", BLAS.get_num_threads())
+
 data_store = BayesianFootball.Data.load_default_datastore()
 model = BayesianFootball.Models.PreGame.StaticDixonColes()
 
@@ -10,18 +28,26 @@ model = BayesianFootball.Models.PreGame.StaticDixonColes()
 
 ds = BayesianFootball.load_scottish_data("24/25", split_week=0)
 
+using Dates
+ds.matches.match_month = [month(d) >= 8 ? month(d) - 7 : month(d) + 5 for d in ds.matches.match_date] ;
+
+
 vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
 
-v2 = BayesianFootball.Features.create_vocabulary(data_store, model)
+vocabulary_l = BayesianFootball.Features.create_vocabulary(data_store, model)
 
-splitter_config = BayesianFootball.Data.StaticSplit(train_seasons =["24/25"]) #
+
+splitter_config = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["24/25"], 
+    round_col = :match_week  # <--- THIS IS THE MISSING KEY
+)
+
+# splitter_config = BayesianFootball.Data.StaticSplit(train_seasons =["24/25"]) #
 data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 
     # splitter_config = BayesianFootball.Data.ExpandingWindowCV([], [season_str], :split_col, :sequential) #
     # data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
     # feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config) #
-
-
 
 # feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config) #
 
@@ -29,12 +55,22 @@ data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 model_grw = BayesianFootball.Models.PreGame.GRWPoisson()
 fs_grw = BayesianFootball.Features.create_features(data_splits, vocabulary, model_grw, splitter_config) #
 
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=50, n_chains=4, n_warmup=10) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=4, n_warmup=50) # Use renamed struct
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 
 training_config  = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
 results = BayesianFootball.Training.train(model_grw, training_config, fs_grw)
+
+
+using JLD2
+
+save_dir = "dev_exp/grw_poisson/"
+save_file = save_dir * "s_24_25_week.jld2"
+JLD2.save_object(save_file, results)
+
+# done
+# save_file = save_dir * "s_24_25_month.jld2"
 
 r = results[1][1]
 
@@ -173,6 +209,11 @@ compare_all_markets(
 
 
 
+using StatsPlots
+sym = :home
+density( match_predict[sym], label="grw")
+density!( match_predict_pos[sym], label="poisson")
+
 
 ### extract trends 
 
@@ -182,7 +223,7 @@ using Plots
 trends_df = BayesianFootball.Models.PreGame.extract_trends(model_grw, vocabulary, r)
 
 # 2. Filter for a few specific teams (plotting 20 teams is messy)
-teams_of_interest = ["celtic", "rangers", "aberdeen", "hearts"]
+teams_of_interest = [ "airdrieonians", "livingston", "hamilton-academical", "falkirk-fc"]
 subset_df = filter(row -> row.team in teams_of_interest, trends_df)
 
 # 3. Plot Attack Strength Over Time
@@ -196,3 +237,9 @@ plot(
     lw = 2,           # Line width
     legend = :outertopright
 )
+
+
+### 
+
+r[Symbol("att_hist[12, 1]")]
+
