@@ -79,7 +79,7 @@ function run_sampler(turing_model, config::NUTSConfig)
     
     chain = sample(
         turing_model, 
-        NUTS(config.n_warmup, 0.8), 
+        NUTS(config.n_warmup, 0.65, max_depth=8), 
         MCMCThreads(), 
         config.n_samples, 
         config.n_chains,
