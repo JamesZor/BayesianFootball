@@ -53,24 +53,42 @@ struct MAPConfig <: AbstractSamplerConfig end # Renamed from MAPMethod
 # Renamed from 'train' to avoid conflict with the higher-level Training module
 
 # 1. Run with NUTS
+# function run_sampler(turing_model, config::NUTSConfig)
+#     println("Sampling with NUTS ($(config.n_samples) samples, $(config.n_chains) chains)...")
+#     # MCMCThreads() enables parallel sampling across chains within Turing
+#     chain = sample(
+#         turing_model, 
+#         NUTS(config.n_warmup, 0.8), 
+#         MCMCThreads(), 
+#         config.n_samples, 
+#         config.n_chains, #
+#         progress=true,
+#         adtype = AutoReverseDiff(; compile=true)
+#     )
+#     return chain
+# end
+#
+
 function run_sampler(turing_model, config::NUTSConfig)
     println("Sampling with NUTS ($(config.n_samples) samples, $(config.n_chains) chains)...")
-    # MCMCThreads() enables parallel sampling across chains within Turing
+    
+    # Create the initialization strategy
+    # We create a vector of strategies, one for each chain.
+    # range: [-0.001, 0.001] forces the Random Walk to start at 0 (Average Team Strength).
+    init_strat = Turing.InitFromUniform(-0.001, 0.001)
+    
     chain = sample(
         turing_model, 
         NUTS(config.n_warmup, 0.8), 
         MCMCThreads(), 
         config.n_samples, 
-        config.n_chains, #
-        progress=true,
-        adtype = AutoReverseDiff(; compile=true),
-
-          # --- THE FIX ---
-        # This tells Turing: "Don't pick random numbers between -2 and 2."
-        # "Pick random numbers between -0.001 and 0.001."
-        # This ensures your cumsum starts near 0, preventing the 485-million-goal explosion.
-        init_params = rand(length(turing_model)) .* 0.001
-
+        config.n_chains,
+        progress = true,
+        adtype = AutoReverseDiff(compile=true),
+        
+        # FIX: Use 'initial_params' with the strategy vector
+        # This bypasses the need to know length(model)
+        initial_params = fill(init_strat, config.n_chains)
     )
     return chain
 end
