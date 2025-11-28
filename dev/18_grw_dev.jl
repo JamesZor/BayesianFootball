@@ -56,16 +56,23 @@ model_grw = BayesianFootball.Models.PreGame.GRWPoisson()
 fs_grw = BayesianFootball.Features.create_features(data_splits, vocabulary, model_grw, splitter_config) #
 
 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 # nuts
 # sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=4, n_warmup=50) # Use renamed struct
-# train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 
 # SGLD
-sampler_conf = BayesianFootball.Samplers.SGLDConfig(step_size=0.005, n_samples=20000)
+
+
+
+sampler_conf = BayesianFootball.Samplers.SGLDConfig(
+    step_size = 0.005,      # Tuning knob (lower if it explodes)
+    n_samples = 20000,      # SGLD needs more samples than NUTS
+    n_chains  = 4,          # Run 4 parallel simulations
+    ad_backend = :reversediff # We found this was 4ms (super fast)
+)
+
 training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
-
-training_config  = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
-
+results = BayesianFootball.Training.train(model_grw, training_config, fs_grw)
 
 ### check 
 using BenchmarkTools

@@ -113,31 +113,63 @@ SGLDConfig(; step_size=0.005, n_samples=20000, n_chains=4, ad_backend=:reversedi
     SGLDConfig(step_size, n_samples, n_chains, ad_backend)
 
 # 2. Define the Runner
+# function run_sampler(turing_model, config::SGLDConfig)
+#     println("Sampling with SGLD (Langevin Dynamics)...")
+#     println("  - Step Size: $(config.step_size)")
+#     println("  - Chains:    $(config.n_chains)")
+#     println("  - Backend:   $(config.ad_backend)")
+#
+#     # 1. Select the AD Backend based on the config
+#     # Your benchmark proved ReverseDiff is fast, so that's our default.
+#     ad_type = if config.ad_backend == :zygote
+#         Turing.AutoZygote()
+#     else
+#         # compile=true makes it faster for static graphs like yours
+#         Turing.AutoReverseDiff(compile=true) 
+#     end
+#
+#     # 2. Run Sampling with Multiple Chains
+#     chain = sample(
+#         turing_model,
+#
+#         SGLD(stepsize=config.step_size, adtype=ad_type), 
+#
+#         MCMCThreads(),            # Enable Parallel Chains
+#         config.n_samples,
+#         config.n_chains,
+#         progress=true
+#     )
+#     return chain
+# end
+#
 function run_sampler(turing_model, config::SGLDConfig)
-    println("Sampling with SGLD (Langevin Dynamics)...")
-    println("  - Step Size: $(config.step_size)")
-    println("  - Chains:    $(config.n_chains)")
-    println("  - Backend:   $(config.ad_backend)")
+    println("Sampling with Langevin Dynamics (ULA)...")
+    println("  - Constant Step: $(config.step_size)")
+    println("  - Backend:       $(config.ad_backend)")
 
-    # 1. Select the AD Backend based on the config
-    # Your benchmark proved ReverseDiff is fast, so that's our default.
+    # 1. Select AD Backend
     ad_type = if config.ad_backend == :zygote
         Turing.AutoZygote()
     else
-        # compile=true makes it faster for static graphs like yours
-        Turing.AutoReverseDiff(compile=true) 
+        Turing.AutoReverseDiff(compile=true)
     end
 
-    # 2. Run Sampling with Multiple Chains
+    # 2. Configure Sampler
+    # FIX: We pass a FUNCTION 't -> step_size', not a raw number.
+    # We avoid PolynomialStepsize because we don't want it to decay for ULA.
+    sampler = SGLD(; 
+        stepsize = t -> config.step_size, 
+        adtype   = ad_type
+    )
+
+    # 3. Run Sampling
     chain = sample(
         turing_model,
-        
-        SGLD(stepsize=config.step_size, adtype=ad_type), 
-        
-        MCMCThreads(),            # Enable Parallel Chains
+        sampler,
+        MCMCThreads(),
         config.n_samples,
         config.n_chains,
-        progress=true
+        progress = true
     )
     return chain
 end
