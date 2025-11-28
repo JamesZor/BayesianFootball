@@ -60,7 +60,60 @@ train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_
 
 training_config  = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
-results = BayesianFootball.Training.train(model_grw, training_config, fs_grw)
+
+### check 
+using BenchmarkTools
+
+# 1. Instantiate the model with data
+# (Assuming 'model_grw' is your defined model function and you have the arguments ready)
+# You need the actual model instance, e.g.:
+turing_instance = build_turing_model(model_grw, fs_grw)
+
+# 2. Extract the current parameter values (just to get a valid point)
+vi = Turing.VarInfo(turing_instance)
+initial_theta = vi[Turing.SampleFromPrior()]
+
+# 3. Define the "Log Density" function (The math the sampler runs)
+# This creates a function f(θ) that returns the log-probability
+log_density_function = Turing.LogDensityFunction(turing_instance)
+
+# 4. Benchmark the AD Backends
+println("--- Benchmarking Gradient Calculation ---")
+
+# Test A: ReverseDiff (Current Setup)
+println("\nTesting ReverseDiff (Compiled)...")
+try
+    # We create the gradient config manually to test the speed
+    using ReverseDiff
+    # Compile the tape
+    tape = ReverseDiff.GradientTape(q -> Turing.LogDensityProblems.logdensity(log_density_function, q), initial_theta)
+    compiled_tape = ReverseDiff.compile(tape)
+    
+    # Run the benchmark
+    b_rev = @benchmark ReverseDiff.gradient!($((similar(initial_theta))), $compiled_tape, $initial_theta)
+    display(b_rev)
+catch e
+    println("ReverseDiff Failed: ", e)
+end
+
+# Test B: Zygote (The "No-Tape" Alternative)
+println("\nTesting Zygote (Source-to-Source)...")
+try
+    using Zygote
+    # Zygote doesn't have a 'tape'. It analyzes the code directly.
+    b_zyg = @benchmark Zygote.gradient(q -> Turing.LogDensityProblems.logdensity($log_density_function, q), $initial_theta)
+    display(b_zyg)
+catch e
+    println("Zygote Failed: ", e)
+end
+
+
+
+
+####
+
+
+# results = BayesianFootball.Training.train(model_grw, training_config, fs_grw)
 
 
 using JLD2
@@ -70,7 +123,9 @@ save_file = save_dir * "s_24_25_week.jld2"
 JLD2.save_object(save_file, results)
 
 # done
-# save_file = save_dir * "s_24_25_month.jld2"
+save_file = save_dir * "s_24_25_month.jld2"
+
+results = JLD2.load_object(save_file)
 
 r = results[1][1]
 
@@ -87,7 +142,7 @@ r1 =  rr[match_id]
 
 model = BayesianFootball.Models.PreGame.StaticPoisson()
 
-match_predict = BayesianFootball.Predictions.predict_market(model, predict_config, r1...);
+match_predict = BayesianFootball.Predictions.predict_market(model_grw, predict_config, r1...);
 
 
 model_odds = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict));
@@ -98,6 +153,9 @@ open, close, outcome = BayesianFootball.Predictions.get_market_data(match_id, pr
 
 
 subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+a = subset( ds.odds, :match_id => ByRow(isequal(match_id)))
+a[:, [:choice_name, :choice_group, :winning, :decimal_odds, :initial_decimal]]
+
 
 sym = :away
 density( match_predict[sym], label="dixon")
@@ -123,7 +181,7 @@ dfs_to_predict = [
 all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
     model_pos,
     dfs_to_predict,  # Pass in the pre-split vector
-    v2,
+    vocabulary_l,
     results_pos
 )
 
@@ -159,13 +217,12 @@ compare_all_markets(
 ###
 
 
-mp = filter( row -> row.split_col == 25, ds.matches)
+mp = filter( row -> row.split_col == 24, ds.matches)
 
 rr = BayesianFootball.Models.PreGame.extract_parameters(model_grw, mp, vocabulary, r)
 
 match_id = rand(keys(rr))
 r1 =  rr[match_id]
-
 open, close, outcome = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds )
 
 
@@ -204,7 +261,7 @@ compare_all_markets(
     outcome, 
     kelly_grw_res, 
     kelly_poisson_res;
-    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :btts_yes, :btts_no]
+    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :over_35, :under_35, :btts_yes, :btts_no]
 )
 
 
@@ -224,6 +281,9 @@ trends_df = BayesianFootball.Models.PreGame.extract_trends(model_grw, vocabulary
 
 # 2. Filter for a few specific teams (plotting 20 teams is messy)
 teams_of_interest = [ "airdrieonians", "livingston", "hamilton-academical", "falkirk-fc"]
+
+
+teams_of_interest = ["stranraer", "bonnyrigg-rose"]
 subset_df = filter(row -> row.team in teams_of_interest, trends_df)
 
 # 3. Plot Attack Strength Over Time
@@ -234,6 +294,17 @@ plot(
     title = "Team Attack Strength (Gaussian Random Walk)",
     xlabel = "Round / Matchweek",
     ylabel = "Attack Rating (Log Scale)",
+    lw = 2,           # Line width
+    legend = :outertopright
+)
+
+plot!(
+    subset_df.round, 
+    subset_df.def, 
+    group = subset_df.team, 
+    title = "Team  deff Strength (Gaussian Random Walk)",
+    xlabel = "Round / Matchweek",
+    ylabel = "def Rating (Log Scale)",
     lw = 2,           # Line width
     legend = :outertopright
 )

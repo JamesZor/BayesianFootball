@@ -93,6 +93,36 @@ function run_sampler(turing_model, config::NUTSConfig)
     return chain
 end
 
+# SGLD 
+export SGLDConfig
+
+# 1. Define the Config
+struct SGLDConfig <: AbstractSamplerConfig
+    step_size::Float64
+    n_samples::Int
+end
+# Default to a small step size and MANY samples (Langevin needs more samples than NUTS)
+SGLDConfig(; step_size=0.001, n_samples=20000) = SGLDConfig(step_size, n_samples)
+
+# 2. Define the Runner
+function run_sampler(turing_model, config::SGLDConfig)
+    println("Sampling with SGLD (Langevin Dynamics)...")
+    println("  - Step Size: $(config.step_size)")
+    println("  - Samples: $(config.n_samples)")
+    
+    # SGLD does not need specific initialization logic as much as NUTS
+    # because it is robust to noise.
+    chain = sample(
+        turing_model, 
+        SGLD(config.step_size), 
+        config.n_samples,
+        progress=true
+    )
+    return chain
+end
+
+
+
 # 2. Run with ADVI
 function run_sampler(turing_model, config::ADVIConfig)
     println("Optimizing with ADVI ($(config.n_iterations) iterations)...")
