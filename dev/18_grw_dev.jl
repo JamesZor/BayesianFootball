@@ -55,58 +55,69 @@ data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 model_grw = BayesianFootball.Models.PreGame.GRWPoisson()
 fs_grw = BayesianFootball.Features.create_features(data_splits, vocabulary, model_grw, splitter_config) #
 
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=4, n_warmup=50) # Use renamed struct
-train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+
+# nuts
+# sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=4, n_warmup=50) # Use renamed struct
+# train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+
+# SGLD
+sampler_conf = BayesianFootball.Samplers.SGLDConfig(step_size=0.005, n_samples=20000)
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
 training_config  = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
 
 ### check 
 using BenchmarkTools
+using DynamicPPL
+using Turing
+using ReverseDiff
+using Zygote
+using LogDensityProblems
 
-# 1. Instantiate the model with data
-# (Assuming 'model_grw' is your defined model function and you have the arguments ready)
-# You need the actual model instance, e.g.:
-turing_instance = build_turing_model(model_grw, fs_grw)
+# 1. Instantiate the model (You already did this successfully)
+turing_instance = BayesianFootball.Models.PreGame.build_turing_model(model_grw, fs_grw[1][1])
 
-# 2. Extract the current parameter values (just to get a valid point)
-vi = Turing.VarInfo(turing_instance)
-initial_theta = vi[Turing.SampleFromPrior()]
+# 2. Extract the current parameter values
+# FIX: Use DynamicPPL explicitly
+vi = DynamicPPL.VarInfo(turing_instance)
+initial_theta = vi[DynamicPPL.SampleFromPrior()]
 
-# 3. Define the "Log Density" function (The math the sampler runs)
-# This creates a function f(θ) that returns the log-probability
+ldf = Turing.LogDensityFunction(turing_instance)
+dim = LogDensityProblems.dimension(ldf)
+initial_theta = randn(dim);
+
+# 3. Define the "Log Density" function
 log_density_function = Turing.LogDensityFunction(turing_instance)
 
-# 4. Benchmark the AD Backends
+# 4. Benchmark
 println("--- Benchmarking Gradient Calculation ---")
+println("Parameter Count: $(length(initial_theta))")
 
-# Test A: ReverseDiff (Current Setup)
+# Test A: ReverseDiff (Compiled)
 println("\nTesting ReverseDiff (Compiled)...")
 try
-    # We create the gradient config manually to test the speed
-    using ReverseDiff
     # Compile the tape
     tape = ReverseDiff.GradientTape(q -> Turing.LogDensityProblems.logdensity(log_density_function, q), initial_theta)
     compiled_tape = ReverseDiff.compile(tape)
     
-    # Run the benchmark
-    b_rev = @benchmark ReverseDiff.gradient!($((similar(initial_theta))), $compiled_tape, $initial_theta)
+    # Benchmark
+    # We allocate the result buffer once to be fair
+    result_buffer = similar(initial_theta)
+    b_rev = @benchmark ReverseDiff.gradient!($result_buffer, $compiled_tape, $initial_theta)
     display(b_rev)
 catch e
     println("ReverseDiff Failed: ", e)
 end
 
-# Test B: Zygote (The "No-Tape" Alternative)
-println("\nTesting Zygote (Source-to-Source)...")
+# Test B: Zygote
+println("\nTesting Zygote...")
 try
-    using Zygote
-    # Zygote doesn't have a 'tape'. It analyzes the code directly.
     b_zyg = @benchmark Zygote.gradient(q -> Turing.LogDensityProblems.logdensity($log_density_function, q), $initial_theta)
     display(b_zyg)
 catch e
     println("Zygote Failed: ", e)
 end
-
 
 
 

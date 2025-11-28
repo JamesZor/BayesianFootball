@@ -3,6 +3,7 @@
 module Samplers
 
 using Turing
+using Zygote
 using Optimization      # Required for MAP
 using OptimizationOptimJL # Required for MAP
 using ReverseDiff, Memoization
@@ -97,25 +98,45 @@ end
 export SGLDConfig
 
 # 1. Define the Config
+export SGLDConfig
+
 struct SGLDConfig <: AbstractSamplerConfig
     step_size::Float64
     n_samples::Int
+    n_chains::Int
+    ad_backend::Symbol # :reversediff or :zygote
 end
-# Default to a small step size and MANY samples (Langevin needs more samples than NUTS)
-SGLDConfig(; step_size=0.001, n_samples=20000) = SGLDConfig(step_size, n_samples)
+
+# Constructor with sensible defaults
+# Defaulting to :reversediff because your benchmark showed it was fast (4ms) & light (120KB)
+SGLDConfig(; step_size=0.005, n_samples=20000, n_chains=4, ad_backend=:reversediff) = 
+    SGLDConfig(step_size, n_samples, n_chains, ad_backend)
 
 # 2. Define the Runner
 function run_sampler(turing_model, config::SGLDConfig)
     println("Sampling with SGLD (Langevin Dynamics)...")
     println("  - Step Size: $(config.step_size)")
-    println("  - Samples: $(config.n_samples)")
-    
-    # SGLD does not need specific initialization logic as much as NUTS
-    # because it is robust to noise.
+    println("  - Chains:    $(config.n_chains)")
+    println("  - Backend:   $(config.ad_backend)")
+
+    # 1. Select the AD Backend based on the config
+    # Your benchmark proved ReverseDiff is fast, so that's our default.
+    ad_type = if config.ad_backend == :zygote
+        Turing.AutoZygote()
+    else
+        # compile=true makes it faster for static graphs like yours
+        Turing.AutoReverseDiff(compile=true) 
+    end
+
+    # 2. Run Sampling with Multiple Chains
     chain = sample(
-        turing_model, 
-        SGLD(config.step_size), 
+        turing_model,
+        
+        SGLD(stepsize=config.step_size, adtype=ad_type), 
+        
+        MCMCThreads(),            # Enable Parallel Chains
         config.n_samples,
+        config.n_chains,
         progress=true
     )
     return chain
