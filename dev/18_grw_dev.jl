@@ -32,7 +32,15 @@ using Dates
 ds.matches.match_month = [month(d) >= 8 ? month(d) - 7 : month(d) + 5 for d in ds.matches.match_date] ;
 
 
-vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
+dss = BayesianFootball.Data.DataStore( 
+    subset( ds.matches, :tournament_id => ByRow(isequal(54)) ),
+    ds.odds,
+    ds.incidents
+)
+  
+
+# vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
+vocabulary = BayesianFootball.Features.create_vocabulary(dss, model)
 
 vocabulary_l = BayesianFootball.Features.create_vocabulary(data_store, model)
 
@@ -43,7 +51,7 @@ splitter_config = BayesianFootball.Data.StaticSplit(
 )
 
 # splitter_config = BayesianFootball.Data.StaticSplit(train_seasons =["24/25"]) #
-data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+data_splits = BayesianFootball.Data.create_data_splits(dss, splitter_config)
 
     # splitter_config = BayesianFootball.Data.ExpandingWindowCV([], [season_str], :split_col, :sequential) #
     # data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
@@ -58,20 +66,18 @@ fs_grw = BayesianFootball.Features.create_features(data_splits, vocabulary, mode
 
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 # nuts
-# sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=4, n_warmup=50) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=50, n_chains=6, n_warmup=50) # Use renamed struct
 
 # SGLD
-
-
-
-sampler_conf = BayesianFootball.Samplers.SGLDConfig(
-    step_size = 0.005,      # Tuning knob (lower if it explodes)
-    n_samples = 20000,      # SGLD needs more samples than NUTS
-    n_chains  = 4,          # Run 4 parallel simulations
-    ad_backend = :reversediff # We found this was 4ms (super fast)
-)
-
+# sampler_conf = BayesianFootball.Samplers.SGLDConfig(
+#     step_size = 0.005,      # Tuning knob (lower if it explodes)
+#     n_samples = 20000,      # SGLD needs more samples than NUTS
+#     n_chains  = 4,          # Run 4 parallel simulations
+#     ad_backend = :reversediff # We found this was 4ms (super fast)
+# )
+#
 training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
 results = BayesianFootball.Training.train(model_grw, training_config, fs_grw)
 
 ### check 
@@ -148,7 +154,7 @@ results = JLD2.load_object(save_file)
 r = results[1][1]
 
 
-mp = filter( row -> row.split_col == 25, ds.matches)
+mp = filter( row -> row.split_col == 25 && row.tournament_id==54, ds.matches)
 
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
@@ -156,9 +162,10 @@ rr = BayesianFootball.Models.PreGame.extract_parameters(model_grw, mp, vocabular
 
 
 match_id = rand(keys(rr))
+
+match_id = keys(rr)[1]
 r1 =  rr[match_id]
 
-model = BayesianFootball.Models.PreGame.StaticPoisson()
 
 match_predict = BayesianFootball.Predictions.predict_market(model_grw, predict_config, r1...);
 
@@ -240,6 +247,8 @@ mp = filter( row -> row.split_col == 24, ds.matches)
 rr = BayesianFootball.Models.PreGame.extract_parameters(model_grw, mp, vocabulary, r)
 
 match_id = rand(keys(rr))
+
+match_id = keys(rr)[2]
 r1 =  rr[match_id]
 open, close, outcome = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds )
 
@@ -285,7 +294,7 @@ compare_all_markets(
 
 
 using StatsPlots
-sym = :home
+sym = :under_25
 density( match_predict[sym], label="grw")
 density!( match_predict_pos[sym], label="poisson")
 
@@ -299,6 +308,8 @@ trends_df = BayesianFootball.Models.PreGame.extract_trends(model_grw, vocabulary
 
 # 2. Filter for a few specific teams (plotting 20 teams is messy)
 teams_of_interest = [ "airdrieonians", "livingston", "hamilton-academical", "falkirk-fc"]
+
+teams_of_interest = unique(trends_df.team)
 
 
 teams_of_interest = ["stranraer", "bonnyrigg-rose"]
@@ -316,7 +327,7 @@ plot(
     legend = :outertopright
 )
 
-plot!(
+plot(
     subset_df.round, 
     subset_df.def, 
     group = subset_df.team, 

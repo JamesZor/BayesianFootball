@@ -80,15 +80,13 @@ function run_sampler(turing_model, config::NUTSConfig)
     
     chain = sample(
         turing_model, 
-        NUTS(config.n_warmup, 0.65, max_depth=8), 
+        NUTS(config.n_warmup, 0.65, max_depth=6), 
         MCMCThreads(), 
         config.n_samples, 
         config.n_chains,
-        progress = true,
+        progress = :perchain,
         adtype = AutoReverseDiff(compile=true),
         
-        # FIX: Use 'initial_params' with the strategy vector
-        # This bypasses the need to know length(model)
         initial_params = fill(init_strat, config.n_chains)
     )
     return chain
@@ -113,35 +111,6 @@ SGLDConfig(; step_size=0.005, n_samples=20000, n_chains=4, ad_backend=:reversedi
     SGLDConfig(step_size, n_samples, n_chains, ad_backend)
 
 # 2. Define the Runner
-# function run_sampler(turing_model, config::SGLDConfig)
-#     println("Sampling with SGLD (Langevin Dynamics)...")
-#     println("  - Step Size: $(config.step_size)")
-#     println("  - Chains:    $(config.n_chains)")
-#     println("  - Backend:   $(config.ad_backend)")
-#
-#     # 1. Select the AD Backend based on the config
-#     # Your benchmark proved ReverseDiff is fast, so that's our default.
-#     ad_type = if config.ad_backend == :zygote
-#         Turing.AutoZygote()
-#     else
-#         # compile=true makes it faster for static graphs like yours
-#         Turing.AutoReverseDiff(compile=true) 
-#     end
-#
-#     # 2. Run Sampling with Multiple Chains
-#     chain = sample(
-#         turing_model,
-#
-#         SGLD(stepsize=config.step_size, adtype=ad_type), 
-#
-#         MCMCThreads(),            # Enable Parallel Chains
-#         config.n_samples,
-#         config.n_chains,
-#         progress=true
-#     )
-#     return chain
-# end
-#
 function run_sampler(turing_model, config::SGLDConfig)
     println("Sampling with Langevin Dynamics (ULA)...")
     println("  - Constant Step: $(config.step_size)")
@@ -154,6 +123,7 @@ function run_sampler(turing_model, config::SGLDConfig)
         Turing.AutoReverseDiff(compile=true)
     end
 
+    init_strat = Turing.InitFromUniform(-0.001, 0.001)
     # 2. Configure Sampler
     # FIX: We pass a FUNCTION 't -> step_size', not a raw number.
     # We avoid PolynomialStepsize because we don't want it to decay for ULA.
@@ -169,7 +139,10 @@ function run_sampler(turing_model, config::SGLDConfig)
         MCMCThreads(),
         config.n_samples,
         config.n_chains,
-        progress = true
+        progress = true,
+        thinning = 200, 
+        discard_initial = 1000,
+        initial_params = fill(init_strat, config.n_chains)
     )
     return chain
 end
