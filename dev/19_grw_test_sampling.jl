@@ -69,6 +69,23 @@ end
 compress_time_col!(dss.matches, 14, col=:split_col)
 
 
+"""
+Check the group of the split cols 
+""" 
+combine( 
+  groupby(dss.matches, :split_col), 
+  nrow => :n_matchs
+)
+
+combine( 
+  groupby(dss.matches, :match_week), 
+  nrow => :n_matchs
+)
+
+
+subset( dss.matches, :split_col => ByRow(isequal(17)))[:, [:home_team, :away_team, :match_date, :split_col, :match_week, :match_dayofweek]]
+
+
 model= BayesianFootball.Models.PreGame.GRWPoisson()
 
 vocabulary = BayesianFootball.Features.create_vocabulary(dss, model)
@@ -95,14 +112,137 @@ results = BayesianFootball.Training.train(model, training_config, feature_sets)
 
 
 """ 
-dealing with the results
+chain diag 
+"""
 
+using MCMCChains, Plots, StatsPlots
+
+r = results[1][1]
+
+hyperparams = ["σ_att", "σ_def", "home_adv"]
+
+plot(r[hyperparams])
+meanplot(r[hyperparams])
+autocorplot(r[hyperparams])
+### 
+# 
+
+
+all_names = string.(names(r))
+
+# 2. Filter for a specific team (e.g., Team ID 1) at specific time steps
+# Adjust '1' to a valid team ID and '10', '20' to valid round numbers in your data
+target_vars = filter(n -> n in ["att_hist[1, 1]", "att_hist[1, 10]", "att_hist[1, 20]"], all_names)
+
+# 3. Plot only these specific latent variables
+plot(r[target_vars])
+
+""" 
+julia> vocabulary.mappings[:team_map]
+Dict{InlineStrings.String31, Int64} with 12 entries:
+  "motherwell"          => 2
+  "st-johnstone"        => 6
+  "hibernian"           => 10
+  "dundee-united"       => 3
+  "st-mirren"           => 5
+  "heart-of-midlothian" => 1
+  "dundee-fc"           => 7
+  "rangers"             => 9
+  "celtic"              => 4
+  "aberdeen"            => 12
+  "ross-county"         => 8
+  "kilmarnock"          => 11
+
+"""
+
+team_id = 6
+team_attact_list_str = [ "att_hist[$team_id, $round]" for round in 1:5:20] 
+team_def_list_str = [ "att_hist[$team_id, $round]" for round in 1:5:20] 
+target_vars_att = filter( n -> n in team_attact_list_str, all_names)
+target_vars_def = filter( n -> n in team_def_list_str, all_names)
+
+plot(r[target_vars_att])
+meanplot(r[target_vars_att])
+autocorplot(r[target_vars_att])
+
+
+println("\n")
+plot(r[target_vars_def])
+autocorplot(r[target_vars_def])
+
+
+
+team_id = 6
+team_attact_list_str = [ "att_hist[$team_id, $round]" for round in 1:5:20] 
+team_def_list_str = [ "att_hist[$team_id, $round]" for round in 1:20] 
+target_vars_att = filter( n -> n in team_attact_list_str, all_names)
+target_vars_def = filter( n -> n in team_def_list_str, all_names)
+
+forestplot(r[target_vars_att], hpd_val = [0.05, 0.15, 0.25], ordered = true)
+
+
+
+
+# Convert your existing string vector to symbols
+hyperparams_sym = Symbol.(hyperparams)
+# Now run the plot
+ridgelineplot(r, hyperparams_sym)
+forestplot(r, hyperparams_sym)
+
+
+team_id = 6
+team_def_list_str = [ "att_hist[$team_id,$round]" for round in 1:20] 
+target_vars_att = filter( n -> n in sym, all_names)
+target_vars_def = filter( n -> n in team_def_list_str, all_names)
+
+team_attact_sym = Symbol.([ "att_hist[$team_id, $round]" for round in 1:20])
+forestplot(r, team_attact_sym)
+
+
+###
+
+stats_df = DataFrame(summarystats(r))
+
+# 2. Find parameters that haven't converged (Rhat > 1.05)
+# Rhat should be close to 1.0. Values > 1.05 indicate the chain is stuck or not mixing.
+bad_rhat = filter(row -> row.rhat > 1.02, stats_df)
+
+println("--- Parameters with Poor Convergence (Rhat > 1.05) ---")
+if isempty(bad_rhat)
+    println("All parameters have converged (Rhat <= 1.05)!")
+else
+    # Sort by worst Rhat first
+    sort!(bad_rhat, :rhat, rev=true)
+    display(bad_rhat[:, [:parameters, :rhat, :ess_bulk]])
+end
+
+
+low_ess_threshold = 100  # Adjust based on your needs
+low_ess = filter(row -> row.ess_bulk < low_ess_threshold, stats_df)
+
+println("\n--- Parameters with Low ESS (< $low_ess_threshold) ---")
+if isempty(low_ess)
+    println("All parameters have sufficient ESS!")
+else
+    sort!(low_ess, :ess_bulk)
+    display(low_ess[:, [:parameters, :ess_bulk, :rhat]])
+end
+
+
+
+
+
+"""
+
+dealing with the results
 """
 
 r = results[1][1]
 
+unique(dss.matches.split_col)
 
-mp = filter( row -> row.split_col == 25 , ds.matches)
+
+mp = filter( row -> row.split_col == 23 , dss.matches)
 
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
@@ -122,6 +262,16 @@ model_odds
 open, close, outcome = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds )
 
 
+
+using StatsPlots
+sym = :under_05
+density( match_predict[sym], label="grw")
+density!( match_predict_pos[sym], label="poisson")
+
+
+
+
+####
 results_pos = JLD2.load_object("training_results_large.jld2")
 
 # 
