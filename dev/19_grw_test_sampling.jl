@@ -25,55 +25,67 @@ data_store = BayesianFootball.Data.load_default_datastore()
 
 ds = BayesianFootball.load_scottish_data("24/25", split_week=14)
 
-# """
-#     compress_time_col!(df, split_week; col=:split_col)
-#
-# Modifies the dataframe in-place.
-# - Matches with match_week <= split_week are mapped to index 1.
-# - Matches with match_week > split_week are mapped to match_week - split_week + 1.
-# """
-# function compress_time_col!(df::DataFrame, split_week::Int; col::Symbol=:split_col)
-#     # Ensure the column exists and is Int
-#     if !hasproperty(df, col)
-#         df[!, col] = zeros(Int, nrow(df))
-#     end
-#
-#     # Logic:
-#     # If week 14 is the split:
-#     # Week 1-14 -> 1 (The Baseline)
-#     # Week 15   -> 2 (The first Step)
-#     # Week 16   -> 3
-#     for row in eachrow(df)
-#         if row.match_week <= split_week
-#             row[col] = 1
-#         else
-#             row[col] = row.match_week - split_week + 1
-#         end
-#     end
-#     return df
-# end
-#
-# compress_time_col!(ds.matches, 14, col=:split_col)
-#
+
+"""
+Here limit to one league to improve the sampling speed and reduce the compleity of the data 
+"""
+
+dss = BayesianFootball.Data.DataStore( 
+    subset( ds.matches, :tournament_id => ByRow(isequal(54)) ),
+    ds.odds,
+    ds.incidents
+)
+  
+
+
+"""
+    compress_time_col!(df, split_week; col=:split_col)
+
+Modifies the dataframe in-place.
+- Matches with match_week <= split_week are mapped to index 1.
+- Matches with match_week > split_week are mapped to match_week - split_week + 1.
+"""
+function compress_time_col!(df::DataFrame, split_week::Int; col::Symbol=:split_col)
+    # Ensure the column exists and is Int
+    if !hasproperty(df, col)
+        df[!, col] = zeros(Int, nrow(df))
+    end
+
+    # Logic:
+    # If week 14 is the split:
+    # Week 1-14 -> 1 (The Baseline)
+    # Week 15   -> 2 (The first Step)
+    # Week 16   -> 3
+    for row in eachrow(df)
+        if row.match_week <= split_week
+            row[col] = 1
+        else
+            row[col] = row.match_week - split_week + 1
+        end
+    end
+    return df
+end
+
+compress_time_col!(dss.matches, 14, col=:split_col)
+
 
 model= BayesianFootball.Models.PreGame.GRWPoisson()
 
-vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
+vocabulary = BayesianFootball.Features.create_vocabulary(dss, model)
 
 splitter_config = BayesianFootball.Data.StaticSplit(
     train_seasons = ["24/25"], 
     round_col = :split_col
 )
 
-data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+data_splits = BayesianFootball.Data.create_data_splits(dss, splitter_config)
 feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
-
 
 
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 
 
-sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=50, n_chains=8, n_warmup=100) # Use renamed struct
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=1000, n_chains=4, n_warmup=1000) # Use renamed struct
 
 
 training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
@@ -82,7 +94,10 @@ training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_c
 results = BayesianFootball.Training.train(model, training_config, feature_sets)
 
 
+""" 
+dealing with the results
 
+"""
 
 r = results[1][1]
 
