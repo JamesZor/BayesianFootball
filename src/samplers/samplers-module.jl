@@ -80,7 +80,7 @@ function run_sampler(turing_model, config::NUTSConfig)
     
     chain = sample(
         turing_model, 
-        NUTS(config.n_warmup, 0.65, max_depth=6), 
+        NUTS(config.n_warmup, 0.65, max_depth=10), # api default max_depth is 10 
         MCMCThreads(), 
         config.n_samples, 
         config.n_chains,
