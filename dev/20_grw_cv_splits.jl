@@ -28,12 +28,12 @@ matches_df = BayesianFootball.Data.add_match_week_column(filtered_matches)
 # create half way through the season
 matches_df.split_col = max.(0, matches_df.match_week .- 20);
 
-unique(matches_df.split_col)
-combine(
-  groupby(matches_df, :split_col), 
-  nrow
-)
-
+# unique(matches_df.split_col)
+# combine(
+#   groupby(matches_df, :split_col), 
+#   nrow
+# )
+#
 
 
 odds_subset = semijoin(data_store.odds, matches_df, on = :match_id)
@@ -66,12 +66,12 @@ sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=1000, n_chains=2, 
 
 training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
-results = BayesianFootball.Training.train(model, training_config, fs_modded)
+# results = BayesianFootball.Training.train(model, training_config, fs_modded)
+# JLD2.save_object("grw_debug_results.jld2", results)
 
 
 using JLD2
 
-JLD2.save_object("grw_debug_results.jld2", results)
 
 results = JLD2.load_object("grw_debug_results.jld2")
 
@@ -90,162 +90,108 @@ dfs_to_predict = [
     for key in prediction_split_keys
 ]
 
-# this is not working
 all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
     model,
     dfs_to_predict, 
     vocabulary,
-    results[1:10]
+    results
 )
-"""
-julia> all_oos_results = BayesianFootball.Models.PreGame.extract_parameters(
-           model,
-           dfs_to_predict, 
-           vocabulary,
-           results[1:10]
-       )
-ERROR: TaskFailedException
 
-    nested task error: DimensionMismatch: array could not be broadcast to match destination
-    Stacktrace:
-      [1] check_broadcast_shape
-        @ ./broadcast.jl:559 [inlined]
-      [2] check_broadcast_axes
-        @ ./broadcast.jl:562 [inlined]
-      [3] instantiate
-        @ ./broadcast.jl:316 [inlined]
-      [4] materialize!
-        @ ./broadcast.jl:905 [inlined]
-      [5] materialize!
-        @ ./broadcast.jl:902 [inlined]
-      [6] unwrap_ntuple(tuple_of_arrays::NTuple{12, AxisArrays.AxisMatrix{Float64, Matrix{…}, Tuple{…}}})
-        @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/models-src/grw-poisson.jl:156
-      [7] extract_parameters(model::BayesianFootball.Models.PreGame.Implementations.GRWPoisson, df_to_predict::SubDataFrame{…}, vocabulary::Vocabulary, chains::MCMCChains.Chains{…})
-        @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/models-src/grw-poisson.jl:187
-      [8] macro expansion
-        @ ~/bet_project/BayesianFootball/src/models/pregame/pregame-module.jl:137 [inlined]
-      [9] (::BayesianFootball.Models.PreGame.Implementations.var"#extract_parameters##0#extract_parameters##1"{…})(tid::Int64; onethread::Bool)
-        @ BayesianFootball.Models.PreGame.Implementations ./threadingconstructs.jl:276
-     [10] #extract_parameters##0
-        @ ./threadingconstructs.jl:243 [inlined]
-     [11] (::Base.Threads.var"#threading_run##0#threading_run##1"{…})()
-        @ Base.Threads ./threadingconstructs.jl:177
+# load static poisson 
+results_poisson = JLD2.load_object("training_results_large.jld2")
 
-...and 7 more exceptions.
+df = filter(row -> row.season=="24/25", data_store.matches)
+# we want to get the last 4 weeks - so added the game weeks
+df = BayesianFootball.Data.add_match_week_column(df)
+df.split_col = max.(0, df.match_week .- 14);
 
-Stacktrace:
- [1] threading_run(fun::BayesianFootball.Models.PreGame.Implementations.var"#extract_parameters##0#extract_parameters##1"{…}, static::Bool)
-   @ Base.Threads ./threadingconstructs.jl:196
- [2] macro expansion
-   @ ./threadingconstructs.jl:213 [inlined]
- [3] extract_parameters(model::BayesianFootball.Models.PreGame.Implementations.GRWPoisson, dfs_to_predict::Vector{…}, vocabulary::Vocabulary, results_vector::Vector{…})
-   @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/pregame-module.jl:129
- [4] top-level scope
-   @ REPL[64]:1
-Some type information was truncated. Use `show(err)` to see complete types.
+dss = BayesianFootball.Data.DataStore(
+    df,
+    data_store.odds,
+    data_store.incidents
+)
 
-"""
+model_pos = BayesianFootball.Models.PreGame.StaticPoisson()
 
+
+data_store = BayesianFootball.Data.load_default_datastore()
+vocabulary_pos = BayesianFootball.Features.create_vocabulary(data_store, model_pos)
+
+split_col_name = :split_col
+all_splits = sort(unique(dss.matches[!, split_col_name]))
+prediction_split_keys = all_splits[2:end] 
+grouped_matches = groupby(dss.matches, split_col_name)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_name => key)] 
+    for key in prediction_split_keys
+]
+
+
+
+oos_poisson = BayesianFootball.Models.PreGame.extract_parameters(
+    model_pos,
+    dfs_to_predict,  # Pass in the pre-split vector
+    vocabulary_pos,
+    results_poisson
+)
+
+
+
+
+
+# 
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(ds)
 
-r = results[9][1]
+match_id = rand(keys(all_oos_results))
 
-mp = subset(ds.matches, :split_col => ByRow(isequal(10)))
+r_grw =  all_oos_results[match_id]
+r_poisson =  oos_poisson[match_id]
 
-row = mp[1, :]
-
-m_e = BayesianFootball.Models.PreGame.extract_parameters(model, mp, vocabulary, r)
-
-##### 
-# de bug unwrap_ntuple 
-
-params = get(r, [:home_adv, :σ_att, :σ_def, :z_att_init, :z_def_init, :z_att_steps, :z_def_steps]);
-
-BayesianFootball.Models.PreGame.Implementations.unwrap_ntuple(params.z_att_init)
-"""
-julia> BayesianFootball.Models.PreGame.Implementations.unwrap_ntuple(params.z_att_init)
-ERROR: DimensionMismatch: array could not be broadcast to match destination
-Stacktrace:
- [1] check_broadcast_shape
-   @ ./broadcast.jl:559 [inlined]
- [2] check_broadcast_axes
-   @ ./broadcast.jl:562 [inlined]
- [3] instantiate
-   @ ./broadcast.jl:316 [inlined]
- [4] materialize!
-   @ ./broadcast.jl:905 [inlined]
- [5] materialize!
-   @ ./broadcast.jl:902 [inlined]
- [6] unwrap_ntuple(tuple_of_arrays::NTuple{12, AxisArrays.AxisMatrix{Float64, Matrix{Float64}, Tuple{AxisArrays.Axis{…}, AxisArrays.Axis{…}}}})
-   @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/models-src/grw-poisson.jl:156
- [7] top-level scope
-   @ REPL[91]:1
-Some type information was truncated. Use `show(err)` to see complete types.
-
-"""
-
-tuple_of_arrays = params.z_att_init ;
-
-n_features = length(tuple_of_arrays) # 12 
-
-n_samples = length(tuple_of_arrays[1]) # 2_000
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
 
 
-out = Matrix{Float64}(undef, n_features, n_samples)
+match_predict_grw = BayesianFootball.Predictions.predict_market(model, predict_config, r_grw...);
+match_predict_poisson = BayesianFootball.Predictions.predict_market(model_pos, predict_config, r_poisson...);
 
 
-for (i, arr) in enumerate(tuple_of_arrays)
-    # We copy the data from the AxisArray 'arr' into the i-th row of 'out'
-    # 'vec(arr)' creates a copy, so we just iterate/broadcast
-    out[i, :] .= arr
-end
-"""
-julia> tuple_of_arrays = params.z_att_init ;
+model_odds_grw = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_grw));
+model_odds_grw
 
-julia> n_features = length(tuple_of_arrays) # 12 
-12
+model_odds_poisson = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_poisson));
+model_odds_poisson
 
-julia> n_samples = length(tuple_of_arrays[1]) # 2_000
-2000
 
-julia> for (i, arr) in enumerate(tuple_of_arrays)
-           # We copy the data from the AxisArray 'arr' into the i-th row of 'out'
-           # 'vec(arr)' creates a copy, so we just iterate/broadcast
-           out[i, :] .= arr
-       end
-ERROR: DimensionMismatch: array could not be broadcast to match destination
-Stacktrace:
- [1] check_broadcast_shape
-   @ ./broadcast.jl:559 [inlined]
- [2] check_broadcast_axes
-   @ ./broadcast.jl:562 [inlined]
- [3] instantiate
-   @ ./broadcast.jl:316 [inlined]
- [4] materialize!
-   @ ./broadcast.jl:905 [inlined]
- [5] materialize!(dest::SubArray{…}, bc::Base.Broadcast.Broadcasted{…})
-   @ Base.Broadcast ./broadcast.jl:902
- [6] top-level scope
-   @ ./REPL[95]:4
-Some type information was truncated. Use `show(err)` to see complete types.
-"""
-for (i, arr) in enumerate(tuple_of_arrays)
-        # THE FIX:
-        # parent(arr) -> Get raw Matrix (2000x1)
-        # vec(...)    -> Create 1D View (2000)
-        # .=          -> Broadcast copy into pre-allocated row
-        out[i, :] .= vec(parent(arr))
-end
 
-out
+open, close, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
 
-typeof(tuple_of_arrays)
-"""
-julia> typeof(tuple_of_arrays)
-NTuple{12, AxisArrays.AxisMatrix{Float64, Matrix{Float64}, Tuple{AxisArrays.Axis{:iter, StepRange{Int64, Int64}}, AxisArrays.Axis{:chain, UnitRange{Int64}}}
-}}
 
-"""
+
+# 1. Calculate Kelly for both (you already did this in your history)
+kelly_grw_res   = BayesianFootball.Signals.bayesian_kelly(match_predict_grw, open)
+kelly_poisson_res = BayesianFootball.Signals.bayesian_kelly(match_predict_poisson, open)
+
+# 2. Run the Comparison Dashboard
+# You can customize the `markets` list to see just what you care about
+compare_all_markets(
+    match_id, 
+    match_predict_grw, 
+    match_predict_poisson, 
+    open, 
+    close, 
+    results, 
+    kelly_grw_res, 
+    kelly_poisson_res;
+    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :over_35, :under_35, :btts_yes, :btts_no]
+)
+
+using StatsPlots
+sym = :under_25
+density( match_predict_grw[sym], label="grw")
+density!( match_predict_poisson[sym], label="poisson")
+
+
 
 ##################################################################################################
 

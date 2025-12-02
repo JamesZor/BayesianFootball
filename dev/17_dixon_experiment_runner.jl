@@ -132,6 +132,9 @@ subset( ds.matches, :match_id => ByRow(isequal(match_id)))
 
 
 match_predict_dixon = BayesianFootball.Predictions.predict_market(model, predict_config, r_dixon...);
+model_odds_poisson = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_poisson));
+model_odds_poisson
+
 match_predict_poisson = BayesianFootball.Predictions.predict_market(model_pos, predict_config, r_poisson...);
 
 model_odds_dixon = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_dixon));
