@@ -40,56 +40,26 @@ struct StaticPoisson <: AbstractStaticPoissonModel end
 end
 
 
-@model function static_poisson_model_predict(n_teams, home_ids, away_ids, 
+                                      
+@model function static_poisson_model_train_opt(n_teams, home_ids, away_ids, 
                                     home_goals, away_goals, ::Type{T} = Float64) where {T}
-        # --- Priors ---
-        log_α_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
-        log_β_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
+
+      # --- Priors ---
+        log_α_raw ~ filldist( Normal(0, 0.5), n_teams) 
+        log_β_raw ~ filldist( Normal(0, 0.5), n_teams) 
         home_adv ~ Normal(log(1.3), 0.2)
 
-        # --- Identifiability Constraint ---
+        
         log_α := log_α_raw .- mean(log_α_raw) # using := to added to track vars,
         log_β := log_β_raw .- mean(log_β_raw)
 
-        # --- Calculate Goal Rates ---
         log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
         log_μs = log_α[away_ids] .+ log_β[home_ids]
 
-        predicted_home_goals ~ arraydist(LogPoisson.(log_λs))
-        predicted_away_goals ~ arraydist(LogPoisson.(log_μs))
-
-# # --- PREDICTION CASE (THE HACK) ---
-#
-#         # 1. Calculate the deterministic values
-#         lambdas = exp.(log_λs)
-#         mus = exp.(log_μs)
-#
-#         # 2. "Sample" them from a Dirac distribution
-#         # This tricks Turing.predict() into saving them.
-#         lambda ~ arraydist(Dirac.(lambdas))
-#         mu ~ arraydist(Dirac.(mus))
-#
-
-
+        home_goals ~ arraydist(LogPoisson.(log_λs))
+        away_goals ~ arraydist(LogPoisson.(log_μs))
     return nothing
 end
-
-# # NEW: A helper to get the data from the FeatureSet
-# function _prepare_data(feature_set::FeatureSet)
-#
-#     home_ids = vcat(feature_set.round_home_ids...)
-#     away_ids = vcat(feature_set.round_away_ids...)
-#     home_goals = vcat(feature_set.round_home_goals...)
-#     away_goals = vcat(feature_set.round_away_goals...)
-#
-#     return (
-#         n_teams = feature_set.n_teams,
-#         f_home_ids = home_ids,
-#         f_away_ids = away_ids,
-#         f_home_goals = home_goals,
-#         f_away_goals = away_goals
-#     )
-# end
 
 
 # 3. DEFINE THE API FUNCTION FOR TRAINING

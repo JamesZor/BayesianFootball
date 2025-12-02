@@ -1,6 +1,263 @@
 using BayesianFootball
 using DataFrames
 using Statistics
+using ThreadPinning
+using LinearAlgebra
+pinthreads(:cores)
+BLAS.set_num_threads(1) 
+
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+
+filtered_matches = subset(data_store.matches,
+                          :season => ByRow( s -> s ∈ ["23/24","24/25"]),
+                          :tournament_id => ByRow(isequal(54))
+                          )
+
+
+matches_df = BayesianFootball.Data.add_match_week_column(filtered_matches)
+
+using Dates
+
+a = subset(matches_df,
+       :match_date => ByRow( s -> month(s) == 9 ), 
+       :season => ByRow(isequal("24/25"))
+       )
+
+matches_df.split_col = max.(0, matches_df.match_week .- 50);
+
+odds_subset = semijoin(data_store.odds, matches_df, on = :match_id)
+incidents_subset = semijoin(data_store.incidents, matches_df, on = :match_id)
+
+# Create the DataStore
+ds = BayesianFootball.Data.DataStore(
+    matches_df,
+    odds_subset,
+    incidents_subset
+)
+
+
+model= BayesianFootball.Models.PreGame.GRWPoisson()
+
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
+
+splitter_config = BayesianFootball.Data.ExpandingWindowCV(["23/24"], ["24/25"], :split_col, :sequential) #
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+
+feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
+
+
+fs_modded = feature_sets[2:end]
+
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=3) 
+
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=1000, n_chains=2, n_warmup=500) # Use renamed struct
+
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
+# results = BayesianFootball.Training.train(model, training_config, fs_modded)
+
+using JLD2
+
+JLD2.save_object("grw_debug_results_v2.jld2", results)
+
+results_v2 = JLD2.load_object("grw_debug_results_v2.jld2")
+results_v1 = JLD2.load_object("grw_debug_results.jld2")
+
+split_col_sym = :split_col
+all_split = sort(unique(ds.matches[!, split_col_sym]))
+prediction_split_keys = all_split[3:end] 
+grouped_matches = groupby(ds.matches, split_col_sym)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_sym => key)] 
+    for key in prediction_split_keys
+]
+
+oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    dfs_to_predict, 
+    vocabulary,
+    results
+)
+
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(ds)
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+match_id = rand(keys(oos_results))
+
+r_grw =  oos_results[match_id]
+
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+match_predict_grw = BayesianFootball.Predictions.predict_market(model, predict_config, r_grw...);
+
+
+model_odds_grw = Dict(key => median(1 ./ value) for (key, value) in pairs(match_predict_grw))
+
+kelly_grw_res   = BayesianFootball.Signals.bayesian_kelly(match_predict_grw, open)
+
+open, close, results = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
+
+
+sym = :under_35
+open[sym]
+model_odds_grw[sym]
+close[sym]
+results[sym]
+kelly_grw_res[sym]
+
+
+using StatsPlots
+sym = :home
+density( match_predict_grw[sym], label="grw")
+
+
+#############################
+# helpers
+
+
+using Statistics
+using Printf
+
+"""
+    summarize_chain(chain, market_odds)
+
+Helper to calculate probability, fair odds, and edge from a posterior chain.
+"""
+function summarize_chain(chain, market_odds)
+    # Calculate Model Probability (Post. Mean)
+    model_prob = mean(chain)
+    
+    # Calculate Implied Probability from Market
+    implied_prob = 1.0 / market_odds
+    
+    # Calculate Fair Odds (1 / Model Prob)
+    model_odds = model_prob > 0 ? 1.0 / model_prob : Inf
+    
+    # Calculate Edge (Expected Value)
+    # EV = (Probability * Decimal Odds) - 1
+    ev = (model_prob * market_odds) - 1.0
+    
+    return model_prob, model_odds, ev, implied_prob
+end
+
+"""
+    print_model_comparison(symbol, predict_dixon, predict_poisson, open_odds, close_odds, result, kelly_dixon, kelly_poisson)
+
+Displays a detailed comparison block for a single market symbol (e.g., :home, :over_25).
+"""
+function print_model_comparison(symbol::Symbol, 
+                                pred_dixon, pred_poisson, 
+                                open_odds, close_odds, result,
+                                kelly_dixon, kelly_poisson)
+
+    # 1. Check if symbol exists in all datasets
+    if !haskey(open_odds, symbol) || !haskey(pred_dixon, symbol)
+        return # Skip if data missing
+    end
+
+    # 2. Get Market Context
+    o_odds = open_odds[symbol]
+    c_odds = close_odds[symbol]
+    outcome_str = result[symbol] ? "WIN" : "LOSS"
+    outcome_color = result[symbol] ? :green : :red
+
+    # 3. Calculate Stats for Both Models
+    prob_d, odds_d, edge_d, imp_p = summarize_chain(pred_dixon[symbol], o_odds)
+    prob_p, odds_p, edge_p, _     = summarize_chain(pred_poisson[symbol], o_odds)
+
+    # 4. Get Kelly Stakes (Handle cases where kelly returns 0.0 or missing)
+    k_d = get(kelly_dixon, symbol, 0.0)
+    k_p = get(kelly_poisson, symbol, 0.0)
+
+    # --- RENDER OUTPUT ---
+    printstyled("──────────────────────────────────────────────────────────────\n", color=:light_black)
+    printstyled(@sprintf(" MARKET: :%-10s ", symbol), bold=true, color=:white)
+    printstyled("RESULT: ", color=:white)
+    printstyled("$outcome_str\n", bold=true, color=outcome_color)
+    
+    # Market Info
+    @printf(" Market Open: %6.3f (Imp: %4.1f%%) | Close: %6.3f\n", o_odds, imp_p*100, c_odds)
+    println()
+
+    # Comparison Header
+    printstyled(@sprintf(" %-12s | %-10s | %-10s | %-8s | %-8s\n", "Model", "Prob", "Fair Odds", "Edge", "Kelly"), color=:light_blue)
+    println(" " * "-"^60)
+
+    # Row: Dixon-Coles
+    # Color code the edge: Green if > 0, Red if < 0
+    d_color = edge_d > 0 ? :green : :light_black
+    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Dixon-Coles", prob_d*100, odds_d), color=:white)
+    printstyled(@sprintf("%+5.1f%%", edge_d*100), color=d_color)
+    printstyled(@sprintf("   | %5.2f%%\n", k_d*100), color=(k_d > 0 ? :yellow : :light_black))
+
+    # Row: Poisson
+    p_color = edge_p > 0 ? :green : :light_black
+    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Poisson", prob_p*100, odds_p), color=:white)
+    printstyled(@sprintf("%+5.1f%%", edge_p*100), color=p_color)
+    printstyled(@sprintf("   | %5.2f%%\n", k_p*100), color=(k_p > 0 ? :yellow : :light_black))
+    println()
+end
+
+"""
+    compare_all_markets(match_id, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+
+Main function to loop through standard markets and display the dashboard.
+"""
+function compare_all_markets(match_id, 
+                             pred_dixon, pred_poisson, 
+                             open, close, results, 
+                             kelly_dixon, kelly_poisson;
+                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
+    
+    printstyled("\n══════════════════════════════════════════════════════════════\n", color=:magenta)
+    printstyled(@sprintf(" BAYESIAN MODEL COMPARISON | MATCH ID: %d \n", match_id), bold=true, color=:white)
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+
+    for sym in markets
+        print_model_comparison(sym, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+    end
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+end
+
+
+function compare_all_markets(match_id, 
+                             pred_dixon, pred_poisson, 
+                             open, close, results, 
+                             kelly_dixon, kelly_poisson;
+                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
+
+function compare_all_markets(match_id, 
+                             model_1,
+                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
+
+
+    
+    printstyled("\n══════════════════════════════════════════════════════════════\n", color=:magenta)
+    printstyled(@sprintf(" BAYESIAN MODEL COMPARISON | MATCH ID: %d \n", match_id), bold=true, color=:white)
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+
+    for sym in markets
+        print_model_comparison(sym, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+    end
+    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+end
+
+##################################################################################################
+
+"""
+workspace 2 
+
+"""
+###################################################################################################
+
+using BayesianFootball
+using DataFrames
+using Statistics
 
 
 using ThreadPinning
