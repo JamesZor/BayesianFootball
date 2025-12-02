@@ -19,7 +19,8 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
 @model function grw_poisson_model_train(n_teams, n_rounds, 
                                       flat_home_ids, flat_away_ids, 
                                       flat_home_goals, flat_away_goals, 
-                                      time_indices) 
+                                      time_indices,
+                                        ::Type{T} = Float64 ) where {T} 
     
     # --- 1. Hyperparameters ---
     # Standard deviations for the random walk steps
@@ -79,11 +80,6 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
     flat_home_goals ~ arraydist(LogPoisson.(log_λs))
     flat_away_goals ~ arraydist(LogPoisson.(log_μs))
     
-    # --- 5. Tracking ---
-    # We track the centered parameters for post-processing
-    att_hist := att
-    def_hist := def
-
     return nothing
 end
 
@@ -136,65 +132,114 @@ function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
     )
 end
 
+
 """
+OPTIMIZED HELPER: unwraps NTuple directly into target shape
+Avoids hcat and permutedims allocations.
+"""
+function unwrap_ntuple(tuple_of_arrays)
+    # 1. Determine Dimensions
+    # tuple_of_arrays is (AxisArray_1, AxisArray_2, ...)
+    n_features = length(tuple_of_arrays)
+    
+    # Peek at the first element to get sample count (length of the array)
+    n_samples = length(tuple_of_arrays[1])
+    
+    # 2. Pre-allocate the FINAL Matrix [Features, Samples]
+    # We want Float64, assuming that's what comes out of Turing
+    out = Matrix{Float64}(undef, n_features, n_samples)
+    
+    # 3. Fill directly (No temporary arrays)
+    for (i, arr) in enumerate(tuple_of_arrays)
+        # We copy the data from the AxisArray 'arr' into the i-th row of 'out'
+        # 'vec(arr)' creates a copy, so we just iterate/broadcast
+        out[i, :] .= arr
+    end
+    
+    return out
+end
+
+
+
+
+"""
+v2 improved 
+
     extract_parameters(model::GRWPoisson, df_to_predict, vocabulary, chains)
 
 Extracts parameters for prediction. 
-Uses the 'att_hist' and 'def_hist' variables we explicitly tracked with :=
+
 """
-function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
-    
-    ValueType = NamedTuple{(:λ_h, :λ_a), Tuple{AbstractVector{Float64}, AbstractVector{Float64}}}
-    extraction_dict = Dict{Int64, ValueType}()
 
-    # 1. Determine the last available round 'T' in the chains
-    # We look for keys like "att_hist[1, T]"
-    all_keys = string.(names(chains))
+function extract_parameters(
+  model::GRWPoisson,
+  df_to_predict::AbstractDataFrame,
+  vocabulary::Vocabulary,
+  chains::Chains)
     
-    # Regex to capture T from "att_hist[team_id, T]"
-    # Note: Turing formats matrix keys as "var[row,col]"
-    # We find the maximum 'col' index.
-    max_round = 0
-    for k in all_keys
-        m = match(r"att_hist\[\d+,\s*(\d+)\]", k)
-        if !isnothing(m)
-            r = parse(Int, m.captures[1])
-            if r > max_round
-                max_round = r
-            end
-        end
-    end
+    # --- STEP 1: Fast Vectorized Reconstruction
+    params = get(chains, [:home_adv, :σ_att, :σ_def, :z_att_init, :z_def_init, :z_att_steps, :z_def_steps])
+
+    home_adv_vec = vec(params.home_adv)
+    σ_att_vec    = vec(params.σ_att)
+    σ_def_vec    = vec(params.σ_def)
+
+    Z_att_init = unwrap_ntuple(params.z_att_init)
+    Z_def_init = unwrap_ntuple(params.z_def_init)
+    Z_att_steps_raw = unwrap_ntuple(params.z_att_steps)
+    Z_def_steps_raw = unwrap_ntuple(params.z_def_steps)
+
+    n_samples = length(σ_att_vec)
+    n_teams   = vocabulary.mappings[:n_teams]
+    n_steps   = div(size(Z_att_steps_raw, 1), n_teams)
+
+    Z_att_steps = reshape(Z_att_steps_raw, n_teams, n_steps, n_samples)
+    Z_def_steps = reshape(Z_def_steps_raw, n_teams, n_steps, n_samples)
+
+    # 1. Sum Z-steps (Vectorized)
+    sum_z_att = dropdims(sum(Z_att_steps, dims=2), dims=2)
+    sum_z_def = dropdims(sum(Z_def_steps, dims=2), dims=2)
+
+    # 2. Reshape Sigmas
+    σ_att_row = reshape(σ_att_vec, 1, :)
+    σ_def_row = reshape(σ_def_vec, 1, :)
+
+    # 3. Calculate Final Strengths (Vectorized)
+    raw_att = (Z_att_init .* 0.5) .+ (sum_z_att .* σ_att_row)
+    raw_def = (Z_def_init .* 0.5) .+ (sum_z_def .* σ_def_row)
+
+    # 4. Center columns
+    final_att = raw_att .- mean(raw_att, dims=1)
+    final_def = raw_def .- mean(raw_def, dims=1)
+
+    # --- STEP 2: Optimized Loop with Views ---
     
-    # Fallback if regex fails (e.g. if n_rounds=1, sometimes it formats differently or we just assume 1)
-    T_final = max_round > 0 ? max_round : 1
-    # println("Debug: Extracting GRW parameters for T=$T_final")
+    ExtractionValue = NamedTuple{(:λ_h, :λ_a), Tuple{Vector{Float64}, Vector{Float64}}}
+    # Pre-allocate Dictionary size to avoid resizing overhead
+    extraction_dict = Dict{Int64, ExtractionValue}()
+    sizehint!(extraction_dict, nrow(df_to_predict))
+    
+    team_map = vocabulary.mappings[:team_map]
 
-    # 2. Extract Home Advantage
-    home_adv = vec(chains[Symbol("home_adv")])
-
-    # 3. Predict for each match
     for row in eachrow(df_to_predict)
-        if !haskey(vocabulary.mappings[:team_map], row.home_team) || !haskey(vocabulary.mappings[:team_map], row.away_team)
-            continue
-        end
+        h_team = row.home_team
+        a_team = row.away_team
 
-        h_id = vocabulary.mappings[:team_map][row.home_team]
-        a_id = vocabulary.mappings[:team_map][row.away_team]
+        # Fast lookup with default to avoid try/catch overhead
+        h_id = get(team_map, h_team, 0)
+        a_id = get(team_map, a_team, 0)
 
-        # 4. Retrieve parameters for the LAST time step (T_final)
-        # Construct the exact symbol name for the chain
-        sym_att_h = Symbol("att_hist[$h_id, $T_final]")
-        sym_att_a = Symbol("att_hist[$a_id, $T_final]")
-        sym_def_h = Symbol("def_hist[$h_id, $T_final]")
-        sym_def_a = Symbol("def_hist[$a_id, $T_final]")
+        # --- THE OPTIMIZATION ---
+        # @views ensures we DO NOT copy the columns from final_att.
+        # We just point to them.
+        att_h = @view final_att[h_id, :]
+        def_a = @view final_def[a_id, :]
+        att_a = @view final_att[a_id, :]
+        def_h = @view final_def[h_id, :]
 
-        att_h = vec(chains[sym_att_h])
-        att_a = vec(chains[sym_att_a])
-        def_h = vec(chains[sym_def_h])
-        def_a = vec(chains[sym_def_a])
-
-        # 5. Calculate Rates
-        λ_h = exp.(att_h .+ def_a .+ home_adv)
+        # Broadcasting results into a new vector (Payload)
+        # We do this directly, skipping intermediate 'matrix' creation
+        λ_h = exp.(att_h .+ def_a .+ home_adv_vec)
         λ_a = exp.(att_a .+ def_h)
 
         extraction_dict[Int(row.match_id)] = (; λ_h, λ_a)
@@ -203,6 +248,76 @@ function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame,
     return extraction_dict
 end
 
+
+
+
+# """
+#     extract_parameters(model::GRWPoisson, df_to_predict, vocabulary, chains)
+#
+# Extracts parameters for prediction. 
+# Uses the 'att_hist' and 'def_hist' variables we explicitly tracked with :=
+# """
+# function extract_parameters(model::GRWPoisson, df_to_predict::AbstractDataFrame, vocabulary::Vocabulary, chains::Chains)
+#
+#     ValueType = NamedTuple{(:λ_h, :λ_a), Tuple{AbstractVector{Float64}, AbstractVector{Float64}}}
+#     extraction_dict = Dict{Int64, ValueType}()
+#
+#     # 1. Determine the last available round 'T' in the chains
+#     # We look for keys like "att_hist[1, T]"
+#     all_keys = string.(names(chains))
+#
+#     # Regex to capture T from "att_hist[team_id, T]"
+#     # Note: Turing formats matrix keys as "var[row,col]"
+#     # We find the maximum 'col' index.
+#     max_round = 0
+#     for k in all_keys
+#         m = match(r"att_hist\[\d+,\s*(\d+)\]", k)
+#         if !isnothing(m)
+#             r = parse(Int, m.captures[1])
+#             if r > max_round
+#                 max_round = r
+#             end
+#         end
+#     end
+#
+#     # Fallback if regex fails (e.g. if n_rounds=1, sometimes it formats differently or we just assume 1)
+#     T_final = max_round > 0 ? max_round : 1
+#     # println("Debug: Extracting GRW parameters for T=$T_final")
+#
+#     # 2. Extract Home Advantage
+#     home_adv = vec(chains[Symbol("home_adv")])
+#
+#     # 3. Predict for each match
+#     for row in eachrow(df_to_predict)
+#         if !haskey(vocabulary.mappings[:team_map], row.home_team) || !haskey(vocabulary.mappings[:team_map], row.away_team)
+#             continue
+#         end
+#
+#         h_id = vocabulary.mappings[:team_map][row.home_team]
+#         a_id = vocabulary.mappings[:team_map][row.away_team]
+#
+#         # 4. Retrieve parameters for the LAST time step (T_final)
+#         # Construct the exact symbol name for the chain
+#         sym_att_h = Symbol("att_hist[$h_id, $T_final]")
+#         sym_att_a = Symbol("att_hist[$a_id, $T_final]")
+#         sym_def_h = Symbol("def_hist[$h_id, $T_final]")
+#         sym_def_a = Symbol("def_hist[$a_id, $T_final]")
+#
+#         att_h = vec(chains[sym_att_h])
+#         att_a = vec(chains[sym_att_a])
+#         def_h = vec(chains[sym_def_h])
+#         def_a = vec(chains[sym_def_a])
+#
+#         # 5. Calculate Rates
+#         λ_h = exp.(att_h .+ def_a .+ home_adv)
+#         λ_a = exp.(att_a .+ def_h)
+#
+#         extraction_dict[Int(row.match_id)] = (; λ_h, λ_a)
+#     end
+#
+#     return extraction_dict
+# end
+#
 function predict(model::GRWPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
     return extract_parameters(model, df_to_predict, vocabulary, chains)
 end

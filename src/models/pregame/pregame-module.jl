@@ -8,6 +8,7 @@ module PreGame
 # This module also only depends on the central interfaces.
 # The '...' goes up two levels from PreGame -> Models -> BayesianFootball to find TypesInterfaces.
 using ...TypesInterfaces
+using Base.Threads
 
 # Shared abstract types are now in the main interfaces file.
 # include("interfaces.jl")
@@ -104,8 +105,52 @@ module Implementations
         return full_extraction_dict
     end
 
+    """
+    OVERLOADED METHOD: GRWPoisson Wrapper
+    Iterates through results and prediction dataframes, calling the inner extraction logic for each fold.
+    """
+    function extract_parameters(
+        model::GRWPoisson,
+        dfs_to_predict::AbstractVector, 
+        vocabulary::Vocabulary,
+        results_vector::AbstractVector
+    )
 
+        # 1. Define Types
+        PredictionValue = NamedTuple{(:λ_h, :λ_a), Tuple{Vector{Float64}, Vector{Float64}}}
+        DictType = Dict{Int64, PredictionValue}
 
+        n_splits = length(dfs_to_predict)
+        
+        # 2. Allocate storage for threaded results
+        partial_results = Vector{DictType}(undef, n_splits)
+
+        # 3. Parallel Map
+        Threads.@threads for i in 1:n_splits
+            # Safety check: ensure we have a result for this data split
+            if i <= length(results_vector)
+                result_tuple = results_vector[i]
+                df_curr = dfs_to_predict[i]
+                chains = result_tuple[1]
+
+                # Call the optimized inner function (v4)
+                partial_results[i] = extract_parameters(model, $df_curr, $vocabulary, $chains)
+            end
+        end
+
+        # 4. Sequential Reduce
+        total_rows = sum(nrow, dfs_to_predict)
+        full_extraction_dict = DictType()
+        sizehint!(full_extraction_dict, total_rows)
+
+        for i in 1:n_splits
+            if isassigned(partial_results, i)
+                merge!(full_extraction_dict, partial_results[i])
+            end
+        end
+
+        return full_extraction_dict
+    end
 
 
 
