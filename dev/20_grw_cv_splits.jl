@@ -1,3 +1,18 @@
+
+
+
+
+
+
+
+
+""""
+old, pre Implementation into the code base
+
+
+"""
+
+
 using Revise
 using BayesianFootball
 using DataFrames

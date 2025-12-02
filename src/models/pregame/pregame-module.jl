@@ -134,7 +134,7 @@ module Implementations
                 chains = result_tuple[1]
 
                 # Call the optimized inner function (v4)
-                partial_results[i] = extract_parameters(model, $df_curr, $vocabulary, $chains)
+                partial_results[i] = extract_parameters(model, df_curr, vocabulary, chains)
             end
         end
 
