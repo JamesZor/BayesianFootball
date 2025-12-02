@@ -20,6 +20,7 @@ module Implementations
     # It also only needs TypesInterfaces for its contracts.
     # '....' goes up three levels from Implementations -> PreGame -> Models -> BayesianFootball
     using ..TypesInterfaces: AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, AbstractPoissonModel, AbstractNegBinModel, AbstractInflatedDiagonalPoissonModel, FeatureSet, Vocabulary, AbstractDixonColesModel, AbstractStaticPoissonModel, AbstractDynamicPoissonModel
+
     # Each model is now in its own self-contained file
     include("./models-src/static-poisson.jl")
     include("./models-src/static-simplex-poisson.jl")

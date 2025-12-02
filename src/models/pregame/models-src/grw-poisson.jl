@@ -151,9 +151,7 @@ function unwrap_ntuple(tuple_of_arrays)
     
     # 3. Fill directly (No temporary arrays)
     for (i, arr) in enumerate(tuple_of_arrays)
-        # We copy the data from the AxisArray 'arr' into the i-th row of 'out'
-        # 'vec(arr)' creates a copy, so we just iterate/broadcast
-        out[i, :] .= arr
+        out[i, :] .= vec(parent(arr))
     end
     
     return out
