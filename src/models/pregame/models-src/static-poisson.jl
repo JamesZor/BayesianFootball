@@ -87,7 +87,7 @@ end
 
 Builds the Turing model for the **training phase**.
 """
-function build_turing_model(model::StaticPoisson, feature_set::FeatureSet, :v2)
+function build_turing_model(model::StaticPoisson, feature_set::FeatureSet, ::Val{:v2})
     # This helper function flattens the round-based data from the FeatureSet
     data = TuringHelpers.prepare_data(model, feature_set)
     
