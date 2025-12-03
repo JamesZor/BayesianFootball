@@ -114,139 +114,198 @@ kelly_grw_res[sym]
 using StatsPlots
 sym = :home
 density( match_predict_grw[sym], label="grw")
+# 1. Define the models you want to compare
+# Format: (name="String", model=ModelStruct, results=ResultsDict)
 
+models_to_compare = [
+    (
+        name    = "GRW Poisson", 
+        model   = model,            # Your specific model struct
+        results = oos_results       # Your results dictionary
+    ),
+    # If you had a second model (e.g., from a loaded file)
+    # (
+    #    name    = "GRW v1 (Loaded)", 
+    #    model   = model, 
+    #    results = results_v1_oos   # Assuming you extracted params for v1
+    # )
+]
+
+# 2. Pick a match ID
+match_id = rand(keys(oos_results))
+
+a = subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+a[:, [:match_id, :home_team, :away_team, :home_score, :away_score, :match_date, :split_col]]
+
+# 3. Run the comparison
+
+compare_models(match_id, ds, predict_config, models_to_compare, 
+    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :over_35, :under_35, :btts_yes, :btts_no]
+            )
 
 #############################
-# helpers
-
 
 using Statistics
 using Printf
+using Dates
+
+# --- 1. Statistical Helper ---
 
 """
     summarize_chain(chain, market_odds)
 
-Helper to calculate probability, fair odds, and edge from a posterior chain.
+Calculates the Model Probability, Fair Odds, Edge, and Kelly Stake.
 """
 function summarize_chain(chain, market_odds)
-    # Calculate Model Probability (Post. Mean)
+    if isempty(chain)
+        return 0.0, 0.0, -1.0, 0.0
+    end
+
+    # 1. Model Probability (Mean of posterior)
     model_prob = mean(chain)
     
-    # Calculate Implied Probability from Market
-    implied_prob = 1.0 / market_odds
+    # 2. Fair Odds (1 / Probability)
+    fair_odds = model_prob > 0 ? 1.0 / model_prob : Inf
     
-    # Calculate Fair Odds (1 / Model Prob)
-    model_odds = model_prob > 0 ? 1.0 / model_prob : Inf
+    # 3. Edge (Expected Value)
+    # EV = (Probability * Market Odds) - 1
+    edge = (model_prob * market_odds) - 1.0
     
-    # Calculate Edge (Expected Value)
-    # EV = (Probability * Decimal Odds) - 1
-    ev = (model_prob * market_odds) - 1.0
-    
-    return model_prob, model_odds, ev, implied_prob
+    return model_prob, fair_odds, edge
 end
 
-"""
-    print_model_comparison(symbol, predict_dixon, predict_poisson, open_odds, close_odds, result, kelly_dixon, kelly_poisson)
+# --- 2. Main Comparison Engine ---
 
-Displays a detailed comparison block for a single market symbol (e.g., :home, :over_25).
 """
-function print_model_comparison(symbol::Symbol, 
-                                pred_dixon, pred_poisson, 
-                                open_odds, close_odds, result,
-                                kelly_dixon, kelly_poisson)
+    compare_models(match_id, ds, predict_config, model_inputs; markets=[:home, :draw, :away])
 
-    # 1. Check if symbol exists in all datasets
-    if !haskey(open_odds, symbol) || !haskey(pred_dixon, symbol)
-        return # Skip if data missing
+Compare multiple models side-by-side for a specific match.
+
+# Arguments
+- `match_id`: Int
+- `ds`: The DataStore
+- `predict_config`: PredictionConfig
+- `model_inputs`: A Vector of NamedTuples: `[(name="Name", model=m, results=r), ...]`
+"""
+function compare_models(match_id::Int, 
+                        ds, 
+                        predict_config, 
+                        model_inputs::Vector; 
+                        markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
+
+    # --- A. Setup Match Data ---
+    # Fetch market data (Open, Close, Results)
+    # We use ds.odds because get_market_data needs the odds dataframe
+    open_odds, close_odds, outcomes = BayesianFootball.Predictions.get_market_data(match_id, predict_config, ds.odds)
+    
+    match_row = subset(ds.matches, :match_id => ByRow(isequal(match_id)))
+    if nrow(match_row) == 0
+        println("Match ID $match_id not found in DataStore.")
+        return
+    end
+    home_team = match_row.home_team[1]
+    away_team = match_row.away_team[1]
+    m_date = match_row.match_date[1]
+
+    # --- B. Pre-Calculate Predictions for all models ---
+    # We store these in a Dict to avoid re-calculating inside the market loop
+    # Structure: predictions[model_name] = (prediction_dict, kelly_dict)
+    model_data = Dict()
+
+    for entry in model_inputs
+        name = entry.name
+        model = entry.model
+        results_dict = entry.results
+
+        if !haskey(results_dict, match_id)
+            model_data[name] = nothing # Model doesn't have data for this match
+            continue
+        end
+
+        # Extract params and predict
+        params = results_dict[match_id]
+        
+        # Predict Market returns Dict{Symbol, Chain}
+        pred_market = BayesianFootball.Predictions.predict_market(model, predict_config, params...)
+        
+        # Calculate Kelly (we need 'open' odds for this)
+        # We pass 'open' because we want to see what the stake would have been at open
+        kelly_res = BayesianFootball.Signals.bayesian_kelly(pred_market, open_odds)
+
+        model_data[name] = (preds=pred_market, kelly=kelly_res)
     end
 
-    # 2. Get Market Context
-    o_odds = open_odds[symbol]
-    c_odds = close_odds[symbol]
-    outcome_str = result[symbol] ? "WIN" : "LOSS"
-    outcome_color = result[symbol] ? :green : :red
+    # --- C. Display Dashboard ---
+    printstyled("\n══════════════════════════════════════════════════════════════════════════════\n", color=:magenta)
+    printstyled(@sprintf(" MATCH %d: %s vs %s \n", match_id, home_team, away_team), bold=true, color=:white)
+    printstyled(@sprintf(" Date: %s \n", m_date), color=:light_black)
+    printstyled("══════════════════════════════════════════════════════════════════════════════\n", color=:magenta)
 
-    # 3. Calculate Stats for Both Models
-    prob_d, odds_d, edge_d, imp_p = summarize_chain(pred_dixon[symbol], o_odds)
-    prob_p, odds_p, edge_p, _     = summarize_chain(pred_poisson[symbol], o_odds)
+    for market_sym in markets
+        # 1. Check if market data exists
+        if !haskey(open_odds, market_sym)
+            continue
+        end
 
-    # 4. Get Kelly Stakes (Handle cases where kelly returns 0.0 or missing)
-    k_d = get(kelly_dixon, symbol, 0.0)
-    k_p = get(kelly_poisson, symbol, 0.0)
+        o_price = open_odds[market_sym]
+        c_price = haskey(close_odds, market_sym) ? close_odds[market_sym] : 0.0
+        
+        has_result = haskey(outcomes, market_sym)
+        is_win = has_result ? outcomes[market_sym] : false
+        res_str = has_result ? (is_win ? "WIN" : "LOSS") : "PENDING"
+        res_col = has_result ? (is_win ? :green : :red) : :yellow
 
-    # --- RENDER OUTPUT ---
-    printstyled("──────────────────────────────────────────────────────────────\n", color=:light_black)
-    printstyled(@sprintf(" MARKET: :%-10s ", symbol), bold=true, color=:white)
-    printstyled("RESULT: ", color=:white)
-    printstyled("$outcome_str\n", bold=true, color=outcome_color)
-    
-    # Market Info
-    @printf(" Market Open: %6.3f (Imp: %4.1f%%) | Close: %6.3f\n", o_odds, imp_p*100, c_odds)
-    println()
+        # 2. Market Header
+        printstyled("──────────────────────────────────────────────────────────────────────────────\n", color=:light_black)
+        printstyled(@sprintf(" %-10s ", string(market_sym)), bold=true, color=:cyan)
+        printstyled("Result: ", color=:light_black)
+        printstyled("$res_str ", bold=true, color=res_col)
+        printstyled(@sprintf("| Open: %.2f | Close: %.2f\n", o_price, c_price), color=:light_black)
+        println()
 
-    # Comparison Header
-    printstyled(@sprintf(" %-12s | %-10s | %-10s | %-8s | %-8s\n", "Model", "Prob", "Fair Odds", "Edge", "Kelly"), color=:light_blue)
-    println(" " * "-"^60)
+        # 3. Table Header
+        printstyled(@sprintf(" %-15s | %-8s | %-8s | %-8s | %-8s\n", "Model", "Prob", "Fair", "Edge", "Kelly"), color=:light_blue)
+        println(" " * "-"^65)
 
-    # Row: Dixon-Coles
-    # Color code the edge: Green if > 0, Red if < 0
-    d_color = edge_d > 0 ? :green : :light_black
-    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Dixon-Coles", prob_d*100, odds_d), color=:white)
-    printstyled(@sprintf("%+5.1f%%", edge_d*100), color=d_color)
-    printstyled(@sprintf("   | %5.2f%%\n", k_d*100), color=(k_d > 0 ? :yellow : :light_black))
+        # 4. Loop through models and print rows
+        for entry in model_inputs
+            name = entry.name
+            
+            if model_data[name] === nothing
+                printstyled(@sprintf(" %-15s | %-30s\n", name, "No Data for Match"), color=:light_black)
+                continue
+            end
 
-    # Row: Poisson
-    p_color = edge_p > 0 ? :green : :light_black
-    printstyled(@sprintf(" %-12s | %5.1f%%     | %6.3f     | ", "Poisson", prob_p*100, odds_p), color=:white)
-    printstyled(@sprintf("%+5.1f%%", edge_p*100), color=p_color)
-    printstyled(@sprintf("   | %5.2f%%\n", k_p*100), color=(k_p > 0 ? :yellow : :light_black))
-    println()
-end
+            (preds, kelly_dict) = model_data[name]
 
-"""
-    compare_all_markets(match_id, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+            if haskey(preds, market_sym)
+                chain = preds[market_sym]
+                
+                prob, fair, edge = summarize_chain(chain, o_price)
+                kelly_stake = get(kelly_dict, market_sym, 0.0)
 
-Main function to loop through standard markets and display the dashboard.
-"""
-function compare_all_markets(match_id, 
-                             pred_dixon, pred_poisson, 
-                             open, close, results, 
-                             kelly_dixon, kelly_poisson;
-                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
-    
-    printstyled("\n══════════════════════════════════════════════════════════════\n", color=:magenta)
-    printstyled(@sprintf(" BAYESIAN MODEL COMPARISON | MATCH ID: %d \n", match_id), bold=true, color=:white)
-    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
-
-    for sym in markets
-        print_model_comparison(sym, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
+                # Formatting Colors
+                edge_col = edge > 0 ? :green : :light_black
+                kelly_col = kelly_stake > 0 ? :yellow : :light_black
+                
+                # Print Row
+                printstyled(@sprintf(" %-15s | %5.1f%%   | %6.2f   | ", name, prob*100, fair), color=:white)
+                printstyled(@sprintf("%+5.1f%%", edge*100), color=edge_col)
+                printstyled(@sprintf("   | %5.1f%%\n", kelly_stake*100), color=kelly_col)
+            else
+                printstyled(@sprintf(" %-15s | N/A\n", name), color=:light_black)
+            end
+        end
+        println()
     end
-    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
+    printstyled("══════════════════════════════════════════════════════════════════════════════\n", color=:magenta)
 end
 
 
-function compare_all_markets(match_id, 
-                             pred_dixon, pred_poisson, 
-                             open, close, results, 
-                             kelly_dixon, kelly_poisson;
-                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
-
-function compare_all_markets(match_id, 
-                             model_1,
-                             markets=[:home, :draw, :away, :over_25, :under_25, :btts_yes])
 
 
-    
-    printstyled("\n══════════════════════════════════════════════════════════════\n", color=:magenta)
-    printstyled(@sprintf(" BAYESIAN MODEL COMPARISON | MATCH ID: %d \n", match_id), bold=true, color=:white)
-    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
 
-    for sym in markets
-        print_model_comparison(sym, pred_dixon, pred_poisson, open, close, results, kelly_dixon, kelly_poisson)
-    end
-    printstyled("══════════════════════════════════════════════════════════════\n", color=:magenta)
-end
-
+# helpers
 ##################################################################################################
 
 """

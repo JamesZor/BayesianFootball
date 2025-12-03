@@ -81,20 +81,22 @@ function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
     )
 end
 
-# 4. DEFINE THE API FUNCTION FOR PREDICTION
-"""
-    build_turing_model(model::StaticPoisson, n_teams::Int, home_ids::Vector{Int}, away_ids::Vector{Int})
 
-Builds the Turing model for the **prediction phase**. 
-It takes team IDs directly, as goals are unknown.
 """
-function build_turing_model(model::StaticPoisson, n_teams::Int, home_ids::Vector{Int}, away_ids::Vector{Int})
-    return static_poisson_model_predict(
-        n_teams,
-        home_ids,
-        away_ids,
-        missing, # Goals are missing for prediction
-        missing
+    build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
+
+Builds the Turing model for the **training phase**.
+"""
+function build_turing_model(model::StaticPoisson, feature_set::FeatureSet, :v2)
+    # This helper function flattens the round-based data from the FeatureSet
+    data = TuringHelpers.prepare_data(model, feature_set)
+    
+    return static_poisson_model_train_opt(
+        data.n_teams, 
+        data.flat_home_ids, 
+        data.flat_away_ids, 
+        data.flat_home_goals, 
+        data.flat_away_goals
     )
 end
 
