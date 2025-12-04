@@ -201,8 +201,156 @@ BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
 typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
 
 """
+#####
 
 
+# workspace_inspect.jl
+
+using BayesianFootball
+using Turing
+using DynamicPPL
+using LogDensityProblems
+using LinearAlgebra
+using InteractiveUtils # for @code_warntype
+using JET # You might need to add this package: ] add JET
+
+# 1. Setup Data (Fast setup)
+ds = BayesianFootball.load_scottish_data("24/25", split_week=0)
+model_struct = BayesianFootball.Models.PreGame.StaticPoisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model_struct)
+# Just grab the first feature set for testing
+data = BayesianFootball.Models.PreGame.TuringHelpers.prepare_data(model_struct, 
+    BayesianFootball.Features.create_features(
+        BayesianFootball.Data.create_data_splits(ds, BayesianFootball.Data.StaticSplit(train_seasons=["24/25"], round_col=:split_col)), 
+        vocabulary, model_struct, BayesianFootball.Data.StaticSplit(train_seasons=["24/25"], round_col=:split_col)
+    )[1][1]
+)
+
+# 2. Define the Model (Using your Optimized V2 filldist version)
+@model function static_poisson_optimized(n_teams, home_ids, away_ids, home_goals, away_goals)
+    # Types matter here! 
+    # filldist is usually more type-stable than MvNormal(zeros(n), 0.5*I)
+    log_α_raw ~ filldist(Normal(0, 0.5), n_teams) 
+    log_β_raw ~ filldist(Normal(0, 0.5), n_teams) 
+    home_adv ~ Normal(log(1.3), 0.2)
+
+    log_α = log_α_raw .- mean(log_α_raw)
+    log_β = log_β_raw .- mean(log_β_raw)
+    
+    log_λs = home_adv .+ log_α[home_ids] .+ log_β[away_ids]
+    log_μs = log_α[away_ids] .+ log_β[home_ids]
+
+    home_goals ~ arraydist(LogPoisson.(log_λs))
+    away_goals ~ arraydist(LogPoisson.(log_μs))
+end
+
+# 3. Instantiate Model & LogDensity
+turing_model = static_poisson_optimized(
+    data.n_teams, 
+    data.flat_home_ids, 
+    data.flat_away_ids, 
+    data.flat_home_goals, 
+    data.flat_away_goals
+)
+
+# Wrap it. This creates a function f(θ) that returns a float.
+ldf = Turing.LogDensityFunction(turing_model)
+
+# Create a dummy parameter vector θ to test with
+theta = randn(LogDensityProblems.dimension(ldf));
+
+# ==============================================================================
+# TEST 1: The Built-in Inspector (@code_warntype)
+# ==============================================================================
+println("\n=== REPORT 1: @code_warntype ===")
+println("Look for RED text or 'Any'. We want 'Float64'.\n")
+
+# We inspect the 'logdensity' call. 
+# This tells us if Julia knows the types of variables inside your model.
+@code_warntype LogDensityProblems.logdensity(ldf, theta)
+
+
+"""
+=== REPORT 1: @code_warntype ===
+
+julia> println("Look for RED text or 'Any'. We want 'Float64'.\n")
+Look for RED text or 'Any'. We want 'Float64'.
+
+
+julia> # We inspect the 'logdensity' call. 
+       # This tells us if Julia knows the types of variables inside your model.
+       @code_warntype LogDensityProblems.logdensity(ldf, theta)
+MethodInstance for LogDensityProblems.logdensity(::LogDensityFunction{Model{typeof(static_poisson_optimized), (:n_teams, :home_ids, :away_ids, :home_goals, :away_goals), (), (), Tuple{Int64, Vararg{Vector{Int64}, 4}}, Tuple{}, DefaultContext}, typeof(getlogjoint_internal), VarInfo{@NamedTuple{log_α_raw::DynamicPPL.Metadata{Dict{VarName{:log_α_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_α_raw, typeof(identity)}}, Vector{Float64}}, log_β_raw::DynamicPPL.Metadata{Dict{VarName{:log_β_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_β_raw, typeof(identity)}}, Vector{Float64}}, home_adv::DynamicPPL.Metadata{Dict{VarName{:home_adv, typeof(identity)}, Int64}, Vector{Normal{Float64}}, Vector{VarName{:home_adv, typeof(identity)}}, Vector{Float64}}}, DynamicPPL.AccumulatorTuple{3, @NamedTuple{LogPrior::LogPriorAccumulator{Float64}, LogJacobian::LogJacobianAccumulator{Float64}, LogLikelihood::LogLikelihoodAccumulator{Float64}}}}, Nothing}, ::Vector{Float64})
+  from logdensity(f::LogDensityFunction, x::AbstractVector) @ DynamicPPL ~/.julia/packages/DynamicPPL/Ut5Ls/src/logdensityfunction.jl:278
+Arguments
+  #self#::Core.Const(LogDensityProblems.logdensity)
+  f::LogDensityFunction{Model{typeof(static_poisson_optimized), (:n_teams, :home_ids, :away_ids, :home_goals, :away_goals), (), (), Tuple{Int64, Vararg{Vector{Int64}, 4}}, Tuple{}, DefaultContext}, typeof(getlogjoint_internal), VarInfo{@NamedTuple{log_α_raw::DynamicPPL.Metadata{Dict{VarName{:log_α_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_α_raw, typeof(identity)}}, Vector{Float64}}, log_β_raw::DynamicPPL.Metadata{Dict{VarName{:log_β_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_β_raw, typeof(identity)}}, Vector{Float64}}, home_adv::DynamicPPL.Metadata{Dict{VarName{:home_adv, typeof(identity)}, Int64}, Vector{Normal{Float64}}, Vector{VarName{:home_adv, typeof(identity)}}, Vector{Float64}}}, DynamicPPL.AccumulatorTuple{3, @NamedTuple{LogPrior::LogPriorAccumulator{Float64}, LogJacobian::LogJacobianAccumulator{Float64}, LogLikelihood::LogLikelihoodAccumulator{Float64}}}}, Nothing}
+  x::Vector{Float64}
+Body::Float64
+1 ─ %1 = DynamicPPL.logdensity_at::Core.Const(DynamicPPL.logdensity_at)
+│   %2 = Base.getproperty(f, :model)::Model{typeof(static_poisson_optimized), (:n_teams, :home_ids, :away_ids, :home_goals, :away_goals), (), (), Tuple{Int64, Vararg{Vector{Int64}, 4}}, Tuple{}, DefaultContext}
+│   %3 = Base.getproperty(f, :getlogdensity)::Core.Const(DynamicPPL.getlogjoint_internal)
+│   %4 = Base.getproperty(f, :varinfo)::VarInfo{@NamedTuple{log_α_raw::DynamicPPL.Metadata{Dict{VarName{:log_α_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_α_raw, typeof(identity)}}, Vector{Float64}}, log_β_raw::DynamicPPL.Metadata{Dict{VarName{:log_β_raw, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{VarName{:log_β_raw, typeof(identity)}}, Vector{Float64}}, home_adv::DynamicPPL.Metadata{Dict{VarName{:home_adv, typeof(identity)}, Int64}, Vector{Normal{Float64}}, Vector{VarName{:home_adv, typeof(identity)}}, Vector{Float64}}}, DynamicPPL.AccumulatorTuple{3, @NamedTuple{LogPrior::LogPriorAccumulator{Float64}, LogJacobian::LogJacobianAccumulator{Float64}, LogLikelihood::LogLikelihoodAccumulator{Float64}}}}
+│   %5 = (%1)(x, %2, %3, %4)::Float64
+└──      return %5
+
+"""
+
+# ==============================================================================
+# TEST 2: JET (The Modern Analyzer)
+# ==============================================================================
+println("\n=== REPORT 2: JET Analysis ===")
+println("Checking for dynamic dispatch (performance killers)...\n")
+
+# JET checks for errors without running the code
+@report_opt LogDensityProblems.logdensity(ldf, theta)
+
+
+"""
+julia> println("\n=== REPORT 2: JET Analysis ===")
+
+=== REPORT 2: JET Analysis ===
+
+julia> println("Checking for dynamic dispatch (performance killers)...\n")
+Checking for dynamic dispatch (performance killers)...
+
+
+julia> # JET checks for errors without running the code
+       @report_opt LogDensityProblems.logdensity(ldf, theta)
+═════ 3 possible errors found ═════
+┌ logdensity(f::LogDensityFunction{Model{…}, typeof(getlogjoint_internal), VarInfo{…}, Nothing}, x::Vector{Float64}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/logdensityfunction.jl:279
+│┌ logdensity_at(x::Vector{…}, model::Model{…}, getlogdensity::typeof(getlogjoint_internal), varinfo::VarInfo{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/logdensityfunction.jl:243
+││┌ evaluate!!(model::Model{…}, varinfo::VarInfo{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/model.jl:923
+│││┌ evaluate_threadsafe!!(model::Model{…}, varinfo::VarInfo{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/model.jl:956
+││││┌ _evaluate!!(model::Model{…}, varinfo::DynamicPPL.ThreadSafeVarInfo{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/model.jl:973
+│││││┌ make_evaluate_args_and_kwargs(model::Model{…}, varinfo::DynamicPPL.ThreadSafeVarInfo{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/model.jl:984
+││││││┌ maybe_invlink_before_eval!!(vi::DynamicPPL.ThreadSafeVarInfo{…}, model::Model{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/threadsafe.jl:141
+│││││││┌ maybe_invlink_before_eval!!(vi::VarInfo{…}, model::Model{…}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/varinfo.jl:1062
+││││││││┌ is_transformed(vi::VarInfo{@NamedTuple{…}, DynamicPPL.AccumulatorTuple{…}}) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/varinfo.jl:1499
+│││││││││┌ any(itr::Base.Generator{Vector{VarName{…} where sym}, DynamicPPL.var"#is_transformed##0#is_transformed##1"{VarInfo{…}}}) @ Base ./anyall.jl:41
+││││││││││┌ any(f::typeof(identity), itr::Base.Generator{Vector{…}, DynamicPPL.var"#is_transformed##0#is_transformed##1"{…}}) @ Base ./anyall.jl:115
+│││││││││││┌ _any(f::typeof(identity), itr::Base.Generator{…}, ::Colon) @ Base ./anyall.jl:123
+││││││││││││┌ iterate(::Base.Generator{Vector{…}, DynamicPPL.var"#is_transformed##0#is_transformed##1"{…}}) @ Base ./generator.jl:48
+│││││││││││││┌ (::DynamicPPL.var"#is_transformed##0#is_transformed##1"{VarInfo{…}})(vn::VarName{sym, typeof(identity)} where sym) @ DynamicPPL ./none:0
+││││││││││││││┌ is_transformed(vi::VarInfo{…}, vn::VarName{…} where sym) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/varinfo.jl:898
+│││││││││││││││┌ is_transformed(md::DynamicPPL.Metadata{…}, vn::VarName{…} where sym) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/varinfo.jl:899
+││││││││││││││││┌ getidx(md::DynamicPPL.Metadata{Dict{…}, Vector{…}, Vector{…}, Vector{…}}, vn::VarName{sym, typeof(identity)} where sym) @ DynamicPPL /home/james/.julia/packages/DynamicPPL/Ut5Ls/src/varinfo.jl:649
+│││││││││││││││││┌ getindex(h::Dict{VarName{:home_adv, typeof(identity)}, Int64}, key::VarName{sym, typeof(identity)} where sym) @ Base ./dict.jl:476
+││││││││││││││││││┌ ht_keyindex(h::Dict{VarName{:home_adv, typeof(identity)}, Int64}, key::VarName{sym, typeof(identity)} where sym) @ Base ./dict.jl:249
+│││││││││││││││││││┌ isequal(x::VarName{sym, typeof(identity)} where sym, y::VarName{:home_adv, typeof(identity)}) @ Base ./operators.jl:178
+││││││││││││││││││││┌ ==(x::VarName{sym, typeof(identity)} where sym, y::VarName{:home_adv, typeof(identity)}) @ AbstractPPL /home/james/.julia/packages/AbstractPPL/DcSP6/src/varname/varname.jl:190
+│││││││││││││││││││││┌ ==(w::WeakRef, v::Symbol) @ Base ./gcutils.jl:35
+││││││││││││││││││││││ runtime dispatch detected: isequal(%1::Any, v::Symbol)::Bool
+│││││││││││││││││││││└────────────────────
+││││││││││││┌ iterate(::Base.Generator{Vector{…}, DynamicPPL.var"#is_transformed##0#is_transformed##1"{…}}) @ Base ./generator.jl:48
+│││││││││││││ runtime dispatch detected: %37::DynamicPPL.var"#is_transformed##0#is_transformed##1"{VarInfo{@NamedTuple{…}, DynamicPPL.AccumulatorTuple{…}}}(%32::VarName{sym, typeof(identity)} where sym)::Bool
+││││││││││││└────────────────────
+│││││││││││┌ _any(f::typeof(identity), itr::Base.Generator{…}, ::Colon) @ Base ./anyall.jl:130
+││││││││││││┌ iterate(g::Base.Generator{Vector{…}, DynamicPPL.var"#is_transformed##0#is_transformed##1"{…}}, s::Int64) @ Base ./generator.jl:48
+│││││││││││││ runtime dispatch detected: %37::DynamicPPL.var"#is_transformed##0#is_transformed##1"{VarInfo{@NamedTuple{…}, DynamicPPL.AccumulatorTuple{…}}}(%33::VarName{sym, typeof(identity)} where sym)::Bool
+││││││││││││└────────────────────
+
+"""
 
 # ==============================================================================
 # WORKSPACE: GRW Gradient Benchmarking
