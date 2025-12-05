@@ -19,13 +19,13 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
 @model function grw_poisson_model_train(n_teams, n_rounds, 
                                       flat_home_ids, flat_away_ids, 
                                       flat_home_goals, flat_away_goals, 
-                                      time_indices,
+                                      time_indices, σ
                                         ::Type{T} = Float64 ) where {T} 
     
     # --- 1. Hyperparameters ---
     # Standard deviations for the random walk steps
-    σ_att ~ Truncated(Normal(0, 0.05), 0, Inf)
-    σ_def ~ Truncated(Normal(0, 0.05), 0, Inf)
+    σ_att ~ Truncated(Normal(0, σ), 0, Inf)
+    σ_def ~ Truncated(Normal(0, σ), 0, Inf)
     home_adv ~ Normal(log(1.3), 0.2)
 
     # --- 2. Non-Centered Random Walk Generation ---
@@ -100,7 +100,8 @@ end
 # end
 #
 
-function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
+function build_turing_model(model::GRWPoisson, feature_set::FeatureSet; σ=0.2)
+    println("σ : $σ")
     data = feature_set.data
     
     # 1. Flatten the IDs and Goals
@@ -128,7 +129,8 @@ function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
         flat_away_ids,
         flat_home_goals,
         flat_away_goals,
-        time_indices  # <--- NEW INPUT
+        time_indices,
+        σ
     )
 end
 
@@ -319,8 +321,9 @@ function extract_trends(model::GRWPoisson, vocabulary::Vocabulary, chains::Chain
 end
 
 
+# FIX: need to add model for overloading, and sort
 
-function reconstruct_vectorized(chain, n_teams ; target_param_step=:z_att_steps, target_param_init=:z_att_init, target_sigma=:σ_att)
+function reconstruct_vectorized(chain, n_teams, target_param_step=:z_att_steps, target_param_init=:z_att_init, target_sigma=:σ_att)
     
     # --- 1. PREPARE DIMENSIONS ---
     # Extract raw flattened data

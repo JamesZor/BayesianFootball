@@ -47,7 +47,7 @@ using Dates
 using Printf
 using Plots # Required for the dashboard
 
-
+using BayesianFootball
 
 # --- STRUCTS ---
 
@@ -395,7 +395,7 @@ BLAS.set_num_threads(1)
 
 model = BayesianFootball.Models.PreGame.StaticPoisson() 
 
-vocabulary = BayesianFootball.Features.create_vocabulary(dss, model) 
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
 
 # splitter_config = BayesianFootball.Data.ExpandingWindowCV([], ["2020/21"], :round, :sequential) #
 
@@ -405,7 +405,7 @@ splitter_config = BayesianFootball.Data.StaticSplit(
 )
 
 
-data_splits = BayesianFootball.Data.create_data_splits(dss, splitter_config)
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 
 feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
 
@@ -555,6 +555,20 @@ p_ab = plot_static_fit_over_time(2, alpha_matrix, beta_matrix, true_params)
 display(p_ab)
 
 
+p_overview = BayesianFootball.SyntheticData.plot_parameter_comparison(alpha_matrix, beta_matrix, true_params)
+display(p_overview)
+
+# 2. Deep Dive: Look at specific teams
+# This shows the "Straight Line" (Model) vs "Wavy Line" (Truth)
+# Team 1 ("aa")
+p_aa = BayesianFootball.SyntheticData.plot_static_fit_over_time(1, alpha_matrix, beta_matrix, true_params)
+display(p_aa)
+
+# Team 2 ("ab")
+p_ab = BayesianFootball.SyntheticData.plot_static_fit_over_time(3, alpha_matrix, beta_matrix, true_params)
+display(p_ab)
+
+
 
 ##########
 # Gaussian random walk model 
@@ -570,7 +584,7 @@ BLAS.set_num_threads(1)
 
 model_grw = BayesianFootball.Models.PreGame.GRWPoisson() 
 
-vocabulary = BayesianFootball.Features.create_vocabulary(dss, model) 
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
 
 # splitter_config = BayesianFootball.Data.ExpandingWindowCV([], ["2020/21"], :round, :sequential) #
 
@@ -580,7 +594,7 @@ splitter_config = BayesianFootball.Data.StaticSplit(
 )
 
 
-data_splits = BayesianFootball.Data.create_data_splits(dss, splitter_config)
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 
 feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model_grw, splitter_config)
 
@@ -594,9 +608,11 @@ training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_c
 results_grw = BayesianFootball.Training.train(model_grw, training_config, feature_sets)
 
 
+
 rg = results_grw[1][1]
 rg
 names(rg)
+describe(rg[:tree_depth])
 
 function reconstruct_vectorized(chain, n_teams, target_param_step=:z_att_steps, target_param_init=:z_att_init, target_sigma=:σ_att)
     
@@ -652,6 +668,11 @@ end
 att_tensor = reconstruct_vectorized(rg, 10, :z_att_steps, :z_att_init, :σ_att)
 def_tensor = reconstruct_vectorized(rg, 10, :z_def_steps, :z_def_init, :σ_def)
 
+att_tensor = BayesianFootball.Models.PreGame.Implementations.reconstruct_vectorized(rg, 10, :z_att_steps, :z_att_init, :σ_att)
+def_tensor = BayesianFootball.Models.PreGame.Implementations.reconstruct_vectorized(rg, 10, :z_def_steps, :z_def_init, :σ_def)
+
+
+
 println("Final Tensor Shape: ", size(att_tensor)) 
 # Should be (10, 36, 1000) -> (Team, Time, Sample)
 #
@@ -667,6 +688,9 @@ uppers = vec(quantile.(eachrow(att_tensor[team_id, :, :]), 0.95))
 
 plot(medians, ribbon=(medians .- lowers, uppers .- medians), 
      label="Team 1 Attack", xlabel="Round", ylabel="Strength")
+
+
+
 
 
 # 
@@ -825,12 +849,26 @@ p1 = plot_dynamic_trajectory(
 
 display(p1)
 
+
+
+p1 = BayesianFootball.SyntheticData.plot_dynamic_trajectory(
+    6, 
+    true_params, 
+    att_tensor, 
+    def_tensor; 
+    stat_att=alpha_matrix, 
+    stat_def=beta_matrix
+)
+
+
 # 2. Compare Errors at the end of the season
 # This proves that the Dynamic model is better at predicting the "Now" 
 # than the Static model (which only knows the "Average of the Past").
 using StatsPlots
 p2 = plot_terminal_error(true_params, att_tensor, def_tensor, alpha_matrix, beta_matrix)
 
+
+p2 = BayesianFootball.SyntheticData.plot_terminal_error(true_params, att_tensor, def_tensor, alpha_matrix, beta_matrix)
 
 
 display(p2)
