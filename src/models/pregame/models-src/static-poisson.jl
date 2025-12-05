@@ -10,14 +10,29 @@ using Base.Threads
 # Export the concrete model struct and its build function
 export StaticPoisson, build_turing_model, predict
 
-struct StaticPoisson <: AbstractStaticPoissonModel end
+#v1 
+# struct StaticPoisson <: AbstractStaticPoissonModel end
+
+#v2
+# Base.@kwdef struct StaticPoisson <: AbstractStaticPoissonModel 
+#   σ::Float64 = 0.5 
+# end 
+#
+#v3 
+Base.@kwdef struct StaticPoisson{D<:Distribution} <: AbstractStaticPoissonModel
+    # We just store a standard Normal. 
+    # filldist will handle the 'n_teams' part later.
+    prior::D = Normal(0, 0.5) 
+end
+
+
 
 # NEW: The main @model block, isolated
 @model function static_poisson_model_train(n_teams, home_ids, away_ids, 
-                                    home_goals, away_goals, ::Type{T} = Float64) where {T}
+                                    home_goals, away_goals, model::StaticPoisson, ::Type{T} = Float64) where {T}
         # --- Priors ---
-        log_α_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
-        log_β_raw ~ MvNormal(zeros(n_teams), 0.5 * I)
+        log_α_raw ~ filldist( model.prior, n_teams) 
+        log_β_raw ~ filldist( model.prior, n_teams) 
         home_adv ~ Normal(log(1.3), 0.2)
 
         # --- Identifiability Constraint ---
@@ -77,30 +92,31 @@ function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
         data.flat_home_ids, 
         data.flat_away_ids, 
         data.flat_home_goals, 
-        data.flat_away_goals
+        data.flat_away_goals,
+        model 
     )
 end
 
 
-"""
-    build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
-
-Builds the Turing model for the **training phase**.
-"""
-function build_turing_model(model::StaticPoisson, feature_set::FeatureSet, ::Val{:v2})
-    # This helper function flattens the round-based data from the FeatureSet
-    data = TuringHelpers.prepare_data(model, feature_set)
-    
-    return static_poisson_model_train_opt(
-        data.n_teams, 
-        data.flat_home_ids, 
-        data.flat_away_ids, 
-        data.flat_home_goals, 
-        data.flat_away_goals
-    )
-end
-
-
+# """
+#     build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
+#
+# Builds the Turing model for the **training phase**.
+# """
+# function build_turing_model(model::StaticPoisson, feature_set::FeatureSet, ::Val{:v2})
+#     # This helper function flattens the round-based data from the FeatureSet
+#     data = TuringHelpers.prepare_data(model, feature_set)
+#
+#     return static_poisson_model_train_opt(
+#         data.n_teams, 
+#         data.flat_home_ids, 
+#         data.flat_away_ids, 
+#         data.flat_home_goals, 
+#         data.flat_away_goals
+#     )
+# end
+#
+#
 """
     predict(model::StaticPoisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains)
 

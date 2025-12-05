@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "b9d1989b9038328d4508d21f3e39477f1fed0bcf"
+project_hash = "547eadafe973d2412df95b9f39510829269d1952"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -247,10 +247,16 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing"]
+deps = ["BenchmarkTools", "CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
+
+[[deps.BenchmarkTools]]
+deps = ["Compat", "JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "7fecfb1123b8d0232218e2da0c213004ff15358d"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.6.3"
 
 [[deps.Bijectors]]
 deps = ["ArgCheck", "ChainRulesCore", "ChangesOfVariables", "Distributions", "DocStringExtensions", "Functors", "InverseFunctions", "IrrationalConstants", "LinearAlgebra", "LogExpFunctions", "MappedArrays", "Random", "Reexport", "Roots", "SparseArrays", "Statistics"]
@@ -694,9 +700,9 @@ version = "1.6.0"
 
 [[deps.DynamicPPL]]
 deps = ["ADTypes", "AbstractMCMC", "AbstractPPL", "Accessors", "BangBang", "Bijectors", "Chairmarks", "Compat", "ConstructionBase", "DifferentiationInterface", "Distributions", "DocStringExtensions", "InteractiveUtils", "LinearAlgebra", "LogDensityProblems", "MacroTools", "OrderedCollections", "Printf", "Random", "Statistics", "Test"]
-git-tree-sha1 = "91f24ed9e834a6c98793352cec683242870b6d78"
+git-tree-sha1 = "9bfe1c8bd1e8970e271ceda0a431820f1adc4ff7"
 uuid = "366bfd00-2699-11ea-058f-f148b4cae6d8"
-version = "0.38.9"
+version = "0.38.10"
 
     [deps.DynamicPPL.extensions]
     DynamicPPLChainRulesCoreExt = ["ChainRulesCore"]
@@ -1753,6 +1759,11 @@ version = "3.1.2"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
+
+[[deps.Profile]]
+deps = ["StyledStrings"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 version = "1.11.0"
 
 [[deps.ProgressLogging]]
