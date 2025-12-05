@@ -47,6 +47,8 @@ using Dates
 using Printf
 using Plots # Required for the dashboard
 
+
+
 # --- STRUCTS ---
 
 struct DataStore
@@ -365,6 +367,21 @@ display(p1)
 p2 = plot_multiple_dashboards(["aa", "ab", "ad"], ds, true_params)
 display(p2)
 
+#### added a synthetic-module to BayesianFootball 
+
+ds, true_params = BayesianFootball.SyntheticData.generate_synthetic_data_with_params(
+    n_teams=10, 
+    n_seasons=1,
+    legs_per_season=4,
+    in_season_volatility=0.05 # Made it volatile so you can see movement in plots!
+)
+
+
+p1 = BayesianFootball.SyntheticData.plot_team_dashboard(1, ds, true_params)
+
+
+
+p2 = BayesianFootball.SyntheticData.plot_multiple_dashboards(["aa", "ab", "ad"], ds, true_params)
 
 ### 
 

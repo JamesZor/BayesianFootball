@@ -32,6 +32,8 @@ include("./predictions/prediction-module.jl") #
 include("./experiments/experiment-module.jl") #
 include( "./signals/signals-module.jl")
 
+include("./synthetic/synthetic-data-module.jl")
+
 # Export the main modules and key functions/types for users
 # *** UPDATED EXPORTS ***
 export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations 
