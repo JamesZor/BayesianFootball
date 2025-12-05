@@ -5,7 +5,7 @@ using LinearAlgebra
 using Statistics
 # using ...TypesInterfaces: required_mapping_keys
 
-export GRWPoisson, build_turing_model, predict, extract_parameters, extract_trends
+export GRWPoisson, build_turing_model, predict, extract_parameters, extract_trends, reconstruct_vectorized
 
 struct GRWPoisson <: AbstractDynamicPoissonModel end 
 
@@ -317,3 +317,56 @@ function extract_trends(model::GRWPoisson, vocabulary::Vocabulary, chains::Chain
         def = def_col
     )
 end
+
+
+
+function reconstruct_vectorized(chain, n_teams ; target_param_step=:z_att_steps, target_param_init=:z_att_init, target_sigma=:σ_att)
+    
+    # --- 1. PREPARE DIMENSIONS ---
+    # Extract raw flattened data
+    # Shape: (Samples, N_teams * N_steps) -> e.g., (1000, 350)
+    Z_flat = Array(group(chain, target_param_step))
+    
+    n_total_samples = size(Z_flat, 1) # 1000
+    n_steps = div(size(Z_flat, 2), n_teams) # 35
+    
+    # --- 2. CONSTRUCT TENSORS (RESHAPING) ---
+    
+    # A. The Steps Tensor (Δ)
+    # Reshape logic: (Sample, Team, Time) -> Permute to (Team, Time, Sample)
+    Z_steps = permutedims(reshape(Z_flat, n_total_samples, n_teams, n_steps), (2, 3, 1))
+    
+    # B. The Init Tensor (X0)
+    # Shape: (Samples, N_teams) -> Permute to (Team, Sample) -> Reshape to (Team, 1, Sample)
+    Z_init_raw = Array(group(chain, target_param_init))
+    Z_init = reshape(permutedims(Z_init_raw, (2, 1)), n_teams, 1, n_total_samples)
+    
+    # C. The Sigma Vector (σ)
+    # We must flatten the chains (500x2) into a single vector (1000)
+    # Then reshape to (1, 1, 1000) to allow broadcasting across Teams and Time
+    σ_vec = vec(Array(chain[target_sigma])) 
+    σ_tensor = reshape(σ_vec, 1, 1, n_total_samples)
+
+    # --- 3. ALGEBRAIC OPERATIONS ---
+
+    # A. Scale the steps
+    # (N, T, S) .* (1, 1, S) -> Broadcasting magic
+    scaled_steps = Z_steps .* σ_tensor
+    
+    # B. Scale the init (Fixed 0.5 scaler from your model)
+    scaled_init = Z_init .* 0.5
+    
+    # C. Concatenate: Join Init and Steps along Time axis (dim 2)
+    # Result shape: (N, T+1, S)
+    raw_walk = cat(scaled_init, scaled_steps, dims=2)
+    
+    # D. Integrate: Cumulative Sum along Time axis
+    traj_raw = cumsum(raw_walk, dims=2)
+    
+    # E. Project: Center the teams (Mean along dim 1)
+    # We subtract the mean of the teams from every team
+    traj_centered = traj_raw .- mean(traj_raw, dims=1)
+    
+    return traj_centered
+end
+

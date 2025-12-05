@@ -11,7 +11,7 @@ using Plots
 using ..Data 
 
 export TrueParameters
-export generate_synthetic_data_with_params
+export generate_synthetic_data_with_params, plot_dynamic_trajectory, plot_terminal_error, plot_static_fit_over_time, plot_parameter_comparison
 
 ### synthetic team data 
 
