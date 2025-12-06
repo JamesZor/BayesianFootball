@@ -11,22 +11,39 @@ export GRWPoisson, build_turing_model, predict, extract_parameters, extract_tren
 # older struct 
 # struct GRWPoisson <: AbstractDynamicPoissonModel end 
 
-Base.@kwdef struct GRWPoisson{D<:Distribution} <: AbstractDynamicPoissonModel 
+# Base.@kwdef struct GRWPoisson{D<:Distribution} <: AbstractDynamicPoissonModel 
+#       # --- Hyperparameters 
+#       σ_att::D = Truncated(Normal(0, 0.05), 0, Inf)
+#       σ_def::D = Truncated(Normal(0, 0.05), 0, Inf)
+#       home_adv::D = Normal(log(1.3, 0.2))
+#
+#       # Non-Centered walk Generation ( steps 1  - first ) 
+#       z_att_init::D = Normal(0,1)
+#       z_def_init::D = Normal(0,1)
+#
+#       # Innovations ( steps 2:T) 
+#       z_att_steps::D = Normal(0,1)
+#       z_def_steps::D = Normal(0,1)
+# end
+    
+# --- 1. THE STRUCT (Fixed) ---
+# Removed {D<:Distribution} to allow mixed distribution types
+Base.@kwdef struct GRWPoisson <: AbstractDynamicPoissonModel 
       # --- Hyperparameters 
-      σ_att::D = Truncated(Normal(0, 0.05), 0, Inf)
-      σ_def::D = Truncated(Normal(0, 0.05), 0, Inf)
-      home_adv::D = Normal(log(1.3, 0.2))
+      σ_att::Distribution = Truncated(Normal(0, 0.05), 0, Inf)
+      σ_def::Distribution = Truncated(Normal(0, 0.05), 0, Inf)
+      
+      # Fixed typo: Normal(log(1.3), 0.2) instead of Normal(log(1.3, 0.2))
+      home_adv::Distribution = Normal(log(1.3), 0.2)
 
       # Non-Centered walk Generation ( steps 1  - first ) 
-      z_att_init::D = Normal(0,1)
-      z_def_init::D = Normal(0,1)
+      z_att_init::Distribution = Normal(0,1)
+      z_def_init::Distribution = Normal(0,1)
 
       # Innovations ( steps 2:T) 
-      z_att_steps::D = Normal(0,1)
-      z_def_steps::D = Normal(0,1)
+      z_att_steps::Distribution = Normal(0,1)
+      z_def_steps::Distribution = Normal(0,1)
 end
-    
-
 
 # function required_mapping_keys(::AbstractGRWPoissonModel)
 #     return [:team_map, :n_teams]
