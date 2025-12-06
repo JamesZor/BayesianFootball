@@ -101,6 +101,9 @@ end
 pinthreads(:cores)
 BLAS.set_num_threads(1) 
 
+
+
+#######
 # 1. Setup & Data Loading
 # ------------------------------------------------------------------------------
 
@@ -347,6 +350,127 @@ model_tdist_scaled = BayesianFootball.Models.PreGame.StaticPoisson(
 #---------
 
 vocabulary = BayesianFootball.Features.create_vocabulary(ds, model_norm) 
+
+splitter_config = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["2020/21"], 
+    round_col = :round
+)
+
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+
+feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model_norm, splitter_config)
+
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=3) 
+
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=500, n_chains=2, n_warmup=500) # Use renamed struct
+
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
+
+results_norm = BayesianFootball.Training.train(model_norm, training_config, feature_sets)
+
+results_tdist_std = BayesianFootball.Training.train(model_tdist_std, training_config, feature_sets)
+
+results_tdist_scaled = BayesianFootball.Training.train(model_tdist_scaled, training_config, feature_sets)
+
+
+alpha_matrix_norm = Array(group(results_norm[1][1], :log_α))
+beta_matrix_norm = Array(group(results_norm[1][1], :log_β))
+
+
+alpha_matrix_tdist_std = Array(group(results_tdist_std[1][1], :log_α))
+beta_matrix_tdist_std = Array(group(results_tdist_std[1][1], :log_β))
+
+alpha_matrix_tdist_scaled = Array(group(results_tdist_scaled[1][1], :log_α))
+beta_matrix_tdist_scaled = Array(group(results_tdist_scaled[1][1], :log_β))
+
+
+
+p_overview_norm = BayesianFootball.SyntheticData.plot_parameter_comparison(alpha_matrix_norm, beta_matrix_norm, true_params)
+
+p_overview_tdist_std = BayesianFootball.SyntheticData.plot_parameter_comparison(alpha_matrix_tdist_std, beta_matrix_tdist_std, true_params)
+
+
+p_overview_tdist_scaled = BayesianFootball.SyntheticData.plot_parameter_comparison(alpha_matrix_tdist_scaled, beta_matrix_tdist_scaled, true_params)
+
+p_aa = BayesianFootball.SyntheticData.plot_static_fit_over_time(5, alpha_matrix_norm, beta_matrix_norm, true_params)
+
+p_aa = BayesianFootball.SyntheticData.plot_static_fit_over_time(5, alpha_matrix_tdist_std, beta_matrix_tdist_std, true_params)
+
+
+p_aa = BayesianFootball.SyntheticData.plot_static_fit_over_time(5, alpha_matrix_tdist_scaled, beta_matrix_tdist_scaled, true_params)
+
+
+using StatsPlots
+density(alpha_matrix_norm[:,1], label="normal")
+density!(alpha_matrix_tdist_std[:,1], label="tdist std")
+density!(alpha_matrix_tdist_scaled[:,1], label="tdist scaled ")
+
+
+num = 4
+density(alpha_matrix_norm[:,num], label="normal")
+density!(alpha_matrix_tdist_std[:,num], label="tdist std")
+density!(alpha_matrix_tdist_scaled[:,num], label="tdist scaled ")
+
+density(rand(model_norm.prior, 10000), label="normal")
+density!(rand(model_tdist_std.prior, 10000), label=" tdist norm ")
+density!(rand(model_tdist_scaled.prior, 10000), label="tdist scaled")
+
+
+
+
+# -------------------------------------------------------------------------------------------
+#
+"""
+  Testing the grw model 
+    
+  #T1: reversediff tape 
+
+  #T2: plots
+"""
+
+# ---- T1 reverse diff Tape ----
+
+using BayesianFootball
+using DataFrames, Statistics, LinearAlgebra
+using ThreadPinning
+using BenchmarkTools
+using Turing, DynamicPPL, ReverseDiff, LogDensityProblems
+
+
+ds, true_params = BayesianFootball.SyntheticData.generate_synthetic_data_with_params(
+    n_teams=10, 
+    n_seasons=1,
+    legs_per_season=4,
+    in_season_volatility=0.05 # Made it volatile so you can see movement in plots!
+)
+
+
+model = BayesianFootball.Models.PreGame.GRWPoisson()
+
+model_low = BayesianFootball.Models.PreGameGRWPoisson(
+                σ_att = Truncated(Normal(0, 0.001), 0, Inf),
+                σ_def = Truncated(Normal(0, 0.001), 0, Inf),
+            )
+
+
+model_high = BayesianFootball.Models.PreGameGRWPoisson(
+                σ_att = Truncated(Normal(0, 0.3), 0, Inf),
+                σ_def = Truncated(Normal(0, 0.3), 0, Inf),
+            )
+
+
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
+
+
+
+splitter_config = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["2020/21"], 
+    round_col = :round
+)
+
+
 data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
 
 feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
@@ -358,7 +482,9 @@ sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=500, n_chains=2, n
 training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
 
 
-results_norm = BayesianFootball.Training.train(model_norm, training_config, feature_sets)
-results_tdist_std = BayesianFootball.Training.train(model_tdist_std, training_config, feature_sets)
-results_tdist_scaled = BayesianFootball.Training.train(model_tdist_scaled, training_config, feature_sets)
+results = BayesianFootball.Training.train(model, training_config, feature_sets)
+
+results_low = BayesianFootball.Training.train(model_low, training_config, feature_sets)
+
+results_high = BayesianFootball.Training.train(model_high, training_config, feature_sets)
 

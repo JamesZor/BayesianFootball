@@ -7,7 +7,26 @@ using Statistics
 
 export GRWPoisson, build_turing_model, predict, extract_parameters, extract_trends, reconstruct_vectorized
 
-struct GRWPoisson <: AbstractDynamicPoissonModel end 
+
+# older struct 
+# struct GRWPoisson <: AbstractDynamicPoissonModel end 
+
+Base.@kwdef struct GRWPoisson{D<:Distribution} <: AbstractDynamicPoissonModel 
+      # --- Hyperparameters 
+      σ_att::D = Truncated(Normal(0, 0.05), 0, Inf)
+      σ_def::D = Truncated(Normal(0, 0.05), 0, Inf)
+      home_adv::D = Normal(log(1.3, 0.2))
+
+      # Non-Centered walk Generation ( steps 1  - first ) 
+      z_att_init::D = Normal(0,1)
+      z_def_init::D = Normal(0,1)
+
+      # Innovations ( steps 2:T) 
+      z_att_steps::D = Normal(0,1)
+      z_def_steps::D = Normal(0,1)
+end
+    
+
 
 # function required_mapping_keys(::AbstractGRWPoissonModel)
 #     return [:team_map, :n_teams]
@@ -16,29 +35,30 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
 # ==============================================================================
 # TURING MODEL
 # ==============================================================================
+
 @model function grw_poisson_model_train(n_teams, n_rounds, 
                                       flat_home_ids, flat_away_ids, 
                                       flat_home_goals, flat_away_goals, 
-                                      time_indices, σ
+                                      time_indices, model::GRWPoisson
                                         ::Type{T} = Float64 ) where {T} 
     
     # --- 1. Hyperparameters ---
     # Standard deviations for the random walk steps
-    σ_att ~ Truncated(Normal(0, σ), 0, Inf)
-    σ_def ~ Truncated(Normal(0, σ), 0, Inf)
-    home_adv ~ Normal(log(1.3), 0.2)
+    σ_att ~ model.σ_att
+    σ_def ~ model.σ_def
+    home_adv ~ model.home_adv
 
     # --- 2. Non-Centered Random Walk Generation ---
     # A. Initial States (Round 1)
     # Sample from Standard Normal, then scale by 0.5 (initial variance)
     # shape: (n_teams,)
-    z_att_init ~ filldist(Normal(0, 1), n_teams)
-    z_def_init ~ filldist(Normal(0, 1), n_teams)
+    z_att_init ~ filldist(model.z_att_init, 1), n_teams)
+    z_def_init ~ filldist(model.z_def_init, 1), n_teams)
 
     # B. Innovations (Steps for Round 2..T)
     # We sample ALL steps at once. Shape: (n_teams, n_rounds - 1)
-    z_att_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
-    z_def_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
+    z_att_steps ~ filldist(model.z_att_steps, 1), n_teams, n_rounds - 1)
+    z_def_steps ~ filldist(model.z_def_steps, 1), n_teams, n_rounds - 1)
 
     # C. Deterministic Reconstruction (The "Matt Trick")
     # We construct the trajectory using cumulative sums.
@@ -83,6 +103,77 @@ struct GRWPoisson <: AbstractDynamicPoissonModel end
     return nothing
 end
 
+
+
+
+
+# @model function grw_poisson_model_train(n_teams, n_rounds, 
+#                                       flat_home_ids, flat_away_ids, 
+#                                       flat_home_goals, flat_away_goals, 
+#                                       time_indices, σ
+#                                         ::Type{T} = Float64 ) where {T} 
+#
+#     # --- 1. Hyperparameters ---
+#     # Standard deviations for the random walk steps
+#     σ_att ~ Truncated(Normal(0, σ), 0, Inf)
+#     σ_def ~ Truncated(Normal(0, σ), 0, Inf)
+#     home_adv ~ Normal(log(1.3), 0.2)
+#
+#     # --- 2. Non-Centered Random Walk Generation ---
+#     # A. Initial States (Round 1)
+#     # Sample from Standard Normal, then scale by 0.5 (initial variance)
+#     # shape: (n_teams,)
+#     z_att_init ~ filldist(Normal(0, 1), n_teams)
+#     z_def_init ~ filldist(Normal(0, 1), n_teams)
+#
+#     # B. Innovations (Steps for Round 2..T)
+#     # We sample ALL steps at once. Shape: (n_teams, n_rounds - 1)
+#     z_att_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
+#     z_def_steps ~ filldist(Normal(0, 1), n_teams, n_rounds - 1)
+#
+#     # C. Deterministic Reconstruction (The "Matt Trick")
+#     # We construct the trajectory using cumulative sums.
+#     # We concatenate the Initial State with the scaled steps.
+#
+#     # Scale the standard normals by the actual sigmas
+#     scaled_steps_att = z_att_steps .* σ_att
+#     scaled_steps_def = z_def_steps .* σ_def
+#
+#     # Reconstruct the raw random walk
+#     # hcat connects the initial state (col 1) with the steps (cols 2..T)
+#     # cumsum adds them up along the time dimension (dims=2)
+#     att_raw = cumsum(hcat(z_att_init .* 0.5, scaled_steps_att), dims=2)
+#     def_raw = cumsum(hcat(z_def_init .* 0.5, scaled_steps_def), dims=2)
+#
+#     # --- 3. Zero-Sum Constraint (Centering) ---
+#     # Enforce mean(att) = 0 and mean(def) = 0 at every time step t
+#     # We subtract the column means from every row
+#     att = att_raw .- mean(att_raw, dims=1)
+#     def = def_raw .- mean(def_raw, dims=1)
+#
+#     # --- 4. Likelihood (Fully Vectorized) ---
+#     # We use the time_indices to pull the correct strength for every match
+#     # flat_home_ids and time_indices are vectors of length n_matches
+#
+#     # Note on indexing: ReverseDiff loves simple indexing.
+#     # We extract the specific team/time strength for every single match.
+#
+#     att_h_flat = view(att, CartesianIndex.(flat_home_ids, time_indices))
+#     def_a_flat = view(def, CartesianIndex.(flat_away_ids, time_indices))
+#     att_a_flat = view(att, CartesianIndex.(flat_away_ids, time_indices))
+#     def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
+#
+#     # Calculate Log-Rates
+#     log_λs = home_adv .+ att_h_flat .+ def_a_flat
+#     log_μs = att_a_flat .+ def_h_flat
+#
+#     # Observe
+#     flat_home_goals ~ arraydist(LogPoisson.(log_λs))
+#     flat_away_goals ~ arraydist(LogPoisson.(log_μs))
+#
+#     return nothing
+# end
+#
 # ==============================================================================
 # API IMPLEMENTATION
 # ==============================================================================
@@ -100,8 +191,7 @@ end
 # end
 #
 
-function build_turing_model(model::GRWPoisson, feature_set::FeatureSet; σ=0.2)
-    println("σ : $σ")
+function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
     data = feature_set.data
     
     # 1. Flatten the IDs and Goals
@@ -130,7 +220,7 @@ function build_turing_model(model::GRWPoisson, feature_set::FeatureSet; σ=0.2)
         flat_home_goals,
         flat_away_goals,
         time_indices,
-        σ
+        model
     )
 end
 
