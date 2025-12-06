@@ -39,7 +39,7 @@ end
 @model function grw_poisson_model_train(n_teams, n_rounds, 
                                       flat_home_ids, flat_away_ids, 
                                       flat_home_goals, flat_away_goals, 
-                                      time_indices, model::GRWPoisson
+                                      time_indices, model::GRWPoisson,
                                         ::Type{T} = Float64 ) where {T} 
     
     # --- 1. Hyperparameters ---
