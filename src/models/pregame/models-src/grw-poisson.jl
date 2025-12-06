@@ -52,13 +52,13 @@ end
     # A. Initial States (Round 1)
     # Sample from Standard Normal, then scale by 0.5 (initial variance)
     # shape: (n_teams,)
-    z_att_init ~ filldist(model.z_att_init, 1), n_teams)
-    z_def_init ~ filldist(model.z_def_init, 1), n_teams)
+    z_att_init ~ filldist(model.z_att_init, n_teams)
+    z_def_init ~ filldist(model.z_def_init, n_teams)
 
     # B. Innovations (Steps for Round 2..T)
     # We sample ALL steps at once. Shape: (n_teams, n_rounds - 1)
-    z_att_steps ~ filldist(model.z_att_steps, 1), n_teams, n_rounds - 1)
-    z_def_steps ~ filldist(model.z_def_steps, 1), n_teams, n_rounds - 1)
+    z_att_steps ~ filldist(model.z_att_steps, n_teams, n_rounds - 1)
+    z_def_steps ~ filldist(model.z_def_steps, n_teams, n_rounds - 1)
 
     # C. Deterministic Reconstruction (The "Matt Trick")
     # We construct the trajectory using cumulative sums.
