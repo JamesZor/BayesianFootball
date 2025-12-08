@@ -6,7 +6,6 @@ export AbstractFootballModel, AbstractPregameModel, AbstractInGameModel, Abstrac
 export AbstractDixonColesModel
 
 export AbstractStaticPoissonModel, AbstractDynamicPoissonModel
-# export AbstractGRWPoissonModel
 export Vocabulary, FeatureSet, required_mapping_keys
 
 # This is the highest-level type

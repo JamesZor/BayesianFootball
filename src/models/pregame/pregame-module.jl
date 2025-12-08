@@ -28,6 +28,7 @@ module Implementations
     include("./models-src/static-dixoncoles.jl")
 
     include("./models-src/grw-poisson.jl")
+    include("./models-src/AR1-Poisson.jl")
 
 
     # --- Your "wrapper" function ---
@@ -163,7 +164,7 @@ using .Implementations
 using .Implementations: extract_parameters
 export StaticPoisson, StaticSimplexPoisson, HierarchicalSimplexPoisson
 export StaticDixonColes
-export GRWPoisson
+export GRWPoisson, AR1Poisson
 export build_turing_model, predict, extract_parameters
 
 # This is where we define the specific methods for our contract.
