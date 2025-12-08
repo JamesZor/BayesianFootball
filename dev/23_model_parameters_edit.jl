@@ -438,6 +438,313 @@ using ThreadPinning
 using BenchmarkTools
 using Turing, DynamicPPL, ReverseDiff, LogDensityProblems
 
+pinthreads(:cores)
+BLAS.set_num_threads(1) 
+
+using StatsPlots 
+using Distributions, StatsPlots, Random
+
+# 1. Your Current Baseline (Half-Normal)
+# σ ~ |N(0, 0.05)|
+hn = Truncated(Normal(0, 0.05), 0, Inf)
+
+# 2. The Heavy Tail (Half-Cauchy)
+# σ ~ |Cauchy(0, 0.05)|
+# Cauchy has undefined mean/variance and extremely heavy tails
+hc = Truncated(Cauchy(0, 0.05), 0, Inf)
+
+# 3. The "Owen" Recommendation (Gamma on Variance)
+# Paper: Variance(σ²) ~ Gamma(α=2, β=250) (Rate=250 => Scale=1/250)
+# We sample Variance, then sqrt() to see the distribution of Sigma
+g_var_dist = Gamma(2, 1/250) 
+
+# Generate samples for plotting
+n = 100_000
+samples_hn = rand(hn, n)
+samples_hc = rand(hc, n)
+samples_g  = sqrt.(rand(g_var_dist, n)) # Transform σ² -> σ
+
+# Plotting
+density(samples_hn, label="Half-Normal (σ=0.05)", linewidth=2, 
+        title="Prior Distributions for Random Walk Sigma", 
+        xlabel="Sigma (Step Size)", ylabel="Density", xlims=(0, 0.25))
+
+density!(samples_hc, label="Half-Cauchy (γ=0.05)", linewidth=2, linestyle=:dash)
+
+density!(samples_g, label="Owen's Gamma (Transformed)", linewidth=2, color=:green)
+
+#  -----
+# ==============================================================================
+# 0. Setup & Data Generation (Dynamic Context)
+# ==============================================================================
+
+# We generate data with volatility to justify the dynamic model
+ds_dynamic, true_params_dynamic = BayesianFootball.SyntheticData.generate_synthetic_data_with_params(
+    n_teams=100, 
+    n_seasons=1,
+    legs_per_season=4, # 4 games per pair = temporal history exists
+    in_season_volatility=0.05 
+)
+
+# ==============================================================================
+# 1. Define the 3 Model Variants
+# ==============================================================================
+
+# 1. Standard: Half-Normal (Baseline)
+# Tightly focused at zero, but allows drift.
+m_std = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Truncated(Normal(0, 0.05), 0, Inf),
+    σ_def = Truncated(Normal(0, 0.05), 0, Inf)
+)
+
+# 2. Owen's Approximation: Gamma
+# Pushes density AWAY from zero.
+# Gamma(2, 0.04) has shape similar to the paper's finding
+m_owen = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Gamma(2, 0.04), 
+    σ_def = Gamma(2, 0.04)
+)
+
+# 3. Heavy Tail: Half-Cauchy
+# Theoretically dangerous for NUTS (funnels), let's see if it's slower.
+m_cauchy = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Truncated(Cauchy(0, 0.05), 0, Inf),
+    σ_def = Truncated(Cauchy(0, 0.05), 0, Inf)
+)
+
+# ==============================================================================
+# 2. Feature Pipeline
+# ==============================================================================
+
+# We only need to create features once using any valid GRW model.
+# The priors do not change the structure of the data (Time indices, IDs, Goals).
+
+vocab_dyn = BayesianFootball.Features.create_vocabulary(ds_dynamic, m_std)
+
+split_conf_dyn = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["2020/21"], 
+    round_col = :round
+)
+
+splits_dyn = BayesianFootball.Data.create_data_splits(ds_dynamic, split_conf_dyn)
+
+# Important: Use m_std to generate features so the system knows to build 
+# the 'time_indices' required for the dynamic model.
+fs_dyn = BayesianFootball.Features.create_features(splits_dyn, vocab_dyn, m_std, split_conf_dyn)
+
+# We grab the first training set
+train_data_dyn = fs_dyn[1][1] 
+
+# ==============================================================================
+# 3. Build Turing Models & LogDensity Functions
+# ==============================================================================
+
+println("\nBuilding Turing models...")
+
+# A. Standard Model
+turing_std = BayesianFootball.Models.PreGame.build_turing_model(m_std, train_data_dyn)
+ldf_std = Turing.LogDensityFunction(turing_std)
+theta_std = Float64.(randn(LogDensityProblems.dimension(ldf_std)));
+
+# B. Owen (Gamma) Model
+turing_owen = BayesianFootball.Models.PreGame.build_turing_model(m_owen, train_data_dyn)
+ldf_owen = Turing.LogDensityFunction(turing_owen)
+theta_owen = Float64.(randn(LogDensityProblems.dimension(ldf_owen)));
+
+# C. Cauchy Model
+turing_cauchy = BayesianFootball.Models.PreGame.build_turing_model(m_cauchy, train_data_dyn)
+ldf_cauchy = Turing.LogDensityFunction(turing_cauchy)
+theta_cauchy = Float64.(randn(LogDensityProblems.dimension(ldf_cauchy)));
+
+# ==============================================================================
+# 4. Run Benchmarks
+# ==============================================================================
+
+# 1. Standard Half-Normal
+# Expectation: Very fast, similar to your Static benchmarks
+bench_grw_std = benchmark_tape(ldf_std, theta_std, "GRW: Half-Normal (Baseline)")
+
+# 2. Owen's Gamma
+# Expectation: Should be as fast as Normal (both are simple scalars in the graph)
+bench_grw_owen = benchmark_tape(ldf_owen, theta_owen, "GRW: Owen's Gamma")
+
+# 3. Half-Cauchy
+# Expectation: Might be slightly slower per gradient due to heavier math operations (log(1+x^2)),
+# BUT the real cost usually comes during sampling (divergences), not just one gradient eval.
+bench_grw_cauchy = benchmark_tape(ldf_cauchy, theta_cauchy, "GRW: Half-Cauchy")
+
+"""
+standard half normal 
+
+julia> bench_grw_std = benchmark_tape(ldf_std, theta_std, "GRW: Half-Normal (Baseline)")                                              
+                                                                                                                                      
+=== Benchmarking: GRW: Half-Normal (Baseline) ===                                                                                     
+Recording tape...                                                                                                                     
+Compiling tape...                                                                                                                     
+BenchmarkTools.Trial: 69 samples with 1 evaluation per sample.                                                                        
+ Range (min … max):  72.172 ms …  76.836 ms  ┊ GC (min … max): 0.00% … 0.00%                                                          
+ Time  (median):     73.269 ms               ┊ GC (median):    0.00%                                                                  
+ Time  (mean ± σ):   73.294 ms ± 578.262 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%                                                          
+                                                                                                                                      
+                        ▃▁ ▁ ▃▁▃ ▁   █ ▁▁▃                                                                                            
+  ▄▁▁▁▁▁▁▁▄▁▄▁▄▄▇▄▇▄▇▄▄▄██▁█▄███▇█▄▄▄█▄███▄▁▇▁▁▁▁▁▁▄▁▁▁▁▁▁▁▁▁▄ ▁                                                                      
+  72.2 ms         Histogram: frequency by time         74.4 ms <                                                                      
+                                                                                                                                      
+ Memory estimate: 1.21 MiB, allocs estimate: 68.                                                                                      
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)                                                                                
+                                                                                                                                      
+julia> bench_grw_std = benchmark_tape(ldf_std, theta_std, "GRW: Half-Normal (Baseline)")                                              
+                                                                                                                                      
+=== Benchmarking: GRW: Half-Normal (Baseline) ===                                                                                     
+Recording tape...                                                                                                                     
+Compiling tape...                                                                                                                     
+BenchmarkTools.Trial: 62 samples with 1 evaluation per sample.                                                                        
+ Range (min … max):  80.837 ms …  82.860 ms  ┊ GC (min … max): 0.00% … 0.00%                                                          
+ Time  (median):     81.637 ms               ┊ GC (median):    0.00%                                                                  
+ Time  (mean ± σ):   81.669 ms ± 389.948 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%                                                          
+                                                                                                                                      
+  ▁         ▁▁      ▁▄▁  ▄▄▁█ ▁ ▁  ██  ▄ ▄▁ ▁                                                                                         
+  █▁▁▁▁▁▆▁▆▁██▁▁▆▆▁▁███▁▆████▆█▆█▆▆██▆▁█▁██▁█▁▁▁▁▆▁▁▁▁▁▁▆▁▁▆▁▆ ▁                                                                      
+  80.8 ms         Histogram: frequency by time         82.6 ms <                                                                      
+                                                                                                                                      
+ Memory estimate: 1.21 MiB, allocs estimate: 68.                                                                                      
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)                                                                                
+                                                                                                                                      
+julia> bench_grw_std = benchmark_tape(ldf_std, theta_std, "GRW: Half-Normal (Baseline)")                                              
+                                                                                                                                      
+=== Benchmarking: GRW: Half-Normal (Baseline) ===                                                                                     
+Recording tape...                                                                                                                     
+Compiling tape...                                                                                                                     
+BenchmarkTools.Trial: 53 samples with 1 evaluation per sample.                                                                        
+ Range (min … max):  94.092 ms …  96.620 ms  ┊ GC (min … max): 0.00% … 0.00%                                                          
+ Time  (median):     94.926 ms               ┊ GC (median):    0.00%                                                                  
+ Time  (mean ± σ):   94.905 ms ± 444.331 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%                                                          
+                                                                                                                                      
+      █    ▃    ▃  ▃▃    ▃   ▃▃ ▃▃█▃▃ █ ▃    ▃▃                                                                                       
+  ▇▁▁▁█▁▁▁▁█▁▁▇▇█▇▁██▁▇▁▁█▇▁▁██▇█████▁█▁█▇▁▇▇██▇▁▁▇▁▁▁▁▁▇▁▁▁▇▇ ▁                                                                      
+  94.1 ms         Histogram: frequency by time         95.7 ms <                                                                      
+                                                                                                                                      
+ Memory estimate: 1.21 MiB, allocs estimate: 68.                                                                                      
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)   
+
+
+
+# ---- owen gamma 
+julia> bench_grw_owen = benchmark_tape(ldf_owen, theta_owen, "GRW: Owen's Gamma")
+
+=== Benchmarking: GRW: Owen's Gamma ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 70 samples with 1 evaluation per sample.
+ Range (min … max):  70.987 ms …  73.523 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     71.811 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   71.846 ms ± 423.891 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+        ▂              ▂▅ █  ▅▅       ▂  ▂                      
+  ▅▁▁▅▁▁█▁▁▅▅▁▁██▅█▁▁█▅█████▅██▅▅▅▅█▅██▁▁█▅██▁▅▁▅▅▁▅█▁▁▁▁▁▁▁▁▅ ▁
+  71 ms           Histogram: frequency by time         72.8 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+julia> bench_grw_owen = benchmark_tape(ldf_owen, theta_owen, "GRW: Owen's Gamma")
+
+=== Benchmarking: GRW: Owen's Gamma ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 47 samples with 1 evaluation per sample.
+ Range (min … max):  106.115 ms … 108.668 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     107.185 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   107.210 ms ± 582.966 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+     ▃      ▃     ▃ █  ▃  █     █ ▃▃  ▃▃       ▃                 
+  ▇▇▁█▁▇▁▁▇▁█▁▇▇▁▁█▁█▇▁█▇▇█▇▁▇▇▇█▇██▁▁██▇▁▁▇▇▁▇█▁▁▁▁▁▁▁▁▁▇▁▁▁▁▇ ▁
+  106 ms           Histogram: frequency by time          109 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+julia> bench_grw_owen = benchmark_tape(ldf_owen, theta_owen, "GRW: Owen's Gamma")
+
+=== Benchmarking: GRW: Owen's Gamma ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 48 samples with 1 evaluation per sample.
+ Range (min … max):  104.515 ms … 107.255 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     105.893 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   105.862 ms ± 760.756 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+           ▄█ ▁         ▁   ▁            ▁   ▄ ▁ █               
+  ▆▁▁▁▆▆▁▆▁██▁█▁▆▁▆▁▆▆▁▁█▆▁▁█▁▆▆▁▆▁▆▆▁▆▁▆█▁▁▆█▆█▆█▁▁▆▁▆▁▁▆▁▆▁▁▆ ▁
+  105 ms           Histogram: frequency by time          107 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+
+# --- half cauchy 
+
+julia> bench_grw_cauchy = benchmark_tape(ldf_cauchy, theta_cauchy, "GRW: Half-Cauchy")
+
+=== Benchmarking: GRW: Half-Cauchy ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 44 samples with 1 evaluation per sample.
+ Range (min … max):  112.794 ms … 114.993 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     113.633 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   113.673 ms ± 466.018 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+  ▁ ▁               ▁ ▁▄ ▁    ▁█▁▁     ▁    ▄                    
+  █▁█▁▁▁▁▆▁▁▆▆▆▆▆▁▆▆█▆██▆█▁▆▆▁████▁▆▁▁▁█▁▁▁▆█▁▁▆▁▁▁▁▁▁▁▁▁▁▁▁▁▁▆ ▁
+  113 ms           Histogram: frequency by time          115 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+julia> bench_grw_cauchy = benchmark_tape(ldf_cauchy, theta_cauchy, "GRW: Half-Cauchy")
+
+=== Benchmarking: GRW: Half-Cauchy ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 39 samples with 1 evaluation per sample.
+ Range (min … max):  129.455 ms … 132.223 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     130.080 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   130.156 ms ± 441.438 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+          ▁█  ██▁▁▄  ▁▁▁                                         
+  ▆▁▆▆▁▁▆▁██▆▆█████▆▆███▆▁▁▆▁▁▁▁▆▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▆ ▁
+  129 ms           Histogram: frequency by time          132 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+julia> bench_grw_cauchy = benchmark_tape(ldf_cauchy, theta_cauchy, "GRW: Half-Cauchy")
+
+=== Benchmarking: GRW: Half-Cauchy ===
+Recording tape...
+Compiling tape...
+BenchmarkTools.Trial: 41 samples with 1 evaluation per sample.
+ Range (min … max):  123.816 ms … 126.786 ms  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     124.448 ms               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   124.493 ms ± 468.766 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+      ▂  ▂   █ ▅    ▂                                            
+  ▅▁▅▁█▁███▅▅███▅█████▁▁▁▅▅▁▁▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▅ ▁
+  124 ms           Histogram: frequency by time          127 ms <
+
+ Memory estimate: 1.21 MiB, allocs estimate: 68.
+typename(ReverseDiff.CompiledTape)(#benchmark_tape##0)
+
+""" 
+
+# ---- T2 plots ----
+
+using BayesianFootball
+using DataFrames, Statistics, LinearAlgebra
+using ThreadPinning
+using BenchmarkTools
+using Turing, DynamicPPL, ReverseDiff, LogDensityProblems
+
 
 ds, true_params = BayesianFootball.SyntheticData.generate_synthetic_data_with_params(
     n_teams=10, 
@@ -670,3 +977,321 @@ describe(results_high[1][1][:tree_depth])
 describe(results_low[1][1][:tree_depth])
 
 
+
+
+##################################################
+
+using BayesianFootball
+using DataFrames, Statistics, LinearAlgebra
+using Turing, DynamicPPL
+
+# 1. Generate Dynamic Data (with volatility to justify the random walk)
+ds, true_params = BayesianFootball.SyntheticData.generate_synthetic_data_with_params(
+    n_teams=10, 
+    n_seasons=1,
+    legs_per_season=4,
+    in_season_volatility=0.05 
+)
+
+# --- Define the 3 Variants ---
+
+# A. Standard Half-Normal (Baseline)
+# Fast, stable, peaks at zero.
+model_std = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Truncated(Normal(0, 0.05), 0, Inf),
+    σ_def = Truncated(Normal(0, 0.05), 0, Inf)
+)
+
+# B. Owen's Gamma (Paper Recommendation)
+# [cite_start]Pushes density AWAY from zero to force adaptation[cite: 55].
+# [cite_start]Gamma(2, 0.04) creates a peak around 0.04, matching the "settled" variance found in the paper[cite: 217].
+model_owen = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Gamma(2, 0.04),
+    σ_def = Gamma(2, 0.04)
+)
+
+# C. Half-Cauchy (Heavy Tail)
+# theoretically allows massive jumps, likely slower sampling.
+model_cauchy = BayesianFootball.Models.PreGame.GRWPoisson(
+    σ_att = Truncated(Cauchy(0, 0.05), 0, Inf),
+    σ_def = Truncated(Cauchy(0, 0.05), 0, Inf)
+)
+
+
+
+
+# Create vocabulary and splits using the standard model (structure is identical)
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model_std)
+
+splitter_config = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["2020/21"], 
+    round_col = :round
+)
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model_std, splitter_config)
+
+# Sampler Configuration
+# Note: You might need to increase warmup for Cauchy if it has divergences
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=3) 
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=500, n_chains=6, n_warmup=500)
+
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
+
+
+println("Training Standard Model...")
+results_std = BayesianFootball.Training.train(model_std, training_config, feature_sets)
+
+
+println("Training Owen Gamma Model...")
+results_owen = BayesianFootball.Training.train(model_owen, training_config, feature_sets)
+
+println("Training Cauchy Model...")
+results_cauchy = BayesianFootball.Training.train(model_cauchy, training_config, feature_sets)
+
+
+"""
+julia> results_std = BayesianFootball.Training.train(model_std, training_config, feature_sets)                                        
+Dispatching to train(model, config, ::Vector{Tuple{FeatureSet, String}})...                                                           
+🚀 Starting Independent training for 1 splits sequentially...                                                                         
+                                                                                                                                      
+--- Training Split 1: static_seasons_2020/21 ---                                                                                      
+Dispatching to train(model, config, ::FeatureSet)...                                                                                  
+Sampling with NUTS (500 samples, 6 chains)...                                                                                         
+                                                                                                                                      
+┌ Info: Found initial step size                                                                               |  ETA: N/A             
+└   ϵ = 0.05                                                                                                                          
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05                                                                                                                          
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05                                                                                                                          
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05                                                                                                                          
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05                                                                                                                          
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05                                                                                                                          
+Chain 2/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:14:06         
+Chain 4/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:04         
+Chain 1/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:11         
+Chain 3/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:16:56         
+Chain 5/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:17:30         
+Chain 6/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:45:27         
+Sampling (6 threads) 100%|████████████████████████████████████████████████████████████████████████████████████| Time: 0:45:27         
+✅ Finished Split 1.                                                                                                                  
+                                                                                                                                      
+Sequential training complete!                                                                                                         
+1-element Vector{Tuple{Any, String}}:                                                                                                 
+ (MCMC chain (500×737×6 Array{Float64, 3}), "static_seasons_2020/21")  
+
+
+julia> results_owen = BayesianFootball.Training.train(model_owen, training_config, feature_sets)                                      
+Dispatching to train(model, config, ::Vector{Tuple{FeatureSet, String}})...                                                           
+🚀 Starting Independent training for 1 splits sequentially...                                                                         
+                                                                                                                                      
+--- Training Split 1: static_seasons_2020/21 ---                                                                                      
+Dispatching to train(model, config, ::FeatureSet)...                                                                                  
+Sampling with NUTS (500 samples, 6 chains)...                                                                                         
+┌ Info: Found initial step size                                                                                                       
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+Chain 1/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:06
+Chain 2/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:24
+Chain 5/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:25
+Chain 3/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:30
+Chain 4/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:16:56
+Chain 6/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:18:39
+Sampling (6 threads) 100%|████████████████████████████████████████████████████████████████████████████████████| Time: 0:18:39
+✅ Finished Split 1.
+
+Sequential training complete!
+1-element Vector{Tuple{Any, String}}:
+ (MCMC chain (500×737×6 Array{Float64, 3}), "static_seasons_2020/21")
+
+
+julia> results_cauchy = BayesianFootball.Training.train(model_cauchy, training_config, feature_sets)
+Dispatching to train(model, config, ::Vector{Tuple{FeatureSet, String}})...
+🚀 Starting Independent training for 1 splits sequentially...
+
+--- Training Split 1: static_seasons_2020/21 ---
+Dispatching to train(model, config, ::FeatureSet)...
+Sampling with NUTS (500 samples, 6 chains)...
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+Chain 1/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:15:27
+Chain 6/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:19:23
+Chain 4/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:19:46
+Chain 3/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:19:51
+Chain 5/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:20:12
+Chain 2/6 100%|███████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:20:46
+Sampling (6 threads) 100%|████████████████████████████████████████████████████████████████████████████████████| Time: 0:20:46
+✅ Finished Split 1.
+
+Sequential training complete!
+1-element Vector{Tuple{Any, String}}:
+ (MCMC chain (500×737×6 Array{Float64, 3}), "static_seasons_2020/21")
+
+"""
+
+
+### 
+# Helper to extract and format tensors for a specific team (e.g., Team 1)
+function get_trajectories(result, model_type)
+    chain = result[1][1]
+    
+    # We use your 'reconstruct_vectorized' helper
+    att = BayesianFootball.Models.PreGame.Implementations.reconstruct_vectorized(
+        chain, 10, :z_att_steps, :z_att_init, :σ_att
+    )
+    def = BayesianFootball.Models.PreGame.Implementations.reconstruct_vectorized(
+        chain, 10, :z_def_steps, :z_def_init, :σ_def
+    )
+    return att, def
+end
+
+# Extract
+att_std, def_std = get_trajectories(results_std, "Standard")
+att_owen, def_owen = get_trajectories(results_owen, "Owen")
+att_cauchy, def_cauchy = get_trajectories(results_cauchy, "Cauchy")
+
+# Plot Team 1 (or any volatile team)
+team_id = 2 
+
+# Plot 1: Standard
+p1 = BayesianFootball.SyntheticData.plot_dynamic_trajectory(
+    team_id, true_params, att_std, def_std; 
+)
+
+# Plot 2: Owen (Gamma)
+p2 = BayesianFootball.SyntheticData.plot_dynamic_trajectory(
+    team_id, true_params, att_owen, def_owen; 
+)
+
+# Plot 3: Cauchy
+p3 = BayesianFootball.SyntheticData.plot_dynamic_trajectory(
+    team_id, true_params, att_cauchy, def_cauchy; 
+)
+
+display(plot(p1, p2, p3, layout=(3,1), size=(800, 900)))
+
+println("=== STANDARD HALF-NORMAL ===")
+describe(results_std[1][1][[:σ_att, :σ_def]])
+
+println("\n=== OWEN'S GAMMA ===")
+describe(results_owen[1][1][[:σ_att, :σ_def]])
+
+println("\n=== HALF-CAUCHY ===")
+describe(results_cauchy[1][1][[:σ_att, :σ_def]])
+
+
+"""
+
+
+julia> describe(results_std[1][1][[:σ_att, :σ_def]])
+Chains MCMC chain (500×2×6 Array{Float64, 3}):
+
+Iterations        = 501:1:1000
+Number of chains  = 6
+Samples per chain = 500
+Wall duration     = 2727.08 seconds
+Compute duration  = 7436.89 seconds
+parameters        = σ_att, σ_def
+internals         = 
+
+Summary Statistics
+
+  parameters      mean       std      mcse   ess_bulk    ess_tail      rhat   ess_per_sec 
+      Symbol   Float64   Float64   Float64    Float64     Float64   Float64       Float64 
+
+       σ_att    0.0470    0.0260    0.0010   654.1427   1224.5080    1.0109        0.0880
+       σ_def    0.0332    0.0219    0.0009   606.2230   1072.6179    1.0169        0.0815
+
+
+Quantiles
+
+  parameters      2.5%     25.0%     50.0%     75.0%     97.5% 
+      Symbol   Float64   Float64   Float64   Float64   Float64 
+
+       σ_att    0.0031    0.0278    0.0457    0.0644    0.0997
+       σ_def    0.0012    0.0150    0.0310    0.0488    0.0805
+
+
+julia> describe(results_owen[1][1][[:σ_att, :σ_def]])
+Chains MCMC chain (500×2×6 Array{Float64, 3}):
+
+Iterations        = 501:1:1000
+Number of chains  = 6
+Samples per chain = 500
+Wall duration     = 1118.95 seconds
+Compute duration  = 5812.87 seconds
+parameters        = σ_att, σ_def
+internals         = 
+
+Summary Statistics
+
+  parameters      mean       std      mcse    ess_bulk    ess_tail      rhat   ess_per_sec 
+      Symbol   Float64   Float64   Float64     Float64     Float64   Float64       Float64 
+
+       σ_att    0.0617    0.0290    0.0009    884.9263   1237.9545    1.0071        0.1522
+       σ_def    0.0426    0.0226    0.0006   1274.8027   1736.3477    0.9998        0.2193
+
+
+Quantiles
+
+  parameters      2.5%     25.0%     50.0%     75.0%     97.5% 
+      Symbol   Float64   Float64   Float64   Float64   Float64 
+
+       σ_att    0.0133    0.0404    0.0589    0.0795    0.1259
+       σ_def    0.0073    0.0258    0.0401    0.0568    0.0926
+
+
+julia> describe(results_cauchy[1][1][[:σ_att, :σ_def]])
+Chains MCMC chain (500×2×6 Array{Float64, 3}):
+
+Iterations        = 501:1:1000
+Number of chains  = 6
+Samples per chain = 500
+Wall duration     = 1245.99 seconds
+Compute duration  = 6914.96 seconds
+parameters        = σ_att, σ_def
+internals         = 
+
+Summary Statistics
+
+  parameters      mean       std      mcse   ess_bulk    ess_tail      rhat   ess_per_sec 
+      Symbol   Float64   Float64   Float64    Float64     Float64   Float64       Float64 
+
+       σ_att    0.0499    0.0317    0.0014   555.9152    492.0809    1.0058        0.0804
+       σ_def    0.0317    0.0232    0.0008   854.4486   1275.4118    1.0148        0.1236
+
+
+Quantiles
+
+  parameters      2.5%     25.0%     50.0%     75.0%     97.5% 
+      Symbol   Float64   Float64   Float64   Float64   Float64 
+
+       σ_att    0.0028    0.0253    0.0464    0.0698    0.1200
+       σ_def    0.0012    0.0136    0.0275    0.0457    0.0879
+
+
+"""

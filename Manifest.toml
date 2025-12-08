@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "547eadafe973d2412df95b9f39510829269d1952"
+project_hash = "34680fdecbd8ba0279cfd36048102e3b3cd4a6a0"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
