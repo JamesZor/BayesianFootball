@@ -47,3 +47,42 @@ splitter_config = BayesianFootball.Data.StaticSplit(
     round_col = :round
 )
 
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+
+feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
+
+turing_model = BayesianFootball.Models.PreGame.build_turing_model(model, feature_sets[1][1])
+
+
+ldf_1 = Turing.LogDensityFunction(turing_model)
+
+# testing the extract_parameters 
+using JLD2
+
+# using another models chains as dummy data 
+results = JLD2.load_object("training_results.jld2")
+
+mp = filter( row -> row.round == 10 , ds.matches)
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+rr = BayesianFootball.Models.PreGame.extract_parameters(model, mp, vocabulary, results[1][1])
+
+
+# testing the wrapper 
+split_col_sym = :round
+all_split = sort(unique(ds.matches[!, split_col_sym]))
+prediction_split_keys = all_split[3:end] 
+grouped_matches = groupby(ds.matches, split_col_sym)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_sym => key)] 
+    for key in prediction_split_keys
+]
+
+oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    dfs_to_predict, 
+    vocabulary,
+    results
+)
+
