@@ -12,6 +12,7 @@ function apply_model_specific_logic(model::AbstractDynamicPoissonModel, df::Data
     return sort(df, [:season, :match_date])
 end
 
+
 function create_features(
     data_split::AbstractDataFrame,
     vocabulary::Vocabulary,
@@ -45,29 +46,37 @@ function create_features(
     F_data[:matches_df] = matches_df
 
     # --- Build split-specific data (F_i) ---
-    # Ensure we respect the sort order when grouping
     grouped = groupby(matches_df, splitter_config.round_col, sort=true)
-    # 2. Automatically get the correct number of rounds (e.g., 38)
     F_data[:n_rounds] = length(grouped)
 
-    # Extract team IDs (these are already Int)
+    # Extract team IDs and Goals (Vector of Vectors)
     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in grouped]
     F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in grouped]
-
-    # Extract goals (these will now be Int)
     F_data[:round_home_goals] = [g.home_score for g in grouped]
     F_data[:round_away_goals] = [g.away_score for g in grouped]
 
-    # Flatten the vectors (the element types will be preserved as Int)
+    # --- REFACTOR START: Standardized Flattening & Time Indices ---
+
+    # 1. Flatten the IDs and Goals
     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
     F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
-    F_data[:flat_home_goals] = vcat(F_data[:round_home_goals]...) # Should now be Vector{Int}
-    F_data[:flat_away_goals] = vcat(F_data[:round_away_goals]...) # Should now be Vector{Int}
+    F_data[:flat_home_goals] = vcat(F_data[:round_home_goals]...)
+    F_data[:flat_away_goals] = vcat(F_data[:round_away_goals]...)
 
+    # 2. Generate Time Indices (Crucial for AR1/GRW)
+    # Maps every match to its time step t (1..n_rounds)
+    # If Round 1 has 5 games, we generate [1, 1, 1, 1, 1]
+    time_indices = Int[]
+    for (t, round_matches) in enumerate(F_data[:round_home_ids])
+        n_matches_in_round = length(round_matches)
+        append!(time_indices, fill(t, n_matches_in_round))
+    end
+    F_data[:time_indices] = time_indices
+
+    # --- REFACTOR END ---
 
     return FeatureSet(F_data)
 end
-
 
 
 """

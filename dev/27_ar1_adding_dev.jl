@@ -1,3 +1,5 @@
+# dev/27_ar_1_adding_dev.jl
+
 """
 Dev work regarding the adding of the AR1 model.
 
@@ -124,6 +126,11 @@ julia> combine( groupby(df_matches, :match_week),
   38 │         38      5
 
 """
+
+
+combine( groupby(df_matches, :round), 
+        nrow 
+        )
 
 
 
