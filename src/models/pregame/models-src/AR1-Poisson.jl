@@ -179,7 +179,7 @@ function reconstruct_ar1_path(Z_init, Z_steps, σ_vec, ρ_vec)
     # t=2..T
     for t in 2:n_rounds
         prev = view(path, :, t-1, :)
-        innov = view(Z_step, :, t-1, :)
+        innov = view(Z_steps, :, t-1, :)
 
             # AR1 Update: ρ * prev + σ * innov
         path[:, t, :] .= (prev .* ρ_b) .+ (innov .* σ_b)
