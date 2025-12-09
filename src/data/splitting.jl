@@ -25,10 +25,8 @@ Base.@kwdef struct ExpandingWindowCV <: AbstractSplitter
     train_seasons::Vector{String}
     test_seasons::Vector{String}
     window_col::Symbol           # The column used for WINDOWING (e.g., :split_col)
-    method::Symbol = :sequential
-    
-    # NEW: Optional time column for model dynamics (e.g., :match_week)
     dynamics_col::Union{Symbol, Nothing} = nothing
+    method::Symbol = :sequential
 end
 
 """

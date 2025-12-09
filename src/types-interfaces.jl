@@ -20,13 +20,9 @@ abstract type AbstractPoissonModel <: AbstractPregameModel end
 abstract type AbstractStaticPoissonModel <: AbstractPoissonModel end 
 abstract type AbstractDynamicPoissonModel <: AbstractPoissonModel end 
 
-
-
 abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
-
-
 
 # --- Flexible Feature Structs ---
 # By defining these here, both Models and Features can use them without depending on each other.

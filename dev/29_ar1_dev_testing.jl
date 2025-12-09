@@ -14,6 +14,7 @@ using Statistics
 using ThreadPinning
 using LinearAlgebra
 pinthreads(:cores)
+
 BLAS.set_num_threads(1) 
 
 
@@ -78,149 +79,54 @@ predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball
 rr = BayesianFootball.Models.PreGame.extract_parameters(model, mp, vocabulary, r)
 
 
+split_col_sym = :split_col
+all_split = sort(unique(ds.matches[!, split_col_sym]))
+prediction_split_keys = all_split[2:end] 
+grouped_matches = groupby(ds.matches, split_col_sym)
+
+dfs_to_predict = [
+    grouped_matches[(; split_col_sym => key)] 
+    for key in prediction_split_keys
+]
+
+oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    dfs_to_predict, 
+    vocabulary,
+    results
+)
+
+
+
+
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(ds)
+
+
+
+models_to_compare = [
+    (
+        name    = "AR1 Poisson", 
+        model   = model,            # Your specific model struct
+        results = oos_results       # Your results dictionary
+    ),
+];
+
+mp = filter( row -> row.split_col >= 1 , ds.matches)
+
+num = 6
+match_id = mp[num, :match_id]
+mp[num, [:match_date, :home_team, :away_team, :home_score, :away_score]]
+
+compare_models(match_id, ds, predict_config, models_to_compare, 
+    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :over_35, :under_35, :btts_yes, :btts_no]
+            )
+
+
 
 """
-error 
-julia> rr = BayesianFootball.Models.PreGame.extract_parameters(model, mp, vocabulary, r)
-ERROR: DimensionMismatch: cannot broadcast array to have fewer non-singleton dimensions
-Stacktrace:
-  [1] check_broadcast_shape
-    @ ./broadcast.jl:554 [inlined]
-  [2] check_broadcast_shape (repeats 2 times)
-    @ ./broadcast.jl:560 [inlined]
-  [3] check_broadcast_axes
-    @ ./broadcast.jl:562 [inlined]
-  [4] check_broadcast_axes
-    @ ./broadcast.jl:566 [inlined]
-  [5] instantiate
-    @ ./broadcast.jl:316 [inlined]
-  [6] materialize!
-    @ ./broadcast.jl:905 [inlined]
-  [7] materialize!
-    @ ./broadcast.jl:902 [inlined]
-  [8] reconstruct_ar1_path(Z_init::Matrix{Float64}, Z_steps::Array{Float64, 3}, σ_vec::Base.ReshapedArray{Float64, 1, AxisArrays.AxisMatrix{…}, Tuple{}}, ρ_vec::Base.ReshapedArray{Float64, 1, AxisArrays.AxisMatrix{…}, Tuple{}})
-    @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/models-src/AR1-Poisson.jl:204
-  [9] extract_parameters(model::BayesianFootball.Models.PreGame.Implementations.AR1Poisson, df_to_predict::DataFrame, vocabulary::Vocabulary, chains::Chains{Float64, AxisArrays.AxisArray{…}, Missing, @NamedTuple{…}, @NamedTuple{…}})
-    @ BayesianFootball.Models.PreGame.Implementations ~/bet_project/BayesianFootball/src/models/pregame/models-src/AR1-Poisson.jl:260
- [10] top-level scope
-    @ REPL[62]:1
-Some type information was truncated. Use `show(err)` to see complete types.
-
-
 # --- step through the function  find the bug 
 
-
 """
-# --- Dev Implementation of extract_parameters ---
-
-# 1. Helper for reconstructing the path (Fixed)
-function reconstruct_ar1_path(Z_init, Z_steps, σ_vec, ρ_vec)
-    n_teams, n_steps, n_samples = size(Z_steps)
-    n_rounds = n_steps + 1 
-    path = zeros(Float64, n_teams, n_rounds, n_samples)
-    
-    # FIX: Reshape to (1, Samples) for 2D broadcasting
-    σ_b = reshape(σ_vec, 1, n_samples)
-    ρ_b = reshape(ρ_vec, 1, n_samples)
-    
-    path[:, 1, :] .= Z_init .* σ_b 
-    
-    for t in 2:n_rounds
-        prev = view(path, :, t-1, :)
-        innov = view(Z_steps, :, t-1, :)
-        path[:, t, :] .= (prev .* ρ_b) .+ (innov .* σ_b)
-    end
-    return path
-end
-
-# 2. Helper for unwrapping Turing tuples
-function unwrap_ntuple_ar1(tuple_of_arrays)
-    n_features = length(tuple_of_arrays)
-    n_samples = length(tuple_of_arrays[1])
-    out = Matrix{Float64}(undef, n_features, n_samples)
-    for (i, arr) in enumerate(tuple_of_arrays)
-        out[i, :] .= vec(parent(arr))
-    end
-    return out
-end
-
-# 3. Execution Logic (Manual Step-through of extract_parameters)
-# Assuming 'model', 'mp' (df_to_predict), 'vocabulary', and 'r' (chains) are defined as in your script:
-
-df_to_predict = mp 
-chains = r 
-
-# Retrieve raw parameters
-params = get(chains, [:home_adv, :σ_att, :σ_def, :ρ_att, :ρ_def, 
-                      :z_att_init, :z_def_init, :z_att_steps, :z_def_steps])
-
-# Vectors (Samples,)
-home_adv_vec = vec(params.home_adv)
-σ_att_vec    = vec(params.σ_att)
-σ_def_vec    = vec(params.σ_def)
-ρ_att_vec    = vec(params.ρ_att)
-ρ_def_vec    = vec(params.ρ_def)
-
-# Unwrap Arrays
-Z_att_init_raw = unwrap_ntuple_ar1(params.z_att_init)
-Z_def_init_raw = unwrap_ntuple_ar1(params.z_def_init)
-Z_att_steps_raw = unwrap_ntuple_ar1(params.z_att_steps)
-Z_def_steps_raw = unwrap_ntuple_ar1(params.z_def_steps)
-
-# Dimensions
-n_teams = vocabulary.mappings[:n_teams]
-n_samples = length(home_adv_vec)
-n_innovations = div(size(Z_att_steps_raw, 1), n_teams)
-
-# Reshape
-Z_att_init = Z_att_init_raw 
-Z_def_init = Z_def_init_raw 
-Z_att_steps = reshape(Z_att_steps_raw, n_teams, n_innovations, n_samples)
-Z_def_steps = reshape(Z_def_steps_raw, n_teams, n_innovations, n_samples)
-
-# Reconstruct Paths (Now using the fixed function)
-raw_att = reconstruct_ar1_path(Z_att_init, Z_att_steps, σ_att_vec, ρ_att_vec)
-raw_def = reconstruct_ar1_path(Z_def_init, Z_def_steps, σ_def_vec, ρ_def_vec)
-
-# Center Constraints
-final_att = raw_att .- mean(raw_att, dims=1)
-final_def = raw_def .- mean(raw_def, dims=1)
-
-# Extract Last Time Step (T) for Prediction
-att_final_T = final_att[:, end, :] # (Teams, Samples)
-def_final_T = final_def[:, end, :] # (Teams, Samples)
-
-# Generate Predictions
-ExtractionValue = NamedTuple{(:λ_h, :λ_a), Tuple{Vector{Float64}, Vector{Float64}}}
-extraction_dict = Dict{Int64, ExtractionValue}()
-sizehint!(extraction_dict, nrow(df_to_predict))
-
-team_map = vocabulary.mappings[:team_map]
-
-for row in eachrow(df_to_predict)
-    h_team = row.home_team
-    a_team = row.away_team
-    h_id = get(team_map, h_team, 0)
-    a_id = get(team_map, a_team, 0)
-
-    if h_id == 0 || a_id == 0 
-        continue 
-    end
-
-    # Calculate Rates
-    # Note: broadcasting (Samples,) + (Samples,) + (Samples,) -> (Samples,)
-    λ_h = exp.(att_final_T[h_id, :] .+ def_final_T[a_id, :] .+ home_adv_vec)
-    λ_a = exp.(att_final_T[a_id, :] .+ def_final_T[h_id, :])
-
-    extraction_dict[Int(row.match_id)] = (; λ_h, λ_a)
-end
-
-println("Extraction successful! Keys count: ", length(extraction_dict))
-
-
-# seems to be working
-extraction_dict
-
 
 BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(ds)
 
