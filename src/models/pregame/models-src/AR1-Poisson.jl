@@ -170,18 +170,18 @@ function reconstruct_ar1_path(Z_init, Z_steps, σ_vec, ρ_vec)
     path = zeros(Float64, n_teams, n_rounds, n_samples)
     
     # Reshape vectors for broadcasting: (1, 1, Samples)
-    σ_b = reshape(σ_vec, 1, 1, n_samples)
-    ρ_b = reshape(ρ_vec, 1, 1, n_samples)
+    σ_b = reshape(σ_vec, 1,  n_samples)
+    ρ_b = reshape(ρ_vec, 1,  n_samples)
     
     # t=1
     path[:, 1, :] .= Z_init .* σ_b # Scale init
     
     # t=2..T
     for t in 2:n_rounds
-        prev = path[:, t-1, :]
-        innov = Z_steps[:, t-1, :]
-        
-        # AR1 Update: ρ * prev + σ * innov
+        prev = view(path, :, t-1, :)
+        innov = view(Z_step, :, t-1, :)
+
+            # AR1 Update: ρ * prev + σ * innov
         path[:, t, :] .= (prev .* ρ_b) .+ (innov .* σ_b)
     end
     
@@ -212,6 +212,13 @@ function extract_parameters(
     Z_att_steps_raw = unwrap_ntuple_ar1(params.z_att_steps)
     Z_def_steps_raw = unwrap_ntuple_ar1(params.z_def_steps)
 
+
+    # Dimensions 
+    n_teams = vocabulary.mappings[:n_teams]
+    n_samples = length(home_adv_vec)
+    n_innovations = div(size(Z_att_steps_raw, 1), n_teams)
+    
+
     # Reshape for reconstruction
     n_teams = vocabulary.mappings[:n_teams]
     n_samples = length(home_adv_vec)
@@ -221,14 +228,10 @@ function extract_parameters(
     Z_def_init = Z_def_init_raw 
 
     # Reshape Steps: (Teams, Steps, Samples)
-    n_innovations = div(size(Z_att_steps_raw, 1), n_teams) # Should be n_rounds - 1
     Z_att_steps = reshape(Z_att_steps_raw, n_teams, n_innovations, n_samples)
     Z_def_steps = reshape(Z_def_steps_raw, n_teams, n_innovations, n_samples)
 
     # --- STEP 2: Reconstruct Paths ---
-    # Need to reshape Init to (Teams, 1, Samples) for the helper if we wanted to be generic,
-    # but let's just pass matching shapes.
-    
     # We expand Init to (Teams, Samples) -> (Teams, Samples) used inside helper
     raw_att = reconstruct_ar1_path(Z_att_init, Z_att_steps, σ_att_vec, ρ_att_vec)
     raw_def = reconstruct_ar1_path(Z_def_init, Z_def_steps, σ_def_vec, ρ_def_vec)
