@@ -133,35 +133,51 @@ end
 
 # ==============================================================================
 # 3. API IMPLEMENTATION (Build)
-# ==============================================================================
+# ============================================================================== 
 
 function build_turing_model(model::AR1Poisson, feature_set::FeatureSet)
     data = feature_set.data
     
-    # Flatten Logic (Same as GRW)
-    flat_home_ids = vcat(data[:round_home_ids]...)
-    flat_away_ids = vcat(data[:round_away_ids]...)
-    flat_home_goals = vcat(collect.(data[:round_home_goals])...)
-    flat_away_goals = vcat(collect.(data[:round_away_goals])...)
-    
-    # Time Indices
-    time_indices = Int[]
-    for (t, round_matches) in enumerate(data[:round_home_ids])
-        append!(time_indices, fill(t, length(round_matches)))
-    end
-
+    # We now trust the feature set to provide these aligned vectors
     return ar1_poisson_model_train(
         data[:n_teams]::Int,
         data[:n_rounds]::Int,
-        flat_home_ids,
-        flat_away_ids,
-        flat_home_goals,
-        flat_away_goals,
-        time_indices,
+        data[:flat_home_ids],     # Pre-flattened
+        data[:flat_away_ids],     # Pre-flattened
+        data[:flat_home_goals],   # Pre-flattened
+        data[:flat_away_goals],   # Pre-flattened
+        data[:time_indices],      # Created in FeatureSet
         model
     )
 end
 
+# function build_turing_model(model::AR1Poisson, feature_set::FeatureSet)
+#     data = feature_set.data
+#
+#     # Flatten Logic (Same as GRW)
+#     flat_home_ids = vcat(data[:round_home_ids]...)
+#     flat_away_ids = vcat(data[:round_away_ids]...)
+#     flat_home_goals = vcat(collect.(data[:round_home_goals])...)
+#     flat_away_goals = vcat(collect.(data[:round_away_goals])...)
+#
+#     # Time Indices
+#     time_indices = Int[]
+#     for (t, round_matches) in enumerate(data[:round_home_ids])
+#         append!(time_indices, fill(t, length(round_matches)))
+#     end
+#
+#     return ar1_poisson_model_train(
+#         data[:n_teams]::Int,
+#         data[:n_rounds]::Int,
+#         flat_home_ids,
+#         flat_away_ids,
+#         flat_home_goals,
+#         flat_away_goals,
+#         time_indices,
+#         model
+#     )
+# end
+#
 # ==============================================================================
 # 4. EXTRACTION (Inner & Wrapper)
 # ==============================================================================

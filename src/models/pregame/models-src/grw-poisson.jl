@@ -194,53 +194,59 @@ end
 # ==============================================================================
 # API IMPLEMENTATION
 # ==============================================================================
-#
-# function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
-#     data = feature_set.data
-#     return grw_poisson_model_train(
-#         data[:n_teams]::Int,
-#         data[:n_rounds]::Int,
-#         data[:round_home_ids],
-#         data[:round_away_ids],
-#         collect.(data[:round_home_goals]), 
-#         collect.(data[:round_away_goals])
-#     )
-# end
-#
+
+
 
 function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
     data = feature_set.data
     
-    # 1. Flatten the IDs and Goals
-    # We can rely on the 'flat_*' keys if they exist and are sorted correctly.
-    # However, to be safe and ensure alignment with the round structure, we re-flatten here.
-    
-    flat_home_ids = vcat(data[:round_home_ids]...)
-    flat_away_ids = vcat(data[:round_away_ids]...)
-    flat_home_goals = vcat(collect.(data[:round_home_goals])...) # Collect + Flatten
-    flat_away_goals = vcat(collect.(data[:round_away_goals])...)
-    
-    # 2. Create the Time Index Vector
-    # If Round 1 has 10 games, we push '1' ten times.
-    # If Round 2 has 8 games, we push '2' eight times.
-    time_indices = Int[]
-    for (t, round_matches) in enumerate(data[:round_home_ids])
-        n_matches_in_round = length(round_matches)
-        append!(time_indices, fill(t, n_matches_in_round))
-    end
-
+    # We now trust the feature set to provide these aligned vectors
     return grw_poisson_model_train(
         data[:n_teams]::Int,
         data[:n_rounds]::Int,
-        flat_home_ids,
-        flat_away_ids,
-        flat_home_goals,
-        flat_away_goals,
-        time_indices,
+        data[:flat_home_ids],     # Pre-flattened
+        data[:flat_away_ids],     # Pre-flattened
+        data[:flat_home_goals],   # Pre-flattened
+        data[:flat_away_goals],   # Pre-flattened
+        data[:time_indices],      # Created in FeatureSet
         model
     )
 end
 
+
+# function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
+#     data = feature_set.data
+#
+#     # 1. Flatten the IDs and Goals
+#     # We can rely on the 'flat_*' keys if they exist and are sorted correctly.
+#     # However, to be safe and ensure alignment with the round structure, we re-flatten here.
+#
+#     flat_home_ids = vcat(data[:round_home_ids]...)
+#     flat_away_ids = vcat(data[:round_away_ids]...)
+#     flat_home_goals = vcat(collect.(data[:round_home_goals])...) # Collect + Flatten
+#     flat_away_goals = vcat(collect.(data[:round_away_goals])...)
+#
+#     # 2. Create the Time Index Vector
+#     # If Round 1 has 10 games, we push '1' ten times.
+#     # If Round 2 has 8 games, we push '2' eight times.
+#     time_indices = Int[]
+#     for (t, round_matches) in enumerate(data[:round_home_ids])
+#         n_matches_in_round = length(round_matches)
+#         append!(time_indices, fill(t, n_matches_in_round))
+#     end
+#
+#     return grw_poisson_model_train(
+#         data[:n_teams]::Int,
+#         data[:n_rounds]::Int,
+#         flat_home_ids,
+#         flat_away_ids,
+#         flat_home_goals,
+#         flat_away_goals,
+#         time_indices,
+#         model
+#     )
+# end
+#
 
 """
 OPTIMIZED HELPER: unwraps NTuple directly into target shape
