@@ -21,33 +21,9 @@ needs the following functions
   - wrapper functions extract_paramters - could move into the model as the file is getting large 
   - add file path to model src file 
 
-"""
 
+>#
 
-using BayesianFootball
-using DataFrames
-using Statistics
-
-using JLD2
-
-using ThreadPinning
-using LinearAlgebra
-pinthreads(:cores)
-BLAS.set_num_threads(1) 
-
-
-data_store = BayesianFootball.Data.load_default_datastore()
-
-ds = BayesianFootball.Data.DataStore( 
-    subset( data_store.matches, 
-           :tournament_id => ByRow(isequal(55)),
-           :season => ByRow(isequal("24/25"))),
-    data_store.odds,
-    data_store.incidents
-)
-  
-names(ds.matches)
-"""
 julia> names(ds.matches)
 19-element Vector{String}:
  "tournament_id"
@@ -69,69 +45,37 @@ julia> names(ds.matches)
  "match_hour"
  "match_dayofweek"
  "match_month"
-"""
-
-df_matches = Data.add_match_week_column(ds.matches)
+ "match_week" -> added by add_match_week_column 
 
 
-combine( groupby(df_matches, :match_week), 
-        nrow 
-        )
-
-"""
-julia> combine( groupby(df_matches, :match_week), 
-               nrow 
-               )
-38×2 DataFrame
- Row │ match_week  nrow  
-     │ Int64       Int64 
-─────┼───────────────────
-   1 │          1      5
-   2 │          2      5
-   3 │          3      1
-   4 │          4      5
-   5 │          5      5
-   6 │          6      5
-   7 │          7      4
-   8 │          8      5
-   9 │          9      5
-  10 │         10      2
-  11 │         11      5
-  12 │         12      5
-  13 │         13      8
-  14 │         14      5
-  15 │         15      5
-  16 │         16      2
-  17 │         17      5
-  18 │         18      5
-  19 │         19      6
-  20 │         20      5
-  21 │         21      4
-  22 │         22      2
-  23 │         23      2
-  24 │         24      5
-  25 │         25      6
-  26 │         26      1
-  27 │         27      5
-  28 │         28      6
-  29 │         29      8
-  30 │         30      6
-  31 │         31      6
-  32 │         32      4
-  33 │         33      5
-  34 │         34      7
-  35 │         35      5
-  36 │         36      5
-  37 │         37      5
-  38 │         38      5
 
 """
 
 
-combine( groupby(df_matches, :round), 
-        nrow 
-        )
+using BayesianFootball
+using DataFrames
+using Statistics
 
+using JLD2
+
+using ThreadPinning
+using LinearAlgebra
+pinthreads(:cores)
+BLAS.set_num_threads(1) 
+
+
+tournament_id = 55
+data_store = BayesianFootball.Data.load_default_datastore()
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(subset( data_store.matches, 
+           :tournament_id => ByRow(isequal(tournament_id)),
+                                      :season => ByRow(isequal("24/25")))),
+    data_store.odds,
+    data_store.incidents
+)
+
+  
 
 
 """

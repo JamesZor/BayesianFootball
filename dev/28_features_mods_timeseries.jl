@@ -3,6 +3,414 @@
 To update the feature sets to handle the dynamics models better. 
 
 """
+
+
+"""
+addressing the time window and dynamics of feature sets 
+
+"""
+
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+using LinearAlgebra
+pinthreads(:cores)
+
+data_store = BayesianFootball.Data.load_default_datastore()
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(subset( data_store.matches, 
+           :tournament_id => ByRow(isequal(55)),
+                                      :season => ByRow(isequal("24/25")))),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+model = BayesianFootball.Models.PreGame.AR1Poisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
+
+# here want to start the expanding window cv ( 1 -38) so 38 - 35 = 3 +1 ( since we have zero ) 4
+ds.matches.split_col = max.(0, ds.matches.match_week .- 35);
+ds.matches.split_col ;
+
+# CONFIG: One place to rule them all
+splitter_config = BayesianFootball.Data.ExpandingWindowCV(
+    train_seasons = [], 
+    test_seasons = ["24/25"], 
+    window_col = :split_col,      # 1. WINDOWING: Split chunks based on this (0, 1, 2...)
+    method = :sequential,
+    dynamics_col = :match_week      # 2. DYNAMICS: Inside the chunk, evolve time based on this
+)
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+
+# API is now clean: no extra kwargs needed
+feature_sets = BayesianFootball.Features.create_features(
+    data_splits, 
+    vocabulary, 
+    model, 
+    splitter_config 
+)
+
+
+split_col_index = 1
+feature_sets[split_col_index][1].data
+unique(feature_sets[split_col_index][1].data[:time_indices])
+
+# static splits 
+
+
+splitter_config = BayesianFootball.Data.StaticSplit(
+    train_seasons = ["24/25"], 
+    window_col = :match_week
+)
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+
+# API is now clean: no extra kwargs needed
+feature_sets = BayesianFootball.Features.create_features(
+    data_splits, 
+    vocabulary, 
+    model, 
+    splitter_config 
+)
+
+split_col_index = 1
+feature_sets[split_col_index][1].data
+unique(feature_sets[split_col_index][1].data[:time_indices])
+
+
+"""
+# ----
+
+julia> split_col_index = 1
+1
+
+julia> feature_sets[split_col_index][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9], [3, 5, 1, 2, 4], [4], [10, 2, 8, 9, 6], [3, 7, 1, 6, 5], [9, 2, 1, 4, 10], [4, 7, 8, 5], [1…
+  :matches_df       => 165×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  6, 10, 4, 2, 7, 1, 8, 5, 4, 3]
+  :time_indices     => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  34, 34, 34, 34, 34, 35, 35, 35, 35, 35]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1]
+  :round_home_ids   => [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [7], [3, 1, 4, 7, 5], [9, 8, 10, 2, 4], [8, 7, 5, 3, 6], [9, 6, 2, 10], [9…
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 1, 8, 5, 9, 7, 6, 9, 2, 10]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-acad…
+  :n_rounds         => 35
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1], [1, 5, 0, 1, 0], [3], [1, 2, 1…
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0], [1, 0, 2, 0, 0], [2], [1, 1, 0…
+
+julia> unique(feature_sets[split_col_index][1].data[:time_indices])
+35-element Vector{Int64}:
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+
+
+# ------
+
+julia> split_col_index = 2
+2
+
+julia> feature_sets[split_col_index][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9], [3, 5, 1, 2, 4], [4], [10, 2, 8, 9, 6], [3, 7, 1, 6, 5], [9, 2, 1, 4, 10], [4, 7, 8, 5], [1…
+  :matches_df       => 170×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  1, 8, 5, 4, 3, 7, 10, 6, 2, 9]
+  :time_indices     => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  35, 35, 35, 35, 35, 36, 36, 36, 36, 36]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  1, 0, 1, 1, 1, 5, 0, 0, 0, 1]
+  :round_home_ids   => [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [7], [3, 1, 4, 7, 5], [9, 8, 10, 2, 4], [8, 7, 5, 3, 6], [9, 6, 2, 10], [9…
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  7, 6, 9, 2, 10, 3, 5, 4, 8, 1]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-acad…
+  :n_rounds         => 36
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  1, 1, 1, 2, 2, 0, 1, 0, 0, 3]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1], [1, 5, 0, 1, 0], [3], [1, 2, 1…
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0], [1, 0, 2, 0, 0], [2], [1, 1, 0…
+
+julia> unique(feature_sets[split_col_index][1].data[:time_indices])
+36-element Vector{Int64}:
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+
+
+# ------
+
+julia> split_col_index = 3
+3
+
+julia> feature_sets[split_col_index][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9], [3, 5, 1, 2, 4], [4], [10, 2, 8, 9, 6], [3, 7, 1, 6, 5], [9, 2, 1, 4, 10], [4, 7, 8, 5], [1…
+  :matches_df       => 175×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  7, 10, 6, 2, 9, 1, 6, 10, 3, 5]
+  :time_indices     => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  36, 36, 36, 36, 36, 37, 37, 37, 37, 37]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  5, 0, 0, 0, 1, 2, 2, 1, 0, 0]
+  :round_home_ids   => [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [7], [3, 1, 4, 7, 5], [9, 8, 10, 2, 4], [8, 7, 5, 3, 6], [9, 6, 2, 10], [9…
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 5, 4, 8, 1, 2, 7, 9, 4, 8]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-acad…
+  :n_rounds         => 37
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 1, 0, 0, 3, 1, 2, 1, 3, 0]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1], [1, 5, 0, 1, 0], [3], [1, 2, 1…
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0], [1, 0, 2, 0, 0], [2], [1, 1, 0…
+
+julia> unique(feature_sets[split_col_index][1].data[:time_indices])
+37-element Vector{Int64}:
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+
+"""
+
+
+
+"""
+feature_sets for expanding window cv 
+
+ - want the column for the match_week intervals, and column to create the feature cv splits 
+ - different, so we can do a split mid way through the seasons etc .. 
+
+"""
+
+using BayesianFootball
+using DataFrames
+using Statistics
+
+
+using ThreadPinning
+using LinearAlgebra
+pinthreads(:cores)
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+df_matches = Data.add_match_week_column(ds.matches)
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(subset( data_store.matches, 
+           :tournament_id => ByRow(isequal(55)),
+                                      :season => ByRow(isequal("24/25")))),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+# here want to start the expanding window cv ( 1 -38) so 38 - 35 = 3 +1 ( since we have zero ) 4
+ds.matches.split_col = max.(0, ds.matches.match_week .- 35);
+ds.matches.split_col 
+
+model = BayesianFootball.Models.PreGame.AR1Poisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
+
+
+splitter_config = BayesianFootball.Data.ExpandingWindowCV([], ["24/25"], :split_col, :sequential) #
+# splitter_config = BayesianFootball.Data.StaticSplit(
+#     train_seasons = ["24/25"], 
+#     round_col = :match_week
+# )
+
+data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+feature_sets = BayesianFootball.Features.create_features(data_splits, vocabulary, model, splitter_config)
+
+split_col_index = 3
+feature_sets[split_col_index][1].data
+unique(feature_sets[split_col_index][1].data[:time_indices])
+
+
+"""
+julia> data_splits = BayesianFootball.Data.create_data_splits(ds, splitter_config)
+Creating TimeSeriesSplits (Expanding Window)...
+4-element Vector{Tuple{SubDataFrame, String}}:
+ (165×21 SubDataFrame
+                       16 columns and 150 rows omitted, "24/25/Round_0")
+
+ (170×21 SubDataFrame
+                       16 columns and 155 rows omitted, "24/25/Round_1")
+
+ (175×21 SubDataFrame
+                       16 columns and 160 rows omitted, "24/25/Round_2")
+
+ (180×21 SubDataFrame
+                       16 columns and 165 rows omitted, "24/25/Round_3")
+
+
+julia> feature_sets[1][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  6, 10, 4, 2, 7, 1, 8, 5, 4, 3]]
+  :matches_df       => 165×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  6, 10, 4, 2, 7, 1, 8, 5, 4, 3]
+  :time_indices     => [1, 1, 1, 1, 1, 1, 1, 1, 1, 1  …  1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1]
+  :round_home_ids   => [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 1, 8, 5, 9, 7, 6, 9, 2, 10]]
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 1, 8, 5, 9, 7, 6, 9, 2, 10]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-academical"=>4, "partick-t…
+  :n_rounds         => 1
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1]]
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]]
+
+
+julia> unique(feature_sets[1][1].data[:time_indices])
+1-element Vector{Int64}:
+ 1
+
+----
+julia> split_col_index = 2
+2
+julia> feature_sets[split_col_index][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  6, 10, 4, 2, 7, 1, 8, 5, 4, 3], [7, 10, 6, 2, 9]]
+  :matches_df       => 170×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  1, 8, 5, 4, 3, 7, 10, 6, 2, 9]
+  :time_indices     => [1, 1, 1, 1, 1, 1, 1, 1, 1, 1  …  1, 1, 1, 1, 1, 2, 2, 2, 2, 2]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  1, 0, 1, 1, 1, 5, 0, 0, 0, 1]
+  :round_home_ids   => [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 1, 8, 5, 9, 7, 6, 9, 2, 10], [3, 5, 4, 8, 1]]
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  7, 6, 9, 2, 10, 3, 5, 4, 8, 1]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-academical"=>4, "partick-t…
+  :n_rounds         => 2
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  1, 1, 1, 2, 2, 0, 1, 0, 0, 3]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1], [5, …
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2], [0, …
+
+julia> unique(feature_sets[split_col_index][1].data[:time_indices])
+2-element Vector{Int64}:
+ 1
+ 2
+
+---
+julia> split_col_index = 3
+3
+
+julia> feature_sets[split_col_index][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  6, 10, 4, 2, 7, 1, 8, 5, 4, 3], [7, 10, 6, 2, 9], [1, 6, 10, 3, 5]]
+  :matches_df       => 175×21 DataFrame…
+  :flat_away_ids    => [6, 10, 8, 7, 9, 3, 5, 1, 2, 4  …  7, 10, 6, 2, 9, 1, 6, 10, 3, 5]
+  :time_indices     => [1, 1, 1, 1, 1, 1, 1, 1, 1, 1  …  2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  5, 0, 0, 0, 1, 2, 2, 1, 0, 0]
+  :round_home_ids   => [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 1, 8, 5, 9, 7, 6, 9, 2, 10], [3, 5, 4, 8, 1], [2, 7, 9, 4, 8]]
+  :flat_home_ids    => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10  …  3, 5, 4, 8, 1, 2, 7, 9, 4, 8]
+  :team_map         => Dict{String31, Int64}("queens-park-fc"=>6, "raith-rovers"=>9, "ayr-united"=>7, "falkirk-fc"=>1, "hamilton-academical"=>4, "partick-t…
+  :n_rounds         => 3
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 1, 0, 0, 3, 1, 2, 1, 3, 0]
+  :n_teams          => 10
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1], [5, …
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2], [0, …
+
+julia> unique(feature_sets[split_col_index][1].data[:time_indices])
+3-element Vector{Int64}:
+ 1
+ 2
+ 3
+
+"""
+
+
 """
 consider the more complex case for tournament_id = 54 - Scottish pl . 
 
@@ -293,6 +701,45 @@ julia> feature_sets[1][1].data[:time_indices]
   7
   7
   7
+  ⋮
+ 26
+ 26
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 27
+ 28
+ 28
+ 28
+ 28
+ 28
+ 28
+ 29
+ 29
+ 29
+ 29
+ 29
+ 29
+ 30
+ 30
+ 30
+ 30
+ 30
+ 30
+ 31
+ 31
+ 31
+ 31
+ 31
+ 31
 
 """
 
