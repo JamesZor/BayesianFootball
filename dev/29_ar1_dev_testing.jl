@@ -66,6 +66,7 @@ training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_c
 
 # results = BayesianFootball.Training.train(model, training_config, feature_sets)
 # JLD2.save_object("debug_ar1_poisson.jld2", results)
+""" compare to a static model """ 
 
 results = JLD2.load_object("debug_ar1_poisson.jld2") 
 
@@ -161,7 +162,7 @@ models_to_compare = [
 
 mp = filter( row -> row.split_col >= 1 , ds.matches)
 
-num = 6
+num = 11
 match_id = mp[num, :match_id]
 mp[num, :]
 
