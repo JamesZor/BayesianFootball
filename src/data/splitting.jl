@@ -29,28 +29,6 @@ Base.@kwdef struct ExpandingWindowCV <: AbstractSplitter
     method::Symbol = :sequential
 end
 
-"""
-old version 
-"""
-
-# abstract type AbstractSplitter end
-#
-# struct StaticSplit <: AbstractSplitter
-#     train_seasons::Vector{String}
-#     round_col::Union{Symbol, AbstractVector{Symbol}}
-# end
-#
-# function StaticSplit(; train_seasons::Vector{String}, round_col = Symbol[])
-#     return StaticSplit(train_seasons, round_col)
-# end
-#
-# struct ExpandingWindowCV <: AbstractSplitter
-#     base_seasons::Vector{String}
-#     target_seasons::Vector{String}
-#     round_col::Symbol
-#     ordering::Symbol
-# end
-#
 struct WindowCV <: AbstractSplitter
     base_seasons::Vector{String}
     target_seasons::Vector{String}
@@ -74,23 +52,6 @@ function create_data_splits(data_store::DataStore, splitter::StaticSplit)::Vecto
     return [(train_view, split_metadata)]
 end
 
-# older 
-# function create_data_splits(data_store::DataStore, splitter::ExpandingWindowCV)::Vector{Tuple{SubDataFrame, String}}
-#     println("Creating TimeSeriesSplits (Expanding Window)...")
-#
-#     # Initialize iterator with window_size = nothing (Infinite history)
-#     ts_iterator = TimeSeriesSplits(
-#         data_store.matches, 
-#         splitter.base_seasons, 
-#         splitter.target_seasons, 
-#         splitter.round_col, 
-#         splitter.ordering,
-#         nothing # No window size
-#     )
-#
-#     return Vector{Tuple{SubDataFrame, String}}(collect(ts_iterator))
-# end
-#
 # new version 
 function create_data_splits(data_store::DataStore, splitter::ExpandingWindowCV)::Vector{Tuple{SubDataFrame, String}}
     println("Creating TimeSeriesSplits (Expanding Window)...")
