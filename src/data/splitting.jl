@@ -4,8 +4,35 @@ using DataFrames
 using Base: collect
 
 export AbstractSplitter, StaticSplit, ExpandingWindowCV, WindowCV, create_data_splits
+export AbstractSplitter, AbstractSplitMetaData, SplitMetaData, CVConfig, create_data_splits
+
+# --- 1. METADATA STRUCTURES ---
+
+abstract type AbstractSplitMetaData end
+
+"""
+    SplitMetaData
+Contains the context for a specific data split (fold).
+Replaces the old String metadata to allow programmatic access downstream.
+"""
+struct SplitMetaData <: AbstractSplitMetaData
+    tournament_id::Int
+    train_season::String       # The primary target season (e.g. "20/21")
+    target_season::String      # Usually same as train_season in expanding window
+    history_depth::Int         # Number of historical seasons included
+    time_step::Int             # The dynamics index (e.g. match_week 5)
+    warmup_period::Int         # The starting dynamics index
+end
+
+# Helpful for debugging/logging
+function Base.show(io::IO, meta::SplitMetaData)
+    print(io, "Split(Tourn: $(meta.tournament_id), Season: $(meta.train_season), Week: $(meta.time_step), Hist: $(meta.history_depth))")
+end
 
 
+# --- 2. CONFIGURATION (THE "RECIPE") ---
+
+abstract type AbstractSplitter end
 # --- 1. SPLITTER TYPES ---
 # --- Abstract Type ---
 abstract type AbstractSplitter end
@@ -178,4 +205,169 @@ function Base.iterate(ts::TimeSeriesSplits, state=1)
     train_view = view(ts.original_df, current_indices, :)
     
     return ((train_view, round_info), state + 1)
+end
+
+
+"""
+    CVConfig
+Configuration for creating cross-validation splits across multiple tournaments and seasons.
+
+# Fields
+- `tournament_ids`: List of tournament IDs to process (e.g., [1, 56]). Splits are generated for each independently.
+- `target_seasons`: The seasons to perform the expanding window on (e.g., ["20/21", "21/22"]).
+- `history_seasons`: How many previous seasons to append to the training set (e.g., 1 implies adding "19/20" when target is "20/21").
+- `dynamics_col`: Column used for time evolution (e.g., :match_week).
+- `warmup_period`: The starting index for `dynamics_col` (inclusive).
+- `end_dynamics`: (Optional) The final index for `dynamics_col`. If nothing, runs to the end of data.
+"""
+Base.@kwdef struct CVConfig <: AbstractSplitter
+    # Filtering
+    tournament_ids::Vector{Int} = [1] 
+    
+    # Season Logic
+    target_seasons::Vector{String}
+    history_seasons::Int = 0
+    
+    # Dynamics
+    dynamics_col::Symbol = :match_week
+    warmup_period::Int = 5
+    
+    # Future extensibility (not used yet, but good to have)
+    # window_type::Symbol = :expanding 
+
+  # Stopping Logic
+    end_dynamics::Union{Int, Nothing} = nothing # Explicit override (e.g., stop at week 30)
+    stop_early::Bool = false                    # If true, auto-stops at (Max - 1)
+end
+
+
+# --- 3. CORE LOGIC ---
+
+"""
+    create_data_splits(data_store, config::CVConfig)
+
+Generates a vector of (DataFrameView, SplitMetaData) tuples based on the configuration.
+Automatically handles history lookup and tournament filtering.
+"""
+function create_data_splits(data_store, config::CVConfig)::Vector{Tuple{SubDataFrame, SplitMetaData}}
+    splits = Vector{Tuple{SubDataFrame, SplitMetaData}}()
+    
+    df = data_store.matches
+    
+    # 1. Pre-calculate sorted seasons for history resolution
+    # Assumes "YY/YY" format where lexicographical sort works (e.g. "20/21" < "21/22")
+    all_seasons = sort(unique(df.season))
+    
+    for tourn_id in config.tournament_ids
+        # Get indices for this tournament to avoid scanning the whole DF constantly
+        tourn_mask = df.tournament_id .== tourn_id
+        
+        # Optimization: If tournament has no data, skip
+        if !any(tourn_mask); continue; end
+
+        for target_season in config.target_seasons
+            # --- A. Resolve History ---
+            # Find where the target season sits in the full timeline
+            target_idx = findfirst(==(target_season), all_seasons)
+            
+            if isnothing(target_idx)
+                @warn "Target season $target_season not found for tournament $tourn_id. Skipping."
+                continue
+            end
+            
+            # Determine range of seasons to include
+            # Start index is target minus history depth (clamped to 1)
+            start_idx = max(1, target_idx - config.history_seasons)
+            
+            # Seasons to include: History + Target
+            # History seasons are treated as "static" (full data included)
+            history_seasons_list = all_seasons[start_idx : target_idx-1]
+            
+            # --- B. Get Indices ---
+            
+            # 1. History Indices (Static)
+            # All rows belonging to the history seasons for this tournament
+            history_indices = findall(
+                tourn_mask .& (in.(df.season, Ref(history_seasons_list)))
+            )
+            
+            # 2. Target Indices (Dynamic)
+            # All rows belonging to the target season for this tournament
+            target_indices = findall(
+                tourn_mask .& (df.season .== target_season)
+            )
+            
+            if isempty(target_indices)
+                @warn "No data found for target season $target_season (Tournament $tourn_id)."
+                continue
+            end
+            
+            # --- C. Iterate Dynamics (Expanding Window) ---
+            # Extract unique time steps from the target season
+            # season_dynamics = unique(df[target_indices, config.dynamics_col])
+            # sort!(season_dynamics)
+            #
+            # # Filter valid steps based on warmup/end
+            # valid_steps = filter(t -> t >= config.warmup_period, season_dynamics)
+            # if !isnothing(config.end_dynamics)
+            #     filter!(t -> t <= config.end_dynamics, valid_steps)
+            # end
+      # --- 
+      # --- C. Iterate Dynamics (Expanding Window) ---
+            # Extract unique time steps from the target season
+            season_dynamics = unique(df[target_indices, config.dynamics_col])
+            sort!(season_dynamics)
+            
+            # 1. Determine the effective end of the season
+            max_week = maximum(season_dynamics)
+            
+            # 2. Apply "Stop Early" logic (Backtesting Mode)
+            # If we are backtesting, we often stop 1 week before the end 
+            # so the last split has a 'future' week to predict within the dataset.
+            effective_end = config.stop_early ? (max_week - 1) : max_week
+
+            # 3. Filter valid steps
+            # Start at warmup, and don't go past explicit end_dynamics OR effective_end
+            valid_steps = filter(t -> t >= config.warmup_period, season_dynamics)
+            
+            # Apply explicit end limit if provided
+            if !isnothing(config.end_dynamics)
+                filter!(t -> t <= config.end_dynamics, valid_steps)
+            end
+            
+            # Apply the calculated effective end (for stop_early)
+            filter!(t -> t <= effective_end, valid_steps)
+           
+      # ---
+            for t in valid_steps
+                # For the target season, include only rows up to time t
+                # We reuse the pre-calculated target_indices and filter them by value
+                # (Note: direct array access is fast here)
+                current_target_indices = filter(idx -> df[idx, config.dynamics_col] <= t, target_indices)
+                
+                # Combine History + Current Window
+                combined_indices = vcat(history_indices, current_target_indices)
+                
+                # Sort indices for better memory access pattern in the View
+                sort!(combined_indices)
+                
+                # Create the View
+                train_view = view(df, combined_indices, :)
+                
+                # Create Metadata
+                meta = SplitMetaData(
+                    tourn_id,
+                    target_season,
+                    target_season, # target is same as train here
+                    config.history_seasons,
+                    t,
+                    config.warmup_period
+                )
+                
+                push!(splits, (train_view, meta))
+            end
+        end
+    end
+    
+    return splits
 end

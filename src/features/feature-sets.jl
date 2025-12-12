@@ -73,17 +73,101 @@ function create_features(
     return FeatureSet(F_data)
 end
 
+
+# TODO: - remove if newer is working
 # Vector wrapper (remains clean, just passes the config)
+# function create_features(
+#     data_splits_vector::Vector{<:Tuple{<:AbstractDataFrame, String}},
+#     vocabulary::Vocabulary,
+#     model::AbstractFootballModel,
+#     splitter_config::AbstractSplitter
+# )::Vector{Tuple{FeatureSet, String}}
+#
+#     return [
+#         (create_features(data, vocabulary, model, splitter_config), meta) 
+#         for (data, meta) in data_splits_vector
+#     ]
+# end
+#
+# new 
+#
+"""
+    create_features(vector_of_splits, ...)
+
+Vectorized wrapper that applies feature creation to every data split.
+It is generic over 'M' (Metadata), allowing it to handle both:
+ - Old style: (DataFrame, String)
+ - New style: (DataFrame, SplitMetaData)
+
+It returns the features paired with their original metadata.
+"""
+# function create_features(
+#     data_splits::Vector{<:Tuple{<:AbstractDataFrame, M}},
+#     vocabulary::Vocabulary,
+#     model::AbstractFootballModel,
+#     splitter_config::AbstractSplitter
+# )::Vector{Tuple{FeatureSet, M}} where M
+#
+#     # We map over the splits, creating features for the DataFrame (data)
+#     # and passing the metadata (meta) through unchanged.
+#     return [
+#         (create_features(data, vocabulary, model, splitter_config), meta) 
+#         for (data, meta) in data_splits
+#     ]
+# end
+#
+#
+
 function create_features(
-    data_splits_vector::Vector{<:Tuple{<:AbstractDataFrame, String}},
+    data_splits::Vector{<:Tuple{<:AbstractDataFrame, M}},
     vocabulary::Vocabulary,
     model::AbstractFootballModel,
     splitter_config::AbstractSplitter
-)::Vector{Tuple{FeatureSet, String}}
+)::Vector{Tuple{FeatureSet, M}} where M
 
+    # Apply the logic:
+    # For each split, we adapt the global vocabulary to the local data 
+    # BEFORE creating the feature set.
     return [
-        (create_features(data, vocabulary, model, splitter_config), meta) 
-        for (data, meta) in data_splits_vector
+        (
+            create_features(
+                data, 
+                adapt_vocabulary(vocabulary, data), # <--- THE MAGIC HAPPENS HERE
+                model, 
+                splitter_config
+            ), 
+            meta
+        ) 
+        for (data, meta) in data_splits
     ]
 end
 
+
+
+
+
+function create_features(
+    data_splits::Vector{<:Tuple{<:AbstractDataFrame, M}},
+    model::AbstractFootballModel,
+    splitter_config::AbstractSplitter
+)::Vector{Tuple{FeatureSet, M}} where M
+
+
+    vocabulary = create_vocabulary(ds, model) 
+
+    # Apply the logic:
+    # For each split, we adapt the global vocabulary to the local data 
+    # BEFORE creating the feature set.
+    return [
+        (
+            create_features(
+                data, 
+                adapt_vocabulary(vocabulary, data), # <--- THE MAGIC HAPPENS HERE
+                model, 
+                splitter_config
+            ), 
+            meta
+        ) 
+        for (data, meta) in data_splits
+    ]
+end

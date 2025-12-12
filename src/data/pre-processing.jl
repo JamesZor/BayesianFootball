@@ -9,9 +9,44 @@ using ..Data: AbstractDataFrame, DataStore # Use AbstractDataFrame from Data mod
 export add_match_week_column, add_global_round_column, add_inital_odds_from_fractions! # Export user-facing names
 export add_split_col_match_week
 
+
+
+# older 
+# """
+# Calculates the date of the Sunday for a given date.
+# Helper for grouping matches by week.
+# """
+# function sunday_of_week(dt::Date)::Date
+#     day_num = dayofweek(dt)
+#     return dt + Day(7 - day_num)
+# end
+#
+# """
+# Adds a ':match_week' column to the DataFrame, grouping matches by
+# the Sunday of the week they were played. Returns a *new* DataFrame copy.
+# """
+# function add_match_week_column(matches_df::AbstractDataFrame)::DataFrame
+#     df = copy(matches_df) # Work on a copy
+#     sort!(df, :match_date)
+#
+#     df.match_week_date = sunday_of_week.(df.match_date)
+#
+#     unique_weeks = sort(unique(df.match_week_date))
+#     week_map = Dict(week_date => i for (i, week_date) in enumerate(unique_weeks))
+#     df.match_week = [week_map[wd] for wd in df.match_week_date]
+#
+#     select!(df, Not(:match_week_date)) # Remove intermediate column
+#
+#     return df
+# end
+#
+
+# new 
 """
-Calculates the date of the Sunday for a given date.
-Helper for grouping matches by week.
+    sunday_of_week(dt::Date)
+
+Returns the date of the Sunday following the given date (or the date itself if it is Sunday).
+Used to group matches occurring in the same week (Mon-Sun).
 """
 function sunday_of_week(dt::Date)::Date
     day_num = dayofweek(dt)
@@ -19,23 +54,42 @@ function sunday_of_week(dt::Date)::Date
 end
 
 """
-Adds a ':match_week' column to the DataFrame, grouping matches by
-the Sunday of the week they were played. Returns a *new* DataFrame copy.
+    add_match_week_column(matches_df::AbstractDataFrame)
+
+Adds a ':match_week' column (Int) that resets for every season and tournament.
+The first week of matches in a season becomes Week 1, the next Week 2, etc.
+
+Groups by: [:tournament_id, :season]
 """
 function add_match_week_column(matches_df::AbstractDataFrame)::DataFrame
-    df = copy(matches_df) # Work on a copy
-    sort!(df, :match_date)
+    df = copy(matches_df) # Work on a copy to avoid mutating the original
+    
+    # 1. Ensure global sort order first (Tournament -> Season -> Date)
+    # This ensures that when we group, the data is relatively ordered, 
+    # though the transform logic below explicitly handles date sorting too.
+    sort!(df, [:tournament_id, :season, :match_date])
 
-    df.match_week_date = sunday_of_week.(df.match_date)
-
-    unique_weeks = sort(unique(df.match_week_date))
-    week_map = Dict(week_date => i for (i, week_date) in enumerate(unique_weeks))
-    df.match_week = [week_map[wd] for wd in df.match_week_date]
-
-    select!(df, Not(:match_week_date)) # Remove intermediate column
+    # 2. Define the per-season logic
+    # We take the vector of dates for a specific season, map them to Week Ending Sundays,
+    # and then index those Sundays 1..N
+    transform!(groupby(df, [:tournament_id, :season]), :match_date => (dates -> begin
+        # A. Map distinct dates to their "Week Ending Sunday"
+        #    (Matches Mon-Sun will share the same sunday_date)
+        week_dates = sunday_of_week.(dates)
+        
+        # B. Find the unique weeks and sort them chronologically
+        unique_weeks = sort(unique(week_dates))
+        
+        # C. Create a map: SundayDate -> Index (1, 2, 3...)
+        week_map = Dict(w => i for (i, w) in enumerate(unique_weeks))
+        
+        # D. Map the original dates row-by-row to their Week Index
+        return [week_map[w] for w in week_dates]
+    end) => :match_week)
 
     return df
 end
+
 
 
 """

@@ -125,3 +125,486 @@ struct, as it will help reduce boiler code when writitng experients.
 
 
 """
+
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+pinthreads(:cores)
+
+
+
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 5
+)
+
+
+tournament_id = 55
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(subset( data_store.matches, 
+           :tournament_id => ByRow(isequal(tournament_id)),
+                                      :season => ByRow(isequal("24/25")))),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 5
+)
+
+
+splits = Data.create_data_splits(ds, cv_config)
+
+
+"""
+
+julia> splits = Data.create_data_splits(ds, cv_config)
+34-element Vector{Tuple{SubDataFrame, BayesianFootball.Data.SplitMetaData}}:
+ (21×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+  15 │            55      62411  24/25    12476939  championship     ayr-unite ⋯
+  16 │            55      62411  24/25    12476941  championship     airdrieon
+  17 │            55      62411  24/25    12476930  championship     raith-rov
+  18 │            55      62411  24/25    12476932  championship     dunfermli
+  19 │            55      62411  24/25    12476933  championship     greenock- ⋯
+  20 │            55      62411  24/25    12476934  championship     partick-t
+  21 │            55      62411  24/25    12476935  championship     hamilton-
+                                                   15 columns and 6 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 5, Hist: 0))
+ (26×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+  20 │            55      62411  24/25    12476934  championship     partick-t ⋯
+  21 │            55      62411  24/25    12476935  championship     hamilton-
+  22 │            55      62411  24/25    12476928  championship     dunfermli
+  23 │            55      62411  24/25    12476929  championship     ayr-unite
+  24 │            55      62411  24/25    12476931  championship     airdrieon ⋯
+  25 │            55      62411  24/25    12476927  championship     livingsto
+  26 │            55      62411  24/25    12476926  championship     queens-pa
+                                                  15 columns and 11 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 6, Hist: 0))
+
+julia> splits[1]
+(21×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team             away_team             home_score  away_sc ⋯
+     │ Int64          Int64      String7  Int64     String15         String31              String31              Int64?      Int64?  ⋯
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-fc            queens-park-fc                 2          ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-thistle       greenock-morton                0
+   3 │            55      62411  24/25    12477137  championship     livingston            dunfermline-athletic           2
+   4 │            55      62411  24/25    12477138  championship     hamilton-academical   ayr-united                     0
+   5 │            55      62411  24/25    12477142  championship     airdrieonians         raith-rovers                   1          ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-park-fc        livingston                     1
+   7 │            55      62411  24/25    12476945  championship     ayr-united            airdrieonians                  5
+   8 │            55      62411  24/25    12476940  championship     dunfermline-athletic  falkirk-fc                     0
+   9 │            55      62411  24/25    12476943  championship     raith-rovers          partick-thistle                1          ⋯
+  10 │            55      62411  24/25    12476944  championship     greenock-morton       hamilton-academical            0
+  11 │            55      62411  24/25    12473119  championship     ayr-united            hamilton-academical            3
+  12 │            55      62411  24/25    12476936  championship     livingston            greenock-morton                1
+  13 │            55      62411  24/25    12476937  championship     falkirk-fc            partick-thistle                2          ⋯
+  14 │            55      62411  24/25    12476938  championship     hamilton-academical   dunfermline-athletic           1
+  15 │            55      62411  24/25    12476939  championship     ayr-united            raith-rovers                   2
+  16 │            55      62411  24/25    12476941  championship     airdrieonians         queens-park-fc                 0
+  17 │            55      62411  24/25    12476930  championship     raith-rovers          livingston                     0          ⋯
+  18 │            55      62411  24/25    12476932  championship     dunfermline-athletic  ayr-united                     1
+  19 │            55      62411  24/25    12476933  championship     greenock-morton       falkirk-fc                     2
+  20 │            55      62411  24/25    12476934  championship     partick-thistle       queens-park-fc                 3
+  21 │            55      62411  24/25    12476935  championship     hamilton-academical   airdrieonians                  2          ⋯
+                                                                                                                    12 columns omitted, Split(Tourn: 55, Season: 24/25, Week: 5, Hist: 0))
+
+
+"""
+using DataFrames, Dates
+
+"""
+    sunday_of_week(dt::Date)
+
+Returns the date of the Sunday following the given date (or the date itself if it is Sunday).
+Used to group matches occurring in the same week (Mon-Sun).
+"""
+function sunday_of_week(dt::Date)::Date
+    day_num = dayofweek(dt)
+    return dt + Day(7 - day_num)
+end
+
+"""
+    add_match_week_column(matches_df::AbstractDataFrame)
+
+Adds a ':match_week' column (Int) that resets for every season and tournament.
+The first week of matches in a season becomes Week 1, the next Week 2, etc.
+
+Groups by: [:tournament_id, :season]
+"""
+function add_match_week_column(matches_df::AbstractDataFrame)::DataFrame
+    df = copy(matches_df) # Work on a copy to avoid mutating the original
+    
+    # 1. Ensure global sort order first (Tournament -> Season -> Date)
+    # This ensures that when we group, the data is relatively ordered, 
+    # though the transform logic below explicitly handles date sorting too.
+    sort!(df, [:tournament_id, :season, :match_date])
+
+    # 2. Define the per-season logic
+    # We take the vector of dates for a specific season, map them to Week Ending Sundays,
+    # and then index those Sundays 1..N
+    transform!(groupby(df, [:tournament_id, :season]), :match_date => (dates -> begin
+        # A. Map distinct dates to their "Week Ending Sunday"
+        #    (Matches Mon-Sun will share the same sunday_date)
+        week_dates = sunday_of_week.(dates)
+        
+        # B. Find the unique weeks and sort them chronologically
+        unique_weeks = sort(unique(week_dates))
+        
+        # C. Create a map: SundayDate -> Index (1, 2, 3...)
+        week_map = Dict(w => i for (i, w) in enumerate(unique_weeks))
+        
+        # D. Map the original dates row-by-row to their Week Index
+        return [week_map[w] for w in week_dates]
+    end) => :match_week)
+
+    return df
+end
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+unique(ds.matches.match_week)
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 35,
+    # stop_early = true  # Splits go 1..5, 1..6, ..., 1..37
+    stop_early = false # Splits go 1..5, ..., 1..38 (The default)
+)
+
+
+splits = Data.create_data_splits(ds, cv_config)
+
+"""
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["23/24","24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 35
+)
+
+
+splits = Data.create_data_splits(ds, cv_config)
+
+julia> splits = Data.create_data_splits(ds, cv_config)
+6-element Vector{Tuple{SubDataFrame, BayesianFootball.Data.SplitMetaData}}:
+ (175×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      52606  23/24    11395859  championship     arbroath  ⋯
+   2 │            55      52606  23/24    11395855  championship     partick-t
+   3 │            55      52606  23/24    11395856  championship     greenock-
+   4 │            55      52606  23/24    11395857  championship     inverness
+   5 │            55      52606  23/24    11395858  championship     dunfermli ⋯
+   6 │            55      52606  23/24    11395850  championship     raith-rov
+   7 │            55      52606  23/24    11395851  championship     queens-pa
+   8 │            55      52606  23/24    11395852  championship     dundee-un
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 169 │            55      52606  23/24    11395681  championship     dunfermli ⋯
+ 170 │            55      52606  23/24    11395682  championship     arbroath
+ 171 │            55      52606  23/24    11395677  championship     airdrieon
+ 172 │            55      52606  23/24    11395673  championship     partick-t
+ 173 │            55      52606  23/24    11395674  championship     dunfermli ⋯
+ 174 │            55      52606  23/24    11395675  championship     arbroath
+ 175 │            55      52606  23/24    11395676  championship     greenock-
+                                                 15 columns and 160 rows omitted, Split(Tourn: 55, Season: 23/24, Week: 35, Hist: 0))
+ (180×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      52606  23/24    11395859  championship     arbroath  ⋯
+   2 │            55      52606  23/24    11395855  championship     partick-t
+   3 │            55      52606  23/24    11395856  championship     greenock-
+   4 │            55      52606  23/24    11395857  championship     inverness
+   5 │            55      52606  23/24    11395858  championship     dunfermli ⋯
+   6 │            55      52606  23/24    11395850  championship     raith-rov
+   7 │            55      52606  23/24    11395851  championship     queens-pa
+   8 │            55      52606  23/24    11395852  championship     dundee-un
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 174 │            55      52606  23/24    11395675  championship     arbroath  ⋯
+ 175 │            55      52606  23/24    11395676  championship     greenock-
+ 176 │            55      52606  23/24    11395668  championship     raith-rov
+ 177 │            55      52606  23/24    11395669  championship     queens-pa
+ 178 │            55      52606  23/24    11395670  championship     inverness ⋯
+ 179 │            55      52606  23/24    11395671  championship     dundee-un
+ 180 │            55      52606  23/24    11395672  championship     ayr-unite
+                                                 15 columns and 165 rows omitted, Split(Tourn: 55, Season: 23/24, Week: 36, Hist: 0))
+ (165×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 159 │            55      62411  24/25    12476817  championship     airdrieon ⋯
+ 160 │            55      62411  24/25    12476868  championship     raith-rov
+ 161 │            55      62411  24/25    12476808  championship     ayr-unite
+ 162 │            55      62411  24/25    12476805  championship     queens-pa
+ 163 │            55      62411  24/25    12476806  championship     raith-rov ⋯
+ 164 │            55      62411  24/25    12476810  championship     partick-t
+ 165 │            55      62411  24/25    12476811  championship     greenock-
+                                                 15 columns and 150 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 35, Hist: 0))
+ (170×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 164 │            55      62411  24/25    12476810  championship     partick-t ⋯
+ 165 │            55      62411  24/25    12476811  championship     greenock-
+ 166 │            55      62411  24/25    12476802  championship     livingsto
+ 167 │            55      62411  24/25    12476804  championship     airdrieon
+ 168 │            55      62411  24/25    12476801  championship     hamilton- ⋯
+ 169 │            55      62411  24/25    12476803  championship     dunfermli
+ 170 │            55      62411  24/25    12476807  championship     falkirk-f
+                                                 15 columns and 155 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 36, Hist: 0))
+ (175×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 169 │            55      62411  24/25    12476803  championship     dunfermli ⋯
+ 170 │            55      62411  24/25    12476807  championship     falkirk-f
+ 171 │            55      62411  24/25    12473064  championship     partick-t
+ 172 │            55      62411  24/25    12473055  championship     ayr-unite
+ 173 │            55      62411  24/25    12473060  championship     raith-rov ⋯
+ 174 │            55      62411  24/25    12473062  championship     hamilton-
+ 175 │            55      62411  24/25    12473066  championship     dunfermli
+                                                 15 columns and 160 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 37, Hist: 0))
+ (180×20 SubDataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 174 │            55      62411  24/25    12473062  championship     hamilton- ⋯
+ 175 │            55      62411  24/25    12473066  championship     dunfermli
+ 176 │            55      62411  24/25    12473058  championship     airdrieon
+ 177 │            55      62411  24/25    12473059  championship     livingsto
+ 178 │            55      62411  24/25    12473061  championship     queens-pa ⋯
+ 179 │            55      62411  24/25    12473063  championship     falkirk-f
+ 180 │            55      62411  24/25    12473065  championship     greenock-
+                                                 15 columns and 165 rows omitted, Split(Tourn: 55, Season: 24/25, Week: 38, Hist: 0))
+"""
+
+
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55, 56],
+    target_seasons = ["21/22"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 34
+)
+
+config = CVConfig(
+    # ...
+    stop_early = true  # Splits go 1..5, 1..6, ..., 1..37
+)
+
+splits = Data.create_data_splits(ds, cv_config)
+unique(splits[end][1].tournament_id)
+
+model = bayesianfootball.models.pregame.ar1poisson()
+vocabulary = bayesianfootball.features.create_vocabulary(ds, model) 
+
+
+
+feature_sets = BayesianFootball.Features.create_features(
+    splits, 
+    vocabulary, 
+    model, 
+    cv_config 
+)
+
+
+# ---------------------------------------------------------------------------
+"""
+
+using this with the feautes api / functions 
+
+
+"""
+
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 35,
+    stop_early = true  # Splits go 1..5, 1..6, ..., 1..37
+    # stop_early = false # Splits go 1..5, ..., 1..38 (The default)
+)
+
+
+splits = Data.create_data_splits(ds, cv_config)
+
+model   = BayesianFootball.Models.PreGame.StaticPoisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
+
+
+
+feature_sets = BayesianFootball.Features.create_features(
+    splits, 
+    vocabulary, 
+    model, 
+    cv_config 
+)
+
+
+feature_sets[1][1].data[:team_map]
+
+
+"""
+julia> feature_sets = BayesianFootball.Features.create_features(
+           splits, 
+           vocabulary, 
+           model, 
+           cv_config 
+       )
+3-element Vector{Tuple{FeatureSet, BayesianFootball.Data.SplitMetaData}}:
+ (FeatureSet(Dict{Symbol, Any}(:round_away_ids => [[26, 16, 19, 18, 17], [9, 27, 15, 24, 8], [8], [16, 24, 19, 17, 26], [9, 18, 15, 26, 27], [17, 24, 15, 8, 16], [8, 18, 19, 27], [15, 24, 27, 26, 16], [19, 8, 18, 17, 9], [9, 15]  …  [24], [8, 27, 19, 24, 18], [8, 15, 27, 8, 9, 26], [16, 19, 17, 9, 16, 15, 26, 27], [18, 15, 17, 18, 19, 8], [24, 19, 18, 16, 15, 9], [17, 26, 27, 8], [15, 17, 24, 17, 19], [27, 9, 26, 16, 8, 24, 18], [15, 19, 27, 8, 9]], :matches_df => 165×20 DataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team ⋯
+     │ Int64          Int64      String7  Int64     String15         String31  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │            55      62411  24/25    12477141  championship     falkirk-f ⋯
+   2 │            55      62411  24/25    12477136  championship     partick-t
+   3 │            55      62411  24/25    12477137  championship     livingsto
+   4 │            55      62411  24/25    12477138  championship     hamilton-
+   5 │            55      62411  24/25    12477142  championship     airdrieon ⋯
+   6 │            55      62411  24/25    12476942  championship     queens-pa
+   7 │            55      62411  24/25    12476945  championship     ayr-unite
+   8 │            55      62411  24/25    12476940  championship     dunfermli
+  ⋮  │       ⋮            ⋮         ⋮        ⋮             ⋮                   ⋱
+ 159 │            55      62411  24/25    12476817  championship     airdrieon ⋯
+ 160 │            55      62411  24/25    12476868  championship     raith-rov
+ 161 │            55      62411  24/25    12476808  championship     ayr-unite
+ 162 │            55      62411  24/25    12476805  championship     queens-pa
+ 163 │            55      62411  24/25    12476806  championship     raith-rov ⋯
+ 164 │            55      62411  24/25    12476810  championship     partick-t
+ 165 │            55      62411  24/25    12476811  championship     greenock-
+                                                 15 columns and 150 rows omitted, :flat_away_ids => [26, 16, 19, 18, 17, 9, 27, 15, 24, 8  …  26, 16, 8, 24, 18, 15, 19, 27, 8, 9], :time_indices => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  34, 34, 34, 34, 34, 35, 35, 35, 35, 35], :flat_home_goals => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1], :round_home_ids => [[15, 24, 9, 8, 27], [26, 18, 19, 17, 16], [18], [9, 15, 8, 18, 27], [17, 19, 16, 24, 8], [19, 18, 27, 9, 26], [17, 26, 24, 16], [17, 8, 9, 19, 18], [27, 26, 15, 16, 24], [15, 24]  …  [15], [26, 16, 9, 17, 15], [16, 16, 24, 17, 18, 19], [9, 8, 27, 24, 19, 8, 17, 18], [26, 27, 9, 16, 15, 27], [26, 17, 24, 8, 26, 27], [24, 16, 15, 18], [9, 16, 16, 8, 18], [26, 19, 9, 15, 19, 27, 17], [18, 26, 17, 24, 16]], :flat_home_ids => [15, 24, 9, 8, 27, 26, 18, 19, 17, 16  …  9, 15, 19, 27, 17, 18, 26, 17, 24, 16], :team_map => Dict{InlineStrings.String31, Int64}("cumnock" => 83, "broomhill-fc" => 88, "musselburgh-athletic-fc" => 112, "coldstream-fc" => 97, "nairn-county-fc" => 58, "carnoustie-panmure" => 80, "inverurie-loco-works-fc" => 95, "dundee-fc" => 13, "east-kilbride" => 46, "dunbar-united" => 85…), :n_rounds => 35, :flat_away_goals => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]…)), Split(Tourn: 55, Season: 24/25, Week: 35, Hist: 0))
+ (FeatureSet(Dict{Symbol, Any}(:round_away_ids => [[26, 16, 19, 18, 17], [9, 27, 15, 24, 8], [8], [16, 24, 19, 17, 26], [9, 18, 15, 26, 27], [17, 24, 15, 8, 16], [8, 18, 19, 27], [15, 24, 27, 26, 16], [19, 8, 18, 17, 9], [9, 15]  …  [8, 27, 19, 24, 18], [8, 15, 27, 8, 9, 26], [16, 19, 17, 9, 16, 15, 26, 27], [18, 15, 17, 18, 19, 8], [24, 19, 18, 16, 15, 9], [17, 26, 27, 8], [15, 17, 24, 17, 19], [27, 9, 26, 16, 8, 24, 18], [15, 19, 27, 8, 9], [18, 16, 26, 24, 17]], :matches_df => 170×20 DataFrame
+
+
+
+julia> feature_sets[1][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[26, 16, 19, 18, 17], [9, 27, 15, 24, 8], [8], [16, 24, 19, 17, 26], [9, 18, 15, 26, 27], [17, 24, 15, 8, 16]…
+  :matches_df       => 165×20 DataFrame…
+  :flat_away_ids    => [26, 16, 19, 18, 17, 9, 27, 15, 24, 8  …  26, 16, 8, 24, 18, 15, 19, 27, 8, 9]
+  :time_indices     => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  34, 34, 34, 34, 34, 35, 35, 35, 35, 35]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1]
+  :round_home_ids   => [[15, 24, 9, 8, 27], [26, 18, 19, 17, 16], [18], [9, 15, 8, 18, 27], [17, 19, 16, 24, 8], [19, 18, 27, 9, 26],…
+  :flat_home_ids    => [15, 24, 9, 8, 27, 26, 18, 19, 17, 16  …  9, 15, 19, 27, 17, 18, 26, 17, 24, 16]
+  :team_map         => Dict{String31, Int64}("cumnock"=>83, "broomhill-fc"=>88, "musselburgh-athletic-fc"=>112, "coldstream-fc"=>97, …
+  :n_rounds         => 35
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]
+  :n_teams          => 131
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1], [1, 5, 0, 1, 0], [3], [1, 2, 1…
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0], [1, 0, 2, 0, 0], [2], [1, 1, 0…
+
+julia> feature_sets[1][1].data
+Dict{Symbol, Any} with 13 entries:
+  :round_away_ids   => [[26, 16, 19, 18, 17], [9, 27, 15, 24, 8], [8], [16, 24, 19, 17, 26], [9, 18, 15, 26, 27], [17, 24, 15, 8, 16]…
+  :matches_df       => 165×20 DataFrame…
+  :flat_away_ids    => [26, 16, 19, 18, 17, 9, 27, 15, 24, 8  …  26, 16, 8, 24, 18, 15, 19, 27, 8, 9]
+  :time_indices     => [1, 1, 1, 1, 1, 2, 2, 2, 2, 2  …  34, 34, 34, 34, 34, 35, 35, 35, 35, 35]
+  :flat_home_goals  => [2, 0, 2, 0, 1, 1, 5, 0, 1, 0  …  3, 5, 0, 2, 1, 1, 0, 1, 1, 1]
+  :round_home_ids   => [[15, 24, 9, 8, 27], [26, 18, 19, 17, 16], [18], [9, 15, 8, 18, 27], [17, 19, 16, 24, 8], [19, 18, 27, 9, 26],…
+  :flat_home_ids    => [15, 24, 9, 8, 27, 26, 18, 19, 17, 16  …  9, 15, 19, 27, 17, 18, 26, 17, 24, 16]
+  :team_map         => Dict{String31, Int64}("cumnock"=>83, "broomhill-fc"=>88, "musselburgh-athletic-fc"=>112, "coldstream-fc"=>97, …
+  :n_rounds         => 35
+  :flat_away_goals  => [1, 0, 0, 2, 0, 1, 0, 2, 0, 0  …  0, 0, 1, 1, 0, 1, 1, 1, 2, 2]
+  :n_teams          => 131
+  :round_home_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[2, 0, 2, 0, 1], [1, 5, 0, 1, 0], [3], [1, 2, 1…
+  :round_away_goals => SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}[[1, 0, 0, 2, 0], [1, 0, 2, 0, 0], [2], [1, 1, 0…
+
+
+
+"""
+
