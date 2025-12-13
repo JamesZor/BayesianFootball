@@ -41,7 +41,13 @@ this returns a struct containing the results and the experiment_config
 The struct, ExperimentResults is what is saved and use furhter for the prediction and analysis. 
 Since everything can be be more or less synethisis from the configs and the results such as the predictions 
 
+Note the ExperimentConfig thing is a round about way of say that there exist a wrapper function for 
+it/api - such that we create an experiment, one defines this function and the set of parameters to 
+iterate / models - like in the the model case, 
 
+ExpCong( M_i | C) -> ExpResult_i 
+
+so we can save the expresult etc 
 
 
 """
