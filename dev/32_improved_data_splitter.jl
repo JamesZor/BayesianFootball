@@ -790,7 +790,96 @@ oos_results = BayesianFootball.Models.PreGame.extract_parameters(
 
 
 
+"""
 
+testing if the tournament_id and seaosn_id stuff works
+
+"""
+
+
+
+using Revise
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+pinthreads(:cores)
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["21/22", "22/23"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 34,
+    stop_early = true  # Splits go 1..5, 1..6, ..., 1..37
+    # stop_early = false # Splits go 1..5, ..., 1..38 (The default)
+)
+
+# 1. Setup & Train
+splits = Data.create_data_splits(ds, cv_config)
+
+model = BayesianFootball.Models.PreGame.AR1Poisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
+
+# 2. Create Features (NOW AUTOMATICALLY ADAPTS VOCAB)
+feature_sets = BayesianFootball.Features.create_features(
+    splits, vocabulary, model, cv_config
+)
+
+# train 
+
+
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=1, n_warmup=100) # Use renamed struct
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
+results = BayesianFootball.Training.train(model, training_config, feature_sets)
+
+# test the get next match 
+meta = results[3][2]
+df = Data.get_next_matches(ds, meta, cv_config)
+
+
+# 4. Extract (NOW AUTOMATICALLY FINDS OOS GAMES)
+oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    ds,              # Source of truth
+    feature_sets,    # Metadata + Maps
+    results,         # Posteriors
+    cv_config        # Config used for splitting
+)
+
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+BayesianFootball.Data.DataPreprocessing.add_inital_odds_from_fractions!(ds)
+
+
+models_to_compare = [
+    (
+        name    = "AR1 Poisson", 
+        model   = model,            # Your specific model struct
+        results = oos_results       # Your results dictionary
+    ),
+]
+
+match_id = collect(keys(oos_results))[2]
+subset( ds.matches, :match_id => ByRow(isequal(match_id)))
+
+# dev/31 for the functions
+compare_models(match_id, ds, predict_config, models_to_compare, 
+    markets=[:home, :draw, :away, :under_05, :over_05, :under_15, :over_15, :over_25, :under_25, :over_35, :under_35, :btts_yes, :btts_no]
+            )
 
 
 
