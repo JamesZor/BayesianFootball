@@ -608,3 +608,207 @@ Dict{Symbol, Any} with 13 entries:
 
 """
 
+
+
+# ---------------------------------
+
+"""
+  # out of sample process
+
+"""
+using Revise
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+pinthreads(:cores)
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["24/25"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+    warmup_period = 35,
+    stop_early = true  # Splits go 1..5, 1..6, ..., 1..37
+    # stop_early = false # Splits go 1..5, ..., 1..38 (The default)
+)
+
+
+# 1. Setup & Train
+splits = Data.create_data_splits(ds, cv_config)
+
+model = BayesianFootball.Models.PreGame.StaticPoisson()
+vocabulary = BayesianFootball.Features.create_vocabulary(ds, model) 
+
+# 2. Create Features (NOW AUTOMATICALLY ADAPTS VOCAB)
+feature_sets = BayesianFootball.Features.create_features(
+    splits, vocabulary, model, cv_config
+)
+
+# train 
+
+
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+sampler_conf = BayesianFootball.Samplers.NUTSConfig(n_samples=100, n_chains=1, n_warmup=100) # Use renamed struct
+training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg)
+
+results = BayesianFootball.Training.train(model, training_config, feature_sets)
+
+# test the get next match 
+meta = results[1][2]
+
+df = Data.get_next_matches(ds, meta, cv_config)
+
+
+# extract parameters walk through
+
+# function extract_parameters(
+#     model::AbstractFootballModel,
+#     data_store::DataStore,
+#     feature_sets::Vector,      # Contains the Local Maps
+#     results::Vector,           # Contains the Posteriors
+#     config::CVConfig           # Contains the Column definitions
+# )
+#
+
+
+# Allocate memory 
+oos_predictions = Dict{Int, Any}
+cv_config
+
+n_folds  = min(length(results), length(feature_sets))
+
+zip
+
+z = zip(results, feature_sets)
+
+zz = first(z)
+# process each fold step
+chain = zz[1][1]
+(fset, meta) = zz[2]
+oos_df = Data.get_next_matches(ds, meta, cv_config)
+
+if isempty(oos_df); println("is empty - replace with continue"); end 
+
+v = Features.Vocabulary(fset.data)
+
+p = Models.PreGame.extract_parameters(model, oos_df, v, chain)
+
+jH
+
+
+
+df = Data.get_next_matches(ds, meta, cv_config)
+
+function process_fold_extract_parameters(
+            model,
+            cv_config,
+            ds,
+            zipped_fold 
+          )
+
+    chain = zipped_fold[1][1]
+    (fset, meta) = zipped_fold[2]
+
+    oos_df = Data.get_next_matches(ds, meta, cv_config)
+
+    if isempty(oos_df); println("is empty - replace with continue"); end 
+
+    v = Features.Vocabulary(fset.data)
+
+    p = Models.PreGame.extract_parameters(model, oos_df, v, chain)
+
+    return p
+
+end 
+
+process_fold_extract_parameters(model, cv_config, ds, zz) 
+
+for zz in z
+    process_fold_extract_parameters(model, cv_config, ds, zz) 
+end
+
+
+function process_fold_extract_parameters(model, cv_config, ds, zipped_fold)
+    # Unpack the "Zip" structure: ((chain, meta), (fset, meta))
+    # We take the chain from the first tuple, and features/meta from the second
+    chain = zipped_fold[1][1]
+    (fset, meta) = zipped_fold[2]
+
+    # 1. Get Out-Of-Sample (OOS) data for this specific fold
+    oos_df = Data.get_next_matches(ds, meta, cv_config)
+
+    # 2. Handle empty weeks (e.g., end of season)
+    if isempty(oos_df)
+        return Dict{Int, Any}() # Return empty dict so 'merge' just skips it
+    end
+
+    # 3. Reconstruct Local Vocabulary
+    # (The FeatureSet stores the Dict, we wrap it back into a Vocabulary struct)
+    v = Features.Vocabulary(fset.data)
+
+    # 4. Extract parameters (Low-level function)
+    return Models.PreGame.extract_parameters(model, oos_df, v, chain)
+end
+
+
+# Create the iterator
+all_folds = zip(results, feature_sets)
+
+# MAP: Run process_fold on every item
+# REDUCE: Merge all resulting dictionaries into one
+all_oos_results = reduce(
+    merge, 
+    process_fold_extract_parameters(model, cv_config, ds, fold) for fold in all_folds
+)
+
+using BenchmarkTools
+
+@benchmark all_oos_results = reduce(
+    merge, 
+    process_fold_extract_parameters(model, cv_config, ds, fold) for fold in all_folds
+)
+
+# 4. Extract (NOW AUTOMATICALLY FINDS OOS GAMES)
+oos_results = BayesianFootball.Models.PreGame.extract_parameters(
+    model,
+    ds,              # Source of truth
+    feature_sets,    # Metadata + Maps
+    results,         # Posteriors
+    cv_config        # Config used for splitting
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

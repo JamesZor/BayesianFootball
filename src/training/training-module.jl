@@ -210,6 +210,105 @@ function train(
 end
 
 
+"""
+    train(model, config, feature_sets)
+
+Generic wrapper for training on a vector of (FeatureSet, Metadata) tuples.
+Accepts ANY metadata type 'M' (String, SplitMetaData, etc.).
+"""
+function train(
+    model::AbstractFootballModel, 
+    config::TrainingConfig, 
+    feature_sets_with_metadata::Vector{<:Tuple{FeatureSet, M}}
+)::Vector{Tuple{Any, M}} where M
+
+    println("Dispatching to train(model, config, ::Vector{Tuple{FeatureSet, $M}})...")
+    num_splits = length(feature_sets_with_metadata)
+    
+    # Pre-allocate generic result vector
+    all_results = Vector{Tuple{Any, M}}(undef, num_splits) 
+
+    strategy = config.strategy 
+
+    if strategy isa Independent
+        if strategy.parallel && num_splits > 1 
+            # --- Independent Parallel Execution ---
+            concurrency = min(num_splits, strategy.max_concurrent_splits, Threads.nthreads()) 
+            println("Starting Independent training for $num_splits splits using up to $concurrency concurrent tasks...")
+
+            semaphore = Base.Semaphore(concurrency)
+            tasks = Vector{Task}(undef, num_splits)
+
+            @sync begin 
+                for i in 1:num_splits
+                    tasks[i] = Threads.@spawn begin
+                        Base.acquire(semaphore) 
+                        try
+                            feature_set_i, metadata = feature_sets_with_metadata[i]
+                            println("--- Starting Split $i on Thread $(Threads.threadid()) ---")
+
+                            result_i = train(model, config, feature_set_i) 
+
+                            all_results[i] = (result_i, metadata)
+                            println("Finished Split $i on Thread $(Threads.threadid()).")
+                        finally
+                            Base.release(semaphore) 
+                        end
+                    end 
+                end 
+            end 
+            println("\nThreaded training complete!")
+
+        else 
+            # --- Independent Sequential Execution ---
+            println("🚀 Starting Independent training for $num_splits splits sequentially...")
+            @showprogress "Training splits..." for i in 1:num_splits
+                feature_set_i, metadata = feature_sets_with_metadata[i]
+                
+                result_i = train(model, config, feature_set_i) 
+                
+                all_results[i] = (result_i, metadata)
+            end
+             println("\nSequential training complete!")
+        end
+        return all_results
+
+    elseif config.strategy isa SequentialPriorUpdate
+        # --- Sequential Prior Update Execution (Placeholder) ---
+        println("🚀 Starting Sequential training with prior updates (Placeholder)...")
+        @warn "SequentialPriorUpdate strategy is not yet fully implemented."
+        
+        current_prior_info = nothing 
+        for i in 1:num_splits
+             feature_set_i, metadata = feature_sets_with_metadata[i]
+             println("\n--- Training Split $i: $metadata ---")
+             
+             # TODO: Modify build_turing_model to accept prior_info
+             # turing_model = build_turing_model(model, feature_set_i, prior_info=current_prior_info) 
+             turing_model = build_turing_model(model, feature_set_i) # Using default for now
+             
+             result_i = run_sampler(turing_model, config.sampler)
+             all_results[i] = (result_i, metadata)
+
+             if i < num_splits && result_i isa Turing.Chains
+                # TODO: Implement construct_prior_from_chains
+                 # current_prior_info = construct_prior_from_chains(result_i, config.strategy) 
+                 println("--- Would construct prior for next step here ---")
+             elseif !(result_i isa Turing.Chains)
+                 @warn "Sampler did not return Chains. Cannot update priors for next step. Stopping sequential update."
+                 break # Cannot continue SMC without chains
+             end
+             println("✅ Finished Split $i.")
+        end
+        println("\nSequential training complete (Placeholder)!")
+        return all_results
+    
+    else
+        error("Unsupported execution strategy: $(typeof(config.strategy))")
+    end
+end
+
+
 # --- Placeholder for SMC prior construction ---
 # function construct_prior_from_chains(chains::Turing.Chains, strategy::SequentialPriorUpdate)
 #     # Placeholder logic

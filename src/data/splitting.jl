@@ -371,3 +371,19 @@ function create_data_splits(data_store, config::CVConfig)::Vector{Tuple{SubDataF
     
     return splits
 end
+
+
+export get_next_matches
+
+function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig)::AbstractDataFrame 
+
+    # 1. Filter by Tournament & Season
+    oos_df = subset( ds.matches, 
+           :tournament_id => ByRow(isequal(meta.tournament_id)),
+           :season => ByRow(isequal(meta.target_season)),
+           config.dynamics_col => ByRow(isequal( meta.time_step + 1 )) 
+           )
+
+    return oos_df
+end
+

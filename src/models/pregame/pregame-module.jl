@@ -155,6 +155,53 @@ module Implementations
     end
 
 
+using ....Data: DataStore, FeatureSet, CVConfig, get_next_matches, SplitMetaData
+
+# export extract_parameters
+
+
+
+"""
+    extract_parameters(model, data_store, feature_sets, results, config)
+
+Top-level coordinator. Iterates over all training folds, extracts OOS parameters,
+and merges them into a single dictionary of predictions.
+"""
+function extract_parameters(
+    model::AbstractFootballModel,
+    data_store::DataStore,
+    feature_sets::AbstractVector,
+    results::AbstractVector,
+    config::CVConfig
+)
+
+    predictions_per_fold = (
+        _process_single_fold(model, config, data_store, fold) 
+        for fold in zip(results, feature_sets)
+    )
+
+    return reduce(merge, predictions_per_fold; init=Dict{Int, Any}())
+end
+
+# --- Internal Helper ---
+function _process_single_fold(model, config, ds, zipped_fold)
+    chain = zipped_fold[1][1]
+    (fset, meta) = zipped_fold[2]
+
+    oos_df = get_next_matches(ds, meta, config)
+
+    if isempty(oos_df)
+        return Dict{Int, Any}()
+    end
+
+    # Use the local vocabulary from the feature set
+    # We assume 'fset.data' contains the :team_map needed
+    local_vocab = Vocabulary(fset.data)
+
+    # Call the low-level extractor (assumed to be defined for the specific model type)
+    # This must return Dict{MatchID, Parameters}
+    return extract_parameters(model, oos_df, local_vocab, chain)
+end
 
 
 end
@@ -175,6 +222,7 @@ required_mapping_keys(model::StaticPoisson) = [:team_map, :n_teams]
 required_mapping_keys(model::StaticSimplexPoisson) = [:team_map, :n_teams]
 # Add more specific model implementations here, e.g.:
 # required_mapping_keys(model::HierarchicalPoisson) = [:team_map, :n_teams, :league_map, :n_leagues]
+
 
 
 
