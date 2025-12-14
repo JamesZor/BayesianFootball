@@ -390,12 +390,13 @@ results1 = Experiments.run_experiment(ds, cfg_1)
 results2 = Experiments.run_experiment(ds, cfg_2)
 
 # Explicit saving (Safety)
-save_experiment(results1)
-save_experiment(results2)
+Experiments.save_experiment(results1)
+Experiments.save_experiment(results2)
 
 
 # 1. List them (and capture the list)
 exps = Experiments.list_experiments()
+exps = Experiments.list_experiments("experiments"; data_dir=".data")
 
 # 2. Load the one you want using the index
 old_results = Experiments.load_experiment(exps, 2)

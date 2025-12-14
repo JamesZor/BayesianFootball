@@ -18,7 +18,7 @@ Base.@kwdef struct ExperimentConfig
     training_config::TrainingConfig 
     tags::Vector{String} = String[]
     description::String = ""
-    save_dir::String = ".data/experiments"
+    save_dir::String = "./data/experiments"
 end
 
 """
