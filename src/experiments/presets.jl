@@ -78,16 +78,16 @@ function experiment_config_models(
     model, 
     name::String;
     # --- Splitter (CVConfig) Defaults ---
-    tournament_ids::AbstractVector{<:Integer} = [55], 
-    target_seasons::AbstractVector{<:String} = ["21/22"],
+    tournament_ids::AbstractVector{<:Integer} = [54, 55, 56, 57], 
+    target_seasons::AbstractVector{<:String} = ["21/22", "22/23", "24/25"],
     history_seasons::Int = 0,
     dynamics_col::Symbol = :match_week,
-    warmup_period::Int = 34,
+    warmup_period::Int = 12,
     stop_early::Bool = true,
 
     # --- Training Strategy Defaults ---
     parallel::Bool = true, 
-    max_concurrent_splits::Int = 2,
+    max_concurrent_splits::Int = 4,
 
     # --- Sampler (NUTS) Defaults ---
     n_samples::Int = 1_000, 
