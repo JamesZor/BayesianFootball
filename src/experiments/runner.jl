@@ -77,18 +77,32 @@ end
     save_experiment(results::ExperimentResults; path=nothing, quiet=false)
 
 Persists the experiment results to disk.
+Creates a `meta.json` sidecar for fast listing.
 """
 function save_experiment(results::ExperimentResults; path=nothing, quiet=false)
-    # Use provided path override, or the one stored in results
     target_path = isnothing(path) ? results.save_path : path
     mkpath(target_path)
 
-    # 1. Save Binary (Results + Vocab + Chains)
+    # 1. Save Binary (Heavy Data)
     jldsave(joinpath(target_path, "results.jld2"); results)
 
-    # 2. Save Config (JSON for readability)
+    # 2. Save Config (Full JSON)
     open(joinpath(target_path, "config.json"), "w") do io
         JSON3.pretty(io, results.config)
+    end
+
+    # 3. Save Metadata Sidecar (Lightweight for Listing)
+    # We explicitly extract the Type Names here
+    meta = Dict(
+        :name => results.config.name,
+        :model => string(nameof(typeof(results.config.model))),
+        :splitter => string(nameof(typeof(results.config.splitter))),
+        :sampler => string(nameof(typeof(results.config.training_config.sampler))),
+        :timestamp => basename(target_path) # usually contains timestamp
+    )
+    
+    open(joinpath(target_path, "meta.json"), "w") do io
+        JSON3.pretty(io, meta)
     end
 
     if !quiet
@@ -104,8 +118,7 @@ end
 """
     list_experiments(base_dir="./experiments") -> Vector{String}
 
-Scans the directory, prints a numbered table of experiments, and returns 
-the list of paths corresponding to those numbers.
+Scans the directory for `meta.json` files and prints a detailed dashboard.
 """
 function list_experiments(base_dir::String="./experiments")
     if !isdir(base_dir)
@@ -113,7 +126,6 @@ function list_experiments(base_dir::String="./experiments")
         return String[]
     end
 
-    # 1. Get and Sort Subdirectories (Newest First)
     subdirs = filter(isdir, readdir(base_dir, join=true))
     sort!(subdirs, by=mtime, rev=true)
 
@@ -122,54 +134,55 @@ function list_experiments(base_dir::String="./experiments")
         return String[]
     end
 
-    # 2. Print Header
-    println("\n experiments in: $base_dir")
-    println("="^85)
+    # Header
+    println("\n Experiments in: $base_dir")
+    println("="^110)
     println(
-        rpad("IDX", 5), " | ", 
-        rpad("NAME", 35), " | ", 
+        rpad("IDX", 4), " | ", 
+        rpad("NAME", 25), " | ", 
         rpad("MODEL", 20), " | ", 
-        "TIMESTAMP"
+        rpad("SPLITTER", 18), " | ", 
+        rpad("SAMPLER", 15), " | ", 
+        "PATH ID"
     )
-    println("-"^85)
+    println("-"^110)
 
-    # 3. Print Rows
     for (i, path) in enumerate(subdirs)
-        meta = _read_experiment_metadata(path)
-        
+        # Try to read the new meta.json, fall back to config parsing, fall back to folder name
+        m = _read_meta(path)
+
         # Formatting
         idx_str = "[$i]"
-        name_str = length(meta.name) > 33 ? meta.name[1:33] * ".." : meta.name
-        model_str = length(meta.model) > 18 ? meta.model[1:18] * ".." : meta.model
-        time_str = basename(path) # Fallback if no timestamp in meta
-
-        # Highlight the first one (most recent)
-        row_color = i == 1 ? :white : :light_black
         
-        printstyled(rpad(idx_str, 5), " | ", color=:cyan, bold=(i==1))
-        printstyled(rpad(name_str, 35), " | ", color=row_color)
-        printstyled(rpad(model_str, 20), " | ", color=row_color)
-        println(time_str)
+        # Truncation logic
+        name_s = length(m.name) > 23 ? m.name[1:23] * ".." : m.name
+        model_s = length(m.model) > 18 ? m.model[1:18] * ".." : m.model
+        split_s = length(m.splitter) > 16 ? m.splitter[1:16] * ".." : m.splitter
+        samp_s = length(m.sampler) > 13 ? m.sampler[1:13] * ".." : m.sampler
+
+        # Color the latest run
+        c = i == 1 ? :white : :light_black
+        
+        printstyled(rpad(idx_str, 4), " | ", color=:cyan, bold=(i==1))
+        printstyled(rpad(name_s, 25), " | ", color=c, bold=(i==1))
+        printstyled(rpad(model_s, 20), " | ", color=c)
+        printstyled(rpad(split_s, 18), " | ", color=c)
+        printstyled(rpad(samp_s, 15), " | ", color=c)
+        println(basename(path))
     end
-    println("="^85, "\n")
+    println("="^110, "\n")
 
     return subdirs
 end
 
 """
-    load_experiment(path::String)
-    load_experiment(experiment_list::Vector{String}, index::Int)
-
-Loads an experiment. Can take a direct path OR a list+index from `list_experiments`.
+    load_experiment(path_or_list, [index])
 """
 function load_experiment(path::String)
-    # Helper to fix path if pointing to dir
     file_path = endswith(path, ".jld2") ? path : joinpath(path, "results.jld2")
-
     if !isfile(file_path)
         error("Results file not found: $file_path")
     end
-
     printstyled("Loading: ", color=:green)
     println(basename(dirname(file_path)))
     
@@ -179,11 +192,10 @@ end
 
 function load_experiment(experiment_list::Vector{String}, index::Int)
     if index < 1 || index > length(experiment_list)
-        error("Index $index out of bounds (1 to $(length(experiment_list)))")
+        error("Index $index out of bounds.")
     end
     return load_experiment(experiment_list[index])
 end
-
 
 # ==============================================================================
 # 4. INTERNAL HELPERS (Private)

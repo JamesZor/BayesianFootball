@@ -355,7 +355,8 @@ cfg_2 = experiment_config_models(model_2, name_2)
 using the module 
 
 """
-using Revise
+# using Revise
+
 using BayesianFootball
 
 using DataFrames
