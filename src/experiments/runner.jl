@@ -120,7 +120,7 @@ end
 
 Scans the directory for `meta.json` files and prints a detailed dashboard.
 """
-function list_experiments(base_dir::String="./experiments")
+function list_experiments(base_dir::String=".data/experiments")
     if !isdir(base_dir)
         println("Directory not found: $base_dir")
         return String[]
