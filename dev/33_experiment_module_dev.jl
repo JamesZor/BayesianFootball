@@ -338,7 +338,6 @@ name_2 = "Cauchy"
 model_3 = Models.PreGame.AR1Poisson()
 name_3 = "ar1"
 
-
 model_4 = Models.PreGame.GRWPoisson()
 name_4 = "grw"
 
@@ -350,3 +349,52 @@ cfg_4 = Experiments.experiment_config_models(model_4, name_4)
 
 cfg_2 = experiment_config_models(model_2, name_2)
 
+
+
+""""
+using the module 
+
+"""
+using Revise
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+pinthreads(:cores)
+
+using Distributions
+
+data_store = BayesianFootball.Data.load_default_datastore()
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+
+model_1 = Models.PreGame.StaticPoisson()
+name_1 = "normal"
+
+model_2 = Models.PreGame.StaticPoisson(prior= Cauchy(0))
+name_2 = "Cauchy"
+
+
+cfg_1 = Experiments.experiment_config_models(model_1, name_1)
+
+cfg_2 = Experiments.experiment_config_models(model_2, name_2)
+
+# Clean output, no I/O clutter
+results1 = Experiments.run_experiment(ds, cfg_1)
+results2 = Experiments.run_experiment(ds, cfg_2)
+
+# Explicit saving (Safety)
+save_experiment(results1)
+save_experiment(results2)
+
+
+# 1. List them (and capture the list)
+exps = Experiments.list_experiments()
+
+# 2. Load the one you want using the index
+old_results = Experiments.load_experiment(exps, 2)
