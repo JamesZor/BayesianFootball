@@ -882,22 +882,3 @@ compare_models(match_id, ds, predict_config, models_to_compare,
             )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -336,4 +336,37 @@ function extract_parameters(
 end
 
 
+# ==============================================================================
+# 5. PRETTY PRINTING (Math Notation)
+# ==============================================================================
 
+function Base.show(io::IO, ::MIME"text/plain", m::AR1Poisson)
+    # Title
+    printstyled(io, "AR1 Poisson Model", color=:cyan, bold=true)
+    println(io)
+    println(io, "=================")
+
+    # 1. Mathematical Structure
+    printstyled(io, "[State Space Dynamics]\n", color=:magenta)
+    println(io, "  att(t) ~ Normal( ρ_att * att(t-1), σ_att )")
+    println(io, "  def(t) ~ Normal( ρ_def * def(t-1), σ_def )")
+    println(io, "  Constraint: Σ(att) = 0, Σ(def) = 0 (per step)")
+    println(io)
+
+    printstyled(io, "[Observation Model]\n", color=:magenta)
+    println(io, "  y_home ~ Poisson( exp( HA + att_h + def_a ) )")
+    println(io, "  y_away ~ Poisson( exp( att_a + def_h ) )")
+    println(io)
+
+    # 2. Priors (Iterate fields, but filter for key hyperparameters)
+    printstyled(io, "[Priors]\n", color=:yellow)
+    
+    # Define the fields we actually want to show (skip the z_init/steps implementation details)
+    key_params = [:home_adv, :σ_att, :σ_def, :ρ_att, :ρ_def]
+    
+    for name in key_params
+        val = getfield(m, name)
+        # Format: parameter ~ Distribution
+        println(io, "  ", rpad(string(name), 10), " ~ ", val)
+    end
+end

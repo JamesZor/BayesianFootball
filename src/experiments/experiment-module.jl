@@ -1,30 +1,23 @@
+# src/Experiments/experiment-module
 
 module Experiments
 
+# using Reexport
+# using Accessors # Need this here for the macros to work if exported
 
-# imports
-using ..Models: AbstractFootballModel
-# using ..Sampling: AbstractTrainingMethod
-using ..Predictions: PredictionConfig
-using ..Data: AbstractSplitter
+using ..Models
+using ..Data
+using ..Features
+using ..Training
+using ..Predictions
+using ..Samplers
 
+include("./types.jl")
+include("./presets.jl") 
+include("./runner.jl")
+include("./display.jl")
 
-# include("./types.jl")
-# include("./runner.jl")
-# exports 
-export Experiment, PredictionConfig
-
-
-# --- Experiment struct ---
-struct Experiment
-    name::String
-    model::AbstractFootballModel
-    splitter::AbstractSplitter 
-    # sampler_config::AbstractTrainingMethod
-end
-
-
-# export run_experiment
-# export ExperimentRunner
+export ExperimentConfig, ExperimentResults, run_experiment
+export BENCHMARK_DEFAULTS, create_benchmark_config
 
 end

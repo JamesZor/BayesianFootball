@@ -486,3 +486,38 @@ function reconstruct_vectorized(chain, n_teams, target_param_step=:z_att_steps, 
     return traj_centered
 end
 
+
+
+# ==============================================================================
+# 5. PRETTY PRINTING (Math Notation)
+# ==============================================================================
+
+function Base.show(io::IO, ::MIME"text/plain", m::GRWPoisson)
+    # Title
+    printstyled(io, "GRW Poisson Model", color=:cyan, bold=true)
+    println(io)
+    println(io, "=================")
+
+    # 1. Mathematical Structure
+    printstyled(io, "[State Space Dynamics]\n", color=:magenta)
+    println(io, "  att(t) = att(t-1) + σ_att * ε_t")
+    println(io, "  def(t) = def(t-1) + σ_def * ε_t")
+    println(io, "  Constraint: Σ(att) = 0, Σ(def) = 0 (per step)")
+    println(io)
+
+    printstyled(io, "[Observation Model]\n", color=:magenta)
+    println(io, "  y_home ~ Poisson( exp( HA + att_h + def_a ) )")
+    println(io, "  y_away ~ Poisson( exp( att_a + def_h ) )")
+    println(io)
+
+    # 2. Priors
+    printstyled(io, "[Priors]\n", color=:yellow)
+    
+    # Skip implementation details (z_steps, z_init)
+    key_params = [:home_adv, :σ_att, :σ_def]
+    
+    for name in key_params
+        val = getfield(m, name)
+        println(io, "  ", rpad(string(name), 10), " ~ ", val)
+    end
+end
