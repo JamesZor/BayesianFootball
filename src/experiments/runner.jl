@@ -120,7 +120,9 @@ end
 
 Scans the directory for `meta.json` files and prints a detailed dashboard.
 """
-function list_experiments(base_dir::String=".data/experiments")
+function list_experiments(dir::String;data_dir::String="./data")
+    base_dir = joinpath(data_dir, dir)
+
     if !isdir(base_dir)
         println("Directory not found: $base_dir")
         return String[]
@@ -200,6 +202,35 @@ end
 # ==============================================================================
 # 4. INTERNAL HELPERS (Private)
 # ==============================================================================
+
+function _read_meta(path)
+    meta_path = joinpath(path, "meta.json")
+    default = (name=basename(path), model="?", splitter="?", sampler="?")
+
+    if isfile(meta_path)
+        try
+            return JSON3.read(read(meta_path, String))
+        catch
+            return default
+        end
+    end
+
+    # Fallback: Try to read old config.json if meta.json doesn't exist yet
+    config_path = joinpath(path, "config.json")
+    if isfile(config_path)
+        try
+            cfg = JSON3.read(read(config_path, String))
+            return (
+                name = get(cfg, :name, default.name),
+                model = "Legacy Config",
+                splitter = "?",
+                sampler = "?"
+            )
+        catch
+        end
+    end
+    return default
+end
 
 function _log_header(name)
     printstyled("\n>> EXPERIMENT: ", color=:magenta, bold=true)

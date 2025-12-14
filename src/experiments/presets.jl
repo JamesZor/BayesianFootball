@@ -59,7 +59,8 @@ function create_benchmark_config(
         splitter = final_splitter,
         training_config = training_config,
         tags = ["benchmark", "standard"],
-        description = "Created via factory with N=$samples, Chains=$chains"
+        description = "Created via factory with N=$samples, Chains=$chains", 
+        save_dir = "./data/experiment_run_dev/"
     )
 end
 
