@@ -64,22 +64,6 @@ function Base.show(io::IO, ::MIME"text/plain", m::AbstractFootballModel)
     end
 end
 
-# --- 4. Splitter (Config View) ---
-
-function Base.show(io::IO, ::MIME"text/plain", s::CVConfig)
-    println(io, TREE_S, "Type: CVConfig")
-    println(io, TREE_S, TREE_J, " Tournaments: ", s.tournament_ids)
-    println(io, TREE_S, TREE_J, " Target:      ", join(s.target_seasons, ", "))
-    println(io, TREE_S, TREE_J, " History:     ", s.history_seasons, " seasons")
-    println(io, TREE_S, TREE_L, " Dynamics:    ", s.dynamics_col, " (Warmup=", s.warmup_period, ")")
-end
-
-function Base.show(io::IO, ::MIME"text/plain", s::ExpandingWindowCV)
-    println(io, TREE_S, "Type: ExpandingWindowCV")
-    println(io, TREE_S, TREE_J, " Test Seasons: ", join(s.test_seasons, ", "))
-    println(io, TREE_S, TREE_L, " Window Col:   ", s.window_col)
-end
-
 # --- 5. Training Config ---
 
 function Base.show(io::IO, ::MIME"text/plain", t::TrainingConfig)
