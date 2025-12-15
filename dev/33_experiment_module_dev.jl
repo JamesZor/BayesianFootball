@@ -395,8 +395,34 @@ Experiments.save_experiment(results2)
 
 
 # 1. List them (and capture the list)
-exps = Experiments.list_experiments()
-exps = Experiments.list_experiments("experiments"; data_dir=".data")
+exps = Experiments.list_experiments("experiments")
 
 # 2. Load the one you want using the index
 old_results = Experiments.load_experiment(exps, 2)
+
+
+
+
+old_results
+
+
+"""
+ :n_steps
+ :is_accept
+ :acceptance_rate
+ :log_density
+ :hamiltonian_energy
+ :hamiltonian_energy_error
+ :max_hamiltonian_energy_error
+ :tree_depth
+ :numerical_error
+ :step_size
+ :nom_step_size
+ :lp
+ :logprior
+ :loglikelihood
+
+
+"""
+
+
