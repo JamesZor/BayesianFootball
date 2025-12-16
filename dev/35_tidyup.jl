@@ -160,7 +160,7 @@ Now we delete one file to simulate a crash that happened partway through.
 println("\n Test 3: Partial Resume (Simulating crash)...")
 
 # 1. Delete the checkpoint for Split #1 (or any index)
-split_to_delete = 1
+split_to_delete = 2
 file_to_delete = joinpath("./data/tmp_checkpoints", "split_$(lpad(split_to_delete, 3, '0')).jls")
 rm(file_to_delete; force=true)
 
