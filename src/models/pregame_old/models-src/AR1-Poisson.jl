@@ -318,6 +318,7 @@ function extract_parameters(
             chains = result_tuple[1]
             
             partial_results[i] = extract_parameters(model, df_curr, vocabulary, chains)
+            partial_results[i] = extract_parameters(model, df_curr, vocabulary, chains)
         end
     end
 
