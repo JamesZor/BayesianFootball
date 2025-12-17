@@ -2,6 +2,7 @@
 
 export AbstractExecutionStrategy, Independent, SequentialPriorUpdate
 export TrainingConfig
+export TrainingResults
 
 abstract type AbstractExecutionStrategy end
 
@@ -43,4 +44,37 @@ end
 
 function Base.show(io::IO, c::TrainingConfig)
     print(io, "TrainingConfig(strategy=$(nameof(typeof(c.strategy))), checkpointing=$(!isnothing(c.checkpoint_dir)))")
+end
+
+
+"""
+    TrainingResults{C, M}
+
+A container for the results of a training run.
+- `C`: Type of the Model Result (e.g., Turing.Chains)
+- `M`: Type of the Metadata (e.g., SplitMetaData)
+"""
+struct TrainingResults{C, M} <: AbstractVector{Tuple{C, M}}
+    items::Vector{Tuple{C, M}}
+end
+
+# Allow construction from a loosely typed vector by attempting to tighten types
+function TrainingResults(items::Vector)
+    # This comprehension forces Julia to look at the actual types of elements
+    # and infer the tightest common type (e.g., Vector{Tuple{Chains, Meta}})
+    tightened = [i for i in items] 
+    return TrainingResults(tightened)
+end
+
+# --- Interface Implementation ---
+Base.size(tr::TrainingResults) = size(tr.items)
+Base.getindex(tr::TrainingResults, i::Int) = getindex(tr.items, i)
+Base.setindex!(tr::TrainingResults, v, i::Int) = setindex!(tr.items, v, i)
+Base.IndexStyle(::Type{<:TrainingResults}) = IndexLinear()
+
+# Optional: Pretty Printing
+function Base.show(io::IO, ::MIME"text/plain", tr::TrainingResults)
+    C = eltype(tr).parameters[1]
+    n = length(tr)
+    print(io, "TrainingResults: $n completed splits ($C)")
 end

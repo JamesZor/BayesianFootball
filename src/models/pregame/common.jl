@@ -41,6 +41,16 @@ get_prediction_type(::AbstractPregameModel) = Dict{Symbol, Vector{Float64}}
 
 # --- The Orchestrator (Vector Method) ---
 
+function extract_parameters(
+    model::AbstractPregameModel, 
+    dfs_to_predict::AbstractDataFrame, 
+    features::Tuple,
+    results::Tuple
+)
+  return extract_parameters(model, dfs_to_predict, features[1], results[1] )
+
+end
+
 """
     extract_parameters(model, dfs::Vector, vocab, results::Vector)
 

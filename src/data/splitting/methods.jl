@@ -1,6 +1,7 @@
 # src/data/splitting/methods.jl
 
 using DataFrames
+using ..TypesInterfaces: FeatureSet
 
 export create_data_splits, get_next_matches
 
@@ -182,3 +183,12 @@ function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig):
            config.dynamics_col => ByRow(isequal(meta.time_step + 1)) 
     )
 end
+
+
+
+"""
+wrapper for get_next_matches 
+"""
+function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, SplitMetaData}, cvconf::CVConfig)::AbstractDataFrame 
+  return get_next_matches(ds, fs[2], cvconf) 
+end 

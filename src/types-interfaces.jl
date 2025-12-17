@@ -25,20 +25,60 @@ abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
 
 # --- Flexible Feature Structs ---
-# By defining these here, both Models and Features can use them without depending on each other.
 
 """
-    Vocabulary (Your 'G')
+    FeatureSet
+    
+A self-contained container for model inputs. 
+It holds both the numerical data (e.g., `flat_home_goals`) AND 
+the metadata mappings (e.g., `team_map`) required to interpret them.
 """
-struct Vocabulary
-    mappings::Dict{Symbol, Any}
+struct FeatureSet <: AbstractDict{Symbol, Any}
+    data::Dict{Symbol, Any}
 end
 
+# Constructor helper
+FeatureSet(pairs::Pair...) = FeatureSet(Dict{Symbol, Any}(pairs...))
+
+# --- AbstractDict Interface Implementation ---
+Base.getindex(fs::FeatureSet, key::Symbol) = getindex(fs.data, key)
+Base.setindex!(fs::FeatureSet, value, key::Symbol) = setindex!(fs.data, value, key)
+Base.length(fs::FeatureSet) = length(fs.data)
+Base.iterate(fs::FeatureSet, state...) = iterate(fs.data, state...)
+Base.keys(fs::FeatureSet) = keys(fs.data)
+Base.haskey(fs::FeatureSet, key::Symbol) = haskey(fs.data, key)
+Base.get(fs::FeatureSet, key::Symbol, default) = get(fs.data, key, default)
+
+
+export FeatureCollection
+
 """
-    FeatureSet (Your 'F_i')
+    FeatureCollection{M}
+
+A wrapper around a sequence of (FeatureSet, Metadata) tuples.
+Provides a clean interface for training loops.
 """
-struct FeatureSet
-    data::Dict{Symbol, Any}
+struct FeatureCollection{M} <: AbstractVector{Tuple{FeatureSet, M}}
+    items::Vector{Tuple{FeatureSet, M}}
+end
+
+# --- Interface Implementation (Makes it behave like a Vector) ---
+Base.size(fc::FeatureCollection) = size(fc.items)
+Base.getindex(fc::FeatureCollection, i::Int) = getindex(fc.items, i)
+Base.setindex!(fc::FeatureCollection, v, i::Int) = setindex!(fc.items, v, i)
+Base.IndexStyle(::Type{<:FeatureCollection}) = IndexLinear()
+
+# HACK: - update this to something more useful - placeholder
+# Optional: Specialized constructor or show methods
+function Base.show(io::IO, ::MIME"text/plain", fc::FeatureCollection)
+    print(io, "FeatureCollection with $(length(fc)) splits")
+end
+
+
+# HACK: Remove this after updating 
+# Legacy/Deprecated (Optional to keep for now)
+struct Vocabulary
+    mappings::Dict{Symbol, Any}
 end
 
 """
@@ -46,7 +86,7 @@ end
 
 This is the "contract". Each model implementation should override
 this function to return a list of symbols for the global
-mappings it needs the Vocabulary to build.
+mappings it needs.
 """
 function required_mapping_keys(model::AbstractFootballModel)
     # By default, we assume all models need at least a team mapping.

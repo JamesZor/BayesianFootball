@@ -47,7 +47,7 @@ function train_independent(model, config, feature_sets)
     if strategy.parallel && length(pending_indices) > 1
         
         concurrency = min(length(pending_indices), strategy.max_concurrent_splits, Threads.nthreads())
-        println("🚀 Starting Parallel Training: $(length(pending_indices)) splits remaining (Concurrency: $concurrency)...")
+        println("Starting Parallel Training: $(length(pending_indices)) splits remaining (Concurrency: $concurrency)...")
         
         semaphore = Base.Semaphore(concurrency)
         
@@ -87,5 +87,5 @@ function train_independent(model, config, feature_sets)
     end
     
     # Ensure type stability for return
-    return Vector{Tuple{Any, Any}}(results)
+    return TrainingResults(results)
 end

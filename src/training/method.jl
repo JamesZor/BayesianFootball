@@ -1,7 +1,7 @@
 # src/training/methods.jl
 
 using ..Models.PreGame: build_turing_model
-using ...TypesInterfaces: AbstractFootballModel
+using ...TypesInterfaces: AbstractFootballModel, FeatureCollection
 export train
 
 # --- Core Single-Split Train Function ---
@@ -23,8 +23,8 @@ Main entry point that dispatches to the correct strategy implementation.
 function train(
     model::AbstractFootballModel, 
     config::TrainingConfig, 
-    feature_sets::Vector{<:Tuple{FeatureSet, M}}
-) where M
+    feature_sets::FeatureCollection{M}            # <-- NEW
+)::TrainingResults where M
     
     if config.strategy isa Independent
         return train_independent(model, config, feature_sets)

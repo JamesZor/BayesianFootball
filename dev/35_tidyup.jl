@@ -228,7 +228,38 @@ end
 
 here is the wrapper of the create_features, 
 
-Note that we can move vocabulary into the features
+Note that we can move vocabulary into the features create_features 
+
+
+in the models we have 
+
+# --- 3. Builder ---
+function build_turing_model(model::StaticPoisson, feature_set::FeatureSet)
+    return static_poisson_model_train(
+        feature_set.data[:n_teams]::Int,
+        feature_set.data[:flat_home_ids],     # Pre-flattened
+        feature_set.data[:flat_away_ids],     # Pre-flattened
+        feature_set.data[:flat_home_goals],   # Pre-flattened
+        feature_set.data[:flat_away_goals],   # Pre-flattened
+        model
+        )
+end
+
+
+function extract_parameters(
+    model::StaticPoisson, 
+    df::AbstractDataFrame, 
+    vocabulary::Vocabulary, 
+    chains::Chains
+)::Dict{Int, PoissonRates}
+    # ... (Specific extraction logic for Poisson) ...
+    extraction_dict = Dict{Int64, PoissonRates}()
+    
+    home_adv_vec = vec(chains["home_adv"])
+    team_map = vocabulary.mappings[:team_map]
+
+As we see in the extract_parameters, we need to remove the Vocabulary, 
+and replace it with the feature_set, 
 
 
 
@@ -258,7 +289,110 @@ Base.iterate(fs::FeatureSet, state...) = iterate(fs.data, state...)
 
 =#
 
-exp_results
+using Revise 
+using BayesianFootball
+
+using DataFrames
+using Statistics
+using ThreadPinning
+using LinearAlgebra
+pinthreads(:cores)
+
+# BLAS.set_num_threads(1) 
+
+
+data_store = BayesianFootball.Data.load_default_datastore()
+
+ds = BayesianFootball.Data.DataStore( 
+    Data.add_match_week_column(data_store.matches),
+    data_store.odds,
+    data_store.incidents
+)
+
+cv_config = BayesianFootball.Data.CVConfig(
+    tournament_ids = [55],
+    target_seasons = ["22/23"],
+    history_seasons = 0, # Will auto-include "23/24" if available
+    dynamics_col = :match_week,
+  warmup_period = 33,
+    stop_early = false
+)
+
+splits = Data.create_data_splits(ds, cv_config)
+
+model = BayesianFootball.Models.PreGame.StaticPoisson()
+
+
+
+feature_sets = BayesianFootball.Features.create_features(splits, model, cv_config)
+
+
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
+
+sampler_conf = Samplers.NUTSConfig(
+                100,
+                2,
+                100,
+                0.65,
+                10,
+  Samplers.UniformInit(-0.05, 0.05)
+)
+
+
+training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
+results = Training.train(model, training_config, feature_sets)
+
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+BayesianFootball.Data.add_inital_odds_from_fractions!(ds)
+
+
+
+feature_sets
+fs = feature_sets[1]
+
+df_test_1 = BayesianFootball.Data.get_next_matches(ds, fs[2], cv_config)
+
+Data.get_next_matches(ds, fs, cv_config)
+
+model_preds_1 = BayesianFootball.Models.PreGame.extract_parameters(
+     model,
+    df_test_1,
+    fs[1],
+  results[1][1]
+)
+
+model_preds_1 = BayesianFootball.Models.PreGame.extract_parameters(
+     model,
+    df_test_1,
+     feature_sets[1],
+  results[1]
+)
+
+
+
+
+
+
+match_id = collect(keys(model_preds_1))[1]
+probs = BayesianFootball.Predictions.predict_market(
+  model, predict_config, model_preds_1[match_id]...
+                )
+
+using Statistics
+model_odds = Dict(key => mean(1 ./ value) for (key, value) in pairs(probs))
+
+                open_odds, close_odds, outcomes = BayesianFootball.Predictions.get_market_data(
+                     match_id, predict_config, ds.odds
+                )
+open_odds
+
+
+
+
+
 
 
 """

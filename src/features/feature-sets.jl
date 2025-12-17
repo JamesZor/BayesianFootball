@@ -6,47 +6,92 @@ function apply_model_specific_logic(model::AbstractStaticPoissonModel, df::DataF
 end
 
 # 2. Define the hook for GRW (Behavior: Sort by time)
-# Note: You need to ensure AbstractGRWPoissonModel is available here or use a specific concrete type
 function apply_model_specific_logic(model::AbstractDynamicPoissonModel, df::DataFrame)
     # Sort by season and date to ensure time flows forward
     return sort(df, [:season, :match_date])
 end
 
+"""
+    build_mappings(df, model)
+
+Internal helper to create the necessary ID maps (e.g. Team A -> 1)
+based specifically on the data present in `df`.
+"""
+function build_mappings(df::AbstractDataFrame, model::AbstractFootballModel)
+    keys_needed = required_mapping_keys(model)
+    mappings = Dict{Symbol, Any}()
+
+    # --- Team Mapping Factory ---
+    if :team_map in keys_needed || :n_teams in keys_needed
+        present_teams = Set{String}()
+        
+        if hasproperty(df, :home_team)
+            union!(present_teams, df.home_team)
+        end
+        if hasproperty(df, :away_team)
+            union!(present_teams, df.away_team)
+        end
+
+        # Sort for deterministic ordering (Crucial for reproducibility)
+        sorted_teams = sort(collect(present_teams))
+        
+        # Create dense map (1..N)
+        team_map = Dict(t => i for (i, t) in enumerate(sorted_teams))
+        
+        mappings[:team_map] = team_map
+        mappings[:n_teams] = length(sorted_teams)
+    end
+
+    # --- League/Tournament Factory (Example extension) ---
+    if :league_map in keys_needed || :n_leagues in keys_needed
+        if hasproperty(df, :tournament_slug)
+            leagues = unique(df.tournament_slug)
+            mappings[:league_map] = Dict(l => i for (i, l) in enumerate(leagues))
+            mappings[:n_leagues] = length(leagues)
+        end
+    end
+
+    return mappings
+end
+
 function create_features(
     data_split::AbstractDataFrame,
-    vocabulary::Vocabulary,
+    # vocabulary::Vocabulary,  <-- REMOVED
     model::AbstractFootballModel,
     splitter_config::AbstractSplitter
 )::FeatureSet
 
-    G = vocabulary.mappings
+    # 1. Initialize data dictionary
     F_data = Dict{Symbol, Any}()
 
-    team_map = G[:team_map]::Dict{<:AbstractString, Int}
-    n_teams = G[:n_teams]::Int
-    F_data[:team_map] = team_map
-    F_data[:n_teams] = n_teams
+    # 2. Build Mappings internally based on THIS split
+    mappings = build_mappings(data_split, model)
+    merge!(F_data, mappings) # Store mappings directly in FeatureSet
 
+    # Retrieve map for processing
+    team_map = F_data[:team_map]::Dict{<:AbstractString, Int}
+    
     # --- Process Data ---
     matches_df_filtered = dropmissing(data_split, [:home_score, :away_score])
+    # Filter to ensure we only keep rows where teams are in our map (redundant here but safe)
     matches_df = filter(row -> haskey(team_map, row.home_team) && haskey(team_map, row.away_team), matches_df_filtered, view=false)
 
     matches_df.home_score = Int.(matches_df.home_score)
     matches_df.away_score = Int.(matches_df.away_score)
     matches_df = apply_model_specific_logic(model, matches_df)
+    
+    # Store the processed DF in the FeatureSet for later reference (e.g. in extract_parameters)
     F_data[:matches_df] = matches_df
 
     # --- DETERMINING THE TIME GROUPING ---
-    # LOGIC: Use config.dynamics_col if it exists. 
-    # If it is nothing, fallback to config.window_col.
-    grouping_col = isnothing(splitter_config.dynamics_col) ? splitter_config.window_col : splitter_config.dynamics_col
+    grouping_col = isnothing(splitter_config.dynamics_col) ?
+                   splitter_config.window_col : splitter_config.dynamics_col
     
-    # Check if column exists to prevent obscure errors
     if !hasproperty(matches_df, grouping_col)
-        error("The time column ':$grouping_col' was not found in the DataFrame. Check your splitter_config.")
+        error("The time column ':$grouping_col' was not found in the DataFrame.")
     end
 
-    # Group by the Time Column (e.g., :match_week)
+    # Group by the Time Column
     grouped = groupby(matches_df, grouping_col, sort=true)
     F_data[:n_rounds] = length(grouped)
 
@@ -75,21 +120,19 @@ end
 
 function create_features(
     data_splits::Vector{<:Tuple{<:AbstractDataFrame, M}},
-    vocabulary::Vocabulary,
     model::AbstractFootballModel,
     splitter_config::AbstractSplitter
-)::Vector{Tuple{FeatureSet, M}} where M
+)::FeatureCollection{M} where M  # <--- Update Return Type
 
-    return [
+    # Generate the vector as before
+    raw_vector = [
         (
-            create_features(
-                data, 
-                adapt_vocabulary(vocabulary, data), # <--- ADD THIS CALL
-                model, 
-                splitter_config
-            ), 
+            create_features(data, model, splitter_config), 
             meta
         ) 
         for (data, meta) in data_splits
     ]
+
+    # Wrap it
+    return FeatureCollection(raw_vector)
 end
