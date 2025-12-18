@@ -376,7 +376,14 @@ model_preds_1 = BayesianFootball.Models.PreGame.extract_parameters(
 )
 
 
+DataFrame(model_preds_1)
 
+df = DataFrame(
+    match_id = collect(keys(model_preds_1)), 
+    latentstate = collect(values(model_preds_1))
+)
+
+df.latentstate[1][:λ_h]
 
 predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
@@ -496,6 +503,84 @@ We organize the logic to get clean odds and outcomes.
     Task: Implement prepare_market_data(ds, prediction_config).
 
     Design: Focus on handling the specific columns (open/close) and removing the overround.
+
+=#
+
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
+
+
+odds = ds.odds
+names(odds)
+"""
+julia> names(odds)
+12-element Vector{String}:
+ "tournament_id"
+ "season_id"
+ "match_id"
+ "market_id"
+ "market_name"
+ "market_group"
+ "choice_name"
+ "choice_group"
+ "initial_fractional_value"
+ "final_fractional_value"
+ "winning"
+"""
+
+#= 
+
+prepare_market_data(ds; predictions_confit = DEFAULT_PREDICTION _CONFIG) 
+
+
+
+# return 
+ struct MarketData
+    df::DataFrame
+    market_confg:: prediction_config  - tell us what markets are processed
+end
+
+
+Base.getindex(ls::MarketData, args...) = getindex(ls.df, args...)
+Base.setindex!(ls::MarketData, val, args...) = setindex!(ls.df, val, args...)
+Base.size(ls::MarketData) = size(ls.df)
+Base.size(ls::MarketData, i) = size(ls.df, i)
+Base.show(io::IO, ls::MarketData) = show(io, ls.df)
+
+# 2. DataFrames specific methods (Use DataFrames.nrow, not Base.nrow)
+DataFrames.nrow(ls::MarketData) = nrow(ls.df)
+DataFrames.ncol(ls::MarketData) = ncol(ls.df)
+
+
+in the df we need the cols 
+  -match_id
+  - market_group ( 1x2, under /over, 
+  - market_choice ( home, under_15, ) 
+  - symbol ( :home, :under_15 ... ) 
+  - open_odds - initial_fractional_value is a string like "1/2"  -> decimal odds  
+  - close_odds - final_fractional_value is a string like "1/2"  -> decimal odds  
+  - open_prob - open_odds to probability 1/ odds 
+  - close_odds - close_odds to probability 1/odds 
+  - clm - closing line movement, close_odds - open_odds - track the movement of the line 
+  - outcome - if the line was winning or not bool  -> winning 
+  - fair_open_odds -> open odds with the vig remove for the market group. 
+  - fair_close_odds -> close odds with the vig removed for the market group 
+  - fair_open_prob  -> open prob with the vig removed for the market group 
+  - fair_close_prob -> close prob with the vig removed 
+  - open_vig -> amount of vig for the open market group 
+  - closed_vig -> amount of vig for the close for the market group 
+
+since we repeat the process for open and close odds, we can abstract the process and 
+run it for the open ( initial_fractional_value) and then the ( final_fractional_value). 
+
+
+
+=#
+
+
+
+
+#=
 
 Step 3: The Probabilities Engine (src/predictions/probabilities.jl)
 
