@@ -17,7 +17,9 @@ include("./presets.jl")
 include("./runner.jl")
 include("./display.jl")
 
+include("post_processing.jl")
+
 export ExperimentConfig, ExperimentResults, run_experiment
 export BENCHMARK_DEFAULTS, create_benchmark_config
-
+export LatentStates, extract_oos_predictions 
 end

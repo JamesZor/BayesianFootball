@@ -72,9 +72,10 @@ Base.getindex(tr::TrainingResults, i::Int) = getindex(tr.items, i)
 Base.setindex!(tr::TrainingResults, v, i::Int) = setindex!(tr.items, v, i)
 Base.IndexStyle(::Type{<:TrainingResults}) = IndexLinear()
 
+# HACK: Placeholder - can improve this display with better info
 # Optional: Pretty Printing
 function Base.show(io::IO, ::MIME"text/plain", tr::TrainingResults)
     C = eltype(tr).parameters[1]
     n = length(tr)
-    print(io, "TrainingResults: $n completed splits ($C)")
+    print(io, "TrainingResults: $n ")
 end

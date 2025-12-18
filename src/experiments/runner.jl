@@ -30,7 +30,7 @@ function run_experiment(data_store, config::ExperimentConfig)
 
     # --- Step 1: Vocabulary ---
     _log_step(1, "Creating Vocabulary")
-    vocabulary = Features.create_vocabulary(data_store, config.model)
+    # vocabulary = Features.create_vocabulary(data_store, config.model)
 
     # --- Step 2: Data Splitting ---
     _log_step(2, "Generating Data Splits")
@@ -40,8 +40,7 @@ function run_experiment(data_store, config::ExperimentConfig)
     # --- Step 3: Feature Engineering ---
     _log_step(3, "Building Feature Sets")
     feature_sets = Features.create_features(
-        data_splits, 
-        vocabulary, 
+    Data.create_data_splits(data_store, config.splitter), 
         config.model, 
         config.splitter 
     )
@@ -60,11 +59,11 @@ function run_experiment(data_store, config::ExperimentConfig)
     # We generate a default save path here, but don't write to it yet.
     timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
     default_path = joinpath(config.save_dir, "$(config.name)_$(timestamp)")
-
+# FIX: 1 
     return ExperimentResults(
         config,
         training_results,
-        vocabulary,
+        nothing,
         default_path
     )
 end
