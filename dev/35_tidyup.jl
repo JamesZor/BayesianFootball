@@ -530,8 +530,8 @@ julia> names(odds)
 
 #= 
 
+# TODO: 
 prepare_market_data(ds; predictions_confit = DEFAULT_PREDICTION _CONFIG) 
-
 
 
 # return 
@@ -572,6 +572,36 @@ in the df we need the cols
 
 since we repeat the process for open and close odds, we can abstract the process and 
 run it for the open ( initial_fractional_value) and then the ( final_fractional_value). 
+
+
+market_data = BayesianFootball.Predictions.prepare_market_data( ds) 
+
+
+This is so we can then process the latentstate struct for different models, 
+as an example suppose we have  poisson model out of sample latentstate struct named 
+
+latents
+
+then we want 
+postrior_predictive_distributions = BayesianFootball.Predictions.model_inference(market_data.prediction_config , latents) 
+or 
+postrior_predictive_distributions = BayesianFootball.Predictions.model_inference(prediction_config , latents) 
+postrior_predictive_distributions = BayesianFootball.Predictions.model_inference(latents; =DEFAULT_PREDICTION) 
+use kwags so we dont need to handle the prediction_config passing around etc 
+
+postrior_predictive_distributions is a wrapper like latentstate 
+
+struct PPD 
+  df::AbstractDataFrame 
+  model::AbstractFootballModel 
+end 
+
+with the goal to then have strategy  module or something 
+
+
+BayesianFootball.Strategy.compute_stakes( postrior_predictive_distributions, market_data; strategies_config = DEFAULT_Stratergis ) 
+
+dont worry about this last step yet this is more for an idea of what is needed 
 
 
 
