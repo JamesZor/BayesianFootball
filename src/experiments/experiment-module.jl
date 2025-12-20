@@ -9,7 +9,7 @@ using ..Models
 using ..Data
 using ..Features
 using ..Training
-using ..Predictions
+# using ..Predictions
 using ..Samplers
 
 include("./types.jl")

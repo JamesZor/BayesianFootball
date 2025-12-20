@@ -1,45 +1,85 @@
 # src/predictions/inference.jl
 
-
 using DataFrames
 using Base.Threads
-using ..PredictionTypes
+using ProgressMeter
 using ..Experiments: LatentStates
-
-# Include the implementation methods (the Kernels)
-include("methods/poisson.jl")
 
 export model_inference
 
-"""
-    model_inference(latents::LatentStates, config::PredictionConfig)
-
-Orchestrates the prediction pipeline:
-1. Maps the `predict_match_kernel` over every row in `latents` (Threaded).
-2. Flattens the resulting list of mini-DataFrames into one big 'Long' DataFrame.
-"""
-function model_inference(latents::LatentStates, config::PredictionConfig)
-    df = latents.df
-    model = latents.model
-    markets = collect(config.markets)
+# ------------------------------------------------------------------
+# 1. The Kernel (Process one match)
+# ------------------------------------------------------------------
+function predict_row(model, row, markets)
+    # A. Dispatch to get parameters (e.g., Poissons vs DixonColes)
+    params = extract_params(model, row)
     
-    n = nrow(df)
-    results = Vector{DataFrame}(undef, n)
+    # B. Compute the Physics (The Score Matrix)
+    S = compute_score_matrix(model, params)
     
-    # Use eachindex for safety & extract columns once
-    match_ids = df.match_id
-    λ_hs = df.λ_h
-    λ_as = df.λ_a
+    # C. Compute the Economics (The Markets)
+    results = Dict{String, Dict{String, Vector{Float64}}}()
     
-    @threads for i in eachindex(results)
-        results[i] = predict_match_kernel(
-            model, match_ids[i], λ_hs[i], λ_as[i], markets
-        )
+    for market in markets
+        # Returns Dict("Home" => [...], "Draw" => [...])
+    results[string(market)] = compute_market_probs(S, market)
     end
     
-    long_ppd = reduce(vcat, results)  # Slightly faster than vcat(results...)
-    return PPD(long_ppd, model, config)
+    return results
 end
 
+# ------------------------------------------------------------------
+# 2. The Orchestrator (Process all matches)
+# ------------------------------------------------------------------
+function model_inference(latents::LatentStates; market_config=nothing)
+    # Handle config default
+    if isnothing(market_config)
+        error("market_config must be provided")
+    end
 
-
+    df = latents.df
+    model = latents.model
+    markets = collect(market_config.markets)
+    n_matches = nrow(df)
+    
+    println("Running Inference on $(n_matches) matches...")
+    
+    # 1. Compute Predictions (Threaded)
+    # We collect a Vector of Dicts to avoid DataFrames threading issues
+    results_vec = Vector{Dict}(undef, n_matches)
+    rows = collect(eachrow(df)) # Collect to allow safe indexing in threads
+    
+    @threads for i in 1:n_matches
+        results_vec[i] = predict_row(model, rows[i], markets)
+    end
+    
+    # 2. Flatten into PPD Structure
+    # We want a long DataFrame: match_id | market | selection | distribution
+    
+    v_match_ids = Real[]
+    v_markets = String[]
+    v_selections = String[]
+    v_dists = Vector{Float64}[]
+    
+    for (i, res_dict) in enumerate(results_vec)
+        mid = rows[i].match_id
+        
+        for (m_name, outcome_dict) in res_dict
+            for (sel_name, dist) in outcome_dict
+                push!(v_match_ids, mid)
+                push!(v_markets, m_name)
+                push!(v_selections, sel_name)
+                push!(v_dists, dist)
+            end
+        end
+    end
+    
+    ppd_df = DataFrame(
+        :match_id => v_match_ids,
+        :market => v_markets,
+        :selection => v_selections,
+        :distribution => v_dists
+    )
+    
+    return PPD(ppd_df, model, market_config)
+end

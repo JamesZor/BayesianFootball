@@ -1,4 +1,4 @@
-# src/predictions/predictions-module 
+# src/predictions/predictions-module.jl
 
 module Predictions
 
@@ -8,33 +8,32 @@ using Base.Threads
 using Distributions
 
 using ..Models
-# using ..Data
+using ..Data
 using ..TypesInterfaces
+using ..Experiments # For LatentStates
 
-# include("./markets.jl")
-# using ..Markets
+# 1. Types & Interfaces
+include("types.jl")
+include("interface.jl")
 
-# 1. Types 
-include("./types.jl")
+# 2. Score Computations (The Physics)
+include("score_computation/poisson.jl")
+# include("score_computation/dixoncoles.jl") # When ready
 
+# 3. Market Inferences (The Business Logic)
+include("market_inference/1x2.jl")
+# include("market_inference/over_under.jl")
+# include("market_inference/btts.jl")
 
-
-# 2. Logic (Functions added to Predictions namespace)
-# include("./market_data.jl")
-# include("./inference.jl") # Dispatcher
-
-# 3. Method Implementations (The math)
-# We can include these here or inside inference.jl. 
-# Including here makes it clear what models are supported.
-# include("methods/poisson.jl")
-# include("methods/dixon_coles.jl")
+# 4. Main Orchestrator
+include("inference.jl")
 
 export 
     # Types
-    PPD
+    PPD,
+    ScoreMatrix,
     
     # Functions
-    # prepare_market_data
+    model_inference
 
-# model_inference, predict_market
 end
