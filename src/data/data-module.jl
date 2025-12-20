@@ -25,4 +25,18 @@ include("./splitting/types.jl")
 include("./splitting/methods.jl")
 include("./splitting/display.jl")
 
+
+include("./markets/markets-module.jl") 
+using .Markets
+
+export 
+    # From Markets
+    MarketData, 
+    MarketConfig, 
+    Market1X2, 
+    MarketOverUnder, 
+    MarketBTTS,
+    prepare_market_data
+    # get_standard_markets # If you moved this helper here
+
 end # module

@@ -506,7 +506,6 @@ We organize the logic to get clean odds and outcomes.
 
 =#
 
-predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
 
 
 
@@ -528,7 +527,215 @@ julia> names(odds)
  "winning"
 """
 
-#= 
+
+
+
+#=
+Needing to sort out the predictions markets part of the code since it is mess, and doesn't flow right. 
+Since market sub module deal with more of the data processing side rather the predictions I believe 
+that it should be contained in the data module - As a sub module dedicated to processing the market odds 
+( As in future we might have different sources for odds and thus a module to manage them in an abstract manner).
+
+dir layout suggestion:
+  data/markets/
+      - types.jl -> house the abstract types - AbstractMarket, marketconfig ( wrapper - holy traits of dict of vector, that contains the AbstractMarket
+                  used to define which markets we want to process as each market will have a slightly different way) 
+
+      - interfaces.jl -> contains the abstract function declaration and fall back function for the common interaction functions for the concrete 
+                    abstractmarket struct / types, etc market_keys, names, process_market_type  etc 
+
+      types/ -> dir to house the files for the concrete abstractmarket types/ struct and interface function implementations.
+            types/x12.jl -> for the implementations of 1x2 (home, draw, away) market. 
+            types/under_over.jl -> for the implementations of under over market type
+            types/btts.jl -> for the implementations of under over market type
+            etc 
+
+    - prepare_market_odds.jl -> File to handle the processing of the ds to marketsdata struct 
+
+    -common.jl/helpers.jl  -> Some file to contain the helper and common funcitons like the devig, and odds parse (fractions to decimal odds) 
+        
+
+Example of the work flow 
+
+market_odds = BayesianFootball.Data.Markets.get_market_data(ds::Data_store)::Data.Markets.MarketData  
+
+=#
+# ---- 
+
+using DataFrames
+using Test
+
+# 1. Load the Package (assuming you are in the project env)
+# If you are developing locally, you might need: include("src/BayesianFootball.jl")
+using BayesianFootball
+using BayesianFootball.Data
+# We need to access the exported types from the submodule
+using BayesianFootball.Data: MarketConfig, Market1X2, MarketOverUnder, MarketBTTS, prepare_market_data
+
+# ==============================================================================
+# 2. SETUP: Create Mock Data
+# ==============================================================================
+println(">> Creating Mock Data...")
+
+# Matches the structure of your uploaded CSV
+# We add a mix of 1X2, Over/Under, and BTTS to test all paths.
+mock_odds = DataFrame(
+    match_id = [101, 101, 101, 101, 101, 102, 102],
+    market_name = ["Full time", "Full time", "Full time", "Match goals", "Match goals", "Both teams to score", "Both teams to score"],
+    market_group = ["1X2", "1X2", "1X2", "Over/Under", "Over/Under", "BTTS", "BTTS"],
+    choice_name = ["1", "X", "2", "Over", "Under", "Yes", "No"],
+    choice_group = ["", "", "", "2.5", "2.5", "", ""], # Note 2.5 is string here to test safe parsing
+    initial_fractional_value = ["2/1", "3/1", "2/1", "1/1", "4/5", "10/11", "10/11"], # Open odds
+    final_fractional_value   = ["2/1", "2/1", "3/1", "4/5", "1/1", "1/1", "4/5"],     # Close odds (Line moved!)
+    winning = [true, false, false, true, false, false, true]
+)
+
+# Mock DataStore (we only care about odds for this test)
+struct MockDataStore
+    odds::DataFrame
+end
+ds = MockDataStore(mock_odds)
+
+# ==============================================================================
+# 3. SETUP: Configure Markets
+# ==============================================================================
+println(">> Configuring Markets...")
+
+config = MarketConfig([
+    Market1X2(),
+    MarketOverUnder(2.5),
+    MarketBTTS()
+])
+
+# ==============================================================================
+# 4. EXECUTE: Run the Pipeline
+# ==============================================================================
+println(">> Running prepare_market_data...")
+
+market_data = prepare_market_data(ds, config)
+df = market_data.df
+
+# ==============================================================================
+# 5. VERIFY: Assertions & Inspection
+# ==============================================================================
+println(">> Verifying Results...")
+
+@testset "Market Data Refactor Tests" begin
+
+    # A. Check Structure
+    @test nrow(df) == 7
+    @test "clm_prob" in names(df)
+    @test "vig_open" in names(df)
+
+    # B. Check 1X2 Logic
+    # Filter for Match 101, 1X2
+    rows_1x2 = subset(df, :match_id => ByRow(==(101)), :market_name => ByRow(==("1X2")))
+    @test nrow(rows_1x2) == 3
+    # Check symbol mapping "1" -> :home
+    @test :home in rows_1x2.selection
+    @test :draw in rows_1x2.selection
+    
+    # C. Check Odds Parsing (Fractional to Decimal)
+    # "2/1" -> 3.0
+    home_row = filter(r -> r.selection == :home, rows_1x2)[1, :]
+    @test home_row.odds_open ≈ 3.0
+    
+    # D. Check Enrichment (Vig & CLM)
+    # Open Odds: Home(3.0), Draw(4.0), Away(3.0) -> Implied: 0.33 + 0.25 + 0.33 = 0.916... ??
+    # Wait, 2/1=3.0. 1/3=0.333. Sum = 1.0 (Approx). 
+    # Let's check calculation of CLM
+    # Open: Home 3.0, Close: Home 3.0. CLM Odds = 0.0
+    @test home_row.clm_odds ≈ 0.0
+
+    # Check Draw: Open 3/1 (4.0), Close 2/1 (3.0). Odds dropped.
+    draw_row = filter(r -> r.selection == :draw, rows_1x2)[1, :]
+    @test draw_row.clm_odds ≈ -1.0 # 3.0 - 4.0
+
+    # E. Check Over/Under Logic
+    rows_ou = subset(df, :market_name => ByRow(==("OverUnder")))
+    @test nrow(rows_ou) == 2
+    @test rows_ou[1, :market_line] == 2.5
+    @test :over_25 in rows_ou.selection # Check dynamic symbol generation
+
+    println("   ALL TESTS PASSED!")
+end
+
+# ==============================================================================
+# 6. VISUAL INSPECTION
+# ==============================================================================
+println("\n>> Preview of Processed Data:")
+show(df[!, [:match_id, :market_name, :selection, :odds_open, :odds_close, :prob_fair_open, :clm_prob]], allrows=true)
+
+
+
+# -------
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+#=
+julia> predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+BayesianFootball.Predictions.PredictionConfig(Set(BayesianFootball.Markets.AbstractMarket[BayesianFootball.Markets.Market1X2(), BayesianFootball.Markets.MarketOverUnder(0.5), BayesianFootball.Markets.MarketOverUnder(2.5), BayesianFootball.Markets.MarketOverUnder(1.5), BayesianFootball.Markets.MarketBTTS(), BayesianFootball.Markets.MarketOverUnder(3.5), BayesianFootball.Markets.MarketOverUnder(4.5)]))
+=#
+
+
+a = first(predict_config.markets)
+#=
+julia> first(predict_config.markets)
+BayesianFootball.Markets.Market1X2()
+
+=#
+Predictions._process_market_type(ds.odds, a)
+
+#=
+julia> Predictions._process_market_type(ds.odds, a)
+ERROR: MethodError: no method matching _process_market_type(::DataFrame, ::BayesianFootball.Markets.Market1X2)
+The function `_process_market_type` exists, but no method is defined for this combination of argument types.
+
+Closest candidates are:
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.Market1X2)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:55
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.MarketOverUnder)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:71
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.MarketBTTS)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:87
+
+Stacktrace:
+ [1] top-level scope
+   @ REPL[29]:1
+
+=#
+
+
+
+  
+
+Predictions.prepare_market_data(ds, predict_config) 
+#=
+
+julia> Predictions.prepare_market_data(ds, predict_config) 
+ERROR: MethodError: no method matching _process_market_type(::DataFrame, ::BayesianFootball.Markets.Market1X2)
+The function `_process_market_type` exists, but no method is defined for this combination of argument types.
+
+Closest candidates are:
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.Market1X2)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:55
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.MarketOverUnder)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:71
+  _process_market_type(::DataFrame, ::BayesianFootball.Predictions.Markets.MarketBTTS)
+   @ BayesianFootball ~/bet_project/BayesianFootball/src/predictions/market_data.jl:87
+
+Stacktrace:
+ [1] prepare_market_data(ds::BayesianFootball.Data.DataStore, config::BayesianFootball.Predictions.PredictionConfig)
+   @ BayesianFootball.Predictions ~/bet_project/BayesianFootball/src/predictions/market_data.jl:17
+ [2] top-level scope
+   @ REPL[21]:1
+=#
+
+
+
+
+
+#=
+predict_config = BayesianFootball.Predictions.PredictionConfig( BayesianFootball.Markets.get_standard_markets() )
+
 
 # TODO: 
 prepare_market_data(ds; predictions_confit = DEFAULT_PREDICTION _CONFIG) 
@@ -574,7 +781,11 @@ since we repeat the process for open and close odds, we can abstract the process
 run it for the open ( initial_fractional_value) and then the ( final_fractional_value). 
 
 
-market_data = BayesianFootball.Predictions.prepare_market_data( ds) 
+=#
+
+
+
+#=
 
 
 This is so we can then process the latentstate struct for different models, 

@@ -26,11 +26,11 @@ include("samplers/samplers-module.jl") # *** ADDED RENAMED MODULE ***
 include("training/training-module.jl") # *** ADDED NEW MODULE ***
 
 # 7. Other modules
-include("./predictions/markets.jl") #
-include("./predictions/calculations.jl") #
-include("./predictions/prediction-module.jl") #
+# include("./predictions/markets.jl") #
+# include("./predictions/calculations.jl") #
+include("./predictions/predictions-module.jl") #
 include("./experiments/experiment-module.jl") #
-include( "./signals/signals-module.jl")
+# include( "./signals/signals-module.jl")
 
 include("./synthetic/synthetic-data-module.jl")
 
@@ -44,6 +44,8 @@ export NUTSConfig, ADVIConfig, MAPConfig # From Samplers
 export TrainingConfig, Independent, SequentialPriorUpdate # From Training
 
 # 
+using .Data: Markets 
+export Markets
 
 
 # --- ADDED DEV HELPERS ---
