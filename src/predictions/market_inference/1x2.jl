@@ -1,46 +1,6 @@
 # src/predictions/market_inference/1x2.jl
 
-using ..Data: Market1X2
-
-# function compute_market_probs(S::ScoreMatrix, market::Market1x2)
-#     # S.data is [HomeGoals, AwayGoals, Samples]
-#     (max_h, max_a, n_samples) = size(S.data)
-#
-#     home_prob = zeros(Float64, n_samples)
-#     draw_prob = zeros(Float64, n_samples)
-#     away_prob = zeros(Float64, n_samples)
-#
-#     @inbounds for k in 1:n_samples
-#         # Get the matrix for this specific sample chain step
-#         mat = view(S.data, :, :, k)
-#
-#         for c in 1:max_a # Away Cols
-#             for r in 1:max_h # Home Rows
-#                 prob = mat[r, c]
-#
-#                 # Map indices to goals: index 1 is 0 goals
-#                 h_goals = r - 1
-#                 a_goals = c - 1
-#
-#                 if h_goals > a_goals
-#                     home_prob[k] += prob
-#                 elseif h_goals == a_goals
-#                     draw_prob[k] += prob
-#                 else
-#                     away_prob[k] += prob
-#                 end
-#             end
-#         end
-#     end
-#
-#     # Return Dict of Outcome Name => Vector of Samples
-#     return Dict(
-#         "Home" => home_prob,
-#         "Draw" => draw_prob,
-#         "Away" => away_prob
-#     )
-# end
-#
+using ..Data: Market1X2, outcomes
 
 function compute_market_probs(S::ScoreMatrix, market::Market1X2)
     # S.data is [HomeGoals, AwayGoals, Samples]
@@ -85,10 +45,13 @@ function compute_market_probs(S::ScoreMatrix, market::Market1X2)
         draw_prob[k] = pd
         away_prob[k] = pa
     end
+
+  keys = outcomes(market)
+
+  return Dict(
+          keys.home => home_prob,
+          keys.draw => draw_prob,
+          keys.away => away_prob
+      )
     
-    return Dict(
-        "Home" => home_prob,
-        "Draw" => draw_prob,
-        "Away" => away_prob
-    )
 end

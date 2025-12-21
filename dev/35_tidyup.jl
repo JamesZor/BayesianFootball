@@ -486,13 +486,18 @@ exp_results = Experiments.run_experiment(ds, experiment_conf)
 latents = Experiments.extract_oos_predictions(ds, exp_results)
 
 pd = Data.Markets.MarketConfig( Data.Markets.Market1X2())
+pd = Data.Markets.DEFAULT_MARKET_CONFIG
 
 a = Predictions.model_inference(latents; market_config=pd)
 
+p = Data.Markets.Market1X2()
 
 market_data = Data.prepare_market_data(ds)
+# Pass pd.markets, not pd
 
-
+using DataFrames
+subset(market_data.df, :match_id => ByRow(isequal(10387456)))
+subset(a.df, :match_id => ByRow(isequal("10387456")))
 # --- walk through for 
 
 using BayesianFootball

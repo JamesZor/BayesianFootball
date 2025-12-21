@@ -22,8 +22,8 @@ include("score_computation/poisson.jl")
 
 # 3. Market Inferences (The Business Logic)
 include("market_inference/1x2.jl")
-# include("market_inference/over_under.jl")
-# include("market_inference/btts.jl")
+include("market_inference/over_under.jl")
+include("market_inference/btts.jl")
 
 # 4. Main Orchestrator
 include("inference.jl")

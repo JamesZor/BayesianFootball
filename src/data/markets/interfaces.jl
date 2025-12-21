@@ -25,3 +25,10 @@ market_line(m::AbstractMarket) = 0.0
 
 # Fallback show
 Base.show(io::IO, m::AbstractMarket) = print(io, market_group(m))
+
+
+"""
+    market_specs(m::AbstractMarket)
+Returns a tuple of (Group Name, Line, OutcomesMap) for consistent DataFrame building.
+"""
+market_specs(m::AbstractMarket) = (market_group(m), market_line(m), outcomes(m))
