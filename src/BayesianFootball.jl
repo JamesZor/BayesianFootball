@@ -28,7 +28,7 @@ include("training/training-module.jl") # *** ADDED NEW MODULE ***
 # 7. Other modules
 include("./experiments/experiment-module.jl") #
 include("./predictions/predictions-module.jl") #
-# include( "./signals/signals-module.jl")
+include( "./signals/signals-module.jl")
 
 include("./synthetic/synthetic-data-module.jl")
 

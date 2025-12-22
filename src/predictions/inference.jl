@@ -61,7 +61,7 @@ function model_inference(latents::LatentStates; market_config=DEFAULT_MARKET_CON
     # Iterate through the results and reconstruct the metadata
     for (i, res_dict) in enumerate(results_vec)
         # Convert match_id to String to ensure consistency
-        mid = string(rows[i].match_id)
+        mid = rows[i].match_id
         
         # Iterate over the *original* markets list to get metadata safely
         for market in markets

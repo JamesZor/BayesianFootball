@@ -446,7 +446,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
-  warmup_period = 33,
+  warmup_period = 30,
     stop_early = false
 )
 
@@ -456,7 +456,7 @@ vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
 feature_sets = BayesianFootball.Features.create_features(
     splits, model, cv_config
 )
-train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
                 100,
                 2,
@@ -485,71 +485,156 @@ exp_results = Experiments.run_experiment(ds, experiment_conf)
 # This handles all the vocabulary recreation, OOS matching, and extraction
 latents = Experiments.extract_oos_predictions(ds, exp_results)
 
-pd = Data.Markets.MarketConfig( Data.Markets.Market1X2())
+# pd = Data.Markets.MarketConfig( Data.Markets.Market1X2())
 pd = Data.Markets.DEFAULT_MARKET_CONFIG
 
 a = Predictions.model_inference(latents; market_config=pd)
 
-p = Data.Markets.Market1X2()
-
 market_data = Data.prepare_market_data(ds)
-# Pass pd.markets, not pd
-
-using DataFrames
-subset(market_data.df, :match_id => ByRow(isequal(10387456)))
-subset(a.df, :match_id => ByRow(isequal("10387456")))
-# --- walk through for 
-
-using BayesianFootball
-using DataFrames
-
-# 1. Extract the components for the first match
-row = latents.df[1, :]          # Get the first DataFrameRow
-model = latents.model           # Get the model struct
-markets = collect(pd.markets)   # Get the vector of markets
-market = markets[1]             # Get the first market (e.g., 1x2)
-
-string(market)
-
-println("Debugging Match ID: ", row.match_id)
-println(row.λ_h)
-println("Model Type: ", typeof(model))
-println("Market Type: ", typeof(market))
 
 
+# signals 
 
-# 2. Call extract_params manually
-# Note: We need to make sure we are calling the one from Predictions
-import BayesianFootball.Predictions: extract_params
+# 1. Flat Stake: Bet 5% of bankroll if Expected Value > 0
+using BayesianFootball.Signals
+flat_strat = FlatStake(0.05)
 
-params = extract_params(model, row)
+# 2. Conservative Kelly: Quarter Kelly (0.25)
+kelly_strat = KellyCriterion(0.25)
 
-println("Params extracted: ", keys(params))
-println("Sample count: ", length(params.λ_h))
+# 3. Bayesian/Shrinkage Kelly: Uses the Baker-McHale analytical approximation
+shrink_strat = AnalyticalShrinkageKelly()
 
+baker = BayesianKelly()
 
-# 3. Call compute_score_matrix manually
-import BayesianFootball.Predictions: compute_score_matrix
+# Combine them into a vector
+my_signals = [flat_strat, kelly_strat, shrink_strat, baker]
 
-# WARNING: If you named your function 'compute_score_matrix_fast', 
-# you MUST rename it to 'compute_score_matrix' or overload it!
-S = compute_score_matrix(model, params)
+# TUI Check: Let's look at one to see your new Base.show implementation
+display(kelly_strat)
+# Output should be:
+# Signal Strategy: KellyCriterion
+# ├─ Parameters: fraction=0.25
+# └─ Logic: Classic Kelly: f = p - (1-p)/(odds-1), using mean probability.
 
-println("Score Matrix Size: ", size(S.data))
-println("Score Matrix Type: ", typeof(S))
+println("Market Data Columns: ", names(market_data))
 
-import BayesianFootball.Predictions: compute_market_probs
-
-compute_market_probs(S, market)
-
-
-#
-#impor=
+# Run the pipeline
+results = process_signals(
+    a,              # Your PPD (Predictions)
+    market_data.df,    # Your Market Odds
+    my_signals;     # The strategies defined above
+    odds_column = :odds_open # Explicitly tell it to use closing odds
+)
 
 
 
-=#
+using DataFrames, Statistics, PrettyTables
 
+"""
+    audit_signals(results; breakdown=[:signal_name, :signal_params, :market_name, :selection])
+
+Calculates performance metrics (ROI, Total Profit, Hit Rate) for the processed signals.
+"""
+function audit_signals(results; breakdown=[:signal_name, :market_name, :selection])
+    # 1. Unpack the DataFrame
+    df = results isa DataFrame ? results : results.df
+    
+    # 2. Filter for Active Bets (Stake > 0) & Settled Outcomes
+    # We filter out tiny floating point stakes (effectively 0)
+    active_bets = filter(row -> row.stake > 1e-6, df)
+    
+    if nrow(active_bets) == 0
+        @warn "No active bets found."
+        return DataFrame()
+    end
+    
+    # Ensure we have the outcome column
+    if !("is_winner" in names(active_bets))
+        error("Column 'is_winner' not found. Ensure your market_data includes outcomes.")
+    end
+    
+    # 3. Calculate Profit/Loss per bet
+    # If Winner: Stake * (DecimalOdds - 1)
+    # If Loser: -Stake
+    # If Missing (Cancelled/Future): 0.0
+    active_bets.pnl = map(eachrow(active_bets)) do r
+        if ismissing(r.is_winner) return 0.0 end
+        r.is_winner ? r.stake * (r.odds - 1.0) : -r.stake
+    end
+
+    # 4. Group and Aggregate
+    gdf = groupby(active_bets, breakdown)
+    
+    stats = combine(gdf, 
+        nrow => :count,
+        :is_winner => (w -> mean(skipmissing(w))) => :win_rate,
+        :stake => sum => :total_staked,
+        :pnl => sum => :total_profit,
+        [:pnl, :stake] => ((p, s) -> sum(p) / sum(s)) => :roi
+    )
+    
+    # 5. Formatting
+    # Convert ROI to percentage for readability
+    stats.roi_pct = round.(stats.roi * 100, digits=2)
+    stats.win_rate_pct = round.(stats.win_rate * 100, digits=1)
+    
+    # Clean up and Sort
+    select!(stats, Not([:roi, :win_rate])) # Drop raw ratios, keep percentages
+    sort!(stats, :roi_pct, rev=true)
+    
+    return stats
+end
+
+stats = audit_signals(results)
+
+
+strat_stats = audit_signals(results, breakdown=[:signal_name, :signal_params])
+display(strat_stats)
+
+
+using DataFrames, Statistics, Plots
+
+"""
+    plot_equity_curve(results::SignalsResult; initial_bankroll=100.0)
+
+Plots the cumulative profit/loss over time for each signal strategy.
+Assumes a fixed stake percentage (non-compounding) for simplicity, 
+but visualizes the growth trajectory.
+"""
+function plot_equity_curve(results::SignalsResult; initial_bankroll=100.0)
+    df = results.df
+    
+    # 1. Ensure we have a time dimension (using match_id as proxy if date missing)
+    # Ideally, join with match_date from your data. For now, we sort by match_id.
+    sort!(df, :match_id)
+    
+    # 2. Calculate PnL per bet
+    # If winner: stake * (odds - 1)
+    # If loser: -stake
+    df.pnl = map(r -> r.is_winner ? r.stake * (r.odds - 1.0) : -r.stake, eachrow(df))
+    
+    # 3. Accumulate PnL by Signal
+    signals = unique(df.signal_name)
+    p = plot(title="Strategy Equity Curves", xlabel="Bets Placed", ylabel="Profit (Units)", legend=:topleft)
+    
+    for sig in signals
+        # Get bets for this signal
+        sig_data = filter(r -> r.signal_name == sig, df)
+        
+        if nrow(sig_data) > 0
+            # Calculate cumulative sum of PnL
+            cumulative_pnl = cumsum(sig_data.pnl)
+            
+            # Add to plot
+            plot!(p, cumulative_pnl, label=sig, linewidth=2, alpha=0.8)
+        end
+    end
+    
+    display(p)
+end
+
+plot_equity_curve(results)
 
 #=
 Needing to sort out the predictions markets part of the code since it is mess, and doesn't flow right. 
@@ -719,5 +804,284 @@ Once we have ModelProb and MarketProb in the same dataframe, calculating Kelly C
 
 
 
+"""
+# - Signals module dev 
+"""
+
+market_data = Data.prepare_market_data(ds)
+latents = Experiments.extract_oos_predictions(ds, exp_results)
+ppd = Predictions.model_inference(latents)
+
+#=
+The signal module of the package is for generating a market making signals, as in whether to back or lay a market line 
+given the predictive posterior distribution from the given model. A signal should return a parentage of wealth to 
+stake, given the market lines PPD. 
+We can achieve this in many ways, the simplest signal would be a fixed percentage stake, i.e 10% of wealth for the market line.
+moreover we can add more complexity, such as computing the point estimate expected value: E(PPD)* market_odds. 
+and then place a bet when EV is great than some thing. 
+Or more commonly we can use a kelly Criterion for the fractions to bet. 
+However since we are dealing with PPD, we dont want to use a point estimate, instead we want to use 
+the full distributions. 
+One that we can look at is the: 
+"""
+Calculates the Optimal Shrinkage Factor 'k' using the Baker & McHale (2013) 
+Bootstrap/Resampling method (Eq. 2).
+
+This simulates the penalty of acting on noisy probability estimates.
+"""
+function bayesian_kelly(chain_probs::AbstractVector, offered_odds::Number)
+    b = offered_odds - 1.0
+    
+    # 1. We treat the Mean of the posterior as the "Ground Truth" for this simulation
+    p_true = mean(chain_probs)
+    
+    # If the mean suggests no bet, we can't shrink what doesn't exist.
+    s_mean = kelly_fraction(offered_odds, p_true)
+    if s_mean <= 1e-6
+        return 0.0
+    end
+
+    # 2. We generate the "Naive" bets we would have made for every sample in the chain.
+    # Ideally, we calculate s*(q) for every q.
+    # This represents the variability of our decision making process.
+    naive_bets = [kelly_fraction(offered_odds, q) for q in chain_probs]
+
+    # 3. Objective Function: 
+    # Find k such that if we shrink ALL our naive bets by k, 
+    # we maximize growth against the "p_true".
+    function objective(k)
+        utility_sum = 0.0
+        n = length(naive_bets)
+        
+        for s_q in naive_bets
+            # The bet we actually place is the Naive Bet * Shrinkage k
+            actual_stake = k * s_q
+            
+            # Constraint check
+            actual_stake = k * s_q
+            if actual_stake >= 0.999 return Inf end
+            if actual_stake < 1e-4 actual_stake = 0.0 end
+            
+            
+            # Utility evaluated against the Mean (p_true)
+            u = p_true * log(1.0 + b * actual_stake) + (1.0 - p_true) * log(1.0 - actual_stake)
+            utility_sum += u
+        end
+        
+        return -(utility_sum / n)
+    end
+
+    res = optimize(objective, 0.0, 1.0)
+    best_k = Optim.minimizer(res)
+    
+    return s_mean * best_k
+end
+
+or an estimate of it as 
+"""Baker-McHale Eq 5 (Analytical Approx)"""
+function calc_analytical_shrinkage(chain_probs::AbstractVector, offered_odds::Number)
+    p_mean = mean(chain_probs)
+    p_var = var(chain_probs)
+    b = offered_odds - 1.0
+    s_star = ((b + 1) * p_mean - 1) / b
+    if s_star <= 0 return 0.0 end
+    term = ((b + 1) / b)^2
+    k_factor = (s_star^2) / (s_star^2 + term * p_var)
+    return s_star * k_factor
+end
+
+function calc_analytical_shrinkage(probabilities::NamedTuple, odds::NamedTuple)
+    common_keys = keys(probabilities) ∩ keys(odds) 
+    return NamedTuple(
+            k => calc_analytical_shrinkage(probabilities[k], odds[k])
+            for k in common_keys 
+          )
+end
 
 
+more we have the following: 
+
+
+"""
+.3.1
+Dixon and Coles approach
+Once the vector of betting probabilities π has been obtained with one among
+the methods described in Section 7.1—either with basic normalization, Shin
+procedure, or regression analysis—we should try to assess how and when it
+is convenient to bet on some events using the model probabilities. The ratio-
+nale behind betting is that if our model reflects approximately well the real
+chances of occurrence of a given event, then these probabilities should be used
+to challenge the bookmakers and eventually beat them: we have already seen
+in the previous sections that whenever oi > pi for some binary events, then
+the bookmaker obtains a positive expected profit. Regarding football and the
+three-way outcomes, Dixon and Coles (1997) suggested to fix a margin toler-
+ance δ, such that one would bet on a match/event i if and only if:
+pj
+i/πj
+i > δ,
+j ∈∆i,
+where pj
+i, πj
+i denote the probabilities for event i and occurrence j under the
+model and the bookmaker, respectively—we assume here to deal with a unique
+bookmaker, for simplicity Actually neither pj
+i nor πj
+i correspond to the true
+probabilities for match i, which are usually unknown in football and in general
+in sports; however, we could obtain a positive return if our estimated proba-
+bilities are sufficiently more accurate than those derived from the bookmakers,
+meaning their ratio exceeds a fixed tolerance δ. If the model probabilities pi
+are accurate, then the expected gain from a unit bet for match i and outcome
+j is given by
+E(Gbe) = pj
+i/πj
+i −1.
+(7.13)
+As remarked by Dixon and Coles (1997), the choice of δ strongly depends
+on the amount of risk aversion undertaken by the bettor. They even propose
+to estimate δ or, alternatively, to monitor the return by varying the values of δ
+through a sensitivity analysis. If we increase δ, this means we adopt a stricter
+betting regime, but with fewer bets. Thus, the amount of δ strictly depends
+on the risk aversion of the single bettors: we give a practical example on the
+choice of δ in the case-study reported in Section 7.4.
+"""
+
+
+
+"""
+7.3.4
+Expected profit optimization
+According to a common sense the choice of the matches for which placing
+one or more bets depends on our utility for betting: we could decide which
+matches to bet on and obtain a favourable game to play as the posterior
+expected profit is positive. Epstein (2012) proposed to bet on outcomes with
+a positive expected profit but place the bets so we obtain a low variance of the
+profit. According to a similar perspective, Rue and Salvesen (2000) proposed
+to bet in order to maximize the expected profit while keeping the variance of
+the profit lower than some threshold.
+An equivalent formulation is to maximise the expected profit minus the
+variance of the profit, which determine how we should place our bets up to
+a multiplicative constant. This constant can be found if we choose a specific
+value or an upper limit for the variance of the profit.
+Let E(Gj
+i) and (σj
+i )2 be the expected profit and the variance for
+betting an unit amount on outcome j in match i, where j
+∈∆i
+=
+{“Home win”, “Draw”, “Away win”}, respectively: we can detect these val-
+ues from the probabilities pj
+i and inverse odds oj
+i, as previously explained. For
+simplicity, suppose to not place more than one bet for each match, and let
+βj
+i be the corresponding bet. Let U(·) denote a proper bettor utility function,
+then the optimal bet is given by setting the condition:
+argmax
+βj
+i ≥0
+U({βj
+i }),
+where
+U({βj
+i }) = E(profit) −Var(profit) =
+�
+i∈β
+βj
+i (E(Gj
+i) −βj
+i (σj
+i )2).
+(7.16)
+The analytical solution is given by βj
+i = max{0, E(Gj
+i)/(2(σj
+i )2)}, where addi-
+tionally we choose the outcome j with maximal βj
+i E(Gj
+i) for match i in order
+to not place more than one bet for each match.
+As an imaginary example, consider again the odds from the example con-
+sidered in the previous sections, Arsenal vs Manchester United considered in
+the previous sections. For this match the expected profit for the single out-
+comes can be computed as pj/πj −1, where pj and πj are the bettor and
+the betting probabilities for the outcome j, respectively. Suppose the bettor
+model probabilities for the home win, the draw and away win are: 0.41, 0.28,
+0.31, whereas the bookmaker probabilities obtained through basic normaliza-
+tion are: 0.382, 0.319, 0.299. We then get the following expected profits from
+the bettor’s perspective:
+E(GH
+be) = 0.41/0.382 −1 = 0.073
+E(GD
+be) = 0.28/0.319 −1 = −0.122
+E(GL
+be) = 0.31/0.299 −1 = 0.037.
+"""
+
+
+Hence there are different signals / strategies to consider and thus we need to compute some empirical / 
+experimentail results to consider which one is better, in order to achieve this we need the signal module in the 
+package to handle the construction and processing of different types signals/ strategies. 
+Similar to the other modules in this package we shall have an abstractsignals struct, and thus when creating a singls, 
+we shall have a separate files that has the implement abstract functions that are shared between them using the 
+julia dispatch method, thus we have a basic abstract implementation in an interfaces files. 
+
+hence we can construct a config / vector of signals ( concrete types from the abstractsignals) 
+and process each market line from the  PPD dataframe ( Predictions.model_inference(latents)) .
+
+Given we have the following: 
+
+market_data = Data.prepare_market_data(ds)
+latents = Experiments.extract_oos_predictions(ds, exp_results)
+ppd = Predictions.model_inference(latents)
+
+
+signals = BayesianFootball.Signals.process(ppd, market_data; signals_config=<struct wrapper for the vector of signals types for dispatch>) 
+
+here the returned value signals is a wrapper of dataframe and a few configs. 
+
+struct 
+df::dataframe,
+model::AbstractFootballModel,
+singals::singalsCOnfig ( which signals are contained) 
+end
+
+with the df being a long format dataframe, 
+  -match_id
+  - market_group ( 1x2, under /over, 
+  - market_choice ( home, under_15, ) 
+  - symbol ( :home, :under_15 ... ) 
+  - signal --> name of the signal : kelly, ev, fix stake 
+  - stake -> amount to stake - percentage 
+
+
+The dir should look like this: 
+
+src/signals/ 
+    -types.jl -> Houses the abstract types: abstractsignals, and abstractconfigs and the wrapper " holy constant" logic 
+    - interfaces.jl -> contains the base abstract functions for the concrete signals logic, such that we can use the julia dispatch logic in the processing 
+                        so shared function / contract for the signals. 
+    - utils.jl /helpers.jl -> For common helper functions that are needed between files and funcitons here . 
+
+    -process_signals.jl -> The main process logic to handle the dispatch / and process of the each market line for each signals and to 
+                        form the returned wrapper struct. Using the dataframe.jl funcitons for the speed/ such as subset and transfrom and threads for speed up. 
+
+    implementations/ 
+        flat_stake.jl -> logic for a strategies / signal - defining the logic in the interfaces.jl 
+        kelly.jl 
+        baker-mchale.jl 
+        baker-mchale-srink.jl 
+        etc, i think you get the idea 
+
+
+
+
+
+
+
+
+
+
+
+
+=#
