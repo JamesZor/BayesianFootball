@@ -6,6 +6,7 @@ using ProgressMeter
 using ..Experiments: LatentStates
 # Import the interface functions we need
 using ..Data: AbstractMarket, market_group, market_line, outcomes
+using ..Data.Markets: DEFAULT_MARKET_CONFIG 
 
 export model_inference
 
@@ -28,7 +29,7 @@ end
 
 # 2. The Orchestrator
 # ------------------------------------------------------------------
-function model_inference(latents::LatentStates; market_config=nothing)
+function model_inference(latents::LatentStates; market_config=DEFAULT_MARKET_CONFIG)
     if isnothing(market_config)
         error("market_config must be provided")
     end
