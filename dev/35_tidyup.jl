@@ -524,7 +524,7 @@ results = process_signals(
     a,              # Your PPD (Predictions)
     market_data.df,    # Your Market Odds
     my_signals;     # The strategies defined above
-    odds_column = :odds_open # Explicitly tell it to use closing odds
+    odds_column = :odds_close # Explicitly tell it to use closing odds
 )
 
 
