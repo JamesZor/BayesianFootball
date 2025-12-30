@@ -446,7 +446,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
-  warmup_period = 30,
+  warmup_period = 20,
     stop_early = false
 )
 
@@ -527,6 +527,13 @@ results = process_signals(
     odds_column = :odds_close # Explicitly tell it to use closing odds
 )
 
+results_open = process_signals(
+    a,              # Your PPD (Predictions)
+    market_data.df,    # Your Market Odds
+    my_signals;     # The strategies defined above
+    odds_column = :odds_open # Explicitly tell it to use closing odds
+)
+
 
 
 using DataFrames, Statistics, PrettyTables
@@ -589,7 +596,9 @@ end
 stats = audit_signals(results)
 
 
-strat_stats = audit_signals(results, breakdown=[:signal_name, :signal_params])
+strat_stats = audit_signals(results, breakdown=[:signal_name, :signal_params, :selection])
+strat_stats = audit_signals(results_open, breakdown=[:signal_name, :signal_params, :selection])
+strat_stats = audit_signals(results_open, breakdown=[:signal_name, :signal_params])
 display(strat_stats)
 
 
