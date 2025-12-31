@@ -206,3 +206,41 @@ function summarize_markets(ledger::BacktestLedger;
     
     return results
 end
+
+
+
+"""
+    detailed_breakdown(ledger::BacktestLedger)
+
+Returns the most granular summary possible:
+Grouped by Model -> Signal -> Market -> Selection.
+Useful for debugging exactly where a strategy is failing.
+"""
+function detailed_breakdown(ledger::BacktestLedger)
+    df = ledger.df
+
+    # Define the full hierarchy of grouping
+    group_cols = [
+        :model_name, :model_parameters, 
+        :signal_name, :signal_params, 
+        :market_name, :selection
+    ]
+    
+    gdf = groupby(df, group_cols)
+    
+    results = combine(gdf) do sub_df
+        m = _calc_metrics(sub_df)
+        DataFrame(
+            bets = m.bets,
+            profit = m.profit,
+            roi_pct = m.roi,
+            win_rate_pct = m.win_rate,
+            avg_odds = m.avg_odds
+        )
+    end
+    
+    # Sort by Profit (ascending) to see the biggest leaks immediately
+    sort!(results, :profit)
+    
+    return results
+end

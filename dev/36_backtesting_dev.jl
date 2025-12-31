@@ -100,3 +100,12 @@ BayesianFootball.BackTesting.summarize_models(ledger)
 
 a = BayesianFootball.BackTesting.summarize_markets(ledger; compare_models=true)
 
+b = BayesianFootball.BackTesting.detailed_breakdown(ledger)
+
+
+sort(b, :roi_pct, rev=true)
+
+c = subset(b, :roi_pct => ByRow( x -> x > 0))
+
+
+sort(c, :roi_pct, rev=true)
