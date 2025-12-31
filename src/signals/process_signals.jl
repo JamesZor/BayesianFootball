@@ -25,7 +25,7 @@ function process_signals(ppd::PPD, market_data::DataFrame, signals::Vector{<:Abs
 
     # 2. Join PPD (Probs) with Market Data (Odds)
     # We select only necessary columns to keep the join clean
-    cols_to_keep = unique([:match_id, :market_name, :selection, :is_winner, odds_column])
+    cols_to_keep = unique([:match_id, :date, :market_name, :selection, :is_winner, odds_column])
     
     # Inner join: We can only bet if we have BOTH a prediction and a market line
     joined_df = innerjoin(
@@ -57,7 +57,7 @@ function process_signals(ppd::PPD, market_data::DataFrame, signals::Vector{<:Abs
         stakes = map(calculate_row_stake, eachrow(joined_df))
         
         # 4. Construct Result Block
-        temp_df = select(joined_df, [:match_id, :market_name, :selection, :is_winner])
+        temp_df = select(joined_df, [:match_id, :date, :market_name, :selection, :is_winner])
         
         # Metadata columns
         temp_df.signal_name = fill(sig_name, nrow(temp_df))

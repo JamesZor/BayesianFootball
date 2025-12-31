@@ -17,4 +17,66 @@ export PreGame, InGame
 # We must re-export the contract function so other modules can use it.
 export required_mapping_keys
 
+
+
+export model_name, model_parameters
+
+"""
+    model_name(model::AbstractFootballModel)::String
+
+Returns the simplified name of the model strategy (e.g., "StaticPoisson").
+"""
+function model_name(model::AbstractFootballModel)::String
+    return string(nameof(typeof(model)))
+end
+
+
+"""
+    _clean_param_str(s::String)
+
+Removes module prefixes and type parameters to make config strings readable.
+Example: "Distributions.Normal{Float64}(...)" -> "Normal(...)"
+"""
+function _clean_param_str(s::String)
+    # 1. Remove common module prefixes
+    s = replace(s, "Distributions." => "")
+    s = replace(s, "BayesianFootball." => "")
+    s = replace(s, "Base." => "")
+    
+    # 2. Remove Type Parameters like {Float64}
+    # This regex matches "{Float64}" or "{Any}" but keeps the core type name
+    s = replace(s, r"\{Float64\}" => "")
+    s = replace(s, r"\{Any\}" => "")
+    
+    # Optional: Remove specific inner type noise if needed
+    # s = replace(s, r"\{.*?\}" => "") # Aggressive removal of ALL {...}
+    
+    return s
+end
+
+"""
+    model_parameters(model::AbstractFootballModel)::String
+
+Returns a clean string representation of the model's configuration.
+"""
+function model_parameters(model::AbstractFootballModel)::String
+    fields = fieldnames(typeof(model))
+    if isempty(fields)
+        return "standard"
+    end
+    
+    params = String[]
+    for f in fields
+        val = getfield(model, f)
+        
+        # Convert the value to string, then clean it
+        raw_str = string(val)
+        clean_str = _clean_param_str(raw_str)
+        
+        push!(params, "$f=$clean_str")
+    end
+    
+    return join(params, ", ")
+end
+
 end

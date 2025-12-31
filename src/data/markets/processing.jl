@@ -27,6 +27,14 @@ function prepare_market_data(ds; config::MarketConfig = DEFAULT_MARKET_CONFIG)
     # 2. Enrich (Probabilities, Vig, Fair Odds)
     _enrich_market_data!(long_df)
 
+    date_df = select(ds.matches, [:match_id, :match_date]) 
+    
+    # Rename :date to :match_date for clarity if needed
+    rename!(date_df, :match_date => :date)
+    
+    # Left join to ensure we keep all market rows (even if date is missing, though unlikely)
+    long_df = leftjoin(long_df, date_df, on=:match_id)
+
     return MarketData(long_df, config)
 end
 
