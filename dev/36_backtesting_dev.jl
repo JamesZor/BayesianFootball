@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # 1. The set up 
 # ----------------------------------------------
-using Revise 
+using Revise
 using BayesianFootball
 
 using DataFrames
@@ -84,16 +84,61 @@ baker = BayesianKelly()
 
 my_signals = [flat_strat, kelly_strat, shrink_strat, baker]
 
-using BayesianFootball.Backtesting
-ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+using BayesianFootball.BackTesting
 
 
+# ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
 
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
 
-BayesianFootball.BackTesting.generate_tearsheet(ledger)
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+
+
+symbols = [:model_name, :model_parameters, :signal_name, :signal_params, :selection]
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger, symbols)
+
+sort(a, :SharpeRatio, rev=true)
+
+
+sorted_df = sort(a, [:selection, order(:SharpeRatio, rev=true)])
+
+
+"""
+    best_strategies_per_selection(breakdown_df::DataFrame; 
+                                  metric::Symbol=:SharpeRatio, 
+                                  top_n::Int=3)
+
+Finds the top performing strategies for each unique market selection.
+"""
+function best_strategies_per_selection(breakdown_df::DataFrame; 
+                                       metric,
+                                       top_n::Int=3)
+    
+    # 1. Group by Selection
+    gdf = groupby(breakdown_df, :selection)
+    
+    # 2. Select Top N per group
+    best_df = combine(gdf) do sub_df
+        # Sort this group by the requested metric
+        sorted = sort(sub_df, metric, rev=true)
+        
+        # Take top N (or fewer if not enough rows)
+        n = min(top_n, nrow(sorted))
+        return first(sorted, n)
+    end
+    
+    # 3. Final Sort for presentation (Group alphabetically by selection)
+    sort!(best_df, [:selection, order(metric, rev=true)])
+    
+    return best_df
+end
+
+best_stats = best_strategies_per_selection(a, metric=:CumulativeWealth)
+best_stats = best_strategies_per_selection(a, metric=:CalmarRatio)
 
 
 BayesianFootball.BackTesting.summarize_models(ledger)

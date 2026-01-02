@@ -57,10 +57,21 @@ function _process_single_experiment(
     # C. Signal Agent: Get Decisions
     # (This might use Threads to process thousands of rows)
     sig_result = process_signals(ppd, market_df, signals; odds_column=odds_column)
-    
+
     # D. Enrichment
     # Add metadata so we can distinguish this model's bets in the big ledger
     df = sig_result.df
+
+    # Calculate PnL immediately ---
+    df.pnl = map(eachrow(df)) do r
+        if ismissing(r.is_winner) || r.stake == 0.0
+            0.0
+        elseif r.is_winner
+            r.stake * (r.odds - 1.0)
+        else
+            -r.stake
+        end
+    end
     
     m_name = model_name(exp_res.config.model)
     m_params = model_parameters(exp_res.config.model)
