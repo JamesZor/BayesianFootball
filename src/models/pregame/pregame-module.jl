@@ -12,10 +12,11 @@ include("common.jl")
 # Since these files are included, their 'extract_parameters' overloads 
 # merge into the function defined in common.jl
 include("./implementations/static_poisson.jl")
+include("./implementations/static_hierarchical_poisson.jl")
 include("./implementations/static_dixoncoles.jl")
 
 # 3. Export
-export StaticPoisson, StaticDixonColes
+export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson
 export build_turing_model, extract_parameters
 
 end # module

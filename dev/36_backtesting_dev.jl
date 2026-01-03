@@ -24,6 +24,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
+  # warmup_period = 35,
   warmup_period = 20,
     stop_early = false
 )
@@ -36,7 +37,7 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                100,
+                300,
                 2,
                 100,
                 0.65,
@@ -58,10 +59,11 @@ exp_results = Experiments.run_experiment(ds, experiment_conf)
 
 
 using Distributions
-model_2 = Models.PreGame.StaticPoisson(prior= Cauchy(0))
+# model_2 = Models.PreGame.StaticPoisson(prior= Cauchy(0))
+model_2 = Models.PreGame.StaticHierarchicalPoisson()
 
 experiment_conf_2 = Experiments.ExperimentConfig(
-                    name = "test_static_poisson_cauchy",
+                    name = "test_static_hierarchicalPoisson",
                     model = model_2,
                     splitter = cv_config,
                     training_config = training_config,
@@ -95,9 +97,24 @@ ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results
 
 a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
 
+ledger_c = deepcopy(ledger) 
+
+
+subset!(ledger_c.df, 
+    :selection => ByRow(x -> x != :draw), 
+    :signal_name => ByRow(x -> x == "BayesianKelly")
+)
+
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger; groupby_cols=symbols)
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger_c; groupby_cols=symbols)
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger_c)
+
 
 
 symbols = [:model_name, :model_parameters, :signal_name, :signal_params, :selection]
+symbols = [:model_name, :model_parameters, :signal_name, :signal_params]
 
 a = BayesianFootball.BackTesting.generate_tearsheet(ledger, symbols)
 

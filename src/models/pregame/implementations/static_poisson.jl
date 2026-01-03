@@ -14,7 +14,6 @@ end
 
 # --- 2. Model Definition ---
 @model function static_poisson_model_train(n_teams, home_ids, away_ids, home_goals, away_goals, model::StaticPoisson)
-    # ... (same logic as before) ...
     log_α_raw ~ filldist(model.prior, n_teams) 
     log_β_raw ~ filldist(model.prior, n_teams) 
     home_adv ~ Normal(log(1.3), 0.2)
