@@ -13,10 +13,11 @@ include("common.jl")
 # merge into the function defined in common.jl
 include("./implementations/static_poisson.jl")
 include("./implementations/static_hierarchical_poisson.jl")
+include("./implementations/static_hierarchical_poisson_NCP.jl")
 include("./implementations/static_dixoncoles.jl")
 
 # 3. Export
-export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson
+export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP
 export build_turing_model, extract_parameters
 
 end # module

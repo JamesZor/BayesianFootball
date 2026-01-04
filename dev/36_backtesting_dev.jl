@@ -37,7 +37,7 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                300,
+                500,
                 2,
                 100,
                 0.65,
@@ -72,6 +72,55 @@ experiment_conf_2 = Experiments.ExperimentConfig(
 
 exp_results_2 = Experiments.run_experiment(ds, experiment_conf_2)
 
+##
+using StatsPlots
+# Define your distribution
+# plot() automatically detects it's a Distribution and plots the PDF
+plot(
+  Gamma(2, 1/2), 
+    title="Boundary Avoiding Prior: Gamma(2, 1/6)", 
+    label="Prior PDF", 
+    xlim=(0, 2),    # Zoom in to see the relevant range
+    legend=:topright
+)
+
+model_3 = Models.PreGame.StaticHierarchicalPoisson(
+            σ_k = Gamma(2, 1/2),       # The boundary avoiding prior
+            )
+
+experiment_conf_3 = Experiments.ExperimentConfig(
+                    name = "StaticHierarchicalPoisson v2 ",
+                    model = model_3,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+exp_results_3 = Experiments.run_experiment(ds, experiment_conf_3)
+
+
+a2 = exp_results_2.training_results[16][1]
+a3 = exp_results_3.training_results[16][1]
+
+describe(a2)
+describe(a3)
+
+
+
+model_4 = Models.PreGame.StaticHierarchicalPoissonNCP(
+            σ_k = Gamma(2, 1/2),       # The boundary avoiding prior
+            )
+
+experiment_conf_4 = Experiments.ExperimentConfig(
+                    name = "StaticHierarchicalPoisson v3 ",
+                    model = model_4,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+exp_results_4 = Experiments.run_experiment(ds, experiment_conf_4)
+
 
 
 using BayesianFootball.Signals
@@ -93,6 +142,7 @@ using BayesianFootball.BackTesting
 
 
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2, exp_results_3], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
 
 a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
@@ -101,7 +151,7 @@ ledger_c = deepcopy(ledger)
 
 
 subset!(ledger_c.df, 
-    :selection => ByRow(x -> x != :draw), 
+    # :selection => ByRow(x -> x != :draw), 
     :signal_name => ByRow(x -> x == "BayesianKelly")
 )
 
