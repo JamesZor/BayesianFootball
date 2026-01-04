@@ -14,10 +14,12 @@ include("common.jl")
 include("./implementations/static_poisson.jl")
 include("./implementations/static_hierarchical_poisson.jl")
 include("./implementations/static_hierarchical_poisson_NCP.jl")
+include("./implementations/bivariate_poisson_ncp.jl")
+
 include("./implementations/static_dixoncoles.jl")
 
 # 3. Export
-export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP
+export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
 
 end # module

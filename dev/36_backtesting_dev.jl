@@ -73,17 +73,17 @@ experiment_conf_2 = Experiments.ExperimentConfig(
 exp_results_2 = Experiments.run_experiment(ds, experiment_conf_2)
 
 ##
-using StatsPlots
-# Define your distribution
-# plot() automatically detects it's a Distribution and plots the PDF
-plot(
-  Gamma(2, 1/2), 
-    title="Boundary Avoiding Prior: Gamma(2, 1/6)", 
-    label="Prior PDF", 
-    xlim=(0, 2),    # Zoom in to see the relevant range
-    legend=:topright
-)
-
+# using StatsPlots
+# # Define your distribution
+# # plot() automatically detects it's a Distribution and plots the PDF
+# plot(
+#   Gamma(2, 1/2), 
+#     title="Boundary Avoiding Prior: Gamma(2, 1/6)", 
+#     label="Prior PDF", 
+#     xlim=(0, 2),    # Zoom in to see the relevant range
+#     legend=:topright
+# )
+#
 model_3 = Models.PreGame.StaticHierarchicalPoisson(
             σ_k = Gamma(2, 1/2),       # The boundary avoiding prior
             )
@@ -122,6 +122,32 @@ experiment_conf_4 = Experiments.ExperimentConfig(
 exp_results_4 = Experiments.run_experiment(ds, experiment_conf_4)
 
 
+a3 = exp_results_3.training_results[16][1]
+a4 = exp_results_4.training_results[16][1]
+
+
+describe(a3)
+describe(a4)
+
+
+
+model_5 = Models.PreGame.BivariatePoissonNCP(
+            σ_k = Gamma(2, 1/2),       # The boundary avoiding prior
+            )
+
+experiment_conf_5 = Experiments.ExperimentConfig(
+                    name = "BivariatePoissonNCP v3 ",
+                    model = model_5,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+exp_results_5 = Experiments.run_experiment(ds, experiment_conf_5)
+
+
+
+
 
 using BayesianFootball.Signals
 flat_strat = FlatStake(0.05)
@@ -143,6 +169,7 @@ using BayesianFootball.BackTesting
 
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2, exp_results_3], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2, exp_results_3, exp_results_4], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
 
 a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
