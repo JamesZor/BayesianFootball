@@ -24,8 +24,8 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
-  warmup_period = 35,
-  # warmup_period = 20,
+  # warmup_period = 35,
+  warmup_period = 20,
     stop_early = false
 )
 
@@ -166,6 +166,7 @@ shrink_strat = AnalyticalShrinkageKelly()
 baker = BayesianKelly()
 
 my_signals = [flat_strat, kelly_strat, shrink_strat, baker]
+my_signals = [baker]
 
 using BayesianFootball.BackTesting
 
@@ -177,6 +178,8 @@ ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2, exp_results_3], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results, exp_results_2, exp_results_3, exp_results_4], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results_5], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [exp_results_2, exp_results_5], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
 a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
 

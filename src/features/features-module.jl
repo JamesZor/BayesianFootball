@@ -8,9 +8,10 @@ module Features
 using DataFrames
 using ..Data
 # Features depends on the central interfaces for types...
-using ..TypesInterfaces: AbstractFootballModel, Vocabulary, FeatureSet, AbstractStaticPoissonModel, AbstractDynamicPoissonModel, FeatureCollection
+using ..TypesInterfaces: AbstractFootballModel, Vocabulary, FeatureSet, AbstractStaticPoissonModel, AbstractDynamicPoissonModel, FeatureCollection, AbstractStaticBivariatePoissonModel
 # ...and on Models for the concrete model types and their contract methods.
 using ..Models: required_mapping_keys
+
 
 export Vocabulary, FeatureSet, create_vocabulary, create_features
 
