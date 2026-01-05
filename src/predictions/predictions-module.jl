@@ -11,6 +11,7 @@ using ..Models
 using ..Data
 using ..TypesInterfaces
 using ..Experiments # For LatentStates
+using ..MyDistributions
 
 # 1. Types & Interfaces
 include("types.jl")
@@ -18,6 +19,7 @@ include("interface.jl")
 
 # 2. Score Computations (The Physics)
 include("score_computation/poisson.jl")
+include("./score_computation/bivariate_poisson.jl")
 # include("score_computation/dixoncoles.jl") # When ready
 
 # 3. Market Inferences (The Business Logic)

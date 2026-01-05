@@ -24,8 +24,8 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
-  # warmup_period = 35,
-  warmup_period = 20,
+  warmup_period = 35,
+  # warmup_period = 20,
     stop_early = false
 )
 
@@ -132,7 +132,6 @@ describe(a4)
 
 
 model_5 = Models.PreGame.BivariatePoissonNCP(
-            σ_k = Gamma(2, 1/2),       # The boundary avoiding prior
             )
 
 experiment_conf_5 = Experiments.ExperimentConfig(
@@ -147,7 +146,14 @@ exp_results_5 = Experiments.run_experiment(ds, experiment_conf_5)
 
 
 
+a5 = exp_results_5.training_results[1][1]
+describe(a5)
 
+
+
+a4 = exp_results_4.training_results[1][1]
+
+describe(a4)
 
 using BayesianFootball.Signals
 flat_strat = FlatStake(0.05)

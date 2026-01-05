@@ -16,8 +16,14 @@ abstract type AbstractPregameModel <: AbstractFootballModel end
 abstract type AbstractInGameModel <: AbstractFootballModel end
 
 abstract type AbstractPoissonModel <: AbstractPregameModel end
+abstract type AbstractBivariatePoissonModel <: AbstractPregameModel end
 
 abstract type AbstractStaticPoissonModel <: AbstractPoissonModel end 
+
+abstract type AbstractStaticBivariatePoissonModel <: AbstractBivariatePoissonModel end
+export AbstractBivariatePoissonModel, AbstractBivariatePoissonModel
+
+
 abstract type AbstractDynamicPoissonModel <: AbstractPoissonModel end 
 
 abstract type AbstractDixonColesModel <: AbstractPregameModel end
