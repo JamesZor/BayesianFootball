@@ -1,7 +1,12 @@
 # src/features/feature-sets.jl 
 
 # 1. Define the hook (Default behavior: do nothing)
+
 function apply_model_specific_logic(model::AbstractStaticPoissonModel, df::DataFrame)
+    return df
+end
+
+function apply_model_specific_logic(model::AbstractStaticDixonColesModel, df::DataFrame)
     return df
 end
 

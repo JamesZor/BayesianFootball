@@ -16,6 +16,9 @@ include("./implementations/static_hierarchical_poisson.jl")
 include("./implementations/static_hierarchical_poisson_NCP.jl")
 include("./implementations/bivariate_poisson_ncp.jl")
 
+include("./implementations/dixon_coles.jl")
+export DixonColesNCP
+
 include("./implementations/static_dixoncoles.jl")
 
 # 3. Export
