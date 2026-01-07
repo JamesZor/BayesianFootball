@@ -19,6 +19,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::StaticHierarchicalPoissonNCP)
     println(io, "  └── NCP Prior:     $(m.Δₛ)")
 end
 
+
 # --- 2. Model Definition ---
 @model function static_hierarchical_poisson_NCP_model_train(n_teams, home_ids, away_ids, home_goals, away_goals, model::StaticHierarchicalPoissonNCP)
 
