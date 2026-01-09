@@ -21,6 +21,7 @@ include("interface.jl")
 include("score_computation/poisson.jl")
 include("./score_computation/bivariate_poisson.jl")
 include("score_computation/dixoncoles.jl") # When ready
+include("score_computation/mvpln.jl") # When ready
 
 # 3. Market Inferences (The Business Logic)
 include("market_inference/1x2.jl")

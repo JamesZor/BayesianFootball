@@ -10,6 +10,10 @@ function apply_model_specific_logic(model::AbstractStaticDixonColesModel, df::Da
     return df
 end
 
+function apply_model_specific_logic(model::AbstractStaticMVPLNModel, df::DataFrame)
+    return df
+end
+
 function apply_model_specific_logic(model::AbstractStaticBivariatePoissonModel, df::DataFrame)
     return df
 end
