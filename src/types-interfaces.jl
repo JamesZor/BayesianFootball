@@ -32,6 +32,13 @@ abstract type AbstractMVPLNModel <: AbstractPregameModel end
 abstract type AbstractStaticMVPLNModel <: AbstractMVPLNModel end
 export AbstractMVPLNModel, AbstractStaticMVPLNModel
 
+
+abstract type AbstractMixCopulaModel <: AbstractPregameModel end
+abstract type AbstractStaticMixCopulaModel <: AbstractMixCopulaModel end
+export AbstractMixCopulaModel, AbstractStaticMixCopulaModel
+
+
+
 abstract type AbstractDynamicPoissonModel <: AbstractPoissonModel end 
 
 abstract type AbstractDixonColesModel <: AbstractPregameModel end

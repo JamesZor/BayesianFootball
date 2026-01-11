@@ -22,6 +22,9 @@ export StaticMVPLN
 include("./implementations/dixon_coles.jl")
 export DixonColesNCP
 
+include("./implementations/static_mixture_copula.jl")
+export StaticMixtureCopula
+
 include("./implementations/static_dixoncoles.jl")
 
 # 3. Export
