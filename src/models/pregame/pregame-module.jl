@@ -30,6 +30,9 @@ include("./implementations/static_dixoncoles.jl")
 include("./implementations/grw_poisson.jl")
 export GRWPoisson
 
+include("./implementations/grw_dixon_coles.jl")
+export GRWDixonColes
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters

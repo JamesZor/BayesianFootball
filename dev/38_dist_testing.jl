@@ -79,6 +79,43 @@ sampler_conf = Samplers.NUTSConfig(
 )
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
+## --- GRW Dixon coles
+grw_dixoncoles_model = Models.PreGame.GRWDixonColes()
+
+exp_conf_grw_dc = Experiments.ExperimentConfig(
+                    name = "grw poisson",
+                    model = grw_dixoncoles_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+grw_dc_results = Experiments.run_experiment(ds, exp_conf_grw_dc)
+
+using Turing
+
+describe(grw_dc_results.training_results[1][1]) 
+
+
+fset = feature_sets[end][1]
+chain = grw_dc_results.training_results[end][1]
+df_trends = Models.PreGame.extract_trends(grw_dixoncoles_model, fset, chain)
+Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
+
+
+using BayesianFootball.Signals
+
+baker = BayesianKelly()
+my_signals = [baker]
+
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_dc_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_dc_results, grw_poisson_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_poisson_results, shp_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+
 
 ## --- GRW poisson 
 
@@ -105,117 +142,6 @@ fset = feature_sets[end][1]
 chain = grw_poisson_results.training_results[end][1]
 df_trends = Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
 Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
-
-
-n_teams = fset[:n_teams]
-team_map = fset[:team_map]
-    
-
-step_names = names(group(chain, :z_att_steps))
-n_steps_raw = length(step_names)
-n_rounds = (n_steps_raw ÷ n_teams) + 1
-
-function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
-    # 1. Extract Scalars (Samples)
-    μ_att_vec   = vec(chain[:μ_att])
-    μ_def_vec   = vec(chain[:μ_def])
-    σ_att_vec   = vec(chain[:σ_att])
-    σ_def_vec   = vec(chain[:σ_def])
-    σ_att_0_vec = vec(chain[:σ_att_0])
-    σ_def_0_vec = vec(chain[:σ_def_0])
-
-    # 2. Extract Arrays (Samples x Dimensions)
-    z_att_init_raw = Array(group(chain, :z_att_init))
-    z_def_init_raw = Array(group(chain, :z_def_init))
-    
-    n_samples = size(z_att_init_raw, 1)
-
-    # Reshape Init: [Team, Time=1, Sample]
-    Z_att_init = permutedims(reshape(z_att_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-    Z_def_init = permutedims(reshape(z_def_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-
-    # Reshape Steps: [Team, Time=Steps, Sample]
-    z_att_steps_raw = Array(group(chain, :z_att_steps))
-    z_def_steps_raw = Array(group(chain, :z_def_steps))
-    
-    Z_att_steps = permutedims(reshape(z_att_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-    Z_def_steps = permutedims(reshape(z_def_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-
-    # 3. Reshape Scalars for Broadcasting
-    S_att   = reshape(σ_att_vec, 1, 1, n_samples)
-    S_def   = reshape(σ_def_vec, 1, 1, n_samples)
-    S_att_0 = reshape(σ_att_0_vec, 1, 1, n_samples)
-    S_def_0 = reshape(σ_def_0_vec, 1, 1, n_samples)
-    
-    M_att   = reshape(μ_att_vec, 1, 1, n_samples)
-    M_def   = reshape(μ_def_vec, 1, 1, n_samples)
-
-    # 4. Reconstruction
-    scaled_init_att = Z_att_init .* S_att_0
-    scaled_init_def = Z_def_init .* S_def_0
-    
-    scaled_steps_att = Z_att_steps .* S_att
-    scaled_steps_def = Z_def_steps .* S_def
-
-    # Integrate
-    raw_att = cumsum(cat(scaled_init_att, scaled_steps_att, dims=2), dims=2)
-    raw_def = cumsum(cat(scaled_init_def, scaled_steps_def, dims=2), dims=2)
-
-    # Center & Shift
-    final_att = (raw_att .- mean(raw_att, dims=1)) .+ M_att
-    final_def = (raw_def .- mean(raw_def, dims=1)) .+ M_def
-
-    return final_att, final_def
-end
-
-function extract_trends(model, feature_set, chain)
-    n_teams = feature_set[:n_teams]
-    team_map = feature_set[:team_map]
-    
-    # --- FIX ---
-    # Use group() to isolate the parameter, then count the names
-    step_names = names(group(chain, :z_att_steps))
-    n_steps_raw = length(step_names)
-    n_rounds = (n_steps_raw ÷ n_teams) + 1
-    # -----------
-
-    # 1. Reconstruct
-    att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
-    
-    # 2. Summarize (Mean of samples)
-    att_means = dropdims(mean(att_cube, dims=3), dims=3)
-    def_means = dropdims(mean(def_cube, dims=3), dims=3)
-
-    # 3. Build DataFrame
-    id_to_team = Dict(v => k for (k, v) in team_map)
-    
-    teams = String[]
-    rounds = Int[]
-    att_vals = Float64[]
-    def_vals = Float64[]
-
-    for i in 1:n_teams
-        t_name = id_to_team[i]
-        for t in 1:n_rounds
-            push!(teams, t_name)
-            push!(rounds, t)
-            push!(att_vals, att_means[i, t])
-            push!(def_vals, def_means[i, t])
-        end
-    end
-
-    return DataFrame(
-        team = teams,
-        round = rounds,
-        att = att_vals,
-        def = def_vals
-    )
-end
-
-
-
-df_trends = extract_trends(grw_poisson_model, fset, chain)
-
 
 
 

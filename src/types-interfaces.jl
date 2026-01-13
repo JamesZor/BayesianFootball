@@ -41,6 +41,11 @@ export AbstractMixCopulaModel, AbstractStaticMixCopulaModel
 
 abstract type AbstractDynamicPoissonModel <: AbstractPoissonModel end 
 
+abstract type AbstractDynamicDixonColesModel <: AbstractDixonColesModel end 
+export AbstractDynamicDixonColesModel
+
+
+
 abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
