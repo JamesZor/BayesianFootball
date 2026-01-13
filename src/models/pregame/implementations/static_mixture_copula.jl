@@ -104,3 +104,78 @@ function build_turing_model(model::StaticMixtureCopula, feature_set::FeatureSet)
     )
 end
 
+function extract_parameters(
+    model::StaticMixtureCopula, 
+    df_to_predict::AbstractDataFrame, 
+    feature_set::FeatureSet, 
+    chains::Chains
+)::Dict{Int, NamedTuple}
+
+    extraction_dict = Dict{Int, NamedTuple}()
+    team_map = feature_set[:team_map]
+
+    # --- A. Extract Global Parameters ---
+    μ = vec(chains[:μ])
+    γ = vec(chains[:γ])
+    
+    # Noise Scales
+    σ_h = vec(chains[:σ_h])
+    σ_a = vec(chains[:σ_a])
+
+    # --- B. Extract Mixture & Copula Parameters ---
+    # Weights: w is a Dirichlet vector. In chains, typically stored as w[1], w[2].
+    # We group them into a matrix (Samples x 2) and convert to vector of vectors.
+    w_mat = Array(group(chains, :w)) 
+    w = [w_mat[i, :] for i in 1:size(w_mat, 1)] # Vector of [w1, w2] vectors
+
+    # Copula Params
+    # 1. Clayton: Model samples θ_clay_log ~ Normal. We need θ_clay = exp(θ_clay_log)
+    θ_clay_log = vec(chains[:θ_clay_log])
+    θ_clay = exp.(θ_clay_log)
+
+    # 2. Frank: Model samples θ_frank ~ Normal.
+    θ_frank = vec(chains[:θ_frank])
+
+    # --- C. Extract & Reconstruct Team Parameters ---
+    σ_att = vec(chains[:σ_att])
+    σ_def = vec(chains[:σ_def])
+    αₛ = Array(group(chains, :αₛ))
+    βₛ = Array(group(chains, :βₛ))
+
+    # Scale
+    α_mat = αₛ .* σ_att
+    β_mat = βₛ .* σ_def
+    
+    # Center (Sum-to-zero constraint)
+    α_c = α_mat .- mean(α_mat, dims=2)
+    β_c = β_mat .- mean(β_mat, dims=2)
+
+    # --- D. Prediction Loop ---
+    for row in eachrow(df_to_predict)
+        h_id = team_map[row.home_team]
+        a_id = team_map[row.away_team]
+
+        α_h = α_c[:, h_id]
+        β_a = β_c[:, a_id]
+        α_a = α_c[:, a_id]
+        β_h = β_c[:, h_id]
+
+        # Deterministic Log-Location (Linear Predictor)
+        # Note: These exclude the epsilon noise terms which are integrated out later
+        loc_h = μ .+ γ .+ α_h .+ β_a
+        loc_a = μ      .+ α_a .+ β_h
+        
+        # Pack everything needed for the score matrix computation
+        extraction_dict[row.match_id] = (; 
+            loc_h, 
+            loc_a, 
+            σ_h, 
+            σ_a,
+            w,       # Vector of Vectors
+            θ_clay,  # Vector
+            θ_frank  # Vector
+        )
+    end
+
+    return extraction_dict
+end

@@ -41,7 +41,7 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                500,
+                100,
                 2,
                 100,
                 0.65,
@@ -70,14 +70,214 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                300,
-                2,
                 200,
+                2,
+                100,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05)
 )
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
+
+## --- GRW poisson 
+
+grw_poisson_model = Models.PreGame.GRWPoisson()
+
+exp_conf_grw = Experiments.ExperimentConfig(
+                    name = "grw poisson",
+                    model = grw_poisson_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+grw_poisson_results = Experiments.run_experiment(ds, exp_conf_grw)
+
+
+using Turing
+
+describe(grw_poisson_results.training_results[1][1]) 
+
+
+
+fset = feature_sets[end][1]
+chain = grw_poisson_results.training_results[end][1]
+df_trends = Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
+Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
+
+
+n_teams = fset[:n_teams]
+team_map = fset[:team_map]
+    
+
+step_names = names(group(chain, :z_att_steps))
+n_steps_raw = length(step_names)
+n_rounds = (n_steps_raw ÷ n_teams) + 1
+
+function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
+    # 1. Extract Scalars (Samples)
+    μ_att_vec   = vec(chain[:μ_att])
+    μ_def_vec   = vec(chain[:μ_def])
+    σ_att_vec   = vec(chain[:σ_att])
+    σ_def_vec   = vec(chain[:σ_def])
+    σ_att_0_vec = vec(chain[:σ_att_0])
+    σ_def_0_vec = vec(chain[:σ_def_0])
+
+    # 2. Extract Arrays (Samples x Dimensions)
+    z_att_init_raw = Array(group(chain, :z_att_init))
+    z_def_init_raw = Array(group(chain, :z_def_init))
+    
+    n_samples = size(z_att_init_raw, 1)
+
+    # Reshape Init: [Team, Time=1, Sample]
+    Z_att_init = permutedims(reshape(z_att_init_raw, n_samples, n_teams, 1), (2, 3, 1))
+    Z_def_init = permutedims(reshape(z_def_init_raw, n_samples, n_teams, 1), (2, 3, 1))
+
+    # Reshape Steps: [Team, Time=Steps, Sample]
+    z_att_steps_raw = Array(group(chain, :z_att_steps))
+    z_def_steps_raw = Array(group(chain, :z_def_steps))
+    
+    Z_att_steps = permutedims(reshape(z_att_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
+    Z_def_steps = permutedims(reshape(z_def_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
+
+    # 3. Reshape Scalars for Broadcasting
+    S_att   = reshape(σ_att_vec, 1, 1, n_samples)
+    S_def   = reshape(σ_def_vec, 1, 1, n_samples)
+    S_att_0 = reshape(σ_att_0_vec, 1, 1, n_samples)
+    S_def_0 = reshape(σ_def_0_vec, 1, 1, n_samples)
+    
+    M_att   = reshape(μ_att_vec, 1, 1, n_samples)
+    M_def   = reshape(μ_def_vec, 1, 1, n_samples)
+
+    # 4. Reconstruction
+    scaled_init_att = Z_att_init .* S_att_0
+    scaled_init_def = Z_def_init .* S_def_0
+    
+    scaled_steps_att = Z_att_steps .* S_att
+    scaled_steps_def = Z_def_steps .* S_def
+
+    # Integrate
+    raw_att = cumsum(cat(scaled_init_att, scaled_steps_att, dims=2), dims=2)
+    raw_def = cumsum(cat(scaled_init_def, scaled_steps_def, dims=2), dims=2)
+
+    # Center & Shift
+    final_att = (raw_att .- mean(raw_att, dims=1)) .+ M_att
+    final_def = (raw_def .- mean(raw_def, dims=1)) .+ M_def
+
+    return final_att, final_def
+end
+
+function extract_trends(model, feature_set, chain)
+    n_teams = feature_set[:n_teams]
+    team_map = feature_set[:team_map]
+    
+    # --- FIX ---
+    # Use group() to isolate the parameter, then count the names
+    step_names = names(group(chain, :z_att_steps))
+    n_steps_raw = length(step_names)
+    n_rounds = (n_steps_raw ÷ n_teams) + 1
+    # -----------
+
+    # 1. Reconstruct
+    att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
+    
+    # 2. Summarize (Mean of samples)
+    att_means = dropdims(mean(att_cube, dims=3), dims=3)
+    def_means = dropdims(mean(def_cube, dims=3), dims=3)
+
+    # 3. Build DataFrame
+    id_to_team = Dict(v => k for (k, v) in team_map)
+    
+    teams = String[]
+    rounds = Int[]
+    att_vals = Float64[]
+    def_vals = Float64[]
+
+    for i in 1:n_teams
+        t_name = id_to_team[i]
+        for t in 1:n_rounds
+            push!(teams, t_name)
+            push!(rounds, t)
+            push!(att_vals, att_means[i, t])
+            push!(def_vals, def_means[i, t])
+        end
+    end
+
+    return DataFrame(
+        team = teams,
+        round = rounds,
+        att = att_vals,
+        def = def_vals
+    )
+end
+
+
+
+df_trends = extract_trends(grw_poisson_model, fset, chain)
+
+
+
+
+using Plots, StatsPlots
+
+# 1. Plot Attack Strengths
+@df df_trends plot(:round, :att, group=:team, 
+    title="Evolution of Attack Strength",
+    xlabel="Round", ylabel="Attack (Log Scale)",
+    legend=:outertopright, lw=2
+)
+
+
+# 2. Plot Defense Strengths
+@df df_trends plot(:round, :def, group=:team, 
+    title="Evolution of Defense Strength",
+    xlabel="Round", ylabel="Defense (Log Scale)",
+    legend=:outertopright, lw=2
+)
+
+# Plot trajectory of one team (e.g., Raith Rovers)
+unique(df_trends.team)
+
+team_data = filter(row -> row.team == "dundee-fc", df_trends)
+
+team_data_1= filter(row -> row.team == "ayr-united", df_trends)
+team_data_2= filter(row -> row.team == "partick-thistle", df_trends)
+
+# 1. Start the plot with the first team (Dundee FC)
+plot(team_data.att, team_data.def, 
+    label="Dundee FC",
+    title="Tactical Evolution: Attack vs Defense",
+    xlabel="Attack Strength", ylabel="Defense Strength",
+    marker=:circle, arrow=true, lw=2, 
+    legend=:outertopright,  # Position the legend outside
+    yflip=true              # OPTIONAL: Flip Y axis if lower defense is "better"
+)
+
+# 2. Add the second team (Ayr United) to the SAME plot
+plot!(team_data_1.att, team_data_1.def, 
+    label="Ayr United",
+    marker=:circle, arrow=true, lw=2
+)
+
+plot!(team_data_2.att, team_data_2.def, 
+    label="partick-thistle",
+    marker=:circle, arrow=true, lw=2
+)
+
+
+
+using BayesianFootball.Signals
+
+baker = BayesianKelly()
+my_signals = [baker]
+
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_poisson_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_poisson_results, shp_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
 
 
 ## -- mix copula model 
@@ -94,6 +294,178 @@ exp_conf = Experiments.ExperimentConfig(
 )
 
 mix_copula_results = Experiments.run_experiment(ds, exp_conf)
+
+
+
+using BayesianFootball.Signals
+
+baker = BayesianKelly()
+my_signals = [baker]
+
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [mix_copula_results, DC], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+c=unique(a.selection)
+
+for cc in c
+  show(subset(a, :selection => ByRow(isequal(cc))))
+end
+
+latents_mc = Experiments.extract_oos_predictions(ds, mix_copula_results)
+latents = Experiments.extract_oos_predictions(ds, mvpln_results)
+latents_bp = Experiments.extract_oos_predictions(ds, BP_results)
+latents_shp = Experiments.extract_oos_predictions(ds, shp_results)
+latents_dc = Experiments.extract_oos_predictions(ds, DC)
+
+
+a = Predictions.model_inference(latents)
+b = Predictions.model_inference(latents_bp)
+c = Predictions.model_inference(latents_shp)
+d = Predictions.model_inference(latents_mc)
+e = Predictions.model_inference(latents_dc)
+
+
+
+fs = feature_sets[1]
+daaa = Data.get_next_matches(ds, fs, cv_config)
+mid = daaa[4,:match_id]
+market_data = Data.prepare_market_data(ds)
+
+subset(market_data.df, :match_id => ByRow(isequal(mid)))
+subset(ds.matches, :match_id => ByRow(isequal(mid)))
+
+using StatsPlots
+
+sym = :draw
+a1 = subset( a.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
+b1 = subset( b.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
+c1 = subset( c.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
+d1 = subset( d.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
+mean(1 ./ a1.distribution)
+mean(1 ./ b1.distribution)
+mean(1 ./ c1.distribution)
+mean(1 ./ d1.distribution)
+mean(a1.distribution)
+mean(b1.distribution)
+mean(c1.distribution)
+mean(d1.distribution)
+subset(market_data.df, :match_id => ByRow(isequal(mid)), :selection => ByRow(isequal(sym)))
+
+density(a1.distribution, title="$sym",label="mvpln")
+density!(b1.distribution, label="bivariatePoisson")
+density!(c1.distribution, label="Heirarical")
+density!(d1.distribution, label="mix copula - clayton + frank")
+
+#- 
+
+compare_models_to_market(mid, :under_35, market_data, a, b, c, d, e)
+
+using DataFrames, StatsPlots, Statistics, PrettyTables
+
+function compare_models_to_market(
+    mid::Int, 
+    sym::Symbol, 
+    market_data, 
+    # Pass your model objects here. I've defaulted names to match your snippet
+    models...; 
+    # Map your model objects to the specific labels you want in the legend/table
+    labels = ["mvpln", "bivariatePoisson", "Hierarchical", "mix copula - clayton + frank", "dixoncoles"]
+)
+
+    # 1. Setup containers
+    # We will store results in a DataFrame for the "nice table"
+    results_df = DataFrame(
+        Source = String[], 
+        Mean_Prob = Float64[], 
+        Mean_Odds = Float64[],
+        Type = String[]
+    )
+    
+    # Initialize the plot
+    p = density(
+        title="Posterior Distributions: $sym (Match $mid)", 
+        xlabel="Probability", 
+        ylabel="Density", 
+        legend=:outertopright,  # Places legend outside the plot area
+        size=(800, 500)         # Increases width to accommodate the external legend
+    )
+
+    # 2. Loop through the models provided
+    for (i, model_obj) in enumerate(models)
+        # Handle cases where user might pass more models than labels
+        lbl = get(labels, i, "Model $i")
+        
+        # Access the dataframe (assuming structure is model.df)
+        # If your models are just DataFrames, remove the `.df` access
+        df = hasproperty(model_obj, :df) ? model_obj.df : model_obj
+
+        # Filter Logic
+        row_subset = subset(df, 
+            :selection => ByRow(isequal(sym)), 
+            :match_id => ByRow(isequal(mid))
+        )
+
+        if isempty(row_subset)
+            @warn "No data found for $lbl in match $mid"
+            continue
+        end
+
+        # Extract the distribution array
+        # row_subset[1, :] gets the first row
+        dist = row_subset[1, :distribution]
+
+        # Calculate Statistics based on your logic
+        # Odds = mean(1 ./ distribution)
+        # Prob = mean(distribution)
+        mean_odds = mean(1 ./ dist)
+        mean_prob = mean(dist)
+
+        # Update Table
+        push!(results_df, (lbl, mean_prob, mean_odds, "Model"))
+
+        # Update Plot
+        # We use i==1 to determine if we start the plot or append to it, 
+        # but StatsPlots handles `density!` well if the plot object `p` is passed.
+        density!(p, dist, label=lbl, linewidth=2, alpha=0.7)
+    end
+
+    # 3. Process Market Data
+    mkt_df = hasproperty(market_data, :df) ? market_data.df : market_data
+    
+    mkt_row = subset(mkt_df, 
+        :match_id => ByRow(isequal(mid)), 
+        :selection => ByRow(isequal(sym))
+    )
+
+    if !isempty(mkt_row)
+        # Extract Market Open
+        odds_open = mkt_row[1, :odds_open]
+        prob_open = mkt_row[1, :prob_implied_open]
+        push!(results_df, ("Market Open", prob_open, odds_open, "Market"))
+        
+        # Extract Market Close
+        odds_close = mkt_row[1, :odds_close]
+        prob_close = mkt_row[1, :prob_implied_close]
+        push!(results_df, ("Market Close", prob_close, odds_close, "Market"))
+
+        # Optional: Add vertical lines to the plot for Market Implied Probability
+        vline!(p, [prob_open], label="Mkt Open", linestyle=:dash, color=:black)
+        vline!(p, [prob_close], label="Mkt Close", linestyle=:dot, color=:gray)
+    end
+
+    # 4. Display Results
+    
+    # Print the table nicely
+    println("\n--- Comparison for Selection: $sym ---")
+    pretty_table(results_df)
+
+    # Return the plot object so it displays
+    return p
+end
+
+
 
 using Turing
 
@@ -217,6 +589,7 @@ Quantiles
             ⋮         ⋮         ⋮         ⋮         ⋮         ⋮
                                                  338 rows omitted
 """
+
 ###
 
 
@@ -254,7 +627,8 @@ r = mvpln_results.training_results[1][1]
 
 describe(r)
 
-
+### 
+#
 shp_model = Models.PreGame.StaticHierarchicalPoisson()
 
 experiment_conf_shp = Experiments.ExperimentConfig(
@@ -267,8 +641,7 @@ experiment_conf_shp = Experiments.ExperimentConfig(
 
 shp_results = Experiments.run_experiment(ds, experiment_conf_shp)
 
-r_shp = shp_results.training_results[1][1]
-describe(r_shp)
+describe(shp_results.training_results[1][1])
 
 
 model_BP = Models.PreGame.BivariatePoissonNCP()

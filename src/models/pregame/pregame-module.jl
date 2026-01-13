@@ -27,6 +27,9 @@ export StaticMixtureCopula
 
 include("./implementations/static_dixoncoles.jl")
 
+include("./implementations/grw_poisson.jl")
+export GRWPoisson
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
