@@ -23,7 +23,7 @@ ds = BayesianFootball.Data.DataStore(
 # --- setup 1 
 cv_config = BayesianFootball.Data.CVConfig(
     # tournament_ids = [56,57],
-    tournament_ids = [55],
+    tournament_ids = [56],
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
@@ -69,15 +69,31 @@ feature_sets = BayesianFootball.Features.create_features(
     splits, model, cv_config
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+
 sampler_conf = Samplers.NUTSConfig(
-                200,
-                2,
                 100,
+                2,
+                10,
+                0.65,
+                10,
+  Samplers.MapInit(50)
+)
+
+
+sampler_conf1 = Samplers.NUTSConfig(
+                100,
+                2,
+                10,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05)
 )
+
+
+
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
+training_config1 = Training.TrainingConfig(sampler_conf1, train_cfg, nothing, false)
 
 ## --- GRW Dixon coles
 grw_dixoncoles_model = Models.PreGame.GRWDixonColes()
@@ -132,9 +148,41 @@ exp_conf_grw = Experiments.ExperimentConfig(
 grw_poisson_results = Experiments.run_experiment(ds, exp_conf_grw)
 
 
+exp_conf_grw1 = Experiments.ExperimentConfig(
+                    name = "grw poisson",
+                    model = grw_poisson_model,
+                    splitter = cv_config,
+                    training_config = training_config1,
+                    save_dir ="./data/junk"
+)
+
+grw_poisson_results1 = Experiments.run_experiment(ds, exp_conf_grw1)
+
+
 using Turing
 
 describe(grw_poisson_results.training_results[1][1]) 
+describe(grw_poisson_results1.training_results[1][1]) 
+
+a = grw_poisson_results.training_results[1][1]
+a1 = grw_poisson_results1.training_results[1][1]
+describe(a[:is_accept])
+describe(a1[:is_accept])
+
+describe(a[:step_size])
+describe(a1[:step_size])
+
+describe(a[:tree_depth])
+describe(a1[:tree_depth])
+
+
+describe(a[:hamiltonian_energy])
+describe(a1[:hamiltonian_energy])
+
+
+describe(a[:max_hamiltonian_energy_error])
+describe(a1[:max_hamiltonian_energy_error])
+
 
 
 
@@ -143,6 +191,9 @@ chain = grw_poisson_results.training_results[end][1]
 df_trends = Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
 Models.PreGame.extract_trends(grw_poisson_model, fset, chain)
 
+using Turing
+
+describe(chain)
 
 
 using Plots, StatsPlots
@@ -198,6 +249,19 @@ using BayesianFootball.Signals
 baker = BayesianKelly()
 my_signals = [baker]
 
+
+
+flat_strat = FlatStake(0.05)
+# 2. Conservative Kelly: Quarter Kelly (0.25)
+kelly_strat = KellyCriterion(0.25)
+
+# 3. Bayesian/Shrinkage Kelly: Uses the Baker-McHale analytical approximation
+shrink_strat = AnalyticalShrinkageKelly()
+
+baker = BayesianKelly()
+
+my_signals = [flat_strat, kelly_strat, shrink_strat, baker]
+
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_poisson_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 ledger = BayesianFootball.BackTesting.run_backtest(ds, [grw_poisson_results, shp_results], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
 
@@ -245,6 +309,8 @@ latents_bp = Experiments.extract_oos_predictions(ds, BP_results)
 latents_shp = Experiments.extract_oos_predictions(ds, shp_results)
 latents_dc = Experiments.extract_oos_predictions(ds, DC)
 
+latents = Experiments.extract_oos_predictions(ds, grw_poisson_results)
+
 
 a = Predictions.model_inference(latents)
 b = Predictions.model_inference(latents_bp)
@@ -264,7 +330,7 @@ subset(ds.matches, :match_id => ByRow(isequal(mid)))
 
 using StatsPlots
 
-sym = :draw
+sym = :away
 a1 = subset( a.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
 b1 = subset( b.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
 c1 = subset( c.df, :selection => ByRow(isequal(sym)), :match_id => ByRow(isequal(mid)))[1, :]
@@ -286,7 +352,7 @@ density!(d1.distribution, label="mix copula - clayton + frank")
 
 #- 
 
-compare_models_to_market(mid, :under_35, market_data, a, b, c, d, e)
+compare_models_to_market(mid, :away, market_data, a)
 
 using DataFrames, StatsPlots, Statistics, PrettyTables
 

@@ -144,8 +144,8 @@ end
         θ_h_else = θ_home_all[idx_else]
         θ_a_else = θ_away_all[idx_else]
         
-        Turing.@addlogprob! sum(logpdf.(Poisson.(exp.(θ_h_else)), scores_else_x))
-        Turing.@addlogprob! sum(logpdf.(Poisson.(exp.(θ_a_else)), scores_else_y))
+        Turing.@addlogprob! sum(logpdf.(LogPoisson.(θ_h_else), scores_else_x))
+        Turing.@addlogprob! sum(logpdf.(LogPoisson.(θ_a_else), scores_else_y))
     end
     
     return nothing
@@ -205,49 +205,6 @@ end
 # ==============================================================================
 # 4. HELPERS & EXTRACTORS
 # ==============================================================================
-
-# Helper to reconstruct the Random Walk (Same as GRWPoisson)
-function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
-    μ_att_vec   = vec(chain[:μ_att])
-    μ_def_vec   = vec(chain[:μ_def])
-    σ_att_vec   = vec(chain[:σ_att])
-    σ_def_vec   = vec(chain[:σ_def])
-    σ_att_0_vec = vec(chain[:σ_att_0])
-    σ_def_0_vec = vec(chain[:σ_def_0])
-
-    z_att_init_raw = Array(group(chain, :z_att_init))
-    z_def_init_raw = Array(group(chain, :z_def_init))
-    n_samples = size(z_att_init_raw, 1)
-
-    Z_att_init = permutedims(reshape(z_att_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-    Z_def_init = permutedims(reshape(z_def_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-
-    z_att_steps_raw = Array(group(chain, :z_att_steps))
-    z_def_steps_raw = Array(group(chain, :z_def_steps))
-    
-    Z_att_steps = permutedims(reshape(z_att_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-    Z_def_steps = permutedims(reshape(z_def_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-
-    S_att   = reshape(σ_att_vec, 1, 1, n_samples)
-    S_def   = reshape(σ_def_vec, 1, 1, n_samples)
-    S_att_0 = reshape(σ_att_0_vec, 1, 1, n_samples)
-    S_def_0 = reshape(σ_def_0_vec, 1, 1, n_samples)
-    M_att   = reshape(μ_att_vec, 1, 1, n_samples)
-    M_def   = reshape(μ_def_vec, 1, 1, n_samples)
-
-    scaled_init_att = Z_att_init .* S_att_0
-    scaled_init_def = Z_def_init .* S_def_0
-    scaled_steps_att = Z_att_steps .* S_att
-    scaled_steps_def = Z_def_steps .* S_def
-
-    raw_att = cumsum(cat(scaled_init_att, scaled_steps_att, dims=2), dims=2)
-    raw_def = cumsum(cat(scaled_init_def, scaled_steps_def, dims=2), dims=2)
-
-    final_att = (raw_att .- mean(raw_att, dims=1)) .+ M_att
-    final_def = (raw_def .- mean(raw_def, dims=1)) .+ M_def
-
-    return final_att, final_def
-end
 
 """
     extract_parameters(...)

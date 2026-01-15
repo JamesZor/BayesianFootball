@@ -23,7 +23,7 @@ Base.@kwdef struct MapInit <: AbstractInitStrategy
 end
 
 function Base.show(io::IO, init::MapInit)
-    print(io, "MapInit(max_iters=$(init.max_iters), jitter=$(init.jitter))")
+  print(io, "MapInit(max_iters=$(init.max_iters))")
 end
 
 # --- 2. Logic ---
@@ -40,6 +40,8 @@ function get_init_params(model, strategy::MapInit, n_chains::Int)
         LBFGS(),
         Optim.Options(iterations=strategy.max_iters)
     )
+
+  # println("         - Found $(map_estimate.params)")
 
   return fill(Turing.InitFromParams(map_estimate.params), n_chains)
 end

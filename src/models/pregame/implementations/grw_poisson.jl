@@ -117,95 +117,6 @@ function build_turing_model(model::GRWPoisson, feature_set::FeatureSet)
     )
 end
 
-
-
-"""
-OPTIMIZED HELPER: unwraps NTuple directly into target shape
-Avoids hcat and permutedims allocations.
-"""
-function unwrap_ntuple(tuple_of_arrays)
-    # 1. Determine Dimensions
-    # tuple_of_arrays is (AxisArray_1, AxisArray_2, ...)
-    n_features = length(tuple_of_arrays)
-    
-    # Peek at the first element to get sample count (length of the array)
-    n_samples = length(tuple_of_arrays[1])
-    
-    # 2. Pre-allocate the FINAL Matrix [Features, Samples]
-    # We want Float64, assuming that's what comes out of Turing
-    out = Matrix{Float64}(undef, n_features, n_samples)
-    
-    # 3. Fill directly (No temporary arrays)
-    for (i, arr) in enumerate(tuple_of_arrays)
-        out[i, :] .= vec(parent(arr))
-    end
-    
-    return out
-end
-
-# ==============================================================================
-# 1. HELPER: Reconstruct States (Unchanged logic, just needed for extraction)
-# ==============================================================================
-"""
-    reconstruct_states(chains, n_teams, n_rounds)
-
-Internal helper to reconstruct 'att' and 'def' matrices (Teams x Rounds x Samples)
-from the MCMC chains using the hierarchical logic (NCP).
-"""
-function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
-    # 1. Extract Scalars (Samples)
-    μ_att_vec   = vec(chain[:μ_att])
-    μ_def_vec   = vec(chain[:μ_def])
-    σ_att_vec   = vec(chain[:σ_att])
-    σ_def_vec   = vec(chain[:σ_def])
-    σ_att_0_vec = vec(chain[:σ_att_0])
-    σ_def_0_vec = vec(chain[:σ_def_0])
-
-    # 2. Extract Arrays (Samples x Dimensions)
-    z_att_init_raw = Array(group(chain, :z_att_init))
-    z_def_init_raw = Array(group(chain, :z_def_init))
-    
-    n_samples = size(z_att_init_raw, 1)
-
-    # Reshape Init: [Team, Time=1, Sample]
-    Z_att_init = permutedims(reshape(z_att_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-    Z_def_init = permutedims(reshape(z_def_init_raw, n_samples, n_teams, 1), (2, 3, 1))
-
-    # Reshape Steps: [Team, Time=Steps, Sample]
-    z_att_steps_raw = Array(group(chain, :z_att_steps))
-    z_def_steps_raw = Array(group(chain, :z_def_steps))
-    
-    Z_att_steps = permutedims(reshape(z_att_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-    Z_def_steps = permutedims(reshape(z_def_steps_raw, n_samples, n_teams, n_rounds-1), (2, 3, 1))
-
-    # 3. Reshape Scalars for Broadcasting
-    S_att   = reshape(σ_att_vec, 1, 1, n_samples)
-    S_def   = reshape(σ_def_vec, 1, 1, n_samples)
-    S_att_0 = reshape(σ_att_0_vec, 1, 1, n_samples)
-    S_def_0 = reshape(σ_def_0_vec, 1, 1, n_samples)
-    
-    M_att   = reshape(μ_att_vec, 1, 1, n_samples)
-    M_def   = reshape(μ_def_vec, 1, 1, n_samples)
-
-    # 4. Reconstruction
-    scaled_init_att = Z_att_init .* S_att_0
-    scaled_init_def = Z_def_init .* S_def_0
-    
-    scaled_steps_att = Z_att_steps .* S_att
-    scaled_steps_def = Z_def_steps .* S_def
-
-    # Integrate
-    raw_att = cumsum(cat(scaled_init_att, scaled_steps_att, dims=2), dims=2)
-    raw_def = cumsum(cat(scaled_init_def, scaled_steps_def, dims=2), dims=2)
-
-    # Center & Shift
-    final_att = (raw_att .- mean(raw_att, dims=1)) .+ M_att
-    final_def = (raw_def .- mean(raw_def, dims=1)) .+ M_def
-
-    return final_att, final_def
-end
-
-
 # ==============================================================================
 # 2. EXTRACT PARAMETERS (Prediction)
 # ==============================================================================
@@ -273,7 +184,7 @@ end
 Extracts the evolution of Attack and Defense strengths over time.
 Returns DataFrame: `[:team, :round, :att, :def]`
 """
-function extract_trends(model, feature_set, chain)
+function extract_trends(model::GRWPoisson, feature_set, chain)
     n_teams = feature_set[:n_teams]
     team_map = feature_set[:team_map]
     
