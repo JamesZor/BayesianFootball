@@ -35,6 +35,8 @@ export GRWDixonColes
 
 include("./implementations/static_double_neg_bin.jl")
 export StaticDoubleNegBin
+include("./implementations/grw_double_neg_bin.jl")
+export GRWNegativeBinomial
 
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP

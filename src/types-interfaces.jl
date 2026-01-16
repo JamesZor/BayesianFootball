@@ -53,9 +53,8 @@ abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
 
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractStaticNegBinModel <: AbstractNegBinModel end 
-
-
-export AbstractStaticNegBinModel
+abstract type AbstractDynamicNegBinModel <: AbstractNegBinModel end 
+export AbstractStaticNegBinModel, AbstractDynamicNegBinModel
 # --- Flexible Feature Structs ---
 
 """

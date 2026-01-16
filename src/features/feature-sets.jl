@@ -37,6 +37,11 @@ function apply_model_specific_logic(model::AbstractDynamicDixonColesModel, df::D
     return sort(df, [:season, :match_date])
 end
 
+function apply_model_specific_logic(model::AbstractDynamicNegBinModel, df::DataFrame)
+    # Sort by season and date to ensure time flows forward
+    return sort(df, [:season, :match_date])
+end
+
 
 """
     build_mappings(df, model)

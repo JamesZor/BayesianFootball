@@ -27,7 +27,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0, # Will auto-include "23/24" if available
     dynamics_col = :match_week,
-  warmup_period = 34,
+  warmup_period = 36,
   # warmup_period = 15,
     # stop_early = false
     stop_early = true
@@ -94,6 +94,48 @@ sampler_conf1 = Samplers.NUTSConfig(
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 training_config1 = Training.TrainingConfig(sampler_conf1, train_cfg, nothing, false)
+
+## --- GRW Negative binomial 
+grw_negbin_model = Models.PreGame.GRWNegativeBinomial()
+
+
+exp_conf_grw_nb = Experiments.ExperimentConfig(
+                    name = "grw nb ",
+                    model = grw_negbin_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+grw_nb_results = Experiments.run_experiment(ds, exp_conf_grw_nb)
+
+
+using Turing
+
+describe(grw_nb_results.training_results[1][1]) 
+
+df_trends = Models.PreGame.extract_trends(grw_negbin_model, feature_sets[end][1], grw_nb_results.training_results[end][1])
+
+
+using Plots, StatsPlots
+
+# 1. Plot Attack Strengths
+@df df_trends plot(:round, :att, group=:team, 
+    title="Evolution of Attack Strength",
+    xlabel="Round", ylabel="Attack (Log Scale)",
+    legend=:outertopright, lw=2,
+    palette = :tab10
+)
+
+
+# 2. Plot Defense Strengths
+@df df_trends plot(:round, :def, group=:team, 
+    title="Evolution of Defense Strength",
+    xlabel="Round", ylabel="Defense (Log Scale)",
+    legend=:outertopright, lw=2,
+    palette = :tab10
+)
+
 
 ## --- GRW Dixon coles
 grw_dixoncoles_model = Models.PreGame.GRWDixonColes()
