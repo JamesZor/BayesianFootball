@@ -22,6 +22,10 @@ function apply_model_specific_logic(model::AbstractStaticBivariatePoissonModel, 
     return df
 end
 
+function apply_model_specific_logic(model::AbstractStaticNegBinModel, df::DataFrame)
+    return df
+end
+
 # 2. Define the hook for GRW (Behavior: Sort by time)
 function apply_model_specific_logic(model::AbstractDynamicPoissonModel, df::DataFrame)
     # Sort by season and date to ensure time flows forward

@@ -50,6 +50,12 @@ abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractInflatedDiagonalPoissonModel <: AbstractPregameModel end
 
+
+abstract type AbstractNegBinModel <: AbstractPregameModel end
+abstract type AbstractStaticNegBinModel <: AbstractNegBinModel end 
+
+
+export AbstractStaticNegBinModel
 # --- Flexible Feature Structs ---
 
 """

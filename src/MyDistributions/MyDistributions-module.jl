@@ -17,5 +17,8 @@ export DixonColesLogGroup
 include("./bivariate_poisson-dist.jl")
 export BivariateLogPoisson
 
+include("./double_negative_binomial.jl")
+export DoubleNegativeBinomial
+
 
 end

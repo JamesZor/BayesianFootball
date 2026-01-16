@@ -33,6 +33,9 @@ export GRWPoisson
 include("./implementations/grw_dixon_coles.jl")
 export GRWDixonColes
 
+include("./implementations/static_double_neg_bin.jl")
+export StaticDoubleNegBin
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
