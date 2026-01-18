@@ -17,6 +17,10 @@ export PreGame, InGame
 # We must re-export the contract function so other modules can use it.
 export required_mapping_keys
 
+include("./traits.jl")
+include("./logic/dynamics.jl")
+include("./universal_poisson.jl")
+
 
 
 export model_name, model_parameters
