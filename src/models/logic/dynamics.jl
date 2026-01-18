@@ -39,3 +39,18 @@ get_state_val(x::AbstractVector, team_id, t) = x[team_id]
 
 # If GRW (Matrix), we must look up [team, time]
 get_state_val(x::AbstractMatrix, team_id, t) = x[team_id, t]
+
+
+export get_sigma_prior 
+
+"""
+get_sigma_prior(dynamics)
+Returns the correct prior distribution for the variability parameter.
+"""
+function get_sigma_prior(d::Static)
+    return d.σ_prior
+end
+
+function get_sigma_prior(d::GRW)
+    return d.σ_step_prior
+end
