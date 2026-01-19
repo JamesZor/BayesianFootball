@@ -1,4 +1,4 @@
-# src/training/strategies/independent.jl
+# src/training/strategies/sequential.jl
 
 using ProgressMeter
 using Base.Threads

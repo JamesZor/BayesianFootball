@@ -35,7 +35,8 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["22/23"],
     history_seasons = 0,
     dynamics_col = :match_week,
-    warmup_period = 36,
+    # warmup_period = 36,
+    warmup_period = 35,
     stop_early = true
 )
 
@@ -45,14 +46,15 @@ vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
 feature_sets = BayesianFootball.Features.create_features(
     splits, model, cv_config
 )
-train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
 sampler_conf = Samplers.NUTSConfig(
                 20,
                 2,
                 20,
                 0.65,
                 10,
-  Samplers.UniformInit(-0.05, 0.05)
+  Samplers.UniformInit(-0.05, 0.05),
+                false,
 )
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 

@@ -11,6 +11,7 @@ struct NUTSConfig <: AbstractSamplerConfig
     accept_rate::Real 
     max_depth::Int
     initialisation::AbstractInitStrategy 
+    show_progress::Union{Symbol, Bool}
 end
 
 # Smart Constructor
@@ -20,10 +21,12 @@ function NUTSConfig(;
     n_warmup=500, 
     accept_rate=0.65,
     max_depth=10,
+    show_progress=:perchain,
     # Helper to allow passing :map or :uniform symbol for convenience
     init_type=:uniform, 
     map_iters=50,
     jitter=0.001
+
 
 )
     # Factory logic to create the correct strategy object
@@ -51,7 +54,7 @@ end
 # --- 3. Execution ---
 
 function run_sampler(turing_model, config::NUTSConfig)
-    println("Sampling with NUTS...")
+    # println("Sampling with NUTS...")
     
     # Delegate initialisation logic to the strategy
     init_params = get_init_params(turing_model, config.initialisation, config.n_chains)
@@ -62,7 +65,7 @@ function run_sampler(turing_model, config::NUTSConfig)
         MCMCThreads(), 
         config.n_samples, 
         config.n_chains,
-        progress = :perchain,
+        progress = config.show_progress,
         adtype = AutoReverseDiff(compile=true),
         initial_params = init_params # Injection
     )

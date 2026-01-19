@@ -43,35 +43,44 @@ function train_independent(model, config, feature_sets)
         return (turing_result, metadata)
     end
 
-    # 3. Execution Logic (Parallel vs Sequential)
-    if strategy.parallel && length(pending_indices) > 1
-        
-        concurrency = min(length(pending_indices), strategy.max_concurrent_splits, Threads.nthreads())
-        println("Starting Parallel Training: $(length(pending_indices)) splits remaining (Concurrency: $concurrency)...")
-        
-        semaphore = Base.Semaphore(concurrency)
-        
-        # Use a lock for thread-safe assignment to the 'results' vector
-        results_lock = ReentrantLock()
-        
-        @sync for i in pending_indices
-            Threads.@spawn begin
-                Base.acquire(semaphore)
-                try
-                    res = process_split(i)
-                    lock(results_lock) do
-                        results[i] = res
-                    end
-                    println("   [Thread $(Threads.threadid())] Finished Split $i")
-                catch e
-                    @error "Error in Split $i: $e"
-                    # We do not rethrow to allow other splits to finish/save
-                finally
-                    Base.release(semaphore)
-                end
-            end
-        end
-        
+  # 3. Execution Logic (Parallel vs Sequential)
+      if strategy.parallel && length(pending_indices) > 1
+          
+          concurrency = min(length(pending_indices), strategy.max_concurrent_splits, Threads.nthreads())
+          println("Starting Parallel Training: $(length(pending_indices)) splits remaining (Concurrency: $concurrency)...")
+          
+          semaphore = Base.Semaphore(concurrency)
+          results_lock = ReentrantLock()
+
+          # [NEW] 1. Initialize the Progress Bar
+          p = Progress(length(pending_indices); desc="Training Splits: ", color=:green)
+          
+          @sync for i in pending_indices
+              Threads.@spawn begin
+                  Base.acquire(semaphore)
+                  try
+                      res = process_split(i)
+                      
+                      lock(results_lock) do
+                          results[i] = res
+                      end
+                      
+                      # [NEW] 2. Update the Progress Bar (Thread-safe by default)
+                      next!(p)
+
+                      # [OPTIONAL] Comment this out to keep the bar clean
+                      # println("   [Thread $(Threads.threadid())] Finished Split $i")
+                      
+                  catch e
+                      @error "Error in Split $i: $e"
+                  finally
+                      Base.release(semaphore)
+                  end
+              end
+          end
+    #
+    #
+
     else
         # Sequential Fallback
         println("🚀 Starting Sequential Training: $(length(pending_indices)) splits remaining...")
