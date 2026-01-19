@@ -115,8 +115,6 @@ Shared by GRWPoisson and GRWDixonColes.
 """
 function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
     # 1. Extract Scalars (Samples)
-    μ_att_vec   = vec(chain[:μ_att])
-    μ_def_vec   = vec(chain[:μ_def])
     σ_att_vec   = vec(chain[:σ_att])
     σ_def_vec   = vec(chain[:σ_def])
     σ_att_0_vec = vec(chain[:σ_att_0])
@@ -144,9 +142,6 @@ function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
     S_def   = reshape(σ_def_vec, 1, 1, n_samples)
     S_att_0 = reshape(σ_att_0_vec, 1, 1, n_samples)
     S_def_0 = reshape(σ_def_0_vec, 1, 1, n_samples)
-    
-    M_att   = reshape(μ_att_vec, 1, 1, n_samples)
-    M_def   = reshape(μ_def_vec, 1, 1, n_samples)
 
     # 4. Reconstruction
     scaled_init_att = Z_att_init .* S_att_0
@@ -160,8 +155,8 @@ function reconstruct_states(chain::Chains, n_teams::Int, n_rounds::Int)
     raw_def = cumsum(cat(scaled_init_def, scaled_steps_def, dims=2), dims=2)
 
     # Center & Shift
-    final_att = (raw_att .- mean(raw_att, dims=1)) .+ M_att
-    final_def = (raw_def .- mean(raw_def, dims=1)) .+ M_def
+    final_att = (raw_att .- mean(raw_att, dims=1)) 
+    final_def = (raw_def .- mean(raw_def, dims=1))
 
     return final_att, final_def
 end

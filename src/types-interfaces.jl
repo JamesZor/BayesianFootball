@@ -22,6 +22,8 @@ abstract type AbstractStaticPoissonModel <: AbstractPoissonModel end
 
 abstract type AbstractStaticBivariatePoissonModel <: AbstractBivariatePoissonModel end
 export AbstractBivariatePoissonModel, AbstractStaticBivariatePoissonModel
+abstract type AbstractDynamicBivariatePoissonModel <: AbstractBivariatePoissonModel end
+export AbstractDynamicBivariatePoissonModel
 
 abstract type AbstractDixonColesModel <: AbstractPregameModel end
 abstract type AbstractStaticDixonColesModel <: AbstractDixonColesModel end

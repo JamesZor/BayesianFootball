@@ -7,28 +7,26 @@ export GRWDixonColes
 
 # ==============================================================================
 # 1. THE STRUCT
+#    Combines GRW dynamics parameters with Dixon-Coles dependence (ρ)
 # ==============================================================================
 Base.@kwdef struct GRWDixonColes <: AbstractDynamicDixonColesModel 
-      # --- Global Baseline (Intercept) ---
-      # Represents the average log-goal rate for an away team.
-      μ::Distribution = Normal(0.2, 0.5)
-
-      # --- Static Parameters ---
+      # --- Static Parameters
       γ::Distribution = Normal(log(1.3), 0.2) # Home Advantage
 
-      # --- Dynamic Hyperparameters (Process Noise) ---
-      # Standard deviation of the weekly random walk step
+      # --- Dynamic Hyperparameters (Process Noise)
       σ_k::Distribution = Truncated(Normal(0, 0.05), 0, Inf) 
       
-      # --- Hierarchical Priors (t=0) ---
-      # Initial Spread of abilities
+      # --- Hierarchical Priors (t=0)
+      # Baseline Attack/Defense Means
+      μ_s::Distribution = Normal(0, 0.5) 
+      # Initial Spread
       σ_0::Distribution = Truncated(Normal(0.5, 0.2), 0, Inf)
 
-      # --- Dependence Parameter (Dixon-Coles specific) ---
+      # --- Dependence Parameter (Dixon-Coles specific)
       # We use a raw Normal prior which is tanh-transformed later
       ρ_raw::Distribution = Normal(0, 1.0) 
 
-      # --- Latent Variables (Random Walk) ---
+      # --- Latent Variables (Random Walk)
       z_init::Distribution = Normal(0,1)
       z_steps::Distribution = Normal(0,1)
 end
@@ -55,15 +53,13 @@ end
 ) where {T} 
     
     # --- 1. Hyperparameters ---
-    # Global Intercept
-    μ ~ model.μ
-    
-    # Home Advantage
-    γ ~ model.γ
-    
-    # Process Noise & Initial Spread
     σ_att ~ model.σ_k
     σ_def ~ model.σ_k
+    γ     ~ model.γ
+    
+    # Hierarchical Baselines
+    μ_att ~ model.μ_s
+    μ_def ~ model.μ_s
     σ_att_0 ~ model.σ_0
     σ_def_0 ~ model.σ_0
 
@@ -91,22 +87,23 @@ end
     att_raw = cumsum(hcat(scaled_init_att, scaled_steps_att), dims=2)
     def_raw = cumsum(hcat(scaled_init_def, scaled_steps_def), dims=2)
 
-    # --- 4. Centering (Robust Formulation) ---
-    # Enforce strictly Zero-Mean deviations. 
-    # The global rate is handled entirely by μ_global.
-    att = att_raw .- mean(att_raw, dims=1)
-    def = def_raw .- mean(def_raw, dims=1)
+    # --- 4. Centering & Baseline Shift ---
+    # Enforce zero-sum on the shape, then add the global baseline
+    att = (att_raw .- mean(att_raw, dims=1)) .+ μ_att
+    def = (def_raw .- mean(def_raw, dims=1)) .+ μ_def
 
     # --- 5. Log-Rate Calculation (Vectorized) ---
+    # Extract specific team strengths for every match using time_indices
     att_h_flat = view(att, CartesianIndex.(flat_home_ids, time_indices))
     def_a_flat = view(def, CartesianIndex.(flat_away_ids, time_indices))
     att_a_flat = view(att, CartesianIndex.(flat_away_ids, time_indices))
     def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
 
     # Calculate Theta (Log-Rates)
-    # θ = μ_global + components
-    θ_home_all = μ .+ att_h_flat .+ def_a_flat .+ γ
-    θ_away_all = μ .+ att_a_flat .+ def_h_flat
+    # θ_home = HomeAdv + Att_Home + Def_Away
+    # θ_away = Att_Away + Def_Home
+    θ_home_all = att_h_flat .+ def_a_flat .+ γ
+    θ_away_all = att_a_flat .+ def_h_flat
 
     # --- 6. Likelihood (Dixon-Coles Grouped) ---
     
@@ -157,6 +154,7 @@ end
 
 # ==============================================================================
 # 3. BUILDER
+#    Handles the Data Grouping logic required for Dixon-Coles optimization
 # ==============================================================================
 function build_turing_model(model::GRWDixonColes, feature_set::FeatureSet)
     data = feature_set.data
@@ -203,9 +201,11 @@ function build_turing_model(model::GRWDixonColes, feature_set::FeatureSet)
     )
 end
 
+
 # ==============================================================================
-# 4. EXTRACT PARAMETERS (Prediction)
+# 4. HELPERS & EXTRACTORS
 # ==============================================================================
+
 """
     extract_parameters(...)
 Extracts θ (Log-Rates) and ρ (Dependence) for prediction.
@@ -228,18 +228,18 @@ function extract_parameters(
     att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
     
     # 3. Extract Global Params
-    γ_vec = vec(Array(chain[:γ]))
-    μ_vec = vec(Array(chain[:μ])) 
-
-    # Handle Rho
+    γ_vec = vec(chain[:γ])
+    
+    # Handle Rho (transform if raw)
     if :ρ in names(chain)
-        ρ_vec = vec(Array(chain[:ρ]))
+        ρ_vec = vec(chain[:ρ])
     else
-        ρ_raw_vec = vec(Array(chain[:ρ_raw]))
+        ρ_raw_vec = vec(chain[:ρ_raw])
         ρ_vec = 0.3 .* tanh.(ρ_raw_vec)
     end
 
     # 4. Prediction Loop
+    # We return a Tuple (θ_1, θ_2, θ_3) where θ_3 is Rho
     ExtractionValue = NamedTuple{(:θ_1, :θ_2, :θ_3), Tuple{Vector{Float64}, Vector{Float64}, Vector{Float64}}}
     extraction_dict = Dict{Int64, ExtractionValue}()
     sizehint!(extraction_dict, nrow(df_to_predict))
@@ -257,9 +257,11 @@ function extract_parameters(
         def_h = view(def_cube, h_id, t_idx, :)
 
         # Calculate Log-Rates (Theta)
-        # θ = μ_global + γ + att + def
-        θ_1 = μ_vec .+ att_h .+ def_a .+ γ_vec
-        θ_2 = μ_vec .+ att_a .+ def_h
+        # θ_1 = Home Log Rate
+        # θ_2 = Away Log Rate
+        # θ_3 = Rho
+        θ_1 = att_h .+ def_a .+ γ_vec
+        θ_2 = att_a .+ def_h
         θ_3 = ρ_vec 
 
         extraction_dict[Int(row.match_id)] = (; θ_1, θ_2, θ_3)
@@ -270,6 +272,7 @@ end
 
 """
     extract_trends(...)
+Identical to GRWPoisson - visualizes the evolution of att/def.
 """
 function extract_trends(model::GRWDixonColes, feature_set::FeatureSet, chain::Chains)
     n_teams = feature_set[:n_teams]

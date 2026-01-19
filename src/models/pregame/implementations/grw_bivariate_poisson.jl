@@ -1,20 +1,25 @@
-# src/models/pregame/implementations/grw_dixon_coles.jl
+# src/models/pregame/implementations/grw_bivariate_poisson.jl
 
 using Turing, Distributions, LinearAlgebra, Statistics
 using ..MyDistributions 
 
-export GRWDixonColes
+export GRWBivariatePoisson
 
 # ==============================================================================
 # 1. THE STRUCT
 # ==============================================================================
-Base.@kwdef struct GRWDixonColes <: AbstractDynamicDixonColesModel 
+Base.@kwdef struct GRWBivariatePoisson <: AbstractDynamicBivariatePoissonModel 
       # --- Global Baseline (Intercept) ---
       # Represents the average log-goal rate for an away team.
       μ::Distribution = Normal(0.2, 0.5)
 
       # --- Static Parameters ---
       γ::Distribution = Normal(log(1.3), 0.2) # Home Advantage
+      
+      # Covariance (Static)
+      # We model this as a single static parameter for the whole history.
+      # Normal(-2, 1) implies median covariance rate ≈ 0.135
+      ρ::Distribution = Normal(-2, 1.0) 
 
       # --- Dynamic Hyperparameters (Process Noise) ---
       # Standard deviation of the weekly random walk step
@@ -24,33 +29,27 @@ Base.@kwdef struct GRWDixonColes <: AbstractDynamicDixonColesModel
       # Initial Spread of abilities
       σ_0::Distribution = Truncated(Normal(0.5, 0.2), 0, Inf)
 
-      # --- Dependence Parameter (Dixon-Coles specific) ---
-      # We use a raw Normal prior which is tanh-transformed later
-      ρ_raw::Distribution = Normal(0, 1.0) 
-
       # --- Latent Variables (Random Walk) ---
       z_init::Distribution = Normal(0,1)
       z_steps::Distribution = Normal(0,1)
 end
 
-function Base.show(io::IO, ::MIME"text/plain", m::GRWDixonColes)
-    printstyled(io, "Dynamic Dixon-Coles (GRW)\n", color=:magenta, bold=true)
+function Base.show(io::IO, ::MIME"text/plain", m::GRWBivariatePoisson)
+    printstyled(io, "Dynamic Bivariate Poisson (GRW)\n", color=:magenta, bold=true)
     println(io, "  ├── Process Noise: $(m.σ_k)")
     println(io, "  ├── Initial Spread: $(m.σ_0)")
-    println(io, "  └── Dependence (ρ): $(m.ρ_raw)")
+    println(io, "  └── Log-Covariance (Static): $(m.ρ)")
 end
 
 # ==============================================================================
 # 2. THE TURING MODEL
 # ==============================================================================
-@model function grw_dixon_coles_model_train(
+@model function grw_bivariate_poisson_train(
     n_teams, n_rounds, 
     flat_home_ids, flat_away_ids, 
+    data_pairs,       # 2xN Matrix of goals
     time_indices,
-    # Dixon-Coles Grouping Indices
-    idx_00, idx_10, idx_01, idx_11, idx_else,
-    scores_else_x, scores_else_y,
-    model::GRWDixonColes,
+    model::GRWBivariatePoisson,
     ::Type{T} = Float64
 ) where {T} 
     
@@ -61,15 +60,14 @@ end
     # Home Advantage
     γ ~ model.γ
     
+    # Static Log-Covariance (θ_3)
+    ρ ~ model.ρ
+
     # Process Noise & Initial Spread
     σ_att ~ model.σ_k
     σ_def ~ model.σ_k
     σ_att_0 ~ model.σ_0
     σ_def_0 ~ model.σ_0
-
-    # Dependence (Rho)
-    ρ_raw ~ model.ρ_raw
-    ρ = 0.3 * tanh(ρ_raw)
 
     # --- 2. Latent Variables (Random Walk) ---
     z_att_init ~ filldist(model.z_init, n_teams)
@@ -104,52 +102,17 @@ end
     def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
 
     # Calculate Theta (Log-Rates)
-    # θ = μ_global + components
-    θ_home_all = μ .+ att_h_flat .+ def_a_flat .+ γ
-    θ_away_all = μ .+ att_a_flat .+ def_h_flat
-
-    # --- 6. Likelihood (Dixon-Coles Grouped) ---
+    # θ_1 = μ_global + γ + att_h + def_a
+    # θ_2 = μ_global + att_a + def_h
+    # θ_3 = ρ (Static scalar)
     
-    # Group 0-0
-    if !isempty(idx_00)
-        Turing.@addlogprob! logpdf(
-            DixonColesLogGroup(θ_home_all[idx_00], θ_away_all[idx_00], ρ, :s00),
-            zeros(2, length(idx_00))
-        )
-    end
+    θ_1 = μ .+ γ .+ att_h_flat .+ def_a_flat 
+    θ_2 = μ .+      att_a_flat .+ def_h_flat
 
-    # Group 1-0
-    if !isempty(idx_10)
-        Turing.@addlogprob! logpdf(
-            DixonColesLogGroup(θ_home_all[idx_10], θ_away_all[idx_10], ρ, :s10),
-            zeros(2, length(idx_10))
-        )
-    end
-
-    # Group 0-1
-    if !isempty(idx_01)
-        Turing.@addlogprob! logpdf(
-            DixonColesLogGroup(θ_home_all[idx_01], θ_away_all[idx_01], ρ, :s01),
-            zeros(2, length(idx_01))
-        )
-    end
-    
-    # Group 1-1
-    if !isempty(idx_11)
-        Turing.@addlogprob! logpdf(
-            DixonColesLogGroup(θ_home_all[idx_11], θ_away_all[idx_11], ρ, :s11),
-            zeros(2, length(idx_11))
-        )
-    end
-
-    # Group Else (Standard Independent Poisson)
-    if !isempty(idx_else)
-        θ_h_else = θ_home_all[idx_else]
-        θ_a_else = θ_away_all[idx_else]
-        
-        Turing.@addlogprob! sum(logpdf.(LogPoisson.(θ_h_else), scores_else_x))
-        Turing.@addlogprob! sum(logpdf.(LogPoisson.(θ_a_else), scores_else_y))
-    end
+    # --- 6. Likelihood ---
+    # Pass Log-Rates directly to BivariateLogPoisson
+    # ρ is broadcasted automatically
+    data_pairs ~ arraydist(BivariateLogPoisson.(θ_1, θ_2, ρ))
     
     return nothing
 end
@@ -158,47 +121,22 @@ end
 # ==============================================================================
 # 3. BUILDER
 # ==============================================================================
-function build_turing_model(model::GRWDixonColes, feature_set::FeatureSet)
+function build_turing_model(model::GRWBivariatePoisson, feature_set::FeatureSet)
     data = feature_set.data
     
+    # Prepare Data Matrix (2 x N_matches)
+    # Row 1: Home Goals, Row 2: Away Goals
     flat_home = data[:flat_home_goals]
     flat_away = data[:flat_away_goals]
-    
-    # --- Pre-processing: Group Matches by Score ---
-    idx_00 = Int[]
-    idx_10 = Int[]
-    idx_01 = Int[]
-    idx_11 = Int[]
-    idx_else = Int[]
+    data_matrix = permutedims(hcat(flat_home, flat_away))
 
-    for i in eachindex(flat_home)
-        h, a = flat_home[i], flat_away[i]
-        
-        if h == 0 && a == 0
-            push!(idx_00, i)
-        elseif h == 1 && a == 0
-            push!(idx_10, i)
-        elseif h == 0 && a == 1
-            push!(idx_01, i)
-        elseif h == 1 && a == 1
-            push!(idx_11, i)
-        else
-            push!(idx_else, i)
-        end
-    end
-
-    scores_else_x = flat_home[idx_else]
-    scores_else_y = flat_away[idx_else]
-
-    return grw_dixon_coles_model_train(
+    return grw_bivariate_poisson_train(
         data[:n_teams]::Int,
         data[:n_rounds]::Int,
         data[:flat_home_ids],
         data[:flat_away_ids],
+        data_matrix,       # <-- Passed here
         data[:time_indices],
-        # Groups
-        idx_00, idx_10, idx_01, idx_11, idx_else,
-        scores_else_x, scores_else_y,
         model
     )
 end
@@ -206,12 +144,8 @@ end
 # ==============================================================================
 # 4. EXTRACT PARAMETERS (Prediction)
 # ==============================================================================
-"""
-    extract_parameters(...)
-Extracts θ (Log-Rates) and ρ (Dependence) for prediction.
-"""
 function extract_parameters(
-    model::GRWDixonColes, 
+    model::GRWBivariatePoisson, 
     df_to_predict::AbstractDataFrame, 
     feature_set::FeatureSet, 
     chain::Chains
@@ -230,14 +164,7 @@ function extract_parameters(
     # 3. Extract Global Params
     γ_vec = vec(Array(chain[:γ]))
     μ_vec = vec(Array(chain[:μ])) 
-
-    # Handle Rho
-    if :ρ in names(chain)
-        ρ_vec = vec(Array(chain[:ρ]))
-    else
-        ρ_raw_vec = vec(Array(chain[:ρ_raw]))
-        ρ_vec = 0.3 .* tanh.(ρ_raw_vec)
-    end
+    ρ_vec = vec(Array(chain[:ρ])) # Static Log-Covariance
 
     # 4. Prediction Loop
     ExtractionValue = NamedTuple{(:θ_1, :θ_2, :θ_3), Tuple{Vector{Float64}, Vector{Float64}, Vector{Float64}}}
@@ -257,7 +184,9 @@ function extract_parameters(
         def_h = view(def_cube, h_id, t_idx, :)
 
         # Calculate Log-Rates (Theta)
-        # θ = μ_global + γ + att + def
+        # θ_1 = Home
+        # θ_2 = Away
+        # θ_3 = Static Covariance
         θ_1 = μ_vec .+ att_h .+ def_a .+ γ_vec
         θ_2 = μ_vec .+ att_a .+ def_h
         θ_3 = ρ_vec 
@@ -268,10 +197,10 @@ function extract_parameters(
     return extraction_dict
 end
 
-"""
-    extract_trends(...)
-"""
-function extract_trends(model::GRWDixonColes, feature_set::FeatureSet, chain::Chains)
+# ==============================================================================
+# 5. EXTRACT TRENDS (Analysis)
+# ==============================================================================
+function extract_trends(model::GRWBivariatePoisson, feature_set::FeatureSet, chain::Chains)
     n_teams = feature_set[:n_teams]
     team_map = feature_set[:team_map]
     

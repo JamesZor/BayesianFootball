@@ -2,27 +2,22 @@
 
 using Turing, Distributions, DataFrames
 using ..MyDistributions 
+
 using LinearAlgebra
 using Statistics
+
 
 export GRWNegativeBinomial
 
 Base.@kwdef struct GRWNegativeBinomial <: AbstractDynamicNegBinModel
-    # --- Global Baseline (Intercept) ---
-    # Represents the average log-goal rate for an away team.
-    μ::Distribution = Normal(0.2, 0.5)
-
     # Standard priors for team strength
     γ::Distribution   = Normal(log(1.3), 0.2)
-    
-    # Dispersion parameter (Negative Binomial)
     log_r_prior::Distribution = Normal(1.5, 1.0) 
 
-    # --- Dynamic Hyperparameters (Process Noise) ---
-    # Adjusted to 0.05 to prevent excessive volatility (factor of ~1.05 per week)
-    σ_k::Distribution = Truncated(Normal(0, 0.05), 0, Inf)
+    σ_k::Distribution = Truncated(Normal(0, 1), 0, Inf)
     
-    # --- Initial State Hyperparameters (Hierarchical Prior t=0) ---
+    μ_s::Distribution = Normal(0, 0.5)  # att, def 
+
     σ_0::Distribution = Truncated(Normal(0.5, 0.2), 0, Inf)
 
     z_init::Distribution = Normal(0,1)
@@ -37,37 +32,31 @@ end
                     time_indices, model::GRWNegativeBinomial,
                     ::Type{T} = Float64 ) where {T} 
 
-    # --- 1. Hyperparameters ---
-    # Global Intercept
-    μ ~ model.μ
-    
-    # Home Advantage
+    # global params
     γ ~ model.γ
     
-    # Dispersion (r)
-    log_r ~ model.log_r_prior 
-    r = exp(log_r)
+    log_r ~ model.log_r_prior  # Dispersion parameters - log space
+    r = exp(log_r) # Transform back to positive space
 
-    # Process Noise
+    # hyperparamets
     σ_att ~ model.σ_k
     σ_def ~ model.σ_k
 
-    # Initial Spread (t=0)
+    # [NEW] Hierarchical Priors for t=0
+    μ_att ~ model.μ_s
+    μ_def ~ model.μ_s
     σ_att_0 ~ model.σ_0
     σ_def_0 ~ model.σ_0
 
-    # --- 2. Latent Variables ---
-    # Initial State
+
     z_att_init ~ filldist(model.z_init, n_teams)
     z_def_init ~ filldist(model.z_init, n_teams)
 
-    # Steps
-    z_att_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
-    z_def_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
-
-    # --- 3. Trajectory Reconstruction (NCP) ---
     scaled_init_att = z_att_init .* σ_att_0
     scaled_init_def = z_def_init .* σ_def_0
+
+    z_att_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
+    z_def_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
 
     scaled_steps_att = z_att_steps .* σ_att
     scaled_steps_def = z_def_steps .* σ_def
@@ -76,10 +65,9 @@ end
     att_raw = cumsum(hcat(scaled_init_att, scaled_steps_att), dims=2)
     def_raw = cumsum(hcat(scaled_init_def, scaled_steps_def), dims=2)
 
-    # --- 4. Centering (Robust Formulation) ---
-    # Strictly Zero-Mean deviations. Global rate is handled by μ_global.
-    att = att_raw .- mean(att_raw, dims=1)
-    def = def_raw .- mean(def_raw, dims=1)
+    # att(t) now has mean μ_att, def(t) has mean μ_def
+    att = (att_raw .- mean(att_raw, dims=1)) .+ μ_att
+    def = (def_raw .- mean(def_raw, dims=1)) .+ μ_def
 
     # --- 5. Likelihood ---
     # Extract specific match strengths
@@ -89,14 +77,16 @@ end
     def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
 
     # Calculate Log-Rates
-    # λ = exp(μ_global + γ + att + def)
-    λₕ = exp.(μ .+ γ .+ att_h_flat .+ def_a_flat)
-    λₐ = exp.(μ .+      att_a_flat .+ def_h_flat)
+    # Total Intercept = home_adv + μ_att + μ_def
+    λₕ =  exp.(att_h_flat .+ def_a_flat .+ γ)
+
+    # Total Intercept = μ_att + μ_def
+    λₐ = exp.(att_a_flat .+ def_h_flat)
 
     flat_goals_pairs ~ arraydist(DoubleNegativeBinomial.(λₕ, λₐ, r, r))
-    
-    return nothing
+
 end
+
 
 
 function build_turing_model(model::GRWNegativeBinomial, feature_set::FeatureSet) 
@@ -113,9 +103,9 @@ function build_turing_model(model::GRWNegativeBinomial, feature_set::FeatureSet)
     )
 end
 
-# ==============================================================================
-# 2. EXTRACT PARAMETERS (Prediction)
-# ==============================================================================
+
+
+
 function extract_parameters(
     model::GRWNegativeBinomial, 
     df_to_predict::AbstractDataFrame, 
@@ -123,21 +113,23 @@ function extract_parameters(
     chain::Chains
 )
     # --- A. Setup ---
+    # Using feature_set dictionary syntax
     n_teams = feature_set[:n_teams]
     team_map = feature_set[:team_map]
     
-    # Infer n_rounds
+    # Infer n_rounds from chains (Columns in z_att_steps / n_teams + 1)
     step_names = names(group(chain, :z_att_steps))
     n_steps_raw = length(step_names)
     n_rounds = (n_steps_raw ÷ n_teams) + 1
 
-    # --- B. Reconstruct Full History ---
+
+
     att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
 
-    # Extract Globals
-    γ_vec = vec(Array(chain[:γ]))
-    μ_vec = vec(Array(chain[:μ])) # New global intercept
-    r_vec = exp.(vec(Array(chain[:log_r])))
+    γ = vec(chain[:γ])
+    r = exp.(vec(chain[:log_r]))
+
+
 
     ExtractionValue = NamedTuple{(:λ_h, :λ_a, :r), Tuple{Vector{Float64}, Vector{Float64}, Vector{Float64}}}
     extraction_dict = Dict{Int64, ExtractionValue}()
@@ -147,29 +139,28 @@ function extract_parameters(
         h_id = team_map[row.home_team]
         a_id = team_map[row.away_team]
         
-        # Time Indexing
+        # Time Indexing: 
+        # If 'match_week' > n_rounds (forecasting), clamp to last known state
         t = row.match_week 
         t_idx = clamp(t, 1, n_rounds)
 
-        # Extract views
+        # Extract views (Team, Time, Samples)
         att_h = view(att_cube, h_id, t_idx, :)
         def_a = view(def_cube, a_id, t_idx, :)
         att_a = view(att_cube, a_id, t_idx, :)
         def_h = view(def_cube, h_id, t_idx, :)
 
-        # Calculate Rates (Standard Formulation)
-        λ_h = exp.(μ_vec .+ γ_vec .+ att_h .+ def_a)
-        λ_a = exp.(μ_vec .+ att_a .+ def_h)
+        # Calculate Rates
+        λ_h = exp.(att_h .+ def_a .+ γ)
+        λ_a = exp.(att_a .+ def_h)
 
-        extraction_dict[Int(row.match_id)] = (; λ_h, λ_a, r=r_vec)
+        extraction_dict[Int(row.match_id)] = (; λ_h, λ_a, r)
     end
 
     return extraction_dict
 end
 
-# ==============================================================================
-# 3. EXTRACT TRENDS (Analysis)
-# ==============================================================================
+
 function extract_trends(model::GRWNegativeBinomial, feature_set::FeatureSet, chain::Chains)
     n_teams = feature_set[:n_teams]
     team_map = feature_set[:team_map]
@@ -210,3 +201,6 @@ function extract_trends(model::GRWNegativeBinomial, feature_set::FeatureSet, cha
         def = def_vals
     )
 end
+
+
+

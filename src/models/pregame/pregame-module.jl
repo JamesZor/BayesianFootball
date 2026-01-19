@@ -38,6 +38,9 @@ export StaticDoubleNegBin
 include("./implementations/grw_double_neg_bin.jl")
 export GRWNegativeBinomial
 
+include("./implementations/grw_bivariate_poisson.jl")
+export GRWBivariatePoisson
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
