@@ -63,18 +63,18 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
     # 4. Define Models
     # ================
     configs = [
-        Experiments.ExperimentConfig(
-            name = "grw_poisson",
-            model = Models.PreGame.GRWPoisson(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k, 
-                σ_0 = prior_σ_0
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_poisson",
+        #     model = Models.PreGame.GRWPoisson(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k, 
+        #         σ_0 = prior_σ_0
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         Experiments.ExperimentConfig(
             name = "grw_dixon_coles",
             model = Models.PreGame.GRWDixonColes(
