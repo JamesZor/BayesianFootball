@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "9bf386a0ca5a1b9f04538b2e1478c63777527309"
+project_hash = "bf7818e9da71e775e29c150a246e2a865555c66e"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"

@@ -46,7 +46,7 @@ vocabulary = BayesianFootball.Features.create_vocabulary(ds, model)
 feature_sets = BayesianFootball.Features.create_features(
     splits, model, cv_config
 )
-train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
                 20,
                 2,
@@ -135,4 +135,27 @@ results_bipoisson = Experiments.run_experiment(ds, conf_bipoisson)
 
 describe(results_bipoisson.training_results[1][1]) 
 df_trends_bipoisson = Models.PreGame.extract_trends(grw_bipoisson_model, feature_sets[end][1], results_bipoisson.training_results[end][1])
+
+
+
+####
+
+using BayesianFootball.Signals
+
+baker = BayesianKelly()
+my_signals = [baker]
+
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [results_poisson, results_negbin, results_bipoisson, results_dixoncoles], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+
+ledger = BayesianFootball.BackTesting.run_backtest(ds, [results_negbin], my_signals; market_config = Data.Markets.DEFAULT_MARKET_CONFIG)
+
+a = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+
+
+c=unique(a.selection)
+
+for cc in c
+  show(subset(a, :selection => ByRow(isequal(cc))))
+end
 

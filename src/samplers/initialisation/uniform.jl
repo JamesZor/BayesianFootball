@@ -20,7 +20,7 @@ end
 # --- 2. Logic ---
 
 function get_init_params(model, strategy::UniformInit, n_chains::Int)
-    println("  [Init] Strategy: Uniform($(strategy.a), $(strategy.b))")
+    # println("  [Init] Strategy: Uniform($(strategy.a), $(strategy.b))")
     # Turing expects a specific Init object for uniform starts
     init_dist = Turing.InitFromUniform(strategy.a, strategy.b)
     return fill(init_dist, n_chains)

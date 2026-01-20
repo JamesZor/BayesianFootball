@@ -6,7 +6,7 @@ using ..Models
 using ..MyDistributions 
 
 
-function extract_params(model::Models.PreGame.StaticDoubleNegBin, row)
+function extract_params(model::Models.PreGame.AbstractNegBinModel, row)
     return (
         λ_h = row.λ_h, # Vector of Home Means (Rates)
         λ_a = row.λ_a, # Vector of Away Means (Rates)
@@ -15,7 +15,7 @@ function extract_params(model::Models.PreGame.StaticDoubleNegBin, row)
 end
 
 function compute_score_matrix(
-    model::Models.PreGame.StaticDoubleNegBin, 
+    model::Models.PreGame.AbstractNegBinModel, 
     params; 
     max_goals::Int=12
 )
