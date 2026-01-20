@@ -19,11 +19,11 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
     )
 
     cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [56],       # Premiership
-        target_seasons = ["22/23"],  # Target Season
+        tournament_ids = [56,57],       # Premiership
+        target_seasons = ["21/22", "22/23", "23/24", "24/25"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_week,
-        warmup_period = 35,          # Long warmup for GRW
+        warmup_period = 15,          # Long warmup for GRW
         stop_early = true
     )
 
@@ -35,16 +35,16 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        20,     # n_samples
+        250,     # n_samples
         2,      # n_chains
-        20,     # n_warmup
+        50,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
         Samplers.UniformInit(-0.05, 0.05),
         false   # show_progress (We use the Global Logger instead)
     )
 
-    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2)
+    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 # 3. Define Priors (Gelman's Boundary-Avoiding)
