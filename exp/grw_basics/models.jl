@@ -54,11 +54,14 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
     prior_σ_k = Gamma(2, 0.05) 
     
     # Initial Spread: Significant variation between teams at start of season
-    prior_σ_0 = Gamma(2, 0.4)
+    prior_σ_0 = Gamma(2, 0.08)
 
     # Globals
-    prior_μ = Normal(0.2, 0.5)        # Global Baseline
-    prior_γ = Normal(log(1.3), 0.2)   # Home Advantage
+    prior_μ = Normal(0.32, 0.05)        # Global Baseline
+    prior_γ = Normal(0.12, 0.05)   # Home Advantage
+
+     # μ ~ Normal{Float64}(μ=0.3191977392306569, σ=0.05)
+     # γ ~ Normal{Float64}(μ=0.12681652075405134, σ=0.05)
 
     # 4. Define Models
     # ================
@@ -75,21 +78,21 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_dixon_coles",
+        #     model = Models.PreGame.GRWDixonColes(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0
+        #         # Using default ρ_raw = Normal(0,1)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         Experiments.ExperimentConfig(
-            name = "grw_dixon_coles",
-            model = Models.PreGame.GRWDixonColes(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k,
-                σ_0 = prior_σ_0
-                # Using default ρ_raw = Normal(0,1)
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-        Experiments.ExperimentConfig(
-            name = "grw_neg_bin",
+            name = "grw_neg_bin_v2",
             model = Models.PreGame.GRWNegativeBinomial(
                 μ = prior_μ,
                 γ = prior_γ,
@@ -101,19 +104,19 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
             training_config = training_config,
             save_dir = save_dir
         ),
-        Experiments.ExperimentConfig(
-            name = "grw_bivariate_poisson",
-            model = Models.PreGame.GRWBivariatePoisson(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k,
-                σ_0 = prior_σ_0,
-                # Using default ρ = Normal(-2, 1.0) for covariance
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        )
+        # Experiments.ExperimentConfig(
+        #     name = "grw_bivariate_poisson",
+        #     model = Models.PreGame.GRWBivariatePoisson(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0,
+        #         # Using default ρ = Normal(-2, 1.0) for covariance
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # )
     ]
 
     return ds, configs
