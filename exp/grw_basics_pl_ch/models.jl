@@ -111,10 +111,6 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
     prior_σ_0 = Gamma(2, 0.08)
 
     # Globals
-  #
-    prior_μ = emperical_priors.prior_μ,  # <--- INJECTED HERE
-    prior_γ = emperical_priors.prior_γ,  # <--- INJECTED HERE
-
      # μ ~ Normal{Float64}(μ=0.3191977392306569, σ=0.05)
      # γ ~ Normal{Float64}(μ=0.12681652075405134, σ=0.05)
 
@@ -124,8 +120,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
         Experiments.ExperimentConfig(
             name = "grw_poisson",
             model = Models.PreGame.GRWPoisson(
-                μ = prior_μ,
-                γ = prior_γ,
+                μ = emperical_priors.prior_μ, 
+                γ = emperical_priors.prior_γ,   
                 σ_k = prior_σ_k, 
                 σ_0 = prior_σ_0
             ),
@@ -136,8 +132,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
         Experiments.ExperimentConfig(
             name = "grw_dixon_coles",
             model = Models.PreGame.GRWDixonColes(
-                μ = prior_μ,
-                γ = prior_γ,
+                μ = emperical_priors.prior_μ, 
+                γ = emperical_priors.prior_γ,   
                 σ_k = prior_σ_k,
                 σ_0 = prior_σ_0
                 # Using default ρ_raw = Normal(0,1)
@@ -149,8 +145,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
         Experiments.ExperimentConfig(
             name = "grw_neg_bin",
             model = Models.PreGame.GRWNegativeBinomial(
-                μ = prior_μ,
-                γ = prior_γ,
+                μ = emperical_priors.prior_μ, 
+                γ = emperical_priors.prior_γ,   
                 σ_k = prior_σ_k,
                 σ_0 = prior_σ_0
                 # Using default log_r_prior = Normal(1.5, 1.0)
@@ -162,8 +158,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
         Experiments.ExperimentConfig(
             name = "grw_bivariate_poisson",
             model = Models.PreGame.GRWBivariatePoisson(
-                μ = prior_μ,
-                γ = prior_γ,
+                μ = emperical_priors.prior_μ, 
+                γ = emperical_priors.prior_γ,   
                 σ_k = prior_σ_k,
                 σ_0 = prior_σ_0,
                 # Using default ρ = Normal(-2, 1.0) for covariance

@@ -9,7 +9,7 @@ using Logging
 pinthreads(:cores)
 
 # Load the definitions from the sibling file
-include("./exp/grw_basics/models.jl")
+include("./exp/grw_basics_pl_ch/models.jl")
 
 function run_all()
     # 1. Get Configs
