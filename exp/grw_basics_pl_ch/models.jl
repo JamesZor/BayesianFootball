@@ -55,7 +55,7 @@ end
 
 Returns a tuple of (DataStore, Vector{ExperimentConfig}) for the GRW Basics experiment.
 """
-function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
+function get_grw_basics_configs(; save_dir="./data/exp/grw_basics_pl_ch")
     
     # 1. Setup Data & Splits
     # ======================
