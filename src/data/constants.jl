@@ -8,7 +8,7 @@ export DataPaths, NameType, MATCHES_COLS_TYPES, INCIDENTS_COLS_TYPES, ODDS_COLS_
 # --- Configuration ---
 
 const DataPaths = (
-    scotland = "/home/james/bet_project/football/scotland_football",
+    scotland = "/home/james/bet_project/football/scotland_football_v2",
     uk_all   = "/home/james/bet_project/football/uk_football_data_20_26", 
 )
 

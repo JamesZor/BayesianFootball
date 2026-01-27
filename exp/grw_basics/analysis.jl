@@ -20,6 +20,7 @@ println("Scanning for results in: $exp_dir")
 
 # This helper lists the folders it finds
 saved_folders = Experiments.list_experiments("exp/grw_basics"; data_dir="./data")
+saved_folders = Experiments.list_experiments("exp/grw_basics_pl_ch"; data_dir="./data")
 
 # Load them all into a list
 loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
