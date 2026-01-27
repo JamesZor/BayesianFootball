@@ -25,7 +25,7 @@ function run_all()
         println("\n\n>>> RUNNING MODEL [$i/$(length(configs))]: $(conf.name)")
         
         # Disable Info logs to keep the Progress Bar clean
-        disable_logging(Logging.Info) 
+        # disable_logging(Logging.Info) 
         
         try
             # Run
@@ -38,7 +38,7 @@ function run_all()
             Experiments.save_experiment(results)
             
         catch e
-            disable_logging(Logging.Debug)
+            # disable_logging(Logging.Debug)
             @error "Failed to run $(conf.name): $e"
             # We continue to the next model even if one fails
         end
