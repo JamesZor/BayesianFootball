@@ -7,7 +7,7 @@ using Distributions # Required for prior definitions (Normal, Gamma, etc.)
 
 Returns a tuple of (DataStore, Vector{ExperimentConfig}) for the GRW Basics experiment.
 """
-function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
+function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     
     # 1. Setup Data & Splits
     # ======================
@@ -19,12 +19,12 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
     )
 
     cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [56,57],       # Premiership
+        tournament_ids = [57],       # Premiership
     target_seasons = ["25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_week,
-        warmup_period = 15,          # Long warmup for GRW
-        stop_early = true
+        warmup_period = 22,          # Long warmup for GRW
+        stop_early = false
     )
 
     # 2. Setup Shared Training Config
@@ -35,13 +35,13 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        250,     # n_samples
-        2,      # n_chains
-        50,     # n_warmup
+        500,     # n_samples
+        4,      # n_chains
+        100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
         Samplers.UniformInit(-0.05, 0.05),
-        false   # show_progress (We use the Global Logger instead)
+        :perchain   # show_progress (We use the Global Logger instead)
     )
 
     train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
@@ -92,7 +92,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     save_dir = save_dir
         # ),
         Experiments.ExperimentConfig(
-            name = "grw_neg_bin_v2",
+            name = "grw_neg_bin",
             model = Models.PreGame.GRWNegativeBinomial(
                 μ = prior_μ,
                 γ = prior_γ,
