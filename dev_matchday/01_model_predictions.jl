@@ -301,7 +301,7 @@ function get_matches(leagues::Vector{String})
     return matches
 end
 
-matches_betfair = get_matches(["england"])
+matches_betfair = get_matches([""])
 
 
 ##
@@ -344,6 +344,7 @@ function extract_prices(outcome_data::AbstractDict)
 
     return MarketOutcome(back_pp, lay_pp)
 end
+extract_price(::Nothing) = nothing
 
 # --- TEST ---
 test_extract = Dict(
@@ -526,29 +527,70 @@ function fetch_odds(matches::Vector{ScraperMatch})
 end
 
 
-fetch_odds( [matches_betfair[1]]) 
-fetch_odds( [matches_betfair[2]]) 
+function fetch_odds(matches::ScraperMatch)
+    results = MarketLine[]
 
+    json_str = _run_cli(["odds", m.event_name, "-d"])
+    isnothing(json_str) && continue
+
+    full_data = JSON3.read(json_str, Dict)
+
+    for (period, markets) in full_data
+        for (market_name_str, market_data) in markets
+            
+            # 1. Convert String to Symbol (e.g., :MatchOdds)
+            sym = normalize_market_name(market_name_str)
+            
+            # 2. DISPATCH! 
+            # We wrap 'sym' in Val() to turn it into a Type
+            process_market!(Val(sym), results, m, market_data)
+            
+        end
+    end
+
+    return results
+end
+
+
+
+fetch_odds( [matches_betfair[10]]) 
+fetch_odds( [matches_betfair[9]]) 
+
+function process_market!(::Val{:BothteamstoScore}, results::Vector{MarketLine}, match::ScraperMatch, data::AbstractDict ) 
+    
+  push!(results, MarketLine(:btts, :yes, extract_prices(get(data, "Yes", Dict()) ) ))
+  push!(results, MarketLine(:btts, :no, extract_prices(get(data, "No", Dict()) ) ))
+
+end
 
 # 1. Ensure your normalizer handles "Correct Score" -> :CorrectScore (It should already!)
 
-function process_market!(::Val{:CorrectScore}, results, match, data)
-    for (score_name, raw_data) in data
-        # score_name comes in like: "1 - 0", "0 - 0", "Any Unquoted"
-        
-        # --- TODO: YOUR LOGIC HERE ---
-        # 1. Handle "Any Unquoted" explicitly (maybe map it to :other)
-        # 2. For scores like "1 - 0", strip the spaces and dash to make a symbol.
-        #    Example: "2 - 1"  ->  :cs_2_1  (or just :s21 if you prefer)
-        
-        # selection_symbol = ...
-        
-        # --- END TODO ---
+function process_market!(::Val{:CorrectScore}, results::Vector{MarketLine}, match::ScraperMatch, data::AbstractDict)
+    
+    for (score_key, raw_data) in data
+        # score_key examples: "1 - 0", "2 - 2", "Any Unquoted"
 
+        # 1. Transform the string key into a generic Symbol
+        selection_symbol = if score_key == "Any Unquoted"
+            :cs_other
+        else
+            # Remove " - " and spaces. 
+            # "2 - 1" -> "21"
+            clean_score = replace(score_key, r"[^0-9]" => "")
+            
+            # Prefix with 'cs_' so it's clear (e.g. :cs_21)
+            Symbol("cs_", clean_score)
+        end
+
+        # 2. Extract Prices
+        if isnothing(raw_data)
+          continue
+        end
         outcome = extract_prices(raw_data)
-        
+
+        # 3. Push to results
+        # We use :CS as the group ID
         if !isnothing(outcome)
-            # We use :CS as the group name
             push!(results, MarketLine(:CS, selection_symbol, outcome))
         end
     end
