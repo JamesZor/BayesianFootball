@@ -19,7 +19,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     )
 
     cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [57],       # Premiership
+        tournament_ids = [56,57],       # Premiership
     target_seasons = ["25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_week,
@@ -36,7 +36,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
         500,     # n_samples
-        4,      # n_chains
+        2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
@@ -92,7 +92,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
         #     save_dir = save_dir
         # ),
         Experiments.ExperimentConfig(
-            name = "grw_neg_bin",
+            name = "grw_neg_bin_beforeweekend",
             model = Models.PreGame.GRWNegativeBinomial(
                 μ = prior_μ,
                 γ = prior_γ,
