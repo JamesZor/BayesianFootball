@@ -148,12 +148,61 @@ function make_predictions(data_store, experiment, matches_to_predict)
 end 
 
 
-match_to_predict = DataFrame(
+
+function make_predictions(data_store, experiment, idx, matches_to_predict)
+
+  function raw_preds_to_df(raw_preds::Dict)
+      ids = collect(keys(raw_preds))
+      cols = Dict{Symbol, Vector{Any}}(:match_id => ids)
+      # Assumes all entries have same keys
+      first_entry = raw_preds[ids[1]]
+      for k in keys(first_entry)
+          cols[k] = [raw_preds[i][k] for i in ids]
+      end
+      return DataFrame(cols)
+  end
+
+  feature_collection = BayesianFootball.Features.create_features(
+      BayesianFootball.Data.create_data_splits(data_store, experiment.config.splitter),
+      experiment.config.model, 
+      experiment.config.splitter
+  )
+  feature_set = feature_collection[idx][1]
+
+  chain = experiment.training_results[idx][1]
+
+
+  raw_preds = BayesianFootball.Models.PreGame.extract_parameters(
+      m.config.model,
+      matches_to_predict,
+      feature_set,
+      chain
+  )
+
+  latents = BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds), m.config.model)
+  ppd = BayesianFootball.Predictions.model_inference(latents)
+
+  return ppd
+
+end 
+
+
+
+match_to_predict56= DataFrame(
     match_id = [1, 2, 3, 4, 5],
     match_week = [999, 999, 999, 999, 999], 
     home_team = ["annan-athletic", "elgin-city", "dumbarton", "east-kilbride", "stirling-albion"], 
     away_team = ["clyde-fc", "the-spartans-fc", "edinburgh-city-fc", "forfar-athletic","stranraer"]
 )
+
+
+match_to_predict56= DataFrame(
+    match_id = [1, 2, 3, 4, 5],
+    match_week = [999, 999, 999, 999, 999], 
+    home_team = ["alloa-athletic", "east-fife", "kelty-hearts-fc", "queen-of-the-south", "stenhousemuir"], 
+    away_team = ["cove-rangers", "montrose", "hamilton-academical", "inverness-caledonian-thistle","peterhead"]
+)
+
 
 #= 
 julia> unique(d.home_team)
@@ -169,27 +218,55 @@ julia> unique(d.home_team)
  "the-spartans-fc"
  "stranraer"
 
+
+league one
+ "cove-rangers"
+ "hamilton-academical"
+ "peterhead"
+ "kelty-hearts-fc"
+ "stenhousemuir"
+ "east-fife"
+ "inverness-caledonian-thistle"
+ "montrose"
+ "queen-of-the-south"
+ "alloa-athletic"
+
 =#
 
+
+unique(d.home_team)
+
 pp = make_predictions(ds, m, match_to_predict) 
+pp56 = make_predictions(ds, m, 6, match_to_predict56) 
+pp56 = make_predictions(ds, m, 4, match_to_predict56) 
 
 
 
-pp.df.prob = mean.(pp.df.distribution)
-pp.df.odds = round.(1 ./ pp.df.prob, digits=2)
+pp56.df.prob = mean.(pp56.df.distribution)
+pp56.df.odds = round.(1 ./ pp56.df.prob, digits=2)
 
-pp
+pp56
 
 id = 5
-ppp = subset(pp.df, :match_id => ByRow(isequal(id)))
+ppp = subset(pp56.df, :match_id => ByRow(isequal(id)))
 
 select(ppp, :market_name, :selection, :prob, :odds)
 
-match_to_predict[id, :]
+match_to_predict56[id, :]
 
 
 
+#= 
+Dumbarton 0-0 Edinburgh City
+East Kilbride 1-0 Forfar
+Stirling 0-0 Stranraer
 
+
+
+East Fife 0-0 Montrose
+Kelty Hearts 0-0 Hamilton
+Stenhousemuir 0-0 Peterhead
+=#
 
 
 # ========== 

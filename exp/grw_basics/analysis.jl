@@ -42,7 +42,11 @@ end
 println("\nRunning Backtest on $(length(loaded_results)) models...")
 
 baker = BayesianKelly()
+
 my_signals = [baker]
+
+flat_strat = FlatStake(0.05)
+my_signals = [flat_strat]
 
 # Run backtest on ALL loaded models at once
 ledger = BayesianFootball.BackTesting.run_backtest(
@@ -120,7 +124,7 @@ p = plot(title = "Strategy Battle: $(over_sym) vs $(under_sym)",
 hline!(p, [0.0], label="Break Even", color=:black, linestyle=:dash, alpha=0.5)
 
 # 2. Iterate through each model
-for (i, model_row) in enumerate(eachrow(unique_models))
+for (i, model_row) in enumerate(eachrow(unique_models[[1,3], :]))
     
     m_name = model_row.model_name
     m_params = model_row.model_parameters
@@ -169,8 +173,13 @@ using DataFrames, StatsPlots, Dates, Printf
 
 # --- 1. CONFIGURATION ---
 # We want to compare the "Battle" for the 2.5 Goal Line
-over_sym  = :over_25
-under_sym = :under_25
+under_sym = [:under_25]
+over_sym  = [:over_25]
+
+over_sym  = [:btts_yes, :over_15]
+
+over_sym  = [:btts_yes, :over_15, :over_25, :over_35, :draw, :under_55]
+under_sym = [:over_150]
 start_view = Date(2021, 7, 1)  # Start of 21/22 Season
 end_view   = Date(2025, 6, 1)  # Present day
 
@@ -208,7 +217,8 @@ p = plot(title = "Regime Battle: $(over_sym) vs $(under_sym)",
 hline!(p, [0.0], label="Break Even", color=:black, linestyle=:dash, alpha=0.5)
 
 # --- 4. PLOTTING LOOP ---
-for (i, model_row) in enumerate(eachrow(unique_models))
+for (i, model_row) in enumerate(eachrow(unique_models[[1,3,4],:]))
+# for (i, model_row) in enumerate(eachrow(unique_models))
     
     m_name = model_row.model_name
     m_params = model_row.model_parameters
@@ -223,7 +233,7 @@ for (i, model_row) in enumerate(eachrow(unique_models))
                                  row.model_parameters == m_params, clean_ledger)
 
     # Plot OVERS (Solid Line)
-    overs = filter(row -> row.selection == over_sym, model_ledger)
+    overs = filter(row -> row.selection in over_sym, model_ledger)
     if !isempty(overs)
         sort!(overs, :date)
         overs.cum_pnl = cumsum(overs.pnl)
@@ -233,7 +243,7 @@ for (i, model_row) in enumerate(eachrow(unique_models))
     end
 
     # Plot UNDERS (Dashed Line)
-    unders = filter(row -> row.selection == under_sym, model_ledger)
+    unders = filter(row -> row.selection in under_sym, model_ledger)
     if !isempty(unders)
         sort!(unders, :date)
         unders.cum_pnl = cumsum(unders.pnl)
