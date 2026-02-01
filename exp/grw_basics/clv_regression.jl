@@ -191,3 +191,341 @@ scatter(grouped_clean.edge_bucket, grouped_clean.actual_win_rate .- grouped_clea
     color=:green
 )
 # Goal: A straight line sloping UP.
+
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Automating the Mincer-Zarnowitz (Encompassing) Test across all models will give you a "League Table of Alpha"—showing exactly which models have intrinsic skill and which are just noise.
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+using DataFrames, Statistics, GLM, Printf
+
+"""
+    benchmark_models(experiments, dataset, market_data)
+
+Iterates through a vector of experiment results, extracts predictions,
+and performs the Encompassing Test (Mincer-Zarnowitz) regression.
+
+Returns a DataFrame with the Alpha (Spread) coefficients for comparison.
+"""
+function benchmark_models(experiments::Vector, ds, market_data)
+    # Initialize the results container
+    results_df = DataFrame(
+        Model_Name = String[],
+        Subset = String[],          # "Overall" vs "Overs_Selected"
+        N_Bets = Int[],
+        Intercept_Vig = Float64[],  # The hurdle rate
+        Coef_Market = Float64[],    # Should be ~1.0 if market is efficient
+        Coef_Alpha = Float64[],     # The "Spread" coefficient (YOUR EDGE)
+        P_Value = Float64[],        # Is the edge real?
+        Significant = Bool[]        # p < 0.05
+    )
+
+    # Define the target selection for the "Selected" subset
+    target_markets = ["OverUnder"]
+    target_selections = [:over_15, :over_25, :over_35]
+
+    for (i, exp) in enumerate(experiments)
+        model_name = exp.config.name
+        println("Processing Model $i: $model_name ...")
+
+        # --- 1. REPLICATE THE ETL PIPELINE ---
+        # Extract OOS Latents
+        latents = BayesianFootball.Experiments.extract_oos_predictions(ds, exp)
+        
+        # Run Inference (This might take time depending on sample count)
+        ppd = BayesianFootball.Predictions.model_inference(latents)
+        
+        # Flatten PPD to Mean Probability
+        model_features = transform(ppd.df, :distribution => ByRow(mean) => :prob_model)
+        select!(model_features, :match_id, :market_name, :market_line, :selection, :prob_model)
+
+        # Join with Market Data
+        analysis_df = innerjoin(
+            market_data.df,
+            model_features,
+            on = [:match_id, :market_name, :market_line, :selection]
+        )
+        
+        # Clean Data
+        dropmissing!(analysis_df, [:odds_close, :is_winner])
+        
+        # Calculate Regression Features
+        analysis_df.P_market = 1.0 ./ analysis_df.odds_close
+        analysis_df.spread = analysis_df.prob_model .- analysis_df.P_market
+        analysis_df.Y = Float64.(analysis_df.is_winner)
+
+        # --- 2. RUN REGRESSION: OVERALL ---
+        # (Includes 1X2, BTTS, Unders - The "Toxic" mix)
+        try
+            stats_overall = run_glm(analysis_df)
+            push!(results_df, (model_name, "Overall", stats_overall...))
+        catch e
+            println("  -> Failed Overall Regression for $model_name")
+        end
+
+        # --- 3. RUN REGRESSION: SELECTED OVERS ---
+        # (The "Goldilocks" Zone)
+        mask = (analysis_df.market_name .== "OverUnder") .& 
+               (in.(analysis_df.selection, Ref(target_selections)))
+        
+        df_selected = analysis_df[mask, :]
+        
+        if nrow(df_selected) > 0
+            try
+                stats_selected = run_glm(df_selected)
+                push!(results_df, (model_name, "Overs_Selected", stats_selected...))
+            catch e
+                println("  -> Failed Selected Regression for $model_name")
+            end
+        else
+            println("  -> No data for Selected Overs")
+        end
+    end
+
+    # Sort by Alpha Coefficient (Descending) to see the best model on top
+    sort!(results_df, [:Subset, :Coef_Alpha], rev=true)
+    
+    return results_df
+end
+
+"""
+Helper to fit the GLM and extract the specific Mincer-Zarnowitz params
+"""
+function run_glm(df)
+    # Fit: Y ~ Market_Prob + Spread
+    model = glm(@formula(Y ~ P_market + spread), df, Binomial(), LogitLink())
+    
+    # Extract the CoefTable object
+    ct = coeftable(model)
+    
+    # 1. Find the index for the "spread" row safely
+    # ct.rownms is a vector of strings like ["(Intercept)", "P_market", "spread"]
+    spread_idx = findfirst(==("spread"), ct.rownms)
+    
+    if isnothing(spread_idx)
+        # Fallback if spread gets dropped (e.g. perfect collinearity)
+        return (nrow(df), NaN, NaN, NaN, NaN, false)
+    end
+
+    # 2. Extract Coefficients
+    # coef(model) returns the vector of estimates. 
+    # We can use our index to find the specific ones.
+    # Note: We need to find the indices for Intercept/P_market too if we want them specifically,
+    # or just assume standard ordering. Let's trust the model object for raw values.
+    val_int = coef(model)[1]
+    val_mkt = coef(model)[2]
+    val_spr = coef(model)[spread_idx] # Use the specific index for spread
+    
+    # 3. Extract P-Value
+    # ct.cols is a Vector of Vectors. ct.pvalcol is the index of the p-value column.
+    p_values = ct.cols[ct.pvalcol]
+    p_val_spr = p_values[spread_idx]
+    
+    return (nrow(df), val_int, val_mkt, val_spr, p_val_spr, p_val_spr < 0.05)
+end
+
+# 1. Prepare Market Data (if not already done)
+market_data = Data.prepare_market_data(ds)
+
+# 2. Run the Benchmark
+alpha_table = benchmark_models(loaded_results, ds, market_data)
+
+# 3. View the Leaderboard
+display(alpha_table)
+
+
+
+###
+using Distributions, Random, Plots, StatsBase, DataFrames, Statistics
+using BayesianFootball # Assuming this is your package name
+
+"""
+    run_residual_diagnostics(experiments, ds, model_name_pattern="grw_neg_bin_v2")
+
+Performs a full forensic audit on the residuals of a specific model.
+Generates Q-Q Plots, Time Series Drift, and Autocorrelation charts.
+"""
+function run_residual_diagnostics(experiments, ds, model_name_pattern="grw_neg_bin_v2")
+    
+    # 1. Select the Target Model
+    # Find the experiment that matches your "Stiff" model name
+    exp_idx = findfirst(e -> occursin(model_name_pattern, e.config.name), experiments)
+    if isnothing(exp_idx)
+        error("Model matching '$model_name_pattern' not found!")
+    end
+    exp_target = experiments[exp_idx]
+    println("--- Analyzing Residuals for: $(exp_target.config.name) ---")
+
+    # 2. Extract Out-of-Sample Predictions (Latents)
+    # This gives us the predicted Mu (Mean) and Phi (Shape) for every match
+    println("Extracting OOS predictions...")
+    latents = BayesianFootball.Experiments.extract_oos_predictions(ds, exp_target)
+    
+    # 3. Get Actual Goal Counts
+    # We need to map predictions back to the ground truth in the dataset 'ds'
+    # Assuming 'ds' has a dataframe or we can lookup matches by ID.
+    # Let's assume latents has 'match_id' and we can join with market_data or ds.df
+    market_data = Data.prepare_market_data(ds) # Helper from your previous snippets
+    
+    # Join Latents (Preds) with Realities (Goals)
+    # We need a DataFrame that has: match_id, date, home_goals, away_goals, pred_home_dist, pred_away_dist
+    
+    # A. Extract predicted parameters (Mu, Phi)
+    # Note: Adjust column names if your 'latents' structure is different.
+    # Usually latents will have: home_mu, away_mu, home_phi, away_phi (or shared phi)
+    
+    # Let's iterate and build the residual vectors
+    home_residuals = Float64[]
+    away_residuals = Float64[]
+    dates = Date[]
+    
+    println("Computing Dunn-Smyth Residuals...")
+    
+    # Map match_ids to actual results for fast lookup
+    # Creating a Dict: match_id -> (home_goals, away_goals, date)
+    actuals_map = Dict(
+        r.match_id => (r.home_score, r.away_score, r.match_date) 
+        for r in eachrow(ds.matches) # Assuming ds.df holds the raw match data
+    )
+
+    for i in 1:nrow(latents.df)
+        row = latents.df[i, :]
+        mid = row.match_id
+        
+        if !haskey(actuals_map, mid) continue end
+        (h_score, a_score, match_date) = actuals_map[mid]
+# The 'vec' ensures matrices become vectors, and 'mean' collapses them to a scalar.
+        # This gives us the Point Estimate for the match.
+        h_mu = mean(vec(row.λ_h))
+        h_phi = mean(vec(row.r)) # Dispersion
+        
+        a_mu = mean(vec(row.λ_a))
+        a_phi = mean(vec(row.r))
+        
+        # --- Parameter Conversion ---
+        # Convert Mean(μ) + Dispersion(ϕ) to Success(p) + Failures(r)
+        # Formula: p = ϕ / (ϕ + μ), r = ϕ
+        
+        # Home Dist
+        h_p = h_phi / (h_phi + h_mu)
+        # Ensure 0 < p < 1 to prevent errors
+        h_p = clamp(h_p, 1e-6, 1.0 - 1e-6) 
+        dist_home = NegativeBinomial(h_phi, h_p)
+        
+        # Away Dist
+        a_p = a_phi / (a_phi + a_mu)
+        a_p = clamp(a_p, 1e-6, 1.0 - 1e-6)
+        dist_away = NegativeBinomial(a_phi, a_p)
+        
+        # --- Calculate RQR ---
+        push!(home_residuals, calculate_rqr(dist_home, h_score))
+        push!(away_residuals, calculate_rqr(dist_away, a_score))
+        push!(dates, match_date)
+
+
+    end
+    
+    # 4. Generate Diagnostic Plots
+    generate_plots(home_residuals, dates, "Home Goals")
+    generate_plots(away_residuals, dates, "Away Goals")
+    
+    return (home_residuals, away_residuals, dates)
+end
+
+"""
+Helper: Calculate single Dunn-Smyth Residual
+"""
+function calculate_rqr(dist, y_obs)
+    # CDF at y (Upper bound)
+    p_high = cdf(dist, y_obs)
+    
+    # CDF at y-1 (Lower bound)
+    p_low = cdf(dist, y_obs - 1)
+    
+    # Randomize uniform between bounds
+    u = rand(Uniform(p_low, p_high))
+    
+    # Clamp for numerical safety
+    u = clamp(u, 1e-9, 1.0-1e-9)
+    
+    # Inverse Normal Transform
+    return quantile(Normal(0,1), u)
+end
+
+"""
+Helper: Plotting Suite
+"""
+function generate_plots(residuals, dates, label)
+    # Sort by date for the time series
+    perm = sortperm(dates)
+    sorted_res = residuals[perm]
+    sorted_dates = dates[perm]
+    
+    # 1. Q-Q Plot (Normality/Tail Check)
+    p1 = qqplot(Normal(0,1), sorted_res, 
+        title="$label: Q-Q Plot", xlabel="Theoretical", ylabel="Observed",
+        legend=false, color=:blue, markerstrokewidth=0, markersize=3)
+    
+    # 2. Residuals vs Time (Regime Check)
+    # Calculate Rolling Mean (Window = 50 games)
+    roll_mean = [mean(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+    
+    p2 = scatter(sorted_dates, sorted_res, 
+        title="$label: Regime Stability", alpha=0.2, color=:black, label="", markersize=2)
+    plot!(p2, sorted_dates, roll_mean, 
+        color=:red, linewidth=2, label="Rolling Mean (Bias)")
+    hline!(p2, [0.0], color=:blue, linestyle=:dash, label="")
+    
+    # 3. Rolling Variance (The Volatility Check)
+    # This detects if your 'Phi' is failing (e.g., Variance explodes in 2024)
+    roll_var = [var(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+    
+    p3 = plot(sorted_dates, roll_var, 
+        title="$label: Rolling Variance (Target = 1.0)", 
+        color=:purple, linewidth=2, legend=false)
+    hline!(p3, [1.0], color=:black, linestyle=:dash)
+    
+    # Combine
+    final_plot = plot(p1, p2, p3, layout=(3,1), size=(800, 1000))
+    display(final_plot)
+end
+
+(home_res, away_res, dates) = run_residual_diagnostics(loaded_results, ds, "grw_neg_bin_v2")
+
+
+using Plots, StatsPlots
+
+# 1. Re-generate the plot object using the data you just calculated
+# (We sort by date first to make the Time Series look right)
+perm = sortperm(dates)
+sorted_res = home_res[perm]
+sorted_dates = dates[perm]
+
+# A. Q-Q Plot
+p1 = qqplot(Normal(0,1), sorted_res, 
+    title="Home Goals: Q-Q Plot", xlabel="Theoretical", ylabel="Observed",
+    legend=false, color=:blue, markerstrokewidth=0, markersize=3)
+
+# B. Regime Stability (Rolling Mean)
+roll_mean = [mean(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+p2 = scatter(sorted_dates, sorted_res, 
+    title="Regime Stability (Bias)", alpha=0.2, color=:black, label="", markersize=2, markerstrokewidth=0)
+plot!(p2, sorted_dates, roll_mean, color=:red, linewidth=2, label="Rolling Mean")
+hline!(p2, [0.0], color=:blue, linestyle=:dash)
+
+# C. Rolling Variance (The Crash Detector)
+roll_var = [var(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+p3 = plot(sorted_dates, roll_var, 
+    title="Rolling Variance (Target = 1.0)", 
+    color=:purple, linewidth=2, legend=false)
+hline!(p3, [1.0], color=:black, linestyle=:dash)
+
+# 2. Combine and Save
+final_plot = plot(p1, p2, p3, layout=(3,1), size=(800, 1000))
+
+# Save to your current directory
+savefig(final_plot, "rqr_diagnosis.png")
+println("Saved plot to: $(pwd())/rqr_diagnosis.png")
