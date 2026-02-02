@@ -138,6 +138,25 @@ describe(results_bipoisson.training_results[1][1])
 df_trends_bipoisson = Models.PreGame.extract_trends(grw_bipoisson_model, feature_sets[end][1], results_bipoisson.training_results[end][1])
 
 
+# E : ---  GRW Negative binomial  phi - later  added 
+
+
+grw_negbin_model = Models.PreGame.GRWNegativeBinomialPhi()
+
+conf_negbin = Experiments.ExperimentConfig(
+                    name = "grw negative binomial phi",
+                    model = grw_negbin_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+results_negbin = Experiments.run_experiment(ds, conf_negbin)
+
+
+describe(results_negbin.training_results[1][1]) 
+df_trends_negbin = Models.PreGame.extract_trends(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
+
 
 ####
 

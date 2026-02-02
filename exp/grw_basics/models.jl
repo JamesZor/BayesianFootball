@@ -91,13 +91,28 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_neg_bin_v2",
+        #     model = Models.PreGame.GRWNegativeBinomial(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0
+        #         # Using default log_r_prior = Normal(1.5, 1.0)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         Experiments.ExperimentConfig(
-            name = "grw_neg_bin_v2",
-            model = Models.PreGame.GRWNegativeBinomial(
+            name = "grw_neg_bin_phi",
+            model = Models.PreGame.GRWNegativeBinomialPhi(
                 μ = prior_μ,
                 γ = prior_γ,
                 σ_k = prior_σ_k,
-                σ_0 = prior_σ_0
+                σ_0 = prior_σ_0,
+                σ_r = Gamma(2, 0.05),
+                log_r_init = Normal(1.5, 0.25)
                 # Using default log_r_prior = Normal(1.5, 1.0)
             ),
             splitter = cv_config,
