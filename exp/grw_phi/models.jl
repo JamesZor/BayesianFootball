@@ -44,7 +44,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_phi")
         false   # show_progress (We use the Global Logger instead)
     )
 
-    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
+    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 # 3. Define Priors (Gelman's Boundary-Avoiding)
