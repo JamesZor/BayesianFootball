@@ -210,7 +210,7 @@ and performs the Encompassing Test (Mincer-Zarnowitz) regression.
 
 Returns a DataFrame with the Alpha (Spread) coefficients for comparison.
 """
-function benchmark_models(experiments::Vector, ds, market_data)
+function benchmark_models(experiments::Vector, ds, market_data; target_selections=[:over_15])
     # Initialize the results container
     results_df = DataFrame(
         Model_Name = String[],
@@ -225,7 +225,6 @@ function benchmark_models(experiments::Vector, ds, market_data)
 
     # Define the target selection for the "Selected" subset
     target_markets = ["OverUnder"]
-    target_selections = [:over_15, :over_25, :over_35]
 
     for (i, exp) in enumerate(experiments)
         model_name = exp.config.name
@@ -332,6 +331,9 @@ market_data = Data.prepare_market_data(ds)
 
 # 2. Run the Benchmark
 alpha_table = benchmark_models(loaded_results, ds, market_data)
+alpha_table = benchmark_models(loaded_results, ds, market_data; target_selections =[:over_15])
+alpha_table = benchmark_models(loaded_results, ds, market_data; target_selections =[:over_25])
+alpha_table = benchmark_models(loaded_results, ds, market_data; target_selections =[:over_35])
 
 # 3. View the Leaderboard
 display(alpha_table)
@@ -471,7 +473,7 @@ function generate_plots(residuals, dates, label)
     
     # 2. Residuals vs Time (Regime Check)
     # Calculate Rolling Mean (Window = 50 games)
-    roll_mean = [mean(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+    roll_mean = [mean(sorted_res[max(1, i-30):i]) for i in 1:length(sorted_res)]
     
     p2 = scatter(sorted_dates, sorted_res, 
         title="$label: Regime Stability", alpha=0.2, color=:black, label="", markersize=2)
@@ -481,7 +483,7 @@ function generate_plots(residuals, dates, label)
     
     # 3. Rolling Variance (The Volatility Check)
     # This detects if your 'Phi' is failing (e.g., Variance explodes in 2024)
-    roll_var = [var(sorted_res[max(1, i-50):i]) for i in 1:length(sorted_res)]
+    roll_var = [var(sorted_res[max(1, i-30):i]) for i in 1:length(sorted_res)]
     
     p3 = plot(sorted_dates, roll_var, 
         title="$label: Rolling Variance (Target = 1.0)", 
@@ -493,8 +495,10 @@ function generate_plots(residuals, dates, label)
     display(final_plot)
 end
 
+using Dates
 (home_res, away_res, dates) = run_residual_diagnostics(loaded_results, ds, "grw_neg_bin_v2")
 
+(home_res, away_res, dates) = run_residual_diagnostics(loaded_results, ds, "grw_neg_bin_phi")
 
 using Plots, StatsPlots
 
@@ -527,5 +531,62 @@ hline!(p3, [1.0], color=:black, linestyle=:dash)
 final_plot = plot(p1, p2, p3, layout=(3,1), size=(800, 1000))
 
 # Save to your current directory
-savefig(final_plot, "rqr_diagnosis.png")
+savefig(final_plot, "rqr_diagnosis_phi.png")
 println("Saved plot to: $(pwd())/rqr_diagnosis.png")
+
+
+
+function compare_stability(dates, res_model_A, label_A, res_model_B, label_B; window=30)
+    # Helper to calculate the metrics
+    function calc_metrics(dates, residuals)
+        # Sort by date first
+        perm = sortperm(dates)
+        sorted_res = residuals[perm]
+        
+        # Calculate Rolling Series
+        n = length(sorted_res)
+        roll_mean = [mean(sorted_res[max(1, i-window):i]) for i in 1:n]
+        roll_var  = [var(sorted_res[max(1, i-window):i]) for i in 1:n]
+        
+        # 1. Bias Score (MSE of Mean from 0.0)
+        # Penalizes periods where the model systematically over/under predicts
+        bias_score = mean((roll_mean .- 0.0).^2)
+        
+        # 2. Variance Stability Score (MSE of Variance from 1.0)
+        # Penalizes "Swinging" and "Fat Tails"
+        stability_score = mean((roll_var .- 1.0).^2)
+        
+        # 3. "Wiggle" (Standard Deviation of the Rolling Variance)
+        # Pure measure of how jerky the line is, regardless of where it is
+        wiggle = std(roll_var)
+        
+        return (bias_score, stability_score, wiggle)
+    end
+
+    # Calculate for both
+    (b_A, s_A, w_A) = calc_metrics(dates, res_model_A)
+    (b_B, s_B, w_B) = calc_metrics(dates, res_model_B)
+
+    # Print Report
+    println("-"^60)
+    println("STABILITY SHOWDOWN: $label_A vs $label_B")
+    println("-"^60)
+    
+    println("1. BIAS SCORE (Target = 0.0) | Lower is Better")
+    println("   $label_A: $(round(b_A, digits=4))")
+    println("   $label_B: $(round(b_B, digits=4))")
+    println("   Winner: $(b_A < b_B ? label_A : label_B)")
+    println("")
+    
+    println("2. VARIANCE STABILITY (Target = 1.0) | Lower is Better")
+    println("   $label_A: $(round(s_A, digits=4))")
+    println("   $label_B: $(round(s_B, digits=4))")
+    println("   Winner: $(s_A < s_B ? label_A : label_B)")
+    println("")
+    
+    println("3. WIGGLINESS (Vol of Vol) | Lower is Smoother")
+    println("   $label_A: $(round(w_A, digits=4))")
+    println("   $label_B: $(round(w_B, digits=4))")
+    println("   Winner: $(w_A < w_B ? label_A : label_B)")
+    println("-"^60)
+end
