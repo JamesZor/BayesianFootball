@@ -35,7 +35,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_phi")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        400,     # n_samples
+        250,     # n_samples
         2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -59,7 +59,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_phi")
     prior_μ = Normal(0.32, 0.05)        # Global Baseline
     prior_γ = Normal(0.12, 0.05)   # Home Advantage
 
-    log_r_init = Normal(1.5, 0.5),
+    log_r_init = Normal(1.5, 0.5)
     σ_0 = Truncated(Normal(0.5, 0.2), 0, Inf)
 
      # μ ~ Normal{Float64}(μ=0.3191977392306569, σ=0.05)

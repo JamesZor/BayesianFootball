@@ -14,6 +14,8 @@ include("./exp/grw_phi/models.jl")
 function run_all()
     # 1. Get Configs
     ds, configs = get_grw_basics_configs()
+
+    println(configs)
     
     println("Starting Experiment Suite: GRW Basics")
     println("   > Found $(length(configs)) configurations.")
