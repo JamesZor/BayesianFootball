@@ -40,6 +40,11 @@ export GRWNegativeBinomial
 include("./implementations/grw_double_neg_bin_phi.jl")
 export GRWNegativeBinomialPhi
 
+
+include("./implementations/grw_double_neg_bin_mu.jl")
+export GRWNegativeBinomialMu
+
+
 include("./implementations/grw_bivariate_poisson.jl")
 export GRWBivariatePoisson
 

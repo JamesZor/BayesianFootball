@@ -256,6 +256,9 @@ end
 display(p)
 
 
+#######
+
+
 ###
 using DataFrames, Statistics, Dates, Printf
 
@@ -662,47 +665,6 @@ describe(loaded_results[1].training_results[end][1][symbols])
 describe(loaded_results[2].training_results[end][1][symbols])
 describe(loaded_results[3].training_results[end][1][symbols])
 describe(loaded_results[4].training_results[end][1][symbols])
-
-
-#= 
-
-
- Model: grw_neg_bin                                                                                                  
-                                                                                                                     
-Chains MCMC chain (250×4×2 Array{Float64, 3}):                                                                       
-                                                                                                                     
-Iterations        = 51:1:300                                                                                         
-Number of chains  = 2                                                                                                
-Samples per chain = 250                                                                                              
-Wall duration     = 249.56 seconds                                                                                   
-Compute duration  = 497.66 seconds                                                                                   
-parameters        = μ, γ, σ_att, σ_def                                                                               
-internals         =                                                                                                  
-                                                                                                                     
-Summary Statistics                                                                                                   
-                                                                                                                     
-  parameters      mean       std      mcse   ess_bulk   ess_tail      rhat   ess_per_sec                             
-      Symbol   Float64   Float64   Float64    Float64    Float64   Float64       Float64                             
-                                                                                                                     
-           μ    0.2693    0.0869    0.0042   436.3733   311.9187    1.0174        0.8769                             
-           γ    0.1701    0.1108    0.0050   496.8303   317.8725    1.0023        0.9983                             
-       σ_att    0.0461    0.0266    0.0012   486.8139   360.3088    1.0023        0.9782                             
-       σ_def    0.0604    0.0355    0.0017   411.4484   352.9079    0.9980        0.8268                             
-                                                                                                                     
-                                                                                                                     
-Quantiles                                                                                                            
-                                                                                                                     
-  parameters      2.5%     25.0%     50.0%     75.0%     97.5%                                                       
-      Symbol   Float64   Float64   Float64   Float64   Float64                                                       
-                                                                                                                     
-           μ    0.1074    0.2116    0.2675    0.3225    0.4525                                                       
-           γ   -0.0474    0.1028    0.1709    0.2416    0.4049                                                       
-       σ_att    0.0086    0.0260    0.0430    0.0601    0.1070                                                       
-       σ_def    0.0081    0.0339    0.0541    0.0810    0.1442   
-
-
-
-=# 
 
 
 using Statistics, Distributions
