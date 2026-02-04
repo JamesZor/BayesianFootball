@@ -178,6 +178,93 @@ df_trends_negbin = Models.PreGame.extract_mu_trends(grw_negbin_model, feature_se
 
 using Plots
 
+# Ensure data is sorted by round (usually is, but good practice)
+sort!(df_trends_negbin, :round)
+
+# Extract vectors for plotting
+x = df_trends_negbin.round
+y = df_trends_negbin.mu_mean
+lower = df_trends_negbin.mu_lower
+upper = df_trends_negbin.mu_upper
+
+# Create the plot
+plot(
+    x, y,
+    ribbon = (y .- lower, upper .- y), # Plots.jl expects (distance_to_lower, distance_to_upper)
+    fillalpha = 0.3,                   # Transparency of the ribbon
+    color = :blue,
+    lw = 2,                            # Line width of the mean
+    label = "League Baseline (μ) Trend",
+    title = "Time-Varying Global Goal Rate (μ)",
+    xlabel = "Match Week",
+    ylabel = "Log-Goal Rate (μ)",
+    legend = :topright,
+    grid = true,
+    minorgrid = true
+)
+
+# Add a horizontal line for the static prior mean (0.2) to see the drift
+hline!([0.2], label="Static Prior (0.2)", linestyle=:dash, color=:red)
+
+# #
+
+df = BayesianFootball.Models.PreGame.extract_trends(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
+
+"""
+    plot_all_teams_strength(df; teams_to_plot=nothing)
+
+Plots trajectories using the 'Tab10' color palette.
+"""
+function plot_all_teams_strength(df::DataFrame; sym::Symbol = :total_att, teams_to_plot::Union{Vector{String}, Nothing}=nothing)
+    
+    # 1. Filter Data
+    data_to_plot = if isnothing(teams_to_plot)
+        df
+    else
+        filter(row -> row.team in teams_to_plot, df)
+    end
+    
+    # Sort for correct line connecting
+    sort!(data_to_plot, [:team, :round])
+
+    # 2. Extract League Baseline (from the first available team)
+    first_team = data_to_plot.team[1]
+    baseline_df = filter(row -> row.team == first_team, data_to_plot)
+
+    # 3. Create Plot with Tab10 Palette
+    p = plot(
+        size = (900, 600),
+        title = "Total Attack Strength (League Adjusted)",
+        xlabel = "Match Week",
+        ylabel = "Total Log-Rate (μ + att)",
+        legend = :outerright,
+        margin = 5Plots.mm,
+        palette = :tab10  # <--- SETS THE COLOUR SCHEME
+    )
+
+    # A. Plot League Baseline (Black Dash for contrast)
+    plot!(p, baseline_df.round, baseline_df.mu_global, 
+          label="League Avg (μ)", color=:black, lw=3, linestyle=:dash, alpha=0.5)
+
+    # B. Plot Teams (Cycling through Tab10)
+    plot!(p, 
+          data_to_plot.round, 
+          data_to_plot[!, sym], 
+          group = data_to_plot.team, 
+          lw = 2.5,
+          alpha = 0.9
+    )
+
+    return p
+end
+
+# Usage:
+# target_teams = ["airdrieonians", "queen-of-the-south", "falkirk"]
+# plot_all_teams_strength(df, teams_to_plot=target_teams)
+
+plot_all_teams_strength(df)
+plot_all_teams_strength(df; sym=:def)
+
 ####
 #
 ####
