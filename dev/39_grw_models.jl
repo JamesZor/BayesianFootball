@@ -48,7 +48,7 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                200,
+                400,
                 4,
                 100,
                 0.65,
@@ -158,6 +158,28 @@ describe(results_negbin.training_results[1][1])
 df_trends_negbin = Models.PreGame.extract_trends(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
 
 
+# F : --- GRW Negative binomial mu - 
+
+grw_negbin_model = Models.PreGame.GRWNegativeBinomialMu()
+
+conf_negbin = Experiments.ExperimentConfig(
+                    name = "grw negative binomial mu",
+                    model = grw_negbin_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+results_negbin = Experiments.run_experiment(ds, conf_negbin)
+
+describe(results_negbin.training_results[1][1]) 
+
+df_trends_negbin = Models.PreGame.extract_mu_trends(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
+
+using Plots
+
+####
+#
 ####
 
 using BayesianFootball.Signals

@@ -256,3 +256,82 @@ function extract_mu_trends(
         mu_upper = mu_upper
     )
 end
+
+
+function extract_trends(
+    model::GRWNegativeBinomialMu, 
+    feature_set::FeatureSet, 
+    chain::Chains
+)
+    # --- 1. Setup ---
+    n_teams = feature_set[:n_teams]
+    team_map = feature_set[:team_map]
+    
+    # Infer n_rounds from μ steps (cleaner than team steps)
+    step_names = names(group(chain, :z_μ_steps))
+    n_rounds = length(step_names) + 1
+
+    # --- 2. Reconstruct Team States (Att/Def) ---
+    # Returns (Teams x Rounds x Samples)
+    att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
+    
+    # Summarize Teams (Mean over samples)
+    att_means = dropdims(mean(att_cube, dims=3), dims=3)
+    def_means = dropdims(mean(def_cube, dims=3), dims=3)
+
+    # --- 3. Reconstruct Global State (μ) ---
+    # Extract raw parameters
+    μ_init = vec(Array(chain[:μ_init]))   # (Samples)
+    σ_μ    = vec(Array(chain[:σ_μ]))      # (Samples)
+    z_steps_mat = Array(group(chain, :z_μ_steps)) # (Samples x Steps)
+
+    # Integrate Random Walk
+    scaled_steps = z_steps_mat .* σ_μ
+    raw_mu_matrix = hcat(μ_init, scaled_steps)
+    μ_traj = cumsum(raw_mu_matrix, dims=2) # (Samples x Rounds)
+    
+    # Summarize Global μ (Mean over samples)
+    # Result is a Vector of length n_rounds
+    μ_means = vec(mean(μ_traj, dims=1))
+
+    # --- 4. Build Combined DataFrame ---
+    id_to_team = Dict(v => k for (k, v) in team_map)
+    
+    teams = String[]
+    rounds = Int[]
+    att_vals = Float64[]
+    def_vals = Float64[]
+    mu_vals  = Float64[] # New Column
+    total_att_vals = Float64[] # Helpful helper column
+
+    for i in 1:n_teams
+        t_name = id_to_team[i]
+        for t in 1:n_rounds
+            push!(teams, t_name)
+            push!(rounds, t)
+            
+            # Team Specific Stats
+            a_val = att_means[i, t]
+            d_val = def_means[i, t]
+            
+            # Global Stat (Same for all teams at time t)
+            m_val = μ_means[t]
+
+            push!(att_vals, a_val)
+            push!(def_vals, d_val)
+            push!(mu_vals, m_val)
+            
+            # Pre-calculate "Effective Attack" for plotting
+            push!(total_att_vals, a_val + m_val)
+        end
+    end
+
+    return DataFrame(
+        team = teams,
+        round = rounds,
+        att = att_vals,     # Pure Relative Strength (Centered at 0)
+        def = def_vals,
+        mu_global = mu_vals, # League Baseline
+        total_att = total_att_vals # Real Scoring Potential (att + μ)
+    )
+end

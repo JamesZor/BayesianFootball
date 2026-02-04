@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "bf7818e9da71e775e29c150a246e2a865555c66e"
+project_hash = "525ad3024de8996f878d9bc733cdd5cab382ac3f"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
@@ -335,6 +335,28 @@ deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jl
 git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.5+0"
+
+[[deps.CategoricalArrays]]
+deps = ["Compat", "DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "73acb4ed51b1855e1b5ce5c610334363a98d13f1"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "1.0.2"
+
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysArrowExt = "Arrow"
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStatsBaseExt = "StatsBase"
+    CategoricalArraysStructTypesExt = "StructTypes"
+
+    [deps.CategoricalArrays.weakdeps]
+    Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
+    JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+    StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+    StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
 
 [[deps.Chain]]
 git-tree-sha1 = "765487f32aeece2cf28aa7038e29c31060cb5a69"
@@ -893,6 +915,12 @@ deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
 version = "2.13.4+0"
+
+[[deps.FreqTables]]
+deps = ["CategoricalArrays", "Missings", "NamedArrays", "Tables"]
+git-tree-sha1 = "a2f24a17652beedaac07ce78f4c985a52c76d005"
+uuid = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
+version = "1.0.0"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2314,10 +2342,10 @@ uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 version = "1.8.0"
 
 [[deps.StatsBase]]
-deps = ["AliasTables", "DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "be5733d4a2b03341bdcab91cea6caa7e31ced14b"
+deps = ["AliasTables", "DataAPI", "DataStructures", "IrrationalConstants", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "aceda6f4e598d331548e04cc6b2124a6148138e3"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.34.9"
+version = "0.34.10"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
