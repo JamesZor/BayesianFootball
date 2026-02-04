@@ -124,3 +124,135 @@ function build_turing_model(model::GRWNegativeBinomialMu, feature_set::FeatureSe
         model
     )
 end
+
+
+function extract_parameters(
+    model::GRWNegativeBinomialMu, 
+    df_to_predict::AbstractDataFrame, 
+    feature_set::FeatureSet, 
+    chain::Chains
+)
+    # --- A. Setup ---
+    n_teams = feature_set[:n_teams]
+    team_map = feature_set[:team_map]
+    
+    step_names = names(group(chain, :z_att_steps))
+    n_steps_raw = length(step_names)
+    n_rounds = (n_steps_raw ÷ n_teams) + 1
+
+    # --- B. Reconstruct Full History (Teams) ---
+    att_cube, def_cube = reconstruct_states(chain, n_teams, n_rounds)
+
+    # --- C. Reconstruct Full History (Global μ) ---
+    # 1. Extract raw chains
+    μ_init = vec(Array(chain[:μ_init])) # Vector (Samples)
+    σ_μ    = vec(Array(chain[:σ_μ]))    # Vector (Samples)
+    
+    # 2. Extract steps: Matrix (Samples x (N_rounds-1))
+    z_μ_steps_mat = Array(group(chain, :z_μ_steps)) 
+
+    # 3. Integrate Random Walk
+    scaled_steps_μ = z_μ_steps_mat .* σ_μ
+    
+    # Combine: [Init, Steps] -> (Samples x Rounds)
+    raw_μ = hcat(μ_init, scaled_steps_μ)
+    μ_traj = cumsum(raw_μ, dims=2) # Result: (Samples x Rounds)
+
+    # --- D. Static Globals ---
+    γ_vec = vec(Array(chain[:γ]))
+    r_vec = exp.(vec(Array(chain[:log_r])))
+
+    ExtractionValue = NamedTuple{(:λ_h, :λ_a, :r), Tuple{Vector{Float64}, Vector{Float64}, Vector{Float64}}}
+    extraction_dict = Dict{Int64, ExtractionValue}()
+    sizehint!(extraction_dict, nrow(df_to_predict))
+
+    for row in eachrow(df_to_predict)
+        h_id = team_map[row.home_team]
+        a_id = team_map[row.away_team]
+        
+        # Time Indexing
+        t = row.match_week 
+        t_idx = clamp(t, 1, n_rounds)
+
+        # Extract Views
+        att_h = view(att_cube, h_id, t_idx, :)
+        def_a = view(def_cube, a_id, t_idx, :)
+        att_a = view(att_cube, a_id, t_idx, :)
+        def_h = view(def_cube, h_id, t_idx, :)
+
+        # Extract Time-Specific Intercept (Samples)
+        μ_current = view(μ_traj, :, t_idx)
+
+        # Calculate Rates
+        # Note: μ_current is now dynamic per week
+        λ_h = exp.(μ_current .+ γ_vec .+ att_h .+ def_a)
+        λ_a = exp.(μ_current .+          att_a .+ def_h)
+
+        extraction_dict[Int(row.match_id)] = (; λ_h, λ_a, r=r_vec)
+    end
+
+    return extraction_dict
+end
+
+
+"""
+    extract_mu_trends(model, feature_set, chain)
+
+Extracts the time-varying global intercept `μ` from the GRWNegativeBinomialMu model.
+Returns a DataFrame with [round, mu_mean, mu_lower, mu_upper].
+"""
+function extract_mu_trends(
+    model::GRWNegativeBinomialMu, 
+    feature_set::FeatureSet, 
+    chain::Chains
+)
+    # --- 1. Infer n_rounds ---
+    # We can look at the number of steps in the μ process directly
+    # The number of steps is (n_rounds - 1)
+    step_names = names(group(chain, :z_μ_steps))
+    n_rounds = length(step_names) + 1
+
+    # --- 2. Reconstruct μ Trajectory ---
+    # Extract raw parameters
+    μ_init = vec(Array(chain[:μ_init]))   # Vector (Samples)
+    σ_μ    = vec(Array(chain[:σ_μ]))      # Vector (Samples)
+    
+    # Extract steps matrix: (Samples x (n_rounds - 1))
+    z_steps_mat = Array(group(chain, :z_μ_steps)) 
+
+    # Integrate Random Walk (NCP)
+    # Scale the standard normal steps by the process noise σ_μ
+    # Broadcasting: (Samples x Steps) .* (Samples)
+    scaled_steps = z_steps_mat .* σ_μ
+    
+    # Combine initial state with steps
+    raw_mu_matrix = hcat(μ_init, scaled_steps)
+    
+    # Cumulative sum across time (dimension 2)
+    # Result: (Samples x Rounds)
+    μ_traj = cumsum(raw_mu_matrix, dims=2) 
+
+    # --- 3. Summarize Statistics per Round ---
+    rounds = Int[]
+    mu_mean = Float64[]
+    mu_lower = Float64[]
+    mu_upper = Float64[]
+
+    for t in 1:n_rounds
+        push!(rounds, t)
+        
+        # Get all samples for time t (View for efficiency)
+        vals = view(μ_traj, :, t)
+        
+        push!(mu_mean, mean(vals))
+        push!(mu_lower, quantile(vals, 0.05))
+        push!(mu_upper, quantile(vals, 0.95))
+    end
+
+    return DataFrame(
+        round = rounds,
+        mu_mean = mu_mean,
+        mu_lower = mu_lower,
+        mu_upper = mu_upper
+    )
+end
