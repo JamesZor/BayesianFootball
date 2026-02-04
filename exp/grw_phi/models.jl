@@ -35,7 +35,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_phi")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        250,     # n_samples
+        300,     # n_samples
         2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
