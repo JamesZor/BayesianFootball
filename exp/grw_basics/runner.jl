@@ -7,6 +7,8 @@ using ThreadPinning
 using LinearAlgebra
 using Logging
 pinthreads(:cores)
+threadinfo()
+BLAS.set_num_threads(1)
 
 # Load the definitions from the sibling file
 include("./exp/grw_basics/models.jl")

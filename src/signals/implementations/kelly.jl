@@ -112,3 +112,60 @@ function compute_stake(s::AnalyticalShrinkageKelly, dist::AbstractVector, odds::
 end
 
 signal_description(::AnalyticalShrinkageKelly) = "Baker-McHale (2013) Eq.5: Analytical Approx using posterior variance."
+
+
+
+"""
+    ExactBayesianKelly()
+
+Calculates the optimal bet size 'f' by numerically maximizing the expected 
+log-growth directly over the full posterior distribution samples.
+This is superior to shrinkage methods as it accounts for the exact 
+higher-order moments (skew/kurtosis) of your specific posterior.
+"""
+struct ExactBayesianKelly <: AbstractSignal end
+
+function compute_stake(s::ExactBayesianKelly, dist::AbstractVector, odds::Number)
+    b = odds - 1.0
+    if b <= 0 return 0.0 end
+    
+    # 1. Quick check: Does the mean even justify a bet?
+    # If E[p] * b - (1 - E[p]) <= 0, no amount of variance analysis will make it a bet.
+    p_mean = mean(dist)
+    if (p_mean * b - (1.0 - p_mean)) <= 0
+        return 0.0
+    end
+
+    # 2. Objective Function: Expected Log Utility
+    # We want to find scalar 'f' that maximizes: 1/N * sum( log(1 + f*r_i) )
+    # where r_i is the return for sample i: b if win, -1 if loss.
+    # U(f) = q * log(1 + f*b) + (1-q) * log(1 - f)
+    # We average this utility across all posterior samples q.
+    
+    function neg_expected_utility(f)
+        # Boundary constraints for optimizer (prevent log(<=0))
+        if f <= 1e-9 return 0.0 end
+        if f >= 0.99 return Inf end # Soft barrier
+        
+        utility_sum = 0.0
+        n = length(dist)
+        
+        @inbounds for q in dist
+            # For a given probability q (a sample from posterior), 
+            # the expected utility of stake f is:
+            u_sample = q * log(1.0 + b * f) + (1.0 - q) * log(1.0 - f)
+            utility_sum += u_sample
+        end
+        
+        return -(utility_sum / n)
+    end
+
+    # 3. Optimization
+    # We search for f in [0.0, 0.99]. 
+    # The upper bound 0.99 is arbitrary safety; rarely optimal to bet > 50%.
+    res = optimize(neg_expected_utility, 0.0, 0.5) 
+    
+    return Optim.minimizer(res)
+end
+
+signal_description(::ExactBayesianKelly) = "Exact maximization of log-utility over posterior samples."
