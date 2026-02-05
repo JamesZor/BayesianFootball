@@ -31,7 +31,7 @@ export
     KellyCriterion,
     BayesianKelly,
     AnalyticalShrinkageKelly,
-    ExactBayesianKelly
+    ExactBayesianKelly,
     
     # Functions
     process_signals,
