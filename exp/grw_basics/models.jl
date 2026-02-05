@@ -44,7 +44,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         false   # show_progress (We use the Global Logger instead)
     )
 
-    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
+    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 # 3. Define Priors (Gelman's Boundary-Avoiding)
@@ -78,6 +78,18 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
+        Experiments.ExperimentConfig(
+            name = "grw_poisson_v2",
+            model = Models.PreGame.GRWPoisson(
+                μ = prior_μ,
+                γ = prior_γ,
+                σ_k = prior_σ_k, 
+                σ_0 = prior_σ_0
+            ),
+            splitter = cv_config,
+            training_config = training_config,
+            save_dir = save_dir
+        ),
         # Experiments.ExperimentConfig(
         #     name = "grw_dixon_coles",
         #     model = Models.PreGame.GRWDixonColes(
@@ -91,6 +103,19 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
+        Experiments.ExperimentConfig(
+            name = "grw_dixon_coles_v2",
+            model = Models.PreGame.GRWDixonColes(
+                μ = prior_μ,
+                γ = prior_γ,
+                σ_k = prior_σ_k,
+                σ_0 = prior_σ_0
+                # Using default ρ_raw = Normal(0,1)
+            ),
+            splitter = cv_config,
+            training_config = training_config,
+            save_dir = save_dir
+        ),
         # Experiments.ExperimentConfig(
         #     name = "grw_neg_bin_v2",
         #     model = Models.PreGame.GRWNegativeBinomial(
@@ -119,22 +144,22 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
-        Experiments.ExperimentConfig(
-            name = "grw_neg_bin_mu",
-            model = Models.PreGame.GRWNegativeBinomialMu(
-                μ_init = Normal(0.20, 0.1),
-                σ_μ    = Gamma(2, 0.015), 
-                γ      = prior_γ,
-                σ_k    = prior_σ_k,
-                σ_0    = prior_σ_0,
-                
-                # Keep Dispersion loose as before
-                log_r_prior = Normal(1.5, 1.0)
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_neg_bin_mu",
+        #     model = Models.PreGame.GRWNegativeBinomialMu(
+        #         μ_init = Normal(0.20, 0.1),
+        #         σ_μ    = Gamma(2, 0.015), 
+        #         γ      = prior_γ,
+        #         σ_k    = prior_σ_k,
+        #         σ_0    = prior_σ_0,
+        #
+        #         # Keep Dispersion loose as before
+        #         log_r_prior = Normal(1.5, 1.0)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         # Experiments.ExperimentConfig(
         #     name = "grw_bivariate_poisson",
         #     model = Models.PreGame.GRWBivariatePoisson(
@@ -148,7 +173,23 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # )
+        Experiments.ExperimentConfig(
+            name = "grw_bivariate_poisson_v2",
+            model = Models.PreGame.GRWBivariatePoisson(
+                μ = prior_μ,
+                γ = prior_γ,
+                σ_k = prior_σ_k,
+                σ_0 = prior_σ_0,
+                # Using default ρ = Normal(-2, 1.0) for covariance
+            ),
+            splitter = cv_config,
+            training_config = training_config,
+            save_dir = save_dir
+        )
+        
     ]
+
+
 
     return ds, configs
 end

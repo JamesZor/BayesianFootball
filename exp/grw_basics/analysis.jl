@@ -79,94 +79,6 @@ println("\n")
 end
 
 
-#####
-###
-using DataFrames, StatsPlots, Dates, Printf
-
-# --- Configuration ---
-over_sym = :over_35  
-under_sym = :under_35 
-
-# Get distinct colors from the Tab10 palette
-# We will cycle through these for different models
-colors = palette(:tab10)
-
-# Helper function to create short, readable labels
-function make_short_label(name, params)
-    # 1. Shorten Model Name
-    short_name = replace(name, "GRWNegativeBinomial" => "NegBin", 
-                               "GRWBivariatePoisson" => "BivPois",
-                               "GRWPoisson" => "Pois",
-                               "GRWDixonColes" => "DC")
-    
-    # 2. Extract key parameter (usually the first mu value)
-    # We look for "μ=0.32" or similar patterns
-    m = match(r"μ=([0-9\.]+)", params)
-    param_str = m === nothing ? "" : " μ=$(m.captures[1])"
-    
-    return "$short_name$param_str"
-end
-
-# 1. Get list of unique model configurations
-unique_models = unique(ledger.df[:, [:model_name, :model_parameters]])
-println("Found $(nrow(unique_models)) unique configurations.")
-start_date = Date(2021, 8, 1)
-end_date   = Date(2025, 11, 1)
-
-# Add xlims to the plot initialization
-p = plot(title = "Strategy Battle: $(over_sym) vs $(under_sym)", 
-         xlabel = "Date", ylabel = "Cumulative Profit",
-         legend = :outertopright, size=(1000, 600), margin=5Plots.mm,
-         xlims = (start_date, end_date)) # <--- FORCE THE RANGE HERE
-
-# Initialize ONE master plot
-# Add Zero line
-hline!(p, [0.0], label="Break Even", color=:black, linestyle=:dash, alpha=0.5)
-
-# 2. Iterate through each model
-for (i, model_row) in enumerate(eachrow(unique_models[[1,3], :]))
-    
-    m_name = model_row.model_name
-    m_params = model_row.model_parameters
-    
-    # Generate the short label for this model
-    lbl_base = make_short_label(m_name, m_params)
-    
-    # Assign a specific color index for this model (mod 10 to cycle if needed)
-    col_idx = mod1(i, 10)
-    model_color = colors[col_idx]
-
-    # --- A. Filter Ledger ---
-    model_ledger = filter(row -> row.model_name == m_name && 
-                                 row.model_parameters == m_params, ledger.df)
-
-    # --- B. Process Overs ---
-    overs = filter(row -> row.selection == over_sym, model_ledger)
-    if !isempty(overs)
-        sort!(overs, :date)
-        overs.cum_pnl = cumsum(overs.pnl)
-        
-        # Solid line for Overs
-        plot!(p, overs.date, overs.cum_pnl, 
-              label="$(lbl_base) | Over", 
-              lw=2, color=model_color, linestyle=:solid)
-    end
-
-    # --- C. Process Unders ---
-    unders = filter(row -> row.selection == under_sym, model_ledger)
-    if !isempty(unders)
-        sort!(unders, :date)
-        unders.cum_pnl = cumsum(unders.pnl)
-        
-        # Dashed line for Unders (Same color, different style)
-        plot!(p, unders.date, unders.cum_pnl, 
-              label="$(lbl_base) | Under", 
-              lw=2, color=model_color, linestyle=:dash)
-    end
-end
-
-display(p)
-
 
 ### 
 using DataFrames, StatsPlots, Dates, Printf
@@ -180,6 +92,8 @@ over_sym  = [:btts_yes, :over_15]
 
 over_sym  = [:btts_yes, :over_15, :over_25, :over_35, :draw, :under_55]
 under_sym = [:over_150]
+
+
 start_view = Date(2021, 7, 1)  # Start of 21/22 Season
 end_view   = Date(2025, 6, 1)  # Present day
 
@@ -217,7 +131,7 @@ p = plot(title = "Regime Battle: $(over_sym) vs $(under_sym)",
 hline!(p, [0.0], label="Break Even", color=:black, linestyle=:dash, alpha=0.5)
 
 # --- 4. PLOTTING LOOP ---
-for (i, model_row) in enumerate(eachrow(unique_models[[1,3,4],:]))
+for (i, model_row) in enumerate(eachrow(unique_models[[1,2,3,5],:]))
 # for (i, model_row) in enumerate(eachrow(unique_models))
     
     m_name = model_row.model_name
