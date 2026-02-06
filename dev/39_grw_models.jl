@@ -48,9 +48,9 @@ feature_sets = BayesianFootball.Features.create_features(
 )
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
 sampler_conf = Samplers.NUTSConfig(
-                300,
-                16,
-                100,
+                250,
+                8,
+                50,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05),

@@ -39,6 +39,97 @@ Base.@kwdef struct GRWNegativeBinomialDelta <: AbstractDynamicNegBinModel
     z_steps::Distribution = Normal(0,1)
 end
 
+@model function grw_negative_binomial_train(
+                    n_teams, n_rounds, 
+                    flat_home_ids, flat_away_ids, 
+                    flat_goals_pairs,
+                    time_indices, model::GRWNegativeBinomialDelta,
+                    ::Type{T} = Float64 ) where {T} 
+
+    # --- 1. Hyperparameters ---
+    μ ~ model.μ
+    γ ~ model.γ
+    log_r ~ model.log_r_prior 
+    r = exp(log_r)
+
+    # --- 2. Hierarchical Volatility (The New Part) ---
+    # A. Global Baselines
+    log_σ_att_bar ~ model.log_σ_att_global
+    log_σ_def_bar ~ model.log_σ_def_global
+
+    # B. Team-Specific Deviations (Deltas)
+    #    We sample n_teams deviations centered at 0
+    δ_att ~ filldist(model.δ_σ_att, n_teams)
+    δ_def ~ filldist(model.δ_σ_def, n_teams)
+
+    # C. Construct Effective Team Sigmas
+    #    exp() ensures positivity. 
+    #    σ_team = exp(Global + Delta)
+    σ_att_vec = exp.(log_σ_att_bar .+ δ_att)
+    σ_def_vec = exp.(log_σ_def_bar .+ δ_def)
+
+    # --- 3. Initial Spread (t=0) ---
+    σ_att_0 ~ model.σ_0
+    σ_def_0 ~ model.σ_0
+
+    # --- 4. Latent Variables ---
+    # Initial State
+    z_att_init ~ filldist(model.z_init, n_teams)
+    z_def_init ~ filldist(model.z_init, n_teams)
+
+    # Random Walk Steps (Matrix: n_teams x n_rounds-1)
+    z_att_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
+    z_def_steps ~ filldist(model.z_steps, n_teams, n_rounds - 1)
+
+    # --- 5. Trajectory Reconstruction (NCP) ---
+    # Initial states
+    scaled_init_att = z_att_init .* σ_att_0
+    scaled_init_def = z_def_init .* σ_def_0
+
+    # Dynamic steps: 
+    # Julia broadcasts the vector `σ_att_vec` (n_teams) across the columns 
+    # of `z_att_steps` (n_teams x rounds). This applies the specific σ to each team.
+    scaled_steps_att = z_att_steps .* σ_att_vec
+    scaled_steps_def = z_def_steps .* σ_def_vec
+
+    # Integrate (Random Walk)
+    att_raw = cumsum(hcat(scaled_init_att, scaled_steps_att), dims=2)
+    def_raw = cumsum(hcat(scaled_init_def, scaled_steps_def), dims=2)
+
+    # --- 6. Centering (Robust Formulation) ---
+    att = att_raw .- mean(att_raw, dims=1)
+    def = def_raw .- mean(def_raw, dims=1)
+
+    # --- 7. Likelihood ---
+    att_h_flat = view(att, CartesianIndex.(flat_home_ids, time_indices))
+    def_a_flat = view(def, CartesianIndex.(flat_away_ids, time_indices))
+    att_a_flat = view(att, CartesianIndex.(flat_away_ids, time_indices))
+    def_h_flat = view(def, CartesianIndex.(flat_home_ids, time_indices))
+
+    λₕ = exp.(μ .+ γ .+ att_h_flat .+ def_a_flat)
+    λₐ = exp.(μ .+      att_a_flat .+ def_h_flat)
+
+    flat_goals_pairs ~ arraydist(DoubleNegativeBinomial.(λₕ, λₐ, r, r))
+    
+    return nothing
+end
+
+
+
+function build_turing_model(model::GRWNegativeBinomialDelta, feature_set::FeatureSet) 
+    data_matrix = permutedims(hcat(feature_set[:flat_home_goals], feature_set[:flat_away_goals]))
+
+    return grw_negative_binomial_train(
+        feature_set[:n_teams]::Int,
+        feature_set[:n_rounds]::Int,
+        feature_set[:flat_home_ids],
+        feature_set[:flat_away_ids],
+        data_matrix::Matrix{Int}, 
+        feature_set[:time_indices],
+        model
+    )
+end
+
 
 function extract_parameters(
     model::GRWNegativeBinomialDelta, 
