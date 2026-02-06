@@ -60,6 +60,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
     prior_μ = Normal(0.32, 0.05)        # Global Baseline
     prior_γ = Normal(0.12, 0.05)   # Home Advantage
 
+    prior_δ = Normal(0.0, 0.4)
+
      # μ ~ Normal{Float64}(μ=0.3191977392306569, σ=0.05)
      # γ ~ Normal{Float64}(μ=0.12681652075405134, σ=0.05)
 
@@ -78,18 +80,18 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
-        Experiments.ExperimentConfig(
-            name = "grw_poisson_v2",
-            model = Models.PreGame.GRWPoisson(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k, 
-                σ_0 = prior_σ_0
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_poisson_v2",
+        #     model = Models.PreGame.GRWPoisson(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k, 
+        #         σ_0 = prior_σ_0
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         # Experiments.ExperimentConfig(
         #     name = "grw_dixon_coles",
         #     model = Models.PreGame.GRWDixonColes(
@@ -103,19 +105,19 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
-        Experiments.ExperimentConfig(
-            name = "grw_dixon_coles_v2",
-            model = Models.PreGame.GRWDixonColes(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k,
-                σ_0 = prior_σ_0
-                # Using default ρ_raw = Normal(0,1)
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_dixon_coles_v2",
+        #     model = Models.PreGame.GRWDixonColes(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0
+        #         # Using default ρ_raw = Normal(0,1)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         # Experiments.ExperimentConfig(
         #     name = "grw_neg_bin_v2",
         #     model = Models.PreGame.GRWNegativeBinomial(
@@ -173,14 +175,38 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # )
-        Experiments.ExperimentConfig(
-            name = "grw_bivariate_poisson_v2",
-            model = Models.PreGame.GRWBivariatePoisson(
+        # Experiments.ExperimentConfig(
+        #     name = "grw_bivariate_poisson_v2",
+        #     model = Models.PreGame.GRWBivariatePoisson(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0,
+        #         # Using default ρ = Normal(-2, 1.0) for covariance
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # )
+       Experiments.ExperimentConfig(
+            name = "grw_neg_bin_delta",
+            model = Models.PreGame.GRWNegativeBinomialDelta(
+                # --- Standard Parameters ---
                 μ = prior_μ,
                 γ = prior_γ,
-                σ_k = prior_σ_k,
                 σ_0 = prior_σ_0,
-                # Using default ρ = Normal(-2, 1.0) for covariance
+                
+                # --- NEW: Hierarchical Parameters ---
+                # We use the same prior for both Att and Def globals to start,
+                # but the model will learn them independently.
+                log_σ_att_global = Normal(-3.0, 0.5),
+                log_σ_def_global = Normal(-3.0, 0.5),
+                
+                # The Deltas (Team Specific Deviations)
+                δ_σ_att = prior_δ,
+                δ_σ_def = prior_δ,
+                # Standard Dispersion (Default)
+                log_r_prior = Normal(1.5, 1.0) 
             ),
             splitter = cv_config,
             training_config = training_config,
