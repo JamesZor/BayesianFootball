@@ -50,7 +50,7 @@ train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_
 sampler_conf = Samplers.NUTSConfig(
                 250,
                 8,
-                50,
+                100,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05),
@@ -224,11 +224,10 @@ df = Models.PreGame.extract_volatility_analysis(grw_negbin_model, feature_sets[e
 
 # I : --- GRW Negative binomial full
 
-
-grw_negbin_model = Models.PreGame.GRWNegativeBinomialDelta()
+grw_negbin_model = Models.PreGame.GRWNegativeBinomialFull()
 
 conf_negbin = Experiments.ExperimentConfig(
-                    name = "grw negative binomial delta ",
+                    name = "grw negative binomial full ",
                     model = grw_negbin_model,
                     splitter = cv_config,
                     training_config = training_config,

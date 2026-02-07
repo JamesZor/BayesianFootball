@@ -19,11 +19,11 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     )
 
     cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [56,57],       # Premiership
-    target_seasons = ["25/26"],  # Target Season
+        tournament_ids = [56],       # Premiership
+        target_seasons = ["25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_week,
-        warmup_period = 22,          # Long warmup for GRW
+        warmup_period = 25,          # Long warmup for GRW
         stop_early = false
     )
 
@@ -36,7 +36,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
         500,     # n_samples
-        2,      # n_chains
+        8,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
@@ -91,19 +91,36 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
         #     training_config = training_config,
         #     save_dir = save_dir
         # ),
-        Experiments.ExperimentConfig(
-            name = "grw_neg_bin_beforeweekend",
-            model = Models.PreGame.GRWNegativeBinomial(
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_k = prior_σ_k,
-                σ_0 = prior_σ_0
-                # Using default log_r_prior = Normal(1.5, 1.0)
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
+        # Experiments.ExperimentConfig(
+        #     name = "grw_neg_bin_beforeweekend",
+        #     model = Models.PreGame.GRWNegativeBinomial(
+        #         μ = prior_μ,
+        #         γ = prior_γ,
+        #         σ_k = prior_σ_k,
+        #         σ_0 = prior_σ_0
+        #         # Using default log_r_prior = Normal(1.5, 1.0)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+
+        # Experiments.ExperimentConfig(
+        #     name = "grw_neg_bin_mu_wk25_l1",
+        #     model = Models.PreGame.GRWNegativeBinomialMu(
+        #         μ_init = Normal(0.20, 0.1),
+        #         σ_μ    = Gamma(2, 0.015), 
+        #         γ      = prior_γ,
+        #         σ_k    = prior_σ_k,
+        #         σ_0    = prior_σ_0,
+        #
+        #         # Keep Dispersion loose as before
+        #         log_r_prior = Normal(1.5, 1.0)
+        #     ),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
         # Experiments.ExperimentConfig(
         #     name = "grw_bivariate_poisson",
         #     model = Models.PreGame.GRWBivariatePoisson(
@@ -117,7 +134,40 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
         #     training_config = training_config,
         #     save_dir = save_dir
         # )
-    ]
+        Experiments.ExperimentConfig(
+                    name = "grw_neg_bin_full",
+                    model = Models.PreGame.GRWNegativeBinomialFull(
+                        # --- 1. Dynamic Global Baseline ---
+                        μ_init = prior_μ,              # Normal(0.32, 0.05)
+                        σ_μ    = Gamma(2, 0.015),      # Process noise for league average (Small)
+
+                        # --- 2. Home Advantage ---
+                        γ = prior_γ,                   # Normal(0.12, 0.05)
+
+                        # --- 3. Hierarchical Dispersion (r) ---
+                        log_r_global = Normal(1.5, 0.5),
+                        
+                        # We use a fixed prior for the team offsets now (removed the hierarchical std).
+                        # Normal(0, 0.5) allows r to vary by factor of ~1.6x between teams (e^0.5).
+                        δ_r = Normal(0, 1),   
+
+                        # --- 4. Hierarchical Process Noise (Volatility) ---
+                        # Baselines targeting ~0.05
+                        log_σ_att_global = Normal(-3.0, 0.5),
+                        log_σ_def_global = Normal(-3.0, 0.5),
+
+                        # Team Deviations (using your defined prior_δ)
+                        δ_σ_att = prior_δ,             # Normal(0.0, 0.4)
+                        δ_σ_def = prior_δ,             # Normal(0.0, 0.4)
+                        
+                        # --- 5. Initial Spread ---
+                        σ_0 = prior_σ_0                # Gamma(2, 0.08)
+                    ),
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir = save_dir
+                )
+            ]
 
     return ds, configs
 end

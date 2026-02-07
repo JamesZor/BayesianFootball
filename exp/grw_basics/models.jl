@@ -188,30 +188,64 @@ function get_grw_basics_configs(; save_dir="./data/exp/grw_basics")
         #     training_config = training_config,
         #     save_dir = save_dir
         # )
-       Experiments.ExperimentConfig(
-            name = "grw_neg_bin_delta",
-            model = Models.PreGame.GRWNegativeBinomialDelta(
-                # --- Standard Parameters ---
-                μ = prior_μ,
-                γ = prior_γ,
-                σ_0 = prior_σ_0,
-                
-                # --- NEW: Hierarchical Parameters ---
-                # We use the same prior for both Att and Def globals to start,
-                # but the model will learn them independently.
-                log_σ_att_global = Normal(-3.0, 0.5),
-                log_σ_def_global = Normal(-3.0, 0.5),
-                
-                # The Deltas (Team Specific Deviations)
-                δ_σ_att = prior_δ,
-                δ_σ_def = prior_δ,
-                # Standard Dispersion (Default)
-                log_r_prior = Normal(1.5, 1.0) 
-            ),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        )
+       # Experiments.ExperimentConfig(
+       #      name = "grw_neg_bin_delta",
+       #      model = Models.PreGame.GRWNegativeBinomialDelta(
+       #          # --- Standard Parameters ---
+       #          μ = prior_μ,
+       #          γ = prior_γ,
+       #          σ_0 = prior_σ_0,
+       #
+       #          # --- NEW: Hierarchical Parameters ---
+       #          # We use the same prior for both Att and Def globals to start,
+       #          # but the model will learn them independently.
+       #          log_σ_att_global = Normal(-3.0, 0.5),
+       #          log_σ_def_global = Normal(-3.0, 0.5),
+       #
+       #          # The Deltas (Team Specific Deviations)
+       #          δ_σ_att = prior_δ,
+       #          δ_σ_def = prior_δ,
+       #          # Standard Dispersion (Default)
+       #          log_r_prior = Normal(1.5, 1.0) 
+       #      ),
+       #      splitter = cv_config,
+       #      training_config = training_config,
+       #      save_dir = save_dir
+       #  )
+       #
+        Experiments.ExperimentConfig(
+                    name = "grw_neg_bin_full",
+                    model = Models.PreGame.GRWNegativeBinomialFull(
+                        # --- 1. Dynamic Global Baseline ---
+                        μ_init = prior_μ,              # Normal(0.32, 0.05)
+                        σ_μ    = Gamma(2, 0.015),      # Process noise for league average (Small)
+
+                        # --- 2. Home Advantage ---
+                        γ = prior_γ,                   # Normal(0.12, 0.05)
+
+                        # --- 3. Hierarchical Dispersion (r) ---
+                        log_r_global = Normal(1.5, 0.5),
+                        
+                        # We use a fixed prior for the team offsets now (removed the hierarchical std).
+                        # Normal(0, 0.5) allows r to vary by factor of ~1.6x between teams (e^0.5).
+                        δ_r = Normal(0, 1),   
+
+                        # --- 4. Hierarchical Process Noise (Volatility) ---
+                        # Baselines targeting ~0.05
+                        log_σ_att_global = Normal(-3.0, 0.5),
+                        log_σ_def_global = Normal(-3.0, 0.5),
+
+                        # Team Deviations (using your defined prior_δ)
+                        δ_σ_att = prior_δ,             # Normal(0.0, 0.4)
+                        δ_σ_def = prior_δ,             # Normal(0.0, 0.4)
+                        
+                        # --- 5. Initial Spread ---
+                        σ_0 = prior_σ_0                # Gamma(2, 0.08)
+                    ),
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir = save_dir
+                )
         
     ]
 

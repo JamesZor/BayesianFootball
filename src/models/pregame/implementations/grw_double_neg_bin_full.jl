@@ -155,3 +155,108 @@ function build_turing_model(model::GRWNegativeBinomialFull, feature_set::Feature
         model
     )
 end
+
+
+function extract_parameters(
+    model::GRWNegativeBinomialFull, 
+    df_to_predict::AbstractDataFrame, 
+    feature_set::FeatureSet, 
+    chain::Chains
+)
+    n_teams = feature_set[:n_teams]
+    team_map = feature_set[:team_map]
+    
+    step_names = names(group(chain, :z_att_steps))
+    n_steps_raw = length(step_names)
+    n_rounds = (n_steps_raw ÷ n_teams) + 1
+
+    # --- 1. Global Scalars (Means) ---
+    γ_val = mean(chain[:γ])
+    
+    # --- 2. Hierarchical Volatility Reconstruction ---
+    # Global Baselines
+    log_σ_att_bar = mean(chain[:log_σ_att_bar])
+    log_σ_def_bar = mean(chain[:log_σ_def_bar])
+    
+    # Team Deltas (Vector of means)
+    δ_σ_att_vec = vec(mean(Array(group(chain, :δ_σ_att_vec)), dims=1))
+    δ_σ_def_vec = vec(mean(Array(group(chain, :δ_σ_def_vec)), dims=1))
+    
+    # Calculate Team Sigmas
+    σ_att_vec = exp.(log_σ_att_bar .+ δ_σ_att_vec)
+    σ_def_vec = exp.(log_σ_def_bar .+ δ_σ_def_vec)
+
+    # --- 3. Hierarchical Dispersion Reconstruction ---
+    log_r_bar = mean(chain[:log_r_bar])
+    δ_r_vec   = vec(mean(Array(group(chain, :δ_r)), dims=1)) # Vector of team r-deltas
+
+    # --- 4. Dynamic Mu Reconstruction ---
+    μ_init = vec(Array(chain[:μ_init]))
+    σ_μ    = vec(Array(chain[:σ_μ]))
+    z_μ_steps = Array(group(chain, :z_μ_steps))
+    
+    # Integrate Mu
+    scaled_steps_μ = z_μ_steps .* σ_μ
+    raw_μ = hcat(μ_init, scaled_steps_μ)
+    μ_traj_samples = cumsum(raw_μ, dims=2)
+    μ_traj_mean = vec(mean(μ_traj_samples, dims=1)) # Vector of length n_rounds
+
+    # --- 5. Team Strength Reconstruction ---
+    z_att_init = vec(mean(Array(group(chain, :z_att_init)), dims=1))
+    z_def_init = vec(mean(Array(group(chain, :z_def_init)), dims=1))
+    
+    # Reshape Steps
+    z_att_steps = reshape(vec(mean(Array(group(chain, :z_att_steps)), dims=1)), n_teams, n_rounds-1)
+    z_def_steps = reshape(vec(mean(Array(group(chain, :z_def_steps)), dims=1)), n_teams, n_rounds-1)
+    
+    σ_att_0 = mean(chain[:σ_att_0])
+    σ_def_0 = mean(chain[:σ_def_0])
+
+    # Integrate Paths using SPECIFIC Sigmas
+    scaled_init_att = z_att_init .* σ_att_0
+    scaled_init_def = z_def_init .* σ_def_0
+    scaled_steps_att = z_att_steps .* σ_att_vec
+    scaled_steps_def = z_def_steps .* σ_def_vec
+
+    att_raw = cumsum(hcat(scaled_init_att, scaled_steps_att), dims=2)
+    def_raw = cumsum(hcat(scaled_init_def, scaled_steps_def), dims=2)
+
+    # Center
+    att_cube = att_raw .- mean(att_raw, dims=1)
+    def_cube = def_raw .- mean(def_raw, dims=1)
+
+    # --- 6. Prediction Loop ---
+    ExtractionValue = NamedTuple{(:λ_h, :λ_a, :r), Tuple{Float64, Float64, Float64}}
+    extraction_dict = Dict{Int64, ExtractionValue}()
+    sizehint!(extraction_dict, nrow(df_to_predict))
+
+    for row in eachrow(df_to_predict)
+        h_id = team_map[row.home_team]
+        a_id = team_map[row.away_team]
+        
+        t = row.match_week 
+        t_idx = clamp(t, 1, n_rounds)
+
+        # Retrieve Team Strengths
+        att_h = att_cube[h_id, t_idx]
+        def_a = def_cube[a_id, t_idx]
+        att_a = att_cube[a_id, t_idx]
+        def_h = def_cube[h_id, t_idx]
+        
+        # Retrieve Dynamic Global Mu
+        μ_curr = μ_traj_mean[t_idx]
+
+        # Calculate Rates
+        λ_h = exp(μ_curr + γ_val + att_h + def_a)
+        λ_a = exp(μ_curr +         att_a + def_h)
+        
+        # Calculate Match-Specific Dispersion
+        # log(r) = Global + Home_Delta + Away_Delta
+        log_r_match = log_r_bar + δ_r_vec[h_id] + δ_r_vec[a_id]
+        r_val = exp(log_r_match)
+
+        extraction_dict[Int(row.match_id)] = (; λ_h, λ_a, r=r_val)
+    end
+
+    return extraction_dict
+end

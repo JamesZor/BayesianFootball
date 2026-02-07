@@ -148,14 +148,23 @@ function _parse_data!(out, m, data)
             end
         end
 
-        # BTTS
-        if haskey(ft, "Both teams to Score?")
-            for (k, o) in ft["Both teams to Score?"]
-                sel = k == "Yes" ? :btts_yes : :btts_no
+
+        if haskey(ft, "Over/Under 1.5 Goals")
+            for (k, o) in ft["Over/Under 1.5 Goals"]
+                sel = startswith(k, "Over") ? :over_15 : :under_15
                 b, l = get_p(o)
-                push!(out, ScraperRow(m.id, m.event_name, "BTTS", sel, b, l, now()))
+                push!(out, ScraperRow(m.id, m.event_name, "OverUnder", sel, b, l, now()))
             end
         end
+
+        # BTTS
+        # if haskey(ft, "Both teams to Score?")
+        #     for (k, o) in ft["Both teams to Score?"]
+        #         sel = k == "Yes" ? :btts_yes : :btts_no
+        #         b, l = get_p(o)
+        #         push!(out, ScraperRow(m.id, m.event_name, "BTTS", sel, b, l, now()))
+        #     end
+        # end
     end
 end
 
