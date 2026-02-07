@@ -213,6 +213,66 @@ conf_negbin = Experiments.ExperimentConfig(
 
 results_negbin = Experiments.run_experiment(ds, conf_negbin)
 
+describe(results_negbin.training_results[1][1]) 
+
+
+df_trends_negbin = Models.PreGame.extract_trends(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
+
+df = Models.PreGame.extract_volatility_analysis(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
+
+
+using StatsPlots, DataFrames, Statistics
+
+function plot_volatility_forest(df::DataFrame)
+    # 1. Sort by Attack Volatility so the plot is ordered
+    #    This makes it easier to see the "ranking" of stability
+    sort!(df, :att_sigma)
+
+    # 2. Calculate errors for the bars (Plots.jl expects relative errors)
+    #    Format: (value - low, high - value)
+    att_errors = (df.att_sigma .- df.att_sigma_low, df.att_sigma_high .- df.att_sigma)
+    def_errors = (df.def_sigma .- df.def_sigma_low, df.def_sigma_high .- df.def_sigma)
+
+    # 3. Create the Plot
+    p = @df df scatter(
+        # --- Data ---
+        [:att_sigma :def_sigma],  # X values (Matrix for two series)
+        :team,                    # Y values (Shared)
+        
+        # --- Error Bars ---
+        # We plot them separately to control colors better, or use a loop.
+        # Here is the cleanest way using a layout:
+        layout = (1, 2),
+        link = :y,                # Link Y-axis so zooming one zooms both
+        legend = false,
+        size = (900, 500),
+        
+        # --- Aesthetics ---
+        title = ["Attack Volatility (Weekly Drift)" "Defense Volatility (Weekly Drift)"],
+        xlabel = "Sigma (Standard Deviation)",
+        markersize = 6,
+        yflip = false,            # Ensure top of list is top of plot
+        left_margin = 5Plots.mm
+    )
+
+    # 4. Add specific error bars to each subplot
+    # Subplot 1: Attack
+    plot!(p[1], df.att_sigma, df.team, xerror=att_errors, 
+          st=:scatter, color=:blue, label="Attack", marker=:circle)
+    vline!(p[1], [mean(df.att_sigma)], color=:grey, linestyle=:dash, label="League Avg")
+
+    # Subplot 2: Defense
+    plot!(p[2], df.def_sigma, df.team, xerror=def_errors, 
+          st=:scatter, color=:red, label="Defense", marker=:square)
+    vline!(p[2], [mean(df.def_sigma)], color=:grey, linestyle=:dash, label="League Avg")
+
+    return p
+end
+
+# --- Usage ---
+# Assuming 'df' is the DataFrame from the previous step
+plt = plot_volatility_forest(df)
+# display(plt)
 
 
 # --- 

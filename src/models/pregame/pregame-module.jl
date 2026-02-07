@@ -51,6 +51,11 @@ include("./implementations/grw_double_neg_bin_delta.jl")
 export GRWNegativeBinomialDelta
 
 
+include("./implementations/grw_double_neg_bin_full.jl")
+export GRWNegativeBinomialFull
+
+
+
 include("./implementations/grw_bivariate_poisson.jl")
 export GRWBivariatePoisson
 
