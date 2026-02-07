@@ -57,7 +57,6 @@ end
     # --- B. Hierarchical Dispersion (r) ---
     # Global Baseline
     log_r_bar ~ model.log_r_global
-    σ_δ_r     ~ model.δ_r_std
     
     # Team-specific contributions to dispersion (Zero-centered)
     # If Team A has negative δ_r, matches involving them are more chaotic (lower r)
