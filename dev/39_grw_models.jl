@@ -221,6 +221,28 @@ df_trends_negbin = Models.PreGame.extract_trends(grw_negbin_model, feature_sets[
 df = Models.PreGame.extract_volatility_analysis(grw_negbin_model, feature_sets[end][1], results_negbin.training_results[end][1])
 
 
+
+# I : --- GRW Negative binomial full
+
+
+grw_negbin_model = Models.PreGame.GRWNegativeBinomialDelta()
+
+conf_negbin = Experiments.ExperimentConfig(
+                    name = "grw negative binomial delta ",
+                    model = grw_negbin_model,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir ="./data/junk"
+)
+
+results_negbin = Experiments.run_experiment(ds, conf_negbin)
+
+describe(results_negbin.training_results[1][1]) 
+
+
+
+
+
 using StatsPlots, DataFrames, Statistics
 
 function plot_volatility_forest(df::DataFrame)
