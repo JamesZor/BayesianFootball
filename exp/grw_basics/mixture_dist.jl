@@ -439,7 +439,9 @@ plot!(1:n_bets, (1:n_bets) .* ev_gamma, color=:red, linewidth=3, label="Expected
 hline!([0], color=:black, linestyle=:dash)
 
 
-###
+# ------------------------------------------------------------------------
+# Rank Strategies 
+# ------------------------------------------------------------------------
 
 
 using DataFrames, Distributions, Statistics, StatsBase

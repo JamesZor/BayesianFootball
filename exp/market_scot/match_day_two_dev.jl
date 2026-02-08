@@ -323,3 +323,18 @@ results2 = BayesianFootball.Signals.process_signals(
   21 │        1  2026-02-07  OverUnder    under_25     missing  BayesianKelly  none           odds          3.25  0.041917
 
 =#
+
+
+ppd2.df.mean_odds = mean( 1 ./ ppd2.df.distribution)
+
+ppd2.df.mean_odds = mean.(1 ./ ppd2.df.distribution)
+ppd2
+ppd2.df.mean_odds = [mean(1 ./ row) for row in ppd2.df.distribution]
+
+ppd2
+
+ppd1.df.mean_odds = [mean(1 ./ row) for row in ppd1.df.distribution]
+
+
+
+ppd1
