@@ -29,6 +29,9 @@ include("./splitting/display.jl")
 include("./markets/markets-module.jl") 
 using .Markets
 
+
+include("./scotland_extra.jl") 
+
 export 
     # From Markets
     MarketData, 
@@ -38,5 +41,7 @@ export
     MarketBTTS,
     prepare_market_data
     # get_standard_markets # If you moved this helper here
+    
+    load_extra_ds
 
 end # module

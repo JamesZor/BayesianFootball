@@ -59,6 +59,9 @@ abstract type AbstractDynamicNegBinModel <: AbstractNegBinModel end
 export AbstractStaticNegBinModel, AbstractDynamicNegBinModel, AbstractNegBinModel
 # --- Flexible Feature Structs ---
 
+abstract type AbstractFunnelModel <: AbstractPregameModel end
+export AbstractFunnelModel
+
 """
     FeatureSet
     
