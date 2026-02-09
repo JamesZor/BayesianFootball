@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "525ad3024de8996f878d9bc733cdd5cab382ac3f"
+project_hash = "b67fdf8ac7fdd6957c8dd5eed0f18ff95ab36686"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -247,7 +247,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "FreqTables", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsBase", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
@@ -2004,6 +2004,11 @@ version = "3.40.0"
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
+
+[[deps.RegularExpressions]]
+git-tree-sha1 = "a844fabeb735fcc08b36e1ef7f6e216fd54e786d"
+uuid = "27faeba3-bc54-5829-b163-df8cb949fe88"
+version = "0.1.0"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
