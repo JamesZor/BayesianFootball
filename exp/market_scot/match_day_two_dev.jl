@@ -1,3 +1,4 @@
+using Revise
 using BayesianFootball
 using DataFrames
 using BayesianFootball.Signals
@@ -108,6 +109,23 @@ match_to_predict2 = DataFrame(
     away_team = ["east-kilbride", "dumbarton", "annan-athletic"]
 )
 
+
+match_to_predict1 = DataFrame(
+    match_id = [1],
+    match_week = [999], 
+    home_team = ["montrose"], 
+    away_team = ["peterhead"]
+)
+
+match_to_predict2 = DataFrame(
+    match_id = [1, 2],
+    match_week = [999, 999], 
+    home_team = ["clyde-fc", "annan-athletic"], 
+    away_team = ["elgin-city", "dumbarton"]
+)
+
+
+
 raw_preds1 = BayesianFootball.Models.PreGame.extract_parameters(
     m1.config.model, 
     match_to_predict1, 
@@ -144,33 +162,7 @@ ppd2 = BayesianFootball.Predictions.model_inference(
 
 
 baker = BayesianKelly()
-
 my_signals = [baker]
-
-### HACK:
-unique_ids = unique(match_to_predict1.match_id)
-str_to_int = Dict(id => i for (i, id) in enumerate(unique_ids))
-
-df_odds.match_id_str = df_odds.match_id 
-# Only keep odds for matches we are actually modeling
-df_odds_clean = filter(row -> haskey(str_to_int, row.match_id), df_odds)
-df_odds_clean.match_id = [str_to_int[x] for x in df_odds_clean.match_id]
-###
-
-results = BayesianFootball.Signals.process_signals(
-    ppd1, 
-    df_odds, 
-    my_signals; 
-    odds_column=:odds
-)
-
-
-results = BayesianFootball.Signals.process_signals(
-    ppd2, 
-    df_odds, 
-    my_signals; 
-    odds_column=:odds
-)
 
 
 
@@ -186,6 +178,13 @@ id_mapping = Dict(
     "b2004323" => 3,
 )
 
+id_mapping = Dict(
+    "1c08a9aa" => 1, 
+)
+
+23 │ 1c08a9aa  Montrose v Peterhead 
+1 │ ec8a3f12  Annan v Dumbarton  
+12 │ 54313492  Clyde v Elgin City FC 
 # 2. Create a clean copy of the odds dataframe to modify
 df_odds_clean = copy(df_odds)
 
@@ -199,6 +198,8 @@ filter!(row -> row.match_id != -1, df_odds_clean)
 # 5. Ensure the column is strictly Int64 (to match ppd1)
 df_odds_clean.match_id = identity.(df_odds_clean.match_id)
 
+df_odds_clean.date .= today()
+
 # 6. Now run the function with the cleaned dataframe
 results = BayesianFootball.Signals.process_signals(
     ppd1, 
@@ -209,6 +210,33 @@ results = BayesianFootball.Signals.process_signals(
 
 
 #= 
+julia> match_to_predict1
+1×4 DataFrame
+ Row │ match_id  match_week  home_team  away_team 
+     │ Int64     Int64       String     String    
+─────┼────────────────────────────────────────────
+   1 │        1         999  montrose   peterhead
+
+11×10 DataFrame
+ Row │ match_id  date        market_name  selection  is_winner  signal_name    signal_params  odds_type  odds     stake     
+     │ Int64     Date        String       Symbol     Missing    String         String         String     Float64  Float64   
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │        1  2026-02-10  1X2          away         missing  BayesianKelly  none           odds          3.1   0.0
+   2 │        1  2026-02-10  1X2          home         missing  BayesianKelly  none           odds          2.32  0.0357306
+   3 │        1  2026-02-10  1X2          draw         missing  BayesianKelly  none           odds          3.55  0.0
+   4 │        1  2026-02-10  OverUnder    under_05     missing  BayesianKelly  none           odds         15.5   0.0
+   5 │        1  2026-02-10  OverUnder    over_05      missing  BayesianKelly  none           odds          1.05  0.11339
+   6 │        1  2026-02-10  OverUnder    over_15      missing  BayesianKelly  none           odds          1.23  0.135571
+   7 │        1  2026-02-10  OverUnder    under_15     missing  BayesianKelly  none           odds          4.8   0.0
+   8 │        1  2026-02-10  OverUnder    over_25      missing  BayesianKelly  none           odds          1.72  0.169388
+   9 │        1  2026-02-10  OverUnder    under_25     missing  BayesianKelly  none           odds          2.3   0.0
+  10 │        1  2026-02-10  OverUnder    under_35     missing  BayesianKelly  none           odds          1.53  0.0
+  11 │        1  2026-02-10  OverUnder    over_35      missing  BayesianKelly  none           odds          2.82  0.156735
+
+
+####
+
+
 21×10 DataFrame
  Row │ match_id  date        market_name  selection  is_winner  signal_name    signal_params  odds_type  odds     stake      
      │ Int64     Date        String       Symbol     Missing    String         String         String     Float64  Float64    
@@ -262,9 +290,8 @@ f* w = amount
 
 
 id_mapping = Dict(
-"1718fd03" => 1,
-"9e59ef31" => 2,
-"4c7a06f0" => 3,
+"54313492" => 1,
+"ec8a3f12" => 2,
 )
 
 # 2. Create a clean copy of the odds dataframe to modify
@@ -279,6 +306,7 @@ filter!(row -> row.match_id != -1, df_odds_clean)
 
 # 5. Ensure the column is strictly Int64 (to match ppd1)
 df_odds_clean.match_id = identity.(df_odds_clean.match_id)
+df_odds_clean.date .= today();
 
 # 6. Now run the function with the cleaned dataframe
 results2 = BayesianFootball.Signals.process_signals(
@@ -287,7 +315,49 @@ results2 = BayesianFootball.Signals.process_signals(
     my_signals; 
     odds_column=:odds
 )
+
+a = innerjoin(df_odds_clean, results2.df, on = :match_id, makeunique=true)
+
+
 #=
+julia> match_to_predict2
+2×4 DataFrame
+ Row │ match_id  match_week  home_team       away_team  
+     │ Int64     Int64       String          String     
+─────┼──────────────────────────────────────────────────
+   1 │        1         999  clyde-fc        elgin-city
+   2 │        2         999  annan-athletic  dumbarton
+
+julia> results2
+22×10 DataFrame
+ Row │ match_id  date        market_name  selection  is_winner  signal_name    signal_params  odds_type  odds     stake      
+     │ Int64     Date        String       Symbol     Missing    String         String         String     Float64  Float64    
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │        2  2026-02-10  1X2          away         missing  BayesianKelly  none           odds          3.55  0.00138557
+   2 │        2  2026-02-10  1X2          home         missing  BayesianKelly  none           odds          1.94  0.0
+   3 │        2  2026-02-10  1X2          draw         missing  BayesianKelly  none           odds          3.95  0.0
+   4 │        2  2026-02-10  OverUnder    under_05     missing  BayesianKelly  none           odds         17.5   0.00152013
+   5 │        2  2026-02-10  OverUnder    over_05      missing  BayesianKelly  none           odds          1.03  0.0
+   6 │        2  2026-02-10  OverUnder    over_15      missing  BayesianKelly  none           odds          1.19  0.0
+   7 │        2  2026-02-10  OverUnder    under_15     missing  BayesianKelly  none           odds          5.5   0.0200506
+   8 │        2  2026-02-10  OverUnder    over_25      missing  BayesianKelly  none           odds          1.59  0.0
+   9 │        2  2026-02-10  OverUnder    under_25     missing  BayesianKelly  none           odds          2.5   0.0194674
+  10 │        2  2026-02-10  OverUnder    under_35     missing  BayesianKelly  none           odds          1.6   0.00917846
+  11 │        2  2026-02-10  OverUnder    over_35      missing  BayesianKelly  none           odds          2.48  0.0
+  12 │        1  2026-02-10  1X2          away         missing  BayesianKelly  none           odds          3.6   0.00329256
+  13 │        1  2026-02-10  1X2          home         missing  BayesianKelly  none           odds          2.0   0.0
+  14 │        1  2026-02-10  1X2          draw         missing  BayesianKelly  none           odds          3.9   0.0
+  15 │        1  2026-02-10  OverUnder    under_05     missing  BayesianKelly  none           odds         15.0   0.00132406
+  16 │        1  2026-02-10  OverUnder    over_05      missing  BayesianKelly  none           odds          1.05  0.0
+  17 │        1  2026-02-10  OverUnder    over_15      missing  BayesianKelly  none           odds          1.2   0.0
+  18 │        1  2026-02-10  OverUnder    under_15     missing  BayesianKelly  none           odds          5.5   0.0350398
+  19 │        1  2026-02-10  OverUnder    over_25      missing  BayesianKelly  none           odds          1.64  0.0
+  20 │        1  2026-02-10  OverUnder    under_25     missing  BayesianKelly  none           odds          2.48  0.0331168
+  21 │        1  2026-02-10  OverUnder    under_35     missing  BayesianKelly  none           odds          1.6   0.0205005
+  22 │        1  2026-02-10  OverUnder    over_35      missing  BayesianKelly  none           odds          2.46  0.0
+
+
+####
 
  Row │ match_id  match_week  home_team          away_team      
      │ Int64     Int64       String             String         
@@ -332,9 +402,11 @@ ppd2
 ppd2.df.mean_odds = [mean(1 ./ row) for row in ppd2.df.distribution]
 
 ppd2
-
+using Statistics
 ppd1.df.mean_odds = [mean(1 ./ row) for row in ppd1.df.distribution]
 
 
 
 ppd1
+
+match_to_predict1

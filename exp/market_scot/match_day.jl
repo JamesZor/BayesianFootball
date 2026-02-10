@@ -157,6 +157,24 @@ function _parse_data!(out, m, data)
             end
         end
 
+
+        if haskey(ft, "Over/Under 0.5 Goals")
+            for (k, o) in ft["Over/Under 0.5 Goals"]
+                sel = startswith(k, "Over") ? :over_05 : :under_05
+                b, l = get_p(o)
+                push!(out, ScraperRow(m.id, m.event_name, "OverUnder", sel, b, l, now()))
+            end
+        end
+
+        if haskey(ft, "Over/Under 3.5 Goals")
+            for (k, o) in ft["Over/Under 3.5 Goals"]
+                sel = startswith(k, "Over") ? :over_35 : :under_35
+                b, l = get_p(o)
+                push!(out, ScraperRow(m.id, m.event_name, "OverUnder", sel, b, l, now()))
+            end
+        end
+
+
         # BTTS
         # if haskey(ft, "Both teams to Score?")
         #     for (k, o) in ft["Both teams to Score?"]
@@ -275,6 +293,7 @@ using .PythonScraper
 # ==============================================================================
 println("🔍 Scanning for matches...")
 matches = PythonScraper.get_matches(["Premiership", "League Two"], time_window_hours=24.0)
+matches = get_matches(["scotland"], time_window_hours=24.0)
 
 if isempty(matches)
     println("No matches found in the next 24 hours.")

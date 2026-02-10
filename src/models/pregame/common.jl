@@ -52,6 +52,21 @@ function extract_parameters(
 end
 
 """
+  Basic funnel rates
+"""
+const FunnelRates = NamedTuple{
+    (:λ_shots_h, :λ_shots_a, :r_create,
+     :θ_prec_h,  :θ_prec_a, 
+     :ϕ_conv_h,  :ϕ_conv_a, 
+     :exp_goals_h, :exp_goals_a), 
+    NTuple{9, Vector{Float64}}
+}
+
+# Add dispatch
+get_prediction_type(::AbstractFunnelModel) = FunnelRates
+
+
+"""
     extract_parameters(model, dfs::Vector, vocab, results::Vector)
 
 Iterates over multiple data splits (folds) and merges the results.

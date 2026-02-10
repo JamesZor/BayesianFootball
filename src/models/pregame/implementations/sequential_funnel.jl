@@ -191,3 +191,144 @@ function build_turing_model(model::SequentialFunnelModel, feature_set::FeatureSe
         model
     )
 end
+
+
+
+# ==============================================================================
+# 5. PARAMETER EXTRACTION
+# ==============================================================================
+"""
+    reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
+
+Helper to reconstruct a GRW state matrix from a submodel's samples.
+Handles the 'prefix.variable' naming convention from Turing submodels.
+"""
+function reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds, n_samples)
+    # 1. Extract Scalars (Hyperparameters)
+    # Use vec(Array(...)) to strip chain metadata and get raw numbers
+    σ_k_vec = vec(Array(chain[σ_k_sym]))
+    σ_0_vec = vec(Array(chain[σ_0_sym]))
+    
+    # 2. Extract Latent States using 'group'
+    # Turing flattens arrays. 'group' grabs all cols starting with "prefix.z_init"
+    # The default sorting of group usually aligns with [1], [2], etc.
+    raw_init  = Array(group(chain, Symbol(prefix, ".z_init")))   # [Samples, Teams]
+    raw_steps = Array(group(chain, Symbol(prefix, ".z_steps")))  # [Samples, Teams * (Rounds-1)]
+    
+    # 3. Reshape for Broadcasting
+    # Target: [Samples, Teams, Time]
+    
+    # Init: [Samples, Teams, 1]
+    Z_init = reshape(raw_init, n_samples, n_teams, 1)
+    
+    # Steps: [Samples, Teams, Rounds-1]
+    Z_steps = reshape(raw_steps, n_samples, n_teams, n_rounds - 1)
+    
+    # 4. Apply GRW Scale
+    S_k = reshape(σ_k_vec, n_samples, 1, 1)
+    S_0 = reshape(σ_0_vec, n_samples, 1, 1)
+    
+    init_scaled  = Z_init .* S_0
+    steps_scaled = Z_steps .* S_k
+    
+    # 5. Integrate (Cumulative Sum)
+    # Concatenate along Time axis (dim 3) then cumsum
+    full_raw = cumsum(cat(init_scaled, steps_scaled, dims=3), dims=3)
+    
+    # 6. Center (Zero-Sum per time step)
+    # Subtract mean across Teams axis (dim 2)
+    centered = full_raw .- mean(full_raw, dims=2)
+    
+    # Permute to standard shape for easier indexing: [Teams, Rounds, Samples]
+    return permutedims(centered, (2, 3, 1))
+end
+
+function extract_parameters(
+    model::SequentialFunnelModel, 
+    df::AbstractDataFrame, 
+    feature_set::FeatureSet,
+    vocab::Vocabulary, 
+    chain::Chains
+)
+    n_teams = feature_set[:n_teams]
+    
+    # Heuristic to find N_ROUNDS from the chain parameter names
+    # Look for "att_create.z_steps[team_id, time_step]"
+    # We find the total number of step columns and divide by teams
+    n_step_cols = length(names(chain, :att_create)) - n_teams # Total cols - init cols = step cols
+    n_rounds = (n_step_cols ÷ n_teams) + 1
+    n_samples = size(chain, 1) * size(chain, 3) # Handle multiple chains if present
+
+    # --- 1. Reconstruct All 6 Processes ---
+    # Shape: [Team, Time, Sample]
+    att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds, n_samples)
+    def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds, n_samples)
+    
+    att_pr = reconstruct_submodel(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds, n_samples)
+    def_pr = reconstruct_submodel(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds, n_samples)
+    
+    att_co = reconstruct_submodel(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds, n_samples)
+    def_co = reconstruct_submodel(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds, n_samples)
+
+    # --- 2. Extract Global Parameters ---
+    μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
+    μ_pr_v = vec(Array(chain[:μ_prec]));   γ_pr_v = vec(Array(chain[:γ_prec]))
+    μ_co_v = vec(Array(chain[:μ_conv]));   γ_co_v = vec(Array(chain[:γ_conv]))
+
+    r_cre_v = Vec(Array(chain[:r_create]))
+    
+
+    # --- 3. Compute Rates for Each Match ---
+    results = Dict{Int64, FunnelRates}()
+    sizehint!(results, nrow(df))
+
+    for row in eachrow(df)
+        mid = row.match_id
+        
+        # Time Index Logic:
+        # If 'time_index' exists (from FeatureSet), use it. 
+        # Otherwise fallback to match_week (assuming 1-based contiguous seasons)
+        t = hasproperty(row, :time_index) ? row.time_index : row.match_week
+        
+        # Safety check for prediction: If t > n_rounds, we clamp to the last known state (Forecast)
+        t_idx = min(t, n_rounds)
+        
+        h_id = vocab.team_name_to_id[row.home_team]
+        a_id = vocab.team_name_to_id[row.away_team]
+
+        # -- Layer 1: Creation (Volume) --
+        # Log-Link
+        log_h_cr = μ_cr_v .+ γ_cr_v .+ att_cr[h_id, t_idx, :] .+ def_cr[a_id, t_idx, :]
+        log_a_cr = μ_cr_v           .+ att_cr[a_id, t_idx, :] .+ def_cr[h_id, t_idx, :]
+        λ_h = exp.(log_h_cr)
+        λ_a = exp.(log_a_cr)
+
+        # -- Layer 2: Precision (Accuracy) --
+        # Logit-Link
+        logit_h_pr = μ_pr_v .+ γ_pr_v .+ att_pr[h_id, t_idx, :] .+ def_pr[a_id, t_idx, :]
+        logit_a_pr = μ_pr_v           .+ att_pr[a_id, t_idx, :] .+ def_pr[h_id, t_idx, :]
+        θ_h = logistic.(logit_h_pr)
+        θ_a = logistic.(logit_a_pr)
+
+        # -- Layer 3: Conversion (Finishing) --
+        # Logit-Link
+        logit_h_co = μ_co_v .+ γ_co_v .+ att_co[h_id, t_idx, :] .+ def_co[a_id, t_idx, :]
+        logit_a_co = μ_co_v           .+ att_co[a_id, t_idx, :] .+ def_co[h_id, t_idx, :]
+        ϕ_h = logistic.(logit_h_co)
+        ϕ_a = logistic.(logit_a_co)
+
+        # -- Final: Expected Goals --
+        # E[G] = E[Shots] * P(Target|Shot) * P(Goal|Target)
+        xg_h = λ_h .* θ_h .* ϕ_h
+        xg_a = λ_a .* θ_a .* ϕ_a
+
+        results[mid] = (
+            λ_shots_h = λ_h, λ_shots_a = λ_a, r_create = r_cre_v,
+            θ_prec_h  = θ_h, θ_prec_a  = θ_a,
+            ϕ_conv_h  = ϕ_h, ϕ_conv_a  = ϕ_a,
+            exp_goals_h = xg_h, exp_goals_a = xg_a
+        )
+    end
+
+    return results
+end
