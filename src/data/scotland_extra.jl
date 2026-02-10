@@ -65,7 +65,10 @@ const SCOT_TEAM_MAPPING = Dict(
     "Montrose"       => "montrose",
     "Peterhead"      => "peterhead",
     "Stenhousemuir"  => "stenhousemuir",
-    "Stranraer"      => "stranraer"
+    "Stranraer"      => "stranraer",
+    "Partick"       => "partick-thistle",
+    "Brechin"       => "brechin-city",
+    "East Kilbride" => "east-kilbride",
 )
 
 const SCOT_TOURNAMENT_MAPPING = Dict(
@@ -144,7 +147,9 @@ function enrich_with_scotland_extra(ds::DataStore, folder_path::String)
     # We use leftjoin on the original matches to ensure we keep all original rows
     # and just add stats where available.
     enriched_matches = leftjoin(
-        ds.matches, 
+        Data.add_match_week_column(
+              subset(ds.matches, :tournament_id => ByRow(in([56,57])))
+              ),
         merge_source, 
         on = [:season, :tournament_id, :match_date, :home_team, :away_team],
         makeunique = true

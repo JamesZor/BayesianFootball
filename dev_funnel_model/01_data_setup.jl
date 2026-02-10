@@ -434,7 +434,7 @@ function _loaded_dataframe(file_path::AbstractString)::AbstractDataFrame
     return matches 
 end
 
-file_path_1 = joinpath(folder_path, files_list[1])
+file_path_1 = joinpath(folder_path, files_list[6])
 
 d1 = _loaded_dataframe(file_path_1)
 
@@ -466,7 +466,7 @@ team_names_list = unique( df.HomeTeam)
 using BayesianFootball
 data_store = BayesianFootball.Data.load_default_datastore()
 ds_l12 = subset(data_store.matches, :tournament_id => ByRow(in([56,57])), 
-                                    :season => ByRow(in(["21/22", "22/23", "23/24", "24/25"])),
+                                    :season => ByRow(in(["20/21","21/22", "22/23", "23/24", "24/25","25/26"])),
                 )
 
 projection_team_names_list = unique(ds_l12.home_team)

@@ -19,11 +19,11 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     )
 
     cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [56],       # Premiership
+        tournament_ids = [57],       # Premiership
         target_seasons = ["25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_week,
-        warmup_period = 25,          # Long warmup for GRW
+        warmup_period = 24,          # Long warmup for GRW
         stop_early = false
     )
 
@@ -35,7 +35,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
+        300,     # n_samples
         8,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -51,8 +51,8 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     # =============================================
     # Process Noise: Push away from 0, keep mode small (approx 0.05)
     # Meaning: "Teams change by ~5% per week, but almost never 0% and rarely >20%"
+
     prior_σ_k = Gamma(2, 0.05) 
-    
     # Initial Spread: Significant variation between teams at start of season
     prior_σ_0 = Gamma(2, 0.08)
 
@@ -60,51 +60,12 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     prior_μ = Normal(0.32, 0.05)        # Global Baseline
     prior_γ = Normal(0.12, 0.05)   # Home Advantage
 
-     # μ ~ Normal{Float64}(μ=0.3191977392306569, σ=0.05)
-     # γ ~ Normal{Float64}(μ=0.12681652075405134, σ=0.05)
+    prior_δ = Normal(0.0, 0.4)
+
 
     # 4. Define Models
     # ================
     configs = [
-        # Experiments.ExperimentConfig(
-        #     name = "grw_poisson",
-        #     model = Models.PreGame.GRWPoisson(
-        #         μ = prior_μ,
-        #         γ = prior_γ,
-        #         σ_k = prior_σ_k, 
-        #         σ_0 = prior_σ_0
-        #     ),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        # Experiments.ExperimentConfig(
-        #     name = "grw_dixon_coles",
-        #     model = Models.PreGame.GRWDixonColes(
-        #         μ = prior_μ,
-        #         γ = prior_γ,
-        #         σ_k = prior_σ_k,
-        #         σ_0 = prior_σ_0
-        #         # Using default ρ_raw = Normal(0,1)
-        #     ),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        # Experiments.ExperimentConfig(
-        #     name = "grw_neg_bin_beforeweekend",
-        #     model = Models.PreGame.GRWNegativeBinomial(
-        #         μ = prior_μ,
-        #         γ = prior_γ,
-        #         σ_k = prior_σ_k,
-        #         σ_0 = prior_σ_0
-        #         # Using default log_r_prior = Normal(1.5, 1.0)
-        #     ),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-
         # Experiments.ExperimentConfig(
         #     name = "grw_neg_bin_mu_wk25_l1",
         #     model = Models.PreGame.GRWNegativeBinomialMu(
@@ -134,8 +95,9 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
         #     training_config = training_config,
         #     save_dir = save_dir
         # )
+    #
         Experiments.ExperimentConfig(
-                    name = "grw_neg_bin_full",
+                    name = "grw_neg_bin_full_wk27_l1",
                     model = Models.PreGame.GRWNegativeBinomialFull(
                         # --- 1. Dynamic Global Baseline ---
                         μ_init = prior_μ,              # Normal(0.32, 0.05)

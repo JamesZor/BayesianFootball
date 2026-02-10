@@ -59,6 +59,10 @@ export GRWNegativeBinomialFull
 include("./implementations/grw_bivariate_poisson.jl")
 export GRWBivariatePoisson
 
+
+include("./implementations/sequential_funnel.jl")
+export SequentialFunnelModel
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
