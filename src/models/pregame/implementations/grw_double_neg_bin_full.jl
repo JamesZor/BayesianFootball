@@ -162,102 +162,127 @@ function extract_parameters(
     feature_set::FeatureSet, 
     chain::Chains
 )
-    # --- 1. Setup and Dimensions ---
+    # --- A. Setup & Dimensions ---
     n_teams = feature_set[:n_teams]
     team_map = feature_set[:team_map]
     
+    # Infer n_rounds and n_samples
     step_names = names(group(chain, :z_att_steps))
     n_steps_raw = length(step_names)
     n_rounds = (n_steps_raw ÷ n_teams) + 1
-    n_samples = length(chain) # Total MCMC iterations
+    n_samples = size(chain, 1) * size(chain, 3) # Handle multiple chains if present
 
-    # --- 2. Global Scalars (Samples) ---
-    γ_vec = vec(Array(chain[:γ])) # Vector of length S
-
-    # --- 3. Hierarchical Volatility Samples ---
-    log_σ_att_bar = vec(Array(chain[:log_σ_att_bar]))
-    log_σ_def_bar = vec(Array(chain[:log_σ_def_bar]))
+    # --- B. Reconstruct Full Distributions ---
     
-    # Deltas: Shape (Samples, Teams)
-    δ_σ_att_mat = Array(group(chain, :δ_σ_att_vec))
-    δ_σ_def_mat = Array(group(chain, :δ_σ_def_vec))
+    # 1. Global Scalars (Vectors of samples)
+    γ_vec = vec(Array(chain[:γ])) # Shape: (n_samples,)
+
+    # 2. Hierarchical Volatility (σ) Reconstruction
+    # Result Shape: (n_teams, n_samples)
+    log_σ_att_bar = vec(Array(chain[:log_σ_att_bar]))' # Transpose to (1, n_samples) for broadcasting
+    log_σ_def_bar = vec(Array(chain[:log_σ_def_bar]))'
     
-    # Sigmas: Shape (Samples, Teams)
-    # Using transpose ' to allow broadcasting (S, 1) .+ (S, T)
-    σ_att_mat = exp.(log_σ_att_bar .+ δ_σ_att_mat)
-    σ_def_mat = exp.(log_σ_def_bar .+ δ_σ_def_mat)
-
-    # --- 4. Hierarchical Dispersion Samples ---
-    log_r_bar = vec(Array(chain[:log_r_bar]))
-    δ_r_mat   = Array(group(chain, :δ_r)) # (Samples, Teams)
-
-    # --- 5. Dynamic Mu Reconstruction ---
-    μ_init = vec(Array(chain[:μ_init]))
-    σ_μ    = vec(Array(chain[:σ_μ]))
-    z_μ_steps = Array(group(chain, :z_μ_steps)) # (Samples, Rounds-1)
+    δ_σ_att = Array(group(chain, :δ_σ_att_vec))' # Shape: (n_teams, n_samples)
+    δ_σ_def = Array(group(chain, :δ_σ_def_vec))'
     
-    # Integrate Mu: Result (Samples, Rounds)
-    raw_μ = hcat(μ_init, z_μ_steps .* σ_μ)
-    μ_traj_samples = cumsum(raw_μ, dims=2) 
+    σ_att_team = exp.(log_σ_att_bar .+ δ_σ_att) 
+    σ_def_team = exp.(log_σ_def_bar .+ δ_σ_def)
 
-    # --- 6. Team Strength Reconstruction ---
-    # Shapes: (Samples, Teams)
-    z_att_init = Array(group(chain, :z_att_init))
-    z_def_init = Array(group(chain, :z_def_init))
+    # 3. Hierarchical Dispersion (r) Reconstruction
+    # Result Shape: δ_r is (n_teams, n_samples)
+    log_r_bar = vec(Array(chain[:log_r_bar])) # (n_samples,)
+    δ_r_mat   = Array(group(chain, :δ_r))'    # (n_teams, n_samples)
+
+    # 4. Dynamic Mu Reconstruction
+    # Result Shape: (n_rounds, n_samples)
+    μ_init = vec(Array(chain[:μ_init]))' # (1, n_samples)
+    σ_μ    = vec(Array(chain[:σ_μ]))'    # (1, n_samples)
     
-    # Steps: (Samples, Teams * (Rounds-1))
-    z_att_steps_raw = Array(group(chain, :z_att_steps))
-    z_def_steps_raw = Array(group(chain, :z_def_steps))
-
-    # Initial Scaled State
-    σ_att_0 = vec(Array(chain[:σ_att_0]))
-    σ_def_0 = vec(Array(chain[:σ_def_0]))
+    z_μ_steps = Array(group(chain, :z_μ_steps))' # (n_rounds-1, n_samples)
     
-    # We create a 3D Cube: [Team, Round, Sample]
-    att_cube = zeros(n_teams, n_rounds, n_samples)
-    def_cube = zeros(n_teams, n_rounds, n_samples)
+    # Reconstruct Random Walk for Mu
+    scaled_steps_μ = z_μ_steps .* σ_μ
+    raw_μ = vcat(μ_init, scaled_steps_μ) # (n_rounds, n_samples)
+    μ_traj = cumsum(raw_μ, dims=1)       # (n_rounds, n_samples)
 
-    for s in 1:n_samples
-        # Reshape steps for this specific sample
-        s_att_steps = reshape(z_att_steps_raw[s, :], n_teams, n_rounds-1)
-        s_def_steps = reshape(z_def_steps_raw[s, :], n_teams, n_rounds-1)
-        
-        # Scale steps by team-specific sigmas for this sample
-        # σ_att_mat[s, :] is a vector of length n_teams
-        s_att_path = cumsum(hcat(z_att_init[s, :] .* σ_att_0[s], s_att_steps .* σ_att_mat[s, :]), dims=2)
-        s_def_path = cumsum(hcat(z_def_init[s, :] .* σ_def_0[s], s_def_steps .* σ_def_mat[s, :]), dims=2)
-        
-        # Mean-center across teams for this sample (Sum-to-zero constraint)
-        att_cube[:, :, s] = s_att_path .- mean(s_att_path, dims=1)
-        def_cube[:, :, s] = s_def_path .- mean(s_def_path, dims=1)
-    end
+    # 5. Team Strength Reconstruction
+    # Result Shape: (n_teams, n_rounds, n_samples)
+    
+    # 5a. Initial States
+    z_att_init = Array(group(chain, :z_att_init))' # (n_teams, n_samples)
+    z_def_init = Array(group(chain, :z_def_init))' 
+    
+    σ_att_0 = vec(Array(chain[:σ_att_0]))' # (1, n_samples)
+    σ_def_0 = vec(Array(chain[:σ_def_0]))'
 
-    # --- 7. Prediction Loop ---
-    # Note the return type changed to Vector{Float64} for each parameter
+    # 5b. Steps (Reshape required)
+    # Raw comes out as (n_samples, n_teams * (n_rounds-1))
+    # We want (n_teams, n_rounds-1, n_samples)
+    raw_z_att = Array(group(chain, :z_att_steps))
+    raw_z_def = Array(group(chain, :z_def_steps))
+    
+    # Reshape helper: Permute to (Teams, Time, Samples)
+    z_att_steps = permutedims(reshape(raw_z_att, n_samples, n_teams, n_rounds-1), [2, 3, 1])
+    z_def_steps = permutedims(reshape(raw_z_def, n_samples, n_teams, n_rounds-1), [2, 3, 1])
+
+    # 5c. Integration (Random Walk)
+    # Note: σ_att_team is (n_teams, n_samples). We need to broadcast over the Time dimension (dim 2)
+    # Reshape Sigma to (n_teams, 1, n_samples)
+    σ_att_team_3d = reshape(σ_att_team, n_teams, 1, n_samples)
+    σ_def_team_3d = reshape(σ_def_team, n_teams, 1, n_samples)
+
+    scaled_init_att = z_att_init .* σ_att_0         # (n_teams, n_samples) -- broadcast ok
+    scaled_init_def = z_def_init .* σ_def_0
+    
+    # Broadcast multiply steps by team-specific volatilities
+    scaled_steps_att = z_att_steps .* σ_att_team_3d 
+    scaled_steps_def = z_def_steps .* σ_def_team_3d
+
+    # Concatenate Init + Steps along Time dimension (dim 2)
+    # Init needs to be reshaped to (n_teams, 1, n_samples) to cat
+    att_raw = cumsum(cat(reshape(scaled_init_att, n_teams, 1, n_samples), scaled_steps_att, dims=2), dims=2)
+    def_raw = cumsum(cat(reshape(scaled_init_def, n_teams, 1, n_samples), scaled_steps_def, dims=2), dims=2)
+
+    # 5d. Centering (Zero-Sum constraint per round, per sample)
+    # Mean across teams (dim 1)
+    att_cube = att_raw .- mean(att_raw, dims=1)
+    def_cube = def_raw .- mean(def_raw, dims=1)
+
+    # --- C. Prediction Loop ---
     ExtractionValue = NamedTuple{(:λ_h, :λ_a, :r), Tuple{Vector{Float64}, Vector{Float64}, Vector{Float64}}}
     extraction_dict = Dict{Int64, ExtractionValue}()
+    sizehint!(extraction_dict, nrow(df_to_predict))
 
     for row in eachrow(df_to_predict)
         h_id = team_map[row.home_team]
         a_id = team_map[row.away_team]
         
-        t_idx = clamp(row.match_week, 1, n_rounds)
+        t = row.match_week 
+        t_idx = clamp(t, 1, n_rounds)
 
-        # Retrieve vectors across all samples
-        att_h = att_cube[h_id, t_idx, :]
-        def_a = def_cube[a_id, t_idx, :]
-        att_a = att_cube[a_id, t_idx, :]
-        def_h = def_cube[h_id, t_idx, :]
+        # 1. Retrieve Team Strengths for this specific match
+        # Views: (n_samples,)
+        att_h = view(att_cube, h_id, t_idx, :)
+        def_a = view(def_cube, a_id, t_idx, :)
+        att_a = view(att_cube, a_id, t_idx, :)
+        def_h = view(def_cube, h_id, t_idx, :)
         
-        μ_curr = μ_traj_samples[:, t_idx]
+        # 2. Retrieve Dynamic Global Mu for this time step
+        μ_curr = view(μ_traj, t_idx, :) # (n_samples,)
 
-        # Calculate Distributions
+        # 3. Calculate Rates (Vectorized over samples)
+        # λ = exp(μ + γ + att + def)
         λ_h = exp.(μ_curr .+ γ_vec .+ att_h .+ def_a)
-        λ_a = exp.(μ_curr .+ att_a .+ def_h)
+        λ_a = exp.(μ_curr .+          att_a .+ def_h)
         
-        # Hierarchical Dispersion Samples
-        # r = exp(Global_bar + Home_Delta + Away_Delta)
-        r_val = exp.(log_r_bar .+ δ_r_mat[:, h_id] .+ δ_r_mat[:, a_id])
+        # 4. Calculate Match-Specific Dispersion
+        # log(r) = Global + Home_Delta + Away_Delta
+        # We perform this calculation per sample
+        δ_r_h = view(δ_r_mat, h_id, :)
+        δ_r_a = view(δ_r_mat, a_id, :)
+        
+        log_r_match = log_r_bar .+ δ_r_h .+ δ_r_a
+        r_val = exp.(log_r_match)
 
         extraction_dict[Int(row.match_id)] = (; λ_h, λ_a, r=r_val)
     end
