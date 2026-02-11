@@ -130,7 +130,7 @@ function enrich_with_scotland_extra(ds::DataStore, folder_path::String)
     # 4. Select Columns to Merge
     # We only want the stats, plus the keys for joining
     cols_to_merge = [:Season, :tournament_id, :Date, :home_team_id, :away_team_id, 
-                     :HS, :AS, :HST, :AST, :HC, :AC, :HF, :AF, :Referee, :HY, :AY, :HR, :AY] # Add others if needed
+                     :HS, :AS, :HST, :AST, :HC, :AC, :HF, :AF, :Referee, :HY, :AY, :HR, :AR] # Add others if needed
     
     merge_source = select(extra_df, cols_to_merge)
     

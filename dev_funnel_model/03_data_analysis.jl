@@ -166,5 +166,110 @@ analyze_midweek_effect(df, :HS, :AS, "Total Shots")
 analyze_midweek_effect(df, :HST, :AST, "Shots on Target")
 analyze_midweek_effect(df, :HC, :AC, "Total Corners")
 
+###
+using Dates
+
+df.Month = month.(df.match_date)
+
+function analyze_seasonality(df)
+    # Group by Month
+    monthly = combine(groupby(df, :Month), 
+        [:home_score, :away_score] => ((h, a) -> mean(h .+ a)) => :avg_goals,
+        [:HS, :AS] => ((h, a) -> mean(h .+ a)) => :avg_shots
+    )
+    
+    sort!(monthly, :Month)
+    println("\n=== Monthly Averages ===")
+    println(monthly)
+end
+
+analyze_seasonality(df)
 
 
+### 3g pitches
+# 1. Define the Set of Plastic Teams (using your standardized names)
+const PLASTIC_TEAMS = Set([
+    "airdrieonians",
+    "alloa-athletic",
+    "annan-athletic",
+    "bonnyrigg-rose",
+    "clyde-fc",
+    "cove-rangers",
+    "east-kilbride",
+    "edinburgh-city-fc",
+    "falkirk-fc",
+    "forfar-athletic",
+    "hamilton-academical",
+    "kelty-hearts-fc",
+    "montrose",
+    "queen-of-the-south",
+    "stenhousemuir",
+    "the-spartans-fc"
+])
+
+# 2. Function to check a row
+function check_surface(team_name_raw)
+    # Map raw name to standard name
+    std_name = get(Data.SCOT_TEAM_MAPPING, team_name_raw, lowercase(replace(team_name_raw, " " => "-")))
+    
+    # Check if in plastic set
+    return std_name in PLASTIC_TEAMS
+end
+
+# 3. Apply to DataFrame
+# This creates a Boolean vector (true/false)
+df.is_plastic = check_surface.(df.home_team)
+
+# 4. Quick Sanity Check
+println("Total Games on Plastic: $(sum(df.is_plastic))")
+println("Total Games on Grass: $(nrow(df) - sum(df.is_plastic))")
+
+
+# 3. Analyze: Do we see more goals/shots on plastic?
+function analyze_surface(df)
+    grass = filter(row -> !row.is_plastic, df)
+    plastic = filter(row -> row.is_plastic, df)
+    
+    println("=== Surface Analysis ===")
+    println("Grass - Avg Goals: $(round(mean(grass.home_score .+ grass.away_score), digits=2))")
+    println("Plastic - Avg Goals: $(round(mean(plastic.home_score .+ plastic.away_score), digits=2))")
+    
+    # Check Home Advantage specifically
+    # Home Win % or Goal Diff
+    h_grass = mean(grass.home_score .- grass.away_score)
+    h_plastic = mean(plastic.home_score .- plastic.away_score)
+    
+    println("Grass - Home Adv (Goal Diff): $(round(h_grass, digits=2))")
+    println("Plastic - Home Adv (Goal Diff): $(round(h_plastic, digits=2))")
+end
+
+analyze_surface(df)
+
+
+###
+# Sum of Red Cards in a match
+df.total_reds = df.HR .+ df.AR
+
+function analyze_red_cards(df)
+    clean_games = filter(row -> row.total_reds == 0, df)
+    dirty_games = filter(row -> row.total_reds > 0, df)
+    
+    println("\n=== Red Card Analysis ===")
+    println("Clean Games Count: $(nrow(clean_games))")
+    println("Red Card Games Count: $(nrow(dirty_games))")
+    
+    # Compare Variance of the Scoreline (Volatility)
+    var_clean = var(clean_games.home_score .- clean_games.away_score)
+    var_dirty = var(dirty_games.home_score .- dirty_games.away_score)
+    
+    println("Score Variance (Clean): $(round(var_clean, digits=2))")
+    println("Score Variance (Red Card): $(round(var_dirty, digits=2))")
+    
+    # Did the red card team lose badly?
+    # (Complex to check without minute-by-minute, but we can check correlation)
+    cor_red = cor(df.HR .- df.AR, df.home_score .- df.away_score)
+    println("Correlation (Home Red Diff vs Goal Diff): $(round(cor_red, digits=3))")
+    # We expect a strong NEGATIVE correlation (More Home Reds = Lower Home Score)
+end
+
+analyze_red_cards(df)
