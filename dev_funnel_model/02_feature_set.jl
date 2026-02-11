@@ -126,9 +126,9 @@ cv_config = BayesianFootball.Data.CVConfig(
 splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
 sampler_conf = Samplers.NUTSConfig(
-                200,
+                50,
                 16,
-                100,
+                50,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05),
@@ -326,4 +326,76 @@ println("First 20 values: ", h_shots[1:min(20, end)])
 
 #####
 
+using Turing, DataFrames, Statistics, LinearAlgebra
 
+# 1. Grab Context from FeatureSet
+n_teams = feature_set1.data[:n_teams]
+n_rounds = feature_set1.data[:n_rounds]
+println("Context: Teams=$n_teams, Rounds=$n_rounds")
+
+# 2. Inspect Chain Dimensions
+n_samples_per_chain = size(chain_1, 1)
+n_chains = size(chain_1, 3)
+n_total_samples = n_samples_per_chain * n_chains
+println("Chain: $n_samples_per_chain samples * $n_chains chains = $n_total_samples total")
+
+# 3. Define Prefix for Testing
+prefix = "att_create"
+
+
+# A. Extract Scalars (Vectorize correctly)
+# 'vec(Array(...))' flattens [Samples, 1, Chains] -> [TotalSamples]
+σ_k_vec = vec(Array(chain_1[:σ_create_k]));
+σ_0_vec = vec(Array(chain_1[:σ_create_0]));
+
+println("Sigma Vector Shape: ", size(σ_k_vec)) 
+# Expected: (3200,) for 200 samples * 16 chains
+
+# B. Extract Init States
+# Construct names manually
+init_vars = [Symbol("$prefix.z_init[$i]") for i in 1:n_teams]
+
+# Extract as matrix. Array(chain[names]) -> [Samples*Chains, n_teams] ?
+# Let's verify what Array(chain[...]) returns.
+raw_init_chain = chain_1[init_vars]
+raw_init = Array(raw_init_chain) 
+
+println("Raw Init Shape: ", size(raw_init))
+# MCMCChains.Array usually returns [Samples, Vars, Chains] or [Samples, Vars] if flattened?
+# Actually, Array(chn) returns a 2D matrix if we don't specify dims, mixing chains?
+# Let's use more explicit extraction to be safe.
+
+# SAFE EXTRACTION:
+# We want [TotalSamples, n_teams]
+# 'Array(chain[vars])' typically returns [Samples, Vars, Chains]
+# We want to reshape to [Samples*Chains, Vars]
+raw_init_3d = Array(chain_1[init_vars]) # [Samples, Teams, Chains]
+raw_init_flat = reshape(permutedims(raw_init_3d, (1, 3, 2)), n_total_samples, n_teams)
+
+println("Corrected Init Shape: ", size(raw_init_flat)) # Should be (3200, 10)
+
+# C. Extract Steps (The Loop that Failed)
+# Pre-allocate Destination
+Z_steps = zeros(Float64, n_total_samples, n_teams, n_rounds - 1)
+
+# Check auto-detection
+sample_sym_space = Symbol("$prefix.z_steps[1, 1]")
+has_space = sample_sym_space in names(chain_1)
+println("Has Space in names? $has_space")
+
+# Run Loop Manually for t=1, i=1
+t = 1
+i = 1
+sym = has_space ? Symbol("$prefix.z_steps[$i, $t]") : Symbol("$prefix.z_steps[$i,$t]")
+println("Fetching Symbol: $sym")
+
+# Extract the column
+col_data_chain = chain_1[sym]
+# Convert to simple vector [TotalSamples]
+col_data = vec(Array(col_data_chain))
+
+println("Column Data Shape: ", size(col_data)) # Should be (3200,)
+
+# Try Assignment (The fix for your error)
+Z_steps[:, i, t] = col_data 
+println("Assignment Successful!")

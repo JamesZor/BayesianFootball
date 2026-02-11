@@ -285,7 +285,7 @@ function extract_parameters(
     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
     μ_pr_v = vec(Array(chain[:μ_prec]));   γ_pr_v = vec(Array(chain[:γ_prec]))
     μ_co_v = vec(Array(chain[:μ_conv]));   γ_co_v = vec(Array(chain[:γ_conv]))
-    r_cre_v = exp.(vec(Array(chain[:r_create])))
+    r_cre_v = exp.(vec(Array(chain[:log_r_cr])))
 
     # 4. Predict
     results = Dict{Int64, FunnelRates}()
