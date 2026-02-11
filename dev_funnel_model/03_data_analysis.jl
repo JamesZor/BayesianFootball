@@ -12,7 +12,7 @@ BLAS.set_num_threads(1)
 ds = Data.load_extra_ds()
 
 df = subset(ds.matches, :tournament_id => ByRow(in([56, 57])))
-dropmissing!(df, [:HS, :AS, :HC, :AC, :HF, :AF, :Referee])
+dropmissing!(df, [:HS, :AS, :HC, :AC, :HF, :AF, :Referee, :HY, :AY, :HR, :AR])
 
 # 1. Check the Distribution (Poisson vs. Negative Binomial)
 using Statistics, DataFrames

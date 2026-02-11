@@ -249,7 +249,6 @@ function extract_parameters(
     model::SequentialFunnelModel, 
     df::AbstractDataFrame, 
     feature_set::FeatureSet,
-    vocab::Vocabulary, 
     chain::Chains
 )
     n_teams = feature_set[:n_teams]

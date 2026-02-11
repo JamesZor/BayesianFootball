@@ -151,3 +151,4 @@ conf_funnel = Experiments.ExperimentConfig(
 
 results_funnel = Experiments.run_experiment(ds, conf_funnel)
 
+Experiments.save_experiment(results_funnel)
