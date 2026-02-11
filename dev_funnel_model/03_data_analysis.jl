@@ -12,7 +12,7 @@ BLAS.set_num_threads(1)
 ds = Data.load_extra_ds()
 
 df = subset(ds.matches, :tournament_id => ByRow(in([56, 57])))
-dropmissing!(df, [:HS, :AS, :HC, :AC, :HF, :AF])
+dropmissing!(df, [:HS, :AS, :HC, :AC, :HF, :AF, :Referee])
 
 # 1. Check the Distribution (Poisson vs. Negative Binomial)
 using Statistics, DataFrames
@@ -70,15 +70,101 @@ corner_shot_correlation_all = cor(vcat(df.HS,df.AS), vcat(df.HC, df.AC))
 corner_goal_correlation_all = cor(vcat(df.home_score, df.away_score), vcat(df.HC, df.AC))
 
 
-phi_shot_home = sum(df.HS) / sum(df.HC)
-phi_shot_away = sum(df.AS) / sum(df.AC)
-phi_shot_all = sum(vcat(df.HS ,df.AS)) / sum(vcat(df.HC, df.AC))
+phi_shot_home = sum(df.HC) /  sum(df.HS)
+phi_shot_away =  sum(df.AC) / sum(df.AS) 
+phi_shot_all =  sum(vcat(df.HC, df.AC)) /  sum(vcat(df.HS ,df.AS)) 
 
-phi_goal_home = sum(df.home_score) / sum(df.HC)
-phi_goal_away = sum(df.away_score) / sum(df.AC)
-phi_goal_all = sum(vcat(df.home_score ,df.away_score)) / sum(vcat(df.HC, df.AC))
+phi_goal_home =  sum(df.HC) / sum(df.home_score) 
+phi_goal_away =  sum(df.AC) / sum(df.away_score) 
+phi_goal_all =  sum(vcat(df.HC, df.AC)) / sum(vcat(df.home_score ,df.away_score)) 
 
 
+
+
+# 4. 
+
+# Group by Referee
+ref_stats = combine(groupby(df, :Referee), 
+    [:HF, :AF] => ((h, a) -> mean(h .+ a)) => :avg_fouls,
+    [:HF, :AF] => ((h, a) -> length(h)) => :n_games
+)
+
+# Filter for refs with enough games (e.g., > 10)
+ref_stats = filter(row -> row.n_games > 10, ref_stats)
+
+# Check the spread
+sort!(ref_stats, :avg_fouls)
+println(first(ref_stats, 5)) # Most lenient refs
+println(last(ref_stats, 5))  # Strictest refs
+
+
+
+
+#### mid week games
+using Dates
+
+# Helper to categorize games
+function get_day_type(date_obj)
+    # 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat, 7 = Sun
+    d = dayofweek(date_obj)
+    
+    if d in [6, 7] # Saturday, Sunday
+        return "Weekend"
+    elseif d in [2, 3, 4] # Tue, Wed, Thu
+        return "Midweek"
+    else 
+        # Fridays are tricky. Usually treated as "Weekend" fixtures in modern football,
+        # but you can check your specific league schedule.
+        return "Weekend" 
+    end
+end
+
+# Apply to DataFrame (assuming you have a 'Date' column)
+df.DayType = get_day_type.(df.match_date)
+
+# Check the split
+println(combine(groupby(df, :DayType), nrow => :Count))
+
+
+using HypothesisTests
+
+function analyze_midweek_effect(df, metric_h, metric_a, name)
+    # Combine Home and Away to get "Match Total"
+    # We care about the "Speed" of the game
+    df.total_metric = df[!, metric_h] .+ df[!, metric_a]
+    
+    # Split
+    weekend = filter(row -> row.DayType == "Weekend", df).total_metric
+    midweek = filter(row -> row.DayType == "Midweek", df).total_metric
+    
+    # Means
+    μ_we = mean(weekend)
+    μ_mw = mean(midweek)
+    diff_pct = round(((μ_mw - μ_we) / μ_we) * 100, digits=1)
+    
+    println("\n=== $name ===")
+    println("Weekend Mean: $(round(μ_we, digits=2))")
+    println("Midweek Mean: $(round(μ_mw, digits=2)) ($diff_pct%)")
+    
+    # T-Test (Is the difference real?)
+    # Equal variance not assumed (Welch's t-test)
+    test = EqualVarianceTTest(weekend, midweek)
+    p_val = pvalue(test)
+    
+    if p_val < 0.05
+        println("  -> SIGNIFICANT (p = $(round(p_val, digits=4)))")
+        println("  -> There is a real 'Midweek Effect'.")
+    else
+        println("  -> Not Significant (p = $(round(p_val, digits=4)))")
+        println("  -> Likely just random noise.")
+    end
+end
+
+# Run the Battery
+analyze_midweek_effect(df, :home_score, :away_score, "Total Goals")
+analyze_midweek_effect(df, :HS, :AS, "Total Shots")
+analyze_midweek_effect(df, :HST, :AST, "Shots on Target")
+analyze_midweek_effect(df, :HC, :AC, "Total Corners")
 
 
 
