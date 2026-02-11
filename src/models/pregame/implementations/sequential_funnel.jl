@@ -265,14 +265,14 @@ function extract_parameters(
     team_map = feature_set.data[:team_map]
     
     # 2. Reconstruct Processes (Robustly)
-    att_cr = reconstruct_submodel_robust(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
-    def_cr = reconstruct_submodel_robust(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
     
-    att_pr = reconstruct_submodel_robust(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
-    def_pr = reconstruct_submodel_robust(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    att_pr = reconstruct_submodel(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    def_pr = reconstruct_submodel(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
     
-    att_co = reconstruct_submodel_robust(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
-    def_co = reconstruct_submodel_robust(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    att_co = reconstruct_submodel(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    def_co = reconstruct_submodel(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
 
     # 3. Extract Globals
     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
