@@ -74,25 +74,61 @@ BLAS.set_num_threads(1)
 
 
 ds = Data.load_extra_ds()
+#=
+julia> names(df)
+26-element Vector{String}:
+ "tournament_id"
+ "season_id"
+ "season"
+ "match_id"
+ "tournament_slug"
+ "home_team"
+ "away_team"
+ "home_score"
+ "away_score"
+ "home_score_ht"
+ "away_score_ht"
+ "match_date"
+ "round"
+ "winner_code"
+ "has_xg"
+ "has_stats"
+ "match_hour"
+ "match_dayofweek"
+ "match_month"
+ "match_week"
+ "HS"
+ "AS"
+ "HST"
+ "AST"
+ "HC"
+ "AC"
+=#
+
+transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+
+df = subset(ds.matches, :tournament_id => ByRow(in(56)), :season => ByRow(isequal("24/25")))
+df[:, [:home_team, :away_team, :match_date, :match_week, :match_month]] 
+
 
 cv_config = BayesianFootball.Data.CVConfig(
     # tournament_ids = [56,57],
     tournament_ids = [56],
     target_seasons = ["24/25"],
     history_seasons = 0,
-    dynamics_col = :match_week,
+    dynamics_col = :match_month,
     # warmup_period = 36,
-    warmup_period = 36,
+    warmup_period = 8,
     stop_early = true
 )
 
 
 splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
-train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2) 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
 sampler_conf = Samplers.NUTSConfig(
-                100,
+                200,
                 16,
-                50,
+                100,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05),
