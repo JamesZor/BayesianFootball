@@ -144,8 +144,8 @@ end
     λ_shots_h = exp.(log_λ_shots_h)
     λ_shots_a = exp.(log_λ_shots_a)
     
-    obs_shots_h ~ arraydist(RobustNegativeBinomial.(r_create, r_create ./ (r_create .+ λ_shots_h)))
-    obs_shots_a ~ arraydist(RobustNegativeBinomial.(r_create, r_create ./ (r_create .+ λ_shots_a)))
+    obs_shots_h ~ arraydist(RobustNegativeBinomial.(r_create, λ_shots_h))
+    obs_shots_a ~ arraydist(RobustNegativeBinomial.(r_create, λ_shots_a))
 
     # --- LAYER 2: PRECISION ---
     logit_p_prec_h = μ_prec .+ γ_prec .+ view(att_prec, h_idx) .+ view(def_prec, a_idx)
