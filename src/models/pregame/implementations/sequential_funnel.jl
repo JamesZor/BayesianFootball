@@ -252,6 +252,7 @@ function extract_parameters(
     chain::Chains
 )
     n_teams = feature_set[:n_teams]
+    team_map = feature_set[:team_map]
 
     # --- 1. Robust N_ROUNDS Calculation ---
     # Get all parameter names as strings
@@ -302,8 +303,8 @@ function extract_parameters(
         # Safety check for prediction: If t > n_rounds, we clamp to the last known state (Forecast)
         t_idx = min(t, n_rounds)
         
-        h_id = vocab.team_name_to_id[row.home_team]
-        a_id = vocab.team_name_to_id[row.away_team]
+        h_id = team_map[row.home_team]
+        a_id = team_map[row.away_team]
 
         # -- Layer 1: Creation (Volume) --
         # Log-Link
