@@ -152,3 +152,173 @@ conf_funnel = Experiments.ExperimentConfig(
 results_funnel = Experiments.run_experiment(ds, conf_funnel)
 
 Experiments.save_experiment(results_funnel)
+
+
+(chain_1, meta_1) = results_funnel.training_results[1];
+
+df_test_1 = BayesianFootball.Data.get_next_matches(ds, meta_1, results_funnel.config.splitter);
+
+df_test_1 = BayesianFootball.Data.get_next_matches(ds, meta_1, results2.config.splitter);
+println("Test Matches Found: ", nrow(df_test_1))
+show(df_test_1[:, [:match_date, :home_team, :away_team]], allcols=false)
+
+
+feature_collection1 = BayesianFootball.Features.create_features(
+    BayesianFootball.Data.create_data_splits(ds, results_funnel.config.splitter),
+    funnel_model, 
+    results_funnel.config.splitter
+)
+feature_set1 = feature_collection1[1][1]
+
+chain1 = results_funnel.training_results[1][1]
+
+model_preds_1 = BayesianFootball.Models.PreGame.extract_parameters(
+    results_funnel.config.model,
+    df_test_1,
+    feature_set1,
+    chain_1
+)
+
+
+df_test_1
+
+using Statistics, Printf
+
+function summarize_funnel_predictions(preds::Dict, df::DataFrame)
+    # Header
+    @printf("%-35s | %-12s | %-10s | %-12s | %-10s\n", 
+            "Match", "Pred Shots", "Act Shots", "Pred Goals", "Act Goals")
+    println("-"^90)
+    
+    for row in eachrow(df)
+        mid = row.match_id
+        if haskey(preds, mid)
+            p = preds[mid]
+            
+            # 1. Volume (Shots) - Take Mean of Samples
+            # We look at Home Team only for brevity
+            pred_shots = mean(p.λ_shots_h)
+            
+            # 2. Goals (xG) - Take Mean of Samples
+            pred_goals = mean(p.exp_goals_h)
+            
+            # 3. Actuals
+            # Use 'get' to handle missing columns safely if checking raw df
+            act_shots = get(row, :HS, NaN) 
+            act_goals = row.home_score
+            
+            match_str = "$(row.home_team)"
+            
+            @printf("%-35s | %-12.2f | %-10.0f | %-12.2f | %-10d\n", 
+                    match_str, pred_shots, act_shots, pred_goals, act_goals)
+        end
+    end
+end
+
+# Run it
+summarize_funnel_predictions(model_preds_1, df_test_1)
+
+
+using Distributions, Statistics, LinearAlgebra
+
+function dev_compute_probabilities(rates, max_goals=10)
+    # rates is the NamedTuple from model_preds_1[match_id]
+    n_samples = length(rates.λ_shots_h)
+    
+    # 1. Initialize Score Grid (Rows=Home, Cols=Away)
+    score_matrix = zeros(Float64, max_goals+1, max_goals+1)
+    
+    # 2. Monte Carlo Loop (Reconstruct the Match)
+    for i in 1:n_samples
+        # --- GLOBAL PARAMETERS ---
+        r = rates.r_create[i]
+
+        # --- HOME TEAM SIMULATION ---
+        # A. Shots (Negative Binomial)
+        # Distributions.jl uses (r, p) where p = r / (r + μ)
+        λ_h = rates.λ_shots_h[i]
+        p_h = r / (r + λ_h)
+        # Clamp to avoid numerical errors
+        p_h = clamp(p_h, 1e-8, 1.0 - 1e-8)
+        
+        n_shots_h = rand(NegativeBinomial(r, p_h))
+        
+        # B. On Target (Binomial)
+        θ_h = rates.θ_prec_h[i]
+        n_sot_h = rand(Binomial(n_shots_h, θ_h))
+        
+        # C. Goals (Binomial)
+        ϕ_h = rates.ϕ_conv_h[i]
+        goals_h = rand(Binomial(n_sot_h, ϕ_h))
+        
+        # --- AWAY TEAM SIMULATION ---
+        λ_a = rates.λ_shots_a[i]
+        p_a = r / (r + λ_a)
+        p_a = clamp(p_a, 1e-8, 1.0 - 1e-8)
+        
+        n_shots_a = rand(NegativeBinomial(r, p_a))
+        
+        θ_a = rates.θ_prec_a[i]
+        n_sot_a = rand(Binomial(n_shots_a, θ_a))
+        
+        ϕ_a = rates.ϕ_conv_a[i]
+        goals_a = rand(Binomial(n_sot_a, ϕ_a))
+
+        # --- RECORD OUTCOME ---
+        # Clamp to grid size (e.g., 11+ goals go into the 10 bucket)
+        idx_h = min(goals_h, max_goals) + 1
+        idx_a = min(goals_a, max_goals) + 1
+        
+        score_matrix[idx_h, idx_a] += 1.0
+    end
+    
+    # 3. Normalize to Probabilities
+    prob_matrix = score_matrix ./ sum(score_matrix)
+    
+    return prob_matrix
+end
+
+# --- Helper to view odds ---
+function print_implied_odds(grid)
+    # Sum triangles for 1x2
+    p_home = sum(tril(grid, -1))
+    p_draw = sum(diag(grid))
+    p_away = sum(triu(grid, 1))
+    
+    println("\n--- Match Probabilities ---")
+    println("Home Win: $(round(p_home * 100, digits=1))%  (Odds: $(round(1/p_home, digits=2)))")
+    println("Draw:     $(round(p_draw * 100, digits=1))%  (Odds: $(round(1/p_draw, digits=2)))")
+    println("Away Win: $(round(p_away * 100, digits=1))%  (Odds: $(round(1/p_away, digits=2)))")
+    
+    return (home=p_home, draw=p_draw, away=p_away)
+end
+
+
+# 1. Grab rates for a match
+mid = 12476645
+rates = model_preds_1[mid]
+
+# 2. Run Simulation
+grid = dev_compute_probabilities(rates)
+
+# 3. Check Results
+print_implied_odds(grid)
+
+# Optional: View the score grid (Correct Score)
+# displaying top 3x3
+display(grid[1:4, 1:4])
+
+
+# 1. Get the training features (from the split used for training)
+train_fs = feature_sets[1][1] 
+
+# 2. Check the Home Shots column
+h_shots = train_fs.data[:flat_home_shots]
+
+println("--- Training Data Inspection ---")
+println("Total Rows: ", length(h_shots))
+println("Sum of Shots: ", sum(h_shots))
+println("Max Shots: ", maximum(h_shots))
+println("Count of Zeros: ", count(==(0), h_shots))
+println("First 20 values: ", h_shots[1:min(20, end)])
+
