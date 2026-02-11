@@ -195,193 +195,48 @@ function build_turing_model(model::SequentialFunnelModel, feature_set::FeatureSe
 end
 
 
-#
-# # ==============================================================================
-# # 5. PARAMETER EXTRACTION
-# # ==============================================================================
-# """
-#     reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
-#
-# Helper to reconstruct a GRW state matrix from a submodel's samples.
-# Handles the 'prefix.variable' naming convention from Turing submodels.
-# """
-# function reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds, n_samples)
-#     # 1. Extract Scalars (Hyperparameters)
-#     # Use vec(Array(...)) to strip chain metadata and get raw numbers
-#     σ_k_vec = vec(Array(chain[σ_k_sym]))
-#     σ_0_vec = vec(Array(chain[σ_0_sym]))
-#
-#     # 2. Extract Latent States using 'group'
-#     # Turing flattens arrays. 'group' grabs all cols starting with "prefix.z_init"
-#     # The default sorting of group usually aligns with [1], [2], etc.
-#     raw_init  = Array(group(chain, Symbol(prefix, ".z_init")))   # [Samples, Teams]
-#     raw_steps = Array(group(chain, Symbol(prefix, ".z_steps")))  # [Samples, Teams * (Rounds-1)]
-#
-#     # 3. Reshape for Broadcasting
-#     # Target: [Samples, Teams, Time]
-#
-#     # Init: [Samples, Teams, 1]
-#     Z_init = reshape(raw_init, n_samples, n_teams, 1)
-#
-#     # Steps: [Samples, Teams, Rounds-1]
-#     Z_steps = reshape(raw_steps, n_samples, n_teams, n_rounds - 1)
-#
-#     # 4. Apply GRW Scale
-#     S_k = reshape(σ_k_vec, n_samples, 1, 1)
-#     S_0 = reshape(σ_0_vec, n_samples, 1, 1)
-#
-#     init_scaled  = Z_init .* S_0
-#     steps_scaled = Z_steps .* S_k
-#
-#     # 5. Integrate (Cumulative Sum)
-#     # Concatenate along Time axis (dim 3) then cumsum
-#     full_raw = cumsum(cat(init_scaled, steps_scaled, dims=3), dims=3)
-#
-#     # 6. Center (Zero-Sum per time step)
-#     # Subtract mean across Teams axis (dim 2)
-#     centered = full_raw .- mean(full_raw, dims=2)
-#
-#     # Permute to standard shape for easier indexing: [Teams, Rounds, Samples]
-#     return permutedims(centered, (2, 3, 1))
-# end
-#
-# function extract_parameters(
-#     model::SequentialFunnelModel, 
-#     df::AbstractDataFrame, 
-#     feature_set::FeatureSet,
-#     chain::Chains
-# )
-#     n_teams = feature_set[:n_teams]
-#     team_map = feature_set[:team_map]
-#
-#     # --- 1. Robust N_ROUNDS Calculation ---
-#     # Get all parameter names as strings
-#     all_params = string.(names(chain))
-#
-#     # "Group" manually by filtering for the specific step variable
-#     # This replaces: names(group(chain, :z_att_steps))
-#     step_names = filter(n -> contains(n, "att_create.z_steps"), all_params)
-#
-#     # Calculate rounds directly from the steps
-#     n_steps_raw = length(step_names)
-#
-#     n_rounds = (n_steps_raw ÷ n_teams) + 1
-#
-#     n_samples = size(chain, 1) * size(chain, 3) # Handle multiple chains if present
-#
-#     # --- 1. Reconstruct All 6 Processes ---
-#     # Shape: [Team, Time, Sample]
-#     att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds, n_samples)
-#     def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds, n_samples)
-#
-#     att_pr = reconstruct_submodel(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds, n_samples)
-#     def_pr = reconstruct_submodel(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds, n_samples)
-#
-#     att_co = reconstruct_submodel(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds, n_samples)
-#     def_co = reconstruct_submodel(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds, n_samples)
-#
-#     # --- 2. Extract Global Parameters ---
-#     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
-#     μ_pr_v = vec(Array(chain[:μ_prec]));   γ_pr_v = vec(Array(chain[:γ_prec]))
-#     μ_co_v = vec(Array(chain[:μ_conv]));   γ_co_v = vec(Array(chain[:γ_conv]))
-#
-#     r_cre_v = vec(Array(chain[:r_create]))
-#
-#
-#     # --- 3. Compute Rates for Each Match ---
-#     results = Dict{Int64, FunnelRates}()
-#     sizehint!(results, nrow(df))
-#
-#     for row in eachrow(df)
-#         mid = row.match_id
-#
-#         # Time Index Logic:
-#         # If 'time_index' exists (from FeatureSet), use it. 
-#         # Otherwise fallback to match_week (assuming 1-based contiguous seasons)
-#         t = hasproperty(row, :time_index) ? row.time_index : row.match_week
-#
-#         # Safety check for prediction: If t > n_rounds, we clamp to the last known state (Forecast)
-#         t_idx = min(t, n_rounds)
-#
-#         h_id = team_map[row.home_team]
-#         a_id = team_map[row.away_team]
-#
-#         # -- Layer 1: Creation (Volume) --
-#         # Log-Link
-#         log_h_cr = μ_cr_v .+ γ_cr_v .+ att_cr[h_id, t_idx, :] .+ def_cr[a_id, t_idx, :]
-#         log_a_cr = μ_cr_v           .+ att_cr[a_id, t_idx, :] .+ def_cr[h_id, t_idx, :]
-#         λ_h = exp.(log_h_cr)
-#         λ_a = exp.(log_a_cr)
-#
-#         # -- Layer 2: Precision (Accuracy) --
-#         # Logit-Link
-#         logit_h_pr = μ_pr_v .+ γ_pr_v .+ att_pr[h_id, t_idx, :] .+ def_pr[a_id, t_idx, :]
-#         logit_a_pr = μ_pr_v           .+ att_pr[a_id, t_idx, :] .+ def_pr[h_id, t_idx, :]
-#         θ_h = logistic.(logit_h_pr)
-#         θ_a = logistic.(logit_a_pr)
-#
-#         # -- Layer 3: Conversion (Finishing) --
-#         # Logit-Link
-#         logit_h_co = μ_co_v .+ γ_co_v .+ att_co[h_id, t_idx, :] .+ def_co[a_id, t_idx, :]
-#         logit_a_co = μ_co_v           .+ att_co[a_id, t_idx, :] .+ def_co[h_id, t_idx, :]
-#         ϕ_h = logistic.(logit_h_co)
-#         ϕ_a = logistic.(logit_a_co)
-#
-#         # -- Final: Expected Goals --
-#         # E[G] = E[Shots] * P(Target|Shot) * P(Goal|Target)
-#         xg_h = λ_h .* θ_h .* ϕ_h
-#         xg_a = λ_a .* θ_a .* ϕ_a
-#
-#         results[mid] = (
-#             λ_shots_h = λ_h, λ_shots_a = λ_a, r_create = r_cre_v,
-#             θ_prec_h  = θ_h, θ_prec_a  = θ_a,
-#             ϕ_conv_h  = ϕ_h, ϕ_conv_a  = ϕ_a,
-#             exp_goals_h = xg_h, exp_goals_a = xg_a
-#         )
-#     end
-#
-#     return results
-# end
-#
+# ==============================================================================
+# 5. PARAMETER EXTRACTION (Robust Version)
+# ==============================================================================
+
 """
     reconstruct_submodel_robust(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
 
 Reconstructs GRW states by explicitly fetching variables by name to avoid
-lexicographical sorting issues with MCMCChains.group().
+sorting issues. Auto-detects "[i,j]" vs "[i, j]" formatting.
 """
 function reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
-    n_samples = size(chain, 1) * size(chain, 3) # Combine chains
+    n_samples = size(chain, 1) * size(chain, 3) 
     
     # 1. Extract Scalars
     σ_k_vec = vec(Array(chain[σ_k_sym]))
     σ_0_vec = vec(Array(chain[σ_0_sym]))
     
     # 2. Extract Init States [Teams]
-    # We build the exact symbol names: "prefix.z_init[1]", "prefix.z_init[2]"...
+    # Naming is consistently "prefix.z_init[i]"
     init_vars = [Symbol("$prefix.z_init[$i]") for i in 1:n_teams]
-    # Extract as matrix [Samples, Teams]
     raw_init = Array(chain[init_vars]) 
     
     # 3. Extract Steps [Teams, Rounds-1]
-    # Iterate Time (slow) then Team (fast) to match Julia's column-major reshape
-    # BUT since we extract by explicit name, we can fill a pre-allocated array safely.
-    
     Z_steps = zeros(Float64, n_samples, n_teams, n_rounds - 1)
+    
+    # Auto-detect format: Check if [1, 1] exists (with space)
+    # Turing/MCMCChains usually adds a space.
+    sample_sym_space = Symbol("$prefix.z_steps[1, 1]")
+    has_space = sample_sym_space in names(chain)
     
     for t in 1:(n_rounds - 1)
         for i in 1:n_teams
-            # Construct name: "prefix.z_steps[i,t]"
-            # Turing naming convention for 2D arrays is [row, col]
-            sym = Symbol("$prefix.z_steps[$i,$t]")
-            # Copy column from chain into 3D array
+            # Construct symbol based on detection
+            sym = has_space ? Symbol("$prefix.z_steps[$i, $t]") : Symbol("$prefix.z_steps[$i,$t]")
             Z_steps[:, i, t] = chain[sym]
         end
     end
     
-    # 4. Reshape Init
+    # 4. Reshape Init [Samples, Teams, 1]
     Z_init = reshape(raw_init, n_samples, n_teams, 1)
     
-    # 5. Apply GRW Scale
+    # 5. Apply GRW Scale [Samples, Teams, 1]
     S_k = reshape(σ_k_vec, n_samples, 1, 1)
     S_0 = reshape(σ_0_vec, n_samples, 1, 1)
     
@@ -404,20 +259,20 @@ function extract_parameters(
     feature_set::FeatureSet,
     chain::Chains
 )
-    # 1. Get Context from FeatureSet (Reliable Source)
+    # 1. Get Context from FeatureSet (The Source of Truth)
     n_teams = feature_set.data[:n_teams]
     n_rounds = feature_set.data[:n_rounds]
     team_map = feature_set.data[:team_map]
     
     # 2. Reconstruct Processes (Robustly)
-    att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
-    def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    att_cr = reconstruct_submodel_robust(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    def_cr = reconstruct_submodel_robust(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
     
-    att_pr = reconstruct_submodel(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
-    def_pr = reconstruct_submodel(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    att_pr = reconstruct_submodel_robust(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    def_pr = reconstruct_submodel_robust(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
     
-    att_co = reconstruct_submodel(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
-    def_co = reconstruct_submodel(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    att_co = reconstruct_submodel_robust(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    def_co = reconstruct_submodel_robust(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
 
     # 3. Extract Globals
     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
@@ -433,8 +288,9 @@ function extract_parameters(
         mid = row.match_id
         
         # Determine Time Index
+        # We clamp t_idx to n_rounds to ensure we don't go out of bounds for future matches
         t = hasproperty(row, :time_index) ? row.time_index : row.match_week
-        t_idx = clamp(t, 1, n_rounds) # Safety clamp
+        t_idx = clamp(t, 1, n_rounds) 
         
         h_id = team_map[row.home_team]
         a_id = team_map[row.away_team]
@@ -457,7 +313,7 @@ function extract_parameters(
         ϕ_h = logistic.(logit_h_co)
         ϕ_a = logistic.(logit_a_co)
 
-        # -- Expected Goals --
+        # -- Expected Goals (Analytical Mean) --
         xg_h = λ_h .* θ_h .* ϕ_h
         xg_a = λ_a .* θ_a .* ϕ_a
 
