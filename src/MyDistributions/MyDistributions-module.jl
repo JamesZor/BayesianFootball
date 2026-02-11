@@ -20,5 +20,8 @@ export BivariateLogPoisson
 include("./double_negative_binomial.jl")
 export DoubleNegativeBinomial
 
+include("./negative_binomial.jl")
+export RobustNegativeBinomial
+
 
 end
