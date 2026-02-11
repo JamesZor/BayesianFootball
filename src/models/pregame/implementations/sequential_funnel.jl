@@ -21,11 +21,12 @@ Base.@kwdef struct SequentialFunnelModel <: AbstractFunnelModel
     creation_home::Distribution = Normal(0.2, 0.1) # Home Advantage
     
     # Dynamics (GRW)
-    creation_σ_k::Distribution = Truncated(Normal(0, 0.05), 0, Inf) 
-    creation_σ_0::Distribution = Truncated(Normal(0.2, 0.1), 0, Inf)
+    # ( Gelman's Boundary Avoiding Priors 
+    creation_σ_k::Distribution = Gamma(2, 0.05)
+    creation_σ_0::Distribution = Gamma(2, 0.12)
 
     # Dispersion for NegBin (r) - Controls variance/clustering of shots
-    creation_r::Distribution = Gamma(10, 1) 
+    log_r_create::Distribution = Normal(2.3, 0.5)
 
 
     # --- LAYER 2: PRECISION (Accuracy) ---
@@ -34,8 +35,8 @@ Base.@kwdef struct SequentialFunnelModel <: AbstractFunnelModel
     precision_home::Distribution = Normal(0.1, 0.1)
 
     # Dynamics
-    precision_σ_k::Distribution = Truncated(Normal(0, 0.05), 0, Inf)
-    precision_σ_0::Distribution = Truncated(Normal(0.1, 0.05), 0, Inf)
+    precision_σ_k::Distribution = Gamma(2, 0.08)
+    precision_σ_0::Distribution = Gamma(2, 0.08)
 
 
     # --- LAYER 3: CONVERSION (Finishing) ---
@@ -44,8 +45,8 @@ Base.@kwdef struct SequentialFunnelModel <: AbstractFunnelModel
     conversion_home::Distribution = Normal(0.1, 0.1)
 
     # Dynamics
-    conversion_σ_k::Distribution = Truncated(Normal(0, 0.05), 0, Inf)
-    conversion_σ_0::Distribution = Truncated(Normal(0.1, 0.05), 0, Inf)
+    conversion_σ_k::Distribution = Gamma(2, 0.08)
+    conversion_σ_0::Distribution = Gamma(2, 0.08)
     
     # Latent Standard Normal
     z_dist::Distribution = Normal(0, 1)
@@ -95,7 +96,8 @@ end
     γ_create    ~ spec.creation_home
     σ_create_k  ~ spec.creation_σ_k
     σ_create_0  ~ spec.creation_σ_0
-    r_create    ~ spec.creation_r
+    log_r_cr    ~ spec.log_r_create
+    r_create    = exp(log_r_cr)
     
     # Layer 2: Precision
     μ_prec      ~ spec.precision_μ
@@ -283,7 +285,7 @@ function extract_parameters(
     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
     μ_pr_v = vec(Array(chain[:μ_prec]));   γ_pr_v = vec(Array(chain[:γ_prec]))
     μ_co_v = vec(Array(chain[:μ_conv]));   γ_co_v = vec(Array(chain[:γ_conv]))
-    r_cre_v = vec(Array(chain[:r_create]))
+    r_cre_v = exp.(vec(Array(chain[:r_create])))
 
     # 4. Predict
     results = Dict{Int64, FunnelRates}()
