@@ -349,7 +349,7 @@ end
 Reconstructs GRW states by explicitly fetching variables by name to avoid
 lexicographical sorting issues with MCMCChains.group().
 """
-function reconstruct_submodel_robust(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
+function reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
     n_samples = size(chain, 1) * size(chain, 3) # Combine chains
     
     # 1. Extract Scalars
@@ -410,14 +410,14 @@ function extract_parameters(
     team_map = feature_set.data[:team_map]
     
     # 2. Reconstruct Processes (Robustly)
-    att_cr = reconstruct_submodel_robust(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
-    def_cr = reconstruct_submodel_robust(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
+    def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
     
-    att_pr = reconstruct_submodel_robust(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
-    def_pr = reconstruct_submodel_robust(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    att_pr = reconstruct_submodel(chain, "att_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
+    def_pr = reconstruct_submodel(chain, "def_prec", :σ_prec_k, :σ_prec_0, n_teams, n_rounds)
     
-    att_co = reconstruct_submodel_robust(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
-    def_co = reconstruct_submodel_robust(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    att_co = reconstruct_submodel(chain, "att_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
+    def_co = reconstruct_submodel(chain, "def_conv", :σ_conv_k, :σ_conv_0, n_teams, n_rounds)
 
     # 3. Extract Globals
     μ_cr_v = vec(Array(chain[:μ_create])); γ_cr_v = vec(Array(chain[:γ_create]))
