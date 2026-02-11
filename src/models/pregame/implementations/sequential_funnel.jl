@@ -252,12 +252,20 @@ function extract_parameters(
     chain::Chains
 )
     n_teams = feature_set[:n_teams]
+
+    # --- 1. Robust N_ROUNDS Calculation ---
+    # Get all parameter names as strings
+    all_params = string.(names(chain))
+
+    # "Group" manually by filtering for the specific step variable
+    # This replaces: names(group(chain, :z_att_steps))
+    step_names = filter(n -> contains(n, "att_create.z_steps"), all_params)
+
+    # Calculate rounds directly from the steps
+    n_steps_raw = length(step_names)
+
+    n_rounds = (n_steps_raw ÷ n_teams) + 1
     
-    # Heuristic to find N_ROUNDS from the chain parameter names
-    # Look for "att_create.z_steps[team_id, time_step]"
-    # We find the total number of step columns and divide by teams
-    n_step_cols = length(names(chain, :att_create)) - n_teams # Total cols - init cols = step cols
-    n_rounds = (n_step_cols ÷ n_teams) + 1
     n_samples = size(chain, 1) * size(chain, 3) # Handle multiple chains if present
 
     # --- 1. Reconstruct All 6 Processes ---
