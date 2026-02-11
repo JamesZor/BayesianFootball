@@ -196,60 +196,65 @@ end
 
 
 # ==============================================================================
-# 5. PARAMETER EXTRACTION (Robust Version)
+# 5. PARAMETER EXTRACTION (Robust Loop Version)
 # ==============================================================================
 
 """
     reconstruct_submodel_robust(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
 
-Reconstructs GRW states by explicitly fetching variables by name to avoid
-sorting issues. Auto-detects "[i,j]" vs "[i, j]" formatting.
+Reconstructs GRW states by iterating variables one-by-one.
+This avoids 'DimensionMismatch' and shape ambiguity with MCMCChains.Array().
 """
 function reconstruct_submodel(chain, prefix, σ_k_sym, σ_0_sym, n_teams, n_rounds)
-    n_samples = size(chain, 1) * size(chain, 3) 
+    # Calculate Total Samples (Samples * Chains)
+    n_samples_per_chain, _, n_chains = size(chain)
+    n_total = n_samples_per_chain * n_chains
     
-    # 1. Extract Scalars
+    # 1. Extract Scalars (Flattened)
     σ_k_vec = vec(Array(chain[σ_k_sym]))
     σ_0_vec = vec(Array(chain[σ_0_sym]))
     
-    # 2. Extract Init States [Teams]
-    # Naming is consistently "prefix.z_init[i]"
-    init_vars = [Symbol("$prefix.z_init[$i]") for i in 1:n_teams]
-    raw_init = Array(chain[init_vars]) 
+    # 2. Extract Init States [TotalSamples, Teams, 1]
+    # We loop explicitly to handle 200x16 -> 3200 flattening consistently
+    Z_init = zeros(Float64, n_total, n_teams, 1)
     
-    # 3. Extract Steps [Teams, Rounds-1]
-    Z_steps = zeros(Float64, n_samples, n_teams, n_rounds - 1)
+    for i in 1:n_teams
+        sym = Symbol("$prefix.z_init[$i]")
+        # vec(Array(...)) flattens [Samples, Chains] -> [TotalSamples]
+        Z_init[:, i, 1] = vec(Array(chain[sym]))
+    end
     
-    # Auto-detect format: Check if [1, 1] exists (with space)
-    # Turing/MCMCChains usually adds a space.
+    # 3. Extract Steps [TotalSamples, Teams, Rounds-1]
+    Z_steps = zeros(Float64, n_total, n_teams, n_rounds - 1)
+    
+    # Auto-detect naming format ([i,j] vs [i, j])
     sample_sym_space = Symbol("$prefix.z_steps[1, 1]")
     has_space = sample_sym_space in names(chain)
     
     for t in 1:(n_rounds - 1)
         for i in 1:n_teams
-            # Construct symbol based on detection
+            # Construct symbol
             sym = has_space ? Symbol("$prefix.z_steps[$i, $t]") : Symbol("$prefix.z_steps[$i,$t]")
-            Z_steps[:, i, t] = chain[sym]
+            # Flatten and Assign
+            Z_steps[:, i, t] = vec(Array(chain[sym]))
         end
     end
     
-    # 4. Reshape Init [Samples, Teams, 1]
-    Z_init = reshape(raw_init, n_samples, n_teams, 1)
-    
-    # 5. Apply GRW Scale [Samples, Teams, 1]
-    S_k = reshape(σ_k_vec, n_samples, 1, 1)
-    S_0 = reshape(σ_0_vec, n_samples, 1, 1)
+    # 4. Apply GRW Scale
+    # Reshape Sigmas for broadcasting: [TotalSamples, 1, 1]
+    S_k = reshape(σ_k_vec, n_total, 1, 1)
+    S_0 = reshape(σ_0_vec, n_total, 1, 1)
     
     init_scaled  = Z_init .* S_0
     steps_scaled = Z_steps .* S_k
     
-    # 6. Integrate (Cumulative Sum over Time)
+    # 5. Integrate (Cumulative Sum over Time axis = 3)
     full_raw = cumsum(cat(init_scaled, steps_scaled, dims=3), dims=3)
     
-    # 7. Center
+    # 6. Center (Zero-Sum over Teams axis = 2)
     centered = full_raw .- mean(full_raw, dims=2)
     
-    # Return: [Teams, Rounds, Samples]
+    # Return: [Teams, Rounds, Samples] (Standard format for extraction loop)
     return permutedims(centered, (2, 3, 1))
 end
 
@@ -259,12 +264,12 @@ function extract_parameters(
     feature_set::FeatureSet,
     chain::Chains
 )
-    # 1. Get Context from FeatureSet (The Source of Truth)
+    # 1. Get Context
     n_teams = feature_set.data[:n_teams]
     n_rounds = feature_set.data[:n_rounds]
     team_map = feature_set.data[:team_map]
     
-    # 2. Reconstruct Processes (Robustly)
+    # 2. Reconstruct Processes
     att_cr = reconstruct_submodel(chain, "att_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
     def_cr = reconstruct_submodel(chain, "def_create", :σ_create_k, :σ_create_0, n_teams, n_rounds)
     
@@ -286,11 +291,8 @@ function extract_parameters(
 
     for row in eachrow(df)
         mid = row.match_id
-        
-        # Determine Time Index
-        # We clamp t_idx to n_rounds to ensure we don't go out of bounds for future matches
         t = hasproperty(row, :time_index) ? row.time_index : row.match_week
-        t_idx = clamp(t, 1, n_rounds) 
+        t_idx = clamp(t, 1, n_rounds)
         
         h_id = team_map[row.home_team]
         a_id = team_map[row.away_team]
@@ -313,7 +315,7 @@ function extract_parameters(
         ϕ_h = logistic.(logit_h_co)
         ϕ_a = logistic.(logit_a_co)
 
-        # -- Expected Goals (Analytical Mean) --
+        # -- Expected Goals --
         xg_h = λ_h .* θ_h .* ϕ_h
         xg_a = λ_a .* θ_a .* ϕ_a
 
