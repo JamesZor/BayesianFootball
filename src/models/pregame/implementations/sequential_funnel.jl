@@ -318,7 +318,8 @@ function extract_parameters(
         ϕ_a = logistic.(logit_a_co)
 
         # -- Expected Goals --
-        xg_h = λ_h .* θ_h .* ϕ_h
+    #   FIX: do we need ?
+        xg_h = λ_h .* θ_h .* ϕ_h 
         xg_a = λ_a .* θ_a .* ϕ_a
 
         results[mid] = (
