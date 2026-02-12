@@ -118,7 +118,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     history_seasons = 0,
     dynamics_col = :match_month,
     # warmup_period = 36,
-    warmup_period = 8,
+    warmup_period = 2,
     stop_early = true
 )
 
@@ -126,9 +126,9 @@ cv_config = BayesianFootball.Data.CVConfig(
 splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1) 
 sampler_conf = Samplers.NUTSConfig(
-                50,
+                100,
                 16,
-                50,
+                100,
                 0.65,
                 10,
   Samplers.UniformInit(-0.05, 0.05),
@@ -141,7 +141,7 @@ training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, fals
 funnel_model = BayesianFootball.Models.PreGame.SequentialFunnelModel()
 
 conf_funnel = Experiments.ExperimentConfig(
-                    name = "grw funnel_model",
+                    name = "grw funnel_model big",
                     model = funnel_model,
                     splitter = cv_config,
                     training_config = training_config,
@@ -153,12 +153,10 @@ results_funnel = Experiments.run_experiment(ds, conf_funnel)
 
 Experiments.save_experiment(results_funnel)
 
-
 (chain_1, meta_1) = results_funnel.training_results[1];
 
 df_test_1 = BayesianFootball.Data.get_next_matches(ds, meta_1, results_funnel.config.splitter);
 
-df_test_1 = BayesianFootball.Data.get_next_matches(ds, meta_1, results2.config.splitter);
 println("Test Matches Found: ", nrow(df_test_1))
 show(df_test_1[:, [:match_date, :home_team, :away_team]], allcols=false)
 
@@ -172,11 +170,13 @@ feature_set1 = feature_collection1[1][1]
 
 chain1 = results_funnel.training_results[1][1]
 
+describe(chain1)
+
 model_preds_1 = BayesianFootball.Models.PreGame.extract_parameters(
     results_funnel.config.model,
     df_test_1,
     feature_set1,
-    chain_1
+    chain1
 )
 
 
@@ -294,8 +294,12 @@ function print_implied_odds(grid)
 end
 
 
+
+df_test_1[1, :match_id]
 # 1. Grab rates for a match
 mid = 12476645
+
+mid = df_test_1[17, :match_id]
 rates = model_preds_1[mid]
 
 # 2. Run Simulation
@@ -303,10 +307,14 @@ grid = dev_compute_probabilities(rates)
 
 # 3. Check Results
 print_implied_odds(grid)
+subset(ds.odds, :match_id => ByRow(isequal(mid)), :market_group => ByRow(isequal("1X2")))
+subset(ds.matches, :match_id => ByRow(isequal(mid)))
+
 
 # Optional: View the score grid (Correct Score)
 # displaying top 3x3
 display(grid[1:4, 1:4])
+
 
 
 # 1. Get the training features (from the split used for training)
