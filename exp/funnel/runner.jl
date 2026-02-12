@@ -11,7 +11,7 @@ threadinfo()
 BLAS.set_num_threads(1)
 
 # Load the definitions from the sibling file
-include("./exp/funnel/model.jl")
+# include("./exp/funnel/model.jl")
 
 function run_all()
     # 1. Get Configs

@@ -126,6 +126,11 @@ scatter(grouped.edge_bucket, grouped.actual_win_rate .- grouped.market_implied,
 target_markets = ["OverUnder"] # Filter by market name first
 target_selections = [:over_15, :over_25, :over_35] # The specific lines
 
+
+target_markets = ["1X2"] # Filter by market name first
+target_selections = [:home] # The specific lines
+
+
 # 2. Create the "Winning Portfolio" DataFrame
 df_overs = filter(row -> 
     row.market_name in target_markets && 
