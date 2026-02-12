@@ -153,7 +153,7 @@ results_funnel = Experiments.run_experiment(ds, conf_funnel)
 
 Experiments.save_experiment(results_funnel)
 
-(chain_1, meta_1) = results_funnel.training_results[1];
+(chain_1, meta_1) = results_funnel.training_results[4];
 
 df_test_1 = BayesianFootball.Data.get_next_matches(ds, meta_1, results_funnel.config.splitter);
 
@@ -166,9 +166,10 @@ feature_collection1 = BayesianFootball.Features.create_features(
     funnel_model, 
     results_funnel.config.splitter
 )
-feature_set1 = feature_collection1[1][1]
 
-chain1 = results_funnel.training_results[1][1]
+feature_set1 = feature_collection1[4][1]
+
+chain1 = results_funnel.training_results[4][1]
 
 describe(chain1)
 
@@ -299,7 +300,7 @@ df_test_1[1, :match_id]
 # 1. Grab rates for a match
 mid = 12476645
 
-mid = df_test_1[17, :match_id]
+mid = df_test_1[2, :match_id]
 rates = model_preds_1[mid]
 
 # 2. Run Simulation
@@ -307,7 +308,7 @@ grid = dev_compute_probabilities(rates)
 
 # 3. Check Results
 print_implied_odds(grid)
-subset(ds.odds, :match_id => ByRow(isequal(mid)), :market_group => ByRow(isequal("1X2")))
+subset(ds.odds, :match_id => ByRow(isequal(mid)), :market_group => ByRow(isequal("1X2")), :market_name => ByRow(isequal("Full time")))[:, [:match_id, :choice_name, :decimal_odds]]
 subset(ds.matches, :match_id => ByRow(isequal(mid)))
 
 
@@ -334,76 +335,37 @@ println("First 20 values: ", h_shots[1:min(20, end)])
 
 #####
 
-using Turing, DataFrames, Statistics, LinearAlgebra
+market_data = Data.prepare_market_data(ds)
 
-# 1. Grab Context from FeatureSet
-n_teams = feature_set1.data[:n_teams]
-n_rounds = feature_set1.data[:n_rounds]
-println("Context: Teams=$n_teams, Rounds=$n_rounds")
+latents = BayesianFootball.Experiments.extract_oos_predictions(ds, results_funnel)
 
-# 2. Inspect Chain Dimensions
-n_samples_per_chain = size(chain_1, 1)
-n_chains = size(chain_1, 3)
-n_total_samples = n_samples_per_chain * n_chains
-println("Chain: $n_samples_per_chain samples * $n_chains chains = $n_total_samples total")
-
-# 3. Define Prefix for Testing
-prefix = "att_create"
+ppd = BayesianFootball.Predictions.model_inference(latents)
 
 
-# A. Extract Scalars (Vectorize correctly)
-# 'vec(Array(...))' flattens [Samples, 1, Chains] -> [TotalSamples]
-σ_k_vec = vec(Array(chain_1[:σ_create_k]));
-σ_0_vec = vec(Array(chain_1[:σ_create_0]));
+baker = BayesianKelly()
+flat_strat = FlatStake(0.05)
 
-println("Sigma Vector Shape: ", size(σ_k_vec)) 
-# Expected: (3200,) for 200 samples * 16 chains
+my_signals = [baker, flat_strat]
 
-# B. Extract Init States
-# Construct names manually
-init_vars = [Symbol("$prefix.z_init[$i]") for i in 1:n_teams]
+ledger = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+    results_funnel, 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
 
-# Extract as matrix. Array(chain[names]) -> [Samples*Chains, n_teams] ?
-# Let's verify what Array(chain[...]) returns.
-raw_init_chain = chain_1[init_vars]
-raw_init = Array(raw_init_chain) 
 
-println("Raw Init Shape: ", size(raw_init))
-# MCMCChains.Array usually returns [Samples, Vars, Chains] or [Samples, Vars] if flattened?
-# Actually, Array(chn) returns a 2D matrix if we don't specify dims, mixing chains?
-# Let's use more explicit extraction to be safe.
 
-# SAFE EXTRACTION:
-# We want [TotalSamples, n_teams]
-# 'Array(chain[vars])' typically returns [Samples, Vars, Chains]
-# We want to reshape to [Samples*Chains, Vars]
-raw_init_3d = Array(chain_1[init_vars]) # [Samples, Teams, Chains]
-raw_init_flat = reshape(permutedims(raw_init_3d, (1, 3, 2)), n_total_samples, n_teams)
+tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
 
-println("Corrected Init Shape: ", size(raw_init_flat)) # Should be (3200, 10)
 
-# C. Extract Steps (The Loop that Failed)
-# Pre-allocate Destination
-Z_steps = zeros(Float64, n_total_samples, n_teams, n_rounds - 1)
 
-# Check auto-detection
-sample_sym_space = Symbol("$prefix.z_steps[1, 1]")
-has_space = sample_sym_space in names(chain_1)
-println("Has Space in names? $has_space")
 
-# Run Loop Manually for t=1, i=1
-t = 1
-i = 1
-sym = has_space ? Symbol("$prefix.z_steps[$i, $t]") : Symbol("$prefix.z_steps[$i,$t]")
-println("Fetching Symbol: $sym")
+model_names = unique(tearsheet.selection)
 
-# Extract the column
-col_data_chain = chain_1[sym]
-# Convert to simple vector [TotalSamples]
-col_data = vec(Array(col_data_chain))
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet, :selection => ByRow(isequal(m_name)))
+    show(sub)
+end
 
-println("Column Data Shape: ", size(col_data)) # Should be (3200,)
-
-# Try Assignment (The fix for your error)
-Z_steps[:, i, t] = col_data 
-println("Assignment Successful!")

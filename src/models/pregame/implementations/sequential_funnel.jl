@@ -41,12 +41,12 @@ Base.@kwdef struct SequentialFunnelModel <: AbstractFunnelModel
 
     # --- LAYER 3: CONVERSION (Finishing) ---
     # Logit Scale: -1.0 is ~27% conversion rate.
-    conversion_μ::Distribution = Normal(-1.0, 0.2)
+    conversion_μ::Distribution = Normal(-0.6, 0.3)
     conversion_home::Distribution = Normal(0.1, 0.1)
 
     # Dynamics
     conversion_σ_k::Distribution = Gamma(2, 0.08)
-    conversion_σ_0::Distribution = Gamma(2, 0.08)
+    conversion_σ_0::Distribution = Gamma(2, 0.2)
     
     # Latent Standard Normal
     z_dist::Distribution = Normal(0, 1)
