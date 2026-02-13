@@ -13,7 +13,13 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
     # 1. Setup Data & Splits
     # ======================
     ds = Data.load_extra_ds()
-    transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+
+    # default 
+    # transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+    # testing the grw GRWNegativeBinomialMu at every 2 weeks
+    transform!(ds.matches, :match_week => ByRow(w -> cld(w, 2)) => :match_month)
+
+
 
     cv_config = BayesianFootball.Data.CVConfig(
         tournament_ids = [56,57],       # Premiership
@@ -29,25 +35,58 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
     sampler_conf = Samplers.NUTSConfig(
         250,     # n_samples
         2,      # n_chains
-        200,     # n_warmup
+        50,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
-        Samplers.UniformInit(-0.05, 0.05),
+        Samplers.UniformInit(-0.5, 0.5),
         false   # show_progress (We use the Global Logger instead)
     )
+
+
+
 
     train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
     configs = [
-        #---- first model ----
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        #  1.---- first model ----
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        #   Was an init test  run 
+    #
+        # Experiments.ExperimentConfig(
+        #     name = "funnel basic 1",
+        #     model = BayesianFootball.Models.PreGame.SequentialFunnelModel(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+    #
+
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        #  2.---- baseline model ----
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # It was found that GRWNegativeBinomialMu, had the best expected growth for over 15 and couple of 
+        # other markets - so will run this a baseline check, monthly as well to see the difference.
+        
         Experiments.ExperimentConfig(
-            name = "funnel basic 1",
-            model = BayesianFootball.Models.PreGame.SequentialFunnelModel(),
+            name = "grw_neg_bin_mu_base_line",
+            model = Models.PreGame.GRWNegativeBinomialMu(
+                μ_init = Normal(0.20, 0.1),
+                σ_μ    = Gamma(2, 0.015), 
+                γ      = Normal(0.12, 0.5),
+                σ_k    = Gamma(2, 0.08),
+                σ_0    = Gamma(2, 0.08),
+
+                # Keep Dispersion loose as before
+                log_r_prior = Normal(1.5, 1.0)
+            ),
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
         ),
+
+
       ]
 
 

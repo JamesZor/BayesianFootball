@@ -17,39 +17,39 @@ Base.@kwdef struct SequentialFunnelModel <: AbstractFunnelModel
     
     # --- LAYER 1: CREATION (Shots) ---
     # Global Intercept for Shots (approx 2.5 on log scale is ~12 shots)
-    creation_μ::Distribution = Normal(2.5, 0.3) 
-    creation_home::Distribution = Normal(0.2, 0.1) # Home Advantage
+    creation_μ::Normal{Float64} = Normal(2.5, 0.3) 
+    creation_home::Normal{Float64} = Normal(0.2, 0.1) # Home Advantage
     
     # Dynamics (GRW)
-    # ( Gelman's Boundary Avoiding Priors 
-    creation_σ_k::Distribution = Gamma(2, 0.05)
-    creation_σ_0::Distribution = Gamma(2, 0.12)
+    # ( Gelman's Boundary Avoiding Priors )
+    creation_σ_k::Gamma{Float64} = Gamma(2, 0.05)
+    creation_σ_0::Gamma{Float64} = Gamma(2, 0.12)
 
     # Dispersion for NegBin (r) - Controls variance/clustering of shots
-    log_r_create::Distribution = Normal(2.3, 0.5)
+    log_r_create::Normal{Float64} = Normal(2.3, 0.5)
 
 
     # --- LAYER 2: PRECISION (Accuracy) ---
     # Logit Scale: 0.0 is 50%. -0.5 is ~38% accuracy.
-    precision_μ::Distribution = Normal(-0.5, 0.2) 
-    precision_home::Distribution = Normal(0.1, 0.1)
+    precision_μ::Normal{Float64} = Normal(-0.5, 0.2) 
+    precision_home::Normal{Float64} = Normal(0.1, 0.1)
 
     # Dynamics
-    precision_σ_k::Distribution = Gamma(2, 0.08)
-    precision_σ_0::Distribution = Gamma(2, 0.08)
+    precision_σ_k::Gamma{Float64} = Gamma(2, 0.08)
+    precision_σ_0::Gamma{Float64} = Gamma(2, 0.08)
 
 
     # --- LAYER 3: CONVERSION (Finishing) ---
     # Logit Scale: -1.0 is ~27% conversion rate.
-    conversion_μ::Distribution = Normal(-0.6, 0.3)
-    conversion_home::Distribution = Normal(0.1, 0.1)
+    conversion_μ::Normal{Float64} = Normal(-0.6, 0.3)
+    conversion_home::Normal{Float64} = Normal(0.1, 0.1)
 
     # Dynamics
-    conversion_σ_k::Distribution = Gamma(2, 0.08)
-    conversion_σ_0::Distribution = Gamma(2, 0.2)
+    conversion_σ_k::Gamma{Float64} = Gamma(2, 0.08)
+    conversion_σ_0::Gamma{Float64} = Gamma(2, 0.2)
     
     # Latent Standard Normal
-    z_dist::Distribution = Normal(0, 1)
+    z_dist::Normal{Float64} = Normal(0, 1)
 end
 
 

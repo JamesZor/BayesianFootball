@@ -1,4 +1,5 @@
 # exp/funnel/runner.jl
+using Revise
 using BayesianFootball
 
 using DataFrames

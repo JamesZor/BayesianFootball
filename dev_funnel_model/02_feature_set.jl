@@ -74,36 +74,6 @@ BLAS.set_num_threads(1)
 
 
 ds = Data.load_extra_ds()
-#=
-julia> names(df)
-26-element Vector{String}:
- "tournament_id"
- "season_id"
- "season"
- "match_id"
- "tournament_slug"
- "home_team"
- "away_team"
- "home_score"
- "away_score"
- "home_score_ht"
- "away_score_ht"
- "match_date"
- "round"
- "winner_code"
- "has_xg"
- "has_stats"
- "match_hour"
- "match_dayofweek"
- "match_month"
- "match_week"
- "HS"
- "AS"
- "HST"
- "AST"
- "HC"
- "AC"
-=#
 
 transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
