@@ -12,7 +12,77 @@ BLAS.set_num_threads(1)
 ds = Data.load_extra_ds()
 
 df = subset(ds.matches, :tournament_id => ByRow(in([56, 57])))
+
+# 1827 rows
+
+### 
+
+using DataFramesMeta
+
+# ---- Check the quality of the data
+# check for missing data
+describe(df[:, [:HS, :AS, :HST, :AST, :HC, :AC, :HF, :AF, :Referee, :HY, :AY, :HR, :AR]], :nmissing)
+#=
+13×2 DataFrame
+ Row │ variable  nmissing 
+     │ Symbol    Int64    
+─────┼────────────────────
+   1 │ HS               2
+   2 │ AS               2
+   3 │ HST              2
+   4 │ AST              2
+   5 │ HC               2
+   6 │ AC               2
+   7 │ HF               4
+   8 │ AF               4
+   9 │ Referee          0
+  10 │ HY               0
+  11 │ AY               0
+  12 │ HR               0
+  13 │ AR               0
+
+# so we do have missing data 
+
+=#
 dropmissing!(df, [:HS, :AS, :HC, :AC, :HF, :AF, :Referee, :HY, :AY, :HR, :AR])
+# 1823 rows 
+
+# check if shots on target > shots - which should not happend 
+@subset(df, :HST .> :HS .|| :AST .> :AS)
+
+#=
+julia> @subset(df, :HST .> :HS .|| :AST .> :AS)
+0×33 DataFrame
+ Row │ tournament_id  season_id  season   match_id  tournament_slug  home_team  away_team  home_score  ⋯
+     │ Int64          Int64      String7  Int64     String15         String31   String31   Int64?      ⋯
+─────┴──────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                      25 columns omitted
+=# 
+
+# check for goasl > shots on target 
+@subset(df, :home_score .> :HST .|| :away_score .> :AST )
+
+#= 
+
+julia> @subset(df, :home_score .> :HST .|| :away_score .> :AST )
+4×33 DataFrame
+ Row │  season   match_id  tournament_slug  home_team        away_team        home_score  away_score  home_score_ht  away_score_ht  match_date   HS       AS       HST       AST       
+     │  String7  Int64     String15         String31         String31         Int64?      Int64?      Int64?         Int64?         Dates.Date   Float64  Float64  Float64?  Float64?  
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │  23/24    11395513  league-one       cove-rangers     stirling-albion           4           2              2              1  2024-03-30       5.0      5.0       3.0       4.0  
+   2 │  21/22     9573953  league-two       annan-athletic   kelty-hearts-fc           1           2              1              2  2022-04-30       2.0      9.0       0.0       5.0  
+   3 │  22/23    10388128  league-two       annan-athletic   east-fife                 2           2              0              2  2022-09-17      12.0      3.0       5.0       1.0  
+   4 │  24/25    12476487  league-two       forfar-athletic  the-spartans-fc           0           2              0              0  2025-03-15      11.0      5.0       3.0       1.0  
+
+=#
+
+
+
+
+
+
+
+
 
 # 1. Check the Distribution (Poisson vs. Negative Binomial)
 using Statistics, DataFrames

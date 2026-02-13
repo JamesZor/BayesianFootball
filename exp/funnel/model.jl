@@ -12,12 +12,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
     
     # 1. Setup Data & Splits
     # ======================
-    data_store = BayesianFootball.Data.load_default_datastore()
-    ds = BayesianFootball.Data.DataStore( 
-        Data.add_match_week_column(data_store.matches),
-        data_store.odds,
-        data_store.incidents
-    )
+    ds = Data.load_extra_ds()
     transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
     cv_config = BayesianFootball.Data.CVConfig(
@@ -32,9 +27,9 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
+        250,     # n_samples
         2,      # n_chains
-        100,     # n_warmup
+        200,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
         Samplers.UniformInit(-0.05, 0.05),

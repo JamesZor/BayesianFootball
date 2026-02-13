@@ -155,9 +155,20 @@ function enrich_with_scotland_extra(ds::DataStore, folder_path::String)
         makeunique = true
     )
 
+    
+    # 6. Enforces shots on target  >= shots ,and goals >= shots on target 
+    # As to make Binomial function valid otherwise it will drop to zero, and crash 
+    transform!(enriched_matches, 
+               [:HST, :home_score] => ByRow((sot, g) -> max(sot, g)) => :HST,
+               [:AST, :away_score] => ByRow((sot, g) -> max(sot, g)) => :AST,
+
+               [:HS, :HST] => ByRow((s,sot) -> max(s, sot)) => :HS,
+               [:AS, :AST] => ByRow((s,sot) -> max(s, sot)) => :AS 
+               )
+
     # 6. Return new DataStore
     # We keep the original odds and incidents for now
-    println("... Merged $(nrow(merge_source)) rows of extra stats.")
+
     return DataStore(enriched_matches, ds.odds, ds.incidents)
 end
 
