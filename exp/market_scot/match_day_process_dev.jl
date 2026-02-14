@@ -643,6 +643,116 @@ odds_df = fetch_odds(target_df)
 
 
 
+#  
+"""
+    get_ppd_for_match(model, home_id, away_id)
+
+Creates the 1-row input DataFrame and generates the PPD using the model.
+"""
+function get_ppd_for_match(model, home_id::String, away_id::String)
+    # 1. Construct the input DataFrame the model expects
+    # We use match_week = 999 as a placeholder for "Next Game"
+    input_df = DataFrame(
+        :match_id => [1], 
+        :match_week => [999], 
+        :home_team => [home_id], 
+        :away_team => [away_id]
+    )
+
+    # 2. Generate Prediction
+    # ADAPT THIS LINE to however you usually generate 'ppd1'
+    # Example: ppd = predict(model, input_df)
+    ppd = BayesianFootball.Models.predict(model, input_df) 
+    
+    return ppd
+end
+
+
+
+using DataFrames
+
+# Configuration: Map Scraper League Symbols to Tournament IDs
+const LEAGUE_TO_TOURNAMENT = Dict(
+    :l1 => 56,
+    :l2 => 57
+)
+
+function process_live_matches(odds_df::DataFrame, models::Vector, signals::Vector)
+    all_bets = DataFrame()
+
+    println("--- Processing $(length(unique(odds_df.match_id))) Matches ---")
+
+    # 1. Group by Match so we handle one game at a time
+    for gdf in groupby(odds_df, :match_id)
+        
+        # --- A. Setup Metadata ---
+        match_row = first(gdf)
+        league = match_row.league
+        home_id = match_row.home_id
+        away_id = match_row.away_id
+        event_name = match_row.event_name
+        
+        # --- B. Model Selector (The Router) ---
+        target_tourn_id = get(LEAGUE_TO_TOURNAMENT, league, nothing)
+        
+        # Find the model that was trained on this tournament ID
+        active_model = nothing
+        for m in models
+            if !isnothing(target_tourn_id) && target_tourn_id in m.config.splitter.tournament_ids
+                active_model = m
+                break
+            end
+        end
+
+        if isnothing(active_model)
+            # @warn "No model found for $league ($event_name). Skipping."
+            continue
+        end
+
+        # --- C. Get PPD (Prediction) ---
+        # Wrap in try/catch in case of missing teams in the model
+        ppd = try
+            get_ppd_for_match(active_model, home_id, away_id)
+        catch e
+            @warn "Prediction failed for $event_name: $e"
+            continue
+        end
+
+        # --- D. Prepare Odds DataFrame ---
+        # process_signals expects a specific format.
+        # We need to ensure column names match what your Signals expect.
+        # 1. Copy the group
+        current_odds = DataFrame(gdf)
+        
+        # 2. Rename 'back_price' to 'odds' (as per your example)
+        rename!(current_odds, :back_price => :odds)
+        
+        # 3. Ensure 'selection' is the correct type (Symbol or String) matches your PPD keys
+        # (Assuming your scraper returns Symbols :home, :away, your code seems to handle this)
+
+        # --- E. Calculate Signals (The Existing Workflow) ---
+        try
+            match_results = BayesianFootball.Signals.process_signals(
+                ppd, 
+                current_odds, 
+                signals; 
+                odds_column=:odds
+            )
+            
+            # Attach the Real Event Name for readability later
+            match_results.event_name .= event_name
+            
+            append!(all_bets, match_results)
+        catch e
+            @warn "Signal processing failed for $event_name: $e"
+        end
+    end
+
+    return all_bets
+end
+
+
+
 #### ??? 
 # --- SETUP MODEL 1 (League 1) ---
 println("Preparing Model 1 (L1)...")
@@ -665,6 +775,210 @@ fset_m2  = feats_m2[end][1]
 
 println("Models Ready.")
 
+
+#=
+# get match to predict 
+# odds_df -> df_match_predict 
+julia> odds_df
+117×10 DataFrame
+ Row │ match_id  event_name                 market_name  selection  back_price  lay_price  timestamp                home_id              away_id                       league  
+     │ String    String                     String       Symbol     Float64     Float64    DateTime                 String?              String?                       Symbol? 
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ 1         Spartans v Edinburgh City  1X2          draw             4.4        4.7   2026-02-14T12:49:51.631  the-spartans-fc      edinburgh-city-fc             l2
+   2 │ 1         Spartans v Edinburgh City  1X2          home             1.59       1.6   2026-02-14T12:49:51.631  the-spartans-fc      edinburgh-city-fc             l2
+   3 │ 1         Spartans v Edinburgh City  1X2          away             6.4        7.0   2026-02-14T12:49:51.631  the-spartans-fc      edinburgh-city-fc             l2
+   4 │ 1         Spartans v Edinburgh City  OverUnder    under_25         2.28       2.44  2026-02-14T12:49:51.631  the-spartans-fc      edinburgh-city-fc             l2
+   5 │ 1         Spartans v Edinburgh City  OverUnder    over_25          1.7        1.78  2026-02-14T12:49:51.631  the-spartans-fc      edinburgh-city-fc             l2
+
+-> 
+match_to_predict2 = DataFrame(
+    match_id = [1, 2],
+    match_week = [999, 999], 
+    home_team = ["clyde-fc", "annan-athletic"], 
+    away_team = ["elgin-city", "dumbarton"]
+)
+
+so group by the league and the match id, 
+
+
+=#
+"""
+    get_matches_to_predict(odds_df)
+
+Extracts unique matches from the odds dataframe and formats them for the model.
+"""
+function get_matches_to_predict(odds_df::DataFrame)
+    # 1. Extract unique match metadata (ignore market rows)
+    # We only care about the ID, League, and Teams
+    unique_matches = unique(odds_df[:, [:match_id, :home_id, :away_id, :league]])
+
+    # 2. Rename columns to match what the Model expects
+    # home_id -> home_team, away_id -> away_team
+    rename!(unique_matches, :home_id => :home_team, :away_id => :away_team)
+
+    # 3. Add the required 'match_week' column (placeholder 999)
+    unique_matches.match_week .= 999
+
+    # 4. Ensure match_id is an Integer (Model usually expects Int, odds_df has String)
+    # We parse "1" -> 1
+    unique_matches.match_id = parse.(Int, unique_matches.match_id)
+
+    # 5. Reorder columns to be clean
+    select!(unique_matches, :match_id, :match_week, :home_team, :away_team, :league)
+
+    return unique_matches
+end
+
+matches_to_predict = get_matches_to_predict(odds_df)
+
+
+
+raw_preds1 = BayesianFootball.Models.PreGame.extract_parameters(
+    m1.config.model, 
+    subset(matches_to_predict, :league => ByRow(isequal(:l1))),
+    fset_m1, 
+    chain_m1
+)
+
+#=
+Dict{Int64, @NamedTuple{λ_h::Vector{Float64}, λ_a::Vector{Float64}, r::Vector{Float64}}} with 5 entries:
+  6  => (λ_h = [2.39925, 1.72266, 1.51839, 2.02214, 2.26357, 2.75044, 1.26044, 1.71226, 1.23242, 1.95777  …  3.13775, 0.736602, 2.76817, 1.35182, 2.50275, 2.43883, 1.92165, 1.69706, 1.45698, 1.67891], λ_a = [1.22843, 0.967194, 0.761267, 0.664, 0.471533, 0.877593, 0.8809…
+  7  => (λ_h = [1.25739, 1.54305, 0.815999, 0.781085, 0.929177, 1.43895, 2.05015, 2.68339, 0.921894, 3.50317  …  1.38361, 1.61003, 1.38289, 1.24293, 1.00116, 1.20626, 1.37464, 1.8649, 1.18814, 1.03464], λ_a = [0.957058, 2.23711, 1.07324, 1.14033, 1.18951, 1.52937, 0.994…
+  10 => (λ_h = [1.2976, 1.03289, 1.02733, 1.13399, 1.05931, 1.47622, 0.884632, 0.790938, 0.873623, 1.51523  …  0.807935, 1.07274, 1.12942, 0.70372, 1.26455, 1.59254, 0.397461, 0.871625, 0.379088, 0.513226], λ_a = [0.890296, 1.39498, 1.36738, 1.5598, 1.45955, 1.48155, 1.…
+  9  => (λ_h = [2.18313, 1.61509, 4.23089, 3.04416, 0.870939, 0.96148, 1.48739, 2.74086, 2.00184, 1.42201  …  1.5057, 1.67675, 1.96111, 1.60099, 0.86889, 0.967304, 2.31919, 1.59943, 2.35729, 1.8797], λ_a = [2.36092, 1.82443, 1.90129, 2.38089, 1.49742, 1.62545, 1.57847, …
+  8  => (λ_h = [1.2524, 1.27249, 1.03819, 0.619774, 0.768856, 0.665935, 1.28069, 0.569431, 1.84503, 1.44939  …  1.4015, 1.18649, 1.25731, 0.91261, 1.44908, 1.46195, 0.694369, 0.584527, 0.91083, 0.712384], λ_a = [1.5144, 1.6874, 2.24721, 2.18369, 2.02707, 1.75238, 2.9345…
+=#
+
+function raw_preds_to_df(raw_preds::Dict)
+    ids = collect(keys(raw_preds))
+    cols = Dict{Symbol, Vector{Any}}(:match_id => ids)
+    for k in keys(raw_preds[ids[1]]); cols[k] = [raw_preds[i][k] for i in ids]; end
+    return DataFrame(cols)
+end
+
+raw_preds_to_df(raw_preds1)
+#=
+5×4 DataFrame
+ Row │ match_id  r                                  λ_a                                λ_h                               
+     │ Any       Any                                Any                                Any                               
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ 6         [1.2704, 21.3234, 69.2302, 7.459…  [1.22843, 0.967194, 0.761267, 0.…  [2.39925, 1.72266, 1.51839, 2.02…
+   2 │ 7         [2.99689, 329.525, 52.7196, 71.9…  [0.957058, 2.23711, 1.07324, 1.1…  [1.25739, 1.54305, 0.815999, 0.7…
+   3 │ 10        [26.311, 0.635927, 3.27399, 3.69…  [0.890296, 1.39498, 1.36738, 1.5…  [1.2976, 1.03289, 1.02733, 1.133…
+   4 │ 9         [4.33425, 116.097, 158.632, 7.85…  [2.36092, 1.82443, 1.90129, 2.38…  [2.18313, 1.61509, 4.23089, 3.04…
+   5 │ 8         [75.0166, 16.1735, 4.75964, 2.14…  [1.5144, 1.6874, 2.24721, 2.1836…  [1.2524, 1.27249, 1.03819, 0.619…
+=#
+
+
+
+
+ppd1 = BayesianFootball.Predictions.model_inference(
+  BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds1), m1.config.model)
+)
+
+#= 
+julia> ppd1 = BayesianFootball.Predictions.model_inference(                                                                                                                                                                                                                    
+         BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds1), m1.config.model)                                                                                                                                                                               
+       )                                                                                                                                                                                                                                                                       
+Running Inference on 5 matches...                                                                                                                                                                                                                                              
+135×5 DataFrame                                                                                                                                                                                                                                                                
+ Row │ match_id  market_name  market_line  selection  distribution                                                                                                                                                                                                             
+     │ Int64     String       Float64      Symbol     Array…                            
+─────┼──────────────────────────────────────────────────────────────────────────────────
+   1 │        6  1X2                  0.0  away       [0.258366, 0.216526, 0.188877, 0…
+   2 │        6  1X2                  0.0  home       [0.525928, 0.546196, 0.55141, 0.…
+   3 │        6  1X2                  0.0  draw       [0.204898, 0.237277, 0.259713, 0…
+   4 │        6  BTTS                 0.0  btts_yes   [0.420464, 0.494972, 0.412737, 0…
+   5 │        6  BTTS                 0.0  btts_no    [0.568728, 0.505026, 0.587263, 0…
+   6 │        6  OverUnder            0.5  under_05   [0.110029, 0.0740871, 0.104446, …
+   7 │        6  OverUnder            0.5  over_05    [0.879162, 0.925911, 0.895554, 0…
+   8 │        6  OverUnder            1.5  over_15    [0.719056, 0.739276, 0.661722, 0…
+   9 │        6  OverUnder            1.5  under_15   [0.270136, 0.260722, 0.338277, 0…
+  10 │        6  OverUnder            2.5  over_25    [0.555801, 0.498298, 0.39788, 0.…
+  11 │        6  OverUnder            2.5  under_25   [0.433391, 0.5017, 0.60212, 0.51…
+  12 │        6  OverUnder            3.5  under_35   [0.576502, 0.714224, 0.802167, 0…
+  13 │        6  OverUnder            3.5  over_35    [0.41269, 0.285774, 0.197833, 0.…
+  14 │        6  OverUnder            4.5  under_45   [0.691937, 0.858175, 0.916821, 0…
+  15 │        6  OverUnder            4.5  over_45    [0.297255, 0.141823, 0.0831785, …
+  16 │        6  OverUnder            5.5  under_55   [0.780335, 0.938012, 0.969804, 0…
+=#
+
+
+
+my_signals = [BayesianKelly()]
+
+odds_df.date .= today()
+odds_df.is_winner .= true
+odds_df.match_id = parse.(Int, odds_df.match_id)
+
+
+ppd1.df.mean_odds = [mean(1 ./ row) for row in ppd1.df.distribution]
+
+results = BayesianFootball.Signals.process_signals(
+    ppd1, 
+    odds_df, 
+    my_signals; 
+    odds_column=:back_price
+)
+
+#=
+julia> names(results.df)
+10-element Vector{String}:
+ "match_id"
+ "date"
+ "market_name"
+ "selection"
+ "is_winner"
+ "signal_name"
+ "signal_params"
+ "odds_type"
+ "odds"
+ "stake"
+
+i want to join the pdd1 mean odds as the model odds column in the results 
+ppd1.df.mean_odds = [mean(1 ./ row) for row in ppd1.df.distribution]
+
+
+=#
+
+
+# 1. Extract Model Prices from PPD
+# We create a lightweight DF with just the keys and the calculated odds
+model_pricing = select(ppd1.df, :match_id, :market_name, :selection)
+
+# Calculate "Fair Odds" (1 / Mean Probability)
+# Note: This is usually more stable than mean(1 ./ p)
+model_pricing.model_odds = [1.0 / mean(d) for d in ppd1.df.distribution]
+
+# 2. Join into Results
+# We join on the three keys that define a unique betting line
+final_df = leftjoin(
+    results.df, 
+    model_pricing, 
+    on = [:match_id, :market_name, :selection]
+)
+
+# 3. (Optional) Calculate Edge explicitly for checking
+# Edge = (Model Probability * Market Odds) - 1
+# We can re-derive it easily now:
+final_df.edge_calc = (1.0 ./ final_df.model_odds) .* final_df.odds .- 1.0
+
+# View
+display(final_df[:, [:match_id, :selection, :odds, :model_odds, :stake]])
+
+# 1. Get a unique list of IDs and Names from your odds dataframe
+match_names = unique(odds_df[:, [:match_id, :event_name]])
+
+# 2. Join it to your final results
+final_df = leftjoin(final_df, match_names, on=:match_id)
+
+# 3. Now this display command will work
+display(final_df[:, [:match_id, :event_name, :selection, :odds, :model_odds, :stake, :edge_calc]])
+
+
+
+# -----
+using DataFrames, Statistics
 
 # --- 1. HELPERS (From your snippets) ---
 
@@ -807,10 +1121,10 @@ final_df = process_betting_pipeline(
 bets = final_df[:, [:match_id, :event_name, :selection, :odds, :model_odds, :edge_calc, :stake]]
 display(filter(r -> r.stake > 0, bets))
 
-# Define the ones you want
-targets = [:over_05, :over_15, :over_25, :under_55, :btts_yes]
+bbb = [:over_05, :over_15, :over_25, :under_55]
 
-# Filter manually
-best_bets = filter(row -> row.stake > 0 && row.selection in targets, bets)
+subset(bets, :selection => ByRow(in(bbb)), :stake => ByRow( >(0)))
 
-display(best_bets)
+using CSV 
+
+CSV.write("odds_df.csv", odds_df)

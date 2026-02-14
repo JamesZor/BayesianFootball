@@ -35,17 +35,17 @@ function get_funnel_basics_configs(; save_dir="./data/exp/scot_l12_matchday")
         target_seasons = ["25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_month,
-        warmup_period = 8,      
+        warmup_period = 7,      
         stop_early = false
     )
 
 
     ## ----- change this to switch the leagues -- have to do it manual
-    cv_config = cv_config_l1
+    cv_config = cv_config_l2
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
+        250,     # n_samples
         16,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -66,7 +66,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/scot_l12_matchday")
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         Experiments.ExperimentConfig(
-            name = "funnel_basic_l1",
+            name = "funnel_basic_l2",
             model = BayesianFootball.Models.PreGame.SequentialFunnelModel(),
             splitter = cv_config,
             training_config = training_config,
