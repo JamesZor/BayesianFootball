@@ -100,4 +100,12 @@ Betfair Bet ID 1:418486389069 | Matched: 14-Feb-26 14:45:00 	Back 	1.25 	4.00 	-
 	Matched 
 
 
+final scores:
+
+Stenhousemuir 2 -2 Montrose, 
+
+Kelty Hearts 1 - 1 Peterhead 
+
+Spartans 0 - 0 Edinburgh
+
 =#

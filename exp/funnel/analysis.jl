@@ -53,7 +53,7 @@ my_signals = [flat_strat]
 # Run backtest on ALL loaded models at once
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
-  loaded_results, 
+  loaded_results[[1,2]], 
     my_signals; 
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
@@ -168,10 +168,14 @@ for m_name in model_names
 end
 
 
-ids_no_2425 =DataFrames.subset(ds.matches, :season => ByRow(!isequal("24/25"))).match_id
+ids_no_2425 =DataFrames.subset(ds.matches, :season => ByRow(!isequal("23/24"))).match_id
 ledger_no_2425 = DataFrames.subset(ledger.df, :match_id => ByRow(in(ids_no_2425)))
 
+ids_2526 = subset(ds.matches, :season => ByRow(isequal("25/26"))).match_id
+ledger_2526 =subset(ledger.df, :match_id => ByRow(in(ids_2526)))
+
 strategy_rankings = rank_strategies(ledger_no_2425)
+sort(strategy_rankings, :Growth_Rate, rev=true)
 
 model_names = unique(strategy_rankings.selection)
 for m_name in model_names
@@ -226,13 +230,101 @@ Stats for: over_35
 
 
 =#
+using Statistics, DataFrames
+
+function calculate_portfolio_correlation(ledger::DataFrame; top_n::Int=10)
+    # 1. Prepare the Data
+    # We only care about rows where a bet was actually placed (stake > 0)
+    active_bets = filter(row -> row.stake > 1e-6, ledger)
+
+    # 2. Create Unique Strategy Identifiers
+    # Format: "ModelName_Market_Selection" (e.g., "GRW_1X2_draw")
+    # We shorten the model name to keep the plot readable
+    active_bets.strat_id = map(eachrow(active_bets)) do r
+        short_model = first(split(r.model_name, "NegativeBinomial")) # Shorten long names
+        return "$(short_model)_$(r.market_name)_$(r.selection)"
+    end
+
+    # 3. Identify the Top Strategies (by Total Profit or Growth)
+    # We calculate a quick summary to find the biggest movers
+    strat_summary = combine(groupby(active_bets, :strat_id), 
+        :pnl => sum => :total_pnl,
+        :pnl => length => :n_bets
+    )
+    # Filter for significance (at least 10 bets) and pick top N by profit
+    top_strats = first(sort(filter(r -> r.n_bets > 10, strat_summary), :total_pnl, rev=true), top_n)
+    
+    selected_ids = top_strats.strat_id
+
+    # 4. Filter Ledger to only these strategies
+    portfolio_data = filter(row -> row.strat_id in selected_ids, active_bets)
+
+    # 5. Pivot: Matches vs Strategies
+    # Rows = Match IDs, Columns = Strategy PnL
+    # Missing values mean the strategy did NOT bet on that match
+    pivoted = unstack(portfolio_data, :match_id, :strat_id, :pnl)
+
+    # 6. Calculate Correlation Matrix
+    strat_names = names(pivoted, Not(:match_id))
+    n = length(strat_names)
+    cor_mat = Matrix{Float64}(undef, n, n)
+
+    for i in 1:n, j in 1:n
+        if i == j
+            cor_mat[i, j] = 1.0
+        else
+            # Get PnL vectors for both strategies
+            vec_a = pivoted[!, strat_names[i]]
+            vec_b = pivoted[!, strat_names[j]]
+
+            # Find matches where BOTH strategies were active (intersection)
+            common_indices = .!ismissing.(vec_a) .& .!ismissing.(vec_b)
+            
+            # We need a minimum number of overlapping games to be statistically significant
+            if sum(common_indices) < 5
+                cor_mat[i, j] = 0.0 # Not enough data to correlate
+            else
+                cor_mat[i, j] = cor(Float64.(vec_a[common_indices]), Float64.(vec_b[common_indices]))
+            end
+        end
+    end
+
+    # 7. Format Output
+    cor_df = DataFrame(cor_mat, strat_names)
+    insertcols!(cor_df, 1, :Strategy => strat_names)
+    
+    return cor_df
+end
+
+# Run the function
+correlation_matrix = calculate_portfolio_correlation(ledger.df)
+
+#=
+julia> correlation_matrix = calculate_portfolio_correlation(ledger.df)
+10×11 DataFrame
+ Row │ Strategy                           GRW_1X2_away  GRW_1X2_draw  GRW_BTTS_btts_yes  GRW_OverUnder_over_15  SequentialFunnelModel_1X2_home  SequentialFunnelModel_1X2_draw  SequentialFunnelModel_OverUnder_under_15  SequentialFunnelModel_OverUnder_over_15  SequentialFunnelModel_OverUnder_over_25  SequentialFunnelModel_OverUnder_under_45 
+     │ String                             Float64       Float64       Float64            Float64                Float64                         Float64                         Float64                                   Float64                                  Float64                                  Float64                                  
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ GRW_1X2_away                          1.0          -0.0554096          -0.203151               0.308059                     -0.0339275                       0.242992                                  0.0115957                                0.474954                                  0.103796                                 -0.0258607
+   2 │ GRW_1X2_draw                         -0.0554096     1.0                 0.45427                0.0                          -0.100523                        0.922412                                  0.0366084                                0.0                                       0.0                                       0.34472
+   3 │ GRW_BTTS_btts_yes                    -0.203151      0.45427             1.0                    0.335416                     -0.554413                        0.386209                                  0.0                                      0.252703                                  0.131375                                  0.0
+   4 │ GRW_OverUnder_over_15                 0.308059      0.0                 0.335416               1.0                          -0.106845                        0.0                                       0.0                                      0.900835                                  0.522005                                  0.0
+   5 │ SequentialFunnelModel_1X2_home       -0.0339275    -0.100523           -0.554413              -0.106845                      1.0                            -0.125778                                  0.0186633                                0.00920373                               -0.0054234                                 0.1147
+   6 │ SequentialFunnelModel_1X2_draw        0.242992      0.922412            0.386209               0.0                          -0.125778                        1.0                                      -0.00490304                               0.0                                       0.0                                       0.0668112
+   7 │ SequentialFunnelModel_OverUnder_…     0.0115957     0.0366084           0.0                    0.0                           0.0186633                      -0.00490304                                1.0                                      0.0                                       0.0                                       0.0743507
+   8 │ SequentialFunnelModel_OverUnder_…     0.474954      0.0                 0.252703               0.900835                      0.00920373                      0.0                                       0.0                                      1.0                                       0.483779                                  0.0
+   9 │ SequentialFunnelModel_OverUnder_…     0.103796      0.0                 0.131375               0.522005                     -0.0054234                       0.0                                       0.0                                      0.483779                                  1.0                                       0.0
+  10 │ SequentialFunnelModel_OverUnder_…    -0.0258607     0.34472             0.0                    0.0                           0.1147                          0.0668112                                 0.0743507                                0.0                                       0.0                                       1.0
+
+
+=#
 
 
 ##### clv regression 
 
 using DataFrames, Statistics, GLM
 # backtesting deconstructed 
-exp_1 = loaded_results[1]
+exp_1 = loaded_results[2]
 
 market_data = Data.prepare_market_data(ds)
 
@@ -286,7 +378,37 @@ analysis_df.spread_fair = analysis_df.prob_model .- analysis_df.prob_fair_close
 analysis_df.Y = Float64.(analysis_df.is_winner)
 
 reg_model = glm(@formula(Y ~ prob_implied_close + spread), analysis_df, Binomial(), LogitLink())
+#=
+grw model 
+julia> reg_model = glm(@formula(Y ~ prob_implied_close + spread), analysis_df, Binomial(), LogitLink())
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
 
+Y ~ 1 + prob_implied_close + spread
+Coefficients:
+────────────────────────────────────────────────────────────────────────────────
+                       Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+────────────────────────────────────────────────────────────────────────────────
+(Intercept)         -3.0629    0.0508555  -60.23    <1e-99  -3.16258    -2.96323
+prob_implied_close   5.93118   0.0942029   62.96    <1e-99   5.74655     6.11582
+spread               1.66187   0.368581     4.51    <1e-05   0.939461    2.38427
+────────────────────────────────────────────────────────────────────────────────
+
+# funnel model 
+julia> reg_model = glm(@formula(Y ~ prob_implied_close + spread), analysis_df, Binomial(), LogitLink())
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
+
+Y ~ 1 + prob_implied_close + spread
+
+Coefficients:
+────────────────────────────────────────────────────────────────────────────────
+                       Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+────────────────────────────────────────────────────────────────────────────────
+(Intercept)         -3.04385   0.0511152  -59.55    <1e-99  -3.14403    -2.94366
+prob_implied_close   5.89592   0.0924809   63.75    <1e-99   5.71467     6.07718
+spread               1.72924   0.395435     4.37    <1e-04   0.954204    2.50428
+────────────────────────────────────────────────────────────────────────────────
+
+=#
 
 # Simple Flat Stake Backtest
 # Bet when your model sees > 5% edge (0.05 prob diff)

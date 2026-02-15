@@ -17,7 +17,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
     # default 
     # transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
     # testing the grw GRWNegativeBinomialMu at every 2 weeks
-    transform!(ds.matches, :match_week => ByRow(w -> cld(w, 2)) => :match_month)
+    transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
 
 
@@ -33,7 +33,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
+        250,     # n_samples
         2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
