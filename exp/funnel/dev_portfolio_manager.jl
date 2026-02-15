@@ -1260,3 +1260,295 @@ chain_joint = sample(
     adtype = AutoReverseDiff(compile=true),
 )
 
+describe(chain_joint) 
+
+
+using Plots, StatsPlots
+
+function plot_correlation_posterior(chain)
+    # 1. Extract the L[2,1] samples
+    # Note: Turing might store it as :L_rho, or flattened
+    # Based on your output, the symbol is Symbol("L_rho.L[2, 1]")
+    
+    # We try to access it dynamically
+    if :L_rho in keys(chain)
+        # If stored as matrix
+        rho_samples = [x.L[2,1] for x in chain[:L_rho]]
+    else
+        # If stored flattened (most likely based on your output)
+        rho_samples = vec(chain[Symbol("L_rho.L[2, 1]")])
+    end
+    
+    # 2. Plot Density
+    p = density(rho_samples, 
+        title="Posterior Distribution of Correlation (Rho)",
+        label="Correlation",
+        xlabel="Correlation Coefficient",
+        ylabel="Density",
+        fill=(0, 0.3, :blue),
+        xlims=(-1, 1),
+        lw=2
+    )
+    
+    # Add mean line
+    vline!(p, [mean(rho_samples)], label="Mean: $(round(mean(rho_samples), digits=3))", color=:red, linestyle=:dash)
+    
+    # 3. Save
+    savefig(p, "correlation_posterior.html")
+    println("Correlation plot saved.")
+end
+
+using Plots, Statistics
+
+function plot_correlation_histogram(chain)
+    # Extract Rho
+    # If the chain names are flattened, it's likely :L_rho_L_2_1 or similar
+    # Use string matching to find it safely
+    all_names = string.(names(chain))
+    rho_name = filter(x -> contains(x, "L") && contains(x, "2") && contains(x, "1"), all_names)[1]
+    
+    rho_samples = vec(chain[Symbol(rho_name)])
+    
+    # Plot
+    p = histogram(rho_samples, 
+        title="Posterior Distribution of Correlation (Rho)",
+        label="Correlation Frequency",
+        xlabel="Correlation Coefficient",
+        ylabel="Count",
+        color=:blue,
+        alpha=0.6,
+        nbins=30, # 30 bars
+        xlims=(-1, 1),
+        normalize=:pdf # Make it look like a density
+    )
+    
+    vline!(p, [mean(rho_samples)], label="Mean: $(round(mean(rho_samples), digits=3))", color=:red, lw=3)
+    
+    savefig(p, "correlation_histogram.html")
+    println("Correlation histogram saved.")
+end
+
+plot_correlation_histogram(chain_joint)
+
+# Usage
+plot_correlation_posterior(chain_joint)
+
+
+using Optim, LinearAlgebra, Statistics
+
+function optimize_portfolio_weights(chain, num_periods, global_mean)
+    println("Running Portfolio Optimization (Monte Carlo)...")
+    
+    # --- 1. Extract Latest State (Parameters at Time T) ---
+    # We need the parameters for the *NEXT* bet, which implies projecting from the last known state.
+    
+    # A. Global Volatilities (Vectors of 4000 samples)
+    σ_p1 = vec(chain[:σ_p1]); σ_mw1 = vec(chain[:σ_mw1])
+    σ_p2 = vec(chain[:σ_p2]); σ_mw2 = vec(chain[:σ_mw2])
+    
+    # B. Latest Latent States (reconstructed from the end of the chain)
+    # Note: Turing usually stores the full trajectory. We need the value at `num_periods`.
+    # To save time, let's extract the "init" and assume the random walk is centered, 
+    # or just use the summary statistics of the *last week* if you ran a Walk-Forward.
+    
+    # BETTER APPROACH FOR BATCH: 
+    # We simulate "next week" by taking the current 'edge' estimate from the model 
+    # and adding one step of random walk noise.
+    
+    # Let's rebuild the final state for each sample in the chain:
+    n_samples = length(σ_p1)
+    
+    # We need L_rho for correlation
+    # Find the name again
+    all_names = string.(names(chain))
+    rho_name = filter(x -> contains(x, "L") && contains(x, "2") && contains(x, "1"), all_names)[1]
+    rho_samples = vec(chain[Symbol(rho_name)])
+    
+    # --- 2. Monte Carlo Simulation Loop ---
+    # We will generate 10,000 synthetic "Next Weeks"
+    n_sims = 10000
+    
+    # Storage for simulated returns of Market 1 and Market 2
+    sim_r1 = zeros(n_sims)
+    sim_r2 = zeros(n_sims)
+    
+    for i in 1:n_sims
+        # A. Pick a random parameter sample (Posterior Uncertainty)
+        idx = rand(1:n_samples)
+        
+        # B. Get Correlation for this sample
+        ρ = rho_samples[idx]
+        
+        # C. Generate Correlated Innovations (The Copula)
+        # Draw [z1, z2] from Bivariate Normal(0, Sigma)
+        # Sigma = [1 rho; rho 1]
+        # Cholesky Decomposition: L = [1 0; rho  sqrt(1-rho^2)]
+        z1_raw = randn()
+        z2_raw = randn()
+        
+        z1_corr = z1_raw
+        z2_corr = (ρ * z1_raw) + (sqrt(1 - ρ^2) * z2_raw)
+        
+        # D. Project "Win Probability" for Next Week
+        # We assume the current estimate is the mean of the last period
+        # (Simplified: using a generic prior for "current state" to demonstrate logic)
+        # In production, you pass the `last_p1` and `last_p2` from your extraction function.
+        
+        # Let's assume the strategies are currently at their historical average for this demo
+        # (You should replace these with your actual `wf_edge` latest values!)
+        current_p1_logit = 0.0 # ~50%
+        current_p2_logit = 0.0 # ~50%
+        
+        # Add the Random Walk Step
+        next_p1 = logistic(current_p1_logit + z1_corr * σ_p1[idx])
+        next_p2 = logistic(current_p2_logit + z2_corr * σ_p2[idx])
+        
+        # E. Determine Win/Loss (Bernoulli Trial)
+        is_win1 = rand() < next_p1
+        is_win2 = rand() < next_p2
+        
+        # F. Determine Magnitude (Gamma)
+        # Simulating a return. 
+        # Win = +0.95 (approx odds 1.95), Loss = -1.0
+        # You can make this stochastic too using Gamma, but fixed is fine for weights.
+        r1 = is_win1 ? 0.95 : -1.0
+        r2 = is_win2 ? 0.95 : -1.0
+        
+        sim_r1[i] = r1
+        sim_r2[i] = r2
+    end
+    
+    # --- 3. The Optimizer (Maximize Log Growth) ---
+    # We want to find w = [w1, w2] to maximize sum(log(1 + w1*r1 + w2*r2))
+    
+    function kelly_objective(w)
+        w1, w2 = w[1], w[2]
+        
+        # Constraint: No leverage > 1 (optional but safe)
+        if w1 < 0 || w2 < 0 || w1 + w2 > 1.0
+            return Inf # Invalid
+        end
+        
+        # Calculate Bankroll Growth for all 10,000 sims
+        # G = 1 + w1*r1 + w2*r2
+        growth = 1.0 .+ (w1 .* sim_r1) .+ (w2 .* sim_r2)
+        
+        # Avoid log(negative) -> Ruin
+        if any(growth .<= 0)
+            return Inf
+        end
+        
+        return -mean(log.(growth)) # Negative because we minimize
+    end
+    
+    # Run Optimization
+    # Start at [0.01, 0.01]
+    res = optimize(kelly_objective, [0.0, 0.0], [0.5, 0.5], [0.01, 0.01], Fminbox(BFGS()))
+    
+    best_weights = Optim.minimizer(res)
+    
+    println("\n--- Optimal Portfolio Weights ---")
+    println("Strategy 1 (Home): $(round(best_weights[1]*100, digits=2))%")
+    println("Strategy 2 (BTTS): $(round(best_weights[2]*100, digits=2))%")
+    println("Correlation Used: Copula-based (Mean Rho = $(round(mean(rho_samples), digits=3)))")
+    
+    return best_weights
+end
+
+# Usage:
+w = optimize_portfolio_weights(chain_joint, 29, 0.1)
+
+using Optim, LinearAlgebra, Statistics, LogisticFunctions
+
+function optimize_live_portfolio(chain, current_edge_1, current_odds_1, current_edge_2, current_odds_2)
+    println("Running Portfolio Optimization for LIVE bets...")
+    println("Strategy 1: Edge $(round(current_edge_1*100, digits=2))% @ Odds $current_odds_1")
+    println("Strategy 2: Edge $(round(current_edge_2*100, digits=2))% @ Odds $current_odds_2")
+    
+    # --- 1. Convert Edge to Logit (The Latent State) ---
+    # We need to reverse-engineer the "current logit" that corresponds to your edge.
+    # Edge = (P * (Odds-1)) - (1-P)
+    # P = (Edge + 1) / Odds
+    
+    prob_1 = (current_edge_1 + 1.0) / current_odds_1
+    prob_2 = (current_edge_2 + 1.0) / current_odds_2
+    
+    # Safety clamp (Kelly blows up if Prob=1.0)
+    prob_1 = clamp(prob_1, 0.01, 0.99)
+    prob_2 = clamp(prob_2, 0.01, 0.99)
+    
+    current_logit_1 = logit(prob_1)
+    current_logit_2 = logit(prob_2)
+    
+    # --- 2. Extract Posterior Samples ---
+    σ_p1 = vec(chain[:σ_p1]); 
+    σ_p2 = vec(chain[:σ_p2]); 
+    
+    # Extract Rho
+    all_names = string.(names(chain))
+    rho_name = filter(x -> contains(x, "L") && contains(x, "2") && contains(x, "1"), all_names)[1]
+    rho_samples = vec(chain[Symbol(rho_name)])
+    
+    n_samples = length(σ_p1)
+    
+    # --- 3. Monte Carlo Simulation (Next Week) ---
+    n_sims = 20000
+    sim_r1 = zeros(n_sims)
+    sim_r2 = zeros(n_sims)
+    
+    for i in 1:n_sims
+        idx = rand(1:n_samples)
+        ρ = rho_samples[idx]
+        
+        # Generate Correlated Random Walk Step
+        z1 = randn()
+        z2_raw = randn()
+        z2 = (ρ * z1) + (sqrt(1 - ρ^2) * z2_raw)
+        
+        # Project Future Probability
+        # We start from YOUR predicted edge and add one week of uncertainty
+        future_p1 = logistic(current_logit_1 + z1 * σ_p1[idx])
+        future_p2 = logistic(current_logit_2 + z2 * σ_p2[idx])
+        
+        # Determine Outcome
+        is_win1 = rand() < future_p1
+        is_win2 = rand() < future_p2
+        
+        # Determine Return (Using your specific odds)
+        sim_r1[i] = is_win1 ? (current_odds_1 - 1.0) : -1.0
+        sim_r2[i] = is_win2 ? (current_odds_2 - 1.0) : -1.0
+    end
+    
+    # --- 4. Optimizer (Maximize Log Growth) ---
+    function kelly_objective(w)
+        w1, w2 = w[1], w[2]
+        if w1 < 0 || w2 < 0 || w1 + w2 > 0.99 return Inf end
+        
+        # Portfolio Return = 1 + w1*r1 + w2*r2
+        growth = 1.0 .+ (w1 .* sim_r1) .+ (w2 .* sim_r2)
+        
+        if any(growth .<= 0) return Inf end
+        return -mean(log.(growth))
+    end
+    
+    # Constrain to max 30% per bet for sanity
+    res = optimize(kelly_objective, [0.0, 0.0], [0.3, 0.3], [0.01, 0.01], Fminbox(BFGS()))
+    best_w = Optim.minimizer(res)
+    
+    println("\n--- FINAL SUGGESTED STAKES ---")
+    println("Home Strategy: $(round(best_w[1]*100, digits=2))%")
+    println("BTTS Strategy: $(round(best_w[2]*100, digits=2))%")
+    
+    return best_w
+end
+
+# 1. Run Walk-Forward for Home
+# (You already did this, stored in wf_edge)
+latest_home_edge = last(wf_edge) # e.g. 0.015 (1.5% edge)
+home_odds = 2.5 # Replace with current average odds for this strategy
+
+# 2. Run Walk-Forward for BTTS
+# (You need to run this function for the BTTS market now)
+wf_wealth_btts, wf_edge_btts, _ = run_strict_walk_forward(ledger.df, :btts_yes, 4)
+latest_btts_edge = last(wf_edge_btts) 
+btts_odds = 1.8 # Replace with actual odds
