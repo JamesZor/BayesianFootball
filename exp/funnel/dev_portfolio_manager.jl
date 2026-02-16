@@ -190,7 +190,8 @@ results = run_walk_forward(ledger.df)
 using UnicodePlots
 lineplot(results.date, results.cumulative_pnl)
 
-
+# (base) ⚡➜ ~ ssh -L 8080:localhost:8000 root@65.109.70.100 -N
+# have python3 -m server running on the server 
 using Plots
 plotlyjs()  # Switch the backend to PlotlyJS
 
