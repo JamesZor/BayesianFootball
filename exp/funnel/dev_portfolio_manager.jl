@@ -192,6 +192,8 @@ lineplot(results.date, results.cumulative_pnl)
 
 # (base) ⚡➜ ~ ssh -L 8080:localhost:8000 root@65.109.70.100 -N
 # have python3 -m server running on the server 
+#  # python3 -m http.server 8000
+#  ssh -L 8080:localhost:8000 root@65.109.70.100 -N
 using Plots
 plotlyjs()  # Switch the backend to PlotlyJS
 
