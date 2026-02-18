@@ -863,7 +863,7 @@ println("Bias Fix Total PnL: ", sum(ledger_bias.pnl))
 
 # 3. The "Full Hack" (Shift + Sharpen)
 # Temp 0.5 effectively doubles your Z-scores (since 0.5 * 2 = 1.0)
-ledger_full = run_hacked_backtest(latents.df, market_data.df, baker, bias=0.21, temp=0.5)
+ledger_full = run_hacked_backtest(latents.df, market_data.df, baker, bias=0.11, temp=0.5)
 println("Full Hack Total PnL: ", sum(ledger_full.pnl))
 
 # Quick Diagnostics
@@ -1895,10 +1895,10 @@ end
 
 display_run_adaptive_backtest(
     ds, exp_res, my_signals, market_data.df;
-     alpha_bias = 0.05, 
-     alpha_temp = 0.01,
+     alpha_bias = 0.01, 
+     alpha_temp = 0.1,
      initial_bias = 0.075,
-     initial_temp = 0.4
+     initial_temp = 0.1
 )
 
 #=
@@ -2191,6 +2191,24 @@ julia> display(first(opt_threaded, 10))
 
 
 
+julia> display(first(opt_threaded, 10))
+10×8 DataFrame
+ Row │ alpha_b  alpha_t  init_b   init_t   pnl       roi      volume  win_rate 
+     │ Float64  Float64  Float64  Float64  Float64   Float64  Int64   Float64  
+─────┼─────────────────────────────────────────────────────────────────────────
+   1 │    0.01     0.1     0.075      0.1  1.01591   11.0998     157   82.8025
+   2 │    0.01     0.1     0.075      0.2  1.0154    11.0962     157   82.8025
+   3 │    0.01     0.1     0.075      0.4  1.01347   11.0829     157   82.8025
+   4 │    0.01     0.05    0.075      0.1  1.01263   10.948      159   83.0189
+   5 │    0.01     0.1     0.075      0.6  1.01062   11.0634     157   82.8025
+   6 │    0.01     0.05    0.075      0.2  1.01044   10.9356     159   83.0189
+   7 │    0.01     0.05    0.075      0.4  1.00308   10.8957     159   83.0189
+   8 │    0.01     0.02    0.075      0.1  0.998594  10.4153     160   83.125
+   9 │    0.01     0.01    0.075      0.1  0.994973  10.0074     160   83.125
+  10 │    0.01     0.05    0.075      0.6  0.993866  10.8501     159   83.0189
+
+
+
 =#
 
-sort(opt_threaded, :volume, rev=true)
+sort(opt_threaded, :roi, rev=true)
