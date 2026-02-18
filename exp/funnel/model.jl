@@ -23,7 +23,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
 
     cv_config = BayesianFootball.Data.CVConfig(
         tournament_ids = [56,57],       # Premiership
-        target_seasons = [ "23/24", "24/25", "25/26"],  # Target Season
+        target_seasons = ["20/21","21/22","22/23", "23/24", "24/25", "25/26"],  # Target Season
         history_seasons = 0,
         dynamics_col = :match_month,
         warmup_period = 2,      
@@ -33,7 +33,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        250,     # n_samples
+        500,     # n_samples
         2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -92,7 +92,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
         #   at two week Δt 
     #
         Experiments.ExperimentConfig(
-            name = "funnel_s23_25",
+            name = "funnel_s20_25",
             model = BayesianFootball.Models.PreGame.SequentialFunnelModel(),
             splitter = cv_config,
             training_config = training_config,
@@ -107,7 +107,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
         # other markets - so will run this a baseline check, monthly as well to see the difference.
         
         Experiments.ExperimentConfig(
-            name = "grw_neg_bin_mu_base_s23_s25",
+            name = "grw_neg_bin_mu_base_s20_s25",
             model = Models.PreGame.GRWNegativeBinomialMu(
                 μ_init = Normal(0.20, 0.1),
                 σ_μ    = Gamma(2, 0.015), 
@@ -116,7 +116,7 @@ function get_funnel_basics_configs(; save_dir="./data/exp/funnel_basics")
                 σ_0    = Gamma(2, 0.08),
 
                 # Keep Dispersion loose as before
-                log_r_prior = Normal(1.5, 1.0)
+                log_r_prior = Normal(2.5, 0.5)
             ),
             splitter = cv_config,
             training_config = training_config,
