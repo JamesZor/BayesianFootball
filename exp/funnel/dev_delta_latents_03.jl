@@ -223,8 +223,8 @@ update_ema(old_val, new_val, alpha) = isnan(old_val) ? new_val : (alpha * new_va
 sort!(joined, :date)
 
 # Hyperparameters (Tweak these)
-ALPHA_BIAS = 0.00   # Fast adaptation (approx 20 matches)
-ALPHA_TEMP = 0.00   # Slow adaptation for volatility
+ALPHA_BIAS = 0.05   # Fast adaptation (approx 20 matches)
+ALPHA_TEMP = 0.01   # Slow adaptation for volatility
 MIN_TEMP   = 0.2
 MAX_TEMP   = 1.5
 
@@ -305,7 +305,7 @@ for row in eachrow(joined)
         # Bias: Negative feedback. If we are too high (Pos Error), subtract bias.
         current_bias = -ema_error
         
-        # Temp: Ratio of Realized Error / Predicted Variance
+# Temp: Ratio of Realized Error / Predicted Variance
         # If Error is high, we increase temp to widen distribution (uncertainty)
         # (This is a simplified control law)
         target_temp = sqrt(ema_sq_error) / (sigma_raw + 1e-6)
@@ -349,18 +349,519 @@ println("ROI: ", round( 100*sum(results_df.pnl) / sum(results_df.stake), digits=
 
 
 #=
+ALPHA_BIAS = 0.00   # Fast adaptation (approx 20 matches)
+ALPHA_TEMP = 0.00   # Slow adaptation for volatility
+MIN_TEMP   = 0.2
+MAX_TEMP   = 1.5
+
 julia> println("Total PnL: ", sum(results_df.pnl))
 Total PnL: 1.160087001917458
-
 julia> println("ROI: ", round( 100*sum(results_df.pnl) / sum(results_df.stake), digits=2))
 ROI: 15.49
+
+
+
+
 =#
 
 # Quick check on the Bias Evolution
 # using Plots
 # plot(results_df.date, results_df.bias_used, title="Bias Correction Over Time", label="Bias")
 
-
-
 #---------------------------------------------
+
+# ------------------------------------------------------------------
+# 1. Helper Functions
+# ------------------------------------------------------------------
+
+# Your robust solver (Verified)
+function solve_negbin_lambda_from_over_25(prob_over::Float64, r_val::Real)
+    if prob_over <= 0.0 || prob_over >= 1.0 return NaN end
+    
+    function objective(λ)
+        if λ <= 1e-6 return -1.0 end
+        p = r_val / (r_val + λ)
+        # beta_inc return (cdf, survival). We want survival (1-cdf) for Over
+        return beta_inc(r_val, 3.0, p)[2] - prob_over
+    end
+
+    try
+        return find_zero(objective, (0.001, 25.0))
+    catch
+        return NaN
+    end
+end
+
+# Simple EMA update
+update_ema(old_val, new_val, alpha) = isnan(old_val) ? new_val : (alpha * new_val + (1.0 - alpha) * old_val)
+
+
+function run_adaptive_backtest(
+    ds, exp_res, market_data;
+    alpha_bias = 0.05,      # Learning rate for Bias (e.g., 0.05 ~ 20 matches)
+    alpha_temp = 0.02,      # Learning rate for Temp (Slower, e.g., 0.02 ~ 50 matches)
+    initial_bias = 0.075,   # Start with your "Robust" finding
+    initial_temp = 0.4,     # Start with your "Robust" finding
+    min_temp = 0.2,         # Safety clamp (don't get too confident)
+    max_temp = 1.5,         # Safety clamp (don't get too scared)
+    market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+  latents_raw = BayesianFootball.Experiments.extract_oos_predictions(ds, exp_res)
+  mkt_subset = DataFrames.subset(market_data.df, :selection => ByRow(isequal(:over_25)))
+
+  joined = innerjoin(
+      select(latents_raw.df, :match_id, :λ_h, :λ_a, :r),
+      select(mkt_subset, :match_id, :odds_close, :fair_odds_close, :is_winner, :prob_fair_close, :date),
+      on = :match_id
+  )
+
+  sort!(joined, :date)
+
+  current_bias = initial_bias
+  current_temp = initial_temp
+
+  ema_error = -initial_bias 
+  ema_sq_error = initial_temp^2
+
+  results_log = []
+
+
+
+    println("Starting adaptive backtest on $(nrow(joined)) matches...")
+
+    for row in eachrow(joined)
+        # --- A. PREDICT (Using YESTERDAY'S State) ---
+        
+        # 1. Get Raw Samples (Log Space)
+        # We sum Home + Away lambda samples to get Total Goals distribution
+        raw_total_lambda = row.λ_h .+ row.λ_a
+        log_samples = log.(raw_total_lambda)
+        
+        # 2. Calibrate (Apply Bias & Temp)
+        mu_raw = mean(log_samples)
+        sigma_raw = std(log_samples)
+        centered = log_samples .- mu_raw
+        
+        # Formula: calibrated = (centered * temp) + mean + bias
+        calibrated_log = (centered .* current_temp) .+ mu_raw .+ current_bias
+        calibrated_lambdas = exp.(calibrated_log)
+        
+        # 3. Compute Probability (Over 2.5) using Fixed r
+        # We compute prob for every sample and average them (Monte Carlo integration)
+        r_val = mean(row.r) # Use mean r if r is a vector, or row.r if scalar
+        
+        probs_over_samples = map(λ -> begin
+            p = r_val / (r_val + λ)
+            # beta_inc[2] is Survival (P(X > 2))
+            SpecialFunctions.beta_inc(r_val, 3.0, p)[2]
+        end, calibrated_lambdas)
+        
+        model_prob = mean(probs_over_samples)
+        
+        # --- B. TRADE (Kelly) ---
+        stake   = BayesianFootball.Signals.compute_stake(
+                  BayesianFootball.Signals.BayesianKelly(),
+                  probs_over_samples,
+                  row.odds_close)
+
+        pnl = get_pnl(stake, row.is_winner, row.odds_close)
+        
+        # --- C. MEASURE (The Inverse Problem) ---
+        # Solve for Market Lambda
+        lambda_mkt = solve_negbin_lambda_from_over_25(row.prob_fair_close, r_val)
+        
+        # --- D. ADAPT (Update State for TOMORROW) ---
+        
+        raw_error = 0.0
+        
+        if !isnan(lambda_mkt)
+            # Error = Model_Raw_Mean - Market_Truth
+            # If Model says 3.0 goals, Market says 2.5 -> Error is Positive
+            raw_error = mu_raw - log(lambda_mkt)
+
+            z_score = raw_error / std(log_samples)
+            
+            # 1. Update Error Tracker
+            ema_error = update_ema(ema_error, raw_error, alpha_bias)
+            
+            # 2. Update Variance Tracker (Optional)
+            # We compare realized error vs predicted volatility
+            sq_error = raw_error^2
+            ema_sq_error = update_ema(ema_sq_error, sq_error, alpha_temp)
+            
+            # 3. Control Law
+            # Bias: Negative feedback. If we are too high (Pos Error), subtract bias.
+            current_bias = -ema_error
+            
+    # Temp: Ratio of Realized Error / Predicted Variance
+            # If Error is high, we increase temp to widen distribution (uncertainty)
+            # (This is a simplified control law)
+            target_temp = sqrt(ema_sq_error) / (sigma_raw + 1e-6)
+            current_temp = clamp(target_temp, min_temp, max_temp)
+        end
+
+        # --- E. LOGGING ---
+        push!(results_log, (
+            match_id = row.match_id,
+            date = row.date,
+            
+            # Prediction
+            prob_model = model_prob,
+            prob_mkt = row.prob_fair_close,
+            lambda_model = exp(mu_raw), # The raw model center
+            lambda_mkt = lambda_mkt,
+            
+            # State Used (For this prediction)
+            bias_used = current_bias,
+            temp_used = current_temp,
+            
+            # Result
+            odds = row.odds_close,
+            stake = stake,
+            pnl = pnl,
+            is_winner = row.is_winner,
+            
+            # Diagnostics
+            raw_error = raw_error,
+            ema_error = ema_error,
+
+            z_score = z_score
+        ))
+    end
+
+  return DataFrame(results_log)
+end
+
+
+
+ledeger_df = run_adaptive_backtest(ds, exp_res, market_data)
+
+
+
+function display_summary(ledger_adapt)
+    active = subset(ledger_adapt, :stake => ByRow(>(1e-6)))
+    println("--- ADAPTIVE MODEL RESULTS ---")
+    println("Total PnL:    ", round(sum(active.pnl), digits=2))
+    println("ROI:          ", round((sum(active.pnl)/sum(active.stake))*100, digits=2), "%")
+    println("Volume:       ", nrow(active))
+    println("Volume Precent: ", round( 100*(nrow(active) /nrow(ledger_adapt)), digits=2), "%")
+    println("Win Rate: ", round( 100*(sum(active.is_winner) / nrow(active)), digits=2), "%")
+end 
+
+function plot_adaptation_curve(log_adapt) 
+    # 2. Plot the Adaptation Curve
+    p1 = plot(log_adapt.date, log_adapt.bias_used, 
+        label="Dynamic Bias", title="Adaptive Calibration State",
+        ylabel="Bias Correction", linewidth=2, color=:blue);
+
+    p2 = plot(log_adapt.date, log_adapt.temp_used, 
+        label="Dynamic Temp", ylabel="Temp Factor", 
+        linewidth=2, color=:orange, ylim=(0, 1.5));
+
+    p3 = plot(p1, p2, layout=(2,1), size=(1200, 600), legend=:outertopright);
+    Plots.savefig(p3, "adaptive_state.html")
+end
+
+display_summary(ledeger_df)
+
+tr = run_adaptive_backtest(
+        ds, exp_res, market_data;
+     alpha_bias = 0.01, 
+     alpha_temp = 0.1,
+     initial_bias = 0.0,
+     initial_temp = 0.6
+  )
+
+display_summary(tr)
+
+plot_adaptation_curve(tr)
+
+#=
+     alpha_bias = 0.0, 
+     alpha_temp = 0.0,
+     initial_bias = 0.0,
+     initial_temp = 1
+
+--- ADAPTIVE MODEL RESULTS ---
+Total PnL:    1.16
+ROI:          15.49%
+Volume:       309
+Volume Precent: 23.11%
+Win Rate: 51.13%
+
++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+     alpha_bias = 0.01, 
+     alpha_temp = 0.1,
+     initial_bias = 0.075,
+     initial_temp = 0.1
+
+--- ADAPTIVE MODEL RESULTS ---
+Total PnL:    1.77
+ROI:          7.03%
+Volume:       422
+Volume Precent: 31.56%
+Win Rate: 53.08%
+
++++++++++++++++++++++++++++++++++++++++++++++
+
+     alpha_bias = 0.01, 
+     alpha_temp = 0.01,
+     initial_bias = 0.0,
+     initial_temp = 0.4
+
+
+--- ADAPTIVE MODEL RESULTS ---
+Total PnL:    1.51
+ROI:          7.2%
+Volume:       406
+Volume Precent: 30.37%
+Win Rate: 52.71%
+
+
+
+
+=#
+
+active = DataFrames.subset(tr, :stake => ByRow(>(1e-6)))
+n_active = subset(tr, :stake => ByRow(<(1e-6)))
+cor(tr.z_score, tr.is_winner)
+cor(active.z_score, active.is_winner)
+cor(n_active.z_score, n_active.is_winner)
+
+describe(tr.z_score)
+describe(active.z_score)
+describe(n_active.z_score)
+
+#=
+
+julia> cor(tr.z_score, tr.is_winner)
+0.029691458202255175
+
+julia> cor(active.z_score, active.is_winner)
+0.03349877449703255
+
+julia> cor(n_active.z_score, n_active.is_winner)
+0.02875158836544118
+
+julia> describe(tr.z_score)
+Summary Stats:
+Length:         1337
+Missing Count:  0
+Mean:           -0.144469
+Std. Deviation: 0.543022
+Minimum:        -1.983930
+1st Quartile:   -0.529418
+Median:         -0.176588
+3rd Quartile:   0.230325
+Maximum:        1.889810
+Type:           Float64
+
+julia> describe(active.z_score)
+Summary Stats:
+Length:         406
+Missing Count:  0
+Mean:           0.483699
+Std. Deviation: 0.312388
+Minimum:        -0.034345
+1st Quartile:   0.257947
+Median:         0.432653
+3rd Quartile:   0.676408
+Maximum:        1.889810
+Type:           Float64
+
+julia> describe(n_active.z_score)
+Summary Stats:
+Length:         931
+Missing Count:  0
+Mean:           -0.418408
+Std. Deviation: 0.365675
+Minimum:        -1.983930
+1st Quartile:   -0.663046
+Median:         -0.366276
+3rd Quartile:   -0.143228
+Maximum:        0.342985
+Type:           Float64
+
+
+
+=#
+
+
+
+# under 
+
+function solve_negbin_lambda_from_under_25(prob_under::Float64, r_val::Real)
+    if prob_under <= 0.0 || prob_under >= 1.0 return NaN end
+    
+    function objective(λ)
+        if λ <= 1e-6 return 1.0 end # Penalty
+        p = r_val / (r_val + λ)
+        
+        # beta_inc return (CDF, Survival). 
+        # We want CDF (P(X <= 2)) for Under 2.5
+        # Element [1] is the CDF.
+        return SpecialFunctions.beta_inc(r_val, 3.0, p)[1] - prob_under
+    end
+
+    try
+        return find_zero(objective, (0.001, 25.0))
+    catch
+        return NaN
+    end
+end
+
+
+function run_adaptive_backtest_under(
+    ds, exp_res, market_data;
+    alpha_bias = 0.05,      
+    alpha_temp = 0.02,      
+    initial_bias = -0.05,   # Default to slightly conservative/low goals if unsure
+    initial_temp = 0.4,     
+    min_temp = 0.2,          
+    max_temp = 1.5,          
+    market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+    latents_raw = BayesianFootball.Experiments.extract_oos_predictions(ds, exp_res)
+    
+    # 1. CHANGE: Filter for Under 2.5
+    mkt_subset = DataFrames.subset(market_data.df, :selection => ByRow(isequal(:under_25)))
+
+    joined = innerjoin(
+       select(latents_raw.df, :match_id, :λ_h, :λ_a, :r),
+       select(mkt_subset, :match_id, :odds_close, :fair_odds_close, :is_winner, :prob_fair_close, :date),
+       on = :match_id
+    )
+
+    sort!(joined, :date)
+
+    current_bias = initial_bias
+    current_temp = initial_temp
+
+    ema_error = -initial_bias 
+    ema_sq_error = initial_temp^2
+    results_log = []
+
+    println("Starting adaptive backtest (UNDER 2.5) on $(nrow(joined)) matches...")
+
+    for row in eachrow(joined)
+        # --- A. PREDICT ---
+        
+        raw_total_lambda = row.λ_h .+ row.λ_a
+        log_samples = log.(raw_total_lambda)
+        
+        # Calibrate
+        mu_raw = mean(log_samples)
+        sigma_raw = std(log_samples)
+        centered = log_samples .- mu_raw
+        
+        calibrated_log = (centered .* current_temp) .+ mu_raw .+ current_bias
+        calibrated_lambdas = exp.(calibrated_log)
+        
+        # 2. CHANGE: Compute Probability for UNDER 2.5 (CDF)
+        r_val = mean(row.r) 
+        
+        probs_under_samples = map(λ -> begin
+            p = r_val / (r_val + λ)
+            # beta_inc[1] is CDF (P(X <= 2))
+            SpecialFunctions.beta_inc(r_val, 3.0, p)[1]
+        end, calibrated_lambdas)
+        
+        model_prob = mean(probs_under_samples)
+        
+        # --- B. TRADE ---
+        stake = BayesianFootball.Signals.compute_stake(
+                  BayesianFootball.Signals.BayesianKelly(),
+                  probs_under_samples, # Pass the UNDER probabilities
+                  row.odds_close)
+
+        pnl = get_pnl(stake, row.is_winner, row.odds_close)
+        
+        # --- C. MEASURE ---
+        # 3. CHANGE: Solve for Market Lambda using Under Prob
+        lambda_mkt = solve_negbin_lambda_from_under_25(row.prob_fair_close, r_val)
+        
+        # --- D. ADAPT ---
+        
+        raw_error = 0.0
+        z_score = 0.0 # Initialize safely
+        
+        if !isnan(lambda_mkt)
+            # Error Calculation remains: Model_Log - Market_Log
+            # Note: For Unders, if Model < Market (Negative Error), that is GOOD for the bet.
+            raw_error = mu_raw - log(lambda_mkt)
+
+            z_score = raw_error / (sigma_raw + 1e-6)
+            
+            # Update Trackers
+            ema_error = update_ema(ema_error, raw_error, alpha_bias)
+            
+            sq_error = raw_error^2
+            ema_sq_error = update_ema(ema_sq_error, sq_error, alpha_temp)
+            
+            # Control Law
+            current_bias = -ema_error
+            
+            target_temp = sqrt(ema_sq_error) / (sigma_raw + 1e-6)
+            current_temp = clamp(target_temp, min_temp, max_temp)
+        end
+
+        # --- E. LOGGING ---
+        push!(results_log, (
+            match_id = row.match_id,
+            date = row.date,
+            
+            prob_model = model_prob,
+            prob_mkt = row.prob_fair_close,
+            lambda_model = exp(mu_raw), 
+            lambda_mkt = lambda_mkt,
+            
+            bias_used = current_bias,
+            temp_used = current_temp,
+            
+            odds = row.odds_close,
+            stake = stake,
+            pnl = pnl,
+            is_winner = row.is_winner,
+            
+            raw_error = raw_error,
+            z_score = z_score
+        ))
+    end
+
+  return DataFrame(results_log)
+end
+
+
+
+
+tr = run_adaptive_backtest_under(
+        ds, exp_res, market_data;
+     alpha_bias = 0.1, 
+     alpha_temp = 0.01,
+     initial_bias = 0.05,
+     initial_temp = 0.4
+  )
+
+display_summary(tr)
+
+plot_adaptation_curve(tr)
+
+#= 
+     alpha_bias = 0.0, 
+     alpha_temp = 0.0,
+     initial_bias = 0.0,
+     initial_temp = 1.0
+
+julia> display_summary(tr)
+--- ADAPTIVE MODEL RESULTS ---
+Total PnL:    -0.76
+ROI:          -5.34%
+Volume:       559
+Volume Precent: 41.81%
+Win Rate: 50.63%
+=#
 

@@ -2212,3 +2212,109 @@ julia> display(first(opt_threaded, 10))
 =#
 
 sort(opt_threaded, :roi, rev=true)
+
+
+
+
+
+using Base.Threads, ProgressMeter, DataFrames
+
+function optimize_adaptive_parameters_threaded(
+    ds, exp_res, market_data;
+    alpha_bias_range = [0.01, 0.02, 0.05, 0.1, 0.15, 0.2],
+    alpha_temp_range = [0.01, 0.02, 0.05, 0.1],
+    init_bias_range  = [0.0, 0.05, 0.075],
+    init_temp_range  = [0.1, 0.2, 0.4, 0.6],
+    min_volume       = 30
+)
+    # 1. Flatten the Grid (using a clean list comprehension)
+    combos = [(ab, at, ib, it) for ab in alpha_bias_range 
+                               for at in alpha_temp_range 
+                               for ib in init_bias_range 
+                               for it in init_temp_range]
+    
+    total_iter = length(combos)
+    println("Starting grid search over $total_iter combinations...")
+    
+    # 2. Prepare Storage
+    # Vector of Any allows us to store NamedTuples or 'nothing' safely
+    results_storage = Vector{Any}(undef, total_iter)
+    
+    # Progress Bar setup
+    p = Progress(total_iter, 1, "Optimizing ($(Threads.nthreads()) Threads)...")
+    progress_lock = ReentrantLock()
+
+    # 3. The Threaded Loop
+    @threads for i in 1:total_iter
+        (ab, at, ib, it) = combos[i]
+        
+        # Run Backtest
+        # (Make sure to silence the print statements inside the backtest 
+        #  so your console doesn't get flooded!)
+        ledger = run_adaptive_backtest_under(
+            ds, exp_res, market_data;
+            alpha_bias = ab,
+            alpha_temp = at,
+            initial_bias = ib,
+            initial_temp = it
+        )
+        
+        # Calculate Metrics
+        active = subset(ledger, :stake => ByRow(>(1e-6)))
+        vol = nrow(active)
+        
+        if vol >= min_volume
+            total_pnl = sum(active.pnl)
+            total_stake = sum(active.stake)
+            roi = total_stake > 0 ? (total_pnl / total_stake) * 100 : 0.0
+            wr = (sum(active.is_winner) / vol) * 100
+            
+            # Store result
+            results_storage[i] = (
+                alpha_bias = ab, 
+                alpha_temp = at, 
+                init_bias  = ib, 
+                init_temp  = it, 
+                pnl        = total_pnl, 
+                roi        = roi, 
+                volume     = vol, 
+                win_rate   = wr
+            )
+        else
+            results_storage[i] = nothing
+        end
+        
+        # Safe Progress Update
+        lock(progress_lock) do 
+            next!(p)
+        end
+    end
+    
+    # 4. Convert to DataFrame
+    valid_results = filter(!isnothing, results_storage)
+    
+    if isempty(valid_results)
+        println("Warning: No parameter combinations met the minimum volume threshold.")
+        return DataFrame()
+    end
+
+    df = DataFrame(valid_results)
+    
+    # Sort by PnL (Highest first)
+    sort!(df, :pnl, rev=true)
+    
+    return df
+end
+
+
+# Run the optimizer
+opt_results = optimize_adaptive_parameters_threaded(
+    ds, exp_res, market_data;
+    alpha_bias_range = [0.01, 0.02, 0.05, 0.1, 0.15, 0.2], 
+    alpha_temp_range = [0.01, 0.02, 0.05, 0.1],
+    init_bias_range  = [0.0, 0.05, 0.075],
+    init_temp_range  = [0.1, 0.2, 0.4, 0.6]
+)
+
+# View the top 5 parameter combinations
+first(opt_results, 5)
