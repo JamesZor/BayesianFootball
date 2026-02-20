@@ -57,7 +57,23 @@ abstract type AbstractNegBinModel <: AbstractPregameModel end
 abstract type AbstractStaticNegBinModel <: AbstractNegBinModel end 
 abstract type AbstractDynamicNegBinModel <: AbstractNegBinModel end 
 export AbstractStaticNegBinModel, AbstractDynamicNegBinModel, AbstractNegBinModel
+
+"""
+    AbstractMultiScaleDynamicModel
+
+Models that track state-space dynamics across two time scales:
+1. Macro-steps (Season-to-Season jumps)
+2. Micro-steps (Month-to-Month jumps within the target season)
+"""
+
+abstract type AbstractMultiScaledNegBinModel <: AbstractNegBinModel end 
+export AbstractMultiScaledNegBinModel
+
+
+
+
 # --- Flexible Feature Structs ---
+#
 
 abstract type AbstractFunnelModel <: AbstractPregameModel end
 export AbstractFunnelModel

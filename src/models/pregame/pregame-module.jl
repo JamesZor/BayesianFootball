@@ -59,6 +59,9 @@ export GRWNegativeBinomialFull
 include("./implementations/grw_bivariate_poisson.jl")
 export GRWBivariatePoisson
 
+include("./implementations/multi_grw_neg_bin.jl")
+export MSNegativeBinomial 
+
 
 include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
