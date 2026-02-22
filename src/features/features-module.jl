@@ -6,6 +6,7 @@ into a model-ready FeatureSet by using a global Vocabulary.
 module Features
 
 using DataFrames
+using Dates
 using ..Data
 # Features depends on the central interfaces for types...
 using ..TypesInterfaces
