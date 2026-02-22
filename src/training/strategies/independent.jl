@@ -92,7 +92,7 @@ function train_independent(model, config, feature_sets)
                     log_progress(i)
                     
                 catch e
-                    @error "Error in Split $i: $e"
+                    @error "Error in Split $i" exception=(e, catch_backtrace())
                 finally
                     Base.release(semaphore)
                 end

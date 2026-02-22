@@ -1541,8 +1541,8 @@ kelty-hearts-fc to score first: 21.2%
 kelty-hearts-fc
 
 subset(df, :home_team => ByRow(isequal("hamilton-academical")), :away_team => ByRow(isequal("kelty-hearts-fc"))) 
-:away_team => ByRow(isequal("forfar-athletic")))
 
+subset(market_data.df, :match_id => ByRow(in([52605, 52605, 77129])))
 ###
 # Sum of Red Cards in a match
 df.total_reds = df.HR .+ df.AR
