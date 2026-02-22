@@ -161,7 +161,7 @@ end
 end
 
 
-function build_turing_model(model::MSNegativeBinomial, feature_set::FeatureSet)
+function build_turing_model(model::MSNegativeBinomialDelta, feature_set::FeatureSet)
     data = feature_set.data
     
     return multi_grw_neg_bin_model_train(
