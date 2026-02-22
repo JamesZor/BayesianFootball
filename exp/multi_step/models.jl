@@ -26,7 +26,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
         target_seasons = ["22/23", "23/24", "24/25", "25/26"],  # Target Season
         history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 0,      
+        warmup_period = 2,      
         stop_early = true
     )
 
@@ -38,7 +38,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
         100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
-        Samplers.UniformInit(1, 1),
+        Samplers.UniformInit(-1, 1),
         false   # show_progress (We use the Global Logger instead)
     )
 

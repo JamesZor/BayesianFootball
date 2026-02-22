@@ -16,7 +16,7 @@ BLAS.set_num_threads(1)
 
 function run_all()
     # 1. Get Configs
-    ds, configs = get_funnel_basics_configs()
+    ds, configs = get_basics_configs()
     
     println("Starting Experiment Suite: Funnel Basics")
     println("   > Found $(length(configs)) configurations.")
