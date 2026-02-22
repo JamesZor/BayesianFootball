@@ -101,7 +101,7 @@ function train_independent(model, config, feature_sets)
         
     else
         # Sequential Fallback
-        println("🚀 Starting Sequential Training: $total_splits splits remaining...")
+        println("Starting Sequential Training: $total_splits splits remaining...")
         
         for i in pending_indices
             results[i] = process_split(i)
