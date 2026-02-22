@@ -62,6 +62,9 @@ export GRWBivariatePoisson
 include("./implementations/multi_grw_neg_bin.jl")
 export MSNegativeBinomial 
 
+include("./implementations/multi_grw_neg_bin_delta.jl")
+export MSNegativeBinomialDelta
+
 
 include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
