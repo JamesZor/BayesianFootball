@@ -314,7 +314,7 @@ function create_features(
     # --- Flatten Data 
     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
     F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
-    F_data[:flat_month_ids] = vcat(F_data[:round_month_ids]...)
+    F_data[:flat_months] = vcat(F_data[:round_month_ids]...)
     F_data[:flat_is_midweek] = vcat(F_data[:round_is_midweek]...)
 
     # Delegate Target Extraction (Goals vs Funnel)
