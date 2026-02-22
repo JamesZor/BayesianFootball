@@ -42,6 +42,14 @@ k_tau = corkendall(h_scores, a_scores)
 println("Pearson Correlation: $(round(p_cor, digits=4))")
 println("Kendall's Tau:       $(round(k_tau, digits=4))")
 
+#=
+julia> println("Pearson Correlation: $(round(p_cor, digits=4))")
+Pearson Correlation: -0.1332
+
+julia> println("Kendall's Tau:       $(round(k_tau, digits=4))")
+Kendall's Tau:       -0.0934
+=#
+
 # --- B. The Contingency Matrix (Heatmap) ---
 # This is the "Truth" of your joint distribution
 max_goals = 6 # Cap at 6 for readability

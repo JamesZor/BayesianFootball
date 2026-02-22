@@ -300,10 +300,22 @@ function create_features(
     F_data[:n_target_steps] = length(target_grouped)
 
     # --- Extract Data ---
+  #  ids 
     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in all_groups]
     F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in all_groups]
+  # Extract the calendar month (1-12) for each match
+    F_data[:round_month_ids] = [ [Dates.month(d) for d in g.match_date] for g in all_groups]
+    F_data[:n_months] = 12
+  # Extract Midweek binary Flag - 1 if Mon - Thu, 0 if Fri-Sun 
+    F_data[:round_is_midweek] = [ [Dates.dayofweek(d) < 5 ? 1 : 0 for d in g.match_date] for g in all_groups]
+
+
+
+    # --- Flatten Data 
     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
     F_data[:flat_away_ids] = vcat(F_data[:round_away_ids]...)
+    F_data[:flat_month_ids] = vcat(F_data[:round_month_ids]...)
+    F_data[:flat_is_midweek] = vcat(F_data[:round_is_midweek]...)
 
     # Delegate Target Extraction (Goals vs Funnel)
     extract_targets!(F_data, model, all_groups)
