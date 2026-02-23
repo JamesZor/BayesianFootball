@@ -20,21 +20,21 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
     transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
 
-
-    cv_config = BayesianFootball.Data.CVConfig(
-        tournament_ids = [56,57],       # Premiership
-        target_seasons = ["22/23", "23/24", "24/25", "25/26"],  # Target Season
+    cv_config = BayesianFootball.Data.GroupedCVConfig(
+        tournament_groups = [[56, 57]],
+        target_seasons = ["24/25"],
         history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 2,      
+        warmup_period = 0,
         stop_early = true
     )
 
 
+
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
-        2,      # n_chains
+        250,     # n_samples
+        4,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
@@ -45,7 +45,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
 
 
 
-    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
+    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 
