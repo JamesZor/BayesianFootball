@@ -528,3 +528,220 @@ Conclusion: Model B improves accuracy by 0.774%
 
 
 =#
+
+
+using DataFrames, Statistics, GLM, Plots, StatsPlots, Printf
+
+# 1. Prepare Market Data & Calculate Spreads
+"""
+    prepare_betting_df(market_data_df, latents)
+
+Takes raw latents, runs model inference, merges with market odds, and calculates the edge/spread.
+"""
+function prepare_betting_df(market_data_df, latents)
+    # Generate predictive distributions from latents
+    ppd = BayesianFootball.Predictions.model_inference(latents)
+    
+    # Extract the mean probability for the specific bet
+    model_features = transform(ppd.df, :distribution => ByRow(mean) => :prob_model)
+    select!(model_features, :match_id, :market_name, :market_line, :selection, :prob_model)
+
+    # Merge with market data
+    analysis_df = innerjoin(
+        market_data_df,
+        model_features,
+        on = [:match_id, :market_name, :market_line, :selection]
+    )
+    
+    # Clean up missing odds and calculate targets
+    dropmissing!(analysis_df, [:odds_close, :is_winner])
+    
+    analysis_df.spread = analysis_df.prob_model .- analysis_df.prob_implied_close
+    analysis_df.spread_fair = analysis_df.prob_model .- analysis_df.prob_fair_close
+    analysis_df.Y = Float64.(analysis_df.is_winner)
+    
+    return analysis_df
+end
+
+# 2. Run GLM Regression
+"""
+    evaluate_betting_edge(df, label="Model"; target_markets=nothing, target_selections=nothing)
+
+Runs a logistic regression to see if the predicted spread translates to actual wins.
+Optionally filters by specific markets (e.g., "OverUnder") and selections (e.g., :over_25).
+"""
+function evaluate_betting_edge(df, label="Model"; target_markets=nothing, target_selections=nothing)
+    # Filter for portfolio subsets if requested
+    if target_markets !== nothing && target_selections !== nothing
+        sub_df = filter(row -> row.market_name in target_markets && row.selection in target_selections, df)
+        strat_name = "Filtered Strategy"
+    else
+        sub_df = df
+        strat_name = "All Markets"
+    end
+
+    println("="^60)
+    println(" GLM EDGE ANALYSIS: $label | $strat_name")
+    println("="^60)
+    
+    # Run the logistic regression using the fair spread
+    reg_model = glm(@formula(Y ~ prob_fair_close + spread_fair), sub_df, Binomial(), LogitLink())
+    
+    println(coeftable(reg_model))
+    println("  Observations: ", nrow(sub_df))
+    println("="^60, "\n")
+    
+    return reg_model, sub_df
+end
+
+# 3. Plot Realized Alpha
+"""
+    plot_realized_alpha(df_base, df_delta)
+
+Creates a bubble chart grouping bets by their predicted edge, comparing realized alpha.
+"""
+function plot_realized_alpha(df_base, df_delta)
+    # Helper to bucket edges and calculate win rates
+    function get_grouped(df)
+        df_copy = copy(df)
+        df_copy.edge_bucket = round.(df_copy.spread_fair, digits=2)
+        
+        grouped = combine(groupby(df_copy, :edge_bucket), 
+            :Y => mean => :actual_win_rate,
+            :prob_fair_close => mean => :market_implied,
+            nrow => :count
+        )
+        
+        # Filter out tiny sample sizes to remove noise
+        filter!(r -> r.count > 10, grouped)
+        grouped.excess_return = grouped.actual_win_rate .- grouped.market_implied
+        return grouped
+    end
+
+    grp_base = get_grouped(df_base)
+    grp_delta = get_grouped(df_delta)
+
+    p = scatter(
+        title="Realized Alpha vs Predicted Edge",
+        xlabel="Predicted Edge vs Fair Line (spread_fair)",
+        ylabel="Actual Excess Return (Realized - Implied)",
+        legend=:topleft,
+        size=(1600, 800)
+    );
+
+    # Plot Baseline Bubbles
+    scatter!(p, grp_base.edge_bucket, grp_base.excess_return,
+        markersize = sqrt.(grp_base.count) ./ 1.5, # Bubble size based on count
+        color = :red, markeralpha=0.6, label="Baseline (Model A)");
+
+    # Plot Delta Bubbles
+    scatter!(p, grp_delta.edge_bucket, grp_delta.excess_return,
+        markersize = sqrt.(grp_delta.count) ./ 1.5, 
+        color = :blue, markeralpha=0.6, label="Delta (Model B)");
+
+    # Zero Alpha Line (Break-even against implied probability)
+    hline!(p, [0.0], line=(:black, 2, :dash), label="Zero Excess Return");
+    
+    # Ideal Alpha Line (y = x)
+    # If your model predicts a 5% edge, you should see a 5% excess return
+    min_x = min(minimum(grp_base.edge_bucket), minimum(grp_delta.edge_bucket))
+    max_x = max(maximum(grp_base.edge_bucket), maximum(grp_delta.edge_bucket))
+    plot!(p, [min_x, max_x], [min_x, max_x], line=(:green, 2, :dot), label="Ideal Alpha (y=x)");
+
+    return p
+end
+
+
+
+# 1. Prepare DataFrames for both models
+# (I am assuming market_data is the loaded struct, so passing market_data.df)
+df_model_a = prepare_betting_df(market_data.df, latents_raw)
+df_model_b = prepare_betting_df(market_data.df, latents_raw2)
+
+# 2. Run Global Regression (All Markets)
+reg_a_all, _ = evaluate_betting_edge(df_model_a, "Model A (Baseline)");
+reg_a_all
+reg_b_all, _ = evaluate_betting_edge(df_model_b, "Model B (Delta)");
+reg_b_all
+
+#=
+
+julia> reg_a_all
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
+
+Y ~ 1 + prob_fair_close + spread_fair
+
+Coefficients:
+─────────────────────────────────────────────────────────────────────────────
+                    Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+─────────────────────────────────────────────────────────────────────────────
+(Intercept)      -2.99391   0.0745515  -40.16    <1e-99   -3.14003   -2.8478
+prob_fair_close   6.10604   0.144175    42.35    <1e-99    5.82347    6.38862
+spread_fair       2.95363   0.563593     5.24    <1e-06    1.84901    4.05826
+─────────────────────────────────────────────────────────────────────────────
+
+
+julia> reg_b_all
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
+
+Y ~ 1 + prob_fair_close + spread_fair
+
+Coefficients:
+─────────────────────────────────────────────────────────────────────────────
+                    Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+─────────────────────────────────────────────────────────────────────────────
+(Intercept)      -2.96776   0.0749889  -39.58    <1e-99   -3.11474   -2.82079
+prob_fair_close   6.05159   0.145337    41.64    <1e-99    5.76673    6.33644
+spread_fair       4.81464   0.627316     7.67    <1e-13    3.58512    6.04415
+=#
+
+# 3. Run Strategy-Specific Regressions (e.g., Just Overs)
+target_markets_overs = ["OverUnder"]
+target_lines_overs = [:over_15, :over_25, :over_35]
+
+reg_a_overs, sub_a_overs = evaluate_betting_edge(df_model_a, "Model A", 
+    target_markets=target_markets_overs, target_selections=target_lines_overs)
+    
+reg_b_overs, sub_b_overs = evaluate_betting_edge(df_model_b, "Model B", 
+    target_markets=target_markets_overs, target_selections=target_lines_overs)
+
+reg_a_overs
+reg_b_overs
+
+#=
+
+julia> reg_a_overs
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
+
+Y ~ 1 + prob_fair_close + spread_fair
+
+Coefficients:
+──────────────────────────────────────────────────────────────────────────────
+                     Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+──────────────────────────────────────────────────────────────────────────────
+(Intercept)      -2.31104     0.215355  -10.73    <1e-26   -2.73313   -1.88895
+prob_fair_close   4.71723     0.405523   11.63    <1e-30    3.92242    5.51204
+spread_fair       0.534872    1.16238     0.46    0.6454   -1.74334    2.81309
+──────────────────────────────────────────────────────────────────────────────
+
+julia> reg_b_overs
+StatsModels.TableRegressionModel{GeneralizedLinearModel{GLM.GlmResp{Vector{Float64}, Binomial{Float64}, LogitLink}, GLM.DensePredChol{Float64, CholeskyPivoted{Float64, Matrix{Float64}, Vector{Int64}}}}, Matrix{Float64}}
+
+Y ~ 1 + prob_fair_close + spread_fair
+
+Coefficients:
+─────────────────────────────────────────────────────────────────────────────
+                    Coef.  Std. Error       z  Pr(>|z|)  Lower 95%  Upper 95%
+─────────────────────────────────────────────────────────────────────────────
+(Intercept)      -2.32365    0.215702  -10.77    <1e-26  -2.74642    -1.90088
+prob_fair_close   4.74183    0.406574   11.66    <1e-30   3.94496     5.5387
+spread_fair       3.21652    1.38738     2.32    0.0204   0.497299    5.93574
+─────────────────────────────────────────────────────────────────────────────
+
+=#
+plotlyjs()
+
+# 4. Generate the Alpha Plot
+alpha_plot = plot_realized_alpha(df_model_a, df_model_b);
+Plots.savefig(alpha_plot, "figures/realized_alpha_comparison.html")
+display(alpha_plot)
