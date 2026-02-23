@@ -18,16 +18,27 @@ cv_config = BayesianFootball.Data.CVConfig(
     history_seasons = 2,
     dynamics_col = :match_month,
     # warmup_period = 36,
-    warmup_period = 0,
+    warmup_period = 8,
+    stop_early = true
+)
+
+
+cv_config_g = BayesianFootball.Data.GroupedCVConfig(
+    tournament_groups = [[56, 57]],
+    target_seasons = ["24/25"],
+    history_seasons = 2,
+    dynamics_col = :match_month,
+    warmup_period = 8,
     stop_early = true
 )
 
 model = BayesianFootball.Models.PreGame.MSNegativeBinomial()
 
 splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
+splits_grouped = BayesianFootball.Data.create_data_splits(ds, cv_config_g)
 
 feature_sets = BayesianFootball.Features.create_features(
-    splits, model, cv_config
+    splits, model, cv_config_g
 )
 
 

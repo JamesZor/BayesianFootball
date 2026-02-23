@@ -113,69 +113,108 @@ function create_data_splits(data_store::DataStore, splitter::WindowCV)::Vector{T
     return Vector{Tuple{SubDataFrame, String}}(collect(ts_iterator))
 end
 
-# --- 4. CVConfig Split Logic (Unified API) ---
+# --- 4. Shared Split Logic (Extracted Helper) ---
 
-function create_data_splits(data_store, config::CVConfig)::Vector{Tuple{SubDataFrame, SplitMetaData}}
-    splits = Vector{Tuple{SubDataFrame, SplitMetaData}}()
-    df = data_store.matches
+function _process_tournament_group(df::DataFrame, group_ids::Vector{Int}, config::Union{CVConfig, GroupedCVConfig}, meta_type::Type)
+    splits = Vector{Tuple{SubDataFrame, AbstractSplitMetaData}}()
     all_seasons = sort(unique(df.season))
     
-    for tourn_id in config.tournament_ids
-        tourn_mask = df.tournament_id .== tourn_id
-        if !any(tourn_mask); continue; end
+    # Check if tournament ID is within the current group
+    tourn_mask = in.(df.tournament_id, Ref(group_ids))
+    if !any(tourn_mask); return splits; end
 
-        for target_season in config.target_seasons
-            target_idx = findfirst(==(target_season), all_seasons)
-            if isnothing(target_idx)
-                @warn "Target season $target_season not found for tournament $tourn_id. Skipping."
-                continue
-            end
-            
-            start_idx = max(1, target_idx - config.history_seasons)
-            history_seasons_list = all_seasons[start_idx : target_idx-1]
-            
-            history_indices = findall(tourn_mask .& (in.(df.season, Ref(history_seasons_list))))
-            target_indices = findall(tourn_mask .& (df.season .== target_season))
-            
-            if isempty(target_indices)
-                @warn "No data found for target season $target_season (Tournament $tourn_id)."
-                continue
-            end
-            
-            season_dynamics = unique(df[target_indices, config.dynamics_col])
-            sort!(season_dynamics)
-            
-            max_week = maximum(season_dynamics)
-            effective_end = config.stop_early ? (max_week - 1) : max_week
+    for target_season in config.target_seasons
+        target_idx = findfirst(==(target_season), all_seasons)
+        if isnothing(target_idx)
+            @warn "Target season $target_season not found for tournament group $group_ids. Skipping."
+            continue
+        end
+        
+        start_idx = max(1, target_idx - config.history_seasons)
+        history_seasons_list = all_seasons[start_idx : target_idx-1]
+        
+        history_indices = findall(tourn_mask .& (in.(df.season, Ref(history_seasons_list))))
+        target_indices = findall(tourn_mask .& (df.season .== target_season))
+        
+        if isempty(target_indices)
+            @warn "No data found for target season $target_season (Tournament group $group_ids)."
+            continue
+        end
+        
+        season_dynamics = unique(df[target_indices, config.dynamics_col])
+        sort!(season_dynamics)
+        
+        max_week = maximum(season_dynamics)
+        effective_end = config.stop_early ? (max_week - 1) : max_week
 
-            valid_steps = filter(t -> t >= config.warmup_period, season_dynamics)
-            if !isnothing(config.end_dynamics)
-                filter!(t -> t <= config.end_dynamics, valid_steps)
-            end
-            filter!(t -> t <= effective_end, valid_steps)
-          
-            for t in valid_steps
-                current_target_indices = filter(idx -> df[idx, config.dynamics_col] <= t, target_indices)
-                combined_indices = vcat(history_indices, current_target_indices)
-                sort!(combined_indices)
-                
-                train_view = view(df, combined_indices, :)
-                
+        valid_steps = filter(t -> t >= config.warmup_period, season_dynamics)
+        if !isnothing(config.end_dynamics)
+            filter!(t -> t <= config.end_dynamics, valid_steps)
+        end
+        filter!(t -> t <= effective_end, valid_steps)
+      
+        for t in valid_steps
+            current_target_indices = filter(idx -> df[idx, config.dynamics_col] <= t, target_indices)
+            combined_indices = vcat(history_indices, current_target_indices)
+            sort!(combined_indices)
+            
+            train_view = view(df, combined_indices, :)
+            
+            # Dispatch the proper MetaData type
+            if meta_type === SplitMetaData
                 meta = SplitMetaData(
-                    tourn_id,
+                    group_ids[1], # Old config expects single Int
                     target_season,
                     target_season, 
                     config.history_seasons,
                     t,
                     config.warmup_period
                 )
-                push!(splits, (train_view, meta))
+            else
+                meta = GroupedSplitMetaData(
+                    group_ids,    # New config expects Vector{Int}
+                    target_season,
+                    target_season, 
+                    config.history_seasons,
+                    t,
+                    config.warmup_period
+                )
             end
+            push!(splits, (train_view, meta))
         end
     end
     return splits
 end
 
+# --- 5. CVConfig Split Wrappers (Unified API via Dispatch) ---
+
+# Legacy API (Fully backward compatible)
+function create_data_splits(data_store, config::CVConfig)::Vector{Tuple{SubDataFrame, SplitMetaData}}
+    splits = Vector{Tuple{SubDataFrame, SplitMetaData}}()
+    for tourn_id in config.tournament_ids
+        group_splits = _process_tournament_group(data_store.matches, [tourn_id], config, SplitMetaData)
+        for (v, m) in group_splits
+            push!(splits, (v, m::SplitMetaData))
+        end
+    end
+    return splits
+end
+
+# New Grouped API
+function create_data_splits(data_store, config::GroupedCVConfig)::Vector{Tuple{SubDataFrame, GroupedSplitMetaData}}
+    splits = Vector{Tuple{SubDataFrame, GroupedSplitMetaData}}()
+    for group in config.tournament_groups
+        group_splits = _process_tournament_group(data_store.matches, group, config, GroupedSplitMetaData)
+        for (v, m) in group_splits
+            push!(splits, (v, m::GroupedSplitMetaData))
+        end
+    end
+    return splits
+end
+
+# --- 6. Next Matches Helpers ---
+
+# Legacy helper
 function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig)::AbstractDataFrame 
     return subset(ds.matches, 
            :tournament_id => ByRow(isequal(meta.tournament_id)),
@@ -184,12 +223,19 @@ function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig):
     )
 end
 
-
-
-"""
-wrapper for get_next_matches 
-"""
 function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, SplitMetaData}, cvconf::CVConfig)::AbstractDataFrame 
   return get_next_matches(ds, fs[2], cvconf) 
-end 
+end
 
+# New Grouped helper
+function get_next_matches(ds::DataStore, meta::GroupedSplitMetaData, config::GroupedCVConfig)::AbstractDataFrame 
+    return subset(ds.matches, 
+           :tournament_id => ByRow(in(meta.tournament_ids)), # Checks array inclusion
+           :season => ByRow(isequal(meta.target_season)),
+           config.dynamics_col => ByRow(isequal(meta.time_step + 1)) 
+    )
+end
+
+function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, GroupedSplitMetaData}, cvconf::GroupedCVConfig)::AbstractDataFrame 
+  return get_next_matches(ds, fs[2], cvconf) 
+end
