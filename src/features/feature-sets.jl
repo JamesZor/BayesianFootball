@@ -239,11 +239,10 @@ function create_features(
 end
 
 
-# src/features/feature-sets.jl
 function create_features(
     data_split::AbstractDataFrame,
     model::AbstractMultiScaledNegBinModel,
-    splitter_config::CVConfig
+    splitter_config::Union{CVConfig, GroupedCVConfig} # <-- UPDATED HERE
 )::FeatureSet
 
     # 1. Initialize data dictionary
@@ -276,7 +275,7 @@ function create_features(
         error("The time column ':$grouping_col' was not found in the DataFrame.")
     end
 
-    # 3. Create the Mask using CVConfig
+    # 3. Create the Mask using the config
     # If the season is in our target_seasons list, it belongs to the target df.
     # Otherwise, it belongs to the history df.
     history_mask = .!in.(matches_df.season, Ref(splitter_config.target_seasons))
@@ -300,16 +299,14 @@ function create_features(
     F_data[:n_target_steps] = length(target_grouped)
 
     # --- Extract Data ---
-  #  ids 
+    #  ids 
     F_data[:round_home_ids] = [ [team_map[name] for name in g.home_team] for g in all_groups]
     F_data[:round_away_ids] = [ [team_map[name] for name in g.away_team] for g in all_groups]
-  # Extract the calendar month (1-12) for each match
+    # Extract the calendar month (1-12) for each match
     F_data[:round_month_ids] = [ [Dates.month(d) for d in g.match_date] for g in all_groups]
     F_data[:n_months] = 12
-  # Extract Midweek binary Flag - 1 if Mon - Thu, 0 if Fri-Sun 
+    # Extract Midweek binary Flag - 1 if Mon - Thu, 0 if Fri-Sun 
     F_data[:round_is_midweek] = [ [Dates.dayofweek(d) < 5 ? 1 : 0 for d in g.match_date] for g in all_groups]
-
-
 
     # --- Flatten Data 
     F_data[:flat_home_ids] = vcat(F_data[:round_home_ids]...)
