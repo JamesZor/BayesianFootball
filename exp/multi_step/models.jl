@@ -22,7 +22,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
 
     cv_config = BayesianFootball.Data.GroupedCVConfig(
         tournament_groups = [[56, 57]],
-        target_seasons = ["24/25"],
+        target_seasons = ["22/23", "23/24", "24/25", "25/26"],
         history_seasons = 2,
         dynamics_col = :match_month,
         warmup_period = 0,
@@ -33,7 +33,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        250,     # n_samples
+        300,     # n_samples
         4,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
