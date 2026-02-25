@@ -1,3 +1,4 @@
+# src/models/pregame/grw_helpers.jl
 
 @model function grw_two_step_component(
         number_teams::Int,         # Tip: Type as Int for matrix dimensions

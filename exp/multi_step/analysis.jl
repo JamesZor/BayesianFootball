@@ -182,6 +182,94 @@ julia> res1 = run_diagnostic_test(joined, "Model A (baseline)")
 ========================================
 Metric          | Sum Res    | Mean Res  
 ----------------------------------------
+Home Goals      |     59.765 |     0.0521
+Away Goals      |      2.832 |     0.0025
+Total Goals     |     62.597 |     0.0545
+----------------------------------------
+One-Sample T-Test (Residuals == 0):
+  t-statistic: 1.1273
+  p-value:     2.5987e-01 (Not Significant)
+  95% CI:      [-0.0404, 0.1494]
+========================================
+
+(t_test = One sample t-test
+-----------------
+Population details:
+    parameter of interest:   Mean
+    value under h_0:         0
+    point estimate:          0.054527
+    95% confidence interval: (-0.04038, 0.1494)
+
+Test summary:
+    outcome with 95% confidence: fail to reject h_0
+    two-sided p-value:           0.2599
+
+Details:
+    number of observations:   1148
+    t-statistic:              1.1272658650511744
+    degrees of freedom:       1147
+    empirical standard error: 0.048370984144518854
+, summary = 3×7 DataFrame
+ Row │ variable  mean        min       median      max      nmissing  eltype   
+     │ Symbol    Float64     Float64   Float64     Float64  Int64     DataType 
+─────┼─────────────────────────────────────────────────────────────────────────
+   1 │ res_home  0.0520598   -2.1751   -0.228163   6.58571         0  Float64
+   2 │ res_away  0.00246718  -2.16013  -0.22394    5.18943         0  Float64
+   3 │ res_all   0.054527    -3.29679  -0.0942759  5.74913         0  Float64)
+
+julia> # Process experiment 2
+       res2 = run_diagnostic_test(joined2, "Model B (Delta)")
+========================================
+ DIAGNOSTIC REPORT: Model B (Delta)
+========================================
+Metric          | Sum Res    | Mean Res  
+----------------------------------------
+Home Goals      |     71.340 |     0.0621
+Away Goals      |     13.180 |     0.0115
+Total Goals     |     84.520 |     0.0736
+----------------------------------------
+One-Sample T-Test (Residuals == 0):
+  t-statistic: 1.5191
+  p-value:     1.2900e-01 (Not Significant)
+  95% CI:      [-0.0215, 0.1687]
+========================================
+
+(t_test = One sample t-test
+-----------------
+Population details:
+    parameter of interest:   Mean
+    value under h_0:         0
+    point estimate:          0.0736237
+    95% confidence interval: (-0.02146, 0.1687)
+
+Test summary:
+    outcome with 95% confidence: fail to reject h_0
+    two-sided p-value:           0.1290
+
+Details:
+    number of observations:   1148
+    t-statistic:              1.5191419449628543
+    degrees of freedom:       1147
+    empirical standard error: 0.04846397493167676
+, summary = 3×7 DataFrame
+ Row │ variable  mean       min       median      max      nmissing  eltype   
+     │ Symbol    Float64    Float64   Float64     Float64  Int64     DataType 
+─────┼────────────────────────────────────────────────────────────────────────
+   1 │ res_home  0.0621426  -2.17789  -0.190557   6.6334          0  Float64
+   2 │ res_away  0.0114811  -2.14954  -0.21056    5.26032         0  Float64
+   3 │ res_all   0.0736237  -3.31055  -0.0839622  5.56908         0  Float64)
+
+
+
+# ----------------------------
+#  small one season version 
+# ----------------------------
+julia> res1 = run_diagnostic_test(joined, "Model A (baseline)")
+========================================
+ DIAGNOSTIC REPORT: Model A (baseline)
+========================================
+Metric          | Sum Res    | Mean Res  
+----------------------------------------
 Home Goals      |     -0.093 |    -0.0003
 Away Goals      |    -19.479 |    -0.0607
 Total Goals     |    -19.572 |    -0.0610
@@ -380,6 +468,45 @@ print_rqr_diagnostics(joined2, "Model B (Delta Midweek/Month)")
 
 
 #=
+#-----------------------------
+# full model 
+#  ------------------------
+julia> print_rqr_diagnostics(joined, "Model A (Baseline)")
+==================================================
+ RQR NORMALITY DIAGNOSTICS: Model A (Baseline)
+==================================================
+Metric          | Home RQR     | Away RQR    
+--------------------------------------------------
+Mean (Target 0) |       0.0586 |      -0.0063
+StdDev(Target 1) |       0.9887 |       1.0230
+Skewness        |       0.0360 |       0.0744
+Exc. Kurtosis   |       0.0999 |       0.1382
+--------------------------------------------------
+Shapiro-Wilk W: Home = 0.9991 (p=0.880)
+Shapiro-Wilk W: Away = 0.9986 (p=0.464)
+==================================================
+
+
+julia> print_rqr_diagnostics(joined2, "Model B (Delta Midweek/Month)")
+==================================================
+ RQR NORMALITY DIAGNOSTICS: Model B (Delta Midweek/Month)
+==================================================
+Metric          | Home RQR     | Away RQR    
+--------------------------------------------------
+Mean (Target 0) |       0.0637 |       0.0109
+StdDev(Target 1) |       0.9701 |       1.0267
+Skewness        |       0.1695 |       0.1763
+Exc. Kurtosis   |       0.0258 |      -0.0486
+--------------------------------------------------
+Shapiro-Wilk W: Home = 0.9976 (p=0.092)
+Shapiro-Wilk W: Away = 0.9969 (p=0.023)
+==================================================
+
+
+#-----------------------------
+# small model 
+#  ------------------------
+
 julia> print_rqr_diagnostics(joined, "Model A (Baseline)")
 ==================================================
  RQR NORMALITY DIAGNOSTICS: Model A (Baseline)
@@ -421,6 +548,42 @@ monthly_delta = aggregate_monthly_rqr(joined2, :match_month)
 #=
 julia> monthly_base = aggregate_monthly_rqr(joined, :match_month)
 9×8 DataFrame
+ Row │ month  mean_rqr      std_rqr   skewness     kurtosis     SW_W      n_obs  margin_of_error 
+     │ Int64  Float64       Float64   Float64      Float64      Float64   Int64  Float64         
+─────┼───────────────────────────────────────────────────────────────────────────────────────────
+   1 │     2   0.065449     1.00732   -0.0273338    0.539295    0.994898    316         0.113332
+   2 │     3   0.0319175    0.986205   0.00469404  -0.00909444  0.997763    300         0.113877
+   3 │     4   0.0916436    0.976919  -0.0856584    0.0307577   0.99288     280         0.116764
+   4 │     5   0.0843406    1.01052    0.160254    -0.224257    0.993309    272         0.122544
+   5 │     6  -0.0409086    1.04577    0.00480127  -0.277852    0.995347    258         0.130213
+   6 │     7   0.000807059  0.986065  -0.0681621    0.0777423   0.99779     292         0.11541
+   7 │     8  -0.00533456   1.03384    0.22664      0.218433    0.99351     254         0.129738
+   8 │     9  -0.0299293    1.02334    0.280571     0.389252    0.991574    254         0.12842
+   9 │    10   0.00662938   0.980222  -0.0683008    1.05222     0.976743     70         0.234318
+
+julia> monthly_delta = aggregate_monthly_rqr(joined2, :match_month)
+9×8 DataFrame
+ Row │ month  mean_rqr     std_rqr   skewness   kurtosis    SW_W      n_obs  margin_of_error 
+     │ Int64  Float64      Float64   Float64    Float64     Float64   Int64  Float64         
+─────┼───────────────────────────────────────────────────────────────────────────────────────
+   1 │     2   0.0617421   0.945738  0.334521    0.523597   0.99083     316         0.106404
+   2 │     3  -0.0230498   1.02666   0.0359481  -0.207517   0.997125    300         0.118548
+   3 │     4   0.0352163   0.988078  0.145383   -0.390444   0.991721    280         0.118098
+   4 │     5   0.0817035   0.982467  0.288654   -0.55242    0.983897    272         0.119142
+   5 │     6  -0.0269309   1.03921   0.0364716  -0.236053   0.996542    258         0.129396
+   6 │     7   0.113276    0.951057  0.154643   -0.0408376  0.995924    292         0.111313
+   7 │     8   0.0517056   1.05743   0.265202    0.144444   0.991989    254         0.132698
+   8 │     9   0.00361961  1.02202   0.199358    0.428654   0.992816    254         0.128255
+   9 │    10   0.0112247   0.980395  0.102002    0.22816    0.990393     70         0.234359
+
+
+
+
+# - ----------------
+# smaller data set 
+# --------------------
+julia> monthly_base = aggregate_monthly_rqr(joined, :match_month)
+9×8 DataFrame
  Row │ month  mean_rqr     std_rqr   skewness    kurtosis    SW_W      n_obs  margin_of_error 
      │ Int64  Float64      Float64   Float64     Float64     Float64   Int64  Float64         
 ─────┼────────────────────────────────────────────────────────────────────────────────────────
@@ -454,7 +617,7 @@ julia> monthly_delta = aggregate_monthly_rqr(joined2, :match_month)
 
 # 4. Generate and Save Comparison Plot
 comparison_plot = plot_model_comparison(monthly_base, monthly_delta);
-Plots.savefig(comparison_plot, "figures/rqr_model_comparison.html")
+Plots.savefig(comparison_plot, "figures_all/rqr_model_comparison.html")
 
 
 function plot_std_comparison(monthly_base, monthly_delta)
@@ -484,7 +647,7 @@ end
 
 # Generate and display the plot
 std_plot = plot_std_comparison(monthly_base, monthly_delta);
-Plots.savefig(std_plot, "figures/rqr_std_comparison.html")
+Plots.savefig(std_plot, "figures_all/rqr_std_comparison.html")
 
 
 using Distributions, Statistics, DataFrames, Printf
@@ -556,6 +719,24 @@ compare_crps(joined, joined2)
 
 
 #=
+
+julia> # --- Execution ---
+       compare_crps(joined, joined2)
+==================================================
+ CRPS MODEL COMPARISON (Lower is Better)
+==================================================
+Model           | Home CRPS    | Away CRPS    | Match CRPS  
+--------------------------------------------------
+A (Baseline)    |      0.66616 |      0.63585 |      0.65101
+B (Delta)       |      0.66777 |      0.63622 |      0.65200
+--------------------------------------------------
+Conclusion: Model A is more accurate by 0.152%
+==================================================
+
+
+# --------------------
+# small data set one season 
+# --------------------
 ==================================================
  CRPS MODEL COMPARISON (Lower is Better)
 ==================================================
