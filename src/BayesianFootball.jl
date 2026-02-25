@@ -13,11 +13,12 @@ export MyDistributions
 # 2. Data is self-contained.
 include("data/data-module.jl") #
 
+# 4. Features depends on Data, TypesInterfaces, and Models.
+include("features/features-module.jl") #
+
 # 3. Models depends only on TypesInterfaces.
 include("models/models-module.jl") #
 
-# 4. Features depends on Data, TypesInterfaces, and Models.
-include("features/features-module.jl") #
 
 # 5. Samplers provides core sampling algorithms.
 include("samplers/samplers-module.jl") # *** ADDED RENAMED MODULE ***

@@ -11,7 +11,7 @@ using ..Data
 # Features depends on the central interfaces for types...
 using ..TypesInterfaces
 # ...and on Models for the concrete model types and their contract methods.
-using ..Models: required_mapping_keys
+# using ..Models: required_mapping_keys
 
 
 export Vocabulary, FeatureSet, create_vocabulary, create_features, get_feature
