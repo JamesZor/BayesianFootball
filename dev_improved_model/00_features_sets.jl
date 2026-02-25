@@ -38,13 +38,32 @@ splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
 splits_grouped = BayesianFootball.Data.create_data_splits(ds, cv_config_g)
 
 feature_sets = BayesianFootball.Features.create_features(
-    splits, model, cv_config_g
+    splits, model, cv_config
 )
 
 
 
-f1 = feature_sets[1][1]
-f2 = feature_sets[2][1]
+
+
+
+
+model1 = BayesianFootball.Models.PreGame.MSNegativeBinomial()
+
+splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
+
+feature_sets1 = BayesianFootball.Features.create_features(
+    splits, model1, cv_config
+)
+
+f1[:round_is_plastic] 
+keys(f1)
+
+
+
+
+
+
+f2 = feature_sets1[1][1]
 feature_sets[2][2]
 #=
 Split(Tourn: 56, Season: 22/23, Week: 1, Hist: 1)

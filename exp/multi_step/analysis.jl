@@ -1,6 +1,47 @@
 
-exp_res = loaded_results[1]
-exp_res2 = loaded_results[2]
+using Revise
+using BayesianFootball
+using DataFrames
+using BayesianFootball.Signals
+
+# Load DataStore again (Data is lightweight, models are heavy)
+#
+ds = Data.load_extra_ds()
+transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+
+
+# 1. Load Experiments from Disk
+# =============================
+exp_dir = "./data/exp/multi_step"
+println("Scanning for results in: $exp_dir")
+
+# This helper lists the folders it finds
+saved_folders = Experiments.list_experiments("exp/multi_step"; data_dir="./data")
+# saved_folders = Experiments.list_experiments("exp/grw_basics_pl_ch"; data_dir="./data")
+
+# Load them all into a list
+loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+for folder in saved_folders
+    try
+        res = Experiments.load_experiment(folder)
+        push!(loaded_results, res)
+    catch e
+        @warn "Could not load $folder: $e"
+    end
+end
+
+if isempty(loaded_results)
+    error("No results loaded! Did you run runner.jl?")
+end
+
+
+
+
+
+
+
+exp_res = loaded_results[2]
+exp_res2 = loaded_results[1]
 
 
 
@@ -660,8 +701,8 @@ df_model_b = prepare_betting_df(market_data.df, latents_raw2)
 
 # 2. Run Global Regression (All Markets)
 reg_a_all, _ = evaluate_betting_edge(df_model_a, "Model A (Baseline)");
-reg_a_all
 reg_b_all, _ = evaluate_betting_edge(df_model_b, "Model B (Delta)");
+reg_a_all
 reg_b_all
 
 #=

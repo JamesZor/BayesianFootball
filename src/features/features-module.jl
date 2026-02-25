@@ -22,6 +22,9 @@ const REQUIRED_MATCH_COLS = [
 ]
 
 # Include the separated logic files.
+include("./extractors.jl")
+include("./model_requirements.jl")
+include("./map_builders.jl")
 include("./vocabulary.jl")
 include("./feature-sets.jl")
 
