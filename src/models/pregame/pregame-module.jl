@@ -7,7 +7,7 @@ using ...TypesInterfaces
 
 using Turing, Distributions, DataFrames
 using ..MyDistributions 
-using ..Features
+using ...Features
 using LinearAlgebra
 using Statistics
 using Dates
