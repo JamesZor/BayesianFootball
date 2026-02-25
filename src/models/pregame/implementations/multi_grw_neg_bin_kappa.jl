@@ -1,16 +1,15 @@
-# src/models/pregame/implementations/multi_grw_neg_bin_delta.jl
+
+# src/models/pregame/implementations/multi_grw_neg_bin_kappa.jl
 
 #=
-Captures a midweek and month effect, based on the multi grw negative binomial
+Captures a midweek, month and 3g/plastic effect,  based on the multi grw negative binomial
 =#
 
-export MSNegativeBinomialDelta
 
-# ==============================================================================
-# 1. STRUCT DEFINITION (The Priors)
-# ==============================================================================
+export MSNegativeBinomialKappa
 
-Base.@kwdef struct MSNegativeBinomialDelta <: AbstractMultiScaledNegBinModel
+
+Base.@kwdef struct MSNegativeBinomialKappa <: AbstractMultiScaledNegBinModel
     # --- Global Baseline (Intercept) ---
     # Represents the average log-goal rate for an away team.
     μ::Distribution = Normal(0.2, 0.5)
@@ -24,6 +23,7 @@ Base.@kwdef struct MSNegativeBinomialDelta <: AbstractMultiScaledNegBinModel
     # Month m 
     δₘ::Distribution = Normal(0, 0.1)  # \m month
     δₙ::Distribution = Normal(0, 0.1)  # \n week
+    δₚ::Distribution = Normal(0, 0.1)  # \p plastic
 
     # --- Dynamic Hyperparameters (Process Noise) ---
     # Adjusted to 0.05 to prevent excessive volatility (factor of ~1.05 per week)
@@ -37,6 +37,7 @@ Base.@kwdef struct MSNegativeBinomialDelta <: AbstractMultiScaledNegBinModel
     zₖ::Distribution = Normal(0,1)
     zₛ::Distribution = Normal(0,1)
 end
+
 
 # ==============================================================================
 # 2. MAIN TURING MODEL
@@ -54,8 +55,9 @@ end
           away_goals_flat,
           months_flat,
           is_midweek_flat,
+          is_plastic_flat,
           time_indices, 
-          model::MSNegativeBinomialDelta,
+          model::MSNegativeBinomialKappa,
           ::Type{T} = Float64 ) where {T} 
 
     # --------------------------------------------------------------------------
@@ -68,6 +70,7 @@ end
 
     δₘ ~ filldist(model.δₘ, n_months) # months 
     δₙ ~ model.δₙ  # weeks 
+    δₚ ~ model.δₚ # plastic effect
 
     # --------------------------------------------------------------------------
     # B. LATENT STATES (Using Submodels)
@@ -98,8 +101,8 @@ end
 
     δₘᵛ = view(δₘ, months_flat)
 
-    λₕ = exp.(μ .+ γ .+ αₕ .+ βₐ .+ δₘᵛ .+ ( δₙ .* is_midweek_flat) ) 
-    λₐ = exp.(μ .+      αₐ .+ βₕ .+ δₘᵛ .+ ( δₙ .* is_midweek_flat) )
+    λₕ = exp.(μ .+ γ .+ αₕ .+ βₐ .+ δₘᵛ .+ ( δₙ .* is_midweek_flat) .+ ( δₚ .* is_plastic_flat ) ) 
+    λₐ = exp.(μ .+      αₐ .+ βₕ .+ δₘᵛ .+ ( δₙ .* is_midweek_flat) .+ ( δₚ .* is_plastic_flat ) )
 
 
     home_goals_flat ~ arraydist(RobustNegativeBinomial.(r, λₕ))
@@ -108,7 +111,7 @@ end
 end
 
 
-function build_turing_model(model::MSNegativeBinomialDelta, feature_set::FeatureSet)
+function build_turing_model(model::MSNegativeBinomialKappa, feature_set::FeatureSet)
     data = feature_set.data
     
     return multi_grw_neg_bin_model_train(
@@ -123,13 +126,16 @@ function build_turing_model(model::MSNegativeBinomialDelta, feature_set::Feature
         data[:flat_away_goals],
         data[:flat_months],
         data[:flat_is_midweek],
+        data[:flat_is_plastic],
         data[:time_indices],
         model
     )
 end
 
+
+
 function extract_parameters(
-    model::MSNegativeBinomialDelta, 
+    model::MSNegativeBinomialKappa, 
     df::AbstractDataFrame, 
     feature_set::FeatureSet,
     chain::Chains
@@ -150,8 +156,9 @@ function extract_parameters(
     γ_v = vec(Array(chain[:γ]))
     log_r_v = vec(Array(chain[:log_r]))
     r_v = exp.(log_r_v)  # Dispersion parameter for NegBin
-    δₘ = Array(group(chain, :δₘ)) 
-    δₙ = vec(Array(chain[:δₙ]))
+    δₘ = Array(group(chain, :δₘ))  # months
+    δₙ = vec(Array(chain[:δₙ])) # weeks 
+    δₚ = vec(Array(chain[:δₚ])) # plastic
 
     
     # 4. Predict
@@ -169,11 +176,11 @@ function extract_parameters(
         h_id = team_map[row.home_team]
         a_id = team_map[row.away_team]
 
-
         month_idx  = Features.get_feature(Val(:month), row)
         is_mid     = Features.get_feature(Val(:midweek), row)
+        is_plastic = Features.get_feature(Val(:is_plastic), row)
+
         δₘᵛ = δₘ[:, month_idx]
-      
 
         # Get Team Strengths for this specific point in time
         α_h = α[h_id, t_idx, :]
@@ -183,8 +190,8 @@ function extract_parameters(
 
 
         # Calculate Lambda (Expected Goals)
-        λ_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a .+ δₘᵛ .+ (δₙ .* is_mid ))
-        λ_a = exp.(μ_v .+        α_a .+ β_h .+ δₘᵛ .+ (δₙ .* is_mid ))
+      λ_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a .+ δₘᵛ .+ (δₙ .* is_mid ) .+ (δₚ .* is_plastic) )
+      λ_a = exp.(μ_v .+        α_a .+ β_h .+ δₘᵛ .+ (δₙ .* is_mid ) .+ (δₚ .* is_plastic) )
 
         # Store the distributions needed to build the Negative Binomial PMF
         results[mid] = (;

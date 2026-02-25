@@ -7,8 +7,10 @@ using ...TypesInterfaces
 
 using Turing, Distributions, DataFrames
 using ..MyDistributions 
+using ..Features
 using LinearAlgebra
 using Statistics
+using Dates
 
 
 # 1. Load Common Helpers (The Orchestrator)
@@ -71,6 +73,9 @@ export MSNegativeBinomial
 
 include("./implementations/multi_grw_neg_bin_delta.jl")
 export MSNegativeBinomialDelta
+
+include("./implementations/multi_grw_neg_bin_kappa.jl")
+export MSNegativeBinomialKappa
 
 
 include("./implementations/sequential_funnel.jl")

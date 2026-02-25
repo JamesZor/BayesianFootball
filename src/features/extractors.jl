@@ -116,5 +116,29 @@ function extract_targets!(F_data::Dict, model::AbstractFunnelModel, grouped)
 end
 
 
+# ==============================================================================
+# Single Row Extractors (Used for Prediction / Inference)
+# ==============================================================================
 
+# Fallback error
+function get_feature(feature::Val{T}, row::DataFrameRow, context...) where T
+    error("No row extractor defined for feature $T")
+end
 
+# 1. Month Extractor
+function get_feature(::Val{:month}, row::DataFrameRow)
+    return Dates.month(row.match_date)
+end
+
+# 2. Midweek Extractor
+function get_feature(::Val{:midweek}, row::DataFrameRow)
+    # Reminder: < 5 means Mon-Thu. (1=Mon, 2=Tue, 3=Wed, 4=Thu). 
+    # Change to < 6 if you want Fridays to count as midweek!
+    return Dates.dayofweek(row.match_date) < 6 ? 1 : 0
+end
+
+# 3. Plastic Pitch Extractor
+function get_feature(::Val{:is_plastic}, row::DataFrameRow)
+    # Relies on the PLASTIC_TEAMS constant defined higher up in extractors.jl
+    return row.home_team in PLASTIC_TEAMS ? 1 : 0
+end

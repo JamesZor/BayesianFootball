@@ -35,13 +35,14 @@ cv_config_g = BayesianFootball.Data.GroupedCVConfig(
 model = BayesianFootball.Models.PreGame.MSNegativeBinomial()
 
 splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
-splits_grouped = BayesianFootball.Data.create_data_splits(ds, cv_config_g)
+# splits_grouped = BayesianFootball.Data.create_data_splits(ds, cv_config_g)
 
 feature_sets = BayesianFootball.Features.create_features(
     splits, model, cv_config
 )
 
 
+f1 = feature_sets[1][1]
 
 
 

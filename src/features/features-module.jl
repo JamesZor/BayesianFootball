@@ -14,7 +14,8 @@ using ..TypesInterfaces
 using ..Models: required_mapping_keys
 
 
-export Vocabulary, FeatureSet, create_vocabulary, create_features
+export Vocabulary, FeatureSet, create_vocabulary, create_features, get_feature
+
 
 # --- Constants for required columns ---
 const REQUIRED_MATCH_COLS = [
