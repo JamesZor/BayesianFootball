@@ -38,7 +38,7 @@ splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2)  
 
 sampler_conf = Samplers.NUTSConfig(                                                                                                                                                                                                                                     
-                       100,                                                                                                                                                                                                                                                    
+                       100,
                        16,                                                                                                                                                                                                                                                     
                        100,                                                                                                                                                                                                                                                    
                        0.65,                                                                                                                                                                                                                                                   

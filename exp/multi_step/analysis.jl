@@ -1096,24 +1096,22 @@ function test_scoreline_independence(df::DataFrame)
     
     for (hg, ag) in target_scores
         # 1. ACTUAL (Empirical) Frequency
-        # How often did this scoreline actually happen in the dataset?
         actual_count = sum((df.home_score .== hg) .& (df.away_score .== ag))
         actual_pct = actual_count / n_matches
         
         # 2. EXPECTED (Independent) Frequency
-        # P(Home = hg) * P(Away = ag) averaged across all matches
         expected_probs = zeros(n_matches)
         
         for i in 1:n_matches
-            # Reconstruct the match distributions
-            # Note: Distributions.jl NegativeBinomial takes (r, p)
-            # p = r / (r + λ)
+            # Use your pre-calculated expectations (lambda) and dispersion (r)
             r_home = df.exp_r_h[i]
-            p_home = r_home / (r_home + mean.(df.λ_h[i]))
+            lambda_h = df.exp_home[i]
+            p_home = r_home / (r_home + lambda_h)
             dist_home = NegativeBinomial(r_home, p_home)
             
             r_away = df.exp_r_a[i]
-            p_away = r_away / (r_away + mean.(df.λ_a[i]))
+            lambda_a = df.exp_away[i]
+            p_away = r_away / (r_away + lambda_a)
             dist_away = NegativeBinomial(r_away, p_away)
             
             # P(A ∩ B) = P(A) * P(B)
@@ -1134,6 +1132,9 @@ function test_scoreline_independence(df::DataFrame)
     end
     println("==================================================")
 end
+
+# Run the test
+test_scoreline_independence(joined2)
 
 #=
 julia> names(joined2)
