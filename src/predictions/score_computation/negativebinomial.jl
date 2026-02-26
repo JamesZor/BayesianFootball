@@ -12,15 +12,15 @@ function extract_params(model::Models.PreGame.AbstractNegBinModel, row)
         return (
             λ_h = row.λ_h, # Vector of Home Means (Rates)
             λ_a = row.λ_a, # Vector of Away Means (Rates)
-            rₕ  = row.r,
-            rₐ  = row.r 
+            r_h  = row.r,
+            r_a  = row.r 
         )
     elseif hasproperty(row, :r_h)
         return (
             λ_h = row.λ_h, # Vector of Home Means (Rates)
             λ_a = row.λ_a, # Vector of Away Means (Rates)
-            rₕ  = row.r_h,
-            rₐ  = row.r_a 
+            r_h  = row.r_h,
+            r_a  = row.r_a 
         )
     else
         throw(ArgumentError("Row does not contain expected shape parameters (:r or :rₕ)"))
