@@ -767,8 +767,8 @@ end
 # 2. Append CRPS to the DataFrames
 function append_crps!(df)
     # Calculate CRPS for Home and Away
-    df.crps_home = compute_crps.(df.home_score, df.exp_home, df.exp_r)
-    df.crps_away = compute_crps.(df.away_score, df.exp_away, df.exp_r)
+    df.crps_home = compute_crps.(df.home_score, df.exp_home, df.exp_r_h)
+    df.crps_away = compute_crps.(df.away_score, df.exp_away, df.exp_r_a)
     
     # Total match CRPS (Average of Home and Away)
     df.crps_match = (df.crps_home .+ df.crps_away) ./ 2.0
@@ -813,6 +813,18 @@ compare_crps(joined, joined2)
 
 
 #=
+
+julia> compare_crps(joined, joined2)
+==================================================
+ CRPS MODEL COMPARISON (Lower is Better)
+==================================================
+Model           | Home CRPS    | Away CRPS    | Match CRPS  
+--------------------------------------------------
+A (Baseline)    |      0.66616 |      0.63585 |      0.65101
+B (Delta)       |      0.66670 |      0.63567 |      0.65119
+--------------------------------------------------
+Conclusion: Model A is more accurate by 0.028%
+==================================================
 
 julia> # --- Execution ---
        compare_crps(joined, joined2)
@@ -1061,3 +1073,103 @@ plotlyjs()
 alpha_plot = plot_realized_alpha(df_model_a, df_model_b);
 Plots.savefig(alpha_plot, "figures/realized_alpha_comparison.html")
 display(alpha_plot)
+
+
+
+#####
+
+using DataFrames
+using Distributions
+using Statistics
+
+function test_scoreline_independence(df::DataFrame)
+    n_matches = nrow(df)
+    
+    # The specific low-scoring matrices Dixon-Coles targets
+    target_scores = [(0,0), (1,0), (0,1), (1,1)]
+    
+    println("==================================================")
+    println(" EMPIRICAL VS INDEPENDENT EXPECTATION TEST")
+    println("==================================================")
+    println("Score | Actual %   | Expected % | Difference (Bias)")
+    println("--------------------------------------------------")
+    
+    for (hg, ag) in target_scores
+        # 1. ACTUAL (Empirical) Frequency
+        # How often did this scoreline actually happen in the dataset?
+        actual_count = sum((df.home_score .== hg) .& (df.away_score .== ag))
+        actual_pct = actual_count / n_matches
+        
+        # 2. EXPECTED (Independent) Frequency
+        # P(Home = hg) * P(Away = ag) averaged across all matches
+        expected_probs = zeros(n_matches)
+        
+        for i in 1:n_matches
+            # Reconstruct the match distributions
+            # Note: Distributions.jl NegativeBinomial takes (r, p)
+            # p = r / (r + λ)
+            r_home = df.exp_r_h[i]
+            p_home = r_home / (r_home + mean.(df.λ_h[i]))
+            dist_home = NegativeBinomial(r_home, p_home)
+            
+            r_away = df.exp_r_a[i]
+            p_away = r_away / (r_away + mean.(df.λ_a[i]))
+            dist_away = NegativeBinomial(r_away, p_away)
+            
+            # P(A ∩ B) = P(A) * P(B)
+            p_indep = pdf(dist_home, hg) * pdf(dist_away, ag)
+            expected_probs[i] = p_indep
+        end
+        
+        expected_pct = mean(expected_probs)
+        diff_pct = actual_pct - expected_pct
+        
+        # Formatting for clean output
+        score_str = "$hg-$ag  "
+        act_str = rpad(round(actual_pct * 100, digits=2), 5) * "%"
+        exp_str = rpad(round(expected_pct * 100, digits=2), 5) * "%"
+        diff_str = (diff_pct > 0 ? "+" : "") * "$(round(diff_pct * 100, digits=2))%"
+        
+        println("$score_str | $act_str     | $exp_str     | $diff_str")
+    end
+    println("==================================================")
+end
+
+#=
+julia> names(joined2)
+29-element Vector{String}:
+ "match_id"
+ "λ_h"
+ "λ_a"
+ "r_h"
+ "r_a"
+ "match_month"
+ "match_date"
+ "home_score"
+ "away_score"
+ "tournament_id"
+ "season"
+ "home_team"
+ "away_team"
+ "exp_home"
+ "exp_away"
+ "exp_all"
+ "res_home"
+ "res_away"
+ "res_all"
+ "cum_res_home"
+ "cum_res_away"
+ "cum_res_all"
+ "exp_r_h"
+ "exp_r_a"
+ "rqr_home"
+ "rqr_away"
+ "crps_home"
+ "crps_away"
+ "crps_match"
+
+
+=#
+
+# Run the test on your out-of-sample data
+test_scoreline_independence(joined2)

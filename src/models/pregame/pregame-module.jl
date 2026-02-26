@@ -81,6 +81,9 @@ export MSNegativeBinomialKappa
 include("./implementations/multi_grw_neg_bin_r_all.jl")
 export MSNegativeBinomialRho
 
+include("./implementations/multi_grw_neg_bin_gamma.jl")
+export MSNegativeBinomialGamma
+
 
 include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
