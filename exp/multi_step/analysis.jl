@@ -40,7 +40,7 @@ end
 
 
 
-exp_res = loaded_results[2]
+exp_res = loaded_results[3]
 exp_res2 = loaded_results[1]
 
 
@@ -59,7 +59,7 @@ joined = innerjoin(
 
 
 joined2 = innerjoin(
-    select(latents_raw2.df, :match_id, :λ_h, :λ_a, :r),
+    select(latents_raw2.df, :match_id, :λ_h, :λ_a, :r_h, :r_a),
     select(ds.matches, :match_id,:match_month, :match_date, :home_score, :away_score, :tournament_id, :season, :home_team, :away_team),
     on = :match_id
 )

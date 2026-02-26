@@ -15,12 +15,12 @@ function extract_params(model::Models.PreGame.AbstractNegBinModel, row)
             rₕ  = row.r,
             rₐ  = row.r 
         )
-    elseif hasproperty(row, :rₕ)
+    elseif hasproperty(row, :r_h)
         return (
             λ_h = row.λ_h, # Vector of Home Means (Rates)
             λ_a = row.λ_a, # Vector of Away Means (Rates)
-            rₕ  = row.rₕ,
-            rₐ  = row.rₐ 
+            rₕ  = row.r_h,
+            rₐ  = row.r_a 
         )
     else
         throw(ArgumentError("Row does not contain expected shape parameters (:r or :rₕ)"))
@@ -34,7 +34,7 @@ function compute_score_matrix(
 )
     # 1. Unpack Params
     λ_h, λ_a = params.λ_h, params.λ_a
-    rₕ, rₐ = params.rₕ, params.rₐ
+    r_h, r_a = params.r_h, params.r_a
     n_samples = length(λ_h)
 
     # 2. Create the Evaluation Grid (Vector of Vectors)
@@ -47,7 +47,7 @@ function compute_score_matrix(
 
     # 3. Compute
     @inbounds for k in 1:n_samples # Instantiate the distribution for this sample
-        dist = DoubleNegativeBinomial(λ_h[k], λ_a[k], rₕ[k], rₐ[k])
+        dist = DoubleNegativeBinomial(λ_h[k], λ_a[k], r_h[k], r_a[k])
 
         # Vectorized PDF Evaluation
         # We broadcast the pdf function over the entire grid of outcomes at once.
