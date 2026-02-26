@@ -504,7 +504,7 @@ Shapiro-Wilk W: Away = 0.9969 (p=0.023)
 
 
 #-----------------------------
-# small model 
+# small data set - one season 
 #  ------------------------
 
 julia> print_rqr_diagnostics(joined, "Model A (Baseline)")
@@ -580,7 +580,7 @@ julia> monthly_delta = aggregate_monthly_rqr(joined2, :match_month)
 
 
 # - ----------------
-# smaller data set 
+# smaller data set - one season 
 # --------------------
 julia> monthly_base = aggregate_monthly_rqr(joined, :match_month)
 9×8 DataFrame

@@ -16,6 +16,7 @@ using Dates
 # 1. Load Common Helpers (The Orchestrator)
 include("common.jl")
 include("./grw_helpers.jl")
+include("./hierarchical_helpers.jl")
 
 # 2. Load Models (The Workers)
 # Since these files are included, their 'extract_parameters' overloads 
