@@ -22,6 +22,48 @@ cv_config = BayesianFootball.Data.GroupedCVConfig(
 )
 
 
+
+# -------------------------------------
+#  MS Gamma
+# -------------------------------------
+model = BayesianFootball.Models.PreGame.MSNegativeBinomialGamma()
+
+splits = BayesianFootball.Data.create_data_splits(ds, cv_config)
+
+feature_sets = BayesianFootball.Features.create_features(
+    splits, model, cv_config
+)
+
+splits = BayesianFootball.Data.create_data_splits(ds, cv_config) 
+train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=2)  
+
+sampler_conf = Samplers.NUTSConfig(                                                                                                                                                                                                                                     
+                       100,                                                                                                                                                                                                                                                    
+                       16,                                                                                                                                                                                                                                                     
+                       100,                                                                                                                                                                                                                                                    
+                       0.65,                                                                                                                                                                                                                                                   
+                       10,                                                                                                                                                                                                                                                     
+         Samplers.UniformInit(-1, 1),                                                                                                                                                                                                                                      
+                       :perchain,                                                                                                                                                                                                                                              
+       )
+
+training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false) 
+
+conf_basic = Experiments.ExperimentConfig(                                                                                                                                                                                                                              
+                           name = "multi_basic_test",                                                                                                                                                                                                                          
+                           model = model,                                                                                                                                                                                                                                      
+                           splitter = cv_config,                                                                                                                                                                                                                               
+                           training_config = training_config,                                                                                                                                                                                                                  
+                           save_dir ="./data/junk"                                                                                                                                                                                                                             
+       )  
+
+results_basic = Experiments.run_experiment(ds, conf_basic)    
+
+c = results_basic.training_results[1][1]  
+describe(c)
+
+
+
 # -------------------------------------
 #  MS Rho
 # -------------------------------------
