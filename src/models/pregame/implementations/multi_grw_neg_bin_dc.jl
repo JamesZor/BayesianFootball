@@ -180,8 +180,8 @@ function build_turing_model(model::MSNegativeBinomialDC, feature_set::FeatureSet
         end
     end
 
-    scores_else_x = flat_home[idx_else]
-    scores_else_y = flat_away[idx_else]
+    scores_else_x = flat_home[idx_other]
+    scores_else_y = flat_away[idx_other]
 
     return multi_grw_neg_bin_model_train(
         data[:n_teams]::Int, data[:n_rounds]::Int, data[:n_history_steps]::Int,
