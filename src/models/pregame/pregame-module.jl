@@ -85,6 +85,11 @@ include("./implementations/multi_grw_neg_bin_gamma.jl")
 export MSNegativeBinomialGamma
 
 
+include("./implementations/multi_grw_neg_bin_dc.jl")
+export MSNegativeBinomialDC
+
+
+
 include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
 

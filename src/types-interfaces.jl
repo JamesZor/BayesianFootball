@@ -72,6 +72,7 @@ export AbstractMultiScaledNegBinModel
 
 abstract type AbstractDixonColesNegBinModel <: AbstractPregameModel end
 abstract type AbstractDynamicDixonColesNegBinModel <: AbstractNegBinModel end 
+
 export AbstractDixonColesNegBinModel, AbstractDynamicDixonColesNegBinModel
 # --- Flexible Feature Structs ---
 #
