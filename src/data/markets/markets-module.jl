@@ -14,6 +14,7 @@ export
     Market1X2, 
     MarketOverUnder, 
     MarketBTTS, 
+    MarketDC,
     MarketConfig, 
     MarketData,
 
@@ -38,6 +39,7 @@ include("utils.jl")
 include("implementations/1x2.jl")
 include("implementations/over_under.jl")
 include("implementations/btts.jl")
+include("./implementations/double_chance.jl")
 
 # 4. The Processing Engine (ETL)
 include("processing.jl")
@@ -52,10 +54,14 @@ Returns a default MarketConfig containing the most common markets:
 - BTTS (Both Teams To Score)
 """
 function get_standard_market_config()
-    return MarketConfig( reduce(vcat, ( [Market1X2(), MarketBTTS()], [MarketOverUnder( (i +0.5) ) for i in 0:10 ] ) ))
+  return MarketConfig( reduce(vcat, ( [Market1X2(), MarketBTTS()], [MarketOverUnder( (i +0.5) ) for i in 0:10 ] ) ))
 end
 
 
+# function get_standard_market_config()
+#   return MarketConfig( reduce(vcat, ( [Market1X2(), MarketBTTS(), MarketDC()], [MarketOverUnder( (i +0.5) ) for i in 0:10 ] ) ))
+# end
+#
 const DEFAULT_MARKET_CONFIG = get_standard_market_config()
 
 end

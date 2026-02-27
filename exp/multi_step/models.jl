@@ -33,7 +33,7 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        400,     # n_samples
+        300,     # n_samples
         2,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -99,13 +99,52 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             #  2.---- Rho Pooled Model (Months, Teams, Dispersion) ----
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # Experiments.ExperimentConfig(
+            #     name = "rho_pooled_multi",
+            #     model = Models.PreGame.MSNegativeBinomialRho(
+            #         # --- Globals ---
+            #         μ = Normal(0.20, 0.2),
+            #         γ = Normal(0.12, 0.5),
+            #         log_r = Normal(2.5, 0.5),
+            #
+            #         # --- Boundary-Avoiding Priors: GRW Latent States ---
+            #         σ₀ = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
+            #         σₛ = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
+            #         σₖ = Gamma(2, 0.015),  # Mean = 0.03 (Micro monthly jump)
+            #
+            #         # --- Boundary-Avoiding Priors: Partial Pooling ---
+            #         # Team dispersion varies a bit (e.g., chaotic Leeds vs rigid Burnley)
+            #         σ_r_team  = Gamma(2, 0.10),   # Mean = 0.20 
+            #
+            #         # Month dispersion is likely much tighter
+            #         σ_r_month = Gamma(2, 0.05),   # Mean = 0.10
+            #
+            #         # Month expected goal effect (λ modifier). In your summary, 
+            #         # these hovered between -0.08 and +0.12, so a mean σ of 0.1 is perfect.
+            #         σ_δₘ      = Gamma(2, 0.05),   # Mean = 0.10 
+            #
+            #         # --- Fixed Effects ---
+            #         δₙ = Normal(0, 0.1), # Midweek
+            #         δₚ = Normal(0, 0.1)  # Plastic pitch
+            #     ),
+            #     splitter = cv_config,
+            #     training_config = training_config,
+            #     save_dir = save_dir
+            # ),
+            # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            #  3.---- Gamma Pooled Model (Team HA, Months, Dispersion) ----
+            # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             Experiments.ExperimentConfig(
-                name = "rho_pooled_multi",
-                model = Models.PreGame.MSNegativeBinomialRho(
+                name = "gamma_ha_pooled_multi",
+                model = Models.PreGame.MSNegativeBinomialGamma(
                     # --- Globals ---
                     μ = Normal(0.20, 0.2),
-                    γ = Normal(0.12, 0.5),
-                    log_r = Normal(2.5, 0.5),
+                    γ = Normal(0.12, 0.5),      # Global Home Advantage
+                    log_r = Normal(2.5, 0.5),   # Global Dispersion
+
+                    # --- NEW: Team-Specific Home Advantage ---
+                    # Gamma(2, 0.04) -> Mean = 0.08. 
+                    σ_γ_team = Gamma(2, 0.04),  
 
                     # --- Boundary-Avoiding Priors: GRW Latent States ---
                     σ₀ = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
@@ -113,14 +152,8 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
                     σₖ = Gamma(2, 0.015),  # Mean = 0.03 (Micro monthly jump)
 
                     # --- Boundary-Avoiding Priors: Partial Pooling ---
-                    # Team dispersion varies a bit (e.g., chaotic Leeds vs rigid Burnley)
                     σ_r_team  = Gamma(2, 0.10),   # Mean = 0.20 
-                    
-                    # Month dispersion is likely much tighter
                     σ_r_month = Gamma(2, 0.05),   # Mean = 0.10
-                    
-                    # Month expected goal effect (λ modifier). In your summary, 
-                    # these hovered between -0.08 and +0.12, so a mean σ of 0.1 is perfect.
                     σ_δₘ      = Gamma(2, 0.05),   # Mean = 0.10 
 
                     # --- Fixed Effects ---
@@ -131,10 +164,6 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
                 training_config = training_config,
                 save_dir = save_dir
             ),
-
-
-
-
           ]
 
         return ds, configs

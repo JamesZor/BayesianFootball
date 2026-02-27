@@ -23,5 +23,8 @@ export DoubleNegativeBinomial
 include("./negative_binomial.jl")
 export RobustNegativeBinomial
 
+include("./dixon_coles_negbin.jl")
+export DixonColesNegBinLogGroup
+
 
 end

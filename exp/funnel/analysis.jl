@@ -48,12 +48,12 @@ my_signals = [baker]
 my_signals = [as]
 my_signals = [baker, as, kelly, kelly25, flat_strat]
 
-my_signals = [flat_strat]
+my_signals = [baker,flat_strat]
 
 # Run backtest on ALL loaded models at once
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
-  loaded_results[[1,2]], 
+  loaded_results[[1,4]], 
     my_signals; 
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
@@ -174,7 +174,11 @@ ledger_no_2425 = DataFrames.subset(ledger.df, :match_id => ByRow(in(ids_no_2425)
 ids_2526 = subset(ds.matches, :season => ByRow(isequal("25/26"))).match_id
 ledger_2526 =subset(ledger.df, :match_id => ByRow(in(ids_2526)))
 
+ids_2425 = subset(ds.matches, :season => ByRow(isequal("24/25"))).match_id
+ledger_2425 =subset(ledger.df, :match_id => ByRow(in(ids_2425)))
+
 strategy_rankings = rank_strategies(ledger_no_2425)
+strategy_rankings = rank_strategies(ledger_2425)
 sort(strategy_rankings, :Growth_Rate, rev=true)
 
 model_names = unique(strategy_rankings.selection)

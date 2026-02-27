@@ -40,7 +40,7 @@ end
 
 
 
-exp_res = loaded_results[3]
+exp_res = loaded_results[4]
 exp_res2 = loaded_results[1]
 
 
@@ -708,7 +708,7 @@ julia> monthly_delta = aggregate_monthly_rqr(joined2, :match_month)
 
 
 =#
-
+plotlyjs()
 # 4. Generate and Save Comparison Plot
 comparison_plot = plot_model_comparison(monthly_base, monthly_delta);
 Plots.savefig(comparison_plot, "figures_all/rqr_model_comparison.html")
@@ -980,6 +980,7 @@ function plot_realized_alpha(df_base, df_delta)
 end
 
 
+market_data = Data.prepare_market_data(ds)
 
 # 1. Prepare DataFrames for both models
 # (I am assuming market_data is the loaded struct, so passing market_data.df)
@@ -1071,8 +1072,7 @@ plotlyjs()
 
 # 4. Generate the Alpha Plot
 alpha_plot = plot_realized_alpha(df_model_a, df_model_b);
-Plots.savefig(alpha_plot, "figures/realized_alpha_comparison.html")
-display(alpha_plot)
+Plots.savefig(alpha_plot, "figures_all/realized_alpha_comparison.html")
 
 
 
@@ -1135,6 +1135,7 @@ end
 
 # Run the test
 test_scoreline_independence(joined2)
+test_scoreline_independence(joined)
 
 #=
 julia> names(joined2)

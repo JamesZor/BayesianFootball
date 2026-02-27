@@ -14,6 +14,11 @@ function required_features(model::AbstractMultiScaledNegBinModel)
     return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
 end
 
+
+function required_features(model::AbstractDynamicDixonColesNegBinModel)
+    return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
+end
+
 # ==============================================================================
 # 2. Model-Specific Preprocessing Hooks
 # ==============================================================================
@@ -31,7 +36,8 @@ const TimeSortedModels = Union{
     AbstractDynamicNegBinModel,
     AbstractDynamicBivariatePoissonModel,
     AbstractFunnelModel,
-    AbstractMultiScaledNegBinModel
+    AbstractMultiScaledNegBinModel,
+    AbstractDynamicDixonColesNegBinModel
 }
 
 # 3. Define the sorting logic exactly ONCE for all of them!
