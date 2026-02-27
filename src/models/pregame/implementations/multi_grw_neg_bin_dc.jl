@@ -57,6 +57,7 @@ end
           months_flat, is_midweek_flat, is_plastic_flat, time_indices, 
           # Dixon-Coles Grouping Indices
           idx_00, idx_10, idx_01, idx_11, idx_other,
+          scores_else_x, scores_else_y,
           model::MSNegativeBinomialDC,
           ::Type{T} = Float64 ) where {T} 
 
@@ -119,30 +120,28 @@ end
     λₕ = exp.(μ .+ γ_global .+ γ_team_v .+ αₕ .- βₐ .+ δₘᵛ .+ (δₙ .* is_midweek_flat) .+ (δₚ .* is_plastic_flat))
     λₐ = exp.(μ .+                         αₐ .- βₕ .+ δₘᵛ .+ (δₙ .* is_midweek_flat) .+ (δₚ .* is_plastic_flat))
 
-
     # --- Dixon-Coles Copula ---
     
     # 1. The Correlated Matches (Dixon-Coles Adjustment)
+    # Using Turing.@addlogprob! here is safer and faster than `0 ~` for custom structs
     if !isempty(idx_00)
-        0 ~ DixonColesNegBinLogGroup(λₕ[idx_00], λₐ[idx_00], rₕ[idx_00], rₐ[idx_00], ρ, :s00)
+        Turing.@addlogprob! logpdf(DixonColesNegBinLogGroup(λₕ[idx_00], λₐ[idx_00], rₕ[idx_00], rₐ[idx_00], ρ, :s00), 0.0)
     end
     if !isempty(idx_10)
-        0 ~ DixonColesNegBinLogGroup(λₕ[idx_10], λₐ[idx_10], rₕ[idx_10], rₐ[idx_10], ρ, :s10)
+        Turing.@addlogprob! logpdf(DixonColesNegBinLogGroup(λₕ[idx_10], λₐ[idx_10], rₕ[idx_10], rₐ[idx_10], ρ, :s10), 0.0)
     end
     if !isempty(idx_01)
-        0 ~ DixonColesNegBinLogGroup(λₕ[idx_01], λₐ[idx_01], rₕ[idx_01], rₐ[idx_01], ρ, :s01)
+        Turing.@addlogprob! logpdf(DixonColesNegBinLogGroup(λₕ[idx_01], λₐ[idx_01], rₕ[idx_01], rₐ[idx_01], ρ, :s01), 0.0)
     end
     if !isempty(idx_11)
-        0 ~ DixonColesNegBinLogGroup(λₕ[idx_11], λₐ[idx_11], rₕ[idx_11], rₐ[idx_11], ρ, :s11)
+        Turing.@addlogprob! logpdf(DixonColesNegBinLogGroup(λₕ[idx_11], λₐ[idx_11], rₕ[idx_11], rₐ[idx_11], ρ, :s11), 0.0)
     end
 
     # 2. All "Other" Matches (Standard Independent Negative Binomial)
+    # Put the argument array directly on the LHS so Turing knows it is data
     if !isempty(idx_other)
-        home_other = view(home_goals_flat, idx_other)
-        away_other = view(away_goals_flat, idx_other)
-        
-        home_other ~ arraydist(RobustNegativeBinomial.(rₕ[idx_other], λₕ[idx_other]))
-        away_other ~ arraydist(RobustNegativeBinomial.(rₐ[idx_other], λₐ[idx_other]))
+        home_goals_flat[idx_other] ~ arraydist(RobustNegativeBinomial.(rₕ[idx_other], λₕ[idx_other]))
+        away_goals_flat[idx_other] ~ arraydist(RobustNegativeBinomial.(rₐ[idx_other], λₐ[idx_other]))
     end
 
 
@@ -181,6 +180,8 @@ function build_turing_model(model::MSNegativeBinomialDC, feature_set::FeatureSet
         end
     end
 
+    scores_else_x = flat_home[idx_else]
+    scores_else_y = flat_away[idx_else]
 
     return multi_grw_neg_bin_model_train(
         data[:n_teams]::Int, data[:n_rounds]::Int, data[:n_history_steps]::Int,
@@ -190,6 +191,7 @@ function build_turing_model(model::MSNegativeBinomialDC, feature_set::FeatureSet
         data[:flat_is_plastic], 
         data[:time_indices],
         idx_00, idx_10, idx_01, idx_11, idx_other,
+        scores_else_x, scores_else_y,
         model,
     )
 end
