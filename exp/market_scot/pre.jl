@@ -22,7 +22,7 @@ ds = BayesianFootball.Data.DataStore(
 
 df =subset(ds.matches, :tournament_id => ByRow(isequal(56)), :season => ByRow(isequal("25/26")))
 
-
+unique(df.match_month)
 
 df
 

@@ -134,22 +134,56 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             #  3.---- Gamma Pooled Model (Team HA, Months, Dispersion) ----
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # Experiments.ExperimentConfig(
+            #     name = "gamma_ha_pooled_multi",
+            #     model = Models.PreGame.MSNegativeBinomialGamma(
+            #         # --- Globals ---
+            #         μ = Normal(0.20, 0.2),
+            #         γ = Normal(0.12, 0.5),      # Global Home Advantage
+            #         log_r = Normal(2.5, 0.5),   # Global Dispersion
+            #
+            #         # --- NEW: Team-Specific Home Advantage ---
+            #         # Gamma(2, 0.04) -> Mean = 0.08. 
+            #         σ_γ_team = Gamma(2, 0.04),  
+            #
+            #         # --- Boundary-Avoiding Priors: GRW Latent States ---
+            #         σ₀ = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
+            #         σₛ = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
+            #         σₖ = Gamma(2, 0.015),  # Mean = 0.03 (Micro monthly jump)
+            #
+            #         # --- Boundary-Avoiding Priors: Partial Pooling ---
+            #         σ_r_team  = Gamma(2, 0.10),   # Mean = 0.20 
+            #         σ_r_month = Gamma(2, 0.05),   # Mean = 0.10
+            #         σ_δₘ      = Gamma(2, 0.05),   # Mean = 0.10 
+            #
+            #         # --- Fixed Effects ---
+            #         δₙ = Normal(0, 0.1), # Midweek
+            #         δₚ = Normal(0, 0.1)  # Plastic pitch
+            #     ),
+            #     splitter = cv_config,
+            #     training_config = training_config,
+            #     save_dir = save_dir
+            # ),
+            #
+            # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            #  4.---- Dixon-Coles Copula Model  ----
+            # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             Experiments.ExperimentConfig(
-                name = "gamma_ha_pooled_multi",
-                model = Models.PreGame.MSNegativeBinomialGamma(
+                name = "dixon_coles_negbin_multi",
+                model = Models.PreGame.MSNegativeBinomialDC(
                     # --- Globals ---
                     μ = Normal(0.20, 0.2),
+                    ρ_raw = Normal(0, 1.0),     # <--- NEW: Copula Correlation parameter
                     γ = Normal(0.12, 0.5),      # Global Home Advantage
                     log_r = Normal(2.5, 0.5),   # Global Dispersion
 
-                    # --- NEW: Team-Specific Home Advantage ---
-                    # Gamma(2, 0.04) -> Mean = 0.08. 
+                    # --- Team-Specific Home Advantage ---
                     σ_γ_team = Gamma(2, 0.04),  
 
                     # --- Boundary-Avoiding Priors: GRW Latent States ---
-                    σ₀ = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
-                    σₛ = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
-                    σₖ = Gamma(2, 0.015),  # Mean = 0.03 (Micro monthly jump)
+                    σ₀ = Gamma(2, 0.15),   # Mean = 0.30 
+                    σₛ = Gamma(2, 0.04),   # Mean = 0.08 
+                    σₖ = Gamma(2, 0.015),  # Mean = 0.03 
 
                     # --- Boundary-Avoiding Priors: Partial Pooling ---
                     σ_r_team  = Gamma(2, 0.10),   # Mean = 0.20 
@@ -161,11 +195,18 @@ function get_basics_configs(; save_dir="./data/exp/multi_step")
                     δₚ = Normal(0, 0.1)  # Plastic pitch
                 ),
                 splitter = cv_config,
-                training_config = training_config,
+                
+                # CRITICAL: Make sure your `training_config` here is the one 
+                # where we set Samplers.UniformInit(0.01, 0.1) earlier!
+                training_config = training_config, 
                 save_dir = save_dir
-            ),
+            ), 
+
           ]
 
         return ds, configs
+
+
+
 end
 

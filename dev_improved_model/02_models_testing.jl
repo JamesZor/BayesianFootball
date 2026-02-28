@@ -108,6 +108,9 @@ results_basic = Experiments.run_experiment(ds, conf_basic)
 c = results_basic.training_results[1][1]  
 describe(c)
 
+latents = BayesianFootball.Experiments.extract_oos_predictions(ds, results_basic)
+
+ppd = BayesianFootball.Predictions.model_inference(latents)
 
 
 # -------------------------------------
