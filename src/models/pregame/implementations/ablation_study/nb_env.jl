@@ -1,7 +1,7 @@
 # src/models/pregame/implementations/ablation_study/nb_env.jl
 
 #=
-Captures a midweek, month and 3g/plastic effect,  based on the multi grw negative binomial
+Captures a midweek and 3g/plastic effect, based on the multi grw negative binomial.
 =#
 
 
@@ -22,8 +22,8 @@ Base.@kwdef struct AblationStudy_NB_env <: AbstractMultiScaledNegBinModel
     δₙ::Distribution = Normal(0, 0.1)  # \n week
     δₚ::Distribution = Normal(0, 0.1)  # \p plastic
 
-    σ₀::Distribution = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
-    σₛ::Distribution = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
+    σ₀::Distribution = Gamma(2, 0.15)   # Mean = 0.30 (Initial spread of teams)
+    σₛ::Distribution = Gamma(2, 0.04)   # Mean = 0.08 (Macro season jump)
     σₖ::Distribution = Gamma(2, 0.015)   # Mean = 0.03 (Micro monthly jump)
 
     z₀::Distribution = Normal(0,1)

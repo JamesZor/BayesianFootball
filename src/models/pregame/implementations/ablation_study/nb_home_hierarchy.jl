@@ -15,9 +15,6 @@ Base.@kwdef struct AblationStudy_NB_home_hierarchy <: AbstractMultiScaledNegBinM
     # --- Global Baseline (Intercept) ---
     # Represents the average log-goal rate for an away team.
     μ::Distribution = Normal(0.2, 0.2)
-
-    # Standard priors for team strength
-    γ::Distribution   = Normal(0.12, 0.5)
     
     # Dispersion parameter (Negative Binomial)
     log_r::Distribution = Normal(2.5, 0.5)
@@ -28,8 +25,8 @@ Base.@kwdef struct AblationStudy_NB_home_hierarchy <: AbstractMultiScaledNegBinM
     z_γ_team::Distribution = Normal(0, 1)
     
     # --- Time Dynamics ----
-    σ₀::Distribution = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
-    σₛ::Distribution = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
+    σ₀::Distribution = Gamma(2, 0.15)   # Mean = 0.30 (Initial spread of teams)
+    σₛ::Distribution = Gamma(2, 0.04)   # Mean = 0.08 (Macro season jump)
     σₖ::Distribution = Gamma(2, 0.015)   # Mean = 0.03 (Micro monthly jump)
 
     z₀::Distribution = Normal(0,1)

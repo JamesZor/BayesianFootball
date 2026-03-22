@@ -24,8 +24,8 @@ Base.@kwdef struct AblationStudy_NB_baseLine <: AbstractMultiScaledNegBinModel
     # Dispersion parameter (Negative Binomial)
     log_r::Distribution = Normal(2.5, 0.5)
 
-    σ₀::Distribution = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
-    σₛ::Distribution = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
+    σ₀::Distribution = Gamma(2, 0.15)   # Mean = 0.30 (Initial spread of teams)
+    σₛ::Distribution = Gamma(2, 0.04)   # Mean = 0.08 (Macro season jump)
     σₖ::Distribution = Gamma(2, 0.015)   # Mean = 0.03 (Micro monthly jump)
 
     z₀::Distribution = Normal(0,1)
