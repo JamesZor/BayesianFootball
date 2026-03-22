@@ -19,26 +19,26 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
         target_seasons = ["25/26"],
         history_seasons = 3,
         dynamics_col = :match_month,
-        warmup_period = 8,
+        warmup_period = 7,
         stop_early = true
     )
 
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        500,     # n_samples
-        6,      # n_chains
-        200,     # n_warmup
+        100,     # n_samples
+        16,      # n_chains
+        100,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
         Samplers.UniformInit(-1, 1),
-        false   # show_progress (We use the Global Logger instead)
+        :perchain   # show_progress (We use the Global Logger instead)
     )
 
 
 
 
-    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
+    train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=1)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
 

@@ -32,7 +32,7 @@ function run_all()
             results = Experiments.run_experiment(ds, conf)
             
             # Re-enable logging to confirm save
-            disable_logging(Logging.Debug) 
+            # disable_logging(Logging.Debug) 
             
             # SAVE (Important!)
             Experiments.save_experiment(results)

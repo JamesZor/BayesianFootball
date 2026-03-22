@@ -28,6 +28,7 @@ for folder in saved_folders
     end
 end
 
+m1 = loaded_results[1]
 
 m2 = loaded_results[1]
 m1 = loaded_results[2]
@@ -446,6 +447,8 @@ df_odds = fetch_odds(matches)
 
 using DataFrames, Dates, JSON3, CSV
 
+
+
 # --- 1. CONFIGURATION: League Definitions ---
 # We use Sets for O(1) fast lookups
 const TEAM_NAMES_L1 = Set([
@@ -831,11 +834,11 @@ end
 
 matches_to_predict = get_matches_to_predict(odds_df)
 
-
+matches_to_predict.match_date .= today()
 
 raw_preds1 = BayesianFootball.Models.PreGame.extract_parameters(
     m1.config.model, 
-    subset(matches_to_predict, :league => ByRow(isequal(:l1))),
+    matches_to_predict,
     fset_m1, 
     chain_m1
 )
@@ -973,7 +976,7 @@ match_names = unique(odds_df[:, [:match_id, :event_name]])
 final_df = leftjoin(final_df, match_names, on=:match_id)
 
 # 3. Now this display command will work
-display(final_df[:, [:match_id, :event_name, :selection, :odds, :model_odds, :stake, :edge_calc]])
+aa = display(final_df[:, [:match_id, :event_name, :selection, :odds, :model_odds, :stake, :edge_calc]])
 
 
 
@@ -1121,7 +1124,7 @@ final_df = process_betting_pipeline(
 bets = final_df[:, [:match_id, :event_name, :selection, :odds, :model_odds, :edge_calc, :stake]]
 display(filter(r -> r.stake > 0, bets))
 
-bbb = [:over_05, :over_15, :over_25, :under_55]
+bbb = [:over_05, :over_15, :over_25, :under_55, :draw, :home]
 
 subset(bets, :selection => ByRow(in(bbb)), :stake => ByRow( >(0)))
 
