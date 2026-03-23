@@ -93,6 +93,15 @@ export MSNegativeBinomialDC
 include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
 
+
+include("./implementations/ablation_study/nb_baseline.jl")
+include("./implementations/ablation_study/nb_env.jl")
+include("./implementations/ablation_study/nb_bloated.jl")
+include("./implementations/ablation_study/nb_r_month.jl")
+include("./implementations/ablation_study/nb_mu_month.jl")
+include("./implementations/ablation_study/nb_home_hierarchy.jl")
+include("./implementations/ablation_study/nb_team_dispersion.jl")
+
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters

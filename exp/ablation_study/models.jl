@@ -23,7 +23,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
         target_seasons = ["22/23"],
         history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 0,
+        warmup_period = 5,
         stop_early = true
     )
 
