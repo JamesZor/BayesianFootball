@@ -14,11 +14,31 @@ using ..Experiments: ExperimentConfig, ExperimentResults
 export run_experiment, save_experiment, load_experiment, list_experiments
 
 # ==============================================================================
+# 0. TIME FORMATTING HELPER
+# ==============================================================================
+function _format_time(seconds::Float64)
+    if seconds < 60
+        return "$(round(seconds, digits=1))s"
+    elseif seconds < 3600
+        mins = floor(Int, seconds / 60)
+        secs = round(Int, seconds % 60)
+        return "$(mins)m $(secs)s"
+    else
+        hrs = floor(Int, seconds / 3600)
+        mins = floor(Int, (seconds % 3600) / 60)
+        return "$(hrs)h $(mins)m"
+    end
+end
+
+# ==============================================================================
 # 1. EXPERIMENT ORCHESTRATION
 # ==============================================================================
 
 function run_experiment(data_store, config::ExperimentConfig)
     _log_header(config.name)
+    
+    # START TIMER
+    start_time = time()
 
     # 1. Vocabulary (Lightweight)
     # vocabulary = Features.create_vocabulary(data_store, config.model)
@@ -44,7 +64,15 @@ function run_experiment(data_store, config::ExperimentConfig)
         feature_sets
     )
 
+    # END TIMER
+    elapsed_time = time() - start_time
+    time_str = _format_time(elapsed_time)
+    
+    # YOUR HACK: Mutate the tags vector to safely store the time without breaking JLD2 types
+    push!(config.tags, "time:$time_str")
+
     _log_footer()
+    _log_info("Experiment completed in $time_str")
 
     timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
     default_path = joinpath(config.save_dir, "$(config.name)_$(timestamp)")
@@ -61,11 +89,6 @@ end
 # 2. PERSISTENCE (Saving)
 # ==============================================================================
 
-"""
-    save_experiment(results::ExperimentResults; path=nothing, quiet=false)
-
-Persists results. Handles 'Inf' in models by stringifying the model in the JSON config.
-"""
 function save_experiment(results::ExperimentResults; path=nothing, quiet=false)
     target_path = isnothing(path) ? results.save_path : path
     mkpath(target_path)
@@ -73,28 +96,37 @@ function save_experiment(results::ExperimentResults; path=nothing, quiet=false)
     # 1. Save Binary (This works fine with Inf)
     jldsave(joinpath(target_path, "results.jld2"); results)
 
-    # 2. Save Config (JSON) - [FIXED]
-    # We construct a Dict and 'stringify' the model to avoid 'Inf not allowed' errors
-    # caused by Truncated(..., upper=Inf) distributions.
+    # 2. Save Config (JSON) 
     safe_config = Dict(
         :name => results.config.name,
         :save_dir => results.config.save_dir,
-        :model => string(results.config.model),     # <--- KEY FIX
+        :model => string(results.config.model),     
         :splitter => results.config.splitter,
-        :training_config => results.config.training_config
+        :training_config => results.config.training_config,
+        :tags => results.config.tags # Make sure tags get written to JSON!
     )
 
     open(joinpath(target_path, "config.json"), "w") do io
         JSON3.pretty(io, safe_config)
     end
 
-    # 3. Save Metadata Sidecar (For listing)
+    # Extract time from tags for the meta sidecar
+    time_taken = "N/A"
+    for tag in results.config.tags
+        if startswith(tag, "time:")
+            time_taken = replace(tag, "time:" => "")
+            break
+        end
+    end
+
+    # 3. Save Metadata Sidecar
     meta = Dict(
         :name => results.config.name,
         :model => string(nameof(typeof(results.config.model))),
         :splitter => string(nameof(typeof(results.config.splitter))),
         :sampler => string(nameof(typeof(results.config.training_config.sampler))),
-        :timestamp => basename(target_path)
+        :timestamp => basename(target_path),
+        :time_taken => time_taken # Easy extraction for the UI
     )
     
     open(joinpath(target_path, "meta.json"), "w") do io
@@ -129,16 +161,17 @@ function list_experiments(dir::String; data_dir::String="./data")
     end
 
     println("\n Experiments in: $base_dir")
-    println("="^110)
+    println("="^125)
     println(
         rpad("IDX", 4), " | ", 
         rpad("NAME", 25), " | ", 
         rpad("MODEL", 20), " | ", 
         rpad("SPLITTER", 18), " | ", 
         rpad("SAMPLER", 15), " | ", 
+        rpad("TIME", 10), " | ", 
         "PATH ID"
     )
-    println("-"^110)
+    println("-"^125)
 
     for (i, path) in enumerate(subdirs)
         m = _read_meta(path)
@@ -148,6 +181,7 @@ function list_experiments(dir::String; data_dir::String="./data")
         model_s = length(m.model) > 18 ? m.model[1:18] * ".." : m.model
         split_s = length(m.splitter) > 16 ? m.splitter[1:16] * ".." : m.splitter
         samp_s = length(m.sampler) > 13 ? m.sampler[1:13] * ".." : m.sampler
+        time_s = length(m.time_taken) > 10 ? m.time_taken[1:10] : m.time_taken
 
         c = i == 1 ? :white : :light_black
         
@@ -156,9 +190,10 @@ function list_experiments(dir::String; data_dir::String="./data")
         printstyled(rpad(model_s, 20), " | ", color=c)
         printstyled(rpad(split_s, 18), " | ", color=c)
         printstyled(rpad(samp_s, 15), " | ", color=c)
+        printstyled(rpad(time_s, 10), " | ", color=:yellow, bold=false) # Pop the time in yellow!
         println(basename(path))
     end
-    println("="^110, "\n")
+    println("="^125, "\n")
 
     return subdirs
 end
@@ -188,11 +223,19 @@ end
 
 function _read_meta(path)
     meta_path = joinpath(path, "meta.json")
-    default = (name=basename(path), model="?", splitter="?", sampler="?")
+    default = (name=basename(path), model="?", splitter="?", sampler="?", time_taken="N/A")
 
     if isfile(meta_path)
         try
-            return JSON3.read(read(meta_path, String))
+            # Read meta and dynamically provide "N/A" if the JSON is from an older run
+            cfg = JSON3.read(read(meta_path, String))
+            return (
+                name = get(cfg, :name, default.name),
+                model = get(cfg, :model, default.model),
+                splitter = get(cfg, :splitter, default.splitter),
+                sampler = get(cfg, :sampler, default.sampler),
+                time_taken = get(cfg, :time_taken, "N/A")
+            )
         catch
             return default
         end
@@ -203,11 +246,23 @@ function _read_meta(path)
     if isfile(config_path)
         try
             cfg = JSON3.read(read(config_path, String))
+            
+            # Check if older config.json has the time tag
+            time_tag = "N/A"
+            if haskey(cfg, :tags)
+                for tag in cfg.tags
+                    if startswith(tag, "time:")
+                        time_tag = replace(tag, "time:" => "")
+                    end
+                end
+            end
+
             return (
                 name = get(cfg, :name, default.name),
                 model = "Legacy Config",
                 splitter = "?",
-                sampler = "?"
+                sampler = "?",
+                time_taken = time_tag
             )
         catch
         end
