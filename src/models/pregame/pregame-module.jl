@@ -94,14 +94,33 @@ include("./implementations/sequential_funnel.jl")
 export SequentialFunnelModel
 
 
+# ==============================================================================
+# ABLATION STUDY MODELS
+# ==============================================================================
 include("./implementations/ablation_study/nb_baseline.jl")
-include("./implementations/ablation_study/nb_env.jl")
-include("./implementations/ablation_study/nb_bloated.jl")
-include("./implementations/ablation_study/nb_r_month.jl")
-include("./implementations/ablation_study/nb_mu_month.jl")
-include("./implementations/ablation_study/nb_home_hierarchy.jl")
-include("./implementations/ablation_study/nb_team_dispersion.jl")
+export AblationStudy_NB_baseLine
 
+include("./implementations/ablation_study/nb_env.jl")
+export AblationStudy_NB_env
+
+include("./implementations/ablation_study/nb_home_hierarchy.jl")
+export AblationStudy_NB_home_hierarchy
+
+include("./implementations/ablation_study/nb_team_dispersion.jl")
+export AblationStudy_NB_team_dispersion
+
+include("./implementations/ablation_study/nb_mu_month.jl")
+export AblationStudy_NB_baseline_month_mu
+
+include("./implementations/ablation_study/nb_r_month.jl")
+export AblationStudy_NB_baseline_month_r
+
+include("./implementations/ablation_study/nb_bloated.jl")
+export AblationStudy_NB_KitchenSink
+
+
+
+# ---- ----
 # 3. Export
 export StaticPoisson, StaticDixonColes, StaticHierarchicalPoisson, StaticHierarchicalPoissonNCP, BivariatePoissonNCP
 export build_turing_model, extract_parameters
