@@ -18,20 +18,19 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
     transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
     cv_config = BayesianFootball.Data.GroupedCVConfig(
-        tournament_groups = [[56, 57]], # e.g., English Premier League & Championship
-        # target_seasons = ["22/23", "23/24", "24/25", "25/26"],
-        target_seasons = ["22/23"],
+        tournament_groups = [[56, 57]],
+        target_seasons = ["22/23", "23/24", "24/25", "25/26"],
         history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 5,
+        warmup_period = 0,
         stop_early = true
     )
 
     # Shared Sampler Configuration (NUTS)
     sampler_conf = Samplers.NUTSConfig(
-        10,      # n_samples
+        120,      # n_samples
         2,        # n_chains
-        20,      # n_warmup
+        50,      # n_warmup
         0.65,     # accept_rate
         10,       # max_depth
         Samplers.UniformInit(-1, 1),
