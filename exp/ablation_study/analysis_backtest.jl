@@ -166,3 +166,35 @@ summary_df = select(master_rqr_df,
 )
 
 display(summary_df)
+
+
+
+# --- cprs --- 
+
+# 1. Initialize an empty array to hold our NamedTuple rows
+flat_rows = []
+
+# 2. Loop through all loaded experiments
+for (i, exp) in enumerate(loaded_results_)
+    model_name = exp.config.name
+    print("[$i/$(length(loaded_results_))] Evaluating: $(model_name) ... ")
+    
+    try
+        # Compute the nested RQR struct
+        rqr_data = Evaluation.compute_metric(Evaluation.CPRS(), exp, ds)
+        
+        # Flatten it using the magic unroller
+        flat_row = Evaluation.to_dataframe_row(exp, rqr_data)
+        
+        # Save to our list
+        push!(flat_rows, flat_row)
+        println("✅ Done")
+    catch e
+        println("❌ Failed")
+        @warn "Error evaluating $model_name: $e"
+    end
+end
+
+# 3. Build the Master DataFrame
+master_rqr_df = DataFrame(flat_rows)
+
