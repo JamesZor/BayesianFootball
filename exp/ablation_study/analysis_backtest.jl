@@ -170,24 +170,26 @@ display(summary_df)
 
 
 # --- cprs --- 
+println("============================================================")
+println(" 🚀 Running Batch CRPS Evaluation...")
+println("============================================================")
 
-# 1. Initialize an empty array to hold our NamedTuple rows
-flat_rows = []
+flat_rows_crps = []
 
-# 2. Loop through all loaded experiments
+# Loop through all loaded experiments
 for (i, exp) in enumerate(loaded_results_)
     model_name = exp.config.name
     print("[$i/$(length(loaded_results_))] Evaluating: $(model_name) ... ")
     
     try
-        # Compute the nested RQR struct
-        rqr_data = Evaluation.compute_metric(Evaluation.CPRS(), exp, ds)
+        # FIXED TYPO: CRPS() instead of CPRS()
+        crps_data = Evaluation.compute_metric(Evaluation.CRPS(), exp, ds)
         
         # Flatten it using the magic unroller
-        flat_row = Evaluation.to_dataframe_row(exp, rqr_data)
+        flat_row = Evaluation.to_dataframe_row(exp, crps_data)
         
         # Save to our list
-        push!(flat_rows, flat_row)
+        push!(flat_rows_crps, flat_row)
         println("✅ Done")
     catch e
         println("❌ Failed")
@@ -195,6 +197,43 @@ for (i, exp) in enumerate(loaded_results_)
     end
 end
 
-# 3. Build the Master DataFrame
-master_rqr_df = DataFrame(flat_rows)
+# Build the Master DataFrame
+master_crps_df = DataFrame(flat_rows_crps)
+
+# Sort by model name to keep it organized
+sort!(master_crps_df, :model)
+
+println("\n============================================================")
+println(" 📊 MASTER CRPS COMPARISON (LOWER is BETTER)")
+println("============================================================")
+display(master_crps_df)
+
+
+
+### 
+
+flat_rows_glm = []
+
+for (i, exp) in enumerate(loaded_results_)
+    print("Evaluating GLM Edge for $(exp.config.name)... ")
+    
+    glm_data = Evaluation.compute_metric(Evaluation.GLMEdge(), exp, ds)
+    flat_row = Evaluation.to_dataframe_row(exp, glm_data)
+    
+    push!(flat_rows_glm, flat_row)
+    println("Done")
+end
+
+master_glm_df = DataFrame(flat_rows_glm)
+sort!(master_glm_df, :model)
+
+# Let's just view the most important columns: The Spread Coef and its P-Value
+display(select(master_glm_df, 
+    :model, 
+    :glmedge_intercept_coef,
+    :glmedge_spread_fair_coef, 
+    :glmedge_spread_fair_p_value,
+    :glmedge_n_obs
+))
+
 
