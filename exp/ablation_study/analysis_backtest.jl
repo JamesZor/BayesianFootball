@@ -89,3 +89,21 @@ println(m.config.model)
 println("\n")
 end
 
+
+
+# ---- evaluation module testing / dev 
+
+exp = loaded_results_[1]
+
+
+using BayesianFootball.Evaluation
+
+# 1. Compute the strict DTO Result
+rqr_data = Evaluation.compute_metric(Evaluation.RQR(), exp, ds)
+
+# 2. Flatten it into a NamedTuple using the Recursive Unroller
+flat_row = Evaluation.to_dataframe_row(exp_res, rqr_data)
+
+# 3. Create DataFrame
+df = DataFrame([flat_row])
+display(df)

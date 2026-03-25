@@ -82,7 +82,7 @@ function compute_metric(metric::RQR, exp::ExperimentResults, ds::DataStore)::RQR
     # 1. Extract latents (Expected Goals, Dispersions)
     latents_raw = Experiments.extract_oos_predictions(ds, exp)
     
-    latent_cols = Predictions.get_latent_column_symbols(exp.model, latents_raw.df)
+    latent_cols = Predictions.get_latent_column_symbols(exp.config.model, latents_raw.df)
 
     joined = innerjoin(
         select(latents_raw.df, latent_cols),
