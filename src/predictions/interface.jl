@@ -9,6 +9,10 @@ structure and the math kernels.
 """
 function extract_params end
 
+
+
+function get_latent_column_symbols end
+
 """
     compute_score_matrix(model::AbstractFootballModel, params)::AbstractScoreMatrix
 

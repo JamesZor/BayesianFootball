@@ -51,8 +51,9 @@ baker = BayesianKelly()
 # as = AnalyticalShrinkageKelly()
 # kelly = KellyCriterion(1)
 # kelly25 = KellyCriterion(1/4)
-# flat_strat = FlatStake(0.05)
+flat_strat = FlatStake(0.05)
 my_signals = [baker]
+my_signals = [baker, flat_strat]
 
 # my_signals = [baker, as, , kelly, kelly25, flat_strat]
 

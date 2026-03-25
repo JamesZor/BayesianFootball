@@ -16,6 +16,7 @@ include("./types.jl")
 include("./presets.jl") 
 include("./runner.jl")
 include("./display.jl")
+include("./helpers.jl")
 
 include("post_processing.jl")
 

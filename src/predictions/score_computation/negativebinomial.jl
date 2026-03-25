@@ -27,6 +27,25 @@ function extract_params(model::Models.PreGame.AbstractNegBinModel, row)
     end 
 end
 
+function get_latent_column_symbols(::Models.PreGame.AbstractNegBinModel, df::AbstractDataFrame)
+    # Start with the core requirements
+    cols = [:match_id, :λ_h, :λ_a]
+    
+    # Check what exists in the actual data
+    existing = propertynames(df)
+    
+    if :r in existing
+        push!(cols, :r)
+    elseif :r_h in existing && :r_a in existing
+        push!(cols, :r_h, :r_a)
+    end
+    
+    return cols
+end
+
+
+
+
 function compute_score_matrix(
     model::Models.PreGame.AbstractNegBinModel, 
     params; 
