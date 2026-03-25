@@ -31,13 +31,15 @@ include("./experiments/experiment-module.jl") #
 include("./predictions/predictions-module.jl") #
 include( "./signals/signals-module.jl")
 
+include("./evaluation/evaluation-module.jl")
+
 include("./synthetic/synthetic-data-module.jl")
 
 include("./backtesting/backtesting-module.jl")
 
 # Export the main modules and key functions/types for users
 # *** UPDATED EXPORTS ***
-export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations, BackTesting
+export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations, BackTesting, Evaluation
 export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 
 # Maybe export core config types too?
