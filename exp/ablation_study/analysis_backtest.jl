@@ -236,4 +236,42 @@ display(select(master_glm_df,
     :glmedge_n_obs
 ))
 
+println("============================================================")
+println(" 🚀 Running Batch LogLoss Evaluation...")
+println("============================================================")
 
+flat_rows_ll = []
+
+for (i, exp) in enumerate(loaded_results_)
+    model_name = exp.config.name
+    print("[$i/$(length(loaded_results_))] Evaluating LogLoss for: $(model_name) ... ")
+    
+    try
+        # Compute the LogLoss struct
+        ll_data = Evaluation.compute_metric(Evaluation.LogLoss(), exp, ds)
+        
+        # Flatten it
+        flat_row = Evaluation.to_dataframe_row(exp, ll_data)
+        push!(flat_rows_ll, flat_row)
+        println("✅ Done")
+    catch e
+        println("❌ Failed")
+        @warn "Error evaluating $model_name: $e"
+    end
+end
+
+# Build DataFrame
+master_ll_df = DataFrame(flat_rows_ll)
+sort!(master_ll_df, :model)
+
+println("\n============================================================")
+println(" 📉 MASTER LOGLOSS COMPARISON (LOWER IS BETTER)")
+println(" Note: A negative 'diff_ll' means your model beat the bookmaker!")
+println("============================================================")
+
+display(select(master_ll_df, 
+    :model, 
+    :logloss_overall_model_ll, 
+    :logloss_overall_market_ll, 
+    :logloss_overall_diff_ll
+))

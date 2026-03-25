@@ -74,7 +74,8 @@ function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore):
     
     # 6. Calculate LogLoss Arrays
     ll_model_array  = calc_logloss.(analysis_df.prob_model, analysis_df.Y)
-    ll_market_array = calc_logloss.(analysis_df.prob_fair_close, analysis_df.Y)
+    # ll_market_array = calc_logloss.(analysis_df.prob_fair_close, analysis_df.Y)
+    ll_market_array = calc_logloss.(analysis_df.odds_close, analysis_df.Y)
     
     # 7. Summarize
     mean_model  = mean(ll_model_array)
