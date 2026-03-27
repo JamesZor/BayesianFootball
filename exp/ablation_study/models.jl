@@ -26,9 +26,22 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
         stop_early = true
     )
 
+    
+    # _01_ version 
     # Shared Sampler Configuration (NUTS)
+    # sampler_conf = Samplers.NUTSConfig(
+    #     120,      # n_samples
+    #     2,        # n_chains
+    #     50,      # n_warmup
+    #     0.65,     # accept_rate
+    #     10,       # max_depth
+    #     Samplers.UniformInit(-1, 1),
+    #     false     # show_progress
+    # )
+
+    # _02_ version 
     sampler_conf = Samplers.NUTSConfig(
-        120,      # n_samples
+        300,      # n_samples
         2,        # n_chains
         50,      # n_warmup
         0.65,     # accept_rate
@@ -36,6 +49,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
         Samplers.UniformInit(-1, 1),
         false     # show_progress
     )
+
 
     train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=8)
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
@@ -45,7 +59,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
     configs = [
         # --- Model 1: Vanilla Baseline ---
         Experiments.ExperimentConfig(
-            name = "01_ablation_baseline",
+            name = "01_02_ablation_baseline",
             model = Models.PreGame.AblationStudy_NB_baseLine(),
             splitter = cv_config,
             training_config = training_config,
@@ -54,7 +68,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 2: Environment (Midweek + Plastic) ---
         Experiments.ExperimentConfig(
-            name = "02_ablation_env",
+            name = "02_02_ablation_env",
             model = Models.PreGame.AblationStudy_NB_env(),
             splitter = cv_config,
             training_config = training_config,
@@ -63,7 +77,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 3: The Fortress (Team-Specific Home Advantage) ---
         Experiments.ExperimentConfig(
-            name = "03_ablation_home_hierarchy",
+            name = "03_02_ablation_home_hierarchy",
             model = Models.PreGame.AblationStudy_NB_home_hierarchy(),
             splitter = cv_config,
             training_config = training_config,
@@ -72,7 +86,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 4: Lean Target (Team HA + Team Dispersion) ---
         Experiments.ExperimentConfig(
-            name = "04_ablation_team_dispersion",
+            name = "04_02_ablation_team_dispersion",
             model = Models.PreGame.AblationStudy_NB_team_dispersion(),
             splitter = cv_config,
             training_config = training_config,
@@ -81,7 +95,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 5: Baseline + Monthly Expectations ---
         Experiments.ExperimentConfig(
-            name = "05_ablation_month_mu",
+            name = "05_02_ablation_month_mu",
             model = Models.PreGame.AblationStudy_NB_baseline_month_mu(),
             splitter = cv_config,
             training_config = training_config,
@@ -90,7 +104,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 6: Baseline + Monthly Dispersion ---
         Experiments.ExperimentConfig(
-            name = "06_ablation_month_r",
+            name = "06_02_ablation_month_r",
             model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
             splitter = cv_config,
             training_config = training_config,
@@ -99,7 +113,7 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
 
         # --- Model 7: The Kitchen Sink (Everything) ---
         Experiments.ExperimentConfig(
-            name = "07_ablation_kitchen_sink",
+            name = "07_02_ablation_kitchen_sink",
             model = Models.PreGame.AblationStudy_NB_KitchenSink(),
             splitter = cv_config,
             training_config = training_config,
