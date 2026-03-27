@@ -17,16 +17,16 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     cv_config = BayesianFootball.Data.GroupedCVConfig(
         tournament_groups = [[56, 57]],
         target_seasons = ["25/26"],
-        history_seasons = 3,
+        history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 7,
-        stop_early = true
+        warmup_period = 9,
+        stop_early = false
     )
 
 
     # Shared Sampler Configuration
     sampler_conf = Samplers.NUTSConfig(
-        100,     # n_samples
+        300,     # n_samples
         16,      # n_chains
         100,     # n_warmup
         0.65,   # accept_rate
@@ -45,7 +45,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
 
     configs = [
             Experiments.ExperimentConfig(
-                name = "gamma_ha_pooled_multi",
+      name = "end_march",
                 model = Models.PreGame.MSNegativeBinomialGamma(
                     # --- Globals ---
                     μ = Normal(0.20, 0.2),

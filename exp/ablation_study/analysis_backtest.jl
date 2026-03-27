@@ -35,9 +35,12 @@ if isempty(loaded_results)
 end
 
 # extract the loaded files and check that they are the right ones by looking at times.
-loaded_results_ = loaded_results[1:7]
+loaded_results_ = loaded_results[1:6]
+loaded_results__ = loaded_results[7:13]
 
-for (i, lr) in enumerate(loaded_results_)
+loaded_results_ = loaded_results[[1:6; 8:14]]
+
+for (i, lr) in enumerate(loaded_results__)
   println("file index: $i : name :$(lr.config.name) - $(lr.config.tags[1])")
 end
 
@@ -67,9 +70,18 @@ ledger = BayesianFootball.BackTesting.run_backtest(
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
 
+ledger_ = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+  loaded_results__, 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+
 # 3. Analyze
 # ==========
 tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+tearsheet_ = BayesianFootball.BackTesting.generate_tearsheet(ledger_)
 
 println("\n=== TEARSHEET SUMMARY ===")
 println(tearsheet)
@@ -78,11 +90,25 @@ println(tearsheet)
 println("\n=== BREAKDOWN BY MODEL ===")
 model_names = unique(tearsheet.selection)
 
+model_names = model_names[1:12]
+
 for m_name in model_names
     println("\nStats for: $m_name")
     sub = subset(tearsheet, :selection => ByRow(isequal(m_name)))
     show(sub)
 end
+
+
+
+
+
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet_, :selection => ByRow(isequal(m_name)))
+    show(sub)
+end
+
+
 
 for m in loaded_results 
 println(m.config.model)
@@ -144,6 +170,38 @@ master_rqr_df = DataFrame(flat_rows)
 # Sort by model name to keep it organized (01 to 07)
 sort!(master_rqr_df, :model)
 
+
+
+flat_rows_ = []
+
+# 2. Loop through all loaded experiments
+for (i, exp) in enumerate(loaded_results__)
+    model_name = exp.config.name
+    print("[$i/$(length(loaded_results__))] Evaluating: $(model_name) ... ")
+    
+    try
+        # Compute the nested RQR struct
+        rqr_data = Evaluation.compute_metric(Evaluation.RQR(), exp, ds)
+        
+        # Flatten it using the magic unroller
+        flat_row_ = Evaluation.to_dataframe_row(exp, rqr_data)
+        
+        # Save to our list
+        push!(flat_rows_, flat_row_)
+        println("✅ Done")
+    catch e
+        println("❌ Failed")
+        @warn "Error evaluating $model_name: $e"
+    end
+end
+
+# 3. Build the Master DataFrame
+master_rqr_df_ = DataFrame(flat_rows_)
+
+# Sort by model name to keep it organized (01 to 07)
+sort!(master_rqr_df_, :model)
+
+
 println("\n============================================================")
 println(" 📊 MASTER RQR COMPARISON (ALL COLUMNS)")
 println("============================================================")
@@ -165,7 +223,20 @@ summary_df = select(master_rqr_df,
     :rqr_all_shapiro_p
 )
 
+
+summary_df_ = select(master_rqr_df_, 
+    :model, 
+    :rqr_all_mean, 
+    :rqr_all_std, 
+    :rqr_all_skewness, 
+    :rqr_all_kurtosis, 
+    :rqr_all_shapiro_w,
+    :rqr_all_shapiro_p
+)
+
+
 display(summary_df)
+display(summary_df_)
 
 
 
@@ -275,3 +346,152 @@ display(select(master_ll_df,
     :logloss_overall_market_ll, 
     :logloss_overall_diff_ll
 ))
+
+
+# --- funcitons ---
+# to compare the mcmc size 
+#
+function evaluate_batch_crps(results_array, ds; label="CRPS Evaluation")
+    println("\n============================================================")
+    println(" 🚀 Running Batch CRPS Evaluation: $label")
+    println("============================================================")
+
+    flat_rows_crps = []
+
+    # Loop through all provided experiments
+    for (i, exp) in enumerate(results_array)
+        model_name = exp.config.name
+        print("[$i/$(length(results_array))] Evaluating: $(model_name) ... ")
+        
+        try
+            crps_data = Evaluation.compute_metric(Evaluation.CRPS(), exp, ds)
+            flat_row = Evaluation.to_dataframe_row(exp, crps_data)
+            
+            push!(flat_rows_crps, flat_row)
+            println("✅ Done")
+        catch e
+            println("❌ Failed")
+            @warn "Error evaluating $model_name: $e"
+        end
+    end
+
+    # Build the Master DataFrame
+    master_crps_df = DataFrame(flat_rows_crps)
+
+    if nrow(master_crps_df) > 0
+        # Sort by model name to keep it organized
+        sort!(master_crps_df, :model)
+
+        println("\n============================================================")
+        println(" 📊 MASTER CRPS COMPARISON: $label")
+        println(" Note: LOWER is BETTER")
+        println("============================================================")
+        display(master_crps_df)
+    else
+        println("⚠️ No results successfully evaluated.")
+    end
+    
+    return master_crps_df
+end
+
+
+# Run the 300-sample models (_02_)
+df_long_run = evaluate_batch_crps(loaded_results_, ds, label="300 Samples (Long Run)")
+
+# Run the 120-sample models
+df_short_run = evaluate_batch_crps(loaded_results__, ds, label="120 Samples (Short Run)")
+
+# 1. Make a copy of the long run and clean the names
+df_long_clean = copy(df_long_run)
+df_long_clean.model = replace.(df_long_clean.model, "_02_" => "_")
+
+# 2. Now join them (the names will match perfectly)
+comparison_crps_df = innerjoin(
+    select(df_short_run, :model, :crps_all_mean => :crps_120),
+    select(df_long_clean, :model, :crps_all_mean => :crps_300),
+    on = :model
+)
+
+# 3. Calculate the difference (Negative means 300 is better)
+comparison_crps_df.improvement = comparison_crps_df.crps_300 .- comparison_crps_df.crps_120
+
+println("\n🔍 MCMC SAMPLE SIZE IMPACT (300 vs 120)")
+display(comparison_crps_df)
+
+
+# ----
+function evaluate_batch_glm(results_array, ds; label="GLM Edge Evaluation")
+    println("\n============================================================")
+    println(" 🚀 Running Batch GLM Edge Evaluation: $label")
+    println("============================================================")
+
+    flat_rows_glm = []
+
+    # Loop through all provided experiments
+    for (i, exp) in enumerate(results_array)
+        model_name = exp.config.name
+        print("[$i/$(length(results_array))] Evaluating: $(model_name) ... ")
+        
+        try
+            glm_data = Evaluation.compute_metric(Evaluation.GLMEdge(), exp, ds)
+            flat_row = Evaluation.to_dataframe_row(exp, glm_data)
+            
+            push!(flat_rows_glm, flat_row)
+            println("✅ Done")
+        catch e
+            println("❌ Failed")
+            @warn "Error evaluating $model_name: $e"
+        end
+    end
+
+    # Build the Master DataFrame
+    master_glm_df = DataFrame(flat_rows_glm)
+
+    if nrow(master_glm_df) > 0
+        # Sort by model name to keep it organized
+        sort!(master_glm_df, :model)
+
+        println("\n============================================================")
+        println(" 📈 MASTER GLM EDGE COMPARISON: $label")
+        println(" Note: HIGHER 'spread_fair_coef' and LOWER 'p_value' is BETTER")
+        println("============================================================")
+        
+        # Display only the critical columns for readability
+        display(select(master_glm_df, 
+            :model, 
+            :glmedge_intercept_coef,
+            :glmedge_spread_fair_coef, 
+            :glmedge_spread_fair_p_value,
+            :glmedge_n_obs
+        ))
+    else
+        println("⚠️ No results successfully evaluated.")
+    end
+    
+    return master_glm_df
+end
+
+
+
+# 1. Evaluate both runs
+df_glm_long = evaluate_batch_glm(loaded_results_, ds, label="300 Samples (Long Run)")
+df_glm_short = evaluate_batch_glm(loaded_results__, ds, label="120 Samples (Short Run)")
+
+
+df_long_clean = copy(df_glm_short)
+df_long_clean.model = replace.(df_glm_long.model, "_02_" => "_")
+
+
+# 2. Join them to compare the Spread Coefficient
+comparison_glm_df = innerjoin(
+    select(df_glm_short, :model, :glmedge_spread_fair_coef => :coef_120, :glmedge_spread_fair_p_value => :pval_120),
+    select(df_glm_long, :model, :glmedge_spread_fair_coef => :coef_300, :glmedge_spread_fair_p_value => :pval_300),
+    on = :model,
+    makeunique=true
+)
+
+# 3. Calculate the difference (Positive means the 300 sample run is BETTER)
+comparison_glm_df.coef_improvement = comparison_glm_df.coef_300 .- comparison_glm_df.coef_120
+
+println("\n🔍 MCMC SAMPLE SIZE IMPACT ON GLM EDGE (300 vs 120)")
+display(select(comparison_glm_df, :model, :coef_120, :coef_300, :coef_improvement))
