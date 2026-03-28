@@ -30,7 +30,7 @@ cv_config_l1 = BayesianFootball.Data.CVConfig(
     target_seasons = ["25/26"],  # Target Season
     history_seasons = 0,
     dynamics_col = :match_month,
-    warmup_period = 7,      
+    warmup_period = 4,      
     stop_early = false
 )
 splits_l1 = BayesianFootball.Data.create_data_splits(ds, cv_config_l1)

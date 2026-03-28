@@ -478,14 +478,14 @@ df_glm_long = evaluate_batch_glm(loaded_results_, ds, label="300 Samples (Long R
 df_glm_short = evaluate_batch_glm(loaded_results__, ds, label="120 Samples (Short Run)")
 
 
-df_long_clean = copy(df_glm_short)
-df_long_clean.model = replace.(df_glm_long.model, "_02_" => "_")
+df_glm_long_clean = copy(df_glm_long)
+df_glm_long_clean.model = replace.(df_glm_long.model, "_02_" => "_")
 
 
 # 2. Join them to compare the Spread Coefficient
 comparison_glm_df = innerjoin(
     select(df_glm_short, :model, :glmedge_spread_fair_coef => :coef_120, :glmedge_spread_fair_p_value => :pval_120),
-    select(df_glm_long, :model, :glmedge_spread_fair_coef => :coef_300, :glmedge_spread_fair_p_value => :pval_300),
+    select(df_glm_long_clean, :model, :glmedge_spread_fair_coef => :coef_300, :glmedge_spread_fair_p_value => :pval_300),
     on = :model,
     makeunique=true
 )
