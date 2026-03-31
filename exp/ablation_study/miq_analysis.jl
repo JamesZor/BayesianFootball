@@ -102,6 +102,90 @@ println("> 0.50 = Model chronically UNDERPRICES this selection vs Market.\n")
 display(market_diagnostics)
 
 
+using DataFrames, HypothesisTests, Statistics
+
+# 1. Define the custom evaluation function
+function evaluate_group_edge(nt)
+    # nt is a NamedTuple of vectors. We extract the array first, then mask it.
+    winners_miq = nt.market_quantile[nt.is_winner .== true]
+    losers_miq  = nt.market_quantile[nt.is_winner .== false]
+    
+    # Safety Check: If a group has no winners/losers, return missings
+    if length(winners_miq) < 2 || length(losers_miq) < 2
+        return (
+            mean_gap = missing, 
+            ks_d_stat = missing, 
+            p_value = missing,
+            n_winners = length(winners_miq),
+            n_losers = length(losers_miq)
+        )
+    end
+    
+    # Calculate Metric A: The Mean Gap
+    mean_gap = mean(losers_miq) - mean(winners_miq)
+    
+    # Calculate Metric B: The K-S Test
+    ks_result = ApproximateTwoSampleKSTest(winners_miq, losers_miq)
+    
+    # Return a NamedTuple
+    return (
+        mean_gap = mean_gap, 
+        ks_d_stat = ks_result.δ, 
+        p_value = pvalue(ks_result),
+        n_winners = length(winners_miq),
+        n_losers = length(losers_miq)
+    )
+end
+
+# 2. Run it across the grouped DataFrame
+model_scorecard = combine(groupby(clean_analysis, :selection), 
+    AsTable(:) => evaluate_group_edge => AsTable
+)
+
+# Optional: Sort it by the highest K-S stat to immediately see your best edges
+sort!(model_scorecard, :p_value, rev=true)
+
+
+#=
+A Positive (+) gap is GOOD. It means your model assigned a higher relative probability to the bets that actually won.
+
+A Negative (-) gap is BAD. It means your model assigned a lower relative probability to the bets that actually won. Your model confidently pointed in the wrong direction.
+
+julia> sort!(model_scorecard, :p_value, rev=true)
+27×6 DataFrame
+ Row │ selection  mean_gap          ks_d_stat        p_value           n_winners  n_losers 
+     │ Symbol     Float64?          Float64?         Float64?          Int64      Int64    
+─────┼─────────────────────────────────────────────────────────────────────────────────────
+   1 │ over_85    missing           missing          missing                   0        76
+   2 │ under_85   missing           missing          missing                  76         0
+   3 │ over_95    missing           missing          missing                   0         8
+   4 │ under_95   missing           missing          missing                   8         0
+   5 │ over_105   missing           missing          missing                   0         1
+   6 │ under_105  missing           missing          missing                   1         0
+   7 │ btts_no          5.19144e-5        0.0255014        0.989852          553       655
+   8 │ btts_yes         2.12811e-5        0.0255014        0.989852          655       553
+   9 │ under_15         0.0130011         0.0472315        0.792507          240       894
+  10 │ over_15          0.0129872         0.0472315        0.792507          894       240
+  11 │ over_35          0.02197           0.045342         0.690642          363       771
+  12 │ under_35         0.0219652         0.045342         0.690642          771       363
+  13 │ under_75        -0.0247906         0.33641          0.509576          975         6
+  14 │ over_75         -0.0247009         0.33641          0.509576            6       975
+  15 │ draw            -0.0107508         0.0550627        0.487293          309       905
+  16 │ under_05         0.0244772         0.107167         0.473077           66      1068
+  17 │ over_05          0.0244538         0.107167         0.473077         1068        66
+  18 │ under_45         0.0278372         0.0920044        0.181494          968       166
+  19 │ over_45          0.0278552         0.0920044        0.181494          166       968
+  20 │ under_65         0.0430054         0.24321          0.138685         1167        23
+  21 │ over_65          0.0430661         0.24321          0.138685           23      1167
+  22 │ over_55          0.0536246         0.146008         0.107807           73      1110
+  23 │ under_55         0.0535946         0.146008         0.107807         1110        73
+  24 │ under_25         0.0265473         0.0786859        0.0509058         553       639
+  25 │ over_25          0.0265407         0.0786859        0.0509058         639       553
+  26 │ away            -0.111596          0.166199         1.06859e-6        381       833
+  27 │ home            -0.0967542         0.164465         2.013e-7          524       690
+
+=#
+
 # ---
 using Plots
 plotlyjs() # Ensure PlotlyJS backend is active

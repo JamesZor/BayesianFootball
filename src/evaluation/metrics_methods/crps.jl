@@ -46,17 +46,6 @@ function compute_crps(y::Int, λ::Float64, r_disp::Float64; max_goals=30)
     return crps_value
 end
 
-# 2. Extract Dispersion (Handles hierarchical vs global r)
-function get_r(df)
-    if hasproperty(df, :r)
-        return mean.(df.r), mean.(df.r)
-    elseif hasproperty(df, :r_h)
-        return mean.(df.r_h), mean.(df.r_a) 
-    else
-        throw(ArgumentError("Row does not contain expected shape parameters (:r or :r_h)"))
-    end 
-end
-
 # ==============================================================================
 # MAIN COMPUTE METHOD
 # ==============================================================================
