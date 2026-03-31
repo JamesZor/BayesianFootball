@@ -186,6 +186,9 @@ julia> sort!(model_scorecard, :p_value, rev=true)
 
 =#
 
+miq_data = Evaluation.compute_metric(Evaluation.MIQ(), exp, ds)
+flat_row = Evaluation.to_dataframe_row(exp, miq_data)
+
 # ---
 using Plots
 plotlyjs() # Ensure PlotlyJS backend is active

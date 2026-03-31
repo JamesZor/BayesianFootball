@@ -495,3 +495,113 @@ comparison_glm_df.coef_improvement = comparison_glm_df.coef_300 .- comparison_gl
 
 println("\n🔍 MCMC SAMPLE SIZE IMPACT ON GLM EDGE (300 vs 120)")
 display(select(comparison_glm_df, :model, :coef_120, :coef_300, :coef_improvement))
+
+
+
+
+# --- miq 
+
+
+function evaluate_batch(metric::Evaluation.AbstractScoringRule, results_array, ds; label="Batch Evaluation")
+    # Dynamically grab the metric name (e.g., "crps", "rqr", "miq") and uppercase it for display
+    metric_name = uppercase(Evaluation.get_metric_method_name(metric))
+    
+    println("\n============================================================")
+    println(" 🚀 Running Batch $metric_name Evaluation: $label")
+    println("============================================================")
+
+    flat_rows = []
+
+    # Loop through all provided experiments
+    for (i, exp) in enumerate(results_array)
+        model_name = exp.config.name
+        print("[$i/$(length(results_array))] Evaluating: $(model_name) ... ")
+        
+        try
+            # Computes whatever metric was passed in
+            metric_data = Evaluation.compute_metric(metric, exp, ds)
+            
+            # Flattens the nested structs into a single row using your unroller
+            flat_row = Evaluation.to_dataframe_row(exp, metric_data)
+            
+            push!(flat_rows, flat_row)
+            println("✅ Done")
+        catch e
+            println("❌ Failed")
+            @warn "Error evaluating $model_name on $metric_name: $e"
+        end
+    end
+
+    # Build the Master DataFrame
+    master_df = DataFrame(flat_rows)
+
+    if nrow(master_df) > 0
+        # Sort by model name to keep it organized
+        if hasproperty(master_df, :model)
+            sort!(master_df, :model)
+        end
+
+        println("\n============================================================")
+        println(" 📊 MASTER $metric_name COMPARISON: $label")
+        if metric_name == "CRPS"
+             println(" Note: LOWER is BETTER")
+        elseif metric_name == "MIQ"
+             println(" Note: Look for Positive mean_gaps and low p_values for edge.")
+        end
+        println("============================================================")
+        display(master_df)
+    else
+        println("⚠️ No results successfully evaluated.")
+    end
+    
+    return master_df
+end
+
+miq_df = evaluate_batch(Evaluation.MIQ(), loaded_results_, ds, label="Baseline Models")
+miq_df_ = evaluate_batch(Evaluation.MIQ(), loaded_results__, ds, label="Baseline Models")
+
+miq_df = vcat(miq_df, miq_df_)
+
+function display_miq_selection(df, sym) 
+    return select(df,
+        :model,
+        Symbol("miq_$(sym)_mean_gap"), 
+        Symbol("miq_$(sym)_ks_d_stat"), 
+        Symbol("miq_$(sym)_p_value"), 
+        Symbol("miq_$(sym)_n_winners"), 
+        Symbol("miq_$(sym)_n_losers") 
+    )
+end
+
+
+home_edge = display_miq_selection(miq_df, :home)
+home_edge = display_miq_selection(miq_df, :away)
+home_edge = display_miq_selection(miq_df, :draw)
+
+
+
+home_edge = display_miq_selection(miq_df, :over_15)
+
+
+home_edge = display_miq_selection(miq_df, :over_15)
+home_edge = display_miq_selection(miq_df, :under_35)
+
+
+home_edge = display_miq_selection(miq_df, :over_25)
+home_edge = display_miq_selection(miq_df, :under_25)
+
+home_edge = display_miq_selection(miq_df, :btts_yes)
+home_edge = display_miq_selection(miq_df, :btts_no)
+
+rqr_df = evaluate_batch(Evaluation.RQR(), loaded_results__, ds, label="Baseline Models")
+
+
+julia> summary_df = select(rqr_df, 
+           :model, 
+           :rqr_all_mean, 
+           :rqr_all_std, 
+           :rqr_all_skewness, 
+           :rqr_all_kurtosis, 
+           :rqr_all_shapiro_w,
+           :rqr_all_shapiro_p
+                           )

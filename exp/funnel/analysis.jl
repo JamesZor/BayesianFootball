@@ -58,6 +58,14 @@ ledger = BayesianFootball.BackTesting.run_backtest(
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
 
+ledger = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+  loaded_results__, 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+
 # 3. Analyze
 # ==========
 tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
@@ -156,6 +164,55 @@ function rank_strategies(ledger::DataFrame)
     
     return results
 end
+
+ledger.df
+names(ledger.df)
+
+function calculate_pure_yield(ledger_df::DataFrame)
+    # 1. Filter out non-bets (where stake is functionally 0)
+    active_bets = filter(row -> abs(row.stake) > 1e-6, ledger_df)
+    
+    # 2. Group by the system components
+    group_cols = [:model_name, :market_name, :selection, :signal_name]
+    
+    # 3. Calculate aggregate stats
+    yield_results = combine(groupby(active_bets, group_cols)) do df
+        total_staked = sum(df.stake)
+        total_pnl = sum(df.pnl)
+        
+        # Pure Yield is Total Profit divided by Total Risked
+        pure_yield = total_staked > 0 ? (total_pnl / total_staked) : 0.0
+        
+        # Calculate Average Odds received on winning bets
+        winning_bets = filter(row -> row.is_winner, df)
+        avg_odds = nrow(winning_bets) > 0 ? mean(winning_bets.odds) : 0.0
+        
+        return (
+            Total_Bets = nrow(df),
+            Win_Rate = nrow(winning_bets) / nrow(df),
+            Avg_Winning_Odds = avg_odds,
+            Total_Staked = total_staked,
+            Total_PnL = total_pnl,
+            Pure_Yield = pure_yield  # This is the gold standard metric
+        )
+    end
+    
+    # Sort by Pure Yield to see who actually picks the best bets
+    sort!(yield_results, :Pure_Yield, rev=true)
+    return yield_results
+end
+
+yield_rankings = calculate_pure_yield(ledger.df)
+display(yield_rankings)
+
+model_names = unique(yield_rankings.selection)
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = DataFrames.subset(yield_rankings, :selection => ByRow(isequal(m_name)))
+  show(sort(sub, :Pure_Yield, rev=true))
+end
+
+
 
 # Run the fixed function
 strategy_rankings = rank_strategies(ledger.df)
