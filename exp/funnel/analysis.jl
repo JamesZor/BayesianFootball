@@ -44,6 +44,13 @@ kelly = KellyCriterion(1)
 kelly25 = KellyCriterion(1/4)
 flat_strat = FlatStake(0.05)
 
+my_signals = [
+    AnalyticalShrinkageKelly(min_edge=0.00),
+    AnalyticalShrinkageKelly(min_edge=0.03),
+    AnalyticalShrinkageKelly(min_edge=0.05),
+    FlatStake(0.05) # Add a flat stake just for baseline pure yield
+]
+
 my_signals = [baker]
 my_signals = [as]
 my_signals = [baker, as, kelly, kelly25, flat_strat]
@@ -80,7 +87,7 @@ model_names = unique(tearsheet.selection)
 for m_name in model_names
     println("\nStats for: $m_name")
     sub = DataFrames.subset(tearsheet, :selection => ByRow(isequal(m_name)))
-    show(sub)
+  show(sort(sub, :CumulativeWealth, rev=true))
 end
 
 for m in loaded_results 
@@ -173,7 +180,7 @@ function calculate_pure_yield(ledger_df::DataFrame)
     active_bets = filter(row -> abs(row.stake) > 1e-6, ledger_df)
     
     # 2. Group by the system components
-    group_cols = [:model_name, :market_name, :selection, :signal_name]
+    group_cols = [:model_name, :market_name, :selection, :signal_name, :signal_params]
     
     # 3. Calculate aggregate stats
     yield_results = combine(groupby(active_bets, group_cols)) do df

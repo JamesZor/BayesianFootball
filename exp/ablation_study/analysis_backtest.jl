@@ -605,3 +605,103 @@ julia> summary_df = select(rqr_df,
            :rqr_all_shapiro_w,
            :rqr_all_shapiro_p
                            )
+
+
+
+# ----
+
+using Plots
+plotlyjs() # Ensure PlotlyJS backend is active
+using DataFrames
+using BayesianFootball
+using BayesianFootball.Signals
+
+println("=== RUNNING HIGH-RES EDGE SWEEP ===")
+
+# Ensure the output directory exists
+output_dir = "exp/ablation_study/figures/"
+mkpath(output_dir)
+
+# 1. Define the Sweep (0.5% steps since you have the RAM)
+edge_range = 0.0:0.005:0.20
+my_signals = [AnalyticalShrinkageKelly(min_edge=e) for e in edge_range]
+
+println("Sweeping $(length(my_signals)) edge thresholds...")
+
+
+loaded_results__[1]
+# 2. Run Backtest
+# (Assuming `ds` and `loaded_results` are already in your environment)
+# Using loaded_results[7] assuming it's your KitchenSink model
+ledger = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+    [loaded_results__[1]], 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+# 3. Generate Tearsheet
+tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+# 4. Parse the min_edge value back into a Float64 for the X-axis
+# The tearsheet saves it as a string like "min_edge=0.035"
+tearsheet.edge_value = map(tearsheet.signal_params) do param_str
+    try
+        parse(Float64, split(param_str, "=")[2])
+    catch
+        0.0 # Fallback safety
+    end
+end
+
+println("=== GENERATING HTML EDGE DIAGNOSTICS ===")
+
+# 5. The Plotly HTML Generation Function
+function plot_edge_optimization(df::DataFrame, target_market::Symbol)
+    # Filter for the specific market (e.g., :over_25)
+    sub_df = subset(df, :selection => ByRow(isequal(target_market)))
+    
+    if nrow(sub_df) == 0
+        @warn "No data found for market: $target_market"
+        return
+    end
+
+    # Sort by the edge value to ensure the line draws correctly left-to-right
+    sort!(sub_df, :edge_value)
+    
+    # Create the interactive Plotly plot
+    p = plot(
+        sub_df.edge_value, 
+        sub_df.CumulativeWealth, 
+        title = "Optimization Profile: $(uppercase(string(target_market)))",
+        xlabel = "Minimum Edge Filter (e.g., 0.05 = 5%)",
+        ylabel = "Cumulative Wealth (Base 1.0)",
+        label = "Analytical Shrinkage",
+        linewidth = 3,
+        color = :royalblue,
+        legend = :topright,
+        marker = (:circle, 4), # Adds hoverable dots for exact values
+        size = (1000, 900),
+        margin = 5Plots.mm
+    );
+    
+    # Add a red horizontal line at 1.0 (Break-even)
+    hline!(p, [1.0], color=:red, linewidth=2, linestyle=:dash, label="Break Even (1.0)")
+    
+    # Save the plot as an interactive HTML file
+    filename = "edge_optimization_$(target_market).html"
+    filepath = joinpath(output_dir, filename)
+    savefig(p, filepath)
+    
+    println("✅ Saved optimization curve to: $filepath")
+end
+
+# 6. Generate the plots for your key markets
+plot_edge_optimization(tearsheet, :over_25)
+plot_edge_optimization(tearsheet, :btts_yes)
+plot_edge_optimization(tearsheet, :draw)
+plot_edge_optimization(tearsheet, :under_25)
+plot_edge_optimization(tearsheet, :over_35)
+plot_edge_optimization(tearsheet, :over_15)
+plot_edge_optimization(tearsheet, :btts_yes)
+
+println("\n🚀 Sweep complete. Open the HTML files in your browser to inspect the peaks.")
