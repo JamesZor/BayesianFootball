@@ -3,7 +3,7 @@ market_data = Data.prepare_market_data(ds)
 
 
 
-exp = loaded_results_[1]
+exp = loaded_results__[2]
 
 
 
@@ -220,7 +220,7 @@ end
 
 ppd = Predictions.model_inference(latents)
 
-sym = :btts_no
+sym = :over_15
 # STEP A: Test the Uncalibrated (Raw) Model First
 # We do this before applying the shift since apply_shift! mutates memory.
 raw_df = evaluate_market(ppd, market_data.df, my_signals, sym, "1. UNCALIBRATED BASELINE");
