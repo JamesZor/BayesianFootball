@@ -9,6 +9,8 @@ struct MIQ <: AbstractScoringRule end
 
 # A reusable component for the edge statistics
 struct MIQStats <: AbstractMetricComponent
+    mean::Union{Missing, Float64}
+    std::Union{Missing, Float64}
     mean_gap::Union{Missing, Float64}
     ks_d_stat::Union{Missing, Float64}
     p_value::Union{Missing, Float64}
@@ -62,6 +64,8 @@ function evaluate_group_edge(market_quantiles::AbstractVector, is_winner::Abstra
     # Safety Check: If a group has no winners/losers, return missings cleanly
     if length(winners_miq) < 2 || length(losers_miq) < 2
         return MIQStats(
+            missing,
+            missing,
             missing, 
             missing, 
             missing, 
@@ -77,6 +81,8 @@ function evaluate_group_edge(market_quantiles::AbstractVector, is_winner::Abstra
     ks_result = ApproximateTwoSampleKSTest(winners_miq, losers_miq)
     
     return MIQStats(
+        mean(market_quantiles),
+        std(market_quantiles),
         mean_gap, 
         ks_result.δ, 
         pvalue(ks_result), 
