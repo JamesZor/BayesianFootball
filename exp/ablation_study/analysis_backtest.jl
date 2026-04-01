@@ -565,6 +565,8 @@ miq_df = vcat(miq_df, miq_df_)
 function display_miq_selection(df, sym) 
     return select(df,
         :model,
+        Symbol("miq_$(sym)_mean"), 
+        Symbol("miq_$(sym)_std"), 
         Symbol("miq_$(sym)_mean_gap"), 
         Symbol("miq_$(sym)_ks_d_stat"), 
         Symbol("miq_$(sym)_p_value"), 
