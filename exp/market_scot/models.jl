@@ -3,7 +3,7 @@
 using BayesianFootball
 using Distributions # Required for prior definitions (Normal, Gamma, etc.)
     
-function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
+function get_grw_basics_configs(; save_dir="./data/exp/market_runs/april")
     # 1. Setup Data & Splits
     # ======================
     ds = Data.load_extra_ds()
@@ -28,7 +28,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
     sampler_conf = Samplers.NUTSConfig(
         300,     # n_samples
         16,      # n_chains
-        100,     # n_warmup
+        150,     # n_warmup
         0.65,   # accept_rate
         10,     # max_depth
         Samplers.UniformInit(-1, 1),
@@ -44,37 +44,14 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs")
 
 
     configs = [
-            Experiments.ExperimentConfig(
-      name = "end_march",
-                model = Models.PreGame.MSNegativeBinomialGamma(
-                    # --- Globals ---
-                    μ = Normal(0.20, 0.2),
-                    γ = Normal(0.12, 0.5),      # Global Home Advantage
-                    log_r = Normal(2.5, 0.5),   # Global Dispersion
 
-                    # --- NEW: Team-Specific Home Advantage ---
-                    # Gamma(2, 0.04) -> Mean = 0.08. 
-                    σ_γ_team = Gamma(2, 0.04),  
-
-                    # --- Boundary-Avoiding Priors: GRW Latent States ---
-                    σ₀ = Gamma(2, 0.15),   # Mean = 0.30 (Initial spread of teams)
-                    σₛ = Gamma(2, 0.04),   # Mean = 0.08 (Macro season jump)
-                    σₖ = Gamma(2, 0.015),  # Mean = 0.03 (Micro monthly jump)
-
-                    # --- Boundary-Avoiding Priors: Partial Pooling ---
-                    σ_r_team  = Gamma(2, 0.10),   # Mean = 0.20 
-                    σ_r_month = Gamma(2, 0.05),   # Mean = 0.10
-                    σ_δₘ      = Gamma(2, 0.05),   # Mean = 0.10 
-
-                    # --- Fixed Effects ---
-                    δₙ = Normal(0, 0.1), # Midweek
-                    δₚ = Normal(0, 0.1)  # Plastic pitch
-                ),
-                splitter = cv_config,
-                training_config = training_config,
-                save_dir = save_dir
-            ),
-
+        Experiments.ExperimentConfig(
+            name = "06_02_ablation_month_r",
+            model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
+            splitter = cv_config,
+            training_config = training_config,
+            save_dir = save_dir
+        ),
           ]
 
         return ds, configs

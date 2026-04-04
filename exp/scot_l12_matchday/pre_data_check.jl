@@ -22,7 +22,7 @@ using DataFramesMeta
 
 df_56 = subset(ds.matches, :tournament_id => ByRow(isequal(56)), :season => ByRow(isequal("25/26")))
 unique(df_56.match_month)
-@rsubset(df_56, :match_month == 13 )
+@rsubset(df_56, :match_month == 9 )
 
 
 cv_config_l1 = BayesianFootball.Data.CVConfig(
@@ -30,7 +30,7 @@ cv_config_l1 = BayesianFootball.Data.CVConfig(
     target_seasons = ["25/26"],  # Target Season
     history_seasons = 0,
     dynamics_col = :match_month,
-    warmup_period = 4,      
+    warmup_period = 9,      
     stop_early = false
 )
 splits_l1 = BayesianFootball.Data.create_data_splits(ds, cv_config_l1)

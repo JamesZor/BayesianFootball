@@ -164,7 +164,7 @@ transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
 println("Loading Model & Features...")
 # UPDATE THIS PATH to your target model!
-saved_folders = BayesianFootball.Experiments.list_experiments("exp/market_runs"; data_dir="./data")
+saved_folders = BayesianFootball.Experiments.list_experiments("exp/market_runs/april"; data_dir="./data")
 m1 = BayesianFootball.Experiments.load_experiment(saved_folders[1])
 
 feature_collection = BayesianFootball.Features.create_features(

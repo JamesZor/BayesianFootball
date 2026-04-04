@@ -9,7 +9,7 @@ using Logging
 pinthreads(:cores)
 
 # Load the definitions from the sibling file
-include("./exp/market_scot/models.jl")
+# include("./exp/market_scot/models.jl")
 
 function run_all()
     # 1. Get Configs
