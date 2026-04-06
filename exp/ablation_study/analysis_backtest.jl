@@ -35,12 +35,12 @@ if isempty(loaded_results)
 end
 
 # extract the loaded files and check that they are the right ones by looking at times.
-loaded_results_ = loaded_results[1:6]
+loaded_results_ = loaded_results[1:7]
 loaded_results__ = loaded_results[7:13]
 
 loaded_results_ = loaded_results[[1:6; 8:14]]
 
-for (i, lr) in enumerate(loaded_results__)
+for (i, lr) in enumerate(loaded_results_)
   println("file index: $i : name :$(lr.config.name) - $(lr.config.tags[1])")
 end
 
@@ -707,3 +707,22 @@ plot_edge_optimization(tearsheet, :over_15)
 plot_edge_optimization(tearsheet, :btts_yes)
 
 println("\n🚀 Sweep complete. Open the HTML files in your browser to inspect the peaks.")
+
+
+
+
+rqr_df = evaluate_batch(Evaluation.RQR(), loaded_results_, ds, label="Baseline Models")
+
+select(rqr_df, :model, :rqr_all_mean, :rqr_all_std, :rqr_all_skewness, :rqr_all_kurtosis, :rqr_all_shapiro_w, :rqr_all_shapiro_p)
+
+
+
+crps_df = evaluate_batch(Evaluation.CRPS(), loaded_results_, ds, label="Baseline Models")
+glm_df = evaluate_batch(Evaluation.GLMEdge(), loaded_results_, ds, label="Baseline Models")
+
+select(glm_df, :model, 
+            :glmedge_intercept_coef,
+            :glmedge_spread_fair_coef, 
+            :glmedge_spread_fair_p_value,
+            :glmedge_n_obs
+       )

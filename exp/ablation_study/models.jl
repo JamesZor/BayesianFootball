@@ -57,60 +57,60 @@ function get_ablation_configs(; save_dir="./data/exp/ablation_study")
     # 2. Build the 7 Ablation Configurations
     # ======================================
     configs = [
-        # --- Model 1: Vanilla Baseline ---
-        Experiments.ExperimentConfig(
-            name = "01_02_ablation_baseline",
-            model = Models.PreGame.AblationStudy_NB_baseLine(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
-        # --- Model 2: Environment (Midweek + Plastic) ---
-        Experiments.ExperimentConfig(
-            name = "02_02_ablation_env",
-            model = Models.PreGame.AblationStudy_NB_env(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
-        # --- Model 3: The Fortress (Team-Specific Home Advantage) ---
-        Experiments.ExperimentConfig(
-            name = "03_02_ablation_home_hierarchy",
-            model = Models.PreGame.AblationStudy_NB_home_hierarchy(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
-        # --- Model 4: Lean Target (Team HA + Team Dispersion) ---
-        Experiments.ExperimentConfig(
-            name = "04_02_ablation_team_dispersion",
-            model = Models.PreGame.AblationStudy_NB_team_dispersion(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
-        # --- Model 5: Baseline + Monthly Expectations ---
-        Experiments.ExperimentConfig(
-            name = "05_02_ablation_month_mu",
-            model = Models.PreGame.AblationStudy_NB_baseline_month_mu(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
-        # --- Model 6: Baseline + Monthly Dispersion ---
-        Experiments.ExperimentConfig(
-            name = "06_02_ablation_month_r",
-            model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-
+        # # --- Model 1: Vanilla Baseline ---
+        # Experiments.ExperimentConfig(
+        #     name = "01_02_ablation_baseline",
+        #     model = Models.PreGame.AblationStudy_NB_baseLine(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
+        # # --- Model 2: Environment (Midweek + Plastic) ---
+        # Experiments.ExperimentConfig(
+        #     name = "02_02_ablation_env",
+        #     model = Models.PreGame.AblationStudy_NB_env(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
+        # # --- Model 3: The Fortress (Team-Specific Home Advantage) ---
+        # Experiments.ExperimentConfig(
+        #     name = "03_02_ablation_home_hierarchy",
+        #     model = Models.PreGame.AblationStudy_NB_home_hierarchy(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
+        # # --- Model 4: Lean Target (Team HA + Team Dispersion) ---
+        # Experiments.ExperimentConfig(
+        #     name = "04_02_ablation_team_dispersion",
+        #     model = Models.PreGame.AblationStudy_NB_team_dispersion(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
+        # # --- Model 5: Baseline + Monthly Expectations ---
+        # Experiments.ExperimentConfig(
+        #     name = "05_02_ablation_month_mu",
+        #     model = Models.PreGame.AblationStudy_NB_baseline_month_mu(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
+        # # --- Model 6: Baseline + Monthly Dispersion ---
+        # Experiments.ExperimentConfig(
+        #     name = "06_02_ablation_month_r",
+        #     model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+        #
         # --- Model 7: The Kitchen Sink (Everything) ---
         Experiments.ExperimentConfig(
             name = "07_02_ablation_kitchen_sink",
