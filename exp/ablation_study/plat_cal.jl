@@ -3,8 +3,7 @@ market_data = Data.prepare_market_data(ds)
 
 
 
-exp = loaded_results_[1]
-
+exp = loaded_results_[2]
 
 
 latents = Predictions.extract_oos_predictions(ds, exp)

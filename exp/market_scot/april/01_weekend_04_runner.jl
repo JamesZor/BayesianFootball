@@ -75,6 +75,17 @@ match_to_predict = DataFrame(
                  "stirling-albion", "annan-athletic", "the-spartans-fc", "elgin-city", "dumbarton"]
 )
 
+
+
+match_to_predict = DataFrame(
+    match_id = [i for i in 1:1],
+    match_week = [ 32 for _ in 1:1],
+    match_date = [ today() for _ in 1:1],
+    home_team = ["montrose"], 
+    away_team = ["cove-rangers"]
+)
+
+
 raw_preds = BayesianFootball.Models.PreGame.extract_parameters(
     m1.config.model, match_to_predict, feature_set, chain1
 )
@@ -200,6 +211,7 @@ target_markets = [:btts_yes, :draw, :over_15, :over_25, :over_35]
 
 # NOTE: Need to ran on the back test exp, since we need to compare historical ppd to the matches - @ablation_study/plat_cat.jl
 calculated_shifts = compute_all_shifts(ppd.df, market_data.df, target_markets)
+
 #=
 === Starting Global Calibration ===
 
