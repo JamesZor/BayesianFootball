@@ -19,8 +19,10 @@ ds = BayesianFootball.Data.DataStore(
     data_store.odds,
     data_store.incidents
 )
+transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
 df =subset(ds.matches, :tournament_id => ByRow(isequal(56)), :season => ByRow(isequal("25/26")))
+
 
 unique(df.match_month)
 

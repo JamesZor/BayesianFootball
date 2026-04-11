@@ -3,16 +3,16 @@
 using BayesianFootball
 using Distributions # Required for prior definitions (Normal, Gamma, etc.)
     
-function get_grw_basics_configs(; save_dir="./data/exp/market_runs/april")
+function get_grw_basics_configs(ds ; save_dir="./data/exp/market_runs/april")
     # 1. Setup Data & Splits
     # ======================
-    ds = Data.load_extra_ds()
-
-    # default 
+    # ds = Data.load_extra_ds()
+    #
+    # # default 
+    # # transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+    # # testing the grw GRWNegativeBinomialMu at every 2 weeks
     # transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
-    # testing the grw GRWNegativeBinomialMu at every 2 weeks
-    transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
-
+    #
 
     cv_config = BayesianFootball.Data.GroupedCVConfig(
         tournament_groups = [[56, 57]],
@@ -46,7 +46,7 @@ function get_grw_basics_configs(; save_dir="./data/exp/market_runs/april")
     configs = [
 
         Experiments.ExperimentConfig(
-            name = "06_02_ablation_month_r",
+            name = "april_wk2_sql",
             model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
             splitter = cv_config,
             training_config = training_config,

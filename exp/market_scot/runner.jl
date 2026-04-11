@@ -11,9 +11,9 @@ pinthreads(:cores)
 # Load the definitions from the sibling file
 # include("./exp/market_scot/models.jl")
 
-function run_all()
+function run_all(ds)
     # 1. Get Configs
-    ds, configs = get_grw_basics_configs()
+    ds, configs = get_grw_basics_configs(ds)
     
     println("🚀 Starting Experiment Suite: GRW Basics")
     println("   > Found $(length(configs)) configurations.")
@@ -48,4 +48,4 @@ function run_all()
 end
 
 # Execute
-run_all()
+run_all(ds)

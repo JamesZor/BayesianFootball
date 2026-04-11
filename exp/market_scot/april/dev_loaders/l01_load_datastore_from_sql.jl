@@ -1,8 +1,16 @@
+# exp/market_scot/april/dev_loaders/l01_load_datastore_from_sql.jl
 
+using Revise
 using LibPQ
-# using DBInterface
 using DataFrames
 using Dates
+using BayesianFootball
+# using DBInterface
+
+
+struct DBConfig
+    url::String
+end
 
 
 """
@@ -15,43 +23,7 @@ end
 """
 Fetch matches and format them to closely match your existing DataFrame structure.
 """
-function fetch_matches(conn::LibPQ.Connection)
-    query = """
-        SELECT 
-            m.tournament_id,
-            m.season_id,
-            s.year AS season, 
-            m.match_id,
-            m.home_team,
-            m.away_team,
-            m.home_score,
-            m.away_score,
-            m.home_score_ht,
-            m.away_score_ht,
-            m.winner_code,
-            m.start_timestamp AS match_date,
-            m.round,
-            
-            -- Extracting boolean flags directly from the JSONB raw_data
-            (m.raw_data ->> 'hasXg')::boolean AS has_xg,
-            (m.raw_data ->> 'hasEventPlayerStatistics')::boolean AS has_stats
-            
-        FROM matches m
-        JOIN seasons s ON m.season_id = s.season_id
-        WHERE m.status_type = 'finished'
-    """
-    
-    df = DataFrame(LibPQ.execute(conn, query))
-    
-    # Cast timestamp to Date to match your CSV output
-    if nrow(df) > 0 && !(typeof(df.match_date[1]) <: Date)
-        df.match_date = Date.(df.match_date) 
-    end
-    
-    return df
-end
-
-function fetch_matches_v2(conn)
+function fetch_matches(conn)
     query = """
         SELECT 
             m.tournament_id,
@@ -99,38 +71,34 @@ function fetch_matches_v2(conn)
     return df
 end
 
-"""
-Fetch incidents, flattening the JSON payload into columns exactly like the Python script did.
-"""
 function fetch_incidents(conn::LibPQ.Connection)
     query = """
-        SELECT 
-            match_id,
-            tournament_id,
-            season_id,
-            incident_type,
-            time,
-            is_home,
-            added_time,
-            
-            -- Flattened JSONB fields from the `data` column
-            data -> 'player' ->> 'name' AS player_name,
-            data -> 'playerIn' ->> 'name' AS player_in_name,
-            data -> 'playerOut' ->> 'name' AS player_out_name,
-            data -> 'assist1' ->> 'name' AS assist1_name,
-            data -> 'assist2' ->> 'name' AS assist2_name,
-            data ->> 'incidentClass' AS incident_class,
-            data ->> 'reason' AS reason,
-            
-            -- Casting strings to booleans safely
-            (data ->> 'injury')::boolean AS is_injury,
-            (data ->> 'rescinded')::boolean AS rescinded,
-            
-            -- Period specific
-            data ->> 'text' AS period_text,
-            (data ->> 'timeSeconds')::numeric AS time_seconds
-            
-        FROM match_incidents
+SELECT 
+    id,
+    match_id,
+    incident_type,
+    time,
+    is_home,
+    added_time,
+
+    -- Flattened JSONB fields from the `data` column
+    data -> 'player' ->> 'slug' AS player_name,
+    data -> 'playerIn' ->> 'slug' AS player_in_name,
+    data -> 'playerOut' ->> 'slug' AS player_out_name,
+    data -> 'assist1' ->> 'slug' AS assist1_name,
+    data -> 'assist2' ->> 'name' AS assist2_name,
+    data ->> 'incidentClass' AS incident_class,
+    data ->> 'reason' AS reason,
+    
+    -- Casting strings to booleans safely
+    (data ->> 'injury')::boolean AS is_injury,
+    (data ->> 'rescinded')::boolean AS rescinded,
+    
+    -- Period specific
+    data ->> 'text' AS period_text,
+    (data ->> 'timeSeconds')::numeric AS time_seconds
+    
+FROM match_incidents
     """
     return DataFrame(LibPQ.execute(conn, query))
 end
@@ -158,23 +126,13 @@ function fetch_odds(conn::LibPQ.Connection)
 end
 
 
-# stage two
-#
-# ---- struct 
-
-using BayesianFootball
-
-struct DBConfig
-    url::String
-end
-
 
 function load_datastore(config::DBConfig)::BayesianFootball.Data.DataStore 
     conn = LibPQ.Connection(config.url)
     try
-        matches = fetch_matches_v2(conn)
+        matches = fetch_matches(conn)
         odds = fetch_odds(conn)
-        incidents =  DataFrame()
+        incidents =  fetch_incidents(conn)
         return BayesianFootball.Data.DataStore(matches, odds, incidents)
     finally
         close(conn)

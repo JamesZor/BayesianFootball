@@ -103,8 +103,8 @@ function raw_preds_to_df(raw_preds::Dict)
 end
 
 
-latents = BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds), m1.config.model)
-ppd = BayesianFootball.Predictions.model_inference(latents)
+latents_m1 = BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds), m1.config.model)
+ppd_m1 = BayesianFootball.Predictions.model_inference(latents_m1)
 
 # ========================================================================
 # 1. NON-MUTATING SHIFT APPLIER
@@ -117,7 +117,7 @@ using GLM
 using Statistics
 
 
-market_data = Data.prepare_market_data(ds)
+market_data = Data.prepare_market_data(ds1)
 
 function calculate_shift(ppd_df::DataFrame, market_df::DataFrame, target_selection::Symbol)
     println("\n--- Layer 2 Calibration for: :$target_selection ---")
@@ -248,7 +248,7 @@ Dict{Symbol, Float64} with 5 entries:
   :over_15  => 0.262941
   :over_25  => 0.0997077
 =#
-ppds_compare = copy(ppds)
+ppds_compare = copy(ppd_m1.df)
 ppds_compare.shifted_distribution = copy(ppds_compare.distribution)
 
 # Apply the shifts dynamically based on the dictionary
@@ -281,18 +281,18 @@ ppds_compare.shift_odds_bid  = 1.0 ./ ppds_compare.shift_prob_upper
 
 
 # 2. Calculate probabilities for these quantiles
-ppd.df.prob_lower = [quantile(d, q_low) for d in ppd.df.distribution]
-ppd.df.prob_mean  = [mean(d) for d in ppd.df.distribution]
-ppd.df.prob_upper = [quantile(d, q_high) for d in ppd.df.distribution]
+ppd_m1.df.prob_lower = [quantile(d, q_low) for d in ppd_m1.df.distribution]
+ppd_m1.df.prob_mean  = [mean(d) for d in ppd_m1.df.distribution]
+ppd_m1.df.prob_upper = [quantile(d, q_high) for d in ppd_m1.df.distribution]
 
 # 3. Translate Probabilities to Odds (Odds = 1 / Probability)
-ppd.df.odds_ask  = 1.0 ./ ppd.df.prob_lower # Max price you'd offer (Bookie Ask)
-ppd.df.odds_mean = 1.0 ./ ppd.df.prob_mean  # True "Fair" Market Odds
-ppd.df.odds_bid  = 1.0 ./ ppd.df.prob_upper # Min price you'd accept (Bookie Bid)
+ppd_m1.df.odds_ask  = 1.0 ./ ppd_m1.df.prob_lower # Max price you'd offer (Bookie Ask)
+ppd_m1.df.odds_mean = 1.0 ./ ppd_m1.df.prob_mean  # True "Fair" Market Odds
+ppd_m1.df.odds_bid  = 1.0 ./ ppd_m1.df.prob_upper # Min price you'd accept (Bookie Bid)
 
 market_selection = [ :btts_yes, :draw, :over_15, :over_25, :over_35]
 
-ppds_selected = subset( ppd.df, :selection => ByRow(in(market_selection)))
+ppds_selected = subset( ppd_m1.df, :selection => ByRow(in(market_selection)))
 
 ppds = leftjoin( ppds_selected, match_to_predict, on=:match_id)
 
@@ -302,7 +302,7 @@ ppds = leftjoin( ppds_selected, match_to_predict, on=:match_id)
 # ========================================================================
 
 # Select the relevant columns to view them side-by-side
-final_view = select(ppds_compare,
+final_view = select(ppds,
     :match_id, 
     :home_team, 
     :away_team, 
@@ -321,6 +321,56 @@ final_view = select(ppds_compare,
 sort!(final_view, [:match_id, :market_name])
 display(final_view)
 
+
+
+# ----
+# Join match data onto ppds_compare instead of ppds_selected
+ppds_full = leftjoin(ppds_compare, match_to_predict, on=:match_id)
+
+# Now select from the newly joined DataFrame
+final_view = select(ppds_full,
+    :match_id, 
+    :home_team, 
+    :away_team, 
+    :market_name, 
+    :selection,
+    # Raw Odds
+    :odds_ask => :raw_ask, 
+    :odds_mean => :raw_mean, 
+    :odds_bid => :raw_bid,
+    # Shifted Odds (these now exist here!)
+    :shift_odds_ask => :shifted_ask, 
+    :shift_odds_mean => :shifted_mean, 
+    :shift_odds_bid => :shifted_bid
+)
+
+sort!(final_view, [:match_id, :market_name])
+display(final_view)
+
+
+# 1. Define the specific teams and selections you want to compare
+target_home_teams = [
+    "cove-rangers", 
+    "montrose", 
+    "east-kilbride", 
+    "edinburgh-city"
+]
+
+target_selections = [:over_15, :over_25]
+
+# 2. Filter the DataFrame
+comparison_view = subset(final_view,
+    # Check if the home team is in our target list (and handle any missing data safely)
+    :home_team => ByRow(team -> !ismissing(team) && team ∈ target_home_teams),
+    # Check if the selection is either over_15 or over_25
+    :selection => ByRow(sel -> sel ∈ target_selections)
+)
+
+# 3. Sort by match and selection for clean reading
+sort!(comparison_view, [:match_id, :selection])
+
+# 4. View the results
+display(comparison_view)
 
 # -----
 
