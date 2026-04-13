@@ -28,8 +28,18 @@ end
     DataStore
 Container for the three core DataFrames used in the football model.
 """
-struct DataStore
+# HACK: 2026-04-13 - for dev_sql_datastore
+# struct DataStore
+#     matches::DataFrame
+#     odds::DataFrame
+#     incidents::DataFrame
+# end
+#
+
+struct DataStore 
     matches::DataFrame
+    statistics::DataFrame
     odds::DataFrame
+    lineups::DataFrame
     incidents::DataFrame
-end
+end 

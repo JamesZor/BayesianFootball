@@ -30,6 +30,9 @@ include("./markets/markets-module.jl")
 using .Markets
 
 
+include("./dev_sql_datastore.jl")
+
+
 include("./scotland_extra.jl") 
 
 export 

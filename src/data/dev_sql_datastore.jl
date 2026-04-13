@@ -1,18 +1,8 @@
-# dev_repl/data_module_sql_update/l01_get_datastore_from_sql.jl 
+# note this is a test file - further dev is need 
 
-
-#=
---- Loader ----
-____________________
-=#
-
-
-
-using Revise
 using LibPQ
 using DataFrames
 using Dates
-using BayesianFootball
 
 
 
@@ -45,17 +35,6 @@ tournament_ids(::ScottishLower) = [56, 57]
 tournament_ids(::Ireland)       = [79]
 tournament_ids(::SouthKorea)    = [3284, 6230]
 
-
-
-# Task 3:
-#   Get DataStore:
-#   Sub-Tacks:
-#     fetch:
-#    1. Matches.
-#    2. Statistics.
-#    3. Odds. - Note we need to check winning - post processing ? 
-#    4. LineUps
-#    5. Incidents.
 
 # ---  structs 
 abstract type FootballDataType end
@@ -406,16 +385,7 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::LineUpsData)::
 end
 
 
-# HACK: Replace with bayesain one 
-struct FootballDataStore
-    matches::DataFrame
-    statistics::DataFrame
-    odds::DataFrame
-    lineups::DataFrame
-    incidents::DataFrame
-end
-
-function get_datastore(conn::LibPQ.Connection, segment::DataTournemantSegment)::FootballDataStore
+function get_datastore(conn::LibPQ.Connection, segment::DataTournemantSegment)::DataStore
     local matches, statistics, incidents, lineup, odds
 
     @info "Building DataStore for $(typeof(segment))..."
@@ -429,5 +399,15 @@ function get_datastore(conn::LibPQ.Connection, segment::DataTournemantSegment)::
         @async odds      = fetch_data(conn, segment, OddsData())
     end
 
-    return FootballDataStore(matches,statistics, odds, lineup, incidents)
+    return DataStore(matches,statistics, odds, lineup, incidents)
 end
+
+
+function load_datastore_sql(segment::DataTournemantSegment)::DataStore 
+    db_config = DBConfig("postgresql://admin:supersecretpassword@100.124.38.117:5432/sofascrape_db")
+    db_conn = connect_to_db(db_config)
+    data_store = get_datastore(db_conn, segment)
+    return data_store
+end 
+
+
