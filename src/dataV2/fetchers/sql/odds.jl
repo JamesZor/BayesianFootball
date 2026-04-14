@@ -1,7 +1,7 @@
 # src/data/fetchers/sql/odds.jl
 
 # Make sure the Markets module is available in this scope
-using ..Markets 
+using .Markets 
 
 function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::OddsData)
     # Same SQL as before, ensuring we pull `m.start_timestamp AS match_date`
