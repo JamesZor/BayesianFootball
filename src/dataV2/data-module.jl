@@ -11,7 +11,7 @@ include("types.jl")
 include("utils.jl")
 
 # 2. Markets Sub-Module
-include("Markets/Markets-module.jl")
+include("./markets/markets-module.jl")
 using .Markets
 
 # 3. Fetchers (SQL -> Pipeline)
