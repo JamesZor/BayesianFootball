@@ -34,7 +34,7 @@ function process_data(df::DataFrame, ::MatchesData)
     df.match_dayofweek = dayofweek.(df.start_timestamp) .- 1
     df.match_date = Date.(df.start_timestamp)
 
-    add_match_week_column(df.matches),
+    add_match_week_column!(df)
 
     transform!(df, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
     

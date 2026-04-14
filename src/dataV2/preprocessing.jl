@@ -58,6 +58,33 @@ function add_match_week_column(matches_df::AbstractDataFrame)::DataFrame
     return df
 end
 
+function add_match_week_column!(matches_df::AbstractDataFrame)
+    df = matches_df # Work on a copy to avoid mutating the original
+    
+    # 1. Ensure global sort order first (Tournament -> Season -> Date)
+    # This ensures that when we group, the data is relatively ordered, 
+    # though the transform logic below explicitly handles date sorting too.
+    sort!(df, [:tournament_id, :season, :match_date])
+
+    # 2. Define the per-season logic
+    # We take the vector of dates for a specific season, map them to Week Ending Sundays,
+    # and then index those Sundays 1..N
+    transform!(groupby(df, [:tournament_id, :season]), :match_date => (dates -> begin
+        # A. Map distinct dates to their "Week Ending Sunday"
+        #    (Matches Mon-Sun will share the same sunday_date)
+        week_dates = sunday_of_week.(dates)
+        
+        # B. Find the unique weeks and sort them chronologically
+        unique_weeks = sort(unique(week_dates))
+        
+        # C. Create a map: SundayDate -> Index (1, 2, 3...)
+        week_map = Dict(w => i for (i, w) in enumerate(unique_weeks))
+        
+        # D. Map the original dates row-by-row to their Week Index
+        return [week_map[w] for w in week_dates]
+    end) => :match_week)
+
+end
 
 
 """

@@ -3,6 +3,22 @@
 # Make sure the Markets module is available in this scope
 using .Markets 
 
+"""
+Maps raw API market ids to internal market groups.
+"""
+function map_odds_market_group(market_id::Integer)::String 
+    if market_id in [1,3] return "1X2"
+    elseif market_id == 2 return "Double chance" 
+    elseif market_id == 4 return "Draw no bet" 
+    elseif market_id == 5 return "Both teams to score" 
+    elseif market_id == 6 return "First team to score" 
+    elseif market_id == 9 return "Match goals" 
+    elseif market_id == 17 return "Asian handicap" 
+    elseif market_id == 21 return "Corners 2-way" 
+    else return "Other" 
+    end 
+end
+
 function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::OddsData)
     # Same SQL as before, ensuring we pull `m.start_timestamp AS match_date`
     query = """
@@ -19,6 +35,8 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::OddsData)
 end
 
 function process_data(df::DataFrame, ::OddsData; config::MarketConfig = Markets.DEFAULT_MARKET_CONFIG)
+
+    df.market_group = map_odds_market_group.(df.market_id)
     # 1. Reconstruct fractions so the Markets module parsers don't break
     df.initial_fractional_value = [
         ismissing(n) ? missing : "$n/$d" 
