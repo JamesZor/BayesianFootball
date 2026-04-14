@@ -1,0 +1,21 @@
+# src/data/fetchers/segments.jl
+
+# ---------------------------------------------------------
+# The Singleton Type Approach (The "Julia" Way for Dispatch)
+# ---------------------------------------------------------
+struct ScottishLower <: DataTournemantSegment end 
+struct Ireland       <: DataTournemantSegment end 
+struct SouthKorea    <: DataTournemantSegment end 
+
+"""
+    tournament_ids(segment::DataTournemantSegment) -> Vector{Int}
+Maps the segment type to the specific tournament IDs in the database.
+"""
+tournament_ids(::ScottishLower) = [56, 57]
+tournament_ids(::Ireland)       = [79]
+tournament_ids(::SouthKorea)    = [3284, 6230]
+
+# Fallback method to catch missing definitions
+function tournament_ids(segment::DataTournemantSegment)
+    error("tournament_ids not defined for segment: $(typeof(segment))")
+end

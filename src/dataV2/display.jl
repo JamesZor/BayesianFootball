@@ -1,15 +1,15 @@
-# src/dataV2/display.jl
+# src/data/display.jl
 
+using DataFrames
 
 # ==============================================================================
 # PRETTY PRINTING (Data Containers)
 # ==============================================================================
 
 function Base.show(io::IO, ::MIME"text/plain", ds::DataStore)
-    # Title & Segment
+    # Title
     printstyled(io, "DataStore", color=:cyan, bold=true)
-    printstyled(io, " [$(typeof(ds.segment))]", color=:yellow, bold=true)
-    printstyled(io, "\n (Container for football data)\n", color=:light_black)
+    printstyled(io, " (Container for football data)\n", color=:light_black)
     println(io, "=========")
 
     # Define a helper to print each dataframe section consistently
@@ -37,26 +37,18 @@ function Base.show(io::IO, ::MIME"text/plain", ds::DataStore)
         end
     end
 
-    # Print the five main sections
+    # Print the three main sections
     print_df_summary("Matches", ds.matches)
     println(io)
-    print_df_summary("Statistics", ds.statistics)
-    println(io)
     print_df_summary("Odds", ds.odds)
-    println(io)
-    print_df_summary("Lineups", ds.lineups)
     println(io)
     print_df_summary("Incidents", ds.incidents)
 end
 
 # Compact inline show (for arrays/logging)
 function Base.show(io::IO, ds::DataStore)
-    seg = typeof(ds.segment)
     m = nrow(ds.matches)
-    s = nrow(ds.statistics)
     o = nrow(ds.odds)
-    l = nrow(ds.lineups)
     i = nrow(ds.incidents)
-    
-    print(io, "DataStore[$seg](matches=$m, stats=$s, odds=$o, lineups=$l, incidents=$i)")
+    print(io, "DataStore(matches=$m, odds=$o, incidents=$i)")
 end
