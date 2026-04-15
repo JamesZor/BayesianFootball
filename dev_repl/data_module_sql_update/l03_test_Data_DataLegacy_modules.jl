@@ -1,5 +1,6 @@
 using Revise
 using BayesianFootball
+using Logging
 
 using DataFrames
 using ThreadPinning
@@ -20,12 +21,35 @@ segment =   Data.ScottishLower()
 end
 
 
+
+function get_datastore_local_ip(;segment=Data.ScottishLower())
+db_config = Data.DBConfig("postgresql://admin:supersecretpassword@192.168.1.88:5432/sofascrape_db")
+db_conn =   Data.connect_to_db(db_config)
+  try
+    data_store = Data.get_datastore(db_conn, segment)
+    return data_store
+  finally
+    close(db_conn) 
+  end 
+end
+
+
+
 function get_datastore_legacy()
   ds = BayesianFootball.DataLegacy.load_extra_ds()
 # Generate the month index required by the time-varying models
   transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
   return ds 
 end
+
+
+#---------------------------------------- 
+# --- Generate experiment configs and run experiment 
+#---------------------------------------- 
+#=
+Used to test the datastore of the scottish league 
+to see if we get the same results with the old datastore and the new sql data 
+=#
 
 struct DSExperimentSettings 
   ds::Data.DataStore
@@ -47,10 +71,10 @@ function create_list_experiment_tasks(es_list::Vector{DSExperimentSettings})
     return reduce(vcat, create_experiment_tasks.(es_list); init=ExperimentTask[])
 end
 
-function create_list_experiment_configs(es_list::Vector{DSExperimentSettings})
-    return reduce(vcat, create_experiment_configs_for_ds.(es_list))
-end
-
+# function create_list_experiment_configs(es_list::Vector{DSExperimentSettings})
+#     return reduce(vcat, create_experiment_configs_for_ds.(es_list))
+# end
+#
 
 function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::String)
 
