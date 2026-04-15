@@ -1,6 +1,6 @@
 # src/data/data-module.jl
 
-module Data
+module DataLegacy
 
 using DataFrames
 using CSV
@@ -37,14 +37,8 @@ include("./scotland_extra.jl")
 
 export 
     # From Markets
-    MarketData, 
-    MarketConfig, 
-    Market1X2, 
-    MarketOverUnder, 
-    MarketBTTS,
     prepare_market_data
     # get_standard_markets # If you moved this helper here
-    
     load_extra_ds
 
 end # module

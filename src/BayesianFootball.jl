@@ -13,7 +13,8 @@ export MyDistributions
 # 2. Data is self-contained.
 # include("data/data-module.jl") #
 # FIX: dev test 
-include("./dataV2/data-module.jl")
+include("./Data/data-module.jl")
+include("./DataLegacy/data-module.jl")
 
 # 4. Features depends on Data, TypesInterfaces, and Models.
 include("features/features-module.jl") #

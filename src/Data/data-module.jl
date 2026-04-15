@@ -32,7 +32,7 @@ include("splitting/methods.jl")
 include("splitting/display.jl")
 
 # 5. QoL
-include("display.jl")
+include("./display.jl")
 
 export 
     # Types

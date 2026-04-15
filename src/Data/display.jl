@@ -60,3 +60,6 @@ function Base.show(io::IO, ds::DataStore)
     
     print(io, "DataStore[$seg](matches=$m, stats=$s, odds=$o, lineups=$l, incidents=$i)")
 end
+
+
+
