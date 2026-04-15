@@ -1,4 +1,7 @@
 
+# repl experiment test 
+
+
 using Revise
 using BayesianFootball
 
@@ -11,21 +14,12 @@ pinthreads(:cores)
 
 
 
-data_store = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+
+ds
 
 
 
-ds = BayesianFootball.Data.DataStore( 
-    Data.add_match_week_column(data_store.matches),
-    data_store.statistics,
-    data_store.odds,
-    data_store.lineups,
-    data_store.incidents
-)
-
-
-
-transform!(ds.matches, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
 
 
 
@@ -54,6 +48,10 @@ sampler_conf = Samplers.NUTSConfig(
 
 train_cfg = BayesianFootball.Training.Independent(parallel=true, max_concurrent_splits=4)
 training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
+
+
+data_splits = Data.create_data_splits(data_store, config.splitter)
 
 model = Models.PreGame.AblationStudy_NB_baseLine()
 

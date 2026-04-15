@@ -113,7 +113,7 @@ end
 Loads the additional Scotland data, merges it with the existing matches to add 
 shot statistics (HS, AS, HST, AST), and returns a NEW DataStore.
 """
-function enrich_with_scotland_extra(ds::DataStore, folder_path::String)
+function enrich_with_scotland_extra(ds::Data.DataStore, folder_path::String)
     println("... Loading Extra Scotland Data from: $folder_path")
     
     # 1. Load Raw Extra Data
@@ -169,14 +169,18 @@ function enrich_with_scotland_extra(ds::DataStore, folder_path::String)
     # 6. Return new DataStore
     # We keep the original odds and incidents for now
 
-    return DataStore(enriched_matches, ds.odds, ds.incidents)
+    return DataStore_wrapper(
+    matches=enriched_matches,
+    incidents=ds.incidents,
+    odds=ds.odds
+  )
 end
 
 
 function load_extra_ds()
-  ds = Data.load_default_datastore()
+  ds = DataLegacy.load_default_datastore()
   # 2. Enrich with New Data
   folder_path = "/home/james/bet_project/football/scotland_l12_extra"
-  ds_enriched = Data.enrich_with_scotland_extra(ds, folder_path)
+  ds_enriched = DataLegacy.enrich_with_scotland_extra(ds, folder_path)
   return ds_enriched
 end

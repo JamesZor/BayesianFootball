@@ -33,12 +33,42 @@ function _get_data_odds(file_path)
 end
 
 # --- Constructors ---
-
+# HACK: 2026-04-15
 function DataStore(data_files::DataFiles)
     matches = _get_data_matches(data_files.match)
     incidents = _get_data_incidents(data_files.incidents)
     odds = _get_data_odds(data_files.odds)
-    return DataStore(matches, odds, incidents)
+  
+return DataStore_wrapper(matches=matches, incidents=incidents , odds= odds)
+end 
+
+
+"""
+    DataStore_wrapper(; kwargs...)
+
+A shim to allow legacy code to create a modern DataStore. 
+Defaults missing fields to empty DataFrames.
+"""
+function DataStore_wrapper(;
+    matches::AbstractDataFrame   = DataFrame(),
+    stats::AbstractDataFrame     = DataFrame(),
+    lineups::AbstractDataFrame   = DataFrame(),
+    incidents::AbstractDataFrame = DataFrame(),
+    odds::AbstractDataFrame      = DataFrame()
+)
+    # 1. Get your placeholder segment
+    segment_holder = Data.DevLegacyDataStore()
+
+    # 2. Return the new Type
+    # Note: Order must match your struct: (segment, matches, stats, odds, lineups, incidents)
+    return Data.DataStore(
+        segment_holder,
+        matches,
+        stats,
+        odds,
+        lineups,
+        incidents
+    )
 end
 
 function load_default_datastore() 

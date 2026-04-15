@@ -7,6 +7,10 @@ struct ScottishLower <: DataTournemantSegment end
 struct Ireland       <: DataTournemantSegment end 
 struct SouthKorea    <: DataTournemantSegment end 
 
+
+# HACK: 2026-04-15 - for DataLegacy DataStore
+struct DevLegacyDataStore <: DataTournemantSegment end 
+
 """
     tournament_ids(segment::DataTournemantSegment) -> Vector{Int}
 Maps the segment type to the specific tournament IDs in the database.

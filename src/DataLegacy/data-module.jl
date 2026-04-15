@@ -6,6 +6,7 @@ using DataFrames
 using CSV
 using Dates
 using InlineStrings
+using ..Data 
 
 # 1. Load Constants & Types
 include("./constants.jl")
