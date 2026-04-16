@@ -65,7 +65,7 @@ my_signals = [baker, flat_strat]
 # Run backtest on ALL loaded models at once
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
-  loaded_results_, 
+    loaded_results, 
     my_signals; 
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )

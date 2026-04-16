@@ -17,8 +17,7 @@ include("./l03_test_Data_DataLegacy_modules.jl")
 
 
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
-# ds_legacy = get_datastore_legacy() - issues witht he load extra data..
-ds_legacy = BayesianFootball.DataLegacy.load_default_datastore()
+ds_legacy = get_datastore_legacy() 
 
 
 
@@ -31,7 +30,7 @@ es_legacy = DSExperimentSettings(ds_legacy, "legacy", save_dir)
 
 all_tasks = create_list_experiment_tasks([es_new, es_legacy])
 
-results = run_experiment_task.(all_tasks)
+# results = run_experiment_task.(all_tasks)
 
 
 # ------ 3 . Load the experiments  --------
@@ -42,6 +41,44 @@ loaded_results = loaded_experiment_files(saved_folders);
 
 # ------ 4. Simple Backtesting -----
 
+
+baker = BayesianFootball.Signals.BayesianKelly()
+flat_strat = BayesianFootball.Signals.FlatStake(0.05)
+my_signals = [baker, flat_strat]
+my_signals = [baker]
+
+loaded_legacy = loaded_results[[1,2]]
+loaded_new = loaded_results[[3,4]]
+
+ledger_new = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+    loaded_new, 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+ledger_legacy = BayesianFootball.BackTesting.run_backtest(
+    ds_legacy, 
+    loaded_legacy, 
+    my_signals; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+
+
+tearsheet_new = BayesianFootball.BackTesting.generate_tearsheet(ledger_new)
+tearsheet_legacy= BayesianFootball.BackTesting.generate_tearsheet(ledger_legacy)
+
+model_names = unique(tearsheet_new.selection)
+model_names = model_names[1:15]
+
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub_new = subset(tearsheet_new, :selection => ByRow(isequal(m_name)))
+    sub_leg = subset(tearsheet_legacy, :selection => ByRow(isequal(m_name)))
+    show(sub_new)
+    show(sub_leg)
+end
 
 
 
