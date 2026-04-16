@@ -17,12 +17,13 @@ include("./l03_test_Data_DataLegacy_modules.jl")
 
 
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
-ds_legacy = get_datastore_legacy()
+# ds_legacy = get_datastore_legacy() - issues witht he load extra data..
+ds_legacy = BayesianFootball.DataLegacy.load_default_datastore()
 
 
 
+# ------ 2 . Running the experiments  --------
 save_dir::String = "./data/exp/data_module_test"
-
 
 es_new = DSExperimentSettings(ds, "new", save_dir)
 es_legacy = DSExperimentSettings(ds_legacy, "legacy", save_dir)
@@ -33,10 +34,20 @@ all_tasks = create_list_experiment_tasks([es_new, es_legacy])
 results = run_experiment_task.(all_tasks)
 
 
+# ------ 3 . Load the experiments  --------
+
+saved_folders = Experiments.list_experiments(save_dir; data_dir="")
+
+loaded_results = loaded_experiment_files(saved_folders);
+
+# ------ 4. Simple Backtesting -----
 
 
 
 
+# ------------------------------------------
+# TODO:
+# This needs to be moved to an eda / statistics sections. 
 # ---- Task 2 -- explore dataset 
 
 ds = get_datastore_local_ip()

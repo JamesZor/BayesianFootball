@@ -1,4 +1,4 @@
-# src/data/markets/processing.jl
+# src/DataLegacy/markets/processing.jl
 
 """
     prepare_market_data(ds, config::MarketConfig)

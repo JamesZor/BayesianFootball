@@ -59,13 +59,24 @@ function DataStore_wrapper(;
     # 1. Get your placeholder segment
     segment_holder = Data.DevLegacyDataStore()
 
+    tmp_ds = Data.DataStore(
+        segment_holder,
+        matches,
+        stats,
+        odds,
+        lineups,
+        incidents
+    )
+    
+    md = prepare_market_data(tmp_ds)
+
     # 2. Return the new Type
     # Note: Order must match your struct: (segment, matches, stats, odds, lineups, incidents)
     return Data.DataStore(
         segment_holder,
         matches,
         stats,
-        odds,
+        md.df,
         lineups,
         incidents
     )

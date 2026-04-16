@@ -20,12 +20,13 @@ function run_backtest(
 
     # 1. Prepare Environment (Once)
     # We prep the market data once so we don't re-calculate it for every model
-    market_data = Data.prepare_market_data(ds)
+    # TEST: - new DataStore type has the odds already processes - so ds.odds = market_data.df --- in theory ...
+    # market_data = Data.prepare_market_data(ds) 
     
     # 2. Define the Worker (Closure)
     # This captures the common data (ds, signals, market_data) 
     # and takes only the specific experiment 'exp' as input.
-    worker_fn(exp) = _process_single_experiment(exp, ds, signals, market_data.df, market_config; 
+    worker_fn(exp) = _process_single_experiment(exp, ds, signals, ds.odds, market_config; 
                                                 odds_column=odds_column)
 
     # 3. Execute

@@ -42,7 +42,6 @@ function get_datastore_legacy()
   return ds 
 end
 
-
 #---------------------------------------- 
 # --- Generate experiment configs and run experiment 
 #---------------------------------------- 
@@ -168,3 +167,27 @@ function run_all_experiments(ds::Data.DataStore, configs::Vector{Experiments.Exp
     println(" Suite Finished: $success_count / $(length(configs)) successful.")
     println("============================================================")
 end
+
+
+
+# ---- Stage 3: loaded the Experiments -----
+
+function loaded_experiment_files(saved_folders::Vector{String})
+  loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+  for folder in saved_folders
+      try
+          res = Experiments.load_experiment(folder)
+          push!(loaded_results, res)
+      catch e
+          @warn "Could not load $folder: $e"
+      end
+  end
+
+  if isempty(loaded_results)
+      error("No results loaded! Did you run runner.jl?")
+  end
+
+  return loaded_results
+
+end
+

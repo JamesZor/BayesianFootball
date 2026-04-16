@@ -70,6 +70,7 @@ function process_data(df::DataFrame, ::OddsData; config::MarketConfig = Markets.
     # from our raw SQL DataFrame. No need to wait for MatchesData anymore!
     date_df = unique(select(df, [:match_id, :match_date]))
     long_df = leftjoin(long_df, date_df, on=:match_id)
+    rename!(long_df, :match_date => :date)
 
     # 4. Math Enrichment (Probabilities, Vig, Fair Odds, CLM)
     Markets._enrich_market_data!(long_df)
