@@ -184,3 +184,44 @@ summary_rqr_df = select(rqr_df,
 =#
 
 
+miq_df= evaluate_batch(Evaluation.MIQ(), loaded_results, ds, label="Baseline Models")
+
+function display_miq_selection(df, sym) 
+    return select(df,
+        :model,
+        Symbol("miq_$(sym)_mean"), 
+        Symbol("miq_$(sym)_std"), 
+        Symbol("miq_$(sym)_mean_gap"), 
+        Symbol("miq_$(sym)_ks_d_stat"), 
+        Symbol("miq_$(sym)_p_value"), 
+        Symbol("miq_$(sym)_n_winners"), 
+        Symbol("miq_$(sym)_n_losers") 
+    )
+end
+
+home_edge = display_miq_selection(miq_df, :home)
+home_edge = display_miq_selection(miq_df, :over_25)
+
+
+
+glm_df = evaluate_batch(Evaluation.GLMEdge(), loaded_results, ds, label="Baseline Models")
+
+select(glm_df, :model, 
+            :glmedge_intercept_coef,
+            :glmedge_spread_fair_coef, 
+            :glmedge_spread_fair_p_value,
+            :glmedge_n_obs
+       )
+
+
+
+#=
+)
+2×5 DataFrame
+ Row │ model               glmedge_intercept_coef  glmedge_spread_fair_coef  glmedge_spread_fair_p_value  glmedge_n_obs 
+     │ String              Float64                 Float64                   Float64                      Int64         
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ norway_01_baseline                -2.97599                  0.202833                     0.445875          26027
+   2 │ norway_02_monthlyR                -2.9759                   0.184637                     0.486645          26027
+=#
+
