@@ -51,8 +51,10 @@ function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore):
     # 1. Extract Latents
     latents_raw = Experiments.extract_oos_predictions(ds, exp)
     
+
+    # REVIEW: - prepare_market_data can be removed - DataLegacy
     # 2. Prepare Market Data
-    market_data = Data.prepare_market_data(ds)
+    # market_data = Data.prepare_market_data(ds)
 
     # 3. Model Inference (Get the model's probabilities)
     ppd = Predictions.model_inference(latents_raw)
@@ -61,7 +63,8 @@ function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore):
 
     # 4. Merge Model Probs with Market Probs
     analysis_df = innerjoin(
-        market_data.df,
+        # REVIEW:
+        ds.odds, # market_data.df,
         model_features,
         on = [:match_id, :market_name, :market_line, :selection]
     )

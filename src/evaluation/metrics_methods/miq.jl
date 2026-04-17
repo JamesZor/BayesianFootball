@@ -99,15 +99,18 @@ function compute_metric(metric::MIQ, exp::ExperimentResults, ds::DataStore)::MIQ
     # 1. Extract Latents
     latents_raw = Experiments.extract_oos_predictions(ds, exp)
 
+
+    # REVIEW: - prepare_market_data can be removed - DataLegacy
     # 2. Prepare Market Data
-    market_data = Data.prepare_market_data(ds)
+    # market_data = Data.prepare_market_data(ds)
 
     # 3. Model Inference (PPD - Posterior Predictive Distribution)
     ppd = Predictions.model_inference(latents_raw)
 
     # 4. Merge with Market Data
     analysis_df = innerjoin(
-        market_data.df,
+        # REVIEW:
+        ds.odds, # market_data.df,
         ppd.df,
         on = [:match_id, :market_name, :market_line, :selection]
     )

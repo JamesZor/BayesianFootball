@@ -38,9 +38,10 @@ function compute_metric(metric::GLMEdge, exp::ExperimentResults, ds::DataStore):
     # 1. Extract Latents
     latents_raw = Experiments.extract_oos_predictions(ds, exp)
     
+    # REVIEW: - prepare_market_data can be removed - DataLegacy
     # 2. Prepare Market Data
     # (Assuming Data.prepare_market_data exists in your Data module as you showed)
-    market_data = Data.prepare_market_data(ds)
+    # market_data = Data.prepare_market_data(ds)
 
     # 3. Model Inference (PPD - Posterior Predictive Distribution)
     # Generates betting probabilities based on latents
@@ -51,6 +52,8 @@ function compute_metric(metric::GLMEdge, exp::ExperimentResults, ds::DataStore):
 
     # 4. Merge with Market Data
     analysis_df = innerjoin(
+        # REVIEW:
+        ds.odds, # market_data.df,
         market_data.df,
         model_features,
         on = [:match_id, :market_name, :market_line, :selection]
