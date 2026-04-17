@@ -54,7 +54,7 @@ function compute_metric(metric::GLMEdge, exp::ExperimentResults, ds::DataStore):
     analysis_df = innerjoin(
         # REVIEW:
         ds.odds, # market_data.df,
-        market_data.df,
+        # market_data.df,
         model_features,
         on = [:match_id, :market_name, :market_line, :selection]
     )

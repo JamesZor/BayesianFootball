@@ -162,4 +162,25 @@ Stats for: under_45
 =#
 
 
-miq_df = evaluate_batch(Evaluation.RQR(), loaded_results, ds, label="Baseline Models")
+rqr_df = evaluate_batch(Evaluation.RQR(), loaded_results, ds, label="Baseline Models")
+
+
+summary_rqr_df = select(rqr_df, 
+           :model, 
+           :rqr_all_mean, 
+           :rqr_all_std, 
+           :rqr_all_skewness, 
+           :rqr_all_kurtosis, 
+           :rqr_all_shapiro_w,
+           :rqr_all_shapiro_p
+                           )
+#=
+2×7 DataFrame
+ Row │ model               rqr_all_mean  rqr_all_std  rqr_all_skewness  rqr_all_kurtosis  rqr_all_shapiro_w  rqr_all_shapiro_p 
+     │ String              Float64       Float64      Float64           Float64           Float64            Float64           
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ norway_01_baseline  -0.000451559      1.01019         0.0230306        -0.0819909           0.999562           0.889813
+   2 │ norway_02_monthlyR   0.0154213        1.00238         0.0635069        -0.0958895           0.999409           0.676717
+=#
+
+
