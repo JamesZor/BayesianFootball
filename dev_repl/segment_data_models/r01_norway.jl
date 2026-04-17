@@ -4,6 +4,10 @@ include("./l01_ireland.jl")
 
 
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Norway())
+
+
+
+ds = JLD2.load_object("norway_datastore_test.jld2")
 #=
 unique(ds.matches.season)
 6-element Vector{Union{Missing, String}}:
@@ -158,3 +162,4 @@ Stats for: under_45
 =#
 
 
+miq_df = evaluate_batch(Evaluation.RQR(), loaded_results, ds, label="Baseline Models")

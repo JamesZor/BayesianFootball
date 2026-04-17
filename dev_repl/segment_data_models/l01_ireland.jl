@@ -168,3 +168,66 @@ function display_tearsheet_by_market(tearsheet::AbstractDataFrame)
         show(sub)
     end
 end
+
+
+
+# ----------------------------------------------------
+# --- metric scoring for the models 
+# ----------------------------------------------------
+
+function evaluate_batch(metric::Evaluation.AbstractScoringRule, results_array, ds; label="Batch Evaluation")
+    # Dynamically grab the metric name (e.g., "crps", "rqr", "miq") and uppercase it for display
+    metric_name = uppercase(Evaluation.get_metric_method_name(metric))
+    
+    println("\n============================================================")
+    println(" 🚀 Running Batch $metric_name Evaluation: $label")
+    println("============================================================")
+
+    flat_rows = []
+
+    # Loop through all provided experiments
+    for (i, exp) in enumerate(results_array)
+        model_name = exp.config.name
+        print("[$i/$(length(results_array))] Evaluating: $(model_name) ... ")
+        
+        try
+            # Computes whatever metric was passed in
+            metric_data = Evaluation.compute_metric(metric, exp, ds)
+            
+            # Flattens the nested structs into a single row using your unroller
+            flat_row = Evaluation.to_dataframe_row(exp, metric_data)
+            
+            push!(flat_rows, flat_row)
+            println("✅ Done")
+        catch e
+            println("❌ Failed")
+            @warn "Error evaluating $model_name on $metric_name: $e"
+        end
+    end
+
+    # Build the Master DataFrame
+    master_df = DataFrame(flat_rows)
+
+    if nrow(master_df) > 0
+        # Sort by model name to keep it organized
+        if hasproperty(master_df, :model)
+            sort!(master_df, :model)
+        end
+
+        println("\n============================================================")
+        println(" 📊 MASTER $metric_name COMPARISON: $label")
+        if metric_name == "CRPS"
+             println(" Note: LOWER is BETTER")
+        elseif metric_name == "MIQ"
+             println(" Note: Look for Positive mean_gaps and low p_values for edge.")
+        end
+        println("============================================================")
+        display(master_df)
+    else
+        println("⚠️ No results successfully evaluated.")
+    end
+    
+    return master_df
+end
+
+miq_df = evaluate_batch(Evaluation.MIQ(), loaded_results_, ds, label="Baseline Models")
