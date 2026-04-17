@@ -96,7 +96,7 @@ function compute_metric(metric::RQR, exp::ExperimentResults, ds::DataStore)::RQR
     exp_r_h, exp_r_a = get_r(joined)
 
     # 3. Compute RQR vectors
-  rqr_home = compute_rqr.(int.(joined.home_score), exp_home, exp_r_h)
+    rqr_home = compute_rqr.(joined.home_score, exp_home, exp_r_h)
     rqr_away = compute_rqr.(joined.away_score, exp_away, exp_r_a)
     rqr_all  = vcat(rqr_home, rqr_away) # Pooled together for total calibration check
 
