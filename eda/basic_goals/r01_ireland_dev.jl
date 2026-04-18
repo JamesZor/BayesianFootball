@@ -114,3 +114,8 @@ DC NB ρ (Dependence): -0.0215
 
 analyze_heavyweight_models(ds)
 
+
+ds
+ds.lineups
+names(ds.lineups)
+ds.matches
