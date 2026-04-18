@@ -31,6 +31,13 @@ RobustNegativeBinomial(r::Real, μ::Real) = RobustNegativeBinomial(promote(r, μ
 Base.minimum(::RobustNegativeBinomial) = 0
 Base.maximum(::RobustNegativeBinomial) = Inf
 Distributions.insupport(::RobustNegativeBinomial, x::Real) = isinteger(x) && x >= 0
+Distributions.nparams(::RobustNegativeBinomial) = 2
+
+# 3. Interface: Statistics
+# These allow things like mean(d) and var(d) to work
+Distributions.mean(d::RobustNegativeBinomial) = d.μ
+Distributions.var(d::RobustNegativeBinomial)  = d.μ + (d.μ^2 / d.r)
+Distributions.std(d::RobustNegativeBinomial)  = sqrt(Distributions.var(d))
 
 # --- Numerically Stable LogPDF ---
 # We compute logpdf directly from r and μ without explicit p
@@ -57,6 +64,7 @@ end
 
 # Handle non-integer k (needed for Turing generic calls sometimes)
 Distributions.logpdf(d::RobustNegativeBinomial, k::Real) = isinteger(k) ? logpdf(d, Int(k)) : -Inf
+Distributions.pdf(d::RobustNegativeBinomial, k::Real) = exp(logpdf(d, k))
 
 # --- Sampler ---
 function Distributions.rand(rng::AbstractRNG, d::RobustNegativeBinomial)

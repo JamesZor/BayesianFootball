@@ -202,6 +202,39 @@ end
 home_edge = display_miq_selection(miq_df, :home)
 home_edge = display_miq_selection(miq_df, :over_25)
 
+# --- GLM metric ----
+
+function display_glm_output(ds)
+    return select(ds, :model, 
+                :glmedge_intercept_coef,
+                :glmedge_spread_fair_coef, 
+                :glmedge_spread_fair_p_value,
+                :glmedge_n_obs
+           )
+end
+
+
+a =evaluate_batch(Evaluation.GLMEdge(:home), loaded_results, ds, label="Baseline")
+over_25 = evaluate_batch(Evaluation.GLMEdge(:over_25), loaded_results, ds, label="Baseline")
+
+display_glm_output(
+  evaluate_batch(Evaluation.GLMEdge([:over_25, :over_35, :btts_yes]), loaded_results, ds, label="Baseline")
+)
+
+
+display_glm_output(
+  evaluate_batch(Evaluation.GLMEdge([:under_25, :under_35, :btts_no]), loaded_results, ds, label="Baseline")
+)
+
+
+
+
+select(a, :model, 
+            :glmedge_intercept_coef,
+            :glmedge_spread_fair_coef, 
+            :glmedge_spread_fair_p_value,
+            :glmedge_n_obs
+       )
 
 
 glm_df = evaluate_batch(Evaluation.GLMEdge(), loaded_results, ds, label="Baseline Models")

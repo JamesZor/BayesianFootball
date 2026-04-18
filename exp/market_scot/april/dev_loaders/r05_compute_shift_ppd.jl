@@ -8,7 +8,6 @@ include("./l05_compute_shift_ppd.jl")
 # from r02
 exp_m1 = load_experiment_data_from_disk()
 
-
 # from l05
 best_match = load_same_large_experiment_model(exp_m1)
 
@@ -19,6 +18,9 @@ best_match = load_same_large_experiment_model(exp_m1)
 
 # 1. Prepare data
 market_data = Data.prepare_market_data(ds)
+
+
+
 selections_to_calibrate = [:btts_yes, :draw, :over_15, :over_25, :over_35]
 # 2. Get the calibration dictionary
 shift_dict = compute_market_shifts(exp_m1, ds, market_data.df, selections_to_calibrate)
