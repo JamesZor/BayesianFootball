@@ -62,6 +62,19 @@ function Distributions.logpdf(d::RobustNegativeBinomial, k::Int)
     return term1 + term2 + term3
 end
 
+# --- Cumulative Distribution Function (CDF) ---
+function Distributions.cdf(d::RobustNegativeBinomial, x::Real)
+    # If x is below 0, the cumulative probability is 0
+    x < 0 && return 0.0
+    
+    # Convert to standard (r, p) for the CDF calculation
+    p = d.r / (d.r + d.μ)
+    p_safe = clamp(p, 1e-12, 1.0 - 1e-12)
+    
+    # Hand off the heavy lifting to the standard NegativeBinomial
+    return cdf(NegativeBinomial(d.r, p_safe), x)
+end
+
 # Handle non-integer k (needed for Turing generic calls sometimes)
 Distributions.logpdf(d::RobustNegativeBinomial, k::Real) = isinteger(k) ? logpdf(d, Int(k)) : -Inf
 Distributions.pdf(d::RobustNegativeBinomial, k::Real) = exp(logpdf(d, k))

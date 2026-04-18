@@ -68,77 +68,102 @@ tota ::  Mean:2.474291710388248 | std:1.527623843782551 | n:953
 # ==========================================
 # 2. Fit the Distributions
 # ==========================================
+
+using Optim
 using Distributions, Statistics, StatsBase, Printf
 
+function fit_mle(::Type{MyDistributions.RobustNegativeBinomial}, data)
+    # Start with MoM estimates as a guess
+    m = mean(data)
+    v = var(data)
+    r_guess = v > m ? m^2 / (v - m) : 10.0
+    
+    # Minimize the Negative Log-Likelihood
+    # Use log-transformed parameters so the optimizer can't pick negative values
+    func(params) = -sum(logpdf(RobustNegativeBinomial(exp(params[1]), exp(params[2])), data))
+    
+    res = optimize(func, [log(r_guess), log(m)])
+    
+    return RobustNegativeBinomial(exp(res.minimizer[1]), exp(res.minimizer[2]))
+end
+
 function fit_goal_distributions(data::AbstractVector{<:Integer})
-    # Fit Poisson (MLE)
+    # 1. Fit Poisson (standard MLE)
     p_dist = fit(Poisson, data)
     
-    # Fit Negative Binomial (Method of Moments)
+    # 2. Fit Robust Negative Binomial (Method of Moments)
     μ = mean(data)
     σ2 = var(data)
     
     if σ2 > μ
-        p = μ / σ2
+        # Solving for r using the variance formula: σ² = μ + μ²/r
         r = μ^2 / (σ2 - μ)
-        nb_dist = NegativeBinomial(r, p)
+        nb_dist = RobustNegativeBinomial(r, μ)
     else
-        # Fallback if no overdispersion: NB is technically not applicable
-        # We'll return nothing or the Poisson equivalent
+        # If variance <= mean, NB is not the right tool
         nb_dist = nothing 
     end
     
     return (poisson = p_dist, nb = nb_dist)
 end
 
-function compute_metrics(dist, data::AbstractVector{<:Integer}, k_params::Int)
-    if isnothing(dist) return nothing end
+function compute_metrics(dist, data::AbstractVector{<:Integer})
+    isnothing(dist) && return nothing
 
-    # 1. Log-Likelihood
+    # Log-Likelihood
     ll = loglikelihood(dist, data)
     
-    # 2. AIC
-    aic = 2*k_params - 2*ll
+    # AIC: 2k - 2LL (k is fetched automatically via nparams)
+  k = length(params(dist))
+    aic = 2k - 2ll
     
-    # 3. Chi-Squared Score
-    # We'll check bins 0 through 6, then 7+
+    # Chi-Squared Goodness of Fit
+    # Bins 0-6, then a "7+" catch-all
     obs_counts = counts(data, 0:7)
     n = length(data)
     
     expected = [pdf(dist, i) * n for i in 0:6]
-    push!(expected, (1 - cdf(dist, 6)) * n) # The "7+" bin
+    push!(expected, (1 - cdf(dist, 6)) * n) 
     
-    # Chi-square formula: sum( (O-E)^2 / E )
-    chi_sq = sum((obs_counts .- expected).^2 ./ expected)
+    # Safeguard against 0 expected values to avoid Inf in Chi-Sq
+    expected_safe = max.(expected, 1e-6)
+    chi_sq = sum((obs_counts .- expected_safe).^2 ./ expected_safe)
     
     return (log_likelihood = ll, aic = aic, chi_sq = chi_sq)
 end
 
-function analyze_goal_models(goals_dict::Dict{String, <:AbstractVector{<:Integer}})
-    results = Dict()
 
+function analyze_goal_models(goals_dict::Dict{String, <:AbstractVector{<:Integer}})
     for (label, data) in goals_dict
-        println("\n" * "="^40)
-        println(" ANALYSIS: $(uppercase(label)) GOALS ")
-        println("="^40)
+        println("\n" * "═"^45)
+        println(" MODEL COMPARISON: $(uppercase(label)) ")
+        println("═"^45)
         
         fits = fit_goal_distributions(data)
         
-        # Calculate stats (Poisson has 1 param, NB has 2)
-        p_stats = compute_metrics(fits.poisson, data, 1)
-        nb_stats = compute_metrics(fits.nb, data, 2)
+        # Calculate stats
+        p_stats = compute_metrics(fits.poisson, data)
+        nb_stats = compute_metrics(fits.nb, data)
         
-        results[label] = (poisson=p_stats, nb=nb_stats)
+        # Table Header
+        @printf("%-18s | %-12s | %-12s\n", "Metric", "Poisson", "Robust NB")
+        println("-"^48)
         
-        # Pretty Print
-        @printf("%-15s | %-12s | %-12s\n", "Metric", "Poisson", "NegBinom")
-        println("-"^45)
-        @printf("%-15s | %-12.2f | %-12.2f\n", "Log-Likelihood", p_stats.log_likelihood, nb_stats.log_likelihood)
-        @printf("%-15s | %-12.2f | %-12.2f\n", "AIC", p_stats.aic, nb_stats.aic)
-        @printf("%-15s | %-12.2f | %-12.2f\n", "Chi-Squared", p_stats.chi_sq, nb_stats.chi_sq)
+        # Display Results
+        for metric in [:log_likelihood, :aic, :chi_sq]
+            p_val = getproperty(p_stats, metric)
+            nb_val = isnothing(nb_stats) ? "N/A" : @sprintf("%.2f", getproperty(nb_stats, metric))
+            
+            @printf("%-18s | %-12.2f | %-12s\n", 
+                    uppercasefirst(replace(string(metric), "_" => " ")), 
+                    p_val, nb_val)
+        end
+        
+        if isnothing(nb_stats)
+            println("\n[!] RobustNB skipped: No overdispersion detected.")
+        end
     end
-    
-    return results
 end
+
 
 analyze_goal_models(goals)
