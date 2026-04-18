@@ -16,7 +16,8 @@ function get_goals(ds::Data.DataStore)
     goals = Dict{String, AbstractVector{<:Integer}}(
             "home" => collect(skipmissing(ds.matches.home_score)),
             "away" => collect(skipmissing(ds.matches.away_score)),
-            "total"=> collect(skipmissing(ds.matches.goals_total)),
+            # "total"=> collect(skipmissing(ds.matches.goals_total)),
+            "total" => vcat(collect(skipmissing(ds.matches.home_score)), collect(skipmissing(ds.matches.away_score)))
     )
   return goals
 
@@ -234,4 +235,348 @@ function analyze_goal_models(goals_dict::Dict{String, <:AbstractVector{<:Integer
             println("\n[!] RobustNB skipped: No overdispersion detected.")
         end
     end
+end
+
+
+
+# ---
+using Optim
+using Distributions, Statistics, StatsBase, Printf
+
+# --- 1. Dixon-Coles Log-Likelihood Function ---
+# We write a clean MLE objective using the exact logic from your uploaded files.
+function dixon_coles_loglikelihood(λ_val, μ_val, ρ_val, home_goals, away_goals)
+    ll = 0.0
+    for (h, a) in zip(home_goals, away_goals)
+        # Base independent Poisson log-likelihood
+        log_indep = logpdf(Poisson(λ_val), h) + logpdf(Poisson(μ_val), a)
+        
+        # Dixon-Coles Tau correction for low scores
+        τ = 1.0
+        if h == 0 && a == 0
+            τ = 1.0 - (λ_val * μ_val * ρ_val)
+        elseif h == 1 && a == 0
+            τ = 1.0 + (μ_val * ρ_val)
+        elseif h == 0 && a == 1
+            τ = 1.0 + (λ_val * ρ_val)
+        elseif h == 1 && a == 1
+            τ = 1.0 - ρ_val
+        end
+        
+        # Safe log for τ to prevent domain errors during optimization
+        log_τ = τ > 0 ? log(τ) : -Inf
+        ll += log_indep + log_τ
+    end
+    return ll
+end
+
+# --- 2. Fit the Bivariate Models ---
+function fit_bivariate_models(home_data, away_data)
+    # Model 1: Independent Poisson (Baseline)
+    # For independent Poisson, the MLE is just the means!
+    λ_indep = mean(home_data)
+    μ_indep = mean(away_data)
+    ll_indep = sum(logpdf.(Poisson(λ_indep), home_data)) + sum(logpdf.(Poisson(μ_indep), away_data))
+    
+    # Model 2: Dixon-Coles
+    # We optimize λ, μ, and ρ simultaneously
+    function objective_dc(params)
+        λ_val = exp(params[1])
+        μ_val = exp(params[2])
+        ρ_val = tanh(params[3]) # scale to roughly [-1, 1] safely
+        return -dixon_coles_loglikelihood(λ_val, μ_val, ρ_val, home_data, away_data)
+    end
+    
+    # Initial guess: Means for rates, 0.0 for rho
+    res_dc = optimize(objective_dc, [log(λ_indep), log(μ_indep), 0.0])
+    
+    λ_dc = exp(res_dc.minimizer[1])
+    μ_dc = exp(res_dc.minimizer[2])
+    ρ_dc = tanh(res_dc.minimizer[3])
+    ll_dc = -res_dc.minimum
+    
+    return (
+        indep = (λ = λ_indep, μ = μ_indep, ρ = 0.0, ll = ll_indep, k = 2),
+        dc    = (λ = λ_dc, μ = μ_dc, ρ = ρ_dc, ll = ll_dc, k = 3)
+    )
+end
+
+# --- 3. Analyze and Print ---
+function analyze_bivariate_models(ds::BayesianFootball.Data.DataStore)
+    home_data = collect(skipmissing(ds.matches.home_score))
+    away_data = collect(skipmissing(ds.matches.away_score))
+    
+    fits = fit_bivariate_models(home_data, away_data)
+    
+    println("\n" * "═"^60)
+    println(" BIVARIATE MODEL COMPARISON (HOME vs AWAY) ")
+    println("═"^60)
+    
+    @printf("%-20s | %-15s | %-15s\n", "Metric", "Indep. Poisson", "Dixon-Coles")
+    println("-"^60)
+    
+    fmt_float = Printf.Format("%.4f")
+    fmt_ll    = Printf.Format("%.2f")
+    
+    # Calculate AIC: 2k - 2 * LogLikelihood
+    aic_indep = 2 * fits.indep.k - 2 * fits.indep.ll
+    aic_dc    = 2 * fits.dc.k - 2 * fits.dc.ll
+    
+    @printf("%-20s | %-15s | %-15s\n", "λ (Home Rate)", Printf.format(fmt_float, fits.indep.λ), Printf.format(fmt_float, fits.dc.λ))
+    @printf("%-20s | %-15s | %-15s\n", "μ (Away Rate)", Printf.format(fmt_float, fits.indep.μ), Printf.format(fmt_float, fits.dc.μ))
+    @printf("%-20s | %-15s | %-15s\n", "ρ (Dependence)", "N/A", Printf.format(fmt_float, fits.dc.ρ))
+    println("-"^60)
+    @printf("%-20s | %-15s | %-15s\n", "Log likelihood", Printf.format(fmt_ll, fits.indep.ll), Printf.format(fmt_ll, fits.dc.ll))
+    @printf("%-20s | %-15s | %-15s\n", "AIC", Printf.format(fmt_ll, aic_indep), Printf.format(fmt_ll, aic_dc))
+    
+    if aic_dc < aic_indep
+        println("\n[RESULT] Dixon-Coles improved the fit! The ρ parameter is capturing dependence.")
+    else
+        println("\n[RESULT] Independent Poisson wins. Correlation (ρ) did not justify the extra parameter.")
+    end
+end
+
+
+
+# -----
+
+using Optim
+using Distributions, Statistics, StatsBase, Printf
+
+# --- 1. Log-Likelihood Functions ---
+
+function dixon_coles_poisson_loglikelihood(λ_val, μ_val, ρ_val, home_goals, away_goals)
+    ll = 0.0
+    for (h, a) in zip(home_goals, away_goals)
+        log_indep = logpdf(Poisson(λ_val), h) + logpdf(Poisson(μ_val), a)
+        
+        τ = 1.0
+        if h == 0 && a == 0; τ = 1.0 - (λ_val * μ_val * ρ_val)
+        elseif h == 1 && a == 0; τ = 1.0 + (μ_val * ρ_val)
+        elseif h == 0 && a == 1; τ = 1.0 + (λ_val * ρ_val)
+        elseif h == 1 && a == 1; τ = 1.0 - ρ_val
+        end
+        
+        ll += log_indep + (τ > 0 ? log(τ) : -Inf)
+    end
+    return ll
+end
+
+function dixon_coles_nb_loglikelihood(λ_val, μ_val, r_h_val, r_a_val, ρ_val, home_goals, away_goals)
+    ll = 0.0
+    for (h, a) in zip(home_goals, away_goals)
+        # Using your custom RobustNegativeBinomial (Dispersion, Mean)
+        log_indep = logpdf(MyDistributions.RobustNegativeBinomial(r_h_val, λ_val), h) + 
+                    logpdf(MyDistributions.RobustNegativeBinomial(r_a_val, μ_val), a)
+        
+        τ = 1.0
+        if h == 0 && a == 0; τ = 1.0 - (λ_val * μ_val * ρ_val)
+        elseif h == 1 && a == 0; τ = 1.0 + (μ_val * ρ_val)
+        elseif h == 0 && a == 1; τ = 1.0 + (λ_val * ρ_val)
+        elseif h == 1 && a == 1; τ = 1.0 - ρ_val
+        end
+        
+        ll += log_indep + (τ > 0 ? log(τ) : -Inf)
+    end
+    return ll
+end
+
+# --- 2. Fit the Bivariate Models ---
+
+function fit_bivariate_models(home_data, away_data)
+    # Model 1: Independent Poisson
+    λ_indep = mean(home_data)
+    μ_indep = mean(away_data)
+    ll_indep_pois = sum(logpdf.(Poisson(λ_indep), home_data)) + sum(logpdf.(Poisson(μ_indep), away_data))
+    
+    # Model 2: Dixon-Coles Poisson
+    res_dc_pois = optimize(
+        p -> -dixon_coles_poisson_loglikelihood(exp(p[1]), exp(p[2]), tanh(p[3]), home_data, away_data), 
+        [log(λ_indep), log(μ_indep), 0.0]
+    )
+    
+    # Model 3: Independent Negative Binomial
+    # Use moment matching for initial guesses for r_h and r_a
+    v_h, v_a = var(home_data), var(away_data)
+    r_h_guess = v_h > λ_indep ? λ_indep^2 / (v_h - λ_indep) : 10.0
+    r_a_guess = v_a > μ_indep ? μ_indep^2 / (v_a - μ_indep) : 10.0
+    
+    res_indep_nb = optimize(
+        p -> -(sum(logpdf.(MyDistributions.RobustNegativeBinomial(exp(p[3]), exp(p[1])), home_data)) + 
+               sum(logpdf.(MyDistributions.RobustNegativeBinomial(exp(p[4]), exp(p[2])), away_data))),
+        [log(λ_indep), log(μ_indep), log(r_h_guess), log(r_a_guess)]
+    )
+    
+    # Model 4: Dixon-Coles Negative Binomial
+    res_dc_nb = optimize(
+        p -> -dixon_coles_nb_loglikelihood(exp(p[1]), exp(p[2]), exp(p[3]), exp(p[4]), tanh(p[5]), home_data, away_data),
+        [res_indep_nb.minimizer[1], res_indep_nb.minimizer[2], res_indep_nb.minimizer[3], res_indep_nb.minimizer[4], 0.0]
+    )
+    
+    return (
+        indep_pois = (ll = ll_indep_pois, k = 2),
+        dc_pois    = (ll = -res_dc_pois.minimum, k = 3),
+        indep_nb   = (ll = -res_indep_nb.minimum, k = 4),
+        dc_nb      = (ll = -res_dc_nb.minimum, ρ = tanh(res_dc_nb.minimizer[5]), k = 5)
+    )
+end
+
+# --- 3. Analyze and Print ---
+
+function analyze_bivariate_models(ds::BayesianFootball.Data.DataStore)
+    home_data = collect(skipmissing(ds.matches.home_score))
+    away_data = collect(skipmissing(ds.matches.away_score))
+    
+    fits = fit_bivariate_models(home_data, away_data)
+    
+    println("\n" * "═"^80)
+    println(" BIVARIATE MODEL COMPARISON (HOME vs AWAY) ")
+    println("═"^80)
+    
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "Metric", "Indep Poisson", "DC Poisson", "Indep NB", "DC NB")
+    println("-"^80)
+    
+    fmt_ll = Printf.Format("%.2f")
+    
+    aic_indep_pois = 2 * fits.indep_pois.k - 2 * fits.indep_pois.ll
+    aic_dc_pois    = 2 * fits.dc_pois.k    - 2 * fits.dc_pois.ll
+    aic_indep_nb   = 2 * fits.indep_nb.k   - 2 * fits.indep_nb.ll
+    aic_dc_nb      = 2 * fits.dc_nb.k      - 2 * fits.dc_nb.ll
+    
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "Log likelihood", 
+        Printf.format(fmt_ll, fits.indep_pois.ll), Printf.format(fmt_ll, fits.dc_pois.ll),
+        Printf.format(fmt_ll, fits.indep_nb.ll),   Printf.format(fmt_ll, fits.dc_nb.ll))
+        
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "AIC", 
+        Printf.format(fmt_ll, aic_indep_pois), Printf.format(fmt_ll, aic_dc_pois),
+        Printf.format(fmt_ll, aic_indep_nb),   Printf.format(fmt_ll, aic_dc_nb))
+        
+    println("-"^80)
+    @printf("DC NB ρ (Dependence): %.4f\n", fits.dc_nb.ρ)
+end
+
+
+
+# --- weibull add 
+using Optim
+using Distributions, Statistics, StatsBase, Printf
+
+# --- 1. Log-Likelihood Functions ---
+
+function dixon_coles_nb_loglikelihood(λ_val, μ_val, r_h_val, r_a_val, ρ_val, home_goals, away_goals)
+    ll = 0.0
+    for (h, a) in zip(home_goals, away_goals)
+        log_indep = logpdf(MyDistributions.RobustNegativeBinomial(r_h_val, λ_val), h) + 
+                    logpdf(MyDistributions.RobustNegativeBinomial(r_a_val, μ_val), a)
+        
+        τ = 1.0
+        if h == 0 && a == 0; τ = 1.0 - (λ_val * μ_val * ρ_val)
+        elseif h == 1 && a == 0; τ = 1.0 + (μ_val * ρ_val)
+        elseif h == 0 && a == 1; τ = 1.0 + (λ_val * ρ_val)
+        elseif h == 1 && a == 1; τ = 1.0 - ρ_val
+        end
+        
+        ll += log_indep + (τ > 0 ? log(τ) : -Inf)
+    end
+    return ll
+end
+
+function dixon_coles_weibull_loglikelihood(c_h, λ_h, c_a, λ_a, ρ_val, home_goals, away_goals)
+    ll = 0.0
+    for (h, a) in zip(home_goals, away_goals)
+        log_indep = logpdf(MyDistributions.WeibullCount(c_h, λ_h), h) + 
+                    logpdf(MyDistributions.WeibullCount(c_a, λ_a), a)
+        
+        # We use the scale parameters (λ) as proxies for the rate in the DC correction
+        τ = 1.0
+        if h == 0 && a == 0; τ = 1.0 - (λ_h * λ_a * ρ_val)
+        elseif h == 1 && a == 0; τ = 1.0 + (λ_a * ρ_val)
+        elseif h == 0 && a == 1; τ = 1.0 + (λ_h * ρ_val)
+        elseif h == 1 && a == 1; τ = 1.0 - ρ_val
+        end
+        
+        ll += log_indep + (τ > 0 ? log(τ) : -Inf)
+    end
+    return ll
+end
+
+# --- 2. Fit the Bivariate Models ---
+
+function fit_heavyweight_models(home_data, away_data)
+    λ_indep = mean(home_data)
+    μ_indep = mean(away_data)
+    v_h, v_a = var(home_data), var(away_data)
+    
+    # 1. Independent Negative Binomial
+    r_h_guess = v_h > λ_indep ? λ_indep^2 / (v_h - λ_indep) : 10.0
+    r_a_guess = v_a > μ_indep ? μ_indep^2 / (v_a - μ_indep) : 10.0
+    
+    res_indep_nb = optimize(
+        p -> -(sum(logpdf.(MyDistributions.RobustNegativeBinomial(exp(p[3]), exp(p[1])), home_data)) + 
+               sum(logpdf.(MyDistributions.RobustNegativeBinomial(exp(p[4]), exp(p[2])), away_data))),
+        [log(λ_indep), log(μ_indep), log(r_h_guess), log(r_a_guess)]
+    )
+    
+    # 2. Dixon-Coles Negative Binomial
+    res_dc_nb = optimize(
+        p -> -dixon_coles_nb_loglikelihood(exp(p[1]), exp(p[2]), exp(p[3]), exp(p[4]), tanh(p[5]), home_data, away_data),
+        [res_indep_nb.minimizer[1], res_indep_nb.minimizer[2], res_indep_nb.minimizer[3], res_indep_nb.minimizer[4], 0.0]
+    )
+
+    println("[INFO] Optimizing Weibull Models... this may take a moment.")
+    
+    # 3. Independent Weibull Count
+    res_indep_wb = optimize(
+        p -> -(sum(logpdf.(MyDistributions.WeibullCount(exp(p[1]), exp(p[2])), home_data)) + 
+               sum(logpdf.(MyDistributions.WeibullCount(exp(p[3]), exp(p[4])), away_data))),
+        [log(1.0), log(λ_indep), log(1.0), log(μ_indep)]
+    )
+    
+    # 4. Dixon-Coles Weibull Count
+    res_dc_wb = optimize(
+        p -> -dixon_coles_weibull_loglikelihood(exp(p[1]), exp(p[2]), exp(p[3]), exp(p[4]), tanh(p[5]), home_data, away_data),
+        [res_indep_wb.minimizer[1], res_indep_wb.minimizer[2], res_indep_wb.minimizer[3], res_indep_wb.minimizer[4], 0.0]
+    )
+    
+    return (
+        indep_nb = (ll = -res_indep_nb.minimum, k = 4),
+        dc_nb    = (ll = -res_dc_nb.minimum, ρ = tanh(res_dc_nb.minimizer[5]), k = 5),
+        indep_wb = (ll = -res_indep_wb.minimum, k = 4),
+        dc_wb    = (ll = -res_dc_wb.minimum, ρ = tanh(res_dc_wb.minimizer[5]), k = 5)
+    )
+end
+
+# --- 3. Analyze and Print ---
+
+function analyze_heavyweight_models(ds::BayesianFootball.Data.DataStore)
+    home_data = collect(skipmissing(ds.matches.home_score))
+    away_data = collect(skipmissing(ds.matches.away_score))
+    
+    fits = fit_heavyweight_models(home_data, away_data)
+    
+    println("\n" * "═"^80)
+    println(" BIVARIATE HEAVYWEIGHTS (HOME vs AWAY) ")
+    println("═"^80)
+    
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "Metric", "Indep NB", "DC NB", "Indep Weibull", "DC Weibull")
+    println("-"^80)
+    
+    fmt_ll = Printf.Format("%.2f")
+    
+    aic_indep_nb = 2 * fits.indep_nb.k - 2 * fits.indep_nb.ll
+    aic_dc_nb    = 2 * fits.dc_nb.k    - 2 * fits.dc_nb.ll
+    aic_indep_wb = 2 * fits.indep_wb.k - 2 * fits.indep_wb.ll
+    aic_dc_wb    = 2 * fits.dc_wb.k    - 2 * fits.dc_wb.ll
+    
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "Log likelihood", 
+        Printf.format(fmt_ll, fits.indep_nb.ll), Printf.format(fmt_ll, fits.dc_nb.ll),
+        Printf.format(fmt_ll, fits.indep_wb.ll), Printf.format(fmt_ll, fits.dc_wb.ll))
+        
+    @printf("%-16s | %-14s | %-14s | %-14s | %-14s\n", "AIC", 
+        Printf.format(fmt_ll, aic_indep_nb), Printf.format(fmt_ll, aic_dc_nb),
+        Printf.format(fmt_ll, aic_indep_wb), Printf.format(fmt_ll, aic_dc_wb))
+        
+    println("-"^80)
+    @printf("DC NB ρ:      %.4f\n", fits.dc_nb.ρ)
+    @printf("DC Weibull ρ: %.4f\n", fits.dc_wb.ρ)
 end

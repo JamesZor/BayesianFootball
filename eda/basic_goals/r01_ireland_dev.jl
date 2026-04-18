@@ -15,6 +15,9 @@ include("./l00_basic_goals_loader.jl")
 
 
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Norway())
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.SouthKorea())
 
 
 goals = get_goals(ds)
@@ -72,4 +75,42 @@ Degrees of freedom | 6            | 6
 P-value            | 0.0606       | 0.0605
 =#
 
+analyze_bivariate_models(ds)
+
+
+
+#=
+════════════════════════════════════════════════════════════
+ BIVARIATE MODEL COMPARISON (HOME vs AWAY) 
+════════════════════════════════════════════════════════════
+Metric               | Indep. Poisson  | Dixon-Coles    
+------------------------------------------------------------
+λ (Home Rate)        | 1.7249          | 1.7249         
+μ (Away Rate)        | 1.3851          | 1.3851         
+ρ (Dependence)       | N/A             | -0.0215        
+------------------------------------------------------------
+Log likelihood       | -7736.57        | -7736.17       
+AIC                  | 15477.14        | 15478.34       
+
+[RESULT] Independent Poisson wins. Correlation (ρ) did not justify the extra parameter.
+=#
+
+
+
+#=
+julia> analyze_bivariate_models(ds)
+
+════════════════════════════════════════════════════════════════════════════════
+ BIVARIATE MODEL COMPARISON (HOME vs AWAY) 
+════════════════════════════════════════════════════════════════════════════════
+Metric           | Indep Poisson  | DC Poisson     | Indep NB       | DC NB         
+--------------------------------------------------------------------------------
+Log likelihood   | -7736.57       | -7736.17       | -7728.50       | -7728.10      
+AIC              | 15477.14       | 15478.34       | 15465.00       | 15466.21      
+--------------------------------------------------------------------------------
+DC NB ρ (Dependence): -0.0215
+=#
+
+
+analyze_heavyweight_models(ds)
 
