@@ -60,51 +60,28 @@ function fit_mle(::Type{MyDistributions.RobustNegativeBinomial}, data)
 end
 
 
-# weibull 
-function fit_mle(::Type{MyDistributions.WeibullCount}, data)
-    # Start with Poisson assumptions as a guess:
-    # When c = 1.0, WeibullCount reduces to Poisson, and λ = mean 
-    c_guess = 1.0
-    λ_guess = mean(data)
-    
-    # Minimize the Negative Log-Likelihood
-    function objective(params)
-        c_val = exp(params[1])
-        λ_val = exp(params[2])
-        dist = MyDistributions.WeibullCount(c_val, λ_val)
-        
-        # Sum logpdf over all data points
-        return -sum(logpdf(dist, x) for x in data)
-    end
-    
-    # Run the optimization
-    res = optimize(objective, [log(c_guess), log(λ_guess)])
-    
-    return MyDistributions.WeibullCount(exp(res.minimizer[1]), exp(res.minimizer[2]))
-end
-
-function fit_goal_distributions(data::AbstractVector{<:Integer})
-    # 1. Fit Poisson (standard MLE)
-    p_dist = fit(Poisson, data)
-
-    nb_dist = fit_mle(MyDistributions.RobustNegativeBinomial, data)
-    
-    # # 2. Fit Robust Negative Binomial (Method of Moments)
-    # μ = mean(data)
-    # σ2 = var(data)
-    #
-    # if σ2 > μ
-    #     # Solving for r using the variance formula: σ² = μ + μ²/r
-    #     r = μ^2 / (σ2 - μ)
-    #     nb_dist = MyDistributions.RobustNegativeBinomial(r, μ)
-    # else
-    #     # If variance <= mean, NB is not the right tool
-    #     nb_dist = nothing 
-    # end
-    #
-    return (poisson = p_dist, nb = nb_dist)
-end
-
+# function fit_goal_distributions(data::AbstractVector{<:Integer})
+#     # 1. Fit Poisson (standard MLE)
+#     p_dist = fit(Poisson, data)
+#
+#     nb_dist = fit_mle(MyDistributions.RobustNegativeBinomial, data)
+#
+#     # # 2. Fit Robust Negative Binomial (Method of Moments)
+#     # μ = mean(data)
+#     # σ2 = var(data)
+#     #
+#     # if σ2 > μ
+#     #     # Solving for r using the variance formula: σ² = μ + μ²/r
+#     #     r = μ^2 / (σ2 - μ)
+#     #     nb_dist = MyDistributions.RobustNegativeBinomial(r, μ)
+#     # else
+#     #     # If variance <= mean, NB is not the right tool
+#     #     nb_dist = nothing 
+#     # end
+#     #
+#     return (poisson = p_dist, nb = nb_dist)
+# end
+#
 function compute_metrics(dist, data::AbstractVector{<:Integer})
     isnothing(dist) && return nothing
 
@@ -134,52 +111,78 @@ function compute_metrics(dist, data::AbstractVector{<:Integer})
 end
 
 
-function analyze_goal_models(goals_dict::Dict{String, <:AbstractVector{<:Integer}})
-    for (label, data) in goals_dict
-        println("\n" * "═"^48)
-        println(" MODEL COMPARISON: $(uppercase(label)) ")
-        println("═"^48)
-        
-        fits = fit_goal_distributions(data)
-        
-        p_stats = compute_metrics(fits.poisson, data)
-        nb_stats = compute_metrics(fits.nb, data)
-        
-        @printf("%-18s | %-12s | %-12s\n", "Metric", "Poisson", "Robust NB")
-        println("-"^48)
-        
-        # Helper function to print safely handling N/A
-        print_row(name, p_val, nb_stats, metric, fmt) = begin
-            if isnothing(nb_stats)
-                @printf("%-18s | %-12s | %-12s\n", name, Printf.format(fmt, p_val), "N/A")
-            else
-                nb_val = getproperty(nb_stats, metric)
-                @printf("%-18s | %-12s | %-12s\n", name, Printf.format(fmt, p_val), Printf.format(fmt, nb_val))
-            end
-        end
+# function analyze_goal_models(goals_dict::Dict{String, <:AbstractVector{<:Integer}})
+#     for (label, data) in goals_dict
+#         println("\n" * "═"^48)
+#         println(" MODEL COMPARISON: $(uppercase(label)) ")
+#         println("═"^48)
+#
+#         fits = fit_goal_distributions(data)
+#
+#         p_stats = compute_metrics(fits.poisson, data)
+#         nb_stats = compute_metrics(fits.nb, data)
+#
+#         @printf("%-18s | %-12s | %-12s\n", "Metric", "Poisson", "Robust NB")
+#         println("-"^48)
+#
+#         # Helper function to print safely handling N/A
+#         print_row(name, p_val, nb_stats, metric, fmt) = begin
+#             if isnothing(nb_stats)
+#                 @printf("%-18s | %-12s | %-12s\n", name, Printf.format(fmt, p_val), "N/A")
+#             else
+#                 nb_val = getproperty(nb_stats, metric)
+#                 @printf("%-18s | %-12s | %-12s\n", name, Printf.format(fmt, p_val), Printf.format(fmt, nb_val))
+#             end
+#         end
+#
+#         # Float format (2 decimals)
+#         fmt_float = Printf.Format("%.2f")
+#         # Int format
+#         fmt_int = Printf.Format("%d")
+#         # P-value format (4 decimals)
+#         fmt_pval = Printf.Format("%.4f")
+#
+#         print_row("Log likelihood", p_stats.log_likelihood, nb_stats, :log_likelihood, fmt_float)
+#         print_row("AIC", p_stats.aic, nb_stats, :aic, fmt_float)
+#         print_row("Chi sq", p_stats.chi_sq, nb_stats, :chi_sq, fmt_float)
+#         print_row("Degrees of freedom", p_stats.df, nb_stats, :df, fmt_int)
+#         print_row("P-value", p_stats.p_value, nb_stats, :p_value, fmt_pval)
+#
+#         if isnothing(nb_stats)
+#             println("\n[!] RobustNB skipped: No overdispersion detected.")
+#         end
+#     end
+# end
+#
+#
+#
+# --- weibull 
 
-        # Float format (2 decimals)
-        fmt_float = Printf.Format("%.2f")
-        # Int format
-        fmt_int = Printf.Format("%d")
-        # P-value format (4 decimals)
-        fmt_pval = Printf.Format("%.4f")
-
-        print_row("Log likelihood", p_stats.log_likelihood, nb_stats, :log_likelihood, fmt_float)
-        print_row("AIC", p_stats.aic, nb_stats, :aic, fmt_float)
-        print_row("Chi sq", p_stats.chi_sq, nb_stats, :chi_sq, fmt_float)
-        print_row("Degrees of freedom", p_stats.df, nb_stats, :df, fmt_int)
-        print_row("P-value", p_stats.p_value, nb_stats, :p_value, fmt_pval)
+# weibull 
+function fit_mle(::Type{MyDistributions.WeibullCount}, data)
+    # Start with Poisson assumptions as a guess:
+    # When c = 1.0, WeibullCount reduces to Poisson, and λ = mean 
+    c_guess = 1.0
+    λ_guess = mean(data)
+    
+    # Minimize the Negative Log-Likelihood
+    function objective(params)
+        c_val = exp(params[1])
+        λ_val = exp(params[2])
+        dist = MyDistributions.WeibullCount(c_val, λ_val)
         
-        if isnothing(nb_stats)
-            println("\n[!] RobustNB skipped: No overdispersion detected.")
-        end
+        # Sum logpdf over all data points
+        return -sum(logpdf(dist, x) for x in data)
     end
+    
+    # Run the optimization
+    res = optimize(objective, [log(c_guess), log(λ_guess)])
+    
+    return MyDistributions.WeibullCount(exp(res.minimizer[1]), exp(res.minimizer[2]))
 end
 
 
 
-# --- weibull 
 function fit_goal_distributions(data::AbstractVector{<:Integer})
     # 1. Fit Poisson (standard MLE)
     p_dist = fit(Poisson, data)

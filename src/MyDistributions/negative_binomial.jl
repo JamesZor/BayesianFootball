@@ -37,7 +37,7 @@ Distributions.params(::RobustNegativeBinomial) = (d.r, d.μ)
 # These allow things like mean(d) and var(d) to work
 Distributions.mean(d::RobustNegativeBinomial) = d.μ
 Distributions.var(d::RobustNegativeBinomial)  = d.μ + (d.μ^2 / d.r)
-Distributions.std(d::RobustNegativeBinomial)  = sqrt(Distributions.var(d))
+Distributions.std(d::RobustNegativeBinomial)  = sqrt(Distributions.var(d.μ))
 
 # --- Numerically Stable LogPDF ---
 # We compute logpdf directly from r and μ without explicit p
