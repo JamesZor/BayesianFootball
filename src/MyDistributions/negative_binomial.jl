@@ -31,13 +31,13 @@ RobustNegativeBinomial(r::Real, μ::Real) = RobustNegativeBinomial(promote(r, μ
 Base.minimum(::RobustNegativeBinomial) = 0
 Base.maximum(::RobustNegativeBinomial) = Inf
 Distributions.insupport(::RobustNegativeBinomial, x::Real) = isinteger(x) && x >= 0
-Distributions.params(::RobustNegativeBinomial) = (d.r, d.μ)
+Distributions.params(d::RobustNegativeBinomial) = (d.r, d.μ)
 
 # 3. Interface: Statistics
 # These allow things like mean(d) and var(d) to work
 Distributions.mean(d::RobustNegativeBinomial) = d.μ
 Distributions.var(d::RobustNegativeBinomial)  = d.μ + (d.μ^2 / d.r)
-Distributions.std(d::RobustNegativeBinomial)  = sqrt(Distributions.var(d.μ))
+Distributions.std(d::RobustNegativeBinomial)  = sqrt(Distributions.var(d))
 
 # --- Numerically Stable LogPDF ---
 # We compute logpdf directly from r and μ without explicit p
