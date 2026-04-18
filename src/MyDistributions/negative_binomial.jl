@@ -31,7 +31,7 @@ RobustNegativeBinomial(r::Real, μ::Real) = RobustNegativeBinomial(promote(r, μ
 Base.minimum(::RobustNegativeBinomial) = 0
 Base.maximum(::RobustNegativeBinomial) = Inf
 Distributions.insupport(::RobustNegativeBinomial, x::Real) = isinteger(x) && x >= 0
-Distributions.params(::RobustNegativeBinomial) = 2
+Distributions.params(::RobustNegativeBinomial) = (d.r, d.μ)
 
 # 3. Interface: Statistics
 # These allow things like mean(d) and var(d) to work

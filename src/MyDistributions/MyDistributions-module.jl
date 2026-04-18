@@ -13,7 +13,6 @@ export DixonColes
 
 include("./dixon_coles.jl")
 export DixonColesLogGroup
-
 include("./bivariate_poisson-dist.jl")
 export BivariateLogPoisson
 
@@ -25,6 +24,9 @@ export RobustNegativeBinomial
 
 include("./dixon_coles_negbin.jl")
 export DixonColesNegBinLogGroup
+
+include("./weibull_count.jl")
+export WeibullCount
 
 
 end
