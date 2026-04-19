@@ -1,0 +1,4 @@
+tournament_id,season_id,match_id,market_id,market_name,market_group,choice_name,choice_group,initial_fractional_value,final_fractional_value,winning,decimal_odds
+54,41957,10387456,1,Full time,1X2,1,,19/10,23/10,True,3.3
+54,41957,10387456,1,Full time,1X2,X,,23/10,5/2,False,3.5
+54,41957,10387456,1,Full time,1X2,2,,29/20,23/20,False,2.15

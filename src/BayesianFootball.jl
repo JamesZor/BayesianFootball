@@ -1,113 +1,62 @@
+# src/BayesianFootball.jl
+
 module BayesianFootball
 
-using CategoricalArrays # maybe 
-# Package dependencies
-using CSV, DataFrames
-using Statistics, Dates
-using Turing, StatsPlots, LinearAlgebra, Distributions, Random, MCMCChains
-using Base.Threads, ThreadsX
-using JLD2, JSON
+# 1. Interfaces contains all shared types and contracts.
+include("./types-interfaces.jl") #
+using .TypesInterfaces
 
-# Include all components in dependency order
-include("types.jl")
-
-# Data pipeline
-include("data/loader.jl")
-include("data/mapping.jl") 
-
-include("data/splitting.jl")
-export time_series_splits, summarize_splits
-
-# Data Utils 
-include("./data/utils_incidents.jl")
-export get_match_results, process_matches_results
-export get_line_active_minutes, process_matches_active_minutes
-
-# data market odds
-include("./data/utils_market_odds.jl")
-export get_processed_game_line_odds, process_matches_odds, default_marketodds_config 
+include("./MyDistributions/MyDistributions-module.jl")
+export MyDistributions
 
 
-# Models
-include("features/core.jl")
-include("models/maher.jl")
-include("models/maher_variants.jl")
+# 2. Data is self-contained.
+# include("data/data-module.jl") #
+# FIX: dev test 
+include("./Data/data-module.jl")
+include("./DataLegacy/data-module.jl")
 
-# pre game ssm 
-include("models/pregame/ar1_poisson_ha.jl")
-include("models/pregame/ar1_negative_binomial_ha.jl")
+# 4. Features depends on Data, TypesInterfaces, and Models.
+include("features/features-module.jl") #
 
-
-# Training
-include("training/morphisms.jl")
-include("training/pipeline.jl")
-
-include("prediction/api.jl") # NEW: Include the generic prediction API
-# Prediction 
-# include("prediction/basic_maher.jl")
-
-# export Predictions
-# export extract_posterior_samples, extract_samples, predict_match_chain_ft, predict_match_chain_ht, predict_match_ft_ht_chain, predict_round_chains, predict_target_season
-
-# Evaluation - TODO: Create these files
-# eval - kelly 
-include("./evaluation/kelly.jl")
-export process_matches_kelly, apply_kelly_to_match
-# include("evaluation/diagnostics.jl")
-include("evaluation/metrics.jl")
-
-# Experiments
-include("experiments/runner.jl")
-include("experiments/registry.jl")   
-include("experiments/persistence.jl") 
-export ExperimentRun, prepare_run, save, load_run, save_experiment_metadata
+# 3. Models depends only on TypesInterfaces.
+include("models/models-module.jl") #
 
 
+# 5. Samplers provides core sampling algorithms.
+include("samplers/samplers-module.jl") # *** ADDED RENAMED MODULE ***
 
-# ============================================================================
-# --- Main API Exports ---
-# ============================================================================
-# model 
-export AbstractStateSpaceModel
-# --- Core Types ---
-export DataFiles, DataStore, MappingFunctions, MappedData
-export TrainedModel # NEW: Export our main model container
+# 6. Training orchestrates the training process using Models, Features, Samplers.
+include("training/training-module.jl") # *** ADDED NEW MODULE ***
 
-# --- Model Definition Protocol ---
-export AbstractModelDefinition, MaherBasic, MaherLeagueHA
-export build_turing_model, get_required_features
+# 7. Other modules
+include("./experiments/experiment-module.jl") #
+include("./predictions/predictions-module.jl") #
+include( "./signals/signals-module.jl")
 
-# --- Training & Experimentation ---
-export ExperimentConfig, ExperimentResult, TrainedChains
-export create_master_features, add_global_round_column!
-export run_experiment, train_all_splits, time_series_splits
-export create_experiment_config
-export prepare_run, save, load_run
-export list_runs, load_model # NEW: Export the user-friendly loading functions
+include("./evaluation/evaluation-module.jl")
 
-# --- Prediction ---
-export predict_target_season # NEW: Export the main high-level prediction function
-export Predictions # Export the Predictions module to access its types
+include("./synthetic/synthetic-data-module.jl")
 
-# --- Utility packages ---
-export DataFrames, Statistics, Plots, Turing
+include("./backtesting/backtesting-module.jl")
 
-# # Data
-# export DataFiles, DataStore
-# export MappingFunctions, MappedData, create_list_mapping
-#
-# # Model Definition Protocol
-# export AbstractModelDefinition, MaherBasic, MaherLeagueHA
-# export build_turing_model, get_required_features # Export the protocol functions
-#
-# # Training & Experimentation
-# export ModelSampleConfig, ExperimentConfig, ExperimentResult, BasicMaherModels, TrainedChains
-# export create_master_features # Export the main feature generator
-# export run_experiment, train_all_splits
-# export create_experiment_config
-# export compose_training_morphism
-#
-# # Utility packages
-# export DataFrames, Statistics, Plots, Distributions, KernelDensity, Plots, StatsPlots, Turing
-#
+# Export the main modules and key functions/types for users
+# *** UPDATED EXPORTS ***
+export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations, BackTesting, Evaluation
+export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
+
+# Maybe export core config types too?
+export NUTSConfig, ADVIConfig, MAPConfig # From Samplers
+export TrainingConfig, Independent, SequentialPriorUpdate # From Training
+
+# 
+using .Data: Markets 
+export Markets
+
+
+# --- ADDED DEV HELPERS ---
+include("./dev_helpers/dev-helpers.jl")
+# --- EXPORT HELPER ---
+export load_scottish_data
+
 end

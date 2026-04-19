@@ -1,0 +1,4 @@
+tournament_id,season_id,match_id,incident_type,time,is_home,period_text,home_score,away_score,is_live,added_time,time_seconds,reversed_period_time,reversed_period_time_seconds,period_time_seconds,injury_time_length,player_in_name,player_out_name,is_injury,incident_class,player_name,card_type,reason,rescinded,assist1_name,assist2_name,var_confirmed,var_decision,var_reason,penalty_reason
+54,41957,10387456,period,90,,FT,2.0,0.0,False,999.0,5400.0,1.0,0.0,2700.0,,,,,,,,,,,,,,,
+54,41957,10387456,injuryTime,90,,,,,,0.0,,1.0,,,6.0,,,,,,,,,,,,,,
+54,41957,10387456,substitution,89,True,,,,,,,,,,,Riku Danzaki,Blair Spittal,False,regular,,,,,,,,,,
