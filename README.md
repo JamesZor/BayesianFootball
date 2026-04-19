@@ -1,108 +1,91 @@
 # models_julia
 
 
-## Bayesian Football Models
+# 🗄️ Data Module (SQL Datastore Pipeline)
 
-A functional, morphism-based framework for Bayesian football prediction models using Turing.jl.
+This module handles the extraction, transformation, and validation of raw PostgreSQL data into memory-optimized Julia `DataFrames`. It serves as the foundational data layer for the `BayesianFootball` package.
 
+## Basic Usage
 
-### Project Philosophy
-
-This project uses a **functional morphism approach** where data transformations are composed as pure functions:
-
-```
-Data → Mapping → Features → Models → Chains → Results
-```
-
-Each arrow represents a morphism (pure function) that can be composed and parallelized.
-
-### Workflow
-
-#### 1. Basic Single Experiment
+The primary entry point for the module is `load_datastore_sql`. It takes a specific tournament segment, executes 5 concurrent SQL queries (`@async`), processes the results, and returns a unified `DataStore` object.
 
 ```julia
 using BayesianFootball
 
-# Load data
-data_files = DataFiles("path/to/data")
-data_store = DataStore(data_files)
+# 1. Fetch all data for the Scottish Lower leagues
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
 
-# Configure experiment
-config = create_experiment_config(
-    "experiment_name",
-    :maher_basic,           # Model variant
-    ["20/21", "21/22"],     # Base seasons
-    "22/23",                # Target season  
-    2000                    # MCMC steps
-)
-
-# Run
-result = run_experiment(config, data_store, save_path="./experiments")
+# 2. Access the individual DataFrames
+matches_df = ds.matches
+odds_df    = ds.odds
 ```
 
-#### 2. Time Series Cross-Validation
+## 📦 The `DataStore` Object
 
-The framework automatically performs expanding window CV:
-- Split 1: Base seasons only
-- Split 2: Base + Round 1 of target
-- Split 3: Base + Rounds 1-2 of target
-- ...and so on
+The `DataStore` is a strictly typed container that holds the data for the requested segment. Every DataFrame inside the `DataStore` has been heavily optimized using `InlineStrings` and strict schemas to minimize RAM usage.
 
-#### 3. Model Comparison
+* `segment::DataTournemantSegment` - The specific slice of data requested (e.g., `ScottishLower()`).
+* `matches::DataFrame` - Core match details, scores, dates, and xG presence.
+* `statistics::DataFrame` - Match-level statistics (possession, shots, etc.) pivoted into wide `_home` and `_away` format.
+* `odds::DataFrame` - Betting market data, fully enriched by the `Markets` module (includes implied probabilities, vig removal, fair odds, and Closing Line Movement).
+* `lineups::DataFrame` - Player-level starting XI, substitutes, and individual JSON performance stats.
+* `incidents::DataFrame` - Event-level timeline data (goals, cards, substitutions, VAR decisions).
 
+---
+
+## ⚙️ Architecture & The Data Flow
+
+To ensure data integrity, every single data domain (Matches, Odds, etc.) passes through a strict 3-step pipeline defined in `fetchers/interfaces.jl`. 
+
+When you call `load_data(conn, segment, MatchesData())`, the orchestrator does the following:
+
+1. **FETCH (`fetch_data`)**: Executes the raw SQL query via `LibPQ` to pull data for the specific `tournament_ids`.
+2. **PROCESS (`process_data`)**: Performs the Julia-side ETL. This includes calculating dates, pivoting wide formats, applying mathematical enrichments (like the `Markets` probability math), and running `apply_schema!` to enforce strict column types.
+3. **QA VALIDATE (`validate_data`)**: Acts as a "Data Contract." It checks the final DataFrame to ensure critical columns exist and that there are no illogical values (e.g., decimal odds below 1.0). If QA fails, it throws a loud warning.
+
+All specific implementations for these 3 steps live in the `src/data/fetchers/sql/` folder.
+
+---
+
+## 🛠️ How to Add a New Segment (League)
+
+Adding a new league or grouping of tournaments to the package is incredibly easy. You only need to touch **one file**.
+
+**File:** `src/data/fetchers/segments.jl`
+
+**Step 1: Define the Singleton Struct**
+Create a new struct that subtypes `DataTournemantSegment`.
 ```julia
-# Define multiple configurations
-configs = [
-    create_experiment_config("model_a", :maher_basic, ...),
-    create_experiment_config("model_b", :maher_league, ...),
-]
-
-# Run batch
-results = run_batch_experiments(configs, data_store)
-
-# Compare
-comparison = compare_models(results, metric=:waic)
+struct EnglishPremier <: DataTournemantSegment end 
 ```
 
-### Directory Structure
-
-```
-src/
-├── data/           # Data loading, mapping, CV splits
-├── features/       # Feature extraction morphisms
-├── models/         # Turing model definitions
-├── training/       # Training pipeline & morphisms
-├── prediction/       # Training pipeline & morphisms
-├── evaluation/     # Metrics and diagnostics
-└── experiments/    # Experiment management
-
-scripts/
-├── run_experiment.jl    # Main execution
-└── analyze_results.jl   # Post-processing
-```
-
-### Adding New Models
-
-#### Step 1: Create Model Definition
+**Step 2: Map the Tournament IDs**
+Define the specific database IDs that belong to this segment by extending the `tournament_ids` function.
 ```julia
-# src/models/dixon_coles.jl
-@model function dixon_coles_model(home_ids, away_ids, home_goals, away_goals, n_teams)
-    # Model implementation
-end
+tournament_ids(::EnglishPremier) = [17]
 ```
 
-#### Step 2: Create Feature Extractor
-```julia
-# src/features/dixon_coles.jl
-function feature_map_dixon_coles(data::SubDataFrame, mapping::MappedData)
-    # Extract features needed by model
-    return (home_ids=..., away_ids=..., ...)
-end
-```
+That is it. You can immediately call `load_datastore_sql(EnglishPremier())`, and the entire pipeline will automatically target tournament ID 17.
 
-#### Step 3: Register Model Variant
-```julia
-# src/experiments/runner.jl
-elseif model_variant == :dixon_coles
-    ModelConfig(dixon_coles_model, feature_map_dixon_coles)
+---
+
+## 📂 Directory Structure Reference
+
+```text
+src/data/
+├── data-module.jl             # Top-level module: exports and includes
+├── types.jl                   # Global structs (DataStore, DBConfig)
+├── utils.jl                   # Generic helpers (apply_schema!)
+├── Markets/                   # Probability, Vig, and CLM math engine
+├── fetchers/
+│   ├── schemas.jl             # Memory-optimized column type dictionaries
+│   ├── segments.jl            # DataTournemantSegment definitions
+│   ├── interfaces.jl          # The 3-step Fetch -> Process -> QA contract
+│   ├── datastore.jl           # Manages DB connection and @async concurrency
+│   └── sql/                   # The domain-specific SQL and ETL logic
+│       ├── matches.jl         
+│       ├── statistics.jl      
+│       ├── lineups.jl         
+│       ├── incidents.jl       
+│       └── odds.jl            # Merges SQL data with the Markets module
 ```
