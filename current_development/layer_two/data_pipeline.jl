@@ -19,7 +19,10 @@ function build_l2_training_df(exp, ds)
     
     # Join with Match metadata (to get dates, scores, and splits)
     println("Joining with Match Metadata & Odds...")
-    matches_df = ds.matches[:, [:match_id, :match_date, :season, :match_month, :home_score, :away_score]]
+    matches_df = ds.matches[:, [
+        :match_id, :match_date, :season, :match_month, 
+        :home_score, :away_score, :home_team, :away_team # <-- Added teams here!
+    ]]
     
     # Create a chronological split_id (e.g., Year-Month)
     matches_df.split_id = [string(r.season, "-", lpad(r.match_month, 2, "0")) for r in eachrow(matches_df)]
@@ -36,7 +39,7 @@ function build_l2_training_df(exp, ds)
     
     # Clean up and select final columns for L2
     select!(df_final, 
-        :match_id, :match_date, :split_id, :season, :match_month,
+        :match_id, :match_date, :split_id, :season, :home_team, :away_team, :match_month,
         :market_name, :market_line, :selection, 
         :odds_close, :raw_prob, :outcome_hit
     )

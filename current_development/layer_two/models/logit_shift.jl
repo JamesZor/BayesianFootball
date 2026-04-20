@@ -2,6 +2,7 @@
 
 using GLM
 using StatsFuns: logit, logistic
+using StatsModels
 
 Base.@kwdef struct PureLogitShift <: AbstractLayerTwoModel
     # No hyperparameters needed for a pure shift
@@ -10,6 +11,7 @@ end
 # The wrapper for our single calculated coefficient
 struct FittedLogitShift
     C_shift::Float64
+    model::StatsModels.TableRegressionModel 
 end
 
 function fit_calibrator(model::PureLogitShift, data::DataFrame, config::CalibrationConfig)
@@ -30,7 +32,7 @@ function fit_calibrator(model::PureLogitShift, data::DataFrame, config::Calibrat
     C_shift = coef(glm_model)[1]
     
     # Return our lightweight fitted struct
-    return FittedLogitShift(C_shift)
+    return FittedLogitShift(C_shift, glm_model)
 end
 
 function apply_shift(fitted_model::FittedLogitShift, new_data::DataFrame)
