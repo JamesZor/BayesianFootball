@@ -8,14 +8,14 @@ l2_data = build_l2_training_df(exp, ds)
 config = CalibrationConfig(
     name = "XGBoost_Basic_Features",
     model = XGBoostCalibrator(num_rounds=15, max_depth=2, eta=0.05), 
-    target_markets = [:over_25], 
+    target_markets = [:btts_yes], 
     min_history_splits = 8,   
     max_history_splits = 0,   
     time_decay_half_life = nothing 
 )
 
 # Run the backtest!
-results = run_calibration_backtest(l2_data, config)
+results = run_calibration_backtest(l2_data, config);
 
 
 quick_analysis(results)
@@ -23,7 +23,7 @@ quick_analysis(results)
 # Check the PnL exactly as before
 raw_ppd, calib_ppd = get_ppd_for_raw_and_calib(ds, exp, results);
 
-min_edge = 0.02
+min_edge = 0.04
 signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
 
 raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd, ds.odds, signals; odds_column=:odds_close);
@@ -31,6 +31,9 @@ raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd, ds.odds, sign
 calib_sig_result = BayesianFootball.Signals.process_signals(calib_ppd, ds.odds, signals; odds_column=:odds_close);
 
 display_result(raw_sig_result, calib_sig_result, min_edge=min_edge)
+
+display_edge_threshold_analysis(calib_ppd, ds)
+display_edge_threshold_analysis(raw_ppd, ds)
 
 
 # ------

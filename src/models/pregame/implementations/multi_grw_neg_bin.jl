@@ -1,4 +1,5 @@
 # src/models/pregame/implementations/multi_grw_neg_bin.jl
+using Statistics # Required for the mean() function
 
 export MSNegativeBinomial 
 
@@ -162,7 +163,13 @@ function extract_parameters(
         results[mid] = (;
             λ_h = λ_h, 
             λ_a = λ_a,
-            r = r_v
+            r = r_v,
+
+# Exported as scalars for Layer 2 ML
+            home_alpha = mean(α_h), 
+            away_alpha = mean(α_a),
+            home_beta  = mean(β_h),
+            away_beta  = mean(β_a)
         )
     end
 
