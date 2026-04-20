@@ -1,4 +1,5 @@
 # src/models/pregame/implementations/ablation_study/nb_baseline_month_r.jl
+using Statistics # Required for the mean() function
 
 #=
 Ablation Study: Baseline + Monthly Dispersion.
@@ -114,8 +115,13 @@ function extract_parameters(model::AblationStudy_NB_baseline_month_r, df::Abstra
         # Monthly Dispersion calculation
         r_match = exp.(log_r_v .+ log_r_month_v)
 
+      home_alpha = mean(α[h_id, t_idx, :]), 
+      away_alpha = mean(α[a_id, t_idx, :]),
+      home_beta  = mean(β[h_id, t_idx, :]),
+      away_beta  = mean(β[a_id, t_idx, :])
+
         # Note: We return r_match under the generic `r` key since it applies equally to both teams in the match
-        results[mid] = (; λ_h, λ_a, r = r_match)
+        results[mid] = (; λ_h, λ_a, r = r_match, home_alpha, away_alpha, home_beta, away_beta)
     end
     return results
 end

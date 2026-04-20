@@ -1,5 +1,91 @@
 # Include the new model
+
+using Revise
+using BayesianFootball
+using DataFrames
+using ThreadPinning
+pinthreads(:cores)
+
+# Include our new Layer 2 files
+include("l01_calib_utils.jl")
+include("data_pipeline.jl")
+include("runner.jl")
+
 include("models/xgboost_shift.jl")
+include("./features/l2_feature_struct_interface.jl")
+include("./features/feature_builders.jl")
+
+
+
+# ----- feature l2 pipe line explore  -----
+
+
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+exp_dir = "exp/ablation_study"
+
+
+saved_folders = BayesianFootball.Experiments.list_experiments(exp_dir)
+exp = BayesianFootball.Experiments.load_experiment(saved_folders[2])
+
+# Inside current_development/layer_two/data_pipeline.jl
+latents = BayesianFootball.Experiments.extract_oos_predictions(ds, exp)
+ppd_df = BayesianFootball.Predictions.model_inference(latents)
+
+# The PPD distribution is an array of samples. We need the mean probability.
+ppd_df.df.raw_prob = [mean(dist) for dist in ppd_df.df.distribution]
+
+
+function build_l2_training_df(exp_results, ds)
+    # ... [Keep the latents extraction exactly as we did before] ...
+    
+    matches_df = ds.matches[:, [:match_id, :match_date, :season, :match_month, 
+                                :home_score, :away_score, :home_team, :away_team]]
+    
+    # ==========================================
+    # 🌟 NEW: The Feature Pipeline
+    # ==========================================
+    pipeline = [
+        SeasonProgress(),
+        RollingForm(window_size = 3),
+        RollingForm(window_size = 7)
+    ]
+    
+    # This automatically melts, calculates, lags, pivots, and joins!
+    enriched_matches = build_all_features(pipeline, matches_df)
+    
+    # ... [Join with PPD probabilities and latents as normal] ...
+    
+    final_df = innerjoin(ppd_df, enriched_matches, on=:match_id)
+    
+    return final_df
+end
+
+
+
+# ---- XGBoost basic  test runner. -----
+
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+exp_dir = "exp/ablation_study"
+
+
+saved_folders = BayesianFootball.Experiments.list_experiments(exp_dir)
+exp = BayesianFootball.Experiments.load_experiment(saved_folders[2])
+
+
+
+# Rebuild the dataset so it has the team names
+l2_data = build_l2_training_df(exp, ds)
+
+
+
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+exp_dir = "exp/ablation_study"
+
+
+saved_folders = BayesianFootball.Experiments.list_experiments(exp_dir)
+exp = BayesianFootball.Experiments.load_experiment(saved_folders[2])
+
+
 
 # Rebuild the dataset so it has the team names
 l2_data = build_l2_training_df(exp, ds)
