@@ -36,24 +36,56 @@ println(first(l2_data, 5))
 config = CalibrationConfig(
     name = "Pure_Affine_Logit_Shift",
     model = PureLogitShift(), 
-    target_markets = [:over_25], # Or whatever you are calibrating
+    target_markets = [:over_15, :over_25, :over_35], # Or whatever you are calibrating
     min_history_splits = 8,   
     max_history_splits = 0,   
     time_decay_half_life = nothing 
 )
 
 # 4. Run the Backtest
-println("Starting L2 Backtest...")
-
-
-using MLJBase: log_loss # Or write a quick logloss function
 results = run_calibration_backtest(l2_data, config);
 
 # 5. Quick Analysis: Did Calibration Help?
 quick_analysis(results)
 
 
-history_dict = results.fitted_models_history[:over_25]
+
+#=
+target_markets = [:over_15, :over_25, :over_35], # Or whatever you are calibrating
+julia> # 5. Quick Analysis: Did Calibration Help?
+       quick_analysis(results)
+
+=== Calibration Results ===
+Raw L1 LogLoss:    0.6134
+Calib L2 LogLoss:  0.612
+Improvement:       0.0014
+
+=== Brier Score Results ===
+Raw L1 Brier:    0.2119
+Calib L2 Brier:  0.2114
+Improvement:     0.0005
+=#
+
+
+#=
+target_markets = [:over_05, :over_15, :over_25, :over_35], # Or whatever you are calibrating
+
+julia> quick_analysis(results)
+
+=== Calibration Results ===
+Raw L1 LogLoss:    0.52
+Calib L2 LogLoss:  0.5196
+Improvement:       0.0004
+
+=== Brier Score Results ===
+Raw L1 Brier:    0.1742
+Calib L2 Brier:  0.1738
+Improvement:     0.0003
+=#
+
+
+
+history_dict = results.fitted_models_history[:btts_yes];
 
 println("--- Logit Shift Drift Over Time ---")
 # Sort by split to view chronologically
@@ -97,17 +129,85 @@ raw_ppd, calib_ppd = get_ppd_for_raw_and_calib(ds, exp, results);
 # 3. Define your native Signal Strategy
 # (Assumes you have this imported from BayesianFootball.Signals)
 min_edge = 0.00
-signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
 
+signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
 println("Running Signals on Raw PPD...")
 raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd, ds.odds, signals; odds_column=:odds_close);
-
 println("Running Signals on Calibrated PPD...")
 calib_sig_result = BayesianFootball.Signals.process_signals(calib_ppd, ds.odds, signals; odds_column=:odds_close);
 
 # 5. Print out the final comparison
 # 5. Print out the final comparison
 display_result(raw_sig_result, calib_sig_result)
+
+
+
+#=
+target_markets = [:over_15, :over_25, :over_35], # Or whatever you are calibrating
+=== L3 Strategy: Bayesian Kelly (Edge > 0.00) ===
+
+[RAW L1 MODEL]
+  Seen Markets: 2703
+  Bets Placed:  505 (Active Rate: 18.68%)
+  Win Rate:     47.72%
+  Total Stake:  13.91 units
+  Total PnL:    +1.46 units
+  ROI:          +10.48%
+
+[CALIBRATED L2 MODEL]
+  Seen Markets: 2703
+  Bets Placed:  1060 (Active Rate: 39.22%)
+  Win Rate:     52.92%
+  Total Stake:  46.99 units
+  Total PnL:    +1.75 units
+  ROI:          +3.73%
+=#
+
+
+#=
+display_result(raw_sig_result, calib_sig_result)
+
+=== L3 Strategy: Bayesian Kelly (Edge > 0.04) ===
+
+[RAW L1 MODEL]
+  Seen Markets: 3618
+  Bets Placed:  238 (Active Rate: 6.58%)
+  Win Rate:     51.26%
+  Total Stake:  16.21 units
+  Total PnL:    +2.83 units
+  ROI:          +17.46%
+
+[CALIBRATED L2 MODEL]
+  Seen Markets: 3618
+  Bets Placed:  560 (Active Rate: 15.48%)
+  Win Rate:     51.96%
+  Total Stake:  48.48 units
+  Total PnL:    +3.30 units
+  ROI:          +6.81%
+
+=== L3 Strategy: Bayesian Kelly (Edge > 0.00) ===
+
+[RAW L1 MODEL]
+  Seen Markets: 3618
+  Bets Placed:  637 (Active Rate: 17.61%)
+  Win Rate:     48.67%
+  Total Stake:  19.39 units
+  Total PnL:    +2.54 units
+  ROI:          +13.12%
+
+[CALIBRATED L2 MODEL]
+  Seen Markets: 3618
+  Bets Placed:  1312 (Active Rate: 36.26%)
+  Win Rate:     53.05%
+  Total Stake:  58.11 units
+  Total PnL:    +2.55 units
+  ROI:          +4.39%
+
+
+=#
+
+
+
 
 
 #=

@@ -9,7 +9,7 @@ using DataFrames
 Extracts OOS PPDs from Layer 1, joins them with live market odds, 
 and evaluates the actual outcome to create the Layer 2 training set.
 """
-function build_l2_training_df_old(exp, ds)
+function build_l2_training_df(exp, ds)
     println("Extracting L1 Out-of-Sample Predictions...")
     latents = BayesianFootball.Experiments.extract_oos_predictions(ds, exp)
     ppd_df = BayesianFootball.Predictions.model_inference(latents)
