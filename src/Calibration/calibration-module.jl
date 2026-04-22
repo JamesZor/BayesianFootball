@@ -1,4 +1,4 @@
-# src/Calibration/Calibration.jl
+# src/Calibration/calibration-module.jl
 
 module Calibration
 

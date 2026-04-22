@@ -268,8 +268,8 @@ end
 
 
 
-raw_sig_result = BayesianFootball.Signals.process_signals(ppd_raw, ds.odds, signals; odds_column=:odds_close);
 min_edge =0.025
+raw_sig_result = BayesianFootball.Signals.process_signals(ppd_raw, ds.odds, signals; odds_column=:odds_close);
 signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
 calib_sig_result = BayesianFootball.Signals.process_signals(ppd_cali, ds.odds, signals; odds_column=:odds_close);
 
@@ -335,3 +335,49 @@ summarize_metrics(eval_cali)
 
 
 df_comparison = compare_models(eval_raw, eval_cali)
+
+
+aligned_raw_df = semijoin(
+    ppd_raw.df, 
+    ppd_cali.df, 
+    on=[:match_id, :market_name, :selection]
+)
+
+# 4. Overwrite raw_ppd with the aligned version
+raw_ppd_1 = BayesianFootball.Predictions.PPD(
+    aligned_raw_df, 
+    ppd_raw.model, 
+    ppd_raw.config 
+)
+
+
+min_edge =0.0
+signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
+
+raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd_1, ds.odds, signals; odds_column=:odds_close);
+calib_sig_result = BayesianFootball.Signals.process_signals(ppd_cali, ds.odds, signals; odds_column=:odds_close);
+
+
+
+display_result(raw_sig_result, calib_sig_result, min_edge=min_edge)
+
+min_edge =0.00
+signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
+raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd_1, ds.odds, signals; odds_column=:odds_close);
+
+min_edge =0.05
+signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
+calib_sig_result = BayesianFootball.Signals.process_signals(ppd_cali, ds.odds, signals; odds_column=:odds_close);
+
+display_result(raw_sig_result, calib_sig_result, min_edge=min_edge)
+
+market_roi_raw = summarize_roi_by_market(raw_sig_result)
+market_roi_calib = summarize_roi_by_market(calib_sig_result)
+
+
+println("calib_ppd")
+display_edge_threshold_analysis(ppd_cali, ds)
+
+println("raw_ppd")
+display_edge_threshold_analysis(raw_ppd_1, ds)
+
