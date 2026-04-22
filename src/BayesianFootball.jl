@@ -46,7 +46,7 @@ include("./backtesting/backtesting-module.jl")
 
 # Export the main modules and key functions/types for users
 # *** UPDATED EXPORTS ***
-export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calculations, BackTesting, Evaluation
+export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calibration, BackTesting, Evaluation
 export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 
 # Maybe export core config types too?

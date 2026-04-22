@@ -32,7 +32,7 @@ struct PPD
     df::DataFrame 
     model::AbstractFootballModel
     
-    calibrators::AbstractLayerTwoModel
+    calibrators::AbstractLayerTwoModelConfig
     
     config::MarketConfig
 end

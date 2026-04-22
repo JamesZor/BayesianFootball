@@ -148,8 +148,9 @@ function required_mapping_keys(model::AbstractFootballModel)
 end
 
 
-abstract type AbstractLayerTwoModel end
-struct NoCalibration <: AbstractLayerTwoModel end
-export AbstractLayerTwoModel, NoCalibration
+
+abstract type AbstractLayerTwoModelConfig end
+struct NoCalibration <: AbstractLayerTwoModelConfig end
+export AbstractLayerTwoModelConfig, NoCalibration
 
 end
