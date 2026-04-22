@@ -29,9 +29,17 @@ end
 The final container for market predictions.
 """
 struct PPD
-    df::DataFrame # Columns: match_id, market_name, selection, distribution (Vector)
+    df::DataFrame 
     model::AbstractFootballModel
+    
+    calibrators::AbstractLayerTwoModelConfig
+    
     config::MarketConfig
+end
+
+# Add a convenience constructor for raw L1 predictions (starts with empty calibrators)
+function PPD(df::DataFrame, model::AbstractFootballModel, config::MarketConfig)
+  return PPD(df, model, NoCalibration(), config)
 end
 
 # Forwarding standard DataFrame methods for convenience

@@ -1,41 +1,19 @@
-# src/experiments/post_process.jl
+# current_development/layer_two/l01_basic_explore.jl
+
+using Revise
+using BayesianFootball
 
 using DataFrames
-using ProgressMeter
-using Base.Threads
-using ..Data
-using ..Features
-using ..Models
-using DataFrames
-using ..TypesInterfaces: AbstractFootballModel
-
-# We don't export here, we rely on the main module to export
-
-# ==============================================================================
-# 1. THE WRAPPER (Holy Trait Pattern)
-# ==============================================================================
-
-struct LatentStates
-    df::DataFrame
-    model::AbstractFootballModel # You can now store the specific model used
-end
+using ThreadPinning
+pinthreads(:cores)
 
 
-# 1. Standard Base methods
-Base.getindex(ls::LatentStates, args...) = getindex(ls.df, args...)
-Base.setindex!(ls::LatentStates, val, args...) = setindex!(ls.df, val, args...)
-Base.size(ls::LatentStates) = size(ls.df)
-Base.size(ls::LatentStates, i) = size(ls.df, i)
-Base.show(io::IO, ls::LatentStates) = show(io, ls.df)
 
-# 2. DataFrames specific methods (Use DataFrames.nrow, not Base.nrow)
-DataFrames.nrow(ls::LatentStates) = nrow(ls.df)
-DataFrames.ncol(ls::LatentStates) = ncol(ls.df)
 
-# ==============================================================================
-# 2. THE BRIDGE
-# ==============================================================================
 
+
+
+#### Taken from src/experiments/post_processing
 function extract_oos_predictions(ds::Data.DataStore, exp_results::ExperimentResults)
     # ... (Same logic as before, just no module wrapper) ...
     # 1. Reconstruct Context
@@ -79,6 +57,4 @@ function _latent_state_dict_to_df(raw_preds::Dict)::AbstractDataFrame
     return DataFrame(cols)
 end
 
-
-
-
+# ------------------------------

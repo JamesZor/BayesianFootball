@@ -162,7 +162,7 @@ function extract_parameters(
         results[mid] = (;
             λ_h = λ_h, 
             λ_a = λ_a,
-            r = r_v
+            r = r_v,
         )
     end
 
