@@ -73,7 +73,7 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
         target_seasons = target_seasons,
         history_seasons = 2,
         dynamics_col = :match_month,
-        warmup_period = 0
+        warmup_period = 0,
         stop_early = true
     )
 
@@ -134,11 +134,10 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
-        )
-
+        ),
         Experiments.ExperimentConfig(
             name = "$(label)_06_baseline_HA_r",
-            model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
+            model = Models.PreGame.AblationStudy_NB_baseline_HA_r(), 
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
