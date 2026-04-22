@@ -1,6 +1,5 @@
-# current_development/layer_two/trainer.jl
-using DataFrames
-using Base.Threads
+# src/Calibration/trainer.jl
+
 
 # ==========================================
 # 1. TRAINING LOOP
@@ -80,6 +79,7 @@ function apply_calibrators(ppd::Predictions.PPD, ds::Data.DataStore, calibration
     return Predictions.PPD(
         select(all_calibrated_preds, :match_id, :market_name, :selection, :distribution), 
         ppd.model,
+        calibration_results.config,
         ppd.config 
     )
 end
@@ -179,7 +179,7 @@ end
 
 function train_calibrators(ppd::Predictions.PPD, ds::Data.DataStore, configs::Vector{CalibrationConfig})
     results_list = CalibrationResults[]
-    training_data_l2 = build_l2_training_df(ds,ppd),
+    training_data_l2 = build_l2_training_df(ds, ppd),
     for config in configs
         println("\n=== Training L2 Model: $(config.name) ===")
         push!(results_list, train_calibrators(training_data_l2, config))
@@ -210,15 +210,12 @@ function apply_calibrators(ppd::Predictions.PPD, ds::Data.DataStore, results_lis
         # Run the core DataFrame application loop
         all_calibrated_preds = apply_calibrators(predict_data, results.fitted_models_history, results.config)
         
-        # Build lineage history (from your updated PPD struct)
-        # new_history = copy(ppd.calibrators)
-        # push!(new_history, results.config.model)
         
         # Construct the final PPD
         new_ppd = Predictions.PPD(
             select(all_calibrated_preds, :match_id, :market_name, :selection, :distribution, :match_date, :split_id), 
             ppd.model,
-            # new_history,
+            results.config,
             ppd.config 
         )
         

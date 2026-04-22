@@ -147,4 +147,9 @@ function required_mapping_keys(model::AbstractFootballModel)
     return [:team_map, :n_teams]
 end
 
+
+abstract type AbstractLayerTwoModel end
+struct NoCalibration <: AbstractLayerTwoModel end
+export AbstractLayerTwoModel, NoCalibration
+
 end
