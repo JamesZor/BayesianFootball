@@ -1,13 +1,12 @@
 # src/Calibration/types.jl 
 #
-# abstract type AbstractLayerTwoModel end
-# in main types interface 
+abstract type AbstractLayerTwoModel end
 """
     CalibrationConfig
 
 The recipe for a Layer 2 recalibration experiment.
 """
-Base.@kwdef struct CalibrationConfig
+Base.@kwdef struct CalibrationConfig <: AbstractLayerTwoModelConfig
     name::String
     model::AbstractLayerTwoModel
 
