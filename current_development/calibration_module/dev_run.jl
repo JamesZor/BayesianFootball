@@ -69,7 +69,7 @@ shift_model_config = CalibrationConfig(
 shift_model_config = BayesianFootball.Calibration.CalibrationConfig(
     name = "Pure_Affine_Logit_Shift",
     model = BayesianFootball.Calibration.BasicLogitShift(), 
-    min_history_splits = 8,   
+    min_history_splits = 10,   
     max_history_splits = 0,   
 )
 
@@ -481,4 +481,159 @@ display_edge_threshold_analysis(ppd_cali, ds)
 
 println("raw_ppd")
 display_edge_threshold_analysis(raw_ppd_1, ds)
+
+
+
+
+
+# ------
+
+using DataFrames
+using Statistics
+using Random
+using Base.Threads
+using Printf
+
+"""
+    run_monte_carlo_bootstrap(sig_results; kwargs...)
+
+Runs a multi-threaded Bootstrap Monte Carlo simulation on betting history.
+Samples `N` bets with replacement over `M` simulations.
+"""
+function run_monte_carlo_bootstrap(
+    sig_results; 
+    target_selection::Union{Symbol, Nothing} = nothing,
+    sims::Int = 100000, 
+    start_bankroll::Float64 = 100.0, 
+    max_stake_pct::Float64 = 0.05,
+    ruin_threshold::Float64 = 0.50, # 50% loss of starting bank = Ruin
+    sample_size::Union{Int, Nothing} = nothing # Defaults to N historical bets
+)
+
+    # 1. Extract and Filter the DataFrame
+    df = sig_results.df
+    if target_selection !== nothing
+        df = subset(df, :selection => ByRow(isequal(target_selection)), view=true)
+    end
+    
+    bets_df = filter(row -> row.stake > 0.0, df)
+    n_history = nrow(bets_df)
+    
+    if n_history == 0
+        println("No bets found for this selection.")
+        return zeros(0)
+    end
+
+    n_bets = isnothing(sample_size) ? n_history : sample_size
+
+    println("Running $sims Bootstrap Simulations...")
+    println("Market: $(isnothing(target_selection) ? "ALL" : target_selection) | Pool: $n_history historical bets | Drawing $n_bets bets per sim (Threads: $(Threads.nthreads()))")
+
+    # 2. Extract to Native Vectors (Crucial for inner-loop performance!)
+    odds_arr  = Vector{Float64}(bets_df.odds)
+    won_arr   = Vector{Bool}(bets_df.is_winner)
+    stake_arr = Vector{Float64}(bets_df.stake)
+
+    # Thread-safe result arrays
+    final_bankrolls = zeros(Float64, sims)
+    ruined_sims     = zeros(Bool, sims)
+    profited_sims   = zeros(Bool, sims)
+
+    # 3. The Multi-Threaded Monte Carlo Loop
+    Threads.@threads for i in 1:sims
+        # Give each thread its own random number generator to avoid locking issues
+        rng = Random.default_rng() 
+        bank = start_bankroll
+        hit_ruin = false
+        
+        for _ in 1:n_bets
+            # Sample WITH REPLACEMENT
+            idx = rand(rng, 1:n_history)
+            
+            # Stop betting if completely bankrupt
+            if bank <= 0.0
+                bank = 0.0
+                break
+            end
+            
+            # Calculate Stake (Capped to prevent total explosion)
+            stake_pct = min(stake_arr[idx], max_stake_pct)
+            bet_amount = bank * stake_pct
+            
+            # Resolve Bet
+            if won_arr[idx]
+                bank += bet_amount * (odds_arr[idx] - 1.0)
+            else
+                bank -= bet_amount
+            end
+            
+            # Track if they ever crossed the ruin threshold during the run
+            if bank < (start_bankroll * ruin_threshold)
+                hit_ruin = true
+            end
+        end
+        
+        # Log final state for this simulation path
+        final_bankrolls[i] = bank
+        ruined_sims[i] = hit_ruin || (bank < (start_bankroll * ruin_threshold))
+        profited_sims[i] = bank > start_bankroll
+    end
+
+    # 4. Calculate Summary Statistics
+    median_bank = median(final_bankrolls)
+    mean_bank   = mean(final_bankrolls)
+    max_bank    = maximum(final_bankrolls)
+    min_bank    = minimum(final_bankrolls)
+    
+    win_prob  = mean(profited_sims) * 100
+    ruin_prob = mean(ruined_sims) * 100
+
+    # 5. Output
+    println("\n=== Bootstrap Monte Carlo Results ($sims Paths) ===")
+    @printf("Start Bankroll:      %.2f units\n", start_bankroll)
+    @printf("Max Stake Cap:       %.1f%%\n", max_stake_pct * 100)
+    println("---------------------------------------------------------")
+    @printf("Median Final Bank:   %.2f units\n", median_bank)
+    @printf("Mean Final Bank:     %.2f units (Skewed by extreme runs)\n", mean_bank)
+    @printf("Best Case (Max):     %.2f units\n", max_bank)
+    @printf("Worst Case (Min):    %.2f units\n", min_bank)
+    println("---------------------------------------------------------")
+    @printf("Probability of Profit: %5.2f%%\n", win_prob)
+    @printf("Risk of %.0f%% Ruin:    %5.2f%%\n", (1.0 - ruin_threshold)*100, ruin_prob)
+    println("=========================================================\n")
+
+    return final_bankrolls
+end
+
+
+
+min_edge =0.00
+signals = [BayesianFootball.Signals.BayesianKelly(min_edge=min_edge)]
+calib_sig_result = BayesianFootball.Signals.process_signals(ppd_cali, ds.odds, signals; odds_column=:odds_close);
+raw_sig_result = BayesianFootball.Signals.process_signals(raw_ppd_1, ds.odds, signals; odds_column=:odds_close);
+
+
+
+run_monte_carlo_bootstrap(calib_sig_result; target_selection=:over_15, max_stake_pct=0.05);
+
+run_monte_carlo_bootstrap(raw_sig_result; target_selection=:over_15, max_stake_pct=0.05);
+
+
+
+
+# ---- 
+
+shift_team_bias = Calibration.CalibrationConfig(
+    name = "Team_Bias_Logit_Shift",
+    model = Calibration.TeamBiasLogitShift(), 
+    prob_col = :prob_mean,
+    min_history_splits = 10,   
+)
+
+
+
+fitted_model_history = Calibration.train_calibrators(training_data_l2, shift_team_bias);
+
+ppd_cali = Calibration.apply_calibrators(ppd_raw, ds, fitted_model_history)
+
 
