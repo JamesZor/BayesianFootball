@@ -112,9 +112,12 @@ ppd_cali = BayesianFootball.Calibration.apply_calibrators(ppd_raw, ds, fitted_mo
 df_eval = build_evaluation_df(ppd_raw, calib_preds, ds)
 
 df_eval = Calibration.build_evaluation_df(ppd_raw, calib_preds, ds)
+df_eval = BayesianFootball.Calibration.build_evaluation_df(ppd_raw, ppd_cali, ds)
 
 # 2. View the overall performance grouped by selection (home, away, over_15, etc.)
 summary_by_selection = summarize_metrics(df_eval, groupby_cols=[:selection])
+summary_by_selection = Calibration.summarize_metrics(df_eval, groupby_cols=[:selection])
+
 display(summary_by_selection)
 
 # 3. Want to see if the calibration degraded over time? Group by split_id!
@@ -134,6 +137,19 @@ df_comparison = compare_models(eval_raw, eval_cali)
 
 display(df_comparison)
 
+# -----  6. updates 
+## 1. Build the evaluation dataframes separately
+eval_raw = Calibration.build_evaluation_df(ppd_raw, ds)
+eval_cali = Calibration.build_evaluation_df(ppd_cali, ds)
+
+# 2. If you just want to look at one model:
+summary_raw = Calibration.summarize_metrics(eval_raw, groupby_cols=[:selection])
+
+# 3. If you want to compare them side-by-side:
+comparison_df = Calibration.compare_models(eval_raw, eval_cali, groupby_cols=[:selection])
+
+
+
 # --- 7. signals
 
 min_edge =0.0
@@ -152,7 +168,7 @@ display_result(raw_sig_result, calib_sig_result, min_edge=min_edge)
 
 
 println("calib_ppd")
-display_edge_threshold_analysis(calib_preds, ds)
+display_edge_threshold_analysis(ppd_cali, ds)
 
 println("raw_ppd")
 display_edge_threshold_analysis(ppd_raw, ds)
@@ -299,6 +315,75 @@ display(market_roi_raw)
 display(market_roi_calib)
 
 
+# ----
+function display_edge_threshold_analysis(ppd, ds; target_selection::Union{Symbol, Nothing}=nothing)
+    # 1. Filter the PPD if a specific market is requested
+    if target_selection !== nothing
+        println("\n=== Model: Edge Threshold Analysis [Market: $target_selection] ===")
+        # Filter the dataframe (using a view to save memory)
+        filtered_df = subset(ppd.df, :selection => ByRow(isequal(target_selection)), view=true)
+        
+        # Create a temporary PPD for the signal processor
+        # (Assuming your PPD struct has these 4 fields from our previous chat)
+        working_ppd = BayesianFootball.Predictions.PPD(
+            filtered_df, 
+            ppd.model, 
+            ppd.calibrators, 
+            ppd.config
+        )
+    else
+        println("\n=== Model: Edge Threshold Analysis [ALL MARKETS] ===")
+        working_ppd = ppd
+    end
+
+    println("Edge% | Bets | Active% | Win%   | Staked | PnL   | ROI%")
+    println("---------------------------------------------------------")
+
+    for edge_pct in 0.0:0.01:0.1
+        # Create temporary signals with the new edge
+        temp_signals = [BayesianFootball.Signals.BayesianKelly(min_edge=edge_pct)]
+        
+        # Process just the working PPD
+        temp_result = BayesianFootball.Signals.process_signals(working_ppd, ds.odds, temp_signals; odds_column=:odds_close)
+        
+        # Summarize
+        metrics = summarize_ledger(temp_result.df)
+        
+        @printf("%5.1f | %4d | %7.2f | %6.2f | %6.2f | %+.2f | %+.2f%%\n", 
+                edge_pct * 100, metrics.bets, metrics.active_rate, metrics.win_rate, 
+                metrics.total_stake, metrics.total_pnl, metrics.roi)
+    end
+end
+
+
+aligned_raw_df = semijoin(
+    ppd_raw.df, 
+    ppd_cali.df, 
+    on=[:match_id, :market_name, :selection]
+)
+
+# 4. Overwrite raw_ppd with the aligned version
+raw_ppd_1 = BayesianFootball.Predictions.PPD(
+    aligned_raw_df, 
+    ppd_raw.model, 
+    ppd_raw.config 
+)
+
+nrow(raw_ppd_1) 
+nrow(ppd_cali) 
+
+
+# Test Over 1.5
+display_edge_threshold_analysis(ppd_cali, ds, target_selection=:over_15)
+display_edge_threshold_analysis(raw_ppd_1, ds, target_selection=:over_15)
+
+# Test Over 2.5
+display_edge_threshold_analysis(ppd_cali, ds, target_selection=:over_25)
+display_edge_threshold_analysis(raw_ppd_1, ds, target_selection=:over_25)
+
+# Test BTTS
+display_edge_threshold_analysis(ppd_cali, ds, target_selection=:btts_yes)
+display_edge_threshold_analysis(raw_ppd_1, ds, target_selection=:btts_yes)
 
 # -----
 # 1. Setup your Configs
