@@ -40,6 +40,7 @@ exp = BayesianFootball.Experiments.load_experiment(saved_folders[2])
 
 ppd_raw= model_inference(ds, exp)
 
+ppd_raw= Predictions.model_inference(ds, exp)
 
 # 2. data_l2_prep
 # @btime training_data_l2 = build_l2_training_df(ds, ppd_raw)
@@ -52,6 +53,8 @@ ppd_raw= model_inference(ds, exp)
 
 
 training_data_l2 = build_l2_training_df(ds, ppd_raw)
+training_data_l2 = BayesianFootball.Calibration.build_l2_training_df(ds, ppd_raw)
+training_data_l2 = Calibration.build_l2_training_df(ds, ppd_raw)
 
 
 
@@ -63,6 +66,14 @@ shift_model_config = CalibrationConfig(
     max_history_splits = 0,   
 )
 
+shift_model_config = BayesianFootball.Calibration.CalibrationConfig(
+    name = "Pure_Affine_Logit_Shift",
+    model = BayesianFootball.Calibration.BasicLogitShift(), 
+    min_history_splits = 8,   
+    max_history_splits = 0,   
+)
+
+
 
 
 # 4. Training 
@@ -73,11 +84,14 @@ config = shift_model_config
 
 
 fitted_model_history = train_calibrators(training_data_l2, shift_model_config);
+fitted_model_history = BayesianFootball.Calibration.train_calibrators(training_data_l2, shift_model_config);
 
 
 # 5. applying the calibration to ppd
 
 ppd_cali = apply_calibrators(ppd_raw, ds, fitted_model_history)
+
+ppd_cali = BayesianFootball.Calibration.apply_calibrators(ppd_raw, ds, fitted_model_history)
 #
 # id = rand(calib_preds.df.match_id)
 # target_select = :under_25
@@ -96,6 +110,8 @@ ppd_cali = apply_calibrators(ppd_raw, ds, fitted_model_history)
 
 # 1. Build the massive evaluation frame
 df_eval = build_evaluation_df(ppd_raw, calib_preds, ds)
+
+df_eval = Calibration.build_evaluation_df(ppd_raw, calib_preds, ds)
 
 # 2. View the overall performance grouped by selection (home, away, over_15, etc.)
 summary_by_selection = summarize_metrics(df_eval, groupby_cols=[:selection])
