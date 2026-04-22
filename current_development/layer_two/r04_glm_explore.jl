@@ -22,8 +22,14 @@ ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLowe
 exp_dir = "exp/ablation_study"
 
 
+
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
+exp_dir = "exp/dev_ireland"
+
+
+
 saved_folders = BayesianFootball.Experiments.list_experiments(exp_dir)
-exp = BayesianFootball.Experiments.load_experiment(saved_folders[6])
+exp = BayesianFootball.Experiments.load_experiment(saved_folders[1])
 
 
 
@@ -105,7 +111,7 @@ println(first(l2_data, 5))
 config_dumb = CalibrationConfig(
     name = "Pure_Affine_Logit_Shift",
     model = PureLogitShift(), 
-    target_markets = [:over_15, :over_25, :over_35], 
+    target_markets = [:over_15, :over_25, :over_35, :under_25, :under_35, :over_45, :under_45, :draw], 
     min_history_splits = 8,   
     max_history_splits = 0,   
     time_decay_half_life = nothing 
@@ -192,9 +198,11 @@ function compare_raw_and_cali(ds, exp, results, min_edge)
 
     println("raw_ppd")
     display_edge_threshold_analysis(raw_ppd, ds)
+
+    return raw_sig_result, calib_sig_result
 end
 
-compare_raw_and_cali(ds,exp, results_dumb, 0.0)
+raw_sig_result, calib_sig_result = compare_raw_and_cali(ds,exp, results_dumb, 0.00);
 
 
 
@@ -440,3 +448,82 @@ Edge% | Bets | Active% | Win%   | Staked | PnL   | ROI%
 
 
 compare_raw_and_cali(ds,exp, results_smart, 0.0)
+
+
+# -----
+using Random
+using Statistics
+
+function run_monte_carlo(sig_results; sims=10000, start_bankroll=100.0, max_stake_pct=0.05)
+    # 1. Access the actual DataFrame inside the SignalsResult struct
+    df = sig_results.df
+    
+    # 2. Filter down to ONLY the matches where we actually placed a bet (stake > 0)
+    bets_df = filter(row -> row.stake > 0.0, df)
+    n_bets = nrow(bets_df)
+    
+    println("Running $sims simulations on $n_bets historical bets...")
+    
+    final_bankrolls = zeros(sims)
+    positive_roi_count = 0
+    ruin_count = 0 # Defined as losing 50% of starting bankroll
+    
+    for i in 1:sims
+        # 3. Shuffle the index to randomize the sequence of events
+        shuffled_idx = shuffle(1:n_bets)
+        bank = start_bankroll
+        
+        for idx in shuffled_idx
+            # Extract the real historical data for this bet using the correct column names
+            odds = bets_df.odds[idx]
+            won = bets_df.is_winner[idx]
+            
+            # The 'stake' column is already the calculated Kelly fraction!
+            raw_kelly_fraction = bets_df.stake[idx]
+            
+            # Cap the stake to prevent total ruin on a single bad bet
+            # (Standard Kelly risk management usually caps bets at 5% of bankroll)
+            stake_pct = min(raw_kelly_fraction, max_stake_pct)
+            bet_amount = bank * stake_pct
+            
+            # Update bankroll based on the actual historical outcome
+            if won == true
+                bank += bet_amount * (odds - 1.0)
+            else
+                bank -= bet_amount
+            end
+        end
+        
+        final_bankrolls[i] = bank
+        if bank > start_bankroll
+            positive_roi_count += 1
+        end
+        if bank < (start_bankroll * 0.8)
+            ruin_count += 1
+        end
+    end
+    
+    # 4. Calculate and Print the Summary Statistics
+    median_bank = median(final_bankrolls)
+    mean_bank = mean(final_bankrolls)
+    win_prob = (positive_roi_count / sims) * 100
+    ruin_prob = (ruin_count / sims) * 100
+    
+    println("\n=== Monte Carlo Simulation Results ($sims Paths) ===")
+    println("Starting Bankroll:  $(start_bankroll) units")
+    println("Max Stake Cap:      $(max_stake_pct * 100)% per bet")
+    println("Median Final Bank:  $(round(median_bank, digits=2)) units")
+    println("Mean Final Bank:    $(round(mean_bank, digits=2)) units")
+    println("Probability of Profit: $(round(win_prob, digits=2))%")
+    println("Risk of 50% Ruin:      $(round(ruin_prob, digits=2))%")
+    
+    return final_bankrolls
+end
+
+
+# calib at 0.0 edge limit 
+mc_results = run_monte_carlo(calib_sig_result, sims=10000, start_bankroll=100.0, max_stake_pct=0.90);
+mc_results = run_monte_carlo(raw_sig_result, sims=10000, start_bankroll=100.0, max_stake_pct=0.90);
+
+# calib at 0.04 edge limit 
+mc_results = run_monte_carlo(calib_sig_result, sims=10000, start_bankroll=100.0, max_stake_pct=0.90);

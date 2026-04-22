@@ -16,3 +16,40 @@ Base.@kwdef struct CalibrationConfig
     min_market_predict::Integer= 0 
 end
 
+
+
+
+"""
+    CalibrationResults
+"""
+struct CalibrationResults
+    config::CalibrationConfig
+    # Changed to track history: Target Market -> Split ID -> Fitted Model
+    fitted_models_history::Dict{Symbol, Dict{String, Any}} 
+end
+
+
+# ==========================================
+# Generic Interfaces (To be extended by models)
+# ==========================================
+
+"""
+    fit_calibrator(model::AbstractLayerTwoModel, data::DataFrame, config::CalibrationConfig)
+Trains the Layer 2 model on historical PPDs and actual outcomes.
+"""
+function fit_calibrator(model::AbstractLayerTwoModel, data::DataFrame, config::CalibrationConfig)
+    error("Not implemented for $(typeof(model))")
+end
+
+"""
+    apply_shift(fitted_model, new_data::DataFrame)
+Applies the learned shift to unobserved PPDs.
+"""
+function apply_shift(fitted_model, new_data::DataFrame)
+    error("Not implemented for $(typeof(fitted_model))")
+end
+
+function apply_calibration(fitted_model, new_data::DataFrame)
+    error("Not implemented for $(typeof(fitted_model))")
+end
+
