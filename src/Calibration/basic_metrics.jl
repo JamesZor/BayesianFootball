@@ -74,8 +74,6 @@ function summarize_metrics(df_eval::DataFrame; groupby_cols=[:selection])
         :bias => mean => :bias
     )
     
-    sort!(summary, :n_predictions, rev=true)
-    
     return summary
 end
 
@@ -111,8 +109,6 @@ function compare_models(eval_baseline::DataFrame, eval_new::DataFrame; groupby_c
         :bias_raw,
         :bias_calib
     )
-    
-    sort!(comp, :n_predictions, rev=true)
     
     return comp
 end
