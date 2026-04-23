@@ -26,7 +26,7 @@ end
 """
   helper function for the Data.segment type, to get the target_season 
 """
-function get_target_seasons_string(segment::Data.Segment) 
+function get_target_seasons_string(segment::Data.DataTournemantSegment) 
     # none - place holder 
     println("Placeholder for the type: $(segment)")
     return 
@@ -79,7 +79,7 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
 
     sampler_conf = Samplers.NUTSConfig(
     500, # Number of samples for each chain
-    10,   # Number of chains
+    2,   # Number of chains
     150, # Number of warm up steps 
     0.65,# Accept rate  [0,1]
     2,  # Max tree depth

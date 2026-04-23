@@ -118,6 +118,9 @@ export AblationStudy_NB_baseline_month_r
 include("./implementations/ablation_study/nb_baseline_ha_r.jl")
 export AblationStudy_NB_baseline_HA_r
 
+include("./implementations/ablation_study/nb_ha_r_home_hierarchy.jl")
+export AblationStudy_NB_HA_r_home_hierarchy
+
 include("./implementations/ablation_study/nb_bloated.jl")
 export AblationStudy_NB_KitchenSink
 
