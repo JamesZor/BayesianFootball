@@ -20,7 +20,7 @@ Base.@kwdef struct AblationStudy_NB_HA_r_home_hierarchy <: AbstractMultiScaledNe
 
     # --- HOME ADVANTAGE (Hierarchical) ---
     γ::Distribution        = Normal(0.2, 0.2)   # Global Baseline HA
-    σ_γ_team::Distribution = Gamma(2, 0.05)     # Team-specific HA variance [cite: 2]
+    σ_γ_team::Distribution = Gamma(2, 0.05)     # Team-specific HA variance
     z_γ_team::Distribution = Normal(0, 1)       # Non-centered parameterization
     
     # --- Time Dynamics (Latent States) ---
@@ -125,7 +125,7 @@ function extract_parameters(
     sizehint!(results, nrow(df))
 
     for row in eachrow(df)
-        mid = Int(row.match_id) [cite: 11]
+        mid = Int(row.match_id)
         t = hasproperty(row, :time_index) ? row.time_index : n_rounds
         t_idx = clamp(t, 1, n_rounds)
         
