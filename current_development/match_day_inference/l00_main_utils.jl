@@ -26,7 +26,7 @@ end
 """
   helper function for the Data.segment type, to get the target_season 
 """
-function get_target_seasons_string(segment::Data.Segment) 
+function get_target_seasons_string(segment::Data.DataTournemantSegment) 
     # none - place holder 
     println("Placeholder for the type: $(segment)")
     return 
@@ -89,7 +89,7 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
     )
 
     sampler_conf = Samplers.NUTSConfig(
-    400, # Number of samples for each chain
+    600, # Number of samples for each chain
     10,   # Number of chains
     150, # Number of warm up steps 
     0.65,# Accept rate  [0,1]
@@ -119,7 +119,15 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
-        )
+        ),
+        # Ireland 
+        # Experiments.ExperimentConfig(
+        #     name = "baseline_HA_R_$(label)", 
+        #     model = Models.PreGame.AblationStudy_NB_baseline_HA_r(), 
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
     ]
 
     # 3. THE "SMART" BIT: 
@@ -529,6 +537,8 @@ function load_live_market_jsonl(filepath::String)::DataFrame
         # 3. Create explicit aliases for your paper_bets runner backwards compatibility
         row_dict[:live_odds_o15] = get(row_dict, Symbol("ft_Over_Under_1_5_Goals_Over_1_5_Goals"), missing)
         row_dict[:live_odds_o25] = get(row_dict, Symbol("ft_Over_Under_2_5_Goals_Over_2_5_Goals"), missing)
+        row_dict[:live_odds_o35] = get(row_dict, Symbol("ft_Over_Under_3_5_Goals_Over_3_5_Goals"), missing)
+        row_dict[:live_odds_o45] = get(row_dict, Symbol("ft_Over_Under_4_5_Goals_Over_4_5_Goals"), missing)
         
         push!(all_rows, row_dict)
     end
@@ -572,7 +582,9 @@ function filter_and_rename_live_markets(live_df::DataFrame, target_selections::V
         :over_25  => "ft_Over_Under_2_5_Goals_Over_2_5_Goals",
         :under_25 => "ft_Over_Under_2_5_Goals_Under_2_5_Goals",
         :over_35  => "ft_Over_Under_3_5_Goals_Over_3_5_Goals",
-        :under_35 => "ft_Over_Under_3_5_Goals_Under_3_5_Goals"
+        :under_35 => "ft_Over_Under_3_5_Goals_Under_3_5_Goals",
+        :over_45  => "ft_Over_Under_4_5_Goals_Over_4_5_Goals",
+        :under_45 => "ft_Over_Under_4_5_Goals_Under_4_5_Goals"
     )
 
     # We ALWAYS want to keep the base reference columns
@@ -615,6 +627,14 @@ function filter_and_rename_live_markets(live_df::DataFrame, target_selections::V
     if :over_25 in names(clean_df)
         clean_df.live_odds_o25 = clean_df.over_25
     end
+
+    if :over_35 in names(clean_df)
+        clean_df.live_odds_o35 = clean_df.over_35
+    end
+    if :over_45 in names(clean_df)
+        clean_df.live_odds_o45 = clean_df.over_45
+    end
+
 
     return clean_df
 end

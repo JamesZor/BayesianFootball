@@ -82,7 +82,7 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
     2,   # Number of chains
     150, # Number of warm up steps 
     0.65,# Accept rate  [0,1]
-    2,  # Max tree depth
+    10,  # Max tree depth
     Samplers.UniformInit(-1, 1), # Interval for starting a chain 
     false,   # show_progress (We use the Global Logger instead)
     # false, # Display progress bar setting
@@ -148,6 +148,7 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
+        ),
     ]
 
     # 3. THE "SMART" BIT: 
@@ -177,4 +178,59 @@ function run_experiment_task(task::ExperimentTask)
         return false # Failure flag
     end
 end
+
+
+function loaded_experiment_files(saved_folders::Vector{String})
+  loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+  for folder in saved_folders
+      try
+          res = Experiments.load_experiment(folder)
+          push!(loaded_results, res)
+      catch e
+          @warn "Could not load $folder: $e"
+      end
+  end
+
+  if isempty(loaded_results)
+      error("No results loaded! Did you run runner.jl?")
+  end
+
+  return loaded_results
+
+end
+
+
+
+
+function run_simple_backtest(loaded_results::Vector{BayesianFootball.Experiments.ExperimentResults}, ds::Data.DataStore) 
+
+    baker = BayesianFootball.Signals.BayesianKelly()
+    # flat_strat = BayesianFootball.Signals.FlatStake(0.05)
+    # my_signals = [baker, flat_strat]
+    my_signals = [baker]
+
+    ledger = BayesianFootball.BackTesting.run_backtest(
+        ds, 
+        loaded_results, 
+        my_signals; 
+        market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+    )
+
+    return BayesianFootball.BackTesting.generate_tearsheet(ledger), ledger
+
+end
+
+
+function display_tearsheet_by_market(tearsheet::AbstractDataFrame) 
+    model_names = unique(tearsheet.selection)
+    model_names = model_names[1:15]
+    for m_name in model_names
+        println("\nStats for: $m_name")
+        sub= subset(tearsheet, :selection => ByRow(isequal(m_name)))
+        show(sub)
+    end
+end
+
+
+
 
