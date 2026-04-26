@@ -274,7 +274,7 @@ end
 # This will automatically work if you pass it `boundaries_with_meta[1]` 
 # OR if you pass it `feature_collection[1]`.
 function get_next_matches(
-    ds::BayesianFootball.Data.DataStore, 
+    ds::Data.DataStore, 
     fold_tuple::Tuple{Any, <:Data.AbstractSplitMetaData}, 
     config::Union{Data.CVConfig, Data.GroupedCVConfig}
 )::AbstractDataFrame 

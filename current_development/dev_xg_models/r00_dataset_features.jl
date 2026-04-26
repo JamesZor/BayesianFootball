@@ -24,10 +24,10 @@ println("Calculated warmup period: ", calc_warmup)
 cv_config = BayesianFootball.Data.CVConfig(
     tournament_ids = [79], 
     target_seasons = ["2025"],
-    history_seasons = 1,   
+    history_seasons = 0,   
     dynamics_col = :match_month,
-    warmup_period = 7, # Using the calculated variable
-    stop_early = false
+    warmup_period = 0, # Using the calculated variable
+    stop_early = true
 )
 
 # -------------------------------------------------------------------------
@@ -79,8 +79,8 @@ if length(feature_collection) > 0
     fold_1_features = feature_collection[1][1].data 
     
     println("\n--- Fold 1 Feature Dictionary ---")
-    println("Month Step:       ", fold_1_features[:dynamics_step])
-    println("Target Matches:   ", fold_1_features[:n_target_matches])
+    # println("Month Step:       ", fold_1_features[:dynamics_step])
+    # println("Target Matches:   ", fold_1_features[:n_target_matches])
     
     # Display the first 5 elements of our perfectly aligned arrays
     println("\nHome Teams:       ", first(fold_1_features[:flat_home_teams], n))
@@ -100,7 +100,35 @@ if length(feature_collection) > 0
     println("\n[SUCCESS] Array distributions perfectly aligned for Turing!")
 end
 
-
+# ==============================================================================
+# 6. Validate the Output (Updated for GRW & Integers)
+# ==============================================================================
+n = 10
+if length(feature_collection) > 0
+    fold_1_features = feature_collection[1][1].data 
+    
+    println("\n--- Fold 1 Feature Dictionary ---")
+    println("History Steps (Seasons): ", fold_1_features[:n_history_steps])
+    println("Target Steps (Months):   ", fold_1_features[:n_target_steps])
+    total_matches = length(fold_1_features[:time_indices])
+    println("Total Matches:           ", total_matches)
+    
+    println("\n[Data Vectors ($total_matches matches total)]")
+    println("Home Goals:  ", first(fold_1_features[:flat_home_goals], n))
+    println("Away Goals:  ", first(fold_1_features[:flat_away_goals], n))
+    println("Home Shots:  ", first(fold_1_features[:flat_home_shots], n))
+    println("Away Shots:  ", first(fold_1_features[:flat_away_shots], n))
+    println("Home xG:     ", first(fold_1_features[:flat_home_xg], n))
+    println("Time Index:  ", first(fold_1_features[:time_indices], n))
+    
+    # The ultimate safety check for Turing.jl: Are all arrays identically sized?
+    @assert length(fold_1_features[:flat_home_ids]) == total_matches
+    @assert length(fold_1_features[:flat_home_goals]) == total_matches
+    @assert length(fold_1_features[:flat_home_shots]) == total_matches
+    @assert length(fold_1_features[:flat_home_xg]) == total_matches
+    
+    println("\n[SUCCESS] GRW Dimensions and Vocabulary correctly aligned for Turing!")
+end
 
 # test it, as it has been added to the module 
 using Revise
@@ -136,7 +164,7 @@ cv_config = BayesianFootball.Data.CVConfig(
     target_seasons = ["2025"],
     history_seasons = 1,   
     dynamics_col = :match_month,
-    warmup_period = calc_warmup, 
+    warmup_period = 0, 
     stop_early = false
 )
 
