@@ -119,41 +119,79 @@ end
 
 
 # ---- updated 
-# -------------------------------------------------------------------------
-# NEW RELATIONAL ARCHITECTURE (ID-Based)
-# -------------------------------------------------------------------------
+# ==============================================================================
+# RELATIONAL FEATURE BUILDER (DataStore & SplitBoundary Architecture)
+# ==============================================================================
 
-# The Macro Loop (Vector Dispatch)
+# 1. The Macro Loop (Vector Dispatch)
 function create_features(
     splits::Vector{<:Tuple{Data.SplitBoundary, <:Any}}, 
     ds::Data.DataStore, 
-    model::AbstractFootballModel
+    model::BayesianFootball.Models.AbstractFootballModel,
+    dynamics_col::Symbol = :match_month
 )
     raw_vector = [
-        (create_features(boundary, ds, model), meta) 
+        (create_features(boundary, ds, model, dynamics_col), meta) 
         for (boundary, meta) in splits
     ]
-
-    # Reusing your existing FeatureCollection wrapper
-    return FeatureCollection(raw_vector) 
+    return FeatureCollection(raw_vector)
 end
 
-# The Micro Builder (Single Boundary Dispatch)
+# 2. The Micro Builder (Single Boundary Dispatch)
 function create_features(
     boundary::Data.SplitBoundary, 
     ds::Data.DataStore, 
-    model::AbstractFootballModel
+    model::BayesianFootball.Models.AbstractFootballModel,
+    dynamics_col::Symbol
 )
     F_data = Dict{Symbol, Any}()
     
-    F_data[:dynamics_step] = boundary.target_step
-    F_data[:n_history_matches] = length(boundary.history_match_ids)
-    F_data[:n_target_matches] = length(boundary.target_match_ids)
+    # 1. COMBINE IDs for the full sequence (History + Target)
+    all_ids = vcat(boundary.history_match_ids, boundary.target_match_ids)
+    
+    # 2. Extract just the matches for this specific fold
+    matches_df = subset(ds.matches, :match_id => ByRow(id -> id in all_ids))
+    
+    # 3. BUILD VOCABULARY (Strings -> Integers)
+    all_teams = unique(vcat(matches_df.home_team, matches_df.away_team))
+    team_map = Dict(name => i for (i, name) in enumerate(sort(all_teams)))
+    
+    F_data[:n_teams] = length(team_map)
+    F_data[:team_map] = team_map
 
-    # Dynamic pipeline
+    # 4. GENERATE TIME INDICES 
+    history_df = subset(matches_df, :match_id => ByRow(id -> id in boundary.history_match_ids))
+    target_df  = subset(matches_df, :match_id => ByRow(id -> id in boundary.target_match_ids))
+    
+    history_groups = groupby(history_df, :season, sort=true)
+    target_groups  = groupby(target_df, dynamics_col, sort=true)
+    
+    time_indices = Int[]
+    t_idx = 1
+    for g in history_groups
+        append!(time_indices, fill(t_idx, nrow(g)))
+        t_idx += 1
+    end
+    n_history = length(history_groups)
+    
+    for g in target_groups
+        append!(time_indices, fill(t_idx, nrow(g)))
+        t_idx += 1
+    end
+    n_target = length(target_groups)
+    
+    ordered_ids = Int.(vcat(history_df.match_id, target_df.match_id))
+    
+    F_data[:time_indices] = time_indices
+    F_data[:n_history_steps] = n_history
+    F_data[:n_target_steps] = n_target
+    F_data[:n_rounds] = n_history + n_target
+
+    # 5. DYNAMIC PIPELINE
     for trait in required_features(model)
-        add_feature!(F_data, Val(trait), boundary, ds)
+        add_feature!(F_data, Val(trait), ordered_ids, team_map, ds)
     end
 
+    # Return using your package's existing FeatureSet struct!
     return FeatureSet(F_data)
 end
