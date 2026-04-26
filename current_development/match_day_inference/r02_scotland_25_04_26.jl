@@ -45,14 +45,14 @@ raw_live_market = load_live_market_jsonl(json_filepath)
 
 selections_to_calibrate = [:over_15, :over_25, :over_35]
 live_market_closing = filter_and_rename_live_markets(raw_live_market, selections_to_calibrate)
-first(live_market_closing, 10)
+last(live_market_closing, 10)
 
 
 paper_bets_df = generate_paper_bets(
     target_ppd, 
     target_ppd, 
     todays_matches, 
-    first(live_market_closing, 10), 
+    last(live_market_closing, 10), 
     min_edge=0.0
 )
 
@@ -73,7 +73,7 @@ paper_bets_df = generate_paper_bets(
     target_ppd, 
     calibrated_ppd, 
     todays_matches, 
-    first(live_market_closing, 10), 
+    last(live_market_closing, 10), 
     min_edge=0.0
 )
 
@@ -153,5 +153,27 @@ MATCH: STRANRAER
   over_25  (Live: 1.58) | Raw: 2.05 [1.59 - 2.80] | Calib: 1.95 [1.54 - 2.62] | Raw Stake:  0.00% | Calib:  0.00%
   over_35  (Live: 2.46) | Raw: 3.60 [2.43 - 5.90] | Calib: 3.41 [2.32 - 5.53] | Raw Stake:  0.00% | Calib:  0.00%
   under_35 (Live: 1.59) | Raw: 1.39 [1.20 - 1.70] | Calib: 1.42 [1.22 - 1.76] | Raw Stake: 16.30% | Calib: 12.16%
+=#
+
+
+#=
+============================================================================================================                                                
+ 📝 PAPER TRADING BOARD: EXACT KELLY STAKES (Edge: 0.0%)                                                                                                    
+============================================================================================================                                                
+                                                                                                                                                            
+
+MATCH: HAMILTON-ACADEMICAL
+  over_15  (Live: 1.25) | Raw: 1.29 [1.15 - 1.50] | Calib: 1.23 [1.12 - 1.38] | Raw Stake:  0.00% | Calib:  1.87%
+  over_25  (Live: 1.69) | Raw: 1.83 [1.45 - 2.47] | Calib: 1.75 [1.40 - 2.33] | Raw Stake:  0.00% | Calib:  0.00%
+
+MATCH: DUMBARTON
+  over_15  (Live: 1.14) | Raw: 1.17 [1.08 - 1.31] | Calib: 1.13 [1.06 - 1.24] | Raw Stake:  0.00% | Calib:  0.44%
+  over_25  (Live: 1.44) | Raw: 1.50 [1.25 - 1.90] | Calib: 1.45 [1.23 - 1.81] | Raw Stake:  0.00% | Calib:  0.00%
+
+MATCH: CLYDE-FC
+  over_15  (Live: 1.25) | Raw: 1.28 [1.15 - 1.47] | Calib: 1.22 [1.12 - 1.36] | Raw Stake:  0.00% | Calib:  3.22%
+  over_25  (Live: 1.78) | Raw: 1.80 [1.45 - 2.39] | Calib: 1.73 [1.40 - 2.25] | Raw Stake:  0.00% | Calib:  0.63%
+  over_35  (Live: 2.98) | Raw: 2.93 [2.07 - 4.62] | Calib: 2.79 [1.99 - 4.35] | Raw Stake:  0.04% | Calib:  0.64%
+
 =#
 
