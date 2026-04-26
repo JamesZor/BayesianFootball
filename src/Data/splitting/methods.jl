@@ -239,3 +239,79 @@ end
 function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, GroupedSplitMetaData}, cvconf::GroupedCVConfig)::AbstractDataFrame 
   return get_next_matches(ds, fs[2], cvconf) 
 end
+
+
+
+
+# -----
+export create_id_boundaries # Export the new API
+
+# 1. The ID-based internal helper
+function _process_tournament_group_ids(
+    df::DataFrame, 
+    group_ids::Vector{Int}, 
+    config::Union{CVConfig, GroupedCVConfig}, 
+    meta_type::Type
+)
+    splits = Vector{Tuple{SplitBoundary, AbstractSplitMetaData}}()
+    all_seasons = sort(unique(df.season))
+    
+    tourn_mask = in.(df.tournament_id, Ref(group_ids))
+    if !any(tourn_mask); return splits; end
+
+    for target_season in config.target_seasons
+        target_idx = findfirst(==(target_season), all_seasons)
+        if isnothing(target_idx); continue; end
+        
+        start_idx = max(1, target_idx - config.history_seasons)
+        history_seasons_list = all_seasons[start_idx : target_idx-1]
+        
+        history_ids = df[tourn_mask .& in.(df.season, Ref(history_seasons_list)), :match_id]
+        target_pool = df[tourn_mask .& (df.season .== target_season), [:match_id, config.dynamics_col]]
+        
+        if isempty(target_pool); continue; end
+        
+        season_dynamics = unique(target_pool[!, config.dynamics_col])
+        sort!(season_dynamics)
+        
+        max_week = maximum(season_dynamics)
+        effective_end = config.stop_early ? (max_week - 1) : max_week
+
+        valid_steps = filter(t -> t >= config.warmup_period, season_dynamics)
+        if !isnothing(config.end_dynamics)
+            filter!(t -> t <= config.end_dynamics, valid_steps)
+        end
+        filter!(t -> t <= effective_end, valid_steps)
+       
+        for (i, t) in enumerate(valid_steps)
+            current_target_ids = target_pool[target_pool[!, config.dynamics_col] .<= t, :match_id]
+            
+            boundary = SplitBoundary(i, t, copy(history_ids), copy(current_target_ids))
+            
+            if meta_type === SplitMetaData
+                meta = SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
+            else
+                meta = GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
+            end
+            
+            push!(splits, (boundary, meta))
+        end
+    end
+    return splits
+end
+
+# 2. The Public APIs
+function create_id_boundaries(data_store, config::CVConfig)
+    splits = Vector{Tuple{SplitBoundary, SplitMetaData}}()
+    for tourn_id in config.tournament_ids
+        group_splits = _process_tournament_group_ids(data_store.matches, [tourn_id], config, SplitMetaData)
+        for (b, m) in group_splits
+            push!(splits, (b, m::SplitMetaData))
+        end
+    end
+    return splits
+end
+
+function create_id_boundaries(data_store, config::GroupedCVConfig)
+    return _process_tournament_group_ids(data_store.matches, config.tournament_ids, config, GroupedSplitMetaData)
+end

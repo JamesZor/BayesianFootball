@@ -114,3 +114,46 @@ function create_features(
 
     return FeatureCollection(raw_vector)
 end
+
+
+
+
+# ---- updated 
+# -------------------------------------------------------------------------
+# NEW RELATIONAL ARCHITECTURE (ID-Based)
+# -------------------------------------------------------------------------
+
+# The Macro Loop (Vector Dispatch)
+function create_features(
+    splits::Vector{<:Tuple{Data.SplitBoundary, <:Any}}, 
+    ds::Data.DataStore, 
+    model::AbstractFootballModel
+)
+    raw_vector = [
+        (create_features(boundary, ds, model), meta) 
+        for (boundary, meta) in splits
+    ]
+
+    # Reusing your existing FeatureCollection wrapper
+    return FeatureCollection(raw_vector) 
+end
+
+# The Micro Builder (Single Boundary Dispatch)
+function create_features(
+    boundary::Data.SplitBoundary, 
+    ds::Data.DataStore, 
+    model::AbstractFootballModel
+)
+    F_data = Dict{Symbol, Any}()
+    
+    F_data[:dynamics_step] = boundary.target_step
+    F_data[:n_history_matches] = length(boundary.history_match_ids)
+    F_data[:n_target_matches] = length(boundary.target_match_ids)
+
+    # Dynamic pipeline
+    for trait in required_features(model)
+        add_feature!(F_data, Val(trait), boundary, ds)
+    end
+
+    return FeatureSet(F_data)
+end

@@ -46,6 +46,20 @@ function Base.show(io::IO, meta::GroupedSplitMetaData)
     print(io, "GroupedSplit(Tourns: $(meta.tournament_ids), Season: $(meta.train_season), Week: $(meta.time_step), Hist: $(meta.history_depth))")
 end
 
+
+export SplitBoundary 
+
+"""
+The new Relational SplitBoundary. 
+Replaces SubDataFrame views for memory efficiency and cross-table joins.
+"""
+struct SplitBoundary
+    fold_id::Int
+    target_step::Int
+    history_match_ids::Vector{Int}
+    target_match_ids::Vector{Int}
+end
+
 # --- Splitter Configurations ---
 
 abstract type AbstractSplitter end
