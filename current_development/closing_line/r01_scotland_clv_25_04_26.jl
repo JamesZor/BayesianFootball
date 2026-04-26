@@ -69,3 +69,114 @@ east_fife_o25 = filter(r -> r.home_team == "east-fife" && r.selection_sym == :ov
 target_ppd = compute_todays_matches_pdds(ds, exp, todays_matches)
 # calib_ppd = compute_todays_matches_pdds(ds, exp_calib, todays_matches)
 calib_ppd = calibrated_ppd
+
+trajectory_df = calculate_time_series_stakes(ou25_df, target_ppd, calib_ppd, todays_matches, min_edge=0.0)
+# 1. Define the hard cutoff for kickoff
+kickoff_time = DateTime("2026-04-25T15:00:00")
+
+# 2. Filter the trajectory to ONLY include pre-match timestamps
+pre_match_traj = filter(r -> r.timestamp < kickoff_time, trajectory_df)
+
+# 3. Check for active bets again
+pre_match_active_bets = filter(r -> r.raw_stake_pct > 0.0, pre_match_traj)
+
+println("Total PRE-MATCH minutes tracked: ", nrow(pre_match_traj))
+println("PRE-MATCH minutes where a bet was viable: ", nrow(pre_match_active_bets))
+
+if nrow(pre_match_active_bets) > 0
+    println("\nFirst viable pre-match entry point:")
+    display(first(pre_match_active_bets, 1))
+else
+    println("\nThe market never offered a price good enough for the RAW model BEFORE kickoff.")
+end
+
+
+# Let's look at the very last minute before kickoff (The Closing Line)
+closing_line = last(pre_match_traj, 1)
+
+println("\n--- CLOSING LINE (1 Min Before Kickoff) ---")
+display(select(closing_line, :timestamp, :back_price, :lay_price, :spread_pct, :raw_stake_pct, :calib_stake_pct))
+
+
+# ----
+
+#=
+The Final Step: Tracing the Crossover to the Whistle
+=#
+
+using Dates
+
+# 1. Isolate the specific game that triggered
+clyde_traj = filter(r -> r.home_team == "clyde-fc" && r.selection_sym == :over_25 && r.timestamp < DateTime("2026-04-25T15:00:00"), trajectory_df)
+
+# 2. Filter to only look at the timeframe after our first trigger (13:32:00)
+clyde_active_period = filter(r -> r.timestamp >= DateTime("2026-04-25T13:32:00"), clyde_traj)
+
+# 3. To prevent flooding the REPL, let's grab one row every ~15 minutes, plus the closing line
+# We can do this roughly by taking every 15th row (since your scraper runs about once a minute)
+snapshot_indices = [1, 15, 30, 45, 60, 75, nrow(clyde_active_period)]
+# Ensure we don't go out of bounds
+valid_indices = filter(i -> i <= nrow(clyde_active_period), snapshot_indices)
+
+clyde_snapshots = clyde_active_period[valid_indices, :]
+
+# Print the crucial columns
+select(clyde_snapshots, :timestamp, :back_price, :back_size, :spread_pct, :raw_stake_pct, :calib_stake_pct)
+
+
+
+# --- plotting 
+plot_dir = "/root/BayesianFootball/figs/" # Change this if your server is running elsewhere
+
+
+pre_match_traj = filter(r -> r.timestamp < DateTime("2026-04-25T15:00:00"), trajectory_df)
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "clyde-fc", :over_25, plot_dir);
+
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "clyde-fc", :over_25, "cali", plot_dir);
+
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "dumbarton", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "dumbarton", :over_25, "cali", plot_dir);
+
+
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "east-fife", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "east-fife", :over_25, "cali", plot_dir);
+
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "forfar-athletic", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "forfar-athletic", :over_25, "cali", plot_dir);
+
+
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "hamilton-academical", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "hamilton-academical", :over_25, "cali", plot_dir);
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "kelty-hearts-fc", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "kelty-hearts-fc", :over_25, "cali", plot_dir);
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "queen-of-the-south", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "queen-of-the-south", :over_25, "cali", plot_dir);
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "stranraer", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "stranraer", :over_25, "cali", plot_dir);
+
+plot_price_discovery(pre_match_traj, target_ppd, todays_matches, "the-spartans-fc", :over_25, "raw", plot_dir);
+plot_price_discovery(pre_match_traj, calib_ppd, todays_matches, "the-spartans-fc", :over_25, "cali", plot_dir);
+
+
+unique(trajectory_df.home_team)
+
+#=
+9-element Vector{String}:
+ "clyde-fc"
+ "dumbarton"
+ "east-fife"
+ "forfar-athletic"
+ "hamilton-academical"
+ "kelty-hearts-fc"
+ "queen-of-the-south"
+ "stranraer"
+ "the-spartans-fc"
+=#
+
