@@ -214,8 +214,42 @@ end
 
 # --- 6. Next Matches Helpers ---
 
-# Legacy helper
-function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig)::AbstractDataFrame 
+# # Legacy helper
+# function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig)::AbstractDataFrame 
+#     return subset(ds.matches, 
+#            :tournament_id => ByRow(isequal(meta.tournament_id)),
+#            :season => ByRow(isequal(meta.target_season)),
+#            config.dynamics_col => ByRow(isequal(meta.time_step + 1)) 
+#     )
+# end
+#
+# function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, SplitMetaData}, cvconf::CVConfig)::AbstractDataFrame 
+#   return get_next_matches(ds, fs[2], cvconf) 
+# end
+#
+# # New Grouped helper
+# function get_next_matches(ds::DataStore, meta::GroupedSplitMetaData, config::GroupedCVConfig)::AbstractDataFrame 
+#     return subset(ds.matches, 
+#            :tournament_id => ByRow(in(meta.tournament_ids)), # Checks array inclusion
+#            :season => ByRow(isequal(meta.target_season)),
+#            config.dynamics_col => ByRow(isequal(meta.time_step + 1)) 
+#     )
+# end
+#
+# function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, GroupedSplitMetaData}, cvconf::GroupedCVConfig)::AbstractDataFrame 
+#   return get_next_matches(ds, fs[2], cvconf) 
+# end
+#
+# ==============================================================================
+# FETCH NEXT MATCHES (Inference Data Retrieval)
+# ==============================================================================
+
+# 1. Base Logic for Single Tournament
+function get_next_matches(
+    ds::Data.DataStore, 
+    meta::Data.SplitMetaData, 
+    config::Data.CVConfig
+)::AbstractDataFrame 
     return subset(ds.matches, 
            :tournament_id => ByRow(isequal(meta.tournament_id)),
            :season => ByRow(isequal(meta.target_season)),
@@ -223,24 +257,30 @@ function get_next_matches(ds::DataStore, meta::SplitMetaData, config::CVConfig):
     )
 end
 
-function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, SplitMetaData}, cvconf::CVConfig)::AbstractDataFrame 
-  return get_next_matches(ds, fs[2], cvconf) 
-end
-
-# New Grouped helper
-function get_next_matches(ds::DataStore, meta::GroupedSplitMetaData, config::GroupedCVConfig)::AbstractDataFrame 
+# 2. Base Logic for Grouped Tournaments
+function get_next_matches(
+    ds::Data.DataStore, 
+    meta::Data.GroupedSplitMetaData, 
+    config::Data.GroupedCVConfig
+)::AbstractDataFrame 
     return subset(ds.matches, 
-           :tournament_id => ByRow(in(meta.tournament_ids)), # Checks array inclusion
+           :tournament_id => ByRow(in(meta.tournament_ids)), 
            :season => ByRow(isequal(meta.target_season)),
            config.dynamics_col => ByRow(isequal(meta.time_step + 1)) 
     )
 end
 
-function get_next_matches(ds::DataStore, fs::Tuple{FeatureSet, GroupedSplitMetaData}, cvconf::GroupedCVConfig)::AbstractDataFrame 
-  return get_next_matches(ds, fs[2], cvconf) 
+# 3. The "Catch-All" Tuple Wrapper (Replaces all the redundant functions!)
+# This will automatically work if you pass it `boundaries_with_meta[1]` 
+# OR if you pass it `feature_collection[1]`.
+function get_next_matches(
+    ds::BayesianFootball.Data.DataStore, 
+    fold_tuple::Tuple{Any, <:Data.AbstractSplitMetaData}, 
+    config::Union{Data.CVConfig, Data.GroupedCVConfig}
+)::AbstractDataFrame 
+    # fold_tuple[2] is always the MetaData object
+    return get_next_matches(ds, fold_tuple[2], config) 
 end
-
-
 
 
 # -----
