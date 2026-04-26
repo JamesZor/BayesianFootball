@@ -250,10 +250,10 @@ export create_id_boundaries # Export the new API
 function _process_tournament_group_ids(
     df::DataFrame, 
     group_ids::Vector{Int}, 
-    config::Union{CVConfig, GroupedCVConfig}, 
+    config::Union{BayesianFootball.Data.CVConfig, BayesianFootball.Data.GroupedCVConfig}, 
     meta_type::Type
 )
-    splits = Vector{Tuple{SplitBoundary, AbstractSplitMetaData}}()
+    splits = Vector{Tuple{SplitBoundary, BayesianFootball.Data.AbstractSplitMetaData}}()
     all_seasons = sort(unique(df.season))
     
     tourn_mask = in.(df.tournament_id, Ref(group_ids))
@@ -261,15 +261,23 @@ function _process_tournament_group_ids(
 
     for target_season in config.target_seasons
         target_idx = findfirst(==(target_season), all_seasons)
-        if isnothing(target_idx); continue; end
+        if isnothing(target_idx)
+            @warn "Target season $target_season not found for tournament group $group_ids. Skipping."
+            continue
+        end
         
         start_idx = max(1, target_idx - config.history_seasons)
         history_seasons_list = all_seasons[start_idx : target_idx-1]
         
+        # --- Extract universal match_ids ---
         history_ids = df[tourn_mask .& in.(df.season, Ref(history_seasons_list)), :match_id]
+        
         target_pool = df[tourn_mask .& (df.season .== target_season), [:match_id, config.dynamics_col]]
         
-        if isempty(target_pool); continue; end
+        if isempty(target_pool)
+            @warn "No data found for target season $target_season (Tournament group $group_ids)."
+            continue
+        end
         
         season_dynamics = unique(target_pool[!, config.dynamics_col])
         sort!(season_dynamics)
@@ -283,20 +291,51 @@ function _process_tournament_group_ids(
         end
         filter!(t -> t <= effective_end, valid_steps)
        
-        for (i, t) in enumerate(valid_steps)
+        # -----------------------------------------------------------------
+        # CREATE FOLDS
+        # -----------------------------------------------------------------
+        fold_counter = 1
+        
+        # --- 1. Inject the Baseline Fold (History Only, t=0) ---
+        boundary_zero = SplitBoundary(
+            fold_counter,
+            0, # Target step 0 (Baseline)
+            copy(history_ids),
+            Int[] # No target matches yet!
+        )
+        
+        if meta_type === BayesianFootball.Data.SplitMetaData
+            meta_zero = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
+        else
+            meta_zero = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
+        end
+        
+        push!(splits, (boundary_zero, meta_zero))
+        fold_counter += 1
+
+        # --- 2. Inject the Dynamic Folds (Walk Forward) ---
+        for t in valid_steps
+            # Get target match IDs up to step t
             current_target_ids = target_pool[target_pool[!, config.dynamics_col] .<= t, :match_id]
             
-            boundary = SplitBoundary(i, t, copy(history_ids), copy(current_target_ids))
+            boundary = SplitBoundary(
+                fold_counter,
+                t,
+                copy(history_ids),       # frozen history
+                copy(current_target_ids) # expanding window
+            )
             
-            if meta_type === SplitMetaData
-                meta = SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
+            if meta_type === BayesianFootball.Data.SplitMetaData
+                meta = Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
             else
-                meta = GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
+                meta = Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
             end
             
             push!(splits, (boundary, meta))
+            fold_counter += 1
         end
     end
+    
     return splits
 end
 

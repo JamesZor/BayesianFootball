@@ -59,14 +59,36 @@ function _process_tournament_group_ids(
         end
         filter!(t -> t <= effective_end, valid_steps)
        
-        # Create folds
-        for (i, t) in enumerate(valid_steps)
+        # -----------------------------------------------------------------
+        # CREATE FOLDS
+        # -----------------------------------------------------------------
+        fold_counter = 1
+        
+        # --- 1. Inject the Baseline Fold (History Only, t=0) ---
+        boundary_zero = SplitBoundary(
+            fold_counter,
+            0, # Target step 0 (Baseline)
+            copy(history_ids),
+            Int[] # No target matches yet!
+        )
+        
+        if meta_type === BayesianFootball.Data.SplitMetaData
+            meta_zero = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
+        else
+            meta_zero = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
+        end
+        
+        push!(splits, (boundary_zero, meta_zero))
+        fold_counter += 1
+
+        # --- 2. Inject the Dynamic Folds (Walk Forward) ---
+        for t in valid_steps
             # Get target match IDs up to step t
             current_target_ids = target_pool[target_pool[!, config.dynamics_col] .<= t, :match_id]
             
             boundary = SplitBoundary(
-                i,                       # fold_id
-                t,                       # target_step
+                fold_counter,
+                t,
                 copy(history_ids),       # frozen history
                 copy(current_target_ids) # expanding window
             )
@@ -78,11 +100,13 @@ function _process_tournament_group_ids(
             end
             
             push!(splits, (boundary, meta))
+            fold_counter += 1
         end
+        # NOTE: The duplicate `for (i, t) in enumerate(valid_steps)` loop has been removed!
     end
+    
     return splits
 end
-
 # -------------------------------------------------------------------------
 # 3. Wrappers
 # -------------------------------------------------------------------------
@@ -217,4 +241,117 @@ function add_feature!(F_data::Dict, ::Val{:xg}, boundary::SplitBoundary, ds)
     
     F_data[:flat_home_xg] = [get(stats_map, id, (missing, missing))[1] for id in boundary.target_match_ids]
     F_data[:flat_away_xg] = [get(stats_map, id, (missing, missing))[2] for id in boundary.target_match_ids]
+end
+
+
+
+
+# ==============================================================================
+# loader.jl - Part 2: Relational Feature Building (Updated for GRW)
+# ==============================================================================
+
+function build_features(
+    boundary::SplitBoundary, 
+    ds::BayesianFootball.Data.DataStore, 
+    model::BayesianFootball.Models.AbstractFootballModel,
+    dynamics_col::Symbol = :match_month # Defaulting based on your config
+)
+    F_data = Dict{Symbol, Any}()
+    
+    # 1. COMBINE IDs for the full sequence (History + Target)
+    all_ids = vcat(boundary.history_match_ids, boundary.target_match_ids)
+
+    # 2. Extract just the matches for this specific fold
+    matches_df = subset(ds.matches, :match_id => ByRow(id -> id in all_ids))
+    
+    # 3. BUILD VOCABULARY (Strings -> Integers)
+    all_teams = unique(vcat(matches_df.home_team, matches_df.away_team))
+    team_map = Dict(name => i for (i, name) in enumerate(sort(all_teams)))
+    
+    F_data[:n_teams] = length(team_map)
+    F_data[:team_map] = team_map # Save it for inference later!
+
+    # 4. GENERATE TIME INDICES (Dual Grouping)
+    # We must preserve the order: History first, Target second.
+    history_df = subset(matches_df, :match_id => ByRow(id -> id in boundary.history_match_ids))
+    target_df  = subset(matches_df, :match_id => ByRow(id -> id in boundary.target_match_ids))
+    
+    # Group History by Season, Target by dynamics_col (e.g., match_month)
+    history_groups = groupby(history_df, :season, sort=true)
+    target_groups  = groupby(target_df, dynamics_col, sort=true)
+    
+    time_indices = Int[]
+    t_idx = 1
+    
+    for g in history_groups
+        append!(time_indices, fill(t_idx, nrow(g)))
+        t_idx += 1
+    end
+    n_history = length(history_groups)
+    
+    for g in target_groups
+        append!(time_indices, fill(t_idx, nrow(g)))
+        t_idx += 1
+    end
+    n_target = length(target_groups)
+    
+    # Ensure IDs match the exact grouped order we just created
+    ordered_ids = Int.(vcat(history_df.match_id, target_df.match_id))
+    
+    F_data[:time_indices] = time_indices
+    F_data[:n_history_steps] = n_history
+    F_data[:n_target_steps] = n_target
+    F_data[:n_rounds] = n_history + n_target
+
+    # 5. ---> DYNAMIC PIPELINE <---
+    # Notice we pass `ordered_ids` and `team_map` down to the extractors!
+    for trait in BayesianFootball.Features.required_features(model)
+        add_feature!(F_data, Val(trait), ordered_ids, team_map, ds)
+    end
+
+    return MockFeatureSet(F_data)
+end
+
+
+
+# -------------------------------------------------------------------------
+# The Relational Extractors (Updated for all_ids & team_map)
+# -------------------------------------------------------------------------
+
+
+# Extractor A: Goals
+function add_feature!(F_data::Dict, ::Val{:goals}, ordered_ids, team_map::Dict, ds)
+    score_map = Dict(row.match_id => (row.home_score, row.away_score) for row in eachrow(ds.matches))
+    F_data[:flat_home_goals] = [score_map[id][1] for id in ordered_ids]
+    F_data[:flat_away_goals] = [score_map[id][2] for id in ordered_ids]
+end
+
+# Extractor B: Team IDs 
+function add_feature!(F_data::Dict, ::Val{:team_ids}, ordered_ids, team_map::Dict, ds)
+    match_team_map = Dict(row.match_id => (row.home_team, row.away_team) for row in eachrow(ds.matches))
+    F_data[:flat_home_ids] = [team_map[match_team_map[id][1]] for id in ordered_ids]
+    F_data[:flat_away_ids] = [team_map[match_team_map[id][2]] for id in ordered_ids]
+end
+
+# Extractor C: Shots 
+function add_feature!(F_data::Dict, ::Val{:shots}, ordered_ids, team_map::Dict, ds)
+    stats_map = Dict(
+        row.match_id => (
+            coalesce(row.shotsOnGoal_home, 0.0) + coalesce(row.shotsOffGoal_home, 0.0),
+            coalesce(row.shotsOnGoal_away, 0.0) + coalesce(row.shotsOffGoal_away, 0.0)
+        ) 
+        for row in eachrow(ds.statistics) if row.period == "ALL"
+    )
+    F_data[:flat_home_shots] = [get(stats_map, id, (missing, missing))[1] for id in ordered_ids]
+    F_data[:flat_away_shots] = [get(stats_map, id, (missing, missing))[2] for id in ordered_ids]
+end
+
+# Extractor D: Expected Goals (xG)
+function add_feature!(F_data::Dict, ::Val{:xg}, ordered_ids, team_map::Dict, ds)
+    stats_map = Dict(
+        row.match_id => (row.expectedGoals_home, row.expectedGoals_away) 
+        for row in eachrow(ds.statistics) if row.period == "ALL"
+    )
+    F_data[:flat_home_xg] = [get(stats_map, id, (missing, missing))[1] for id in ordered_ids]
+    F_data[:flat_away_xg] = [get(stats_map, id, (missing, missing))[2] for id in ordered_ids]
 end
