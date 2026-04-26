@@ -251,10 +251,10 @@ export create_id_boundaries # Export the new API
 function _process_tournament_group_ids(
     df::DataFrame, 
     group_ids::Vector{Int}, 
-    config::Union{BayesianFootball.Data.CVConfig, BayesianFootball.Data.GroupedCVConfig}, 
+    config::Union{Data.CVConfig, Data.GroupedCVConfig}, 
     meta_type::Type
 )
-    splits = Vector{Tuple{SplitBoundary, BayesianFootball.Data.AbstractSplitMetaData}}()
+    splits = Vector{Tuple{SplitBoundary, Data.AbstractSplitMetaData}}()
     all_seasons = sort(unique(df.season))
     
     tourn_mask = in.(df.tournament_id, Ref(group_ids))
@@ -306,10 +306,10 @@ function _process_tournament_group_ids(
                 Int[] # No target matches yet!
             )
             
-            if meta_type === BayesianFootball.Data.SplitMetaData
-                meta_zero = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
+            if meta_type === Data.SplitMetaData
+                meta_zero = Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
             else
-                meta_zero = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
+                meta_zero = Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
             end
             
             push!(splits, (boundary_zero, meta_zero))
@@ -328,10 +328,10 @@ function _process_tournament_group_ids(
                 copy(current_target_ids) # expanding window
             )
             
-            if meta_type === BayesianFootball.Data.SplitMetaData
-                meta = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
+            if meta_type === Data.SplitMetaData
+                meta = Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
             else
-                meta = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
+                meta = Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
             end
             
             push!(splits, (boundary, meta))
