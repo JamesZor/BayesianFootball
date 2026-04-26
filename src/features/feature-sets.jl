@@ -127,7 +127,7 @@ end
 function create_features(
     splits::Vector{<:Tuple{Data.SplitBoundary, <:Any}}, 
     ds::Data.DataStore, 
-    model::BayesianFootball.Models.AbstractFootballModel,
+    model::AbstractFootballModel,
     dynamics_col::Symbol = :match_month
 )
     raw_vector = [
@@ -141,7 +141,7 @@ end
 function create_features(
     boundary::Data.SplitBoundary, 
     ds::Data.DataStore, 
-    model::BayesianFootball.Models.AbstractFootballModel,
+    model::AbstractFootballModel,
     dynamics_col::Symbol
 )
     F_data = Dict{Symbol, Any}()
