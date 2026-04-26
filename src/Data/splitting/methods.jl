@@ -247,6 +247,7 @@ end
 export create_id_boundaries # Export the new API
 
 # 1. The ID-based internal helper
+
 function _process_tournament_group_ids(
     df::DataFrame, 
     group_ids::Vector{Int}, 
@@ -290,28 +291,30 @@ function _process_tournament_group_ids(
             filter!(t -> t <= config.end_dynamics, valid_steps)
         end
         filter!(t -> t <= effective_end, valid_steps)
-       
         # -----------------------------------------------------------------
         # CREATE FOLDS
         # -----------------------------------------------------------------
         fold_counter = 1
         
         # --- 1. Inject the Baseline Fold (History Only, t=0) ---
-        boundary_zero = SplitBoundary(
-            fold_counter,
-            0, # Target step 0 (Baseline)
-            copy(history_ids),
-            Int[] # No target matches yet!
-        )
-        
-        if meta_type === BayesianFootball.Data.SplitMetaData
-            meta_zero = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
-        else
-            meta_zero = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
+        # ONLY inject this if we actually have history!
+        if length(history_ids) > 0
+            boundary_zero = SplitBoundary(
+                fold_counter,
+                0, # Target step 0 (Baseline)
+                copy(history_ids),
+                Int[] # No target matches yet!
+            )
+            
+            if meta_type === BayesianFootball.Data.SplitMetaData
+                meta_zero = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, 0, config.warmup_period)
+            else
+                meta_zero = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, 0, config.warmup_period)
+            end
+            
+            push!(splits, (boundary_zero, meta_zero))
+            fold_counter += 1
         end
-        
-        push!(splits, (boundary_zero, meta_zero))
-        fold_counter += 1
 
         # --- 2. Inject the Dynamic Folds (Walk Forward) ---
         for t in valid_steps
@@ -326,18 +329,19 @@ function _process_tournament_group_ids(
             )
             
             if meta_type === BayesianFootball.Data.SplitMetaData
-                meta = Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
+                meta = BayesianFootball.Data.SplitMetaData(group_ids[1], target_season, target_season, config.history_seasons, t, config.warmup_period)
             else
-                meta = Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
+                meta = BayesianFootball.Data.GroupedSplitMetaData(group_ids, target_season, target_season, config.history_seasons, t, config.warmup_period)
             end
             
             push!(splits, (boundary, meta))
             fold_counter += 1
         end
-    end
-    
+      end
     return splits
-end
+end 
+
+
 
 # 2. The Public APIs
 function create_id_boundaries(data_store, config::CVConfig)
