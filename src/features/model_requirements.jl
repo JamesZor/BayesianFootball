@@ -10,10 +10,10 @@ function required_features(model::AbstractFootballModel)
 end
 
 # Override for MultiScaled models
-function required_features(model::AbstractMultiScaledNegBinModel)
-    return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
-end
-
+# function required_features(model::AbstractMultiScaledNegBinModel)
+#     return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
+# end
+#
 
 function required_features(model::AbstractDynamicDixonColesNegBinModel)
     return [:team_ids, :midweek, :month, :is_plastic, :time_indices]

@@ -34,3 +34,24 @@ training_task = create_experiment_tasks(es)
 
 results = run_experiment_task.(training_task)
 
+
+
+saved_folders = Experiments.list_experiments(save_dir; data_dir="")
+loaded_results = loaded_experiment_files(saved_folders);
+
+exp = loaded_results[1]
+
+
+exo
+
+using Turing
+chain_fold_1 = exp.training_results[1][1]
+chain_fold_2 = exp.training_results[2][1]
+
+chain_fold_6 = exp.training_results[6][1]
+
+
+describe(chain_fold_1)
+
+describe(chain_fold_2)
+describe(chain_fold_6)
