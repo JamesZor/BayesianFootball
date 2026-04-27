@@ -83,13 +83,24 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
 
     # 2. Build the list of Configs
     configs = [
+        # Experiments.ExperimentConfig(
+        #     name = "$(label)_01_baseline",
+        #     model = Models.PreGame.AblationStudy_NB_baseLine(),
+        #     splitter = cv_config,
+        #     training_config = training_config,
+        #     save_dir = save_dir
+        # ),
+
         Experiments.ExperimentConfig(
-            name = "$(label)_01_baseline",
-            model = Models.PreGame.AblationStudy_NB_baseLine(),
+            name = "$(label)_02_home_hierarchy",
+            model = Models.PreGame.AblationStudy_NB_home_hierarchy(
+                      μ = Normal(0.21, 0.05),
+                      log_r = Normal(2.8, 0.1),
+      ),
             splitter = cv_config,
             training_config = training_config,
             save_dir = save_dir
-        ),
+    ),
     ]
 
     # 3. THE "SMART" BIT: 
@@ -140,3 +151,71 @@ function loaded_experiment_files(saved_folders::Vector{String})
 
 end
 
+using DataFrames
+using Statistics
+
+function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
+    # Initialize an empty DataFrame
+    df = DataFrame(Fold = Int[])
+    
+    # Create Mean and Std columns dynamically based on targets
+    for p in target_params
+        df[!, Symbol(string(p), "_mean")] = Float64[]
+        df[!, Symbol(string(p), "_std")]  = Float64[]
+    end
+    
+    # Iterate through each fold's MCMCChain
+    for (fold_idx, chain) in enumerate(chains)
+        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
+        
+        for p in target_params
+            # Check if the parameter exists in the chain
+            if p in keys(chain)
+                # vec() flattens all chains and samples into one big array
+                samples = vec(chain[p]) 
+                row_dict[Symbol(string(p), "_mean")] = mean(samples)
+                row_dict[Symbol(string(p), "_std")]  = std(samples)
+            else
+                row_dict[Symbol(string(p), "_mean")] = missing
+                row_dict[Symbol(string(p), "_std")]  = missing
+            end
+        end
+        
+        push!(df, row_dict)
+    end
+    
+    return df
+end
+
+
+function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
+    # Initialize an empty DataFrame
+    df = DataFrame(Fold = Int[])
+    
+    # FIX: Explicitly tell Julia these columns can contain missing values
+    for p in target_params
+        df[!, Symbol(string(p), "_mean")] = Union{Missing, Float64}[]
+        df[!, Symbol(string(p), "_std")]  = Union{Missing, Float64}[]
+    end
+    
+    # Iterate through each fold's MCMCChain
+    for (fold_idx, chain) in enumerate(chains)
+        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
+        
+        for p in target_params
+            # Check if the parameter exists in the chain
+            if p in keys(chain)
+                samples = vec(chain[p]) 
+                row_dict[Symbol(string(p), "_mean")] = mean(samples)
+                row_dict[Symbol(string(p), "_std")]  = std(samples)
+            else
+                row_dict[Symbol(string(p), "_mean")] = missing
+                row_dict[Symbol(string(p), "_std")]  = missing
+            end
+        end
+        
+        push!(df, row_dict) # This will now safely accept the missing values!
+    end
+    
+    return df
+end
