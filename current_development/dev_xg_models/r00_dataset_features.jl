@@ -140,7 +140,7 @@ using DataFrames
 # ==============================================================================
 # We define a dummy model right in the runner just to test the pipeline.
 # By making it a subtype of AbstractFootballModel, the multiple dispatch will catch it.
-struct TestRelationalModel <: BayesianFootball.Models.AbstractFootballModel end
+struct TestRelationalModel <: BayesianFootball.AbstractFootballModel end
 
 # Tell the Feature Builder exactly which traits to pull from the DataStore
 BayesianFootball.Features.required_features(::TestRelationalModel) = [:team_ids, :goals, :shots, :xg]
@@ -191,57 +191,30 @@ println("Successfully extracted feature sets for all folds.")
 # ==============================================================================
 # 6. Validate the Output
 # ==============================================================================
+n = 10
 if length(feature_collection) > 0
-    # collection[1] is the Tuple, [1] gets the FeatureSet, .data gets the Dict
-    fold_1_features = feature_collection[1][1].data 
+    fold_1_features = feature_collection[7][1].data 
     
     println("\n--- Fold 1 Feature Dictionary ---")
-    println("Dynamics Step:    ", fold_1_features[:dynamics_step])
-    println("History Matches:  ", fold_1_features[:n_history_matches])
-    println("Target Matches:   ", fold_1_features[:n_target_matches])
+    println("History Steps (Seasons): ", fold_1_features[:n_history_steps])
+    println("Target Steps (Months):   ", fold_1_features[:n_target_steps])
+    total_matches = length(fold_1_features[:time_indices])
+    println("Total Matches:           ", total_matches)
     
-    # Show a sample of the aligned data
-    n_show = min(5, fold_1_features[:n_target_matches])
-    println("\nHome Teams:       ", first(fold_1_features[:flat_home_teams], n_show))
-    println("Home Goals:       ", first(fold_1_features[:flat_home_goals], n_show))
-    println("Home Shots:       ", first(fold_1_features[:flat_home_shots], n_show))
-    println("Home xG:          ", first(fold_1_features[:flat_home_xg], n_show))
-    
-    # --- The Ultimate Safety Check ---
-    # Ensure every array is the exact same length, guaranteeing Turing compatibility
-    N = fold_1_features[:n_target_matches]
-    @assert length(fold_1_features[:flat_home_teams]) == N
-    @assert length(fold_1_features[:flat_home_goals]) == N
-    @assert length(fold_1_features[:flat_home_shots]) == N
-    @assert length(fold_1_features[:flat_home_xg])    == N
-    
-end
-n = 15
-
-# 3. Inspect Fold 1 to prove Relational Integrity
-if length(feature_collection) > 0
-    # Dig into the Tuple -> MockFeatureSet -> Dict
-    fold_1_features = feature_collection[1][1].data 
-    
-    println("\n--- Fold 1 Feature Dictionary ---")
-    println("Month Step:       ", fold_1_features[:dynamics_step])
-    println("Target Matches:   ", fold_1_features[:n_target_matches])
-    
-    # Display the first 5 elements of our perfectly aligned arrays
-    println("\nHome Teams:       ", first(fold_1_features[:flat_home_teams], n))
-    println("Away Teams:       ", first(fold_1_features[:flat_away_teams], n))
-    println("Home Goals:       ", first(fold_1_features[:flat_home_goals], n))
-    println("Away Goals:       ", first(fold_1_features[:flat_away_goals], n))
-    println("Home Shots:       ", first(fold_1_features[:flat_home_shots], n))
-    println("Away Shots:       ", first(fold_1_features[:flat_away_shots], n))
-    println("Home xG:       ", first(fold_1_features[:flat_home_xg], n))
-    println("Away xG:       ", first(fold_1_features[:flat_away_xg], n))
+    println("\n[Data Vectors ($total_matches matches total)]")
+    println("Home Goals:  ", first(fold_1_features[:flat_home_goals], n))
+    println("Away Goals:  ", first(fold_1_features[:flat_away_goals], n))
+    println("Home Shots:  ", first(fold_1_features[:flat_home_shots], n))
+    println("Away Shots:  ", first(fold_1_features[:flat_away_shots], n))
+    println("Home xG:     ", first(fold_1_features[:flat_home_xg], n))
+    println("Time Index:  ", first(fold_1_features[:time_indices], n))
     
     # The ultimate safety check for Turing.jl: Are all arrays identically sized?
-    @assert length(fold_1_features[:flat_home_teams]) == fold_1_features[:n_target_matches]
-    @assert length(fold_1_features[:flat_home_goals]) == fold_1_features[:n_target_matches]
-    @assert length(fold_1_features[:flat_home_shots]) == fold_1_features[:n_target_matches]
+    @assert length(fold_1_features[:flat_home_ids]) == total_matches
+    @assert length(fold_1_features[:flat_home_goals]) == total_matches
+    @assert length(fold_1_features[:flat_home_shots]) == total_matches
+    @assert length(fold_1_features[:flat_home_xg]) == total_matches
     
-    println("\n[SUCCESS] Package integration complete. Arrays perfectly aligned for Turing.jl!")
+    println("\n[SUCCESS] GRW Dimensions and Vocabulary correctly aligned for Turing!")
 end
 
