@@ -106,6 +106,66 @@ function build_turing_model(model::AblationStudy_NB_home_hierarchy, feature_set:
         data[:time_indices], model
     )
 end
+#
+# function extract_parameters(
+#     model::AblationStudy_NB_home_hierarchy, 
+#     df::AbstractDataFrame, 
+#     feature_set::FeatureSet,
+#     chain::Chains
+# )
+#     n_teams = feature_set.data[:n_teams]
+#     n_rounds = feature_set.data[:n_rounds]
+#     n_history = feature_set.data[:n_history_steps]
+#     n_target = feature_set.data[:n_target_steps]
+#     team_map = feature_set.data[:team_map]
+#
+#     # Reconstruct Latent States
+#     α = reconstruct_multiscale_submodel(chain, "α", n_teams, n_history, n_target)
+#     β = reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
+#
+#     # Reconstruct Hierarchical Components
+#     γ_team      = reconstruct_hierarchical_centered(chain, "γ_team")
+#
+#     # Extract Globals
+#     μ_v = vec(Array(chain[:μ]))
+#     γ_global_v = vec(Array(chain[:γ_global]))
+#     log_r_v = vec(Array(chain[:log_r]))
+#     r_v = exp.(log_r_v)
+#
+#     results = Dict{Int64, NamedTuple}()
+#     sizehint!(results, nrow(df))
+#
+#     for row in eachrow(df)
+#         mid = Int(row.match_id)
+#         t = hasproperty(row, :time_index) ? row.time_index : n_rounds
+#         t_idx = clamp(t, 1, n_rounds)
+#
+#         h_id = team_map[row.home_team]
+#         a_id = team_map[row.away_team]
+#
+#
+#         # 1. Get specific slices for this match
+#         γ_team_v = γ_team[:, h_id]
+#
+#         α_h = α[h_id, t_idx, :]
+#         α_a = α[a_id, t_idx, :]
+#         β_h = β[h_id, t_idx, :]
+#         β_a = β[a_id, t_idx, :]
+#
+#         # 2. Calculate Final Expected Goals
+#         λ_h = exp.(μ_v .+ γ_global_v .+ γ_team_v .+ α_h .+ β_a )
+#         λ_a = exp.(μ_v .+                           α_a .+ β_h )
+#
+#         results[mid] = (;
+#             λ_h = λ_h, 
+#             λ_a = λ_a,
+#             r = r_v,
+#         )
+#     end
+#
+#     return results
+# end
+#
 
 function extract_parameters(
     model::AblationStudy_NB_home_hierarchy, 
@@ -124,42 +184,48 @@ function extract_parameters(
     β = reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
     
     # Reconstruct Hierarchical Components
-    γ_team      = reconstruct_hierarchical_centered(chain, "γ_team")
+    # Assuming this returns a [sample, team] matrix
+    γ_team = reconstruct_hierarchical_centered(chain, "γ_team")
 
     # Extract Globals
     μ_v = vec(Array(chain[:μ]))
     γ_global_v = vec(Array(chain[:γ_global]))
     log_r_v = vec(Array(chain[:log_r]))
     r_v = exp.(log_r_v)
+    n_samples = length(μ_v) # Number of MCMC samples
     
     results = Dict{Int64, NamedTuple}()
     sizehint!(results, nrow(df))
 
     for row in eachrow(df)
         mid = Int(row.match_id)
-        t = hasproperty(row, :time_index) ? row.time_index : n_rounds
-        t_idx = clamp(t, 1, n_rounds)
         
-        h_id = team_map[row.home_team]
-        a_id = team_map[row.away_team]
-
+        # --- RESOLVE TIME INDEX ---
+        # For predicting unseen future matches, project the most recent latent state
+        t_idx = n_rounds
+        
+        # --- SAFEGUARD: Unseen Teams ---
+        h_idx = get(team_map, row.home_team, -1)
+        a_idx = get(team_map, row.away_team, -1)
 
         # 1. Get specific slices for this match
-        γ_team_v = γ_team[:, h_id]
+        # If unseen (-1), fall back to an array of zeros.
+        # For home advantage, zeros mean they just get the γ_global_v baseline!
+        γ_team_v = h_idx > 0 ? γ_team[:, h_idx] : zeros(n_samples)
 
-        α_h = α[h_id, t_idx, :]
-        α_a = α[a_id, t_idx, :]
-        β_h = β[h_id, t_idx, :]
-        β_a = β[a_id, t_idx, :]
+        α_h = h_idx > 0 ? α[h_idx, t_idx, :] : zeros(n_samples)
+        α_a = a_idx > 0 ? α[a_idx, t_idx, :] : zeros(n_samples)
+        β_h = h_idx > 0 ? β[h_idx, t_idx, :] : zeros(n_samples)
+        β_a = a_idx > 0 ? β[a_idx, t_idx, :] : zeros(n_samples)
 
-        # 2. Calculate Final Expected Goals
+        # 2. Calculate Final Expected Goals (for EVERY MCMC sample)
         λ_h = exp.(μ_v .+ γ_global_v .+ γ_team_v .+ α_h .+ β_a )
         λ_a = exp.(μ_v .+                           α_a .+ β_h )
 
         results[mid] = (;
             λ_h = λ_h, 
             λ_a = λ_a,
-            r = r_v,
+            r = r_v
         )
     end
 
