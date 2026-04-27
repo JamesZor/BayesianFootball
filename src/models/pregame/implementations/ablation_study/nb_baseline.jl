@@ -108,6 +108,67 @@ function build_turing_model(model::AblationStudy_NB_baseLine, feature_set::Featu
         model
     )
 end
+#
+#
+# function extract_parameters(
+#     model::AblationStudy_NB_baseLine, 
+#     df::AbstractDataFrame, 
+#     feature_set::FeatureSet,
+#     chain::Chains
+# )
+#     # 1. Get Context from the Feature Set
+#     n_teams = feature_set.data[:n_teams]
+#     n_rounds = feature_set.data[:n_rounds]
+#     n_history = feature_set.data[:n_history_steps]
+#     n_target = feature_set.data[:n_target_steps]
+#     team_map = feature_set.data[:team_map]
+#
+#     # 2. Reconstruct the Latent States
+#     α = reconstruct_multiscale_submodel(chain, "α", n_teams, n_history, n_target)
+#     β = reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
+#
+#     # 3. Extract Global Parameters
+#     μ_v = vec(Array(chain[:μ]))
+#     γ_v = vec(Array(chain[:γ]))
+#     log_r_v = vec(Array(chain[:log_r]))
+#     r_v = exp.(log_r_v)  # Dispersion parameter for NegBin
+#
+#     # 4. Predict
+#     results = Dict{Int64, NamedTuple}()
+#     sizehint!(results, nrow(df))
+#
+#     for row in eachrow(df)
+#         mid = Int(row.match_id)
+#
+#         # Resolve Time Index: 
+#         # For predicting unseen future matches, default to the last available round state.
+#         t = hasproperty(row, :time_index) ? row.time_index : n_rounds
+#         t_idx = clamp(t, 1, n_rounds)
+#
+#         h_id = team_map[row.home_team]
+#         a_id = team_map[row.away_team]
+#
+#         # Get Team Strengths for this specific point in time
+#         α_h = α[h_id, t_idx, :]
+#         α_a = α[a_id, t_idx, :]
+#         β_h = β[h_id, t_idx, :]
+#         β_a = β[a_id, t_idx, :]
+#
+#         # Calculate Lambda (Expected Goals)
+#         λ_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a)
+#         λ_a = exp.(μ_v .+        α_a .+ β_h)
+#
+#         # Store the distributions needed to build the Negative Binomial PMF
+#         results[mid] = (;
+#             λ_h = λ_h, 
+#             λ_a = λ_a,
+#             r = r_v
+#         )
+#     end
+#
+#     return results
+# end
+
 
 
 function extract_parameters(
@@ -123,7 +184,8 @@ function extract_parameters(
     n_target = feature_set.data[:n_target_steps]
     team_map = feature_set.data[:team_map]
     
-    # 2. Reconstruct the Latent States
+    # 2. Reconstruct the Latent States (Full Posterior 3D Arrays)
+    # Dimensions: [team_index, time_index, mcmc_sample]
     α = reconstruct_multiscale_submodel(chain, "α", n_teams, n_history, n_target)
     β = reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
     
@@ -131,7 +193,8 @@ function extract_parameters(
     μ_v = vec(Array(chain[:μ]))
     γ_v = vec(Array(chain[:γ]))
     log_r_v = vec(Array(chain[:log_r]))
-    r_v = exp.(log_r_v)  # Dispersion parameter for NegBin
+    r_v = exp.(log_r_v)  
+    n_samples = length(μ_v) # Should be ~2000 (depending on your chains)
     
     # 4. Predict
     results = Dict{Int64, NamedTuple}()
@@ -140,23 +203,22 @@ function extract_parameters(
     for row in eachrow(df)
         mid = Int(row.match_id)
         
-        # Resolve Time Index: 
-        # For predicting unseen future matches, default to the last available round state.
-        t = hasproperty(row, :time_index) ? row.time_index : n_rounds
-        t_idx = clamp(t, 1, n_rounds)
+        # --- RESOLVE TIME INDEX ---
+        # For predicting unseen future matches, we project the most recent latent state
+        t_idx = n_rounds
 
-      # --- SAFEGUARD: Unseen Teams ---
-        # Use get() to map the team to an ID. If they aren't in the map, assign -1.
-        h_idx = get(feature_set.data[:team_map], h_team, -1)
-        a_idx = get(feature_set.data[:team_map], a_team, -1)
-        
-        # If a team is unknown (-1), they fall back to the league average prior (0.0)
-        α_h = h_idx > 0 ? mean(chain[Symbol("α.z_target_steps[$h_idx, 1]")]) : 0.0
-        α_a = a_idx > 0 ? mean(chain[Symbol("α.z_target_steps[$a_idx, 1]")]) : 0.0
-        β_h = h_idx > 0 ? mean(chain[Symbol("β.z_target_steps[$h_idx, 1]")]) : 0.0
-        β_a = a_idx > 0 ? mean(chain[Symbol("β.z_target_steps[$a_idx, 1]")]) : 0.0
+        # --- SAFEGUARD: Unseen Teams ---
+        h_idx = get(team_map, row.home_team, -1)
+        a_idx = get(team_map, row.away_team, -1)
 
-        # Calculate Lambda (Expected Goals)
+        # Get Team Strengths for this specific point in time (t_idx).
+        # If unseen (-1), fall back to an array of zeros (the league average prior).
+        α_h = h_idx > 0 ? α[h_idx, t_idx, :] : zeros(n_samples)
+        α_a = a_idx > 0 ? α[a_idx, t_idx, :] : zeros(n_samples)
+        β_h = h_idx > 0 ? β[h_idx, t_idx, :] : zeros(n_samples)
+        β_a = a_idx > 0 ? β[a_idx, t_idx, :] : zeros(n_samples)
+
+        # Calculate Expected Goals (λ) for EVERY MCMC sample
         λ_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a)
         λ_a = exp.(μ_v .+        α_a .+ β_h)
 
