@@ -90,53 +90,6 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
             training_config = training_config,
             save_dir = save_dir
         ),
-        #
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_02_home_hierarchy",
-        #     model = Models.PreGame.AblationStudy_NB_home_hierarchy(),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        #
-        # # --- Model 4: Lean Target (Team HA + Team Dispersion) ---
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_03_team_dispersion",
-        #     model = Models.PreGame.AblationStudy_NB_team_dispersion(),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        #
-        # # --- Model 5: Baseline + Monthly Expectations ---
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_04_monthly_mu",
-        #     model = Models.PreGame.AblationStudy_NB_baseline_month_mu(),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_05_monthly_r",
-        #     model = Models.PreGame.AblationStudy_NB_baseline_month_r(),
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_06_baseline_HA_r",
-        #     model = Models.PreGame.AblationStudy_NB_baseline_HA_r(), 
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
-        # Experiments.ExperimentConfig(
-        #     name = "$(label)_06_HA_r_H_hierarchy",
-        #     model = Models.PreGame.AblationStudy_NB_HA_r_home_hierarchy(), 
-        #     splitter = cv_config,
-        #     training_config = training_config,
-        #     save_dir = save_dir
-        # ),
     ]
 
     # 3. THE "SMART" BIT: 
