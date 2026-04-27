@@ -104,9 +104,11 @@ function run_experiment(data_store::Data.DataStore, config::ExperimentConfig)
     # 3. Features
     _log_step(3, "Building Feature Sets")
     feature_sets = Features.create_features(
-              boundaries_with_meta,
-              data_store,
-              config.splitter)
+            boundaries_with_meta,
+            data_store,
+            config.model,                # <--- FIX: Pass the model, not the splitter!
+            config.splitter.dynamics_col # <--- FIX: Pass the dynamics column
+        )
 
     # 4. Training
     _log_step(4, "Executing Training Strategy")
