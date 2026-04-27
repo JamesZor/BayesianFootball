@@ -33,7 +33,7 @@
     
     # 3. Conditionally sample target steps (Handle single-step targets)
     if number_target_steps > 0
-        z_target_steps ~ filldist(zₖ, number_teams, number_target_steps - 1)
+        z_target_steps ~ filldist(zₖ, number_teams, number_target_steps )
         target_steps   = z_target_steps .* σₖ
     else
         # AD-safe empty matrix

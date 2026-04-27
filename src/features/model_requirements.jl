@@ -9,6 +9,7 @@ function required_features(model::AbstractFootballModel)
     return [:team_ids, :time_indices] 
 end
 
+# TEST: removed for new code
 # Override for MultiScaled models
 # function required_features(model::AbstractMultiScaledNegBinModel)
 #     return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
