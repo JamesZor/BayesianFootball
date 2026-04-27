@@ -158,40 +158,6 @@ function check_parameter_stability(chains::Vector, target_params::Vector{Symbol}
     # Initialize an empty DataFrame
     df = DataFrame(Fold = Int[])
     
-    # Create Mean and Std columns dynamically based on targets
-    for p in target_params
-        df[!, Symbol(string(p), "_mean")] = Float64[]
-        df[!, Symbol(string(p), "_std")]  = Float64[]
-    end
-    
-    # Iterate through each fold's MCMCChain
-    for (fold_idx, chain) in enumerate(chains)
-        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
-        
-        for p in target_params
-            # Check if the parameter exists in the chain
-            if p in keys(chain)
-                # vec() flattens all chains and samples into one big array
-                samples = vec(chain[p]) 
-                row_dict[Symbol(string(p), "_mean")] = mean(samples)
-                row_dict[Symbol(string(p), "_std")]  = std(samples)
-            else
-                row_dict[Symbol(string(p), "_mean")] = missing
-                row_dict[Symbol(string(p), "_std")]  = missing
-            end
-        end
-        
-        push!(df, row_dict)
-    end
-    
-    return df
-end
-
-
-function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
-    # Initialize an empty DataFrame
-    df = DataFrame(Fold = Int[])
-    
     # FIX: Explicitly tell Julia these columns can contain missing values
     for p in target_params
         df[!, Symbol(string(p), "_mean")] = Union{Missing, Float64}[]

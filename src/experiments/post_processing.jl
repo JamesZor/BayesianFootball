@@ -130,7 +130,7 @@ function extract_oos_predictions(ds::Data.DataStore, exp_results::ExperimentResu
     )
     
     # Extract the array of tuples from the TrainingResults object
-    results_array = exp_results.training_results.splits
+    results_array = exp_results.training_results.items
     n_splits = length(results_array)
 
     # 2. Extract
