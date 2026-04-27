@@ -32,7 +32,7 @@
     end
     
     # 3. Conditionally sample target steps (Handle single-step targets)
-    if number_target_steps > 1
+    if number_target_steps > 0
         z_target_steps ~ filldist(zₖ, number_teams, number_target_steps - 1)
         target_steps   = z_target_steps .* σₖ
     else
