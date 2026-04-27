@@ -384,14 +384,16 @@ end
 
 
 # 2. The Public APIs
-function create_id_boundaries(data_store, config::CVConfig)
-    splits = Vector{Tuple{SplitBoundary, SplitMetaData}}()
-    for tourn_id in config.tournament_ids
-        group_splits = _process_tournament_group_ids(data_store.matches, [tourn_id], config, SplitMetaData)
+function create_id_boundaries(data_store, config::GroupedCVConfig)
+    splits = Vector{Tuple{SplitBoundary, GroupedSplitMetaData}}()
+    # Iterate over the groups (e.g., [[1, 2], [3]])
+    for group in config.tournament_groups
+        group_splits = _process_tournament_group_ids(data_store.matches, group, config, GroupedSplitMetaData)
         for (b, m) in group_splits
-            push!(splits, (b, m::SplitMetaData))
+            push!(splits, (b, m::GroupedSplitMetaData))
         end
     end
+    
     return splits
 end
 
