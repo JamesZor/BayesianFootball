@@ -186,3 +186,34 @@ function add_feature!(F_data::Dict, ::Val{:xg}, ordered_ids, team_map::Dict, ds)
     F_data[:flat_home_xg] = [get(stats_map, id, (missing, missing))[1] for id in ordered_ids]
     F_data[:flat_away_xg] = [get(stats_map, id, (missing, missing))[2] for id in ordered_ids]
 end
+
+
+# ==============================================================================
+# RELATIONAL EXTRACTORS (Match Metadata)
+# ==============================================================================
+
+# Extractor E: Midweek
+function add_feature!(F_data::Dict, ::Val{:midweek}, ordered_ids, team_map::Dict, ds)
+    # Map match_id to match_date
+    date_map = Dict(row.match_id => row.match_date for row in eachrow(ds.matches))
+    
+    # < 6 means Mon-Thu. (1=Mon, ..., 5=Fri)
+    F_data[:flat_is_midweek] = [Dates.dayofweek(date_map[id]) < 6 ? 1 : 0 for id in ordered_ids]
+end
+
+# Extractor F: Month
+function add_feature!(F_data::Dict, ::Val{:month}, ordered_ids, team_map::Dict, ds)
+    date_map = Dict(row.match_id => row.match_date for row in eachrow(ds.matches))
+    
+    F_data[:flat_months] = [Dates.month(date_map[id]) for id in ordered_ids]
+    F_data[:n_months] = 12
+end
+
+# Extractor G: Plastic Pitch
+function add_feature!(F_data::Dict, ::Val{:is_plastic}, ordered_ids, team_map::Dict, ds)
+    # Map match_id to home_team to check for plastic pitches
+    home_team_map = Dict(row.match_id => row.home_team for row in eachrow(ds.matches))
+    
+    # PLASTIC_TEAMS is already defined in your file
+    F_data[:flat_is_plastic] = [home_team_map[id] in PLASTIC_TEAMS ? 1 : 0 for id in ordered_ids]
+end

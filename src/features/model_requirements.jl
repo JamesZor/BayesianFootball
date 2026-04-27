@@ -19,6 +19,12 @@ function required_features(model::AbstractDynamicDixonColesNegBinModel)
     return [:team_ids, :midweek, :month, :is_plastic, :time_indices]
 end
 
+
+# added 
+function required_features(model::AbstractMultiScaledNegBinModel)
+    return [:team_ids, :midweek, :month, :is_plastic, :goals] 
+end
+
 # ==============================================================================
 # 2. Model-Specific Preprocessing Hooks
 # ==============================================================================
