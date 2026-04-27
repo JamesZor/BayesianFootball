@@ -144,15 +144,17 @@ function extract_parameters(
         # For predicting unseen future matches, default to the last available round state.
         t = hasproperty(row, :time_index) ? row.time_index : n_rounds
         t_idx = clamp(t, 1, n_rounds)
-        
-        h_id = team_map[row.home_team]
-        a_id = team_map[row.away_team]
 
-        # Get Team Strengths for this specific point in time
-        α_h = α[h_id, t_idx, :]
-        α_a = α[a_id, t_idx, :]
-        β_h = β[h_id, t_idx, :]
-        β_a = β[a_id, t_idx, :]
+      # --- SAFEGUARD: Unseen Teams ---
+        # Use get() to map the team to an ID. If they aren't in the map, assign -1.
+        h_idx = get(feature_set.data[:team_map], h_team, -1)
+        a_idx = get(feature_set.data[:team_map], a_team, -1)
+        
+        # If a team is unknown (-1), they fall back to the league average prior (0.0)
+        α_h = h_idx > 0 ? mean(chain[Symbol("α.z_target_steps[$h_idx, 1]")]) : 0.0
+        α_a = a_idx > 0 ? mean(chain[Symbol("α.z_target_steps[$a_idx, 1]")]) : 0.0
+        β_h = h_idx > 0 ? mean(chain[Symbol("β.z_target_steps[$h_idx, 1]")]) : 0.0
+        β_a = a_idx > 0 ? mean(chain[Symbol("β.z_target_steps[$a_idx, 1]")]) : 0.0
 
         # Calculate Lambda (Expected Goals)
         λ_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a)
