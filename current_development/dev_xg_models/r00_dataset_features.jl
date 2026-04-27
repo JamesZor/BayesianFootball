@@ -162,7 +162,7 @@ calc_warmup = last(unique(subset(ds.matches, :season => ByRow(isequal("2025"))).
 cv_config = BayesianFootball.Data.CVConfig(
     tournament_ids = [79], 
     target_seasons = ["2025"],
-    history_seasons = 1,   
+    history_seasons = 0,   
     dynamics_col = :match_month,
     warmup_period = 0, 
     stop_early = false
@@ -188,12 +188,13 @@ feature_collection = BayesianFootball.Features.create_features(boundaries_with_m
 println("Successfully extracted feature sets for all folds.")
 
 
+
 # ==============================================================================
 # 6. Validate the Output
 # ==============================================================================
 n = 10
 if length(feature_collection) > 0
-    fold_1_features = feature_collection[7][1].data 
+    fold_1_features = feature_collection[1][1].data 
     
     println("\n--- Fold 1 Feature Dictionary ---")
     println("History Steps (Seasons): ", fold_1_features[:n_history_steps])
@@ -218,3 +219,23 @@ if length(feature_collection) > 0
     println("\n[SUCCESS] GRW Dimensions and Vocabulary correctly aligned for Turing!")
 end
 
+# 1. Grab the exact tuple for Fold 1
+# (This contains both your FeatureSet dictionary and the SplitMetaData)
+fold_1_tuple = feature_collection[1]
+meta_1 = fold_1_tuple[2]
+
+println("\n--- Testing Inference Retrieval for Fold 1 ---")
+println("Current Fold Step (Month): ", meta_1.time_step)
+println("Target Next Step (Month):  ", meta_1.time_step + 1)
+
+# 2. Call the new wrapper function
+# (Make sure to prefix with your module name if get_next_matches isn't exported!)
+next_matches_df = Data.get_next_matches(ds, fold_1_tuple, cv_config)
+
+println("Found $(nrow(next_matches_df)) matches to predict.\n")
+
+# 3. Inspect the DataFrame
+if nrow(next_matches_df) > 0
+    # Displaying just the relevant columns to prove it worked
+    display(next_matches_df[1:min(5, end), [:match_id, :season, cv_config.dynamics_col, :home_team, :away_team]])
+end

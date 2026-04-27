@@ -33,8 +33,61 @@ end
 # ==============================================================================
 # 1. EXPERIMENT ORCHESTRATION
 # ==============================================================================
+#
+# function run_experiment(data_store::Data.DataStore, config::ExperimentConfig)
+#     _log_header(config.name)
+#
+#     # START TIMER
+#     start_time = time()
+#
+#     # 1. Vocabulary (Lightweight)
+#     # vocabulary = Features.create_vocabulary(data_store, config.model)
+#
+#     # 2. Splits
+#     _log_step(2, "Generating Data Splits")
+#     data_splits = Data.create_data_splits(data_store, config.splitter)
+#     _log_info("Generated $(length(data_splits)) splits")
+#
+#     # 3. Features
+#     _log_step(3, "Building Feature Sets")
+#     feature_sets = Features.create_features(
+#         data_splits, 
+#         config.model, 
+#         config.splitter 
+#     )
+#
+#     # 4. Training
+#     _log_step(4, "Executing Training Strategy")
+#     training_results = Training.train(
+#         config.model, 
+#         config.training_config, 
+#         feature_sets
+#     )
+#
+#     # END TIMER
+#     elapsed_time = time() - start_time
+#     time_str = _format_time(elapsed_time)
+#
+#     # YOUR HACK: Mutate the tags vector to safely store the time without breaking JLD2 types
+#     push!(config.tags, "time:$time_str")
+#
+#     _log_footer()
+#     _log_info("Experiment completed in $time_str")
+#
+#     timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
+#     default_path = joinpath(config.save_dir, "$(config.name)_$(timestamp)")
+#
+#     return ExperimentResults(
+#         config,
+#         training_results,
+#         nothing,
+#         default_path
+#     )
+# end
 
-function run_experiment(data_store, config::ExperimentConfig)
+
+# new Architecture
+function run_experiment(data_store::Data.DataStore, config::ExperimentConfig)
     _log_header(config.name)
     
     # START TIMER
@@ -45,16 +98,15 @@ function run_experiment(data_store, config::ExperimentConfig)
 
     # 2. Splits
     _log_step(2, "Generating Data Splits")
-    data_splits = Data.create_data_splits(data_store, config.splitter)
-    _log_info("Generated $(length(data_splits)) splits")
+    boundaries_with_meta = Data.create_id_boundaries(data_store, config.splitter)
+    _log_info("Generated $(length(boundaries_with_meta)) splits")
 
     # 3. Features
     _log_step(3, "Building Feature Sets")
     feature_sets = Features.create_features(
-        data_splits, 
-        config.model, 
-        config.splitter 
-    )
+              boundaries_with_meta,
+              data_store,
+              config.splitter)
 
     # 4. Training
     _log_step(4, "Executing Training Strategy")
@@ -68,7 +120,6 @@ function run_experiment(data_store, config::ExperimentConfig)
     elapsed_time = time() - start_time
     time_str = _format_time(elapsed_time)
     
-    # YOUR HACK: Mutate the tags vector to safely store the time without breaking JLD2 types
     push!(config.tags, "time:$time_str")
 
     _log_footer()

@@ -4,6 +4,7 @@ module Training
 
 using Turing
 using ProgressMeter
+using Printf
 using Base.Threads
 using ..Samplers
 using ..Models

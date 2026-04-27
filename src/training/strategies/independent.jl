@@ -59,14 +59,21 @@ function train_independent(model, config, feature_sets)
         pct = round((c / total_splits) * 100, digits=1)
         eta_str = _format_seconds(eta_seconds)
         elapsed_str = _format_seconds(elapsed)
+
+# Print a single, neatly column-aligned progress line
+        progress_msg = @sprintf(
+            "[PROGRESS] Split %4d / %-4d (%5.1f%%)  |  Index: %-5d  |  Elapsed: %8s  |  ETA: %8s\n",
+            c, total_splits, pct, current_idx, elapsed_str, eta_str
+        )
+        printstyled(progress_msg, color=:green, bold=true)
         
-        # Print a clear block that won't get missed
-        printstyled("\n" * "="^60 * "\n", color=:green)
-        printstyled("[PROGRESS] Split $c / $total_splits ($pct%)\n", color=:green, bold=true)
-        println("   > Finished Index: $current_idx")
-        println("   > Elapsed:        $elapsed_str")
-        println("   > Est. Remaining: $eta_str")
-        printstyled("="^60 * "\n", color=:green)
+        # # Print a clear block that won't get missed
+        # printstyled("\n" * "="^60 * "\n", color=:green)
+        # printstyled("[PROGRESS] Split $c / $total_splits ($pct%)\n", color=:green, bold=true)
+        # println("   > Finished Index: $current_idx")
+        # println("   > Elapsed:        $elapsed_str")
+        # println("   > Est. Remaining: $eta_str")
+        # printstyled("="^60 * "\n", color=:green)
     end
 
     # 3. Execution Logic (Parallel vs Sequential)
