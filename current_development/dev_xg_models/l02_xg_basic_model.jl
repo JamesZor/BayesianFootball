@@ -160,7 +160,122 @@ function BayesianFootball.Models.PreGame.build_turing_model(model::XG_baseLine_t
     )
 end
 
+function BayesianFootball.Models.PreGame.extract_parameters(
+    model::XG_baseLine_test, 
+    df::AbstractDataFrame, 
+    feature_set::Features.FeatureSet,
+    chain::Chains
+)
+    n_teams = feature_set.data[:n_teams]
+    n_rounds = feature_set.data[:n_rounds]
+    n_history = feature_set.data[:n_history_steps]
+    n_target = feature_set.data[:n_target_steps]
+    team_map = feature_set.data[:team_map]
+    
+    # 1. Reconstruct Latent States (The Random Walks)
+    α = BayesianFootball.Models.PreGame.reconstruct_multiscale_submodel(chain, "α", n_teams, n_history, n_target)
+    β = BayesianFootball.Models.PreGame.reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
+    
+    # 2. Extract Globals
+    μ_v = vec(Array(chain[:μ]))
+    γ_v = vec(Array(chain[:γ]))         # Global Home Advantage
+    κ_v = vec(Array(chain[:κ]))         # Goal Conversion Bias
+    log_r_v = vec(Array(chain[:log_r]))
+    r_v = exp.(log_r_v)
+    n_samples = length(μ_v) 
+    
+    results = Dict{Int64, NamedTuple}()
+    sizehint!(results, nrow(df))
 
+    for row in eachrow(df)
+        mid = Int(row.match_id)
+        
+        # --- RESOLVE TIME INDEX ---
+        # For predicting unseen future matches, project the most recent latent state
+        t_idx = n_rounds
+        
+        # --- SAFEGUARD: Unseen Teams ---
+        h_idx = get(team_map, row.home_team, -1)
+        a_idx = get(team_map, row.away_team, -1)
+
+        α_h = h_idx > 0 ? α[h_idx, t_idx, :] : zeros(n_samples)
+        α_a = a_idx > 0 ? α[a_idx, t_idx, :] : zeros(n_samples)
+        β_h = h_idx > 0 ? β[h_idx, t_idx, :] : zeros(n_samples)
+        β_a = a_idx > 0 ? β[a_idx, t_idx, :] : zeros(n_samples)
+
+        # 3. Calculate True Underlying xG (The pure Latent State)
+        true_xg_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a)
+        true_xg_a = exp.(μ_v .+        α_a .+ β_h)
+
+        # 4. Calculate Final Goal Expectancy (Applying the κ scaling factor)
+        λ_goals_h = κ_v .* true_xg_h
+        λ_goals_a = κ_v .* true_xg_a
+
+        # Store BOTH distributions in the NamedTuple!
+        results[mid] = (;
+            λ_h = λ_goals_h,       # MUST be passed to your Poisson/NegBin odds compiler
+            λ_a = λ_goals_a,       # MUST be passed to your Poisson/NegBin odds compiler
+            r = r_v,
+            true_xg_h = true_xg_h, # Great for secondary backtesting and diagnostic dashboards
+            true_xg_a = true_xg_a, 
+            κ = κ_v
+        )
+    end
+
+    return results
+end
+
+# ==============================================================================
+# 5. SCORE COMPUTATION WRAPPERS (Odds Compiler Hooks)
+# ==============================================================================
+using Distributions
+
+# 1. Extract Params for the xG Model
+function BayesianFootball.Predictions.extract_params(model::AbstractXGNegativeBinomial, row)
+    if hasproperty(row, :r)
+        return (
+            λ_h = row.λ_h, # This is the κ-scaled λ_goals_h
+            λ_a = row.λ_a, # This is the κ-scaled λ_goals_a
+            r_h = row.r,   # Shared dispersion
+            r_a = row.r 
+        )
+    else
+        throw(ArgumentError("Row does not contain expected shape parameter :r"))
+    end 
+end
+
+# 2. Get Column Symbols
+function BayesianFootball.Predictions.get_latent_column_symbols(::AbstractXGNegativeBinomial, df::DataFrames.AbstractDataFrame)
+    cols = [:match_id, :λ_h, :λ_a]
+    if :r in propertynames(df)
+        push!(cols, :r)
+    end
+    return cols
+end
+
+# 3. Compute Score Matrix
+function BayesianFootball.Predictions.compute_score_matrix(
+    model::AbstractXGNegativeBinomial, 
+    params; 
+    max_goals::Int=12
+)
+    λ_h, λ_a = params.λ_h, params.λ_a
+    r_h, r_a = params.r_h, params.r_a
+    n_samples = length(λ_h)
+
+    outcomes_grid = [[h, a] for h in 0:max_goals-1, a in 0:max_goals-1]
+    S = zeros(Float64, max_goals, max_goals, n_samples)
+
+    @inbounds for k in 1:n_samples
+        # Rely on the package's DoubleNegativeBinomial distribution
+        dist = BayesianFootball.MyDistributions.DoubleNegativeBinomial(λ_h[k], λ_a[k], r_h[k], r_a[k])
+        S_k = pdf.(Ref(dist), outcomes_grid)
+        S[:, :, k] = S_k
+    end
+    
+    # Wrap it in the package's ScoreMatrix type
+    return BayesianFootball.Predictions.ScoreMatrix(S)
+end
 
 
 function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::String, target_seasons::Vector{<:String} )
@@ -216,11 +331,72 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
     return ExperimentTask.(Ref(ds), configs)
 end
 
+# ----
+using DataFrames
+using Statistics
 
+function dev_compute_xg_residuals(
+    ds::BayesianFootball.Data.DataStore, 
+    exp::BayesianFootball.Experiments.ExperimentResults
+)
+    println("1. Extracting OOS Latent States...")
+    latents_raw = BayesianFootball.Experiments.extract_oos_predictions(ds, exp)
+    
+    println("2. Joining with Actual xG Data from ds.statistics...")
+    
+    # SAFEGUARD: Ensure the statistics table has what we need
+    if !hasproperty(ds, :statistics)
+        error("DataStore does not contain a `statistics` DataFrame.")
+    end
+    
+    avail_cols = propertynames(ds.statistics)
+    if !(:expectedGoals_home in avail_cols) || !(:expectedGoals_away in avail_cols)
+        println("\n❌ ERROR: Could not find xG columns in ds.statistics!")
+        println("Available columns: ", avail_cols)
+        error("Missing :expectedGoals_home or :expectedGoals_away")
+    end
 
-# function train(model::AbstractFootballModel, config::TrainingConfig, feature_set::FeatureSet)
-#     # This logic remains the same: Build -> Run Sampler
-#     turing_model = build_turing_model(model, feature_set) 
-#     return run_sampler(turing_model, config.sampler)
-# end
-#
+    # Join with the statistics table and rename them to our internal standard
+    joined = innerjoin(
+        latents_raw.df,
+        select(ds.statistics, :match_id, :expectedGoals_home => :home_xg, :expectedGoals_away => :away_xg),
+        on = :match_id
+    )
+    
+    # Filter out matches where xG is missing
+    dropmissing!(joined, [:home_xg, :away_xg])
+    
+    n_matches = nrow(joined)
+    if n_matches == 0
+        error("No non-missing xG data found in the out-of-sample predictions.")
+    end
+    
+    println("3. Computing Residuals for $n_matches matches...")
+    
+    # Extract the Mean Expected xG from the posterior distributions
+    exp_xg_h = mean.(joined.true_xg_h)
+    exp_xg_a = mean.(joined.true_xg_a)
+    
+    # Calculate Continuous Residuals (Observed - Expected)
+    res_h = Float64.(joined.home_xg) .- exp_xg_h
+    res_a = Float64.(joined.away_xg) .- exp_xg_a
+    res_all = vcat(res_h, res_a)
+    
+    # Print a quick diagnostic summary
+    println("\n=== xG Continuous Residuals Summary ===")
+    println("Home xG Bias (Mean Error):  ", round(mean(res_h), digits=4))
+    println("Away xG Bias (Mean Error):  ", round(mean(res_a), digits=4))
+    println("Total xG Bias:              ", round(mean(res_all), digits=4))
+    println("Total xG MAE (Abs Error):   ", round(mean(abs.(res_all)), digits=4))
+    println("Total xG RMSE:              ", round(sqrt(mean(res_all.^2)), digits=4))
+    println("=======================================\n")
+    
+    # Return a detailed DataFrame
+    return DataFrame(
+        match_id = vcat(joined.match_id, joined.match_id),
+        team_type = vcat(fill("Home", n_matches), fill("Away", n_matches)),
+        observed_xg = vcat(joined.home_xg, joined.away_xg),
+        expected_xg = vcat(exp_xg_h, exp_xg_a),
+        residual = res_all
+    )
+end
