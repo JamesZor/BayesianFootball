@@ -31,6 +31,7 @@ end
 
 ## HACK:
 # --- HOME ADVANTAGE CONFIGS ---
+#
 abstract type AbstractHomeAdvantageConfig end
 
 Base.@kwdef struct GlobalHomeAdvantage <: AbstractHomeAdvantageConfig
@@ -46,7 +47,7 @@ end
 
 # --- MAIN MODEL STRUCT ---
 Base.@kwdef struct XG_Master_Model{
-              K<:AbstractKappaConfig, D<:AbstractDispersionConfig, H::AbstractHomeAdvantageConfig} <: AbstractXGNegativeBinomial
+              K<:AbstractKappaConfig, D<:AbstractDispersionConfig, H<:AbstractHomeAdvantageConfig} <: AbstractXGNegativeBinomial
     μ::Distribution = Normal(0.17, 0.1)
     ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
     
