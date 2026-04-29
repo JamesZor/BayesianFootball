@@ -28,15 +28,32 @@ Base.@kwdef struct HomeAwayDispersion <: AbstractDispersionConfig
     δ_r_home::Distribution = Normal(0.0, 0.5)     # Home deviation
 end
 
+
+## HACK:
+# --- HOME ADVANTAGE CONFIGS ---
+abstract type AbstractHomeAdvantageConfig end
+
+Base.@kwdef struct GlobalHomeAdvantage <: AbstractHomeAdvantageConfig
+    γ_global::Distribution = Normal(0.27, 0.1)
+end
+
+Base.@kwdef struct HierarchicalTeamHomeAdvantage <: AbstractHomeAdvantageConfig
+    γ_global::Distribution = Normal(0.27, 0.1)
+    δ_γ_σ::Distribution = Gamma(2, 0.05)   # Learns the variance of HA across the league
+    δ_γ_z::Distribution = Normal(0, 1)     # NCP z-scores
+end
+###
+
 # --- MAIN MODEL STRUCT ---
-Base.@kwdef struct XG_Master_Model{K<:AbstractKappaConfig, D<:AbstractDispersionConfig} <: AbstractXGNegativeBinomial
+Base.@kwdef struct XG_Master_Model{
+              K<:AbstractKappaConfig, D<:AbstractDispersionConfig, H::AbstractHomeAdvantageConfig} <: AbstractXGNegativeBinomial
     μ::Distribution = Normal(0.17, 0.1)
-    γ::Distribution = Normal(0.27, 0.1)
     ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
     
     # Inject Modules
     kappa_config::K
     disp_config::D
+    ha_config::H 
 
     # --- Latent State Variances (ATTACK & DEFENSE) ---
     α_σ₀::Distribution = Gamma(2, 0.06)    
@@ -106,6 +123,25 @@ end
     return (; h = r_h, a = r_a) # Separated R
 end
 
+## HACK::
+# ==========================================
+# HOME ADVANTAGE SUBMODELS
+# ==========================================
+@model function build_home_advantage(n_teams, config::GlobalHomeAdvantage)
+    γ_global ~ config.γ_global
+    return fill(γ_global, n_teams) 
+end
+
+@model function build_home_advantage(n_teams, config::HierarchicalTeamHomeAdvantage)
+    γ_global ~ config.γ_global
+    δ_γ ~ to_submodel(BayesianFootball.Models.PreGame.hierarchical_zero_centered_component(n_teams, config.δ_γ_σ, config.δ_γ_z))
+    return γ_global .+ δ_γ
+end
+
+function get_match_ha(γ::AbstractVector, team_ids, time_ids)
+    return γ[team_ids]
+end
+####
 
 function BayesianFootball.Features.required_features(model::XG_Master_Model)
     return [:team_ids, :goals, :xg] 
@@ -122,31 +158,34 @@ end
 
     # --- A. HYPERPARAMETERS ---
     μ ~ model.μ 
-    γ ~ model.γ 
     ν_xg ~ model.ν_xg
 
     # Build Modules via Dispatch
     κ_base ~ to_submodel(build_kappa_base(n_teams, model.kappa_config))
     disp   ~ to_submodel(build_dispersion(model.disp_config))
+    γ_base ~ to_submodel(build_home_advantage(n_teams, model.ha_config)) # <--- NEW
 
-    
     # --- B. LATENT STATES (GRW) ---
     α ~ to_submodel(BayesianFootball.Models.PreGame.grw_two_step_component(n_teams, n_rounds, n_history, n_target, model.z₀, model.zₛ, model.zₖ, model.α_σ₀, model.α_σₛ, model.α_σₖ))
     β ~ to_submodel(BayesianFootball.Models.PreGame.grw_two_step_component(n_teams, n_rounds, n_history, n_target, model.z₀, model.zₛ, model.zₖ, model.β_σ₀, model.β_σₛ, model.β_σₖ))
 
+    # --- C. LIKELIHOOD PIPELINE ---
     αₕ = view(α, CartesianIndex.(home_ids_flat, time_indices))
     αₐ = view(α, CartesianIndex.(away_ids_flat, time_indices))
     βₕ = view(β, CartesianIndex.(home_ids_flat, time_indices))
     βₐ = view(β, CartesianIndex.(away_ids_flat, time_indices))
-  
-
-    # --- C. LIKELIHOOD PIPELINE ---
-    λₕ = exp.(μ .+ γ .+ αₕ .+ βₐ) .+ 1e-6
-    λₐ = exp.(μ .+      αₐ .+ βₕ) .+ 1e-6
 
     # Map parameters to matches safely
     κ_h_flat = get_match_kappa(κ_base, home_ids_flat, time_indices)
     κ_a_flat = get_match_kappa(κ_base, away_ids_flat, time_indices)
+    γ_h_flat = get_match_ha(γ_base, home_ids_flat, time_indices) # <--- NEW
+
+    # Inject the mapped Home Advantage into the Home Lambda
+    log_λₕ = clamp.(μ .+ γ_h_flat .+ αₕ .+ βₐ, -20.0, 20.0) 
+    log_λₐ = clamp.(μ .+             αₐ .+ βₕ, -20.0, 20.0)
+
+    λₕ = exp.(log_λₕ) .+ 1e-6
+    λₐ = exp.(log_λₐ) .+ 1e-6
 
     # ---------------------------------------------------------
     # GROUP 1: Matches WITH xG Data
@@ -247,6 +286,20 @@ function extract_dispersion(chain, config::HomeAwayDispersion)
     return (; h = r_h, a = r_a)
 end
 
+## HACK
+# --- HOME ADVANTAGE EXTRACTORS ---
+function extract_home_advantage(chain, config::GlobalHomeAdvantage, n_teams)
+    # Scoped under γ_base
+    g_glob = vec(Array(chain[Symbol("γ_base.γ_global")]))
+    return repeat(g_glob, 1, n_teams) 
+end
+
+function extract_home_advantage(chain, config::HierarchicalTeamHomeAdvantage, n_teams)
+    g_glob = vec(Array(chain[Symbol("γ_base.γ_global")]))
+    # Reconstruct the zero-centered deltas using the helper
+    delta_g = reconstruct_hierarchical_centered(chain, "γ_base.δ_γ") 
+    return g_glob .+ delta_g
+end
 
 
 function reconstruct_hierarchical_centered(chain::Chains, prefix::String)
@@ -283,22 +336,19 @@ function BayesianFootball.Models.PreGame.extract_parameters(
     β = BayesianFootball.Models.PreGame.reconstruct_multiscale_submodel(chain, "β", n_teams, n_history, n_target)
 
     μ_v = vec(Array(chain[:μ]))
-    γ_v = vec(Array(chain[:γ]))     
-    n_samples = length(μ_v)          
+    n_samples = length(μ_v)
 
-    # 2. Dispatch Extractors (These "just work" no matter the config!)
+    # 1. Dispatch Extractors
     κ_matrix = extract_kappa(chain, model.kappa_config, n_teams)
     disp_tuple = extract_dispersion(chain, model.disp_config)
+    γ_matrix = extract_home_advantage(chain, model.ha_config, n_teams) # <--- NEW
     
     results = Dict{Int64, NamedTuple}()
     
     for row in eachrow(df)
         mid = Int(row.match_id)
-        
-        # --- RESOLVE TIME INDEX ---
         t_idx = n_rounds
         
-        # --- SAFEGUARD: Unseen Teams ---
         h_idx = get(team_map, row.home_team, -1)
         a_idx = get(team_map, row.away_team, -1)
 
@@ -307,25 +357,24 @@ function BayesianFootball.Models.PreGame.extract_parameters(
         β_h = h_idx > 0 ? β[h_idx, t_idx, :] : zeros(n_samples)
         β_a = a_idx > 0 ? β[a_idx, t_idx, :] : zeros(n_samples)
 
-        # 3. Calculate True Underlying xG
-        true_xg_h = exp.(μ_v .+ γ_v .+ α_h .+ β_a)
-        true_xg_a = exp.(μ_v .+        α_a .+ β_h)
-        
-        # Pull team-specific kappa (or fallback to global if unseen team)
+        # Map team-specific variables
         κ_h_v = h_idx > 0 ? κ_matrix[:, h_idx] : κ_matrix[:, 1]
         κ_a_v = a_idx > 0 ? κ_matrix[:, a_idx] : κ_matrix[:, 1]
+        γ_h_v = h_idx > 0 ? γ_matrix[:, h_idx] : γ_matrix[:, 1] # <--- NEW
 
+        # 3. Calculate True Underlying xG using the specific γ_h_v
+        true_xg_h = exp.(μ_v .+ γ_h_v .+ α_h .+ β_a)
+        true_xg_a = exp.(μ_v .+          α_a .+ β_h)
+        
         λ_goals_h = κ_h_v .* true_xg_h
         λ_goals_a = κ_a_v .* true_xg_a
 
-      results[mid] = (;
+        results[mid] = (;
             λ_h = λ_goals_h,       
             λ_a = λ_goals_a,       
-            # ---> FIX: ADD THESE KEYS FOR LEGACY COMPATIBILITY <---
-            r = disp_tuple.h,     # Fallback key
-            r_h = disp_tuple.h,   # Expected by Home-specific logic
-            r_a = disp_tuple.a,   # Expected by Away-specific logic
-            # -----------------------------------------------------
+            r = disp_tuple.h,     
+            r_h = disp_tuple.h,   
+            r_a = disp_tuple.a,   
             true_xg_h = true_xg_h, 
             true_xg_a = true_xg_a
         )
@@ -335,6 +384,17 @@ end
 
 
 # ---------------------------
+
+# --- ABBREVIATION DISPATCH ---
+short_name(::GlobalKappa) = "GLK"
+short_name(::HierarchicalTeamKappa) = "HTK"
+
+short_name(::GlobalDispersion) = "GLD"
+short_name(::HomeAwayDispersion) = "HAD"
+
+short_name(::GlobalHomeAdvantage) = "GLH"
+short_name(::HierarchicalTeamHomeAdvantage) = "HTH"
+
 function create_experiment_tasks_grid(ds::Data.DataStore, label::String, save_dir::String, target_seasons::Vector{<:String})
 
     # 1. Define the shared parts (CV and Training)
@@ -348,60 +408,49 @@ function create_experiment_tasks_grid(ds::Data.DataStore, label::String, save_di
     )
 
     sampler_conf = Samplers.NUTSConfig(
-        1000, # Number of samples for each chain
-        4,    # Number of chains
-        200,  # Number of warm up steps 
-        0.65, # Accept rate  [0,1]
-        10,   # Max tree depth
-        Samplers.UniformInit(-1, 1), 
-        false
+        1000, 4, 200, 0.65, 10, Samplers.UniformInit(-1, 1), false
     )
     
     train_cfg = BayesianFootball.Training.Independent(
-        parallel=true,
-        max_concurrent_splits=4
+        parallel=true, max_concurrent_splits=4
     )
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
-    # 2. Define the Grid Spaces (Add new modules here in the future!)
-    kappa_options = [
-        GlobalKappa(),
-        HierarchicalTeamKappa()
-    ]
-
-    disp_options = [
-        GlobalDispersion(),
-        HomeAwayDispersion()
-    ]
+    # 2. Define the Grid Spaces (Now with Home Advantage!)
+    kappa_options = [GlobalKappa(), HierarchicalTeamKappa()]
+    disp_options  = [GlobalDispersion(), HomeAwayDispersion()]
+    ha_options    = [GlobalHomeAdvantage(), HierarchicalTeamHomeAdvantage()]
 
     # 3. Build the list of Configs dynamically
     configs = Experiments.ExperimentConfig[]
 
     for k in kappa_options
         for d in disp_options
-            # Automatically grab the clean struct names for labeling
-            # e.g., "GlobalKappa" and "HomeAwayDispersion"
-            k_name = string(nameof(typeof(k)))
-            d_name = string(nameof(typeof(d)))
-            
-            # Create a highly descriptive experiment name
-            experiment_name = "$(label)_$(k_name)_$(d_name)"
-            
-            # Instantiate the Master Model with this specific combination
-            model_instance = XG_Master_Model(kappa_config=k, disp_config=d)
+            for h in ha_options
+                
+                # Fetch the 3-letter acronyms via dispatch
+                k_str = short_name(k)
+                d_str = short_name(d)
+                h_str = short_name(h)
+                
+                # Creates nice short names like: "xg_v2_HTK_HAD_HTH"
+                experiment_name = "$(label)_$(k_str)_$(d_str)_$(h_str)"
+                
+                # Instantiate the Master Model with this specific 3-part combination
+                model_instance = XG_Master_Model(kappa_config=k, disp_config=d, ha_config=h)
 
-            push!(configs, Experiments.ExperimentConfig(
-                name = experiment_name,
-                model = model_instance,
-                splitter = cv_config,
-                training_config = training_config,
-                save_dir = save_dir
-            ))
+                push!(configs, Experiments.ExperimentConfig(
+                    name = experiment_name,
+                    model = model_instance,
+                    splitter = cv_config,
+                    training_config = training_config,
+                    save_dir = save_dir
+                ))
+            end
         end
     end
 
-    # 4. THE "SMART" BIT: 
-    # Wrap every config with the DS into an ExperimentTask
+    # 4. Wrap every config with the DS into an ExperimentTask
     return ExperimentTask.(Ref(ds), configs)
 end
 

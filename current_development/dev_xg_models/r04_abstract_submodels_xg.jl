@@ -14,7 +14,7 @@ save_dir::String = "./data/dev_xg_models/"
 
 es = DSExperimentSettings(
   ds,
-  "xg_grid",
+  "xg_grid_2",
   save_dir,
   get_target_seasons_string(ds.segment)
 )
@@ -22,7 +22,7 @@ es = DSExperimentSettings(
 training_task = create_experiment_tasks_grid(es)
 
 
-# results = run_experiment_task.(training_task)
+results = run_experiment_task.(training_task)
 
 
 
