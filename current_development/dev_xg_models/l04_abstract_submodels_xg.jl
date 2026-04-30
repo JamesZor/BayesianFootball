@@ -83,7 +83,9 @@ end
 @model function build_kappa_base(n_teams, config::HierarchicalTeamKappa)
     κ_global ~ config.κ_global
     δ_κ ~ to_submodel(BayesianFootball.Models.PreGame.hierarchical_zero_centered_component(n_teams, config.δ_κ_σ, config.δ_κ_z))
-    return κ_global .+ δ_κ
+    
+    # CRITICAL FIX: Prevent Negative Conversion Rates
+    return clamp.(κ_global .+ δ_κ, 0.05, 5.0)
 end
 
 """
@@ -111,17 +113,17 @@ end
 # ==========================================
 @model function build_dispersion(config::GlobalDispersion)
     log_r ~ config.log_r
-    r = exp(log_r)
-    return (; h = r, a = r) # Same exact R for both
+    r = exp(clamp(log_r, -10.0, 10.0))
+    return (; h = r, a = r) 
 end
 
 @model function build_dispersion(config::HomeAwayDispersion)
     log_r ~ config.log_r
     δ_r_home ~ config.δ_r_home
     
-    r_a = exp(log_r)
-    r_h = exp(log_r + δ_r_home)
-    return (; h = r_h, a = r_a) # Separated R
+    r_a = exp(clamp(log_r, -10.0, 10.0))
+    r_h = exp(clamp(log_r + δ_r_home, -10.0, 10.0))
+    return (; h = r_h, a = r_a) 
 end
 
 ## HACK::
@@ -187,6 +189,11 @@ end
 
     λₕ = exp.(log_λₕ) .+ 1e-6
     λₐ = exp.(log_λₐ) .+ 1e-6
+
+    if any(isnan, λₕ) || any(isnan, λₐ) || any(isinf, λₕ) || any(isinf, λₐ)
+      Turing.@addlogprob! -Inf
+      return
+    end
 
     # ---------------------------------------------------------
     # GROUP 1: Matches WITH xG Data
@@ -396,6 +403,24 @@ short_name(::HomeAwayDispersion) = "HAD"
 short_name(::GlobalHomeAdvantage) = "GLH"
 short_name(::HierarchicalTeamHomeAdvantage) = "HTH"
 
+
+
+
+
+# --- 2. Running the experiment
+struct DSExperimentSettings 
+  ds::Data.DataStore
+  label::String
+  save_dir::String
+  target_season::Vector{<:String}
+end
+
+struct ExperimentTask
+    ds::Data.DataStore
+    config::Experiments.ExperimentConfig
+end
+
+
 function create_experiment_tasks_grid(ds::Data.DataStore, label::String, save_dir::String, target_seasons::Vector{<:String})
 
     # 1. Define the shared parts (CV and Training)
@@ -459,5 +484,104 @@ end
 
 function create_experiment_tasks_grid(es::DSExperimentSettings)
     return create_experiment_tasks_grid(es.ds, es.label, es.save_dir, es.target_season)
+end
+
+
+function create_experiment_tasks_grid_tdis_hist(es::DSExperimentSettings)
+    return create_experiment_tasks_grid_tdis_hist(es.ds, es.label, es.save_dir, es.target_season)
+end
+
+
+function create_experiment_tasks_grid_tdis_hist(
+        ds::Data.DataStore, 
+        label::String, 
+        save_dir::String, 
+        target_seasons::Vector{<:String};
+        history_options::Vector{Int} = [1,2,3]  # <--- Loop over 1 to 4 years of history
+    )
+
+    sampler_conf = Samplers.NUTSConfig(
+        1000, 4, 200, 0.65, 10, Samplers.UniformInit(-1, 1), false
+    )
+    
+    train_cfg = BayesianFootball.Training.Independent(
+        parallel=true, max_concurrent_splits=4
+    )
+    training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
+    # 2. Define the Grid Spaces
+    kappa_options = [GlobalKappa(), HierarchicalTeamKappa()]
+    disp_options  = [GlobalDispersion(), HomeAwayDispersion()]
+    ha_options    = [GlobalHomeAdvantage(), HierarchicalTeamHomeAdvantage()]
+
+    # 3. Build the list of Configs dynamically
+    configs = Experiments.ExperimentConfig[]
+
+    for hist in history_options # <--- NEW: Loop over history depths
+        
+        # CV Config must be inside the loop to change per history option
+        cv_config = Data.GroupedCVConfig(
+            tournament_groups = [Data.tournament_ids(ds.segment)],
+            target_seasons = target_seasons,
+            history_seasons = hist, 
+            dynamics_col = :match_month,
+            warmup_period = 0,
+            stop_early = true
+        )
+
+        for k in kappa_options
+            for d in disp_options
+                for h in ha_options
+                    
+                    # Fetch acronyms
+                    k_str = short_name(k)
+                    d_str = short_name(d)
+                    h_str = short_name(h)
+                    
+                    # Tag the label with H1, H2, H3, etc., and "rob" for robust t-dist
+                    experiment_name = "$(label)_H$(hist)_rob_$(k_str)_$(d_str)_$(h_str)"
+                    
+                    # Instantiate Master Model
+                    model_instance = XG_Master_Model(
+                        kappa_config = k, 
+                        disp_config  = d, 
+                        ha_config    = h,
+                        zₛ = truncated(TDist(4.0), lower=-10.0, upper=10.0) 
+                    )
+
+                    push!(configs, Experiments.ExperimentConfig(
+                        name = experiment_name,
+                        model = model_instance,
+                        splitter = cv_config,
+                        training_config = training_config,
+                        save_dir = save_dir
+                    ))
+                end
+            end
+        end
+    end
+
+    return ExperimentTask.(Ref(ds), configs)
+end
+
+function run_experiment_task(task::ExperimentTask)
+    conf = task.config
+    println("Running: $(conf.name)")
+
+    try
+        # 2. Execute
+        results = Experiments.run_experiment(task.ds, conf)
+
+        # 3. Re-enable logging to save and confirm
+        Experiments.save_experiment(results)
+        
+        return true # Success flag
+
+    catch e
+        @error "❌ Failed [$(conf.name)]: $e"
+        # If you want to see the stacktrace for debugging:
+        # Base.showerror(stdout, e, catch_backtrace())
+        return false # Failure flag
+    end
 end
 

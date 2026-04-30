@@ -22,7 +22,7 @@ es = DSExperimentSettings(
 training_task = create_experiment_tasks_grid(es)
 
 
-results = run_experiment_task.(training_task)
+# results = run_experiment_task.(training_task)
 
 
 
@@ -36,7 +36,7 @@ expr.training_results[2][1]
 
 
 
-loaded_results_ = loaded_results[1:5]
+loaded_results_ = loaded_results[1:8];
 
 # ----
 
@@ -85,6 +85,22 @@ summary_df = select(master_rqr_df,
 
 
 
+
+#=
+8×7 DataFrame
+ Row │ model                  rqr_all_mean  rqr_all_std  rqr_all_skewness  rqr_all_kurtosis  rqr_all_shapiro_w  rqr_all_shapiro_p 
+     │ String                 Float64       Float64      Float64           Float64           Float64            Float64           
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ xg_grid_2_GLK_GLD_GLH    0.0566325      0.951874         -0.328998         0.218915            0.989652         0.0120406
+   2 │ xg_grid_2_GLK_GLD_HTH   -0.00202199     0.962419         -0.232705         0.108238            0.994352         0.205504
+   3 │ xg_grid_2_GLK_HAD_GLH    0.0677622      0.946397         -0.177722         0.267834            0.994006         0.167789
+   4 │ xg_grid_2_GLK_HAD_HTH    0.0500441      0.935867         -0.13283         -0.183909            0.995417         0.371672
+   5 │ xg_grid_2_HTK_GLD_GLH    0.0235619      0.953472         -0.200908         0.0762431           0.994394         0.210592
+   6 │ xg_grid_2_HTK_GLD_HTH    0.0631679      0.921461         -0.343517         0.581991            0.98781          0.00410114
+   7 │ xg_grid_2_HTK_HAD_GLH    0.0528865      0.941718         -0.152491         0.22699             0.995836         0.459982
+   8 │ xg_grid_2_HTK_HAD_HTH    0.0398593      0.94206          -0.265975         0.159541            0.992313         0.0603223
+=#
+
 # ----
 flat_rows_glm = []
 
@@ -109,6 +125,23 @@ display(select(master_glm_df,
     :glmedge_spread_fair_p_value,
     :glmedge_n_obs
 ))
+
+
+
+#=
+8×5 DataFrame
+ Row │ model                  glmedge_intercept_coef  glmedge_spread_fair_coef  glmedge_spread_fair_p_value  glmedge_n_obs 
+     │ String                 Float64                 Float64                   Float64                      Int64         
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ xg_grid_2_GLK_GLD_GLH                -2.90415                   1.20725                     0.156389           3466
+   2 │ xg_grid_2_GLK_GLD_HTH                -2.90485                   1.05862                     0.219834           3466
+   3 │ xg_grid_2_GLK_HAD_GLH                -2.90399                   1.17332                     0.169384           3466
+   4 │ xg_grid_2_GLK_HAD_HTH                -2.90465                   1.0322                      0.232384           3466
+   5 │ xg_grid_2_HTK_GLD_GLH                -2.90427                   1.29935                     0.132726           3466
+   6 │ xg_grid_2_HTK_GLD_HTH                -2.9048                    1.16582                     0.182641           3466
+   7 │ xg_grid_2_HTK_HAD_GLH                -2.90398                   1.28162                     0.138342           3466
+   8 │ xg_grid_2_HTK_HAD_HTH                -2.90469                   1.10764                     0.205132           3466
+=#
 
 
 
@@ -145,13 +178,29 @@ println(" 📉 MASTER LOGLOSS COMPARISON (LOWER IS BETTER)")
 println(" Note: A negative 'diff_ll' means your model beat the bookmaker!")
 println("============================================================")
 
-display(select(master_ll_df, 
+display(sort(select(master_ll_df, 
     :model, 
     :logloss_overall_model_ll, 
     :logloss_overall_market_ll, 
     :logloss_overall_diff_ll
-))
+                    ), :logloss_overall_model_ll))
 
+
+
+#=
+8×4 DataFrame
+ Row │ model                  logloss_overall_model_ll  logloss_overall_market_ll  logloss_overall_diff_ll 
+     │ String                 Float64                   Float64                    Float64                 
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ xg_grid_2_HTK_GLD_GLH                  0.442898                    18.1667                 -17.7238
+   2 │ xg_grid_2_HTK_HAD_GLH                  0.442922                    18.1667                 -17.7237
+   3 │ xg_grid_2_GLK_GLD_GLH                  0.44305                     18.1667                 -17.7236
+   4 │ xg_grid_2_HTK_GLD_HTH                  0.443062                    18.1667                 -17.7236
+   5 │ xg_grid_2_GLK_HAD_GLH                  0.44308                     18.1667                 -17.7236
+   6 │ xg_grid_2_HTK_HAD_HTH                  0.443137                    18.1667                 -17.7235
+   7 │ xg_grid_2_GLK_GLD_HTH                  0.443232                    18.1667                 -17.7234
+   8 │ xg_grid_2_GLK_HAD_HTH                  0.443293                    18.1667                 -17.7234
+=#
 
 
 # 1. SETUP GLOBAL CONFIGS
@@ -191,15 +240,15 @@ for (i, exp) in enumerate(loaded_results_)
         push!(rqr_rows, Evaluation.to_dataframe_row(exp, rqr_data))
 
         # --- B. CALIBRATION (The ML Band-Aid) ---
-        training_data_l2 = Calibration.build_l2_training_df(ds, ppd_raw)
-        shift_model_config = Calibration.CalibrationConfig(
-            name = "Affine_Logit_Shift",
-            model = Calibration.BasicLogitShift(), 
-            min_history_splits = 2,   
-            max_history_splits = 0,   
-        )
-        calibrators = Calibration.train_calibrators(training_data_l2, shift_model_config)
-        ppd_cali = Calibration.apply_calibrators(ppd_raw, ds, calibrators)
+        # training_data_l2 = Calibration.build_l2_training_df(ds, ppd_raw)
+        # shift_model_config = Calibration.CalibrationConfig(
+        #     name = "Affine_Logit_Shift",
+        #     model = Calibration.BasicLogitShift(), 
+        #     min_history_splits = 2,   
+        #     max_history_splits = 0,   
+        # )
+        # calibrators = Calibration.train_calibrators(training_data_l2, shift_model_config)
+        # ppd_cali = Calibration.apply_calibrators(ppd_raw, ds, calibrators)
 
         # --- C. SIGNAL PROCESSING (PnL/ROI) ---
         # 1. Raw ROI
@@ -209,10 +258,10 @@ for (i, exp) in enumerate(loaded_results_)
         push!(all_ledger_results, "$model_name (RAW)" => ledger_raw)
 
         # 2. Calibrated ROI
-        ledger_cali = BayesianFootball.Signals.process_signals(
-            ppd_cali, ds.odds, signals; odds_column=:odds_close
-        )
-        push!(all_ledger_results, "$model_name (CALI)" => ledger_cali)
+        # ledger_cali = BayesianFootball.Signals.process_signals(
+        #     ppd_cali, ds.odds, signals; odds_column=:odds_close
+        # )
+        # push!(all_ledger_results, "$model_name (CALI)" => ledger_cali)
 
         println("   ✅ Metrics & Calibration completed.")
 
@@ -308,3 +357,18 @@ display_results(all_ledger_results...; min_edge = min_edge)
   ----------------------------------------------------------------------------------
 =#
 
+
+
+# Find all indices where the result is 0 (false)
+failed_indices = findall(==(0), results)
+
+# Print the name of the model(s) that failed
+for idx in failed_indices
+    failed_model_name = training_task[idx].config.name
+    println("❌ Failed at index $idx: $failed_model_name")
+end
+
+
+failed_task = training_task[5]
+
+rescued_result = run_experiment_task(failed_task)
