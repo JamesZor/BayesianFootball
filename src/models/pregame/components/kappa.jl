@@ -19,7 +19,8 @@ end
 # ==========================================
 @model function build_kappa(config::GlobalKappa, n_teams::Int)
   κ_global ~ config.κ_global 
-end fill(κ_global, n_teams)
+  return fill(κ_global, n_teams)
+end
 
 @model function build_kappa(config::HierarchicalTeamKappa, n_teams::Int)
     κ_base ~ config.κ_base
