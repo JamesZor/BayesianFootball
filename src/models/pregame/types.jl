@@ -1,8 +1,5 @@
 # src/Models/PreGame/types.jl
 
-using Distributions
-using ..Models # Assuming this gives access to AbstractXGNegativeBinomial or AbstractNegBinModel
-
 # ==========================================
 # 1. ABSTRACT COMPONENT INTERFACES
 # ==========================================

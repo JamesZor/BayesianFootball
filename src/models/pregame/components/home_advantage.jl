@@ -39,7 +39,7 @@ end
 
 
 
-@model function build_home_advantage(config::HierarchicalTeamHomeAdvantage, n_leagues::Int)
+@model function build_home_advantage(config::HierarchicalLeagueHomeAdvantage, n_leagues::Int)
     γ_base ~ config.γ_base
     σ_γ ~ config.σ_γ
     γ_league_raw ~ filldist(Normal(0, 1), n_leagues) 
