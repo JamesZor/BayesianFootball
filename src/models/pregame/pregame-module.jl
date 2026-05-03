@@ -5,13 +5,13 @@ module PreGame
 # We import the Types to extend them, but we don't need Reexport
 using ...TypesInterfaces
 
+# Macro libraries MUST be loaded at the top
 using Turing, Distributions, DataFrames
 using ..MyDistributions 
 using ..Features
 using LinearAlgebra
 using Statistics
 using Dates
-using DataFrames
 using MCMCChains
 
 # 1. Load Common Helpers (The Orchestrator)
@@ -19,13 +19,11 @@ include("common.jl")
 include("./grw_helpers.jl")
 include("./hierarchical_helpers.jl")
 
-##
-# feature_set updates
+# 2. feature_set updates & Architecture
 include("./types.jl")
 include("./components/dispersion.jl")
 include("./components/interception.jl")
 include("./components/home_advantage.jl")
-include("./components/dispersion.jl")
 
 include("./engines/goals_engine.jl")
 export DynamicGoalsModel
