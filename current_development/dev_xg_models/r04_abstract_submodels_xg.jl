@@ -36,7 +36,16 @@ expr.training_results[2][1]
 
 
 
-loaded_results_ = loaded_results[1:8];
+
+latents = BayesianFootball.Experiments.extract_oos_predictions(ds, expr)
+
+
+ppd = BayesianFootball.Predictions.model_inference(ds, expr)
+
+
+
+
+loaded_results_ = loaded_results;
 
 # ----
 
@@ -84,7 +93,7 @@ summary_df = select(master_rqr_df,
 )
 
 
-
+sort(summary_df, :rqr_all_shapiro_w, rev=true)
 
 #=
 8×7 DataFrame

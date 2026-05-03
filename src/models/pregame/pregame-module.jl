@@ -11,12 +11,26 @@ using ...Features
 using LinearAlgebra
 using Statistics
 using Dates
-
+using DataFrames
+using MCMCChains
 
 # 1. Load Common Helpers (The Orchestrator)
 include("common.jl")
 include("./grw_helpers.jl")
 include("./hierarchical_helpers.jl")
+
+##
+# feature_set updates
+include("./types.jl")
+include("./components/dispersion.jl")
+include("./components/interception.jl")
+include("./components/home_advantage.jl")
+include("./components/dispersion.jl")
+
+include("./engines/goals_engine.jl")
+
+##
+
 
 # 2. Load Models (The Workers)
 # Since these files are included, their 'extract_parameters' overloads 

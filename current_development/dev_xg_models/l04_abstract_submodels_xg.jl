@@ -585,3 +585,53 @@ function run_experiment_task(task::ExperimentTask)
     end
 end
 
+
+
+## predictive  - compute scores / model inference 
+#
+
+function BayesianFootball.Predictions.get_latent_column_symbols(::XG_Master_Model, df::AbstractDataFrame)
+    # We just need the final calculated rates and dispersions
+    return [:match_id, :λ_h, :λ_a, :r_h, :r_a]
+end
+
+function BayesianFootball.Predictions.extract_params(::XG_Master_Model, row::DataFrameRow)
+    # Because your upstream extract_parameters already applied the kappa multiplier
+    # row.λ_h and row.λ_a are the final Expected Goals arrays!
+    
+    return (
+        λ_h = row.λ_h, 
+        λ_a = row.λ_a, 
+        r_h = row.r_h, 
+        r_a = row.r_a 
+    )
+end
+
+
+function BayesianFootball.Predictions.compute_score_matrix(
+    model::XG_Master_Model, 
+    params; 
+    max_goals::Int=12
+)
+    # 1. Unpack the parameters we just extracted
+    λ_h, λ_a = params.λ_h, params.λ_a
+    r_h, r_a = params.r_h, params.r_a
+    n_samples = length(λ_h)
+
+    # 2. Create the Evaluation Grid (Vector of Vectors)
+    outcomes_grid = [[h, a] for h in 0:max_goals-1, a in 0:max_goals-1]
+
+    # Output Tensor
+    S = zeros(Float64, max_goals, max_goals, n_samples)
+
+    # 3. Compute the Bivariate Negative Binomial Matrix
+    @inbounds for k in 1:n_samples 
+        # Note: Make sure DoubleNegativeBinomial is exported/available here
+        dist = MyDistributions.DoubleNegativeBinomial(λ_h[k], λ_a[k], r_h[k], r_a[k])
+        
+        S_k = pdf.(Ref(dist), outcomes_grid)
+        S[:, :, k] = S_k
+    end
+    
+    return BayesianFootball.Predictions.ScoreMatrix(S)
+end

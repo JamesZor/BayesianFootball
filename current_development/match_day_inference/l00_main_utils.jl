@@ -82,16 +82,16 @@ function create_experiment_tasks(ds::Data.DataStore, label::String, save_dir::St
         cv_config = Data.GroupedCVConfig(
         tournament_groups = [Data.tournament_ids(ds.segment)],
         target_seasons = [cv_params.target_season],
-        history_seasons = 4,
+        history_seasons = 1,
         dynamics_col = :match_month,
         warmup_period = cv_params.warmup_period,
         stop_early = false
     )
 
     sampler_conf = Samplers.NUTSConfig(
-    600, # Number of samples for each chain
+    1000, # Number of samples for each chain
     10,   # Number of chains
-    150, # Number of warm up steps 
+    300, # Number of warm up steps 
     0.65,# Accept rate  [0,1]
     10,  # Max tree depth
     Samplers.UniformInit(-1, 1), # Interval for starting a chain 
