@@ -28,7 +28,7 @@ include("./components/home_advantage.jl")
 include("./components/dispersion.jl")
 
 include("./engines/goals_engine.jl")
-
+export DynamicGoalsModel
 ##
 
 
