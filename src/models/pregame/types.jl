@@ -32,10 +32,18 @@ Base.@kwdef struct DynamicGoalsModel{
     homeadvantage_config::H
 end
 
-# Base.@kwdef struct DynamicXGModel{K<:AbstractKappaConfig, D<:AbstractDispersionConfig, H<:AbstractHomeAdvantageConfig, P<:ContinuousUnivariateDistribution} <: AbstractDynamicFootballModel
-#     kappa_config::K
-#     disp_config::D
-#     ha_config::H
-#     zₛ::Distribution = Normal(0, 1.0)
-#     # zₛ::P = TDist(4.0)
-# end
+Base.@kwdef struct DynamicXGModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig,
+  K<:AbstractKappaConfig
+} <: AbstractNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+    kappa_config::K
+    ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+end
+

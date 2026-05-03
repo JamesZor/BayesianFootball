@@ -191,33 +191,33 @@ end
     λₐ = exp.(log_λₐ) .+ 1e-6
 
     if any(isnan, λₕ) || any(isnan, λₐ) || any(isinf, λₕ) || any(isinf, λₐ)
-      Turing.@addlogprob! -Inf
+      turing.@addlogprob! -inf
       return
     end
 
     # ---------------------------------------------------------
-    # GROUP 1: Matches WITH xG Data
+    # group 1: matches with xg data
     # ---------------------------------------------------------
     if !isempty(idx_xg)
         λₕ_xg = λₕ[idx_xg]
         λₐ_xg = λₐ[idx_xg]
         
-        clean_home_xg ~ arraydist(Gamma.(ν_xg, λₕ_xg ./ ν_xg))
-        clean_away_xg ~ arraydist(Gamma.(ν_xg, λₐ_xg ./ ν_xg))
+        clean_home_xg ~ arraydist(gamma.(ν_xg, λₕ_xg ./ ν_xg))
+        clean_away_xg ~ arraydist(gamma.(ν_xg, λₐ_xg ./ ν_xg))
 
-        home_goals_flat[idx_xg] ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.h, κ_h_flat[idx_xg] .* λₕ_xg))
-        away_goals_flat[idx_xg] ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.a, κ_a_flat[idx_xg] .* λₐ_xg))
+        home_goals_flat[idx_xg] ~ arraydist(bayesianfootball.mydistributions.robustnegativebinomial.(disp.h, κ_h_flat[idx_xg] .* λₕ_xg))
+        away_goals_flat[idx_xg] ~ arraydist(bayesianfootball.mydistributions.robustnegativebinomial.(disp.a, κ_a_flat[idx_xg] .* λₐ_xg))
     end
 
     # ---------------------------------------------------------
-    # GROUP 2: Matches WITHOUT xG Data (History)
+    # group 2: matches without xg data (history)
     # ---------------------------------------------------------
     if !isempty(idx_no_xg)
         λₕ_no = λₕ[idx_no_xg]
         λₐ_no = λₐ[idx_no_xg]
 
-        home_goals_flat[idx_no_xg] ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.h, κ_h_flat[idx_no_xg] .* λₕ_no))
-        away_goals_flat[idx_no_xg] ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.a, κ_a_flat[idx_no_xg] .* λₐ_no))
+        home_goals_flat[idx_no_xg] ~ arraydist(bayesianfootball.mydistributions.robustnegativebinomial.(disp.h, κ_h_flat[idx_no_xg] .* λₕ_no))
+        away_goals_flat[idx_no_xg] ~ arraydist(bayesianfootball.mydistributions.robustnegativebinomial.(disp.a, κ_a_flat[idx_no_xg] .* λₐ_no))
     end
 end
 

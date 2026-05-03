@@ -25,9 +25,12 @@ include("./components/dispersion.jl")
 include("./components/interception.jl")
 include("./components/home_advantage.jl")
 include("./components/dynamics.jl")
+include("./components/kappa.jl")
 
 include("./engines/goals_engine.jl")
-export DynamicGoalsModel
+include("./engines/xg_engine.jl")
+export DynamicGoalsModel, DynamicXGModel
+
 ##
 
 
