@@ -7,6 +7,7 @@ module Models
 # and shared structs. It has NO dependency on Features.
 using ..TypesInterfaces
 using ..MyDistributions
+using ..Features
 
 # --- Include and export sub-modules ---
 include("pregame/pregame-module.jl")
