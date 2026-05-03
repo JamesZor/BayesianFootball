@@ -20,6 +20,7 @@ inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion() 
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 dyn_cfg   = PreGame.MultiScaleGRW()
+kap_cfg   = PreGame.GlobalKappa()
 
 # ==========================================
 # 2. BUILD THE MASTER MODEL
@@ -35,3 +36,20 @@ model = PreGame.DynamicGoalsModel(
 
 println("Success! Model instantiated:")
 display(model)
+
+
+
+model_xg = PreGame.DynamicXGModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg
+)
+
+
+
+
+
+
+
