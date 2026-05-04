@@ -119,11 +119,13 @@ function build_turing_model(config::DynamicXGModel, feature_set::FeatureSet)
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
-    # Ensure xG data is typed strictly
-    home_xg = Vector{Float64}(data[:flat_home_xg])
-    away_xg = Vector{Float64}(data[:flat_away_xg])
+    # --- THE FIX IS HERE ---
+    # coalesce.() replaces any `missing` with `NaN`. 
+    # Then we safely cast the entire clean array to Float64!
+    home_xg = Vector{Float64}(coalesce.(data[:flat_home_xg], NaN))
+    away_xg = Vector{Float64}(coalesce.(data[:flat_away_xg], NaN))
 
-    # Dynamically find the indices to split the likelihood
+    # Your dynamic splitting logic works perfectly on NaN!
     idx_xg    = findall(x -> !isnan(x), home_xg)
     idx_no_xg = findall(isnan, home_xg)
 
