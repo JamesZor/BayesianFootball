@@ -101,6 +101,18 @@ function run_experiment_task(task::ExperimentTask)
     end
 end
 
+###### ------
+#
+
+using Dates
+using LibPQ
+
+
+
+function fetch_todays_matches(ds::Data.DataStore)::AbstractDataFrame
+  return fetch_todays_matches(ds.segment)
+
+end
 
 function fetch_todays_matches(segment::Data.DataTournemantSegment)::AbstractDataFrame
     db_config = Data.DBConfig("postgresql://admin:supersecretpassword@100.124.38.117:5432/sofascrape_db")
@@ -147,3 +159,84 @@ function fetch_todays_matches(db_conn::LibPQ.Connection, segment::Data.DataTourn
     return df
 end
 
+
+function raw_preds_to_df(raw_preds)
+    ids = collect(keys(raw_preds))
+    cols = Dict{Symbol, Vector{Any}}(:match_id => ids)
+    first_entry = raw_preds[ids[1]]
+    
+    for k in keys(first_entry)
+        cols[Symbol(k)] = [raw_preds[i][k] for i in ids]
+    end
+    
+    return DataFrame(cols)
+end
+
+function compute_todays_matches_pdds(ds, expr, todays_matches)
+boundaries_with_meta = BayesianFootball.Data.create_id_boundaries(ds, expr.config.splitter)
+feature_collection = BayesianFootball.Features.create_features(boundaries_with_meta, ds, expr.config.model)
+
+  last_split_idx = length(expr.training_results)
+  chain = expr.training_results[last_split_idx][1]
+  feature_set = feature_collection[last_split_idx][1]
+
+  raw_preds = BayesianFootball.Models.PreGame.extract_parameters(
+      expr.config.model, todays_matches, feature_set, chain
+  )
+
+  latents = BayesianFootball.Experiments.LatentStates(raw_preds_to_df(raw_preds), expr.config.model)
+  ppd = BayesianFootball.Predictions.model_inference(latents)
+  return ppd
+
+end
+# ------
+function generate_odds_comparison(ds, model_results::AbstractVector{<:Pair}, todays_matches; 
+    selections = [:home,:draw, :away, :over_15, :over_25, :under_25, :over_35])
+    
+    # 1. Fetch matches once
+    
+    comparison_df = DataFrame()
+    odds_columns = Symbol[]
+
+    # 2. Loop through each passed model and process it
+    for (i, (model_name, res)) in enumerate(model_results)
+        println("Processing model: $model_name...")
+        
+        # Compute PPD
+        ppd = compute_todays_matches_pdds(ds, res, todays_matches)
+        
+        # Calculate Odds
+        odds = calculate_mean_odds(ppd.df, selections)
+        
+        # Rename the odds column dynamically
+        col_name = Symbol("odds_", model_name)
+        rename!(odds, :mean_odds => col_name)
+        push!(odds_columns, col_name)
+        
+        # Join to the master dataframe
+        if i == 1
+            comparison_df = odds
+        else
+            comparison_df = innerjoin(comparison_df, odds, on = [:match_id, :selection])
+        end
+    end
+
+    # 3. Add Team Names
+    comparison_df = leftjoin(
+        comparison_df, 
+        select(todays_matches, :match_id, :home_team, :away_team), 
+        on = :match_id,
+        makeunique = true
+    )
+
+    # 4. Reorder columns
+    select!(comparison_df, 
+        :match_id, :home_team, :away_team, :selection, 
+        odds_columns...
+    )
+
+    sort!(comparison_df, [:match_id, :selection])
+    
+    println("Comparison generated successfully!")
+    return comparison_df
+end
