@@ -201,3 +201,125 @@ src/Calibration/
     ├── basic_glm.jl             # Intercept-only Logit Shift
     └── platt_scale.jl           # (Future) Slope & Intercept scaling
 ```
+
+
+
+# 🧠 Models Module (PreGame Bayesian Engines)
+
+This module contains the **Layer 1 (L1) Probabilistic Engines**. It is built using a highly modular, "Component-Driven Architecture" powered by `Turing.jl`. Instead of writing massive, monolithic scripts, the mathematical concepts (Home Advantage, Form/Dynamics, Conversion Rates) are isolated into interchangeable Lego blocks.
+
+Currently, this module powers two master engines:
+1. `DynamicGoalsModel` - Trains purely on historical goals.
+2. `DynamicXGModel` - A unified engine that co-trains on both True xG (when available) and actual goals, bridging them via a `Kappa` conversion rate.
+
+## Basic Usage
+
+The primary workflow involves instantiating the individual mathematical components (Configs), bolting them into a Master Model, and passing that to the `Experiments` or `Training` modules.
+```julia
+using BayesianFootball
+const PreGame = BayesianFootball.Models.PreGame
+
+# 1. Instantiate the Components (The Lego Blocks)
+inter_cfg = PreGame.GlobalInterception()
+disp_cfg  = PreGame.HomeAwayDispersion() 
+ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
+dyn_cfg   = PreGame.MultiScaleGRW()
+kap_cfg   = PreGame.GlobalKappa() # Only needed for the xG Model
+
+# 2. Build the Master Model
+model_xg = PreGame.DynamicXGModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg
+)
+
+# 3. Pass to the pipeline!
+# (The Experiments module handles the Turing AD compilation internally)
+task = ExperimentTask(ds, exp_config)
+results = BayesianFootball.Experiments.run_experiment(task)
+```
+
+## 📦 Component-Driven Architecture
+
+The engine is built on standardizing the inputs and outputs of sub-models. By using Julia's Multiple Dispatch, the master Turing engine (`build_xg_engine`) doesn't care *how* you calculate Home Advantage, as long as the component returns an array of shifts.
+
+* **Interception (`interception.jl`)**: The global baseline scoring rate (μ).
+* **Dispersion (`dispersion.jl`)**: Controls the variance/spread of the `RobustNegativeBinomial` likelihoods. Can be Global or Home/Away split.
+* **Home Advantage (`home_advantage.jl`)**: Can be a single flat scalar, or a deeply Hierarchical Non-Centered parameter per team.
+* **Dynamics (`dynamics.jl`)**: The Time-Series engine. Currently implements a `MultiScaleGRW` (Gaussian Random Walk) with three distinct speeds (baseline, season, recent form).
+* **Kappa (`kappa.jl`)**: Specifically for the xG Model. Learns the conversion rate to scale True Expected Goals into Actual Goals.
+
+---
+
+## 🧮 Feature Processing & AD-Safety
+
+Before data enters the Turing engine, it is processed into a `FeatureSet`. Because Automatic Differentiation (AD) engines like ReverseDiff crash when they encounter `missing` values or `NaN`s in the wrong places, the Features layer enforces strict type safety:
+
+1. **Flattening & Indexing:** DataFrames are converted into heavily optimized, flat `Vector{Int}` arrays (`flat_home_ids`, `time_indices`).
+2. **The `coalesce` Fallback:** For leagues missing historical xG data, `missing` values are safely coerced to `NaN` using `coalesce.(data, NaN)`.
+3. **Dynamic Likelihood Splitting:** The master engine dynamically finds `idx_xg = findall(x -> !isnan(x), home_xg)`. It then routes matches *with* xG through a Gamma likelihood, and matches *without* xG straight to the Negative Binomial likelihood. 
+4. **Gradient Protection:** Uses `clamp` and `Turing.@addlogprob! -Inf` to gracefully reject samples where the math explodes (e.g., `exp(200)`), preventing the entire MCMC chain from crashing.
+
+---
+
+## 🛠️ How to Add a New Component
+
+Adding a new architectural piece (like a new way to calculate Team Strength) requires zero changes to the master engine. You just need to implement a Config, a Builder, and an Extractor.
+
+**Step 1: Define the Config**
+Create a struct subtyping the relevant abstract type in `types.jl`.
+```julia
+Base.@kwdef struct FlatTeamStrength <: AbstractDynamicsConfig
+    σ_strength::ContinuousUnivariateDistribution = Normal(0, 1)
+end
+```
+
+**Step 2: Define the Turing Builder**
+Write the math using the `@model` macro. Ensure it returns the format the master engine expects (e.g., a NamedTuple of `(; α, β)` for Dynamics).
+```julia
+@model function build_dynamics(config::FlatTeamStrength, n_teams::Int, ...)
+    # Sample your parameters
+    σ ~ config.σ_strength
+    α_raw ~ filldist(Normal(0,1), n_teams)
+    
+    # Do the math
+    α_team = α_raw .* σ
+    
+    # Return it!
+    return (; α = α_team, β = reverse(α_team)) # Example logic
+end
+```
+
+**Step 3: Define the Extractor**
+Tell the system how to pull your specific variables out of the `MCMCChains` object during inference.
+```julia
+function extract_dynamics(chain::Chains, ::FlatTeamStrength, prefix::String, ...)
+    # Pull "dyn.σ_strength" out of the chain and format it
+    # ...
+    return (; α = formatted_matrix, β = formatted_matrix)
+end
+```
+
+You can now instantly inject `dyn_cfg = FlatTeamStrength()` into your master model!
+
+---
+
+## 📂 Directory Structure Reference
+```text
+src/Models/PreGame/
+├── pregame-module.jl          # Top-level module: imports Turing and components
+├── types.jl                   # Abstract Contracts and Master Structs
+├── common.jl                  # Shared helpers
+├── grw_helpers.jl             # Mathematical utilities for Random Walks
+├── components/                # The Mathematical Lego Blocks
+│   ├── interception.jl        
+│   ├── dispersion.jl          
+│   ├── home_advantage.jl      
+│   ├── kappa.jl               
+│   └── dynamics.jl            # Time-series / Team Strength logic
+└── engines/                   # The Master Assembly Lines
+    ├── goals_engine.jl        # Puts components together for Goals
+    └── xg_engine.jl           # Puts components together for xG
+```
