@@ -161,8 +161,8 @@ function extract_parameters(
 
     # Delegate to Components
     μ_v = extract_interception(chain, model.interception_config)
-    disp_nt = extract_dispersion(chain, model.disp_config)
-    ha_mat  = extract_home_advantage(chain, model.ha_config, n_teams)
+    disp_nt = extract_dispersion(chain, model.dispersion_config)
+    ha_mat  = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     kap_mat = extract_kappa(chain, model.kappa_config, n_teams)
     dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 

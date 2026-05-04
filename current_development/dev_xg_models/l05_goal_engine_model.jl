@@ -102,3 +102,48 @@ function run_experiment_task(task::ExperimentTask)
 end
 
 
+function fetch_todays_matches(segment::Data.DataTournemantSegment)::AbstractDataFrame
+    db_config = Data.DBConfig("postgresql://admin:supersecretpassword@100.124.38.117:5432/sofascrape_db")
+    db_conn = Data.connect_to_db(db_config)
+    
+    try
+        # Pass the connection down
+        data_store = fetch_todays_matches(db_conn, segment)
+        return data_store
+    finally
+        # Always close the connection, even if an error occurs during fetching
+        close(db_conn) 
+    end
+end
+
+function fetch_todays_matches(db_conn::LibPQ.Connection, segment::Data.DataTournemantSegment)::AbstractDataFrame
+    # 1. Removed the stray semicolon before the final AND
+    query = """
+    SELECT 
+        match_id,
+        home_team,
+        away_team,
+        round,
+        tournament_id,
+        season_id
+    FROM 
+        events
+    WHERE 
+        status_type = 'notstarted'
+        AND start_timestamp >= EXTRACT(EPOCH FROM CURRENT_DATE)
+        AND start_timestamp < EXTRACT(EPOCH FROM CURRENT_DATE + INTERVAL '1 day')
+        AND tournament_id = ANY(\$1);
+    """
+
+    # 2 & 3. Fixed variable name (db_conn) and passed the tournament IDs parameter
+    # (Assuming Data.tournament_ids(segment) returns a Vector of IDs)
+    t_ids = Data.tournament_ids(segment)
+    df = DataFrame(LibPQ.execute(db_conn, query, (t_ids,)))
+
+    # 4. Simplified column assignment using pure broadcasting
+    df.match_week .= 999
+    df.match_date .= today()
+
+    return df
+end
+
