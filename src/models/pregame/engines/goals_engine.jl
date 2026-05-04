@@ -19,11 +19,11 @@
     # ==========================================
     # 1. LOAD THE COMPONENTS
     # ==========================================
-    inter = to_submodel(build_interception(config.interception_config))
-    disp  = to_submodel(build_dispersion(config.dispersion_config))
-    ha    = to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
+    inter ~ to_submodel(build_interception(config.interception_config))
+    disp  ~ to_submodel(build_dispersion(config.dispersion_config))
+    ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     # dyn returns the FULL matrices: dyn.α and dyn.β
-    dyn   = to_submodel(build_dynamics(config.dynamics_config, n_teams, n_history, n_target))
+    dyn   ~ to_submodel(build_dynamics(config.dynamics_config, n_teams, n_history, n_target))
 
     # ==========================================
     # 2. VECTORIZED INDEXING

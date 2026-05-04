@@ -31,11 +31,11 @@ using Distributions
     ν_xg ~ config.ν_xg
 
     # Load the Lego Blocks using the native `~` operator
-    inter = to_submodel(build_interception(config.interception_config))
-    disp = to_submodel(build_dispersion(config.disp_config))
-    ha   = to_submodel(build_home_advantage(config.ha_config, n_teams))
-    kap  = to_submodel(build_kappa(config.kappa_config, n_teams))
-    dyn  = to_submodel(build_dynamics(config.dynamics_config, n_teams, n_history, n_target))
+    inter ~ to_submodel(build_interception(config.interception_config))
+    disp ~ to_submodel(build_dispersion(config.disp_config))
+    ha   ~ to_submodel(build_home_advantage(config.ha_config, n_teams))
+    kap  ~ to_submodel(build_kappa(config.kappa_config, n_teams))
+    dyn  ~ to_submodel(build_dynamics(config.dynamics_config, n_teams, n_history, n_target))
 
     # ==========================================
     # 2. VECTORIZED INDEXING

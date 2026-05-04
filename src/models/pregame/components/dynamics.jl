@@ -133,14 +133,14 @@ end
 # ==========================================
 @model function build_dynamics(config::MultiScaleGRW, n_teams::Int, n_history::Int, n_target::Int)
     # We call your helper once for Attack (α)
-    α = to_submodel(_grw_trajectory(
+    α ~ to_submodel(_grw_trajectory(
         n_teams, n_history, n_target, 
         config.z₀, config.zₛ, config.zₖ, 
         config.α_σ₀, config.α_σₛ, config.α_σₖ
   ))
 
     # We call your helper again for Defense (β)
-    β = to_submodel(_grw_trajectory(
+    β ~ to_submodel(_grw_trajectory(
         n_teams, n_history, n_target, 
         config.z₀, config.zₛ, config.zₖ, 
         config.β_σ₀, config.β_σₛ, config.β_σₖ
