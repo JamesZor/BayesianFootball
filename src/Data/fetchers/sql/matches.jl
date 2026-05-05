@@ -37,6 +37,7 @@ function process_data(df::DataFrame, ::MatchesData)
     add_match_week_column!(df)
 
     transform!(df, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
+    transform!(df, :match_week => ByRow(w -> cld(w, 2)) => :match_biweek)
     
     # Drop the raw timestamp as we have the parsed components
     select!(df, Not(:start_timestamp))
