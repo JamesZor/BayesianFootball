@@ -767,3 +767,54 @@ ou_comparison = generate_odds_comparison(ds, [
 ], todays_matches)
 
 display(ou_comparison)
+
+
+
+
+
+#=
+The Master Blueprint: Transitioning to a Hybrid Quant Model
+
+1. The "Favorite" Problem (Regression to the Mean)
+
+    The Issue: Pure statistical models naturally pull extreme teams (like Shamrock Rovers) back toward the league average. Your model will constantly underprice heavy favorites because it refuses to believe a team can be that much better than everyone else based purely on xG.
+
+    The Fix: Market-Implied Priors.
+
+2. The Market-Implied Prior (The Ultimate Shortcut)
+
+    The Concept: Instead of initializing team strengths from scratch (a blank slate), you "steal" the bookmaker's homework. You use Pinnacle's opening lines as your starting point.
+
+    The Implementation: You build an inverse solver (using Optim.jl) that reverse-engineers Pinnacle's vig-free 1X2 odds into Home and Away Expected Goals (λ). You feed that log-ratio directly into your Turing model as z_init. Your xG data then audits the market rather than fighting it.
+
+3. The "Under Bias" Problem (Totals & Variance)
+
+    The Issue: Your model systematically predicts fewer goals than Pinnacle, making the Over 2.5 look like a bad bet. We proved that simply adding more variance (fatter tails via the Negative Binomial log_r parameter) "hollows out" the middle of the distribution, hurting exact 2-goal and 3-goal predictions.
+
+    The Fix: You cannot treat Home Goals and Away Goals as completely independent. You must add Game State Correlation.
+
+4. The Dixon-Coles Adjustment (Bivariate Correlation)
+
+    The Concept: Teams change their behavior based on the scoreline. A 1-1 game late in the match has a higher probability of ending 1-1 (teams settle for a draw) or seeing a 3rd goal (teams push for a win) than independent math suggests.
+
+    The Implementation: You use your custom DixonColesNegBinLogGroup code. It applies a ρ (rho) penalty/boost specifically to the 0-0, 1-0, 0-1, and 1-1 scorelines. Note: A ρ value of ~0.10 is not a failure; it is exactly the industry standard and creates massive swings in betting odds.
+
+5. The Production Pipeline (SQL & Betfair)
+
+    The Issue: Flat files and CSVs will break as your experiments get more complex.
+
+    The Fix: Move to a relational SQL database. Track events, markets, runners, and price_ticks.
+
+    The Betting Strategy: Use Tuesday Opening Lines to set your model's prior. Run your inference. Compare your model's final output against the Saturday Betfair VWAP (Volume-Weighted Average Price) to find your edge.
+
+🛑 Your Immediate Next Steps
+
+If you are feeling burnt out, it is because you are trying to boil the ocean. To break the cycle of "just one more feature," do this:
+
+    Code Freeze: Do not write a single new line of Turing code this week.
+
+    Scope Reduction: Stop looking at Match Winners and Asian Handicaps. Pick one market (e.g., Over/Under 2.5).
+
+    Run a Blind Backtest: Take your model exactly as it is right now and run it against the last two years of historical closing odds. You need a baseline ROI (Return on Investment). You might be surprised to find that your current "broken" model is actually highly profitable in specific niches (like betting Underdogs).
+=#
+
