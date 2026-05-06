@@ -78,3 +78,217 @@ res    = Experiments.run_experiment(task_base.ds,    task_base.config)
 Experiments.save_experiment(res)
 ###############
 
+latents = Experiments.extract_oos_predictions(ds, res)
+
+
+
+saved_folders = Experiments.list_experiments(save_dir; data_dir="")
+# saved_folders = Experiments.list_experiments("exp/grw_basics_pl_ch"; data_dir="./data")
+
+# Load them all into a list
+loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+for folder in saved_folders
+    try
+        res = Experiments.load_experiment(folder)
+        push!(loaded_results, res)
+    catch e
+        @warn "Could not load $folder: $e"
+    end
+end
+
+baker = BayesianFootball.Signals.BayesianKelly()
+my_signals = [baker]
+
+
+market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+
+a = market_config.markets[[1,2,4,5,6,7,8,9,10]]
+cfgM = Data.MarketConfig(a)
+ledger = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+    loaded_results, 
+    my_signals; 
+    market_config = cfgM
+)
+
+tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+
+
+model_names = unique(tearsheet.selection)
+
+model_names = model_names
+
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet, :selection => ByRow(isequal(m_name)))
+    show(sub)
+end
+
+
+expr = loaded_results[1]
+
+expr.training_results[2][1]
+
+
+# ------
+
+using DataFrames
+using Statistics
+
+function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
+    # Initialize an empty DataFrame
+    df = DataFrame(Fold = Int[])
+    
+    # FIX: Explicitly tell Julia these columns can contain missing values
+    for p in target_params
+        df[!, Symbol(string(p), "_mean")] = Union{Missing, Float64}[]
+        df[!, Symbol(string(p), "_std")]  = Union{Missing, Float64}[]
+    end
+    
+    # Iterate through each fold's MCMCChain
+    for (fold_idx, chain) in enumerate(chains)
+        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
+        
+        for p in target_params
+            # Check if the parameter exists in the chain
+            if p in keys(chain)
+                samples = vec(chain[p]) 
+                row_dict[Symbol(string(p), "_mean")] = mean(samples)
+                row_dict[Symbol(string(p), "_std")]  = std(samples)
+            else
+                row_dict[Symbol(string(p), "_mean")] = missing
+                row_dict[Symbol(string(p), "_std")]  = missing
+            end
+        end
+        
+        push!(df, row_dict) # This will now safely accept the missing values!
+    end
+    
+    return df
+end
+
+
+
+params_to_track_xg = [
+    Symbol("σ_market"), # NEW: Variance/spread of team conversion abilities
+    Symbol("inter.μ"), 
+    Symbol("disp.log_r"), 
+    Symbol("ha.γ_global"),
+]
+
+all_chains = [res[1] for res in expr.training_results] 
+# 3. Generate the Stability Report
+stability_df_xg = check_parameter_stability(all_chains, params_to_track_xg)
+
+
+
+
+# ----
+
+println("============================================================")
+println(" 🚀 Running Batch RQR Evaluation...")
+println("============================================================")
+
+# 1. Initialize an empty array to hold our NamedTuple rows
+flat_rows = []
+
+# 2. Loop through all loaded experiments
+for (i, exp) in enumerate(loaded_results)
+    model_name = exp.config.name
+  print("[$i/$(length(loaded_results))] Evaluating: $(model_name) ... ")
+    
+    try
+        # Compute the nested RQR struct
+        rqr_data = Evaluation.compute_metric(Evaluation.RQR(), exp, ds)
+        
+        # Flatten it using the magic unroller
+        flat_row = Evaluation.to_dataframe_row(exp, rqr_data)
+        
+        # Save to our list
+        push!(flat_rows, flat_row)
+        println("✅ Done")
+    catch e
+        println("❌ Failed")
+        @warn "Error evaluating $model_name: $e"
+    end
+end
+
+# 3. Build the Master DataFrame
+master_rqr_df = DataFrame(flat_rows)
+
+sort!(master_rqr_df, :model)
+
+summary_df = select(master_rqr_df, 
+    :model, 
+    :rqr_all_mean, 
+    :rqr_all_std, 
+    :rqr_all_skewness, 
+    :rqr_all_kurtosis, 
+    :rqr_all_shapiro_w,
+    :rqr_all_shapiro_p
+)
+
+flat_rows_glm = []
+
+for (i, exp) in enumerate(loaded_results)
+    print("Evaluating GLM Edge for $(exp.config.name)... ")
+    
+    glm_data = Evaluation.compute_metric(Evaluation.GLMEdge(), exp, ds)
+    flat_row = Evaluation.to_dataframe_row(exp, glm_data)
+    
+    push!(flat_rows_glm, flat_row)
+    println("Done")
+end
+
+master_glm_df = DataFrame(flat_rows_glm)
+sort!(master_glm_df, :model)
+
+# Let's just view the most important columns: The Spread Coef and its P-Value
+display(select(master_glm_df, 
+     :model, 
+    :glmedge_intercept_coef,
+    :glmedge_spread_fair_coef, 
+    :glmedge_spread_fair_p_value,
+    :glmedge_n_obs
+))
+
+
+
+
+flat_rows_ll = []
+
+for (i, exp) in enumerate(loaded_results)
+    model_name = exp.config.name
+    print("[$i/$(length(loaded_results))] Evaluating LogLoss for: $(model_name) ... ")
+    
+    try
+        # Compute the LogLoss struct
+        ll_data = Evaluation.compute_metric(Evaluation.LogLoss(), exp, ds)
+        
+        # Flatten it
+        flat_row = Evaluation.to_dataframe_row(exp, ll_data)
+        push!(flat_rows_ll, flat_row)
+        println("✅ Done")
+    catch e
+        println("❌ Failed")
+        @warn "Error evaluating $model_name: $e"
+    end
+end
+
+# Build DataFrame
+master_ll_df = DataFrame(flat_rows_ll)
+sort!(master_ll_df, :model)
+
+println("\n============================================================")
+println(" 📉 MASTER LOGLOSS COMPARISON (LOWER IS BETTER)")
+println(" Note: A negative 'diff_ll' means your model beat the bookmaker!")
+println("============================================================")
+
+display(select(master_ll_df, 
+    :model, 
+    :logloss_overall_model_ll, 
+    :logloss_overall_market_ll, 
+    :logloss_overall_diff_ll
+))
+
