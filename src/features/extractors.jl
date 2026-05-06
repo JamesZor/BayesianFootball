@@ -221,7 +221,7 @@ end
 
 
 
-function BayesianFootball.Features.add_feature!(F_data::Dict, ::Val{:market_lambda}, ordered_ids, team_map::Dict, ds)
+function add_feature!(F_data::Dict, ::Val{:market_lambda}, ordered_ids, team_map::Dict, ds)
     # 1. Filter the odds data FIRST
     # Converting to a Set is critical for performance so the 'in' check is instant
     id_set = Set(ordered_ids)
