@@ -25,7 +25,7 @@ function create_CVsplit_training_config(ds::Data.DataStore, target_seasons::Vect
         tournament_groups = [Data.tournament_ids(ds.segment)],
         target_seasons = target_seasons,
         history_seasons = 1,
-        dynamics_col = :match_week,
+        dynamics_col = :match_month,
         warmup_period = 0,
         stop_early = true
     )

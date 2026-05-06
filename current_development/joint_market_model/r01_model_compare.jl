@@ -84,7 +84,7 @@ using DataFrames
 using Statistics
 using StatsPlots # Used for the EDA visualisations
 
-# 1. Isolate the 2025 Odds Data
+# 1. Isolate the 
 matches_2025 = subset(ds.matches, :season => ByRow(isequal("2025")))
 odds_2025 = subset(ds.odds, :match_id => ByRow(in(matches_2025.match_id)))
 
@@ -121,6 +121,29 @@ describe(analysis_df[:, [:log_diff_a]])
 
 
 #=
+
+market_goals (month)
+--- Summary of Home Log Differences ---
+
+julia> describe(analysis_df[:, [:log_diff_h]])
+1×7 DataFrame
+ Row │ variable    mean       min        median     max       nmissing  eltype   
+     │ Symbol      Float64    Float64    Float64    Float64   Int64     DataType 
+─────┼───────────────────────────────────────────────────────────────────────────
+   1 │ log_diff_h  0.0164489  -0.439191  0.0226689  0.327871         0  Float64
+
+julia> println("\n--- Summary of Away Log Differences ---")
+
+--- Summary of Away Log Differences ---
+
+julia> describe(analysis_df[:, [:log_diff_a]])
+1×7 DataFrame
+ Row │ variable    mean        min        median      max      nmissing  eltype   
+     │ Symbol      Float64     Float64    Float64     Float64  Int64     DataType 
+─────┼────────────────────────────────────────────────────────────────────────────
+   1 │ log_diff_a  0.00893412  -0.247067  0.00813164  0.54612         0  Float64
+
+
 xg model 
 --- Summary of Home Log Differences ---
 
@@ -478,6 +501,174 @@ julia> println("\n--- AWAY Log Differences ---")
 julia> println("p-value: ", round(pvalue(ks_a), digits=4))
 p-value: 0.9959
 =#
+
+
+# test for grouping of the winner_code
+
+
+
+using DataFrames
+using Statistics
+using HypothesisTests
+
+# Abstract function to print a clean console table of stats per group
+function print_group_stats(df::DataFrame, target_col::Symbol, group_col::Symbol)
+    outcomes = sort(unique(df[!, group_col]))
+    
+    # Print Headers
+    println(rpad("Outcome", 12), rpad("Mean", 9), rpad("Median", 9), rpad("StdDev", 9), rpad("T-Test(p)", 12), "Normality_JB(p)")
+    println("-"^65)
+    
+    for g in outcomes
+        # Extract subset data
+        subset_data = df[df[!, group_col] .== g, target_col]
+        
+        m = round(mean(subset_data), digits=4)
+        med = round(median(subset_data), digits=4)
+        sd = round(std(subset_data), digits=4)
+        
+        # T-Test: Is the mean residual statistically different from 0? 
+        # (p < 0.05 means YES, there is a distinct market bias for this outcome)
+        tt_p = round(pvalue(OneSampleTTest(subset_data)), digits=4)
+        
+        # Jarque-Bera Test: Is the distribution normal?
+        # (p < 0.05 means NO, there are extreme fat tails/outliers)
+        jb_p = round(pvalue(JarqueBeraTest(subset_data)), digits=4)
+        
+        # Map outcome codes for readability
+        label = g == 1 ? "1: Home" : (g == 2 ? "2: Away" : "3: Draw")
+        
+        println(rpad(label, 12), rpad(m, 9), rpad(med, 9), rpad(sd, 9), rpad(tt_p, 12), jb_p)
+    end
+end
+
+function run_headless_eda(eda_df::DataFrame)
+    # 1. ENGINEER THE TOTAL GOALS (PACE) FEATURES
+    # We use the raw lambdas here, not log-lambdas, for absolute goals difference
+    eda_df.model_total = eda_df.model_λ_h_mean .+ eda_df.model_λ_a_mean
+    eda_df.market_total = eda_df.λ_home .+ eda_df.λ_away
+    eda_df.diff_total = eda_df.market_total .- eda_df.model_total
+    
+    println("\n=================================================================")
+    println(" 1. TOTAL GOALS (PACE) BIAS CHECK")
+    println("=================================================================")
+    display(describe(eda_df[:, [:model_total, :market_total, :diff_total]]))
+    
+    # Test if the Market expects significantly more/fewer goals than the Model overall
+    tt_total = OneSampleTTest(eda_df.diff_total)
+    jb_total = JarqueBeraTest(eda_df.diff_total)
+    
+    println("\n-> Is the Market biased on Total Goals? (T-Test p-value): ", round(pvalue(tt_total), digits=4))
+    if pvalue(tt_total) < 0.05
+        println("   RESULT: REJECT NULL. The Market systematically expects a different pace than the Model.")
+    else
+        println("   RESULT: FAIL TO REJECT. Market and Model agree on overall league pace.")
+    end
+    
+    println("-> Are the Pace differences Normal? (JB p-value):       ", round(pvalue(jb_total), digits=4))
+
+    println("\n=================================================================")
+    println(" 2. HOME LOG-RESIDUALS BY MATCH OUTCOME")
+    println("=================================================================")
+    print_group_stats(eda_df, :log_diff_h, :winner_code)
+
+    println("\n=================================================================")
+    println(" 3. AWAY LOG-RESIDUALS BY MATCH OUTCOME")
+    println("=================================================================")
+    print_group_stats(eda_df, :log_diff_a, :winner_code)
+end
+
+
+
+analysis_df_matches= innerjoin(analysis_df, matches , on=:match_id)
+
+# Execute the script on your dataframe
+run_headless_eda(analysis_df_matches)
+
+
+#=
+julia> run_headless_eda(analysis_df_matches)                                                                                          
+                                                                                                                                      
+=================================================================                                                                     
+ 1. TOTAL GOALS (PACE) BIAS CHECK                                                                                                     
+=================================================================                                                                     
+3×7 DataFrame                                                                                                                         
+ Row │ variable      mean       min        median     max       nmissing  eltype                                                      
+     │ Symbol        Float64    Float64    Float64    Float64   Int64     DataType                                                    
+─────┼─────────────────────────────────────────────────────────────────────────────                                                   
+   1 │ model_total   2.42085     1.88752   2.42095    3.22739          0  Float64                                                     
+   2 │ market_total  2.4967      1.92836   2.47972    3.20496          0  Float64                                                     
+   3 │ diff_total    0.0758463  -0.463504  0.0767566  0.598324         0  Float64                                                     
+                                                                                                                                      
+-> Is the Market biased on Total Goals? (T-Test p-value): 0.0                                                                         
+   RESULT: REJECT NULL. The Market systematically expects a different pace than the Model.                                            
+-> Are the Pace differences Normal? (JB p-value):       0.8926                                                                        
+                                                                                                                                      
+=================================================================                                                                     
+ 2. HOME LOG-RESIDUALS BY MATCH OUTCOME                                                                                               
+=================================================================                                                                     
+Outcome     Mean     Median   StdDev   T-Test(p)   Normality_JB(p)                                                                    
+-----------------------------------------------------------------                                                                     
+1: Home     0.0217   0.0125   0.124    0.1292      0.7845                                                                             
+2: Away     -0.0669  -0.0757  0.1482   0.0022      0.3236                                                                             
+3: Draw     0.0121   0.0331   0.1452   0.5492      0.329                                                                              
+                                                                                                                                      
+=================================================================                                                                     
+ 3. AWAY LOG-RESIDUALS BY MATCH OUTCOME                                                                                               
+=================================================================
+Outcome     Mean     Median   StdDev   T-Test(p)   Normality_JB(p)
+-----------------------------------------------------------------
+1: Home     0.0031   0.006    0.1492   0.8564      0.8637
+2: Away     0.0807   0.0655   0.1631   0.0009      0.0817
+3: Draw     0.0558   0.0427   0.1472   0.0086      0.8727
+=#
+
+
+function check_raw_lambda_bias(df::DataFrame)
+    # Calculate the raw differences (Market minus Model)
+    df.diff_home  = df.λ_home .- df.model_λ_h_mean
+    df.diff_away  = df.λ_away .- df.model_λ_a_mean
+    df.diff_total = (df.λ_home .+ df.λ_away) .- (df.model_λ_h_mean .+ df.model_λ_a_mean)
+    
+    metrics = [
+        ("HOME GOALS", :λ_home, :model_λ_h_mean, :diff_home),
+        ("AWAY GOALS", :λ_away, :model_λ_a_mean, :diff_away),
+        ("TOTAL GOALS", :market_total, :model_total, :diff_total) # Assuming market_total/model_total exist from earlier
+    ]
+    
+    # Just in case they don't exist yet
+    df.market_total = df.λ_home .+ df.λ_away
+    df.model_total = df.model_λ_h_mean .+ df.model_λ_a_mean
+    
+    println("\n=================================================================")
+    println(" RAW LAMBDA BIAS: MARKET vs MODEL (OVERALL)")
+    println("=================================================================")
+    println(rpad("Metric", 15), rpad("Market Mean", 15), rpad("Model Mean", 15), rpad("Diff (Bias)", 15), "T-Test (p-value)")
+    println("-"^75)
+    
+    for (name, mkt_col, mod_col, diff_col) in metrics
+        mkt_mean = round(mean(df[!, mkt_col]), digits=4)
+        mod_mean = round(mean(df[!, mod_col]), digits=4)
+        diff_mean = round(mean(df[!, diff_col]), digits=4)
+        
+        # T-Test to see if the difference is statistically significant from 0
+        tt_p = round(pvalue(OneSampleTTest(df[!, diff_col])), digits=4)
+        
+        println(rpad(name, 15), rpad(mkt_mean, 15), rpad(mod_mean, 15), rpad(diff_mean, 15), tt_p)
+    end
+    
+    println("-"^75)
+    println("* Note: A positive Diff means the Market expects MORE goals than your Model.")
+    println("* Note: A p-value < 0.05 proves the bias is structural, not random noise.\n")
+end
+
+check_raw_lambda_bias(eda_df)
+
+
+
+
+
+# Test for the rho 
 using GLM
 
 # 1. Create the fundamental features from the market lambdas

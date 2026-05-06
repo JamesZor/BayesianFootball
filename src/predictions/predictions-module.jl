@@ -31,6 +31,7 @@ include("./score_computation/dixon_coles_negbin.jl")
 include("market_inference/1x2.jl")
 include("market_inference/over_under.jl")
 include("market_inference/btts.jl")
+include("market_inference/double_chance.jl")
 
 # 4. Main Orchestrator
 include("inference.jl")
