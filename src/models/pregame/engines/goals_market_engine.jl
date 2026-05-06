@@ -32,7 +32,7 @@
 
     # Market Variance: How much should we trust the market?
     # If σ is small, the model tightly hugs the market. If large, it relies more on goals.
-    σ_market ~ truncated(Normal(0.1, 0.2), lower=0.01) 
+    σ_market ~ config.market_σ
 
     # ==========================================
     # 2. VECTORIZED INDEXING
