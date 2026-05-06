@@ -67,8 +67,8 @@
     # ==========================================
     
     # A. Goal Likelihood (Always runs)
-    home_goals ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.h, λ_h))
-    away_goals ~ arraydist(BayesianFootball.MyDistributions.RobustNegativeBinomial.(disp.a, λ_a))
+    home_goals ~ arraydist(MyDistributions.RobustNegativeBinomial.(disp.h, λ_h))
+    away_goals ~ arraydist(MyDistributions.RobustNegativeBinomial.(disp.a, λ_a))
 
     # B. Market Likelihood (Only for matches where we scraped/solved the odds)
     if !isempty(idx_market)
