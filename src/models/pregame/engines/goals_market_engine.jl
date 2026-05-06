@@ -85,7 +85,7 @@ function Features.required_features(model::DynamicMarketGoalsModel)
     return [:team_ids, :goals, :market_lambda] 
 end
 
-function build_turing_model(config::DynamicMarketGoalsModel, feature_set::BayesianFootball.Features.FeatureSet)
+function build_turing_model(config::DynamicMarketGoalsModel, feature_set::Features.FeatureSet)
     data = feature_set.data
     
     n_teams   = Int(data[:n_teams])
@@ -117,7 +117,7 @@ function build_turing_model(config::DynamicMarketGoalsModel, feature_set::Bayesi
     )
 end
 
-function BayesianFootball.Models.PreGame.extract_parameters(
+function extract_parameters(
     model::DynamicMarketGoalsModel, 
     df::AbstractDataFrame, 
     feature_set::Features.FeatureSet,
