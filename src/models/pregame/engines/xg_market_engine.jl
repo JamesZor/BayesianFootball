@@ -106,7 +106,7 @@ end
 # ==========================================
 # 2. THE BUILDER
 # ==========================================
-function Features.required_features(model::DynamicXGMarketModel)
+function Features.required_features(model::DynamicMarketXGModel)
     return [:team_ids, :goals, :xg, :market_lambda] 
 end
 

@@ -146,6 +146,18 @@ model_gxg = PreGame.DynamicXGModel(
 )
 
 
+model_gxgm = PreGame.DynamicMarketXGModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg
+)
+
+
+
+
+
 
 save_dir::String = "./data/dev_inverse_model_run1/"
 
@@ -183,7 +195,7 @@ end
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
     loaded_results, 
-  [BayesianFootball.Signals.BayesianKelly()]; 
+  [BayesianFootball.Signals.BayesianKelly(), BayesianFootball.Signals.BayesianKelly(min_edge=0.04), BayesianFootball.Signals.BayesianKelly(min_edge=0.02)]; 
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
 
