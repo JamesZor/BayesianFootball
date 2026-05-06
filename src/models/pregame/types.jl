@@ -47,3 +47,15 @@ Base.@kwdef struct DynamicXGModel{
     ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
 end
 
+Base.@kwdef struct DynamicMarketGoalsModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig
+  } <: AbstractNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+    market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+end

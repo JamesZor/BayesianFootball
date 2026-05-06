@@ -29,7 +29,8 @@ include("./components/kappa.jl")
 
 include("./engines/goals_engine.jl")
 include("./engines/xg_engine.jl")
-export DynamicGoalsModel, DynamicXGModel
+include("./engines/goals_market_engine.jl")
+export DynamicGoalsModel, DynamicXGModel, DynamicMarketGoalsModel
 
 ##
 

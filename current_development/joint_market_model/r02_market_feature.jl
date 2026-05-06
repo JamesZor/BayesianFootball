@@ -104,11 +104,12 @@ market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 
 a = market_config.markets[[1,2,4,5,6,7,8,9,10]]
 cfgM = Data.MarketConfig(a)
+
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
     loaded_results, 
     my_signals; 
-    market_config = cfgM
+    market_config = market_config
 )
 
 tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
@@ -229,6 +230,9 @@ summary_df = select(master_rqr_df,
     :rqr_all_shapiro_p
 )
 
+
+# ---
+
 flat_rows_glm = []
 
 for (i, exp) in enumerate(loaded_results)
@@ -292,3 +296,49 @@ display(select(master_ll_df,
     :logloss_overall_diff_ll
 ))
 
+#
+function evaluate_batch_crps(results_array, ds; label="CRPS Evaluation")
+    println("\n============================================================")
+    println(" 🚀 Running Batch CRPS Evaluation: $label")
+    println("============================================================")
+
+    flat_rows_crps = []
+
+    # Loop through all provided experiments
+    for (i, exp) in enumerate(results_array)
+        model_name = exp.config.name
+        print("[$i/$(length(results_array))] Evaluating: $(model_name) ... ")
+        
+        try
+            crps_data = Evaluation.compute_metric(Evaluation.CRPS(), exp, ds)
+            flat_row = Evaluation.to_dataframe_row(exp, crps_data)
+            
+            push!(flat_rows_crps, flat_row)
+            println("✅ Done")
+        catch e
+            println("❌ Failed")
+            @warn "Error evaluating $model_name: $e"
+        end
+    end
+
+    # Build the Master DataFrame
+    master_crps_df = DataFrame(flat_rows_crps)
+
+    if nrow(master_crps_df) > 0
+        # Sort by model name to keep it organized
+        sort!(master_crps_df, :model)
+
+        println("\n============================================================")
+        println(" 📊 MASTER CRPS COMPARISON: $label")
+        println(" Note: LOWER is BETTER")
+        println("============================================================")
+        display(master_crps_df)
+    else
+        println("⚠️ No results successfully evaluated.")
+    end
+    
+    return master_crps_df
+end
+
+
+df_long_run = evaluate_batch_crps(loaded_results, ds, label="test_basic")

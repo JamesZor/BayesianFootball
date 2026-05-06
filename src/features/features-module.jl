@@ -13,7 +13,7 @@ using ..TypesInterfaces
 # ...and on Models for the concrete model types and their contract methods.
 # using ..Models: required_mapping_keys
 
-
+using Base.Threads
 export Vocabulary, FeatureSet, create_vocabulary, create_features, get_feature
 
 
@@ -23,6 +23,7 @@ const REQUIRED_MATCH_COLS = [
 ]
 
 # Include the separated logic files.
+include("./market_inverse_utils.jl")
 include("./extractors.jl")
 include("./model_requirements.jl")
 include("./map_builders.jl")

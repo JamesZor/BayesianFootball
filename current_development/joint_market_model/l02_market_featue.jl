@@ -377,7 +377,7 @@ end
 function BayesianFootball.Models.PreGame.extract_parameters(
     model::DynamicMarketGoalsModel, 
     df::AbstractDataFrame, 
-    feature_set::FeatureSet,
+    feature_set::BayesianFootball.Features.FeatureSet,
     chain::Chains
 )
     # 1. Unpack Metadata
@@ -391,10 +391,10 @@ function BayesianFootball.Models.PreGame.extract_parameters(
     # ==========================================
     # 2. DELEGATE TO COMPONENTS
     # ==========================================
-    inter_v = extract_interception(chain, model.interception_config)
-    disp_nt = extract_dispersion(chain, model.dispersion_config)
-    ha_mat  = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
-    dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
+    inter_v = BayesianFootball.Models.PreGame.extract_interception(chain, model.interception_config)
+    disp_nt = BayesianFootball.Models.PreGame.extract_dispersion(chain, model.dispersion_config)
+    ha_mat  = BayesianFootball.Models.PreGame.extract_home_advantage(chain, model.homeadvantage_config, n_teams)
+    dyn_nt  = BayesianFootball.Models.PreGame.extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 
 
     n_samples = length(inter_v)
