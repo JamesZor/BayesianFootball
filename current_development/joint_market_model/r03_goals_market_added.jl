@@ -171,8 +171,9 @@ task_gm = build_experiment_task(ds, model_gm, "goals_market_biweek", save_dir, c
 
 all_task = [task_g, task_gm, task_gxg]
 
+task_gxgm = build_experiment_task(ds, model_gxgm, "goals_xg_market_biweek", save_dir, cfgs)
 # run_experiment_task.(all_task)
-#
+# run_experiment_task(task_gxgm)
 #
 
 saved_folders = Experiments.list_experiments(save_dir; data_dir="")

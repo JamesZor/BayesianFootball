@@ -169,7 +169,6 @@ function extract_parameters(
     dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 
     # Optional: Extract Variances for diagnostics
-    σ_mkt = haskey(chain, :σ_market) ? Array(chain[:σ_market]) : nothing
 
     n_samples = length(μ_v)
     results = Dict{Int, NamedTuple}()
@@ -209,7 +208,6 @@ function extract_parameters(
             r_a = disp_nt.a,
             true_xg_h = true_xg_h, 
             true_xg_a = true_xg_a,
-            σ_market = σ_mkt
         )
     end
     
