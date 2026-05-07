@@ -127,8 +127,8 @@ model_gm = PreGame.DynamicMarketGoalsModel(
     dynamics_config      = dyn_cfg,
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
-    market_σ = Gamma(1.8, 0.15)
 )
+    market_σ = Gamma(1.8, 0.15)
 
 model_g = PreGame.DynamicGoalsModel(
     interception_config  = inter_cfg,
@@ -175,7 +175,47 @@ task_gxgm = build_experiment_task(ds, model_gxgm, "goals_xg_market_biweek", save
 # run_experiment_task.(all_task)
 # run_experiment_task(task_gxgm)
 #
+#### - 
 
+
+
+kap_loose = PreGame.HierarchicalTeamKappa(
+    κ_base = Normal(1.0, 0.2),
+    σ_κ    = Gamma(1.1,1.5) 
+)
+
+ha_loose = PreGame.HierarchicalTeamHomeAdvantage(
+    γ_base = Normal(0.12, 0.1),
+    σ_γ    = Gamma(1.1, 1.5)
+)
+
+model_gxgm_loose_market = PreGame.DynamicMarketXGModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_loose,
+    kappa_config         = kap_loose,
+    market_σ = Gamma(2, 0.1)
+)
+
+
+model_gm_loose_market = PreGame.DynamicMarketGoalsModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_loose,
+    market_σ = Gamma(2, 0.1)
+)
+
+task_gxgm_loose = build_experiment_task(ds, model_gxgm_loose_market, "g_xg_m_biweek_loose", save_dir, cfgs)
+task_gm_loose = build_experiment_task(ds, model_gm_loose_market, "g_m_biweek_loose", save_dir, cfgs)
+
+task_loose =[ task_gm_loose, task_gxgm_loose]
+
+run_experiment_task.(task_loose)
+
+
+#####
 saved_folders = Experiments.list_experiments(save_dir; data_dir="")
 # saved_folders = Experiments.list_experiments("exp/grw_basics_pl_ch"; data_dir="./data")
 
@@ -192,11 +232,12 @@ end
 
 
 # ----
+  # [BayesianFootball.Signals.BayesianKelly(), BayesianFootball.Signals.BayesianKelly(min_edge=0.04), BayesianFootball.Signals.BayesianKelly(min_edge=0.02)]; 
 
 ledger = BayesianFootball.BackTesting.run_backtest(
     ds, 
     loaded_results, 
-  [BayesianFootball.Signals.BayesianKelly(), BayesianFootball.Signals.BayesianKelly(min_edge=0.04), BayesianFootball.Signals.BayesianKelly(min_edge=0.02)]; 
+  [BayesianFootball.Signals.BayesianKelly()]; 
     market_config = Data.Markets.DEFAULT_MARKET_CONFIG
 )
 
@@ -260,7 +301,7 @@ params_to_track_xg = [
     Symbol("ha.γ_global"),
 ]
 
-expr = loaded_results[2]
+expr = loaded_results[1]
 all_chains = [res[1] for res in expr.training_results] 
 # 3. Generate the Stability Report
 stability_df_xg = check_parameter_stability(all_chains, params_to_track_xg)
