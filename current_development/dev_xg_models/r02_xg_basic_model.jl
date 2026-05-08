@@ -46,12 +46,12 @@ params_to_track_xg = [
     :log_r,
     :κ,          # NEW: Goal scaling factor
     :ν_xg,       # NEW: xG Gamma shape parameter
-    Symbol("α.σ₀"), 
-    Symbol("α.σₛ"), 
-    Symbol("α.σₖ"),
-    Symbol("β.σ₀"), 
-    Symbol("β.σₛ"), 
-    Symbol("β.σₖ")
+    Symbol("dyn.α.σ₀"), 
+    Symbol("dyn.α.α.σₛ"), 
+    Symbol("dyn.α.α.σₖ"),
+    Symbol("dyn.α.β.σ₀"), 
+    Symbol("dyn.α.β.σₛ"), 
+    Symbol("dyn.α.β.σₖ")
 ]
 
 all_chains = [res[1] for res in expr.training_results] 

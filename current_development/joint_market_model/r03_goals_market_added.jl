@@ -212,7 +212,7 @@ task_gm_loose = build_experiment_task(ds, model_gm_loose_market, "g_m_biweek_loo
 
 task_loose =[ task_gm_loose, task_gxgm_loose]
 
-run_experiment_task.(task_loose)
+# run_experiment_task.(task_loose)
 
 
 #####
@@ -253,6 +253,26 @@ for m_name in model_names
     show(sub)
 end
 
+
+ledger_fair = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+    loaded_results, 
+  [BayesianFootball.Signals.BayesianKelly()]; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG,
+    odds_column=:odds_open
+)
+
+tearsheet_fair = BayesianFootball.BackTesting.generate_tearsheet(ledger_fair)
+
+model_names = unique(tearsheet.selection)
+
+model_names = model_names
+
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet_fair, :selection => ByRow(isequal(m_name)))
+    show(sub)
+end
 
 
 # -----
@@ -301,7 +321,7 @@ params_to_track_xg = [
     Symbol("ha.γ_global"),
 ]
 
-expr = loaded_results[1]
+expr = loaded_results[2]
 all_chains = [res[1] for res in expr.training_results] 
 # 3. Generate the Stability Report
 stability_df_xg = check_parameter_stability(all_chains, params_to_track_xg)

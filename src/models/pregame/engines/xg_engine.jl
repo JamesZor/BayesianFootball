@@ -22,6 +22,7 @@ using Distributions
     n_teams::Int,
     n_history::Int,
     n_target::Int,
+    n_seasons::Int,
     config::DynamicXGModel
 )
     # ==========================================
@@ -30,7 +31,7 @@ using Distributions
     # Sample the global baselines directly from the config distributions
     ν_xg ~ config.ν_xg
 
-    inter ~ to_submodel(build_interception(config.interception_config))
+    inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     disp  ~ to_submodel(build_dispersion(config.dispersion_config))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     kap  ~ to_submodel(build_kappa(config.kappa_config, n_teams))
@@ -113,6 +114,7 @@ function build_turing_model(config::DynamicXGModel, feature_set::FeatureSet)
     n_rounds  = Int(data[:n_rounds])
     n_history = Int(data[:n_history_steps])
     n_target  = Int(data[:n_target_steps])
+    n_seasons = n_history + 1
     
     home_ids   = Vector{Int}(data[:flat_home_ids])
     away_ids   = Vector{Int}(data[:flat_away_ids])
@@ -135,7 +137,8 @@ function build_turing_model(config::DynamicXGModel, feature_set::FeatureSet)
         home_goals, away_goals, 
         home_xg, away_xg, 
         idx_xg, idx_no_xg,
-        n_teams, n_history, n_target, config
+        n_teams, n_history, n_target, n_seasons,
+        config
     )
 end
 
