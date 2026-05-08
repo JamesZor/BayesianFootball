@@ -293,6 +293,7 @@ function extract_parameters(
     ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 
+    n_samples = size(chain, 1) * size(chain, 3) # total draws across all chains
     results = Dict{Int, NamedTuple}()
 
 #     # ==========================================

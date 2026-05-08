@@ -103,7 +103,11 @@ using Distributions
 const PreGame = BayesianFootball.Models.PreGame
 
 
-inter_cfg = PreGame.GlobalInterception()
+# inter_cfg = PreGame.GlobalInterception()
+
+
+inter_season_cfg = PreGame.SeasonalInterception()
+
 # Note: Using HomeAwayDispersion based on your previous grid (unless you built a custom TeamDispersion!)
 disp_cfg  = PreGame.HomeAwayDispersion() 
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
@@ -118,7 +122,7 @@ kap_cfg   = PreGame.HierarchicalTeamKappa()
 ## models 
 
 model_gm = PreGame.DynamicMarketGoalsModel(
-    interception_config  = inter_cfg,
+    interception_config  = inter_season_cfg,
     dynamics_config      = dyn_cfg,
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
@@ -157,7 +161,7 @@ ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
 
 cfgs = create_CVsplit_training_config(ds,get_target_seasons_string(ds.segment))
 
-task_g = build_experiment_task(ds, model_g, "goals_biweek", save_dir, cfgs)
+task_g = build_experiment_task(ds, model_g, "goals_biweek_season_mu", save_dir, cfgs)
 # task_gm = build_experiment_task(ds, model_gm, "goals_market_biweek", save_dir, cfgs)
 # task_gxg = build_experiment_task(ds, model_gxg, "goals_xg_biweek", save_dir, cfgs)
 # task_gxgm = build_experiment_task(ds, model_gxgm, "goals_xg_market_biweek", save_dir, cfgs)
