@@ -240,56 +240,36 @@ function Features.required_features(model::DynamicGoalsModel)
     return [:team_ids, :goals] 
 end
 
-function extract_parameters(
-    model::DynamicGoalsModel, 
-    df::AbstractDataFrame, 
-    feature_set::FeatureSet,
-    chain::Chains
-)
+
+function build_turing_model(config::DynamicGoalsModel, feature_set::FeatureSet)
     data = feature_set.data
-    n_teams   = Int(data[:n_teams])
-    n_seasons = Int(data[:n_seasons])
-    team_map  = data[:team_map]
-    # You need a way to map "2026" -> Index 6
-    season_map = data[:season_map] 
-
-    # inter_mat is [Samples, Seasons]
-    inter_mat = extract_interception(chain, model.interception_config, n_seasons)
-    disp_nt   = extract_dispersion(chain, model.dispersion_config)
-    ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
-    dyn_nt    = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, ...)
-
-    results = Dict{Int, NamedTuple}()
-
-    for row in eachrow(df)
-        mid = Int(row.match_id)
-        
-        # 1. Get Correct Indices
-        h_idx = get(team_map, row.home_team, -1)
-        a_idx = get(team_map, row.away_team, -1)
-        
-        # Determine which seasonal intercept to use for this specific match
-        # Fallback to the latest season if not specified (for forecasting)
-        s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
-        
-        # 2. Slice parameters for this match
-        # inter_match is [Samples]
-        inter_match = inter_mat[:, s_idx] 
-        
-        α_h = h_idx > 0 ? dyn_nt.α[h_idx, t_idx, :] : zeros(n_samples)
-        # ... (rest of your existing slicing logic) ...
-
-        # 3. Final Math
-        λ_goals_h = exp.(inter_match .+ γ_h .+ α_h .+ β_a)
-        λ_goals_a = exp.(inter_match .+        α_a .+ β_h)
-
-        results[mid] = (; λ_h = λ_goals_h, λ_a = λ_goals_a, ...)
-    end
     
-    return results
+    n_teams    = Int(data[:n_teams])
+    n_seasons  = Int(data[:n_seasons]) # <--- Ensure your pipeline provides this
+    n_history  = Int(data[:n_history_steps])
+    n_target   = Int(data[:n_target_steps])
+    
+    home_ids   = Vector{Int}(data[:flat_home_ids])
+    away_ids   = Vector{Int}(data[:flat_away_ids])
+    season_ids = Vector{Int}(data[:season_indices]) # <--- NEW
+    time_idxs  = Vector{Int}(data[:time_indices])
+    home_goals = Vector{Int}(data[:flat_home_goals])
+    away_goals = Vector{Int}(data[:flat_away_goals])
+
+    return build_goals_engine(
+        home_ids,
+        away_ids,
+        season_ids,
+        time_idxs,
+        home_goals,
+        away_goals,
+        n_teams,
+        n_seasons,
+        n_history,
+        n_target,
+        config
+    )
 end
-
-
 
 function extract_parameters(
     model::DynamicGoalsModel, 
