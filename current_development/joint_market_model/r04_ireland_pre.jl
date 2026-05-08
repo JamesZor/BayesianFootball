@@ -763,7 +763,7 @@ function run_regime_audit(matches::DataFrame, odds::DataFrame)
     df_o = innerjoin(odds, matches[!, [:match_id, :season]], on=:match_id)
     
     # We will specifically audit the Over 2.5 and Away markets as they are the most sensitive
-    audit_selections = [:over_25, :away, :draw]
+    audit_selections = [:over_15, :over_25, :under_25, :away, :draw]
     
     for sel in audit_selections
         println("\n--- Tracking Selection: $(sel) ---")
