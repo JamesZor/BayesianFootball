@@ -311,7 +311,7 @@ function extract_parameters(
     inter_mat = extract_interception(chain, model.interception_config, n_seasons)
     disp_nt   = extract_dispersion(chain, model.dispersion_config)
     ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
-    dyn_nt    = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, ...)
+    dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 
     results = Dict{Int, NamedTuple}()
 
