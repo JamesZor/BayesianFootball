@@ -8,6 +8,7 @@ using Distributions
     # --- Base Data ---
     home_team_indices::Vector{Int},
     away_team_indices::Vector{Int},
+    season_indices::Vector{Int}, # <--- NEW
     time_indices::Vector{Int},
     home_goals::Vector{Int},
     away_goals::Vector{Int},
@@ -24,6 +25,7 @@ using Distributions
     n_teams::Int,
     n_history::Int,
     n_target::Int,
+    n_seasons::Int,              # <--- NEW
     config::DynamicMarketXGModel
 )
     # ==========================================
@@ -32,7 +34,7 @@ using Distributions
     ν_xg     ~ config.ν_xg
     σ_market ~ config.market_σ
 
-    inter ~ to_submodel(build_interception(config.interception_config))
+    inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     disp  ~ to_submodel(build_dispersion(config.dispersion_config))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     kap   ~ to_submodel(build_kappa(config.kappa_config, n_teams))
@@ -53,11 +55,14 @@ using Distributions
     κ_h_flat = view(kap, home_team_indices)
     κ_a_flat = view(kap, away_team_indices)
 
+
+    inter_match = view(inter, season_indices) # <--- NEW
+
     # ==========================================
     # 3. STABLE RATE GENERATION (True xG)
     # ==========================================
-    log_λₕ = clamp.(inter .+ γ_h_flat .+ att_h .+ def_a, -20.0, 20.0) 
-    log_λₐ = clamp.(inter .+             att_a .+ def_h, -20.0, 20.0)
+    log_λₕ = clamp.(inter_match .+ γ_h_flat .+ att_h .+ def_a, -20.0, 20.0) 
+    log_λₐ = clamp.(inter_match .+             att_a .+ def_h, -20.0, 20.0)
 
     λₕ = exp.(log_λₕ) .+ 1e-6
     λₐ = exp.(log_λₐ) .+ 1e-6
@@ -117,9 +122,11 @@ function build_turing_model(config::DynamicMarketXGModel, feature_set::Features.
     n_rounds  = Int(data[:n_rounds])
     n_history = Int(data[:n_history_steps])
     n_target  = Int(data[:n_target_steps])
+    n_seasons  = Int(data[:n_seasons]) # <--- Ensure your pipeline provides this
     
     home_ids   = Vector{Int}(data[:flat_home_ids])
     away_ids   = Vector{Int}(data[:flat_away_ids])
+    season_ids = Vector{Int}(data[:season_indices]) # <--- NEW
     time_idxs  = Vector{Int}(data[:time_indices])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
@@ -136,12 +143,14 @@ function build_turing_model(config::DynamicMarketXGModel, feature_set::Features.
     idx_market = findall(x -> !isnan(x), market_log_h)
 
     return build_xg_market_engine(
-        home_ids, away_ids, time_idxs, 
+        home_ids, away_ids,
+        season_ids, time_idxs, 
         home_goals, away_goals, 
         home_xg, away_xg, 
         idx_xg, idx_no_xg,
         market_log_h, market_log_a, idx_market,
-        n_teams, n_history, n_target, config
+        n_teams, n_history, n_target, n_seasons,
+        config
     )
 end
 
@@ -159,10 +168,11 @@ function extract_parameters(
     n_rounds  = Int(data[:n_rounds])
     n_history = Int(data[:n_history_steps])
     n_target  = Int(data[:n_target_steps])
+    n_seasons = Int(data[:n_seasons])
     team_map  = data[:team_map]
 
     # Unpack Components
-    μ_v     = extract_interception(chain, model.interception_config)
+    inter_mat = extract_interception(chain, model.interception_config, n_seasons)
     disp_nt = extract_dispersion(chain, model.dispersion_config)
     ha_mat  = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     kap_mat = extract_kappa(chain, model.kappa_config, n_teams)
@@ -170,7 +180,7 @@ function extract_parameters(
 
     # Optional: Extract Variances for diagnostics
 
-    n_samples = length(μ_v)
+    n_samples = size(chain, 1) * size(chain, 3) # total draws across all chains
     results = Dict{Int, NamedTuple}()
 
     for row in eachrow(df)
@@ -189,6 +199,10 @@ function extract_parameters(
         
         κ_h = h_idx > 0 ? kap_mat[:, h_idx] : ones(n_samples)
         κ_a = a_idx > 0 ? kap_mat[:, a_idx] : ones(n_samples)
+
+
+        s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
+        μ_v = inter_mat[:, s_idx] 
 
         # 1. True Underlying xG
         log_xg_h = clamp.(μ_v .+ γ_h .+ α_h .+ β_a, -20.0, 20.0)

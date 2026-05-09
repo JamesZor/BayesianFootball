@@ -11,6 +11,7 @@
     time_indices::Vector{Int},
     home_goals::Vector{Int},
     away_goals::Vector{Int},
+    season_indices::Vector{Int}, # <--- NEW
     # --- Market Data ---
     market_log_λ_h::Vector{Float64},
     market_log_λ_a::Vector{Float64},
@@ -20,12 +21,13 @@
     n_teams::Int,
     n_history::Int,
     n_target::Int,
+    n_seasons::Int,              # <--- NEW
     config::DynamicMarketGoalsModel # Assume you create this config struct
 )
     # ==========================================
     # 1. LOAD COMPONENTS
     # ==========================================
-    inter ~ to_submodel(build_interception(config.interception_config))
+    inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     disp  ~ to_submodel(build_dispersion(config.dispersion_config))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     dyn   ~ to_submodel(build_dynamics(config.dynamics_config, n_teams, n_history, n_target))
@@ -47,11 +49,13 @@
 
     home_adv = view(ha, home_team_indices)
 
+    inter_match = view(inter, season_indices) # <--- NEW
+
     # ==========================================
     # 3. RATE GENERATION (Log Scale)
     # ==========================================
-    log_λ_h = clamp.(inter .+ home_adv .+ att_h .+ def_a, -10.0, 10.0) 
-    log_λ_a = clamp.(inter .+             att_a .+ def_h, -10.0, 10.0)
+    log_λ_h = clamp.(inter_match .+ home_adv .+ att_h .+ def_a, -10.0, 10.0) 
+    log_λ_a = clamp.(inter_match .+             att_a .+ def_h, -10.0, 10.0)
 
     λ_h = exp.(log_λ_h) .+ 1e-6
     λ_a = exp.(log_λ_a) .+ 1e-6
@@ -92,12 +96,14 @@ function build_turing_model(config::DynamicMarketGoalsModel, feature_set::Featur
     n_rounds  = Int(data[:n_rounds])
     n_history = Int(data[:n_history_steps])
     n_target  = Int(data[:n_target_steps])
+    n_seasons  = Int(data[:n_seasons])
     
     home_ids   = Vector{Int}(data[:flat_home_ids])
     away_ids   = Vector{Int}(data[:flat_away_ids])
     time_idxs  = Vector{Int}(data[:time_indices])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
+    season_ids = Vector{Int}(data[:season_indices])
 
     # 1. Extract Market Lambdas (assume you pre-calculated these via Optim and saved to db)
     # We take the log() immediately because our engine expects log_lambdas
@@ -110,10 +116,12 @@ function build_turing_model(config::DynamicMarketGoalsModel, feature_set::Featur
 
     return build_market_goals_engine(
         home_ids, away_ids, time_idxs, 
-        home_goals, away_goals, 
+        home_goals, away_goals,
+        season_ids,
         market_log_h, market_log_a, 
         idx_market, idx_no_market,
-        n_teams, n_history, n_target, config
+        n_teams, n_history, n_target, n_seasons,
+        config
     )
 end
 
@@ -129,18 +137,19 @@ function extract_parameters(
     n_rounds  = Int(data[:n_rounds])
     n_history = Int(data[:n_history_steps])
     n_target  = Int(data[:n_target_steps])
+    n_seasons = Int(data[:n_seasons])
     team_map  = data[:team_map]
 
     # ==========================================
     # 2. DELEGATE TO COMPONENTS
     # ==========================================
-    inter_v = extract_interception(chain, model.interception_config)
+    inter_mat = extract_interception(chain, model.interception_config, n_seasons)
     disp_nt = extract_dispersion(chain, model.dispersion_config)
     ha_mat  = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams, n_history, n_target)
 
 
-    n_samples = length(inter_v)
+    n_samples = size(chain, 1) * size(chain, 3) # total draws across all chains
     results = Dict{Int, NamedTuple}()
 
     # ==========================================
@@ -160,12 +169,15 @@ function extract_parameters(
 
         γ_h = h_idx > 0 ? ha_mat[:, h_idx] : zeros(n_samples)
 
+        s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
+        inter_match = inter_mat[:, s_idx] 
+
         # ==========================================
         # 4. FINAL LIKELIHOOD MATH (Mirrors Turing Engine)
         # ==========================================
         # We add clamping and the 1e-6 offset to perfectly match what Turing saw
-        log_λ_h = clamp.(inter_v .+ γ_h .+ α_h .+ β_a, -10.0, 10.0)
-        log_λ_a = clamp.(inter_v .+        α_a .+ β_h, -10.0, 10.0)
+        log_λ_h = clamp.(inter_match .+ γ_h .+ α_h .+ β_a, -10.0, 10.0)
+        log_λ_a = clamp.(inter_match .+        α_a .+ β_h, -10.0, 10.0)
 
         λ_goals_h = exp.(log_λ_h) .+ 1e-6
         λ_goals_a = exp.(log_λ_a) .+ 1e-6

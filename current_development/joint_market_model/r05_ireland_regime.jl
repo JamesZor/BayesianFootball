@@ -129,7 +129,7 @@ model_gm = PreGame.DynamicMarketGoalsModel(
 )
 
 model_g = PreGame.DynamicGoalsModel(
-    interception_config  = inter_cfg,
+    interception_config  = inter_season_cfg,
     dynamics_config      = dyn_cfg,
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
@@ -169,4 +169,99 @@ task_g = build_experiment_task(ds, model_g, "goals_biweek_season_mu", save_dir, 
 all_task = [task_g]
 
 run_experiment_task.(all_task)
+
+
+# -----
+
+saved_folders = Experiments.list_experiments(save_dir; data_dir="")
+# saved_folders = Experiments.list_experiments("exp/grw_basics_pl_ch"; data_dir="./data")
+
+# Load them all into a list
+loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+for folder in saved_folders
+    try
+        res = Experiments.load_experiment(folder)
+        push!(loaded_results, res)
+    catch e
+        @warn "Could not load $folder: $e"
+    end
+end
+
+ledger = BayesianFootball.BackTesting.run_backtest(
+    ds, 
+  loaded_results[[2]], 
+  [BayesianFootball.Signals.BayesianKelly()]; 
+    market_config = Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+tearsheet = BayesianFootball.BackTesting.generate_tearsheet(ledger)
+
+model_names = unique(tearsheet.selection)
+
+model_names = model_names
+
+for m_name in model_names
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet, :selection => ByRow(isequal(m_name)))
+    show(sub)
+end
+
+expr1 = loaded_results[1]
+expr2 = loaded_results[2]
+
+
+# -----
+
+using DataFrames
+using Statistics
+
+function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
+    # Initialize an empty DataFrame
+    df = DataFrame(Fold = Int[])
+    
+    # FIX: Explicitly tell Julia these columns can contain missing values
+    for p in target_params
+        df[!, Symbol(string(p), "_mean")] = Union{Missing, Float64}[]
+        df[!, Symbol(string(p), "_std")]  = Union{Missing, Float64}[]
+    end
+    
+    # Iterate through each fold's MCMCChain
+    for (fold_idx, chain) in enumerate(chains)
+        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
+        
+        for p in target_params
+            # Check if the parameter exists in the chain
+            if p in keys(chain)
+                samples = vec(chain[p]) 
+                row_dict[Symbol(string(p), "_mean")] = mean(samples)
+                row_dict[Symbol(string(p), "_std")]  = std(samples)
+            else
+                row_dict[Symbol(string(p), "_mean")] = missing
+                row_dict[Symbol(string(p), "_std")]  = missing
+            end
+        end
+        
+        push!(df, row_dict) # This will now safely accept the missing values!
+    end
+    
+    return df
+end
+
+
+
+params_to_track_xg = [
+    Symbol("inter.μ"), 
+    Symbol("σ_market"), # NEW: Variance/spread of team conversion abilities
+    Symbol("disp.log_r"), 
+    Symbol("ha.γ_global"),
+    :ν_xg,       # NEW: xG Gamma shape parameter
+    Symbol("kap.κ_base"),
+    Symbol("kap.σ_κ"),
+    Symbol("dyn.α.σ₀"), 
+    Symbol("dyn.α.σₛ"), 
+    Symbol("dyn.α.σₖ"),
+    Symbol("dyn.β.σ₀"), 
+    Symbol("dyn.β.σₛ"), 
+    Symbol("dyn.β.σₖ")
+]
 
