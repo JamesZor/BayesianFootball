@@ -8,6 +8,7 @@ using DataFrames
 using ThreadPinning
 pinthreads(:cores)
 
+ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
 
 # --- 2. Running the experiment
 struct DSExperimentSettings 
@@ -152,19 +153,60 @@ model_gxgm = PreGame.DynamicMarketXGModel(
     kappa_config         = kap_cfg
 )
 
-
-save_dir::String = "./data/dev_joint_model/ireland/"
-
-
-ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
-
-
-cfgs = create_CVsplit_training_config(ds,get_target_seasons_string(ds.segment))
-
 task_g = build_experiment_task(ds, model_g, "goals_biweek", save_dir, cfgs)
 task_gm = build_experiment_task(ds, model_gm, "goals_market_biweek", save_dir, cfgs)
 task_gxg = build_experiment_task(ds, model_gxg, "goals_xg_biweek", save_dir, cfgs)
 task_gxgm = build_experiment_task(ds, model_gxgm, "goals_xg_market_biweek", save_dir, cfgs)
+
+# --- season interception_config
+inter_season_cfg = PreGame.SeasonalInterception()
+
+model_gm = PreGame.DynamicMarketGoalsModel(
+    interception_config  = inter_season_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+)
+
+model_g = PreGame.DynamicGoalsModel(
+    interception_config  = inter_season_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+)
+
+model_gxg = PreGame.DynamicXGModel(
+    interception_config  = inter_season_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg
+)
+
+
+model_gxgm = PreGame.DynamicMarketXGModel(
+    interception_config  = inter_season_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg
+)
+
+
+save_dir::String = "./data/dev_joint_model/ireland/"
+
+task_g = build_experiment_task(ds, model_g, "mu_goals_biweek", save_dir, cfgs)
+task_gm = build_experiment_task(ds, model_gm, "mu_goals_market_biweek", save_dir, cfgs)
+task_gxg = build_experiment_task(ds, model_gxg, "mu_goals_xg_biweek", save_dir, cfgs)
+task_gxgm = build_experiment_task(ds, model_gxgm, "mu_goals_xg_market_biweek", save_dir, cfgs)
+# ----
+
+
+
+
+
+cfgs = create_CVsplit_training_config(ds,get_target_seasons_string(ds.segment))
+
 
 all_task = [task_g, task_gm, task_gxg, task_gxgm]
 
