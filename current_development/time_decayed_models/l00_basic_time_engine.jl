@@ -41,8 +41,8 @@ function create_experiment_tasks(ds::Data.DataStore, model, label::String, save_
         cv_config = Data.GroupedCVConfig(
         tournament_groups = [Data.tournament_ids(ds.segment)],
         target_seasons = target_seasons,
-        history_seasons = 1,
-        dynamics_col = :match_month,
+        history_seasons = 3,
+        dynamics_col = :match_week,
         warmup_period = 0,
         stop_early = true
     )
