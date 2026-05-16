@@ -1,7 +1,7 @@
-# current_development/time_decayed_models/r01_test_implementation.jl
+# current_development/time_decayed_models/r02_test_market_decay.jl
 
-using Revise
 using BayesianFootball
+using Revise
 using DataFrames
 using ThreadPinning
 pinthreads(:cores)
@@ -11,7 +11,7 @@ using Distributions
 
 const PreGame = BayesianFootball.Models.PreGame
 
-# --- Helper Functions (Copied from l00 for runner logic) ---
+# --- Helper Functions (Copied for runner logic) ---
 
 struct ExperimentTask
     ds::Data.DataStore
@@ -29,9 +29,9 @@ function create_experiment_tasks(ds::Data.DataStore, model, label::String, save_
     )
 
     sampler_conf = Samplers.NUTSConfig(
-        500, # Number of samples for each chain
+        1000, # Number of samples for each chain
         4,   # Number of chains
-        150, # Number of warm up steps 
+        200, # Number of warm up steps 
         0.65,# Accept rate  [0,1]
         10,  # Max tree depth
         Samplers.UniformInit(-1, 1), # Interval for starting a chain 
@@ -71,44 +71,35 @@ function run_experiment_task(task::ExperimentTask)
     end
 end
 
-function loaded_experiment_files(saved_folders::Vector{String})
-    loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
-    for folder in saved_folders
-        try
-            res = Experiments.load_experiment(folder)
-            push!(loaded_results, res)
-        catch e
-            @warn "Could not load $folder: $e"
-        end
-    end
-    return loaded_results
-end
-
 # --- Runner Logic ---
 
 # 1. Load Data
+# Note: Ireland segment has market data available
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
-save_dir::String = "./data/test_src_time_decay/"
+save_dir::String = "./data/test_src_market_time_decay/"
 
-# 2. Instantiate Model (using src implementation)
+# 2. Instantiate Model
+# Testing with market integration and custom market_weight
 inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion() 
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 dyn_cfg   = PreGame.TimeDecayDynamics(days_half_life = 180)
 
-model = PreGame.DynamicGoalsTimeDecayModel(
+model = PreGame.DynamicMarketGoalsTimeDecayModel(
     interception_config  = inter_cfg,
     dynamics_config      = dyn_cfg,
     dispersion_config    = disp_cfg,
-    homeadvantage_config = ha_cfg
+    homeadvantage_config = ha_cfg,
+    market_weight        = 0.5 # Testing with reduced market influence
 )
 
 # 3. Create and Run Tasks
-training_tasks = create_experiment_tasks(ds, model, "src_time_decay_test", save_dir, ["2026"])
+# Testing on 2026 season
+training_tasks = create_experiment_tasks(ds, model, "src_market_decay_test_w05", save_dir, ["2026"])
 
-results = run_experiment_task.(training_tasks)
+# To execute the test run:
+# results = run_experiment_task.(training_tasks)
 
-# 4. (Optional) Load results and run backtest summary
-# saved_folders = Experiments.list_experiments(save_dir; data_dir="")
-# loaded_results = loaded_experiment_files(saved_folders)
-# println("Loaded $(length(loaded_results)) results.")
+println("Test runner for DynamicMarketGoalsTimeDecayModel initialized.")
+println("Label: src_market_decay_test_w05")
+println("Market Weight: $(model.market_weight)")
