@@ -5,6 +5,13 @@ function calculate_match_weights(deltas::Vector{<:Real}, half_life_days::Real)
     return weights
 end
 
+
+
+function Features.required_features(model::DynamicGoalsTimeDecayModel)
+    return [:team_ids, :goals, :dates] 
+end
+
+
 @model function build_weighted_goals_engine(
     home_team_indices::Vector{Int},
     away_team_indices::Vector{Int},
