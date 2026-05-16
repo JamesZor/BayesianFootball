@@ -22,6 +22,14 @@ end
 
 
 # added 
+function required_features(model::DynamicGoalsModel)
+    return [:team_ids, :goals] 
+end
+
+function required_features(model::DynamicGoalsTimeDecayModel)
+    return [:team_ids, :goals, :dates] 
+end
+
 function required_features(model::AbstractMultiScaledNegBinModel)
     return [:team_ids, :midweek, :month, :is_plastic, :goals] 
 end

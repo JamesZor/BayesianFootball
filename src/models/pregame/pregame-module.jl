@@ -28,10 +28,12 @@ include("./components/dynamics.jl")
 include("./components/kappa.jl")
 
 include("./engines/goals_engine.jl")
+include("./engines/goals_time_decay_engine.jl")
 include("./engines/xg_engine.jl")
 include("./engines/goals_market_engine.jl")
 include("./engines/xg_market_engine.jl")
-export DynamicGoalsModel, DynamicXGModel, DynamicMarketGoalsModel, DynamicMarketXGModel
+export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicXGModel, DynamicMarketGoalsModel, DynamicMarketXGModel
+export TimeDecayDynamics
 
 ##
 

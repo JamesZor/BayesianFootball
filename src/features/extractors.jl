@@ -219,6 +219,19 @@ function add_feature!(F_data::Dict, ::Val{:is_plastic}, ordered_ids, team_map::D
 end
 
 
+function add_feature!(F_data::Dict, ::Val{:dates}, ordered_ids, team_map::Dict, ds)
+    # 1. Create a fast lookup dictionary: Match ID -> Date
+    date_lookup = Dict(row.match_id => row.match_date for row in eachrow(ds.matches))
+    
+    # 2. Extract the dates in the exact sequence of ordered_ids
+    subset_dates = [date_lookup[id] for id in ordered_ids]
+    
+    # 3. Find the newest date in this specific subset
+    newest_in_subset = maximum(subset_dates)
+    
+    # 4. Calculate deltas and convert to integers
+    F_data[:dates] = (newest_in_subset .- subset_dates) .|> Dates.value
+end
 
 
 function add_feature!(F_data::Dict, ::Val{:market_lambda}, ordered_ids, team_map::Dict, ds)

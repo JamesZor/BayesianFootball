@@ -32,6 +32,18 @@ Base.@kwdef struct DynamicGoalsModel{
     homeadvantage_config::H
 end
 
+Base.@kwdef struct DynamicGoalsTimeDecayModel{
+    I<:AbstractInterceptionConfig,
+    T<:AbstractDynamicsConfig, 
+    D<:AbstractDispersionConfig, 
+    H<:AbstractHomeAdvantageConfig
+    } <: AbstractDynamicNegBinModel
+      interception_config::I
+      dynamics_config::T
+      dispersion_config::D
+      homeadvantage_config::H
+end
+
 Base.@kwdef struct DynamicXGModel{
   I<:AbstractInterceptionConfig,
   T<:AbstractDynamicsConfig, 
