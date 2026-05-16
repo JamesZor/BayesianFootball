@@ -1,7 +1,7 @@
-# current_development/time_decayed_models/r02_test_market_decay.jl
+# current_development/time_decayed_models/r03_test_xg_decay.jl
 
-using Revise
 using BayesianFootball
+using Revise
 using DataFrames
 using ThreadPinning
 pinthreads(:cores)
@@ -29,18 +29,18 @@ function create_experiment_tasks(ds::Data.DataStore, model, label::String, save_
     )
 
     sampler_conf = Samplers.NUTSConfig(
-        1000, # Number of samples for each chain
-        4,   # Number of chains
-        200, # Number of warm up steps 
-        0.65,# Accept rate  [0,1]
-        10,  # Max tree depth
-        Samplers.UniformInit(-1, 1), # Interval for starting a chain 
-        false,   # show_progress
+        150, # Reduced for quick testing
+        2,   
+        50,  
+        0.65,
+        10,  
+        Samplers.UniformInit(-1, 1),
+        false,
     )
 
     train_cfg = BayesianFootball.Training.Independent(
         parallel=true,
-        max_concurrent_splits=4
+        max_concurrent_splits=2
     )
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
@@ -59,11 +59,12 @@ end
 
 function run_experiment_task(task::ExperimentTask)
     conf = task.config
-    println("Running: $(conf.name)")
+    println("\n>>> Running: $(conf.name)")
 
     try
         results = Experiments.run_experiment(task.ds, conf)
         Experiments.save_experiment(results)
+        println("✅ Success: $(conf.name)")
         return true
     catch e
         @error "❌ Failed [$(conf.name)]: $e"
@@ -74,32 +75,44 @@ end
 # --- Runner Logic ---
 
 # 1. Load Data
-# Note: Ireland segment has market data available
+# Ireland typically has both xG and Market data
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
-save_dir::String = "./data/test_src_market_time_decay/"
+save_dir::String = "./data/test_src_xg_decay/"
 
-# 2. Instantiate Model
-# Testing with market integration and custom market_weight
+# 2. Shared Config Components
 inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion() 
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 dyn_cfg   = PreGame.TimeDecayDynamics(days_half_life = 180)
+kap_cfg   = PreGame.GlobalKappa()
 
-model = PreGame.DynamicMarketGoalsTimeDecayModel(
+# 3. Model A: DynamicXGTimeDecayModel
+model_xg = PreGame.DynamicXGTimeDecayModel(
     interception_config  = inter_cfg,
     dynamics_config      = dyn_cfg,
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
-    market_weight        = 0.5 # Testing with reduced market influence
+    kappa_config         = kap_cfg
 )
 
-# 3. Create and Run Tasks
-# Testing on 2026 season
-training_tasks = create_experiment_tasks(ds, model, "src_market_decay_test_w05", save_dir, ["2026"])
+# 4. Model B: DynamicMarketXGTimeDecayModel
+model_market_xg = PreGame.DynamicMarketXGTimeDecayModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg,
+    market_weight        = 0.5
+)
 
-# To execute the test run:
-results = run_experiment_task.(training_tasks)
+# 5. Create Tasks
+task_xg = create_experiment_tasks(ds, model_xg, "src_xg_decay_test", save_dir, ["2026"])
+task_market_xg = create_experiment_tasks(ds, model_market_xg, "src_market_xg_decay_test", save_dir, ["2026"])
 
-println("Test runner for DynamicMarketGoalsTimeDecayModel initialized.")
-println("Label: src_market_decay_test_w05")
-println("Market Weight: $(model.market_weight)")
+# To execute the test runs:
+# run_experiment_task(task_xg[1])
+# run_experiment_task(task_market_xg[1])
+
+println("\nxG Decay test runners initialized.")
+println("1. DynamicXGTimeDecayModel")
+println("2. DynamicMarketXGTimeDecayModel (Market Weight: 0.5)")

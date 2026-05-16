@@ -87,7 +87,39 @@ Base.@kwdef struct DynamicMarketGoalsTimeDecayModel{
       market_weight::Float64 = 1.0 # Mixing value: 1.0 = equal weight, <1.0 = reduced market influence
 end
 
-Base.@kwdef struct DynamicMarketXGModel{
+Base.@kwdef struct DynamicXGTimeDecayModel{
+    I<:AbstractInterceptionConfig,
+    T<:AbstractDynamicsConfig, 
+    D<:AbstractDispersionConfig, 
+    H<:AbstractHomeAdvantageConfig,
+    K<:AbstractKappaConfig
+  } <: AbstractDynamicNegBinModel
+      interception_config::I
+      dynamics_config::T
+      dispersion_config::D
+      homeadvantage_config::H
+      kappa_config::K
+      ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+end
+
+Base.@kwdef struct DynamicMarketXGTimeDecayModel{
+    I<:AbstractInterceptionConfig,
+    T<:AbstractDynamicsConfig, 
+    D<:AbstractDispersionConfig, 
+    H<:AbstractHomeAdvantageConfig,
+    K<:AbstractKappaConfig
+  } <: AbstractDynamicNegBinModel
+      interception_config::I
+      dynamics_config::T
+      dispersion_config::D
+      homeadvantage_config::H
+      kappa_config::K
+      ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+      market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+      market_weight::Float64 = 1.0
+end
+
+Base.@kwdef struct DynamicXGModel{
   I<:AbstractInterceptionConfig,
   T<:AbstractDynamicsConfig, 
   D<:AbstractDispersionConfig, 
