@@ -1,5 +1,18 @@
-using Turing
-using Distributions
+Base.@kwdef struct DynamicMarketXGModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig,
+  K<:AbstractKappaConfig
+    } <: AbstractDynamicNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+    kappa_config::K
+    ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+    market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+end
 
 # ==========================================
 # 1. THE TURING ENGINE

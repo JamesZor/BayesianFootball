@@ -1,5 +1,20 @@
 # src/Models/PreGame/engines/goals_engine.jl
 
+using Turing
+using Distributions
+
+Base.@kwdef struct DynamicGoalsModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig
+    } <: AbstractDynamicNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+end
+
 @model function build_goals_engine(
     home_team_indices::Vector{Int},
     away_team_indices::Vector{Int},

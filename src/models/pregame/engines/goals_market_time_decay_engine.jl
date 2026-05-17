@@ -1,5 +1,19 @@
 # src/models/pregame/engines/goals_market_time_decay_engine.jl
 
+Base.@kwdef struct DynamicMarketGoalsTimeDecayModel{
+    I<:AbstractInterceptionConfig,
+    T<:AbstractDynamicsConfig, 
+    D<:AbstractDispersionConfig, 
+    H<:AbstractHomeAdvantageConfig
+    } <: AbstractNegBinModel
+      interception_config::I
+      dynamics_config::T
+      dispersion_config::D
+      homeadvantage_config::H
+      market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+      market_weight::Float64 = 1.0 # Mixing value: 1.0 = equal weight, <1.0 = reduced market influence
+end
+
 function calculate_market_match_weights(deltas::Vector{<:Real}, half_life_days::Real)
     weights = 0.5 .^ (deltas ./ half_life_days)
     return weights

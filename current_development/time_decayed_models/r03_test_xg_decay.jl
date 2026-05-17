@@ -1,7 +1,7 @@
 # current_development/time_decayed_models/r03_test_xg_decay.jl
 
-using BayesianFootball
 using Revise
+using BayesianFootball
 using DataFrames
 using ThreadPinning
 pinthreads(:cores)
@@ -29,9 +29,9 @@ function create_experiment_tasks(ds::Data.DataStore, model, label::String, save_
     )
 
     sampler_conf = Samplers.NUTSConfig(
-        150, # Reduced for quick testing
+        500, # Reduced for quick testing
         2,   
-        50,  
+        200,  
         0.65,
         10,  
         Samplers.UniformInit(-1, 1),
@@ -40,7 +40,7 @@ function create_experiment_tasks(ds::Data.DataStore, model, label::String, save_
 
     train_cfg = BayesianFootball.Training.Independent(
         parallel=true,
-        max_concurrent_splits=2
+        max_concurrent_splits=8
     )
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 

@@ -1,7 +1,19 @@
 # src/Models/PreGame/engines/xg_engine.jl
 
-using Turing
-using Distributions
+Base.@kwdef struct DynamicXGModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig,
+  K<:AbstractKappaConfig
+    } <: AbstractDynamicNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+    kappa_config::K
+    ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+end
 
 # ==========================================
 # 1. THE TURING ENGINE

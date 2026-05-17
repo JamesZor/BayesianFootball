@@ -1,5 +1,21 @@
 # src/Models/PreGame/engines/goals_market_engine.jl
 
+using Turing
+using Distributions
+
+Base.@kwdef struct DynamicMarketGoalsModel{
+  I<:AbstractInterceptionConfig,
+  T<:AbstractDynamicsConfig, 
+  D<:AbstractDispersionConfig, 
+  H<:AbstractHomeAdvantageConfig
+    } <: AbstractDynamicNegBinModel
+    interception_config::I
+    dynamics_config::T
+    dispersion_config::D
+    homeadvantage_config::H
+    market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+end
+
 # ==========================================
 # 1. THE TURING ENGINE
 # =========================================

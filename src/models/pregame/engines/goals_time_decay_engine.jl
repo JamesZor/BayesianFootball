@@ -1,5 +1,17 @@
 # src/models/pregame/engines/goals_time_decay_engine.jl
 
+Base.@kwdef struct DynamicGoalsTimeDecayModel{
+    I<:AbstractInterceptionConfig,
+    T<:AbstractDynamicsConfig, 
+    D<:AbstractDispersionConfig, 
+    H<:AbstractHomeAdvantageConfig
+    } <: AbstractNegBinModel
+      interception_config::I
+      dynamics_config::T
+      dispersion_config::D
+      homeadvantage_config::H
+end
+
 function calculate_match_weights(deltas::Vector{<:Real}, half_life_days::Real)
     weights = 0.5 .^ (deltas ./ half_life_days)
     return weights
