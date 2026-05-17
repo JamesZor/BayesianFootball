@@ -26,6 +26,7 @@ include("./components/interception.jl")
 include("./components/home_advantage.jl")
 include("./components/dynamics.jl")
 include("./components/kappa.jl")
+include("./display.jl")
 
 include("./engines/goals_engine.jl")
 include("./engines/goals_time_decay_engine.jl")

@@ -3,11 +3,13 @@
 # ==========================================
 # 1. ABSTRACT COMPONENT INTERFACES
 # ==========================================
-abstract type AbstractDispersionConfig end
-abstract type AbstractHomeAdvantageConfig end
-abstract type AbstractKappaConfig end
-abstract type AbstractDynamicsConfig end
-abstract type AbstractInterceptionConfig end
+abstract type AbstractModelComponent end
+
+abstract type AbstractDispersionConfig <: AbstractModelComponent end
+abstract type AbstractHomeAdvantageConfig <: AbstractModelComponent end
+abstract type AbstractKappaConfig <: AbstractModelComponent end
+abstract type AbstractDynamicsConfig <: AbstractModelComponent end
+abstract type AbstractInterceptionConfig <: AbstractModelComponent end
 
 # ==========================================
 # 2. MASTER ARCHITECTURE TYPES

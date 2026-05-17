@@ -102,7 +102,7 @@ model_market_xg = PreGame.DynamicMarketXGTimeDecayModel(
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
     kappa_config         = kap_cfg,
-    market_weight        = 0.5
+    market_weight        = 1.0
 )
 
 # 5. Create Tasks
@@ -110,6 +110,7 @@ task_xg = create_experiment_tasks(ds, model_xg, "src_xg_decay_test", save_dir, [
 task_market_xg = create_experiment_tasks(ds, model_market_xg, "src_market_xg_decay_test", save_dir, ["2026"])
 
 # To execute the test runs:
+run_experiment_task.([task_xg[1], task_market_xg[1]])
 # run_experiment_task(task_xg[1])
 # run_experiment_task(task_market_xg[1])
 
