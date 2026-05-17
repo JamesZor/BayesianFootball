@@ -110,6 +110,7 @@ task_xg = create_experiment_tasks(ds, model_xg, "src_xg_decay_test", save_dir, [
 task_market_xg = create_experiment_tasks(ds, model_market_xg, "src_market_xg_decay_test", save_dir, ["2026"])
 
 # To execute the test runs:
+run_experiment_task.(task_xg)
 # run_experiment_task.([task_xg[1], task_market_xg[1]])
 
 
