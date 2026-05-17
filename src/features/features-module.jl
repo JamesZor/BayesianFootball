@@ -1,40 +1,30 @@
+# src/features/features-module.jl
 
 """
 This module is responsible for transforming raw data from a DataStore
-into a model-ready FeatureSet by using a global Vocabulary.
+into a model-ready FeatureSet using the new relational SplitBoundary architecture.
 """
 module Features
 
 using DataFrames
 using Dates
-using ..Data
-# Features depends on the central interfaces for types...
-using ..TypesInterfaces
-# ...and on Models for the concrete model types and their contract methods.
-# using ..Models: required_mapping_keys
-
 using Base.Threads
-export Vocabulary, FeatureSet, create_vocabulary, create_features, get_feature
+using ..Data
+using ..TypesInterfaces
 
+export FeatureSet, create_features, required_features, add_feature!
 
-# --- Constants for required columns ---
-const REQUIRED_MATCH_COLS = [
-    :home_team, :away_team, :home_score, :away_score, :match_date, :tournament_slug
-]
-
-# Include the separated logic files.
-include("./market_inverse_utils.jl")
-include("./extractors.jl")
+# Core Architecture
 include("./model_requirements.jl")
-include("./map_builders.jl")
 include("./vocabulary.jl")
-include("./feature-sets.jl")
+include("./map_builders.jl")
+include("./builder.jl")
 
+# Relational Extractors
+include("./market_inverse_utils.jl")
+include("./extractors/core_extractors.jl")
+include("./extractors/time_extractors.jl")
+include("./extractors/stats_extractors.jl")
+include("./extractors/market_extractors.jl")
 
-
-
-
-end
-
-
-
+end # module
