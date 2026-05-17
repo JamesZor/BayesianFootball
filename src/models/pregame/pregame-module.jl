@@ -26,10 +26,18 @@ include("./components/interception.jl")
 include("./components/home_advantage.jl")
 include("./components/dynamics.jl")
 include("./components/kappa.jl")
+include("./display.jl")
 
 include("./engines/goals_engine.jl")
+include("./engines/goals_time_decay_engine.jl")
+include("./engines/goals_market_time_decay_engine.jl")
+include("./engines/xg_time_decay_engine.jl")
+include("./engines/xg_market_time_decay_engine.jl")
 include("./engines/xg_engine.jl")
-export DynamicGoalsModel, DynamicXGModel
+include("./engines/goals_market_engine.jl")
+include("./engines/xg_market_engine.jl")
+export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel
+export TimeDecayDynamics
 
 ##
 

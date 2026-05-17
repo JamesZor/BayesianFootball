@@ -54,7 +54,7 @@ Returns a default MarketConfig containing the most common markets:
 - BTTS (Both Teams To Score)
 """
 function get_standard_market_config()
-  return MarketConfig( reduce(vcat, ( [Market1X2(), MarketBTTS()], [MarketOverUnder( (i +0.5) ) for i in 0:10 ] ) ))
+  return MarketConfig( reduce(vcat, ( [Market1X2(), MarketBTTS(), MarketDC()], [MarketOverUnder( (i +0.5) ) for i in 0:10 ] ) ))
 end
 
 

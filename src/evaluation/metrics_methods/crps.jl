@@ -28,8 +28,7 @@ end
 # ==============================================================================
 # MATH & HELPERS
 # ==============================================================================
-
-function compute_crps(y::Int, λ::Float64, r_disp::Float64; max_goals=30)
+function compute_crps(y::Real, λ::Real, r_disp::Real; max_goals=30)
     # Convert mean (λ) and dispersion (r) to NegBinomial (r, p)
     p = r_disp / (r_disp + λ)
     dist = NegativeBinomial(r_disp, p)
@@ -37,7 +36,7 @@ function compute_crps(y::Int, λ::Float64, r_disp::Float64; max_goals=30)
     crps_value = 0.0
     # Sum over possible goal counts
     for x in 0:max_goals
-        F_x = cdf(dist, x)            # Model's cumulative probability up to x goals
+        F_x = cdf(dist, x)             # Model's cumulative probability up to x goals
         indicator = x >= y ? 1.0 : 0.0 # 1.0 if the actual score was less than or equal to x
         
         crps_value += (F_x - indicator)^2

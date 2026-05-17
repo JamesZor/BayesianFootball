@@ -322,4 +322,107 @@ src/Models/PreGame/
 └── engines/                   # The Master Assembly Lines
     ├── goals_engine.jl        # Puts components together for Goals
     └── xg_engine.jl           # Puts components together for xG
+
+
+# 🔄 Features Module (Relational Data Extraction)
+
+This module is responsible for transforming raw data from the SQL `DataStore` into model-ready `FeatureSet`s (tensors) that `Turing.jl` can digest. It utilizes a highly optimized **"Relational Architecture"** that strictly isolates data grouping boundaries from feature extraction, allowing for massive memory savings and lightning-fast temporal iterations.
+
+## Basic Usage
+
+The primary workflow involves generating `SplitBoundary` folds (which act as pointers to specific Match IDs) and then passing them to the Features builder.
+
+```julia
+using BayesianFootball
+const Data = BayesianFootball.Data
+const Features = BayesianFootball.Features
+
+# 1. Load DataStore
+ds = Data.load_datastore_sql(Data.ScottishLower())
+
+# 2. Define Temporal Rules (e.g., Step forward month-by-month)
+cv_config = Data.GroupedCVConfig(
+    tournament_groups = [[56, 57]], 
+    target_seasons = ["24/25"],
+    history_seasons = 1,
+    dynamics_col = :match_month
+)
+
+# 3. Generate Boundaries (Match ID Pointers)
+boundaries = Data.create_id_boundaries(ds, cv_config)
+
+# 4. Extract Features! 
+# The builder asks the model what traits it needs, and maps the boundaries to the DataStore.
+test_model = PreGame.DynamicXGModel(...)
+feature_collection = Features.create_features(boundaries, ds, test_model)
+```
+
+## 📦 Core Architecture: The SplitBoundary
+
+In the past, generating 50 temporal "walk-forward" folds meant creating 50 separate copies (or views) of the entire DataFrame. 
+
+The new architecture uses `Data.SplitBoundary`. A boundary does **not** contain data. It is simply a lightweight struct containing arrays of `Int` (Match IDs).
+* `history_match_ids`: Static list of match IDs used for burn-in/history.
+* `target_match_ids`: Expanding list of match IDs for the current temporal step.
+
+When you call `create_features(boundary, ds, model)`, the builder merges these IDs, creates an ordered temporal sequence, and passes them to specific extractors which query the `DataStore` on the fly.
+
+## 🤝 The Contract: `required_features`
+
+The `Features` module does not blindly extract every possible column. It uses Multiple Dispatch to ask the provided model exactly what it needs.
+
+Every concrete model engine must define its requirements:
+```julia
+# In src/models/pregame/engines/xg_engine.jl
+function Features.required_features(model::DynamicXGModel)
+    return [:team_ids, :goals, :xg] 
+end
+```
+When the builder runs, it dynamically calls the corresponding `add_feature!` extractors for only those requested traits, keeping the `FeatureSet` as lean as possible.
+
+## 🛠️ How to Add a New Feature Extractor
+
+If you build a new model that requires a new type of data (e.g., `:weather`), you simply need to define a new `add_feature!` method in the `src/features/extractors/` directory.
+
+**Step 1: Define the Extractor**
+All extractors follow the exact same signature. They receive the `ordered_ids` (the chronological sequence of Match IDs for the current fold) and the raw `DataStore`.
+
+```julia
+# In src/features/extractors/weather_extractors.jl
+function add_feature!(F_data::Dict, ::Val{:weather}, ordered_ids::Vector{Int}, team_map::Dict, ds::DataStore)
+    # 1. Create a fast lookup dictionary (Match ID -> Weather Code)
+    weather_lookup = Dict(row.match_id => row.weather_code for row in eachrow(ds.matches))
+    
+    # 2. Extract the weather codes in the EXACT order requested by the boundary
+    # Fallback to 0 if the data is missing
+    F_data[:flat_weather] = [get(weather_lookup, id, 0) for id in ordered_ids]
+end
+```
+
+**Step 2: Require the Feature**
+Update your model's contract to request the new trait:
+```julia
+function Features.required_features(model::MyNewWeatherModel)
+    return [:team_ids, :goals, :weather] 
+end
+```
+The builder will now automatically inject `:flat_weather` into the `FeatureSet.data` dictionary during compilation!
+
+---
+
+## 📂 Directory Structure Reference
+
+```text
+src/features/
+├── features-module.jl         # Top-level module: exports and includes
+├── builder.jl                 # The Core macro/micro loops for handling SplitBoundaries
+├── model_requirements.jl      # Fallback/Abstract required_features definitions
+├── vocabulary.jl              # Global dictionary mapping (e.g., Team Strings -> Integers)
+├── map_builders.jl            # Helper to generate the vocabulary
+├── market_inverse_utils.jl    # Math utilities to solve for Implied Lambdas from Odds
+└── extractors/                # The specific add_feature! implementations
+    ├── core_extractors.jl     # Goals, Team IDs
+    ├── time_extractors.jl     # Dates (Deltas), Month, Midweek, Pitch Type
+    ├── stats_extractors.jl    # Shots, Expected Goals (xG)
+    └── market_extractors.jl   # Multi-threaded Market Lambda extraction
 ```

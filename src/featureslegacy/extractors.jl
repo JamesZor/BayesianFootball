@@ -217,3 +217,56 @@ function add_feature!(F_data::Dict, ::Val{:is_plastic}, ordered_ids, team_map::D
     # PLASTIC_TEAMS is already defined in your file
     F_data[:flat_is_plastic] = [home_team_map[id] in PLASTIC_TEAMS ? 1 : 0 for id in ordered_ids]
 end
+
+
+function add_feature!(F_data::Dict, ::Val{:dates}, ordered_ids, team_map::Dict, ds)
+    # 1. Create a fast lookup dictionary: Match ID -> Date
+    date_lookup = Dict(row.match_id => row.match_date for row in eachrow(ds.matches))
+    
+    # 2. Extract the dates in the exact sequence of ordered_ids
+    subset_dates = [date_lookup[id] for id in ordered_ids]
+    
+    # 3. Find the newest date in this specific subset
+    newest_in_subset = maximum(subset_dates)
+    
+    # 4. Calculate deltas and convert to integers
+    F_data[:dates] = (newest_in_subset .- subset_dates) .|> Dates.value
+end
+
+
+function add_feature!(F_data::Dict, ::Val{:market_lambda}, ordered_ids, team_map::Dict, ds)
+    # 1. Filter the odds data FIRST
+    # Converting to a Set is critical for performance so the 'in' check is instant
+    id_set = Set(ordered_ids)
+    
+    # Keep only the rows where the match_id is in our target Set
+    filtered_odds = subset(ds.odds, :match_id => ByRow(in(id_set)))
+    
+    # 2. Group ONLY the necessary matches
+    odds_by_match = groupby(filtered_odds, :match_id)
+    n_matches = length(odds_by_match)
+    
+    # 3. Pre-allocate an array to hold the thread results safely
+    # Storing Tuple: (match_id, λ_home, λ_away, ρ)
+    thread_results = Vector{Tuple{Int, Float64, Float64, Float64}}(undef, n_matches)
+    
+    # 4. Multi-threaded loop (Now only running for the matches we actually need!)
+    @threads for i in 1:n_matches
+        match_df = odds_by_match[i]
+        res = fit_market_implied_parameters(match_df)
+        
+        # Save to the pre-allocated array safely
+        thread_results[i] = (res.match_id, res.λ_home, res.λ_away, res.ρ)
+    end
+    
+    # 5. Build the Dictionary from the array
+    market_map = Dict{Int, NTuple{3, Float64}}(
+        r[1] => (r[2], r[3], r[4]) for r in thread_results
+    )
+
+    # 6. Align to ordered_ids (Fallback to missings if a match had no odds data)
+    F_data[:flat_market_λ_home] = [get(market_map, id, (missing, missing, missing))[1] for id in ordered_ids]
+    F_data[:flat_market_λ_away] = [get(market_map, id, (missing, missing, missing))[2] for id in ordered_ids]
+    F_data[:flat_market_ρ]      = [get(market_map, id, (missing, missing, missing))[3] for id in ordered_ids]
+end
+
