@@ -42,9 +42,13 @@ test_model = PreGame.DynamicXGModel(
 # -------------------------------------------------------------------------
 # 2. SPLITTING: Generate Temporal Boundaries
 # -------------------------------------------------------------------------
-# We use CVConfig to define how we want to "walk forward" through time.
-cv_config = Data.CVConfig(
-    tournament_ids = [79],      # League of Ireland Premier
+# We use GroupedCVConfig to define how we want to "walk forward" through time.
+# GroupedCVConfig is preferred because it supports combining multiple 
+# tournaments (e.g., [[56, 57]]) into a single processed sequence.
+cv_config = Data.GroupedCVConfig(
+    # Pass a list of lists. Each inner list is processed as a single group.
+    # To combine leagues 56 and 57, use: tournament_groups = [[56, 57]]
+    tournament_groups = [[79]], 
     target_seasons = ["2024"],  # We want to test on the 2024 season
     history_seasons = 1,        # Use 2023 as history
     dynamics_col = :match_month,# Step forward month-by-month
