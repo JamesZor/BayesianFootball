@@ -26,5 +26,6 @@ include("./extractors/core_extractors.jl")
 include("./extractors/time_extractors.jl")
 include("./extractors/stats_extractors.jl")
 include("./extractors/market_extractors.jl")
+include("./extractors/player_extractors.jl")
 
 end # module
