@@ -213,7 +213,7 @@ function extract_parameters(
     n_samples = size(chain, 1) * size(chain, 3) 
     results = Dict{Int, NamedTuple}()
 
-    # 3. FIXTURE LOOP
+    # 3. FIFIXTURE LOOP
     for row in eachrow(df)
         mid = Int(row.match_id)
         t_idx = hasproperty(row, :time_index) ? Int(row.time_index) : n_rounds

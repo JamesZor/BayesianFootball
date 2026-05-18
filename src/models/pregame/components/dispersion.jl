@@ -55,13 +55,18 @@ end
 
 # Overloads to allow uniform calling from engines
 @model function build_dispersion(config::GlobalDispersion, n_teams::Int, n_months::Int)
-    res ~ to_submodel(build_dispersion(config))
-    return res
+    log_r ~ config.log_r
+    r = exp(clamp(log_r, -10.0, 10.0))
+    return (; h = r, a = r) 
 end
 
 @model function build_dispersion(config::HomeAwayDispersion, n_teams::Int, n_months::Int)
-    res ~ to_submodel(build_dispersion(config))
-    return res
+    log_r ~ config.log_r
+    δ_r_home ~ config.δ_r_home
+    
+    r_a = exp(clamp(log_r, -10.0, 10.0))
+    r_h = exp(clamp(log_r + δ_r_home, -10.0, 10.0))
+    return (; h = r_h, a = r_a) 
 end
 
 # ==========================================
