@@ -76,9 +76,9 @@ function display_summary_metric(df::DataFrame, metric_family::Symbol)
         # Depending on if they passed GLMEdge() or GLMEdge(:home) it might be glmedge_all_...
         # We use regex to grab the most important intercept and spread fair columns
         cols = [:model]
-        append!(cols, filter(n -> occursin(r"glmedge.*_intercept_coef", String(n)), names(df)))
-        append!(cols, filter(n -> occursin(r"glmedge.*_spread_fair_coef", String(n)), names(df)))
-        append!(cols, filter(n -> occursin(r"glmedge.*_spread_fair_p_value", String(n)), names(df)))
+        append!(cols, Symbol.(filter(n -> occursin(r"glmedge.*_intercept_coef", n), names(df))))
+        append!(cols, Symbol.(filter(n -> occursin(r"glmedge.*_spread_fair_coef", n), names(df))))
+        append!(cols, Symbol.(filter(n -> occursin(r"glmedge.*_spread_fair_p_value", n), names(df))))
         println("\n--- GLM Edge Summary ---")
     elseif metric_family == :crps
         cols = [:model, :crps_home_mean, :crps_away_mean, :crps_all_mean]
