@@ -122,7 +122,7 @@ end
 
 # 4. Create and Run Tasks
 println("\nCreating Experiment Tasks...")
-tasks = create_experiment_tasks(ds, model, "adv_disp_test", save_dir, ["2026"])
+tasks = create_experiment_tasks(ds, model, "global_disp2_test", save_dir, ["2026"])
 
 println("\nReady! To execute the test run, use:")
 println("run_experiment_task.(tasks)")
@@ -148,6 +148,8 @@ end
 
 saved_folders = Experiments.list_experiments(save_dir; data_dir="")
 loaded_results = loaded_experiment_files(saved_folders)
+
+loaded_results_ = loaded_results[[1,3]]
 
 
 
@@ -208,3 +210,31 @@ flat_row = Evaluation.to_dataframe_row(expr, ll_data)
 
 glm_data = Evaluation.compute_metric(Evaluation.GLMEdge(), expr, ds)
 flat_row = Evaluation.to_dataframe_row(expr, glm_data)
+
+
+
+
+latents = BayesianFootball.Experiments.extract_oos_predictions(ds, expr)
+ppd = BayesianFootball.Predictions.model_inference(ds, expr)
+
+
+
+
+
+using BayesianFootball.Evaluation
+
+# 1. Define the metrics you want to run
+metrics = [
+    Evaluation.RQR(), 
+    Evaluation.LogLoss(), 
+    Evaluation.CRPS(), 
+    Evaluation.GLMEdge()
+]
+
+# 2. Run everything in one go
+master_eval_df = Evaluation.evaluate_experiments(metrics, loaded_results, ds)
+
+# 3. View clean summaries for specific families
+Evaluation.display_summary_metric(master_eval_df, :rqr)
+Evaluation.display_summary_metric(master_eval_df, :logloss)
+Evaluation.display_summary_metric(master_eval_df, :glmedge)
