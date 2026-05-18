@@ -20,7 +20,7 @@ end
 
 
 function Features.required_features(model::DynamicGoalsTimeDecayModel)
-    return [:team_ids, :goals, :dates] 
+    return [:team_ids, :goals, :dates, :month] 
 end
 
 
@@ -29,16 +29,18 @@ end
     away_team_indices::Vector{Int},
     season_indices::Vector{Int},
     time_indices::Vector{Int},
+    month_indices::Vector{Int},
     home_goals::Vector{Int},
     away_goals::Vector{Int},
     match_weights::Vector{Float64},
     n_teams::Int,
     n_seasons::Int,
+    n_months::Int,
     config::DynamicGoalsTimeDecayModel
 )
     # 1. LOAD COMPONENTS
     inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
-    disp  ~ to_submodel(build_dispersion(config.dispersion_config))
+    disp  ~ to_submodel(build_dispersion(config.dispersion_config, n_teams, n_months))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     dyn   ~ to_submodel(build_dynamics(config.dynamics_config, n_teams))
 
@@ -50,13 +52,29 @@ end
     inter_match = view(inter, season_indices)
     home_adv = view(ha, home_team_indices)
 
+    # --- Dispersion Construction ---
+    if hasproperty(disp, :team_vol) # AdvancedVolatilityDispersion
+        vol_h = view(disp.team_vol, home_team_indices)
+        vol_a = view(disp.team_vol, away_team_indices)
+        vol_m = view(disp.month_vol, month_indices)
+        
+        log_r_h = disp.base .+ disp.home_offset .+ vol_h .+ vol_a .+ vol_m
+        log_r_a = disp.base .+ vol_h .+ vol_a .+ vol_m
+        
+        r_h_flat = exp.(clamp.(log_r_h, -10.0, 10.0))
+        r_a_flat = exp.(clamp.(log_r_a, -10.0, 10.0))
+    else # GlobalDispersion or HomeAwayDispersion
+        r_h_flat = disp.h
+        r_a_flat = disp.a
+    end
+
     # 3. VECTORIZED RATES (λ)
     λ_h = exp.(inter_match .+ home_adv .+ att_h .+ def_a)
     λ_a = exp.(inter_match .+             att_a .+ def_h)
 
     # 4. TIME-DECAYED LIKELIHOOD
-    log_lik_h = logpdf.(RobustNegativeBinomial.(disp.h, λ_h), home_goals)
-    log_lik_a = logpdf.(RobustNegativeBinomial.(disp.a, λ_a), away_goals)
+    log_lik_h = logpdf.(RobustNegativeBinomial.(r_h_flat, λ_h), home_goals)
+    log_lik_a = logpdf.(RobustNegativeBinomial.(r_a_flat, λ_a), away_goals)
 
     Turing.@addlogprob! sum(log_lik_h .* match_weights)
     Turing.@addlogprob! sum(log_lik_a .* match_weights)
@@ -67,6 +85,7 @@ function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::Feat
     
     n_teams    = Int(data[:n_teams])
     n_seasons  = Int(data[:n_seasons])
+    n_months   = 12
     
     date_deltas = Vector{Int}(data[:dates])
     match_weights = calculate_match_weights(date_deltas, model.dynamics_config.days_half_life)
@@ -75,6 +94,7 @@ function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::Feat
     away_ids   = Vector{Int}(data[:flat_away_ids])
     season_ids = Vector{Int}(data[:season_indices])
     time_idxs  = Vector{Int}(data[:time_indices])
+    month_indices = Vector{Int}(data[:flat_months])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
@@ -83,11 +103,13 @@ function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::Feat
         away_ids,
         season_ids,
         time_idxs,
+        month_indices,
         home_goals,
         away_goals,
         match_weights,
         n_teams,
         n_seasons,
+        n_months,
         model
     )
 end
@@ -103,11 +125,12 @@ function extract_parameters(
     n_teams   = Int(data[:n_teams])
     n_rounds  = Int(data[:n_rounds])
     n_seasons = Int(data[:n_seasons])
+    n_months  = 12
     team_map  = data[:team_map]
 
-    # inter_mat is [Samples, Seasons]
+    # 2. DELEGATE TO COMPONENTS
     inter_mat = extract_interception(chain, model.interception_config, n_seasons)
-    disp_nt   = extract_dispersion(chain, model.dispersion_config)
+    disp_nt   = extract_dispersion(chain, model.dispersion_config, n_teams, n_months)
     ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     dyn_nt    = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams)
 
@@ -131,14 +154,18 @@ function extract_parameters(
         s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
         inter_match = inter_mat[:, s_idx] 
 
+        # --- Reconstruct Dispersion ---
+        m_idx = month(row.match_date)
+        match_disp = reconstruct_dispersion(disp_nt, h_idx, a_idx, m_idx)
+
         λ_goals_h = exp.(inter_match .+ γ_h .+ α_h .+ β_a)
         λ_goals_a = exp.(inter_match .+        α_a .+ β_h)
 
         results[mid] = (;
             λ_h = λ_goals_h,
             λ_a = λ_goals_a,
-            r_h = disp_nt.h,
-            r_a = disp_nt.a,
+            r_h = match_disp.h,
+            r_a = match_disp.a,
             true_xg_h = λ_goals_h, 
             true_xg_a = λ_goals_a
         )

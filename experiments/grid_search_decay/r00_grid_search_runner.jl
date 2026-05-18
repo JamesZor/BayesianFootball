@@ -14,13 +14,13 @@ const Evaluation = BayesianFootball.Evaluation
 # ==============================================================================
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
 save_dir::String = "./data/experiments/grid_search_decay/"
-target_seasons = ["2026"]
+target_seasons = ["2025"]
 
 # ==============================================================================
 # 1. SETUP THE GRID
 # ==============================================================================
 # Define the half-lives and market weights we want to test
-half_lives_to_test = [7, 14, 30, 90, 180, 365, 400]
+half_lives_to_test = [7, 14, 30, 90, 180, 365, 400, 500]
 market_weights_to_test = [0.1, 0.25, 0.5, 0.75, 1.0]
 
 # Base component configs

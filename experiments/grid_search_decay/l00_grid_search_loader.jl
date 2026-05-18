@@ -7,9 +7,6 @@ pinthreads(:cores)
 using Turing, Distributions, Dates
 
 const PreGame = BayesianFootball.Models.PreGame
-dadada
-
-
 
 # --- 1. Structs for Experiment Orchestration ---
 
@@ -43,17 +40,20 @@ function create_experiment_tasks(
     cv_config = Data.GroupedCVConfig(
         tournament_groups = [Data.tournament_ids(ds.segment)],
         target_seasons = target_seasons,
-        history_seasons = 3,
+        history_seasons = 4,
         dynamics_col = :match_week,
         warmup_period = 0,
         stop_early = true
     )
 
     sampler_conf = Samplers.NUTSConfig(
-        n_samples = 500, 
-        n_chains = 4,   
-        n_warmup = 150, 
-        target_accept = 0.65
+        1000, 
+        4,   
+        200,  
+        0.65,
+        10,  
+        Samplers.UniformInit(-1, 1),
+        false,
     )
 
     train_cfg = BayesianFootball.Training.Independent(
@@ -61,7 +61,8 @@ function create_experiment_tasks(
         max_concurrent_splits = 4
     )
 
-    training_config = Training.TrainingConfig(sampler_conf, train_cfg)
+    training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
+
 
     # 2. Build the ExperimentConfig
     config = Experiments.ExperimentConfig(
