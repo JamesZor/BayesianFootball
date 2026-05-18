@@ -49,10 +49,8 @@ end
 # MAIN COMPUTE METHOD
 # ==============================================================================
 
-function compute_metric(metric::CRPS, exp::ExperimentResults, ds::DataStore)::CRPSResults
-    # 1. Extract latents (Expected Goals, Dispersions)
-    latents_raw = Experiments.extract_oos_predictions(ds, exp)
-    
+function compute_metric(metric::CRPS, exp::ExperimentResults, ds::DataStore, latents_raw::Any)::CRPSResults
+    # 1. Use provided latents
     latent_cols = Predictions.get_latent_column_symbols(exp.config.model, latents_raw.df)
     
     # Ensure :match_id is included so we can join!

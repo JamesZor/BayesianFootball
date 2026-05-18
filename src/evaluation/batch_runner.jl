@@ -17,15 +17,18 @@ function evaluate_experiments(metrics::Vector{<:AbstractScoringRule}, experiment
 
     for (i, exp) in enumerate(experiments)
         model_name = exp.config.name
-        print("[\$i/\$(length(experiments))] Evaluating: \$(model_name) ... ")
-        
+        print("[$i/$(length(experiments))] Evaluating: $(model_name) ... ")
+
+        # 1. Extract Latents ONCE for the entire batch of metrics for this experiment
+        latents = Experiments.extract_oos_predictions(ds, exp)
+
         # Start the row with the model name
         combined_row = (; model = model_name)
         success = true
-        
+
         for metric in metrics
             try
-                result = compute_metric(metric, exp, ds)
+                result = compute_metric(metric, exp, ds, latents)
                 flat_row = to_dataframe_row(exp, result)
                 
                 # Remove the duplicate 'model' key from the flat_row before merging

@@ -78,10 +78,8 @@ end
 # MAIN COMPUTE METHOD
 # ==============================================================================
 
-function compute_metric(metric::RQR, exp::ExperimentResults, ds::DataStore)::RQRResult
-    # 1. Extract latents (Expected Goals, Dispersions)
-    latents_raw = Experiments.extract_oos_predictions(ds, exp)
-    
+function compute_metric(metric::RQR, exp::ExperimentResults, ds::DataStore, latents_raw::Any)::RQRResult
+    # 1. Use provided latents
     latent_cols = Predictions.get_latent_column_symbols(exp.config.model, latents_raw.df)
 
     joined = innerjoin(
