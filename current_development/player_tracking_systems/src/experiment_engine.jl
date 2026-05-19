@@ -30,7 +30,7 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
             
             # Join with matches to get outcomes (goals)
             m_data = filter(row -> row.match_id in ids, ds.matches)
-            df = innerjoin(df, select(m_data, :match_id, :home_goals, :away_goals), on = :match_id)
+            df = innerjoin(df, select(m_data, :match_id, :home_score, :away_score), on = :match_id)
             
             # Target: Home Win (1/0) or goal diff
             function compute_outcome(hg, ag)
@@ -39,7 +39,7 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
                 end
                 return hg > ag ? 1.0 : 0.0
             end
-            df.outcome = compute_outcome.(df.home_goals, df.away_goals)
+            df.outcome = compute_outcome.(df.home_score, df.away_score)
             
             # Filter out any NaNs from outcome (though typically ds.matches won't have missing goals)
             df = filter(row -> !isnan(row.outcome), df)
