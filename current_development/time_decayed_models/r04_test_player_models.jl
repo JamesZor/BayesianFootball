@@ -39,7 +39,7 @@ function create_experiment_tasks(ds::BayesianFootball.Data.DataStore, model, lab
 
     train_cfg = BayesianFootball.Training.Independent(
         parallel=true,
-        max_concurrent_splits=8
+        max_concurrent_splits=4
     )
     training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
@@ -122,7 +122,7 @@ task_bayes = create_experiment_tasks(ds, model_bayes, "player_model_bayesian", s
 
 # 6. Execute 
 println("\n[INFO] Starting execution. This will run 1 fold per model for validation.")
-run_experiment_task.(task_lv[1])
-run_experiment_task.(task_bayes[1])
+run_experiment_task.(task_lv)
+run_experiment_task.(task_bayes)
 
 println("\nValidation complete. Check $save_dir for results.")

@@ -40,3 +40,11 @@ function add_feature!(F_data::Dict, ::PlasticPitchFeature, ordered_ids, team_map
     home_team_map = Dict(row.match_id => row.home_team for row in eachrow(ds.matches))
     F_data[:flat_is_plastic] = [home_team_map[id] in PLASTIC_TEAMS ? 1 : 0 for id in ordered_ids]
 end
+
+# 5. Time Indices (Sequence indices for dynamic models)
+function add_feature!(F_data::Dict, ::TimeIndicesFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
+    # Note: time_indices are currently pre-calculated and added directly in Features.create_features 
+    # to maintain compatibility with the SplitBoundary history/target logic.
+    # This dispatcher exists to satisfy the AbstractFeatureConfig interface.
+    return nothing
+end
