@@ -15,10 +15,10 @@ include("./l00_basic_goals_loader.jl")
 
 
 ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
-ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
-ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Norway())
-ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.SouthKorea())
-
+# ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+# ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Norway())
+# ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.SouthKorea())
+#
 
 goals = get_goals(ds)
 

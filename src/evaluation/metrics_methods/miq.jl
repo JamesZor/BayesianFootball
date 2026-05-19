@@ -95,15 +95,7 @@ end
 # MAIN COMPUTE METHOD
 # ==============================================================================
 
-function compute_metric(metric::MIQ, exp::ExperimentResults, ds::DataStore)::MIQResult
-    # 1. Extract Latents
-    latents_raw = Experiments.extract_oos_predictions(ds, exp)
-
-
-    # REVIEW: - prepare_market_data can be removed - DataLegacy
-    # 2. Prepare Market Data
-    # market_data = Data.prepare_market_data(ds)
-
+function compute_metric(metric::MIQ, exp::ExperimentResults, ds::DataStore, latents_raw::Any)::MIQResult
     # 3. Model Inference (PPD - Posterior Predictive Distribution)
     ppd = Predictions.model_inference(latents_raw)
 

@@ -26,6 +26,7 @@ end
     away_team_indices::Vector{Int},
     season_indices::Vector{Int},
     time_indices::Vector{Int},
+    month_indices::Vector{Int}, # <-- ADD THIS
     home_goals::Vector{Int},
     away_goals::Vector{Int},
     match_weights::Vector{Float64},
@@ -41,6 +42,7 @@ end
     # --- Dimensions ---
     n_teams::Int,
     n_seasons::Int,
+    n_months::Int, # <-- ADD THIS
     config::DynamicMarketXGTimeDecayModel
 )
     # ==========================================
@@ -50,7 +52,7 @@ end
     σ_market ~ config.market_σ
 
     inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
-    disp  ~ to_submodel(build_dispersion(config.dispersion_config))
+    disp  ~ to_submodel(build_dispersion(config.dispersion_config, n_teams, n_months))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     kap   ~ to_submodel(build_kappa(config.kappa_config, n_teams))
     dyn   ~ to_submodel(build_dynamics(config.dynamics_config, n_teams))
@@ -68,6 +70,22 @@ end
     κ_a_flat = view(kap, away_team_indices)
 
     inter_match = view(inter, season_indices)
+
+    # --- Dispersion Construction ---
+    if hasproperty(disp, :team_vol) # AdvancedVolatilityDispersion
+        vol_h = view(disp.team_vol, home_team_indices)
+        vol_a = view(disp.team_vol, away_team_indices)
+        vol_m = view(disp.month_vol, month_indices)
+        
+        log_r_h = disp.base .+ disp.home_offset .+ vol_h .+ vol_a .+ vol_m
+        log_r_a = disp.base .+ vol_h .+ vol_a .+ vol_m
+        
+        r_h_flat = exp.(clamp.(log_r_h, -10.0, 10.0))
+        r_a_flat = exp.(clamp.(log_r_a, -10.0, 10.0))
+    else # GlobalDispersion or HomeAwayDispersion
+        r_h_flat = disp.h
+        r_a_flat = disp.a
+    end
 
     # ==========================================
     # 3. STABLE RATE GENERATION (True xG)
@@ -103,8 +121,8 @@ end
     λ_goals_h = κ_h_flat .* λₕ
     λ_goals_a = κ_a_flat .* λₐ
 
-    log_lik_goals_h = logpdf.(RobustNegativeBinomial.(disp.h, λ_goals_h), home_goals)
-    log_lik_goals_a = logpdf.(RobustNegativeBinomial.(disp.a, λ_goals_a), away_goals)
+    log_lik_goals_h = logpdf.(RobustNegativeBinomial.(r_h_flat, λ_goals_h), home_goals)
+    log_lik_goals_a = logpdf.(RobustNegativeBinomial.(r_a_flat, λ_goals_a), away_goals)
 
     Turing.@addlogprob! sum(log_lik_goals_h .* match_weights)
     Turing.@addlogprob! sum(log_lik_goals_a .* match_weights)
@@ -124,7 +142,7 @@ end
 end
 
 function Features.required_features(model::DynamicMarketXGTimeDecayModel)
-    return [:team_ids, :goals, :dates, :xg, :market_lambda] 
+    return [:team_ids, :goals, :dates, :month, :xg, :market_lambda] 
 end
 
 function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::FeatureSet)
@@ -132,6 +150,7 @@ function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::
     
     n_teams   = Int(data[:n_teams])
     n_seasons  = Int(data[:n_seasons]) 
+    n_months   = 12
     
     date_deltas = Vector{Int}(data[:dates])
     match_weights = 0.5 .^ (date_deltas ./ config.dynamics_config.days_half_life)
@@ -140,6 +159,7 @@ function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::
     away_ids   = Vector{Int}(data[:flat_away_ids])
     season_ids = Vector{Int}(data[:season_indices])
     time_idxs  = Vector{Int}(data[:time_indices])
+    month_indices = Vector{Int}(data[:flat_months])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
@@ -154,13 +174,13 @@ function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::
 
     return build_weighted_xg_market_engine(
         home_ids, away_ids,
-        season_ids, time_idxs, 
+        season_ids, time_idxs, month_indices,
         home_goals, away_goals, 
         match_weights,
         home_xg, away_xg, 
         idx_xg, idx_no_xg,
         market_log_h, market_log_a, idx_market,
-        n_teams, n_seasons,
+        n_teams, n_seasons, n_months,
         config
     )
 end
@@ -171,15 +191,17 @@ function extract_parameters(
     feature_set::FeatureSet,
     chain::Chains
 )
+    # 1. Unpack Metadata
     data = feature_set.data
     n_teams   = Int(data[:n_teams])
     n_rounds  = Int(data[:n_rounds])
     n_seasons = Int(data[:n_seasons])
+    n_months  = 12
     team_map  = data[:team_map]
 
-    # Unpack Components
+    # 2. DELEGATE TO COMPONENTS
     inter_mat = extract_interception(chain, model.interception_config, n_seasons)
-    disp_nt = extract_dispersion(chain, model.dispersion_config)
+    disp_nt = extract_dispersion(chain, model.dispersion_config, n_teams, n_months)
     ha_mat  = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
     kap_mat = extract_kappa(chain, model.kappa_config, n_teams)
     dyn_nt  = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams)
@@ -187,12 +209,13 @@ function extract_parameters(
     n_samples = size(chain, 1) * size(chain, 3) 
     results = Dict{Int, NamedTuple}()
 
+    # 3. FIXTURE LOOP
     for row in eachrow(df)
         mid = Int(row.match_id)
         t_idx = hasproperty(row, :time_index) ? Int(row.time_index) : n_rounds
 
-        h_id = team_map[row.home_team]
-        a_id = team_map[row.away_team]
+        h_id = get(team_map, row.home_team, -1)
+        a_id = get(team_map, row.away_team, -1)
 
         α_h = h_id > 0 ? dyn_nt.α[:, h_id] : zeros(n_samples)
         β_h = h_id > 0 ? dyn_nt.β[:, h_id] : zeros(n_samples)
@@ -207,24 +230,24 @@ function extract_parameters(
         s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
         μ_v = inter_mat[:, s_idx] 
 
-        # 1. True Underlying xG
-        log_xg_h = clamp.(μ_v .+ γ_h .+ α_h .+ β_a, -20.0, 20.0)
-        log_xg_a = clamp.(μ_v .+        α_a .+ β_h, -20.0, 20.0)
-        
-        true_xg_h = exp.(log_xg_h) .+ 1e-6
-        true_xg_a = exp.(log_xg_a) .+ 1e-6
+        # --- Reconstruct Dispersion for this match ---
+        m_idx = month(row.match_date)
+        match_disp = reconstruct_dispersion(disp_nt, h_id, a_id, m_idx)
 
-        # 2. Final Goal Expectancy (xG * Kappa)
-        λ_goals_h = κ_h .* true_xg_h
-        λ_goals_a = κ_a .* true_xg_a
+        # 4. FINAL LIKELIHOOD MATH (Mirrors Turing Engine)
+        log_λ_h = clamp.(μ_v .+ γ_h .+ α_h .+ β_a, -20.0, 20.0)
+        log_λ_a = clamp.(μ_v .+        α_a .+ β_h, -20.0, 20.0)
+
+        λ_goals_h = exp.(log_λ_h) .+ 1e-6
+        λ_goals_a = exp.(log_λ_a) .+ 1e-6
 
         results[mid] = (;
             λ_h = λ_goals_h,
             λ_a = λ_goals_a,
-            r_h = disp_nt.h,  
-            r_a = disp_nt.a,
-            true_xg_h = true_xg_h, 
-            true_xg_a = true_xg_a,
+            r_h = match_disp.h,  
+            r_a = match_disp.a,
+            true_xg_h = exp.(log_λ_h), 
+            true_xg_a = exp.(log_λ_a),
         )
     end
     

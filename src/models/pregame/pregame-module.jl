@@ -36,8 +36,9 @@ include("./engines/xg_market_time_decay_engine.jl")
 include("./engines/xg_engine.jl")
 include("./engines/goals_market_engine.jl")
 include("./engines/xg_market_engine.jl")
-export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel
-export TimeDecayDynamics
+include("./engines/xg_market_player_engine.jl")
+export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel
+export TimeDecayDynamics, PositionalPlayerDynamics
 
 ##
 

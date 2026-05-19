@@ -76,7 +76,7 @@ function extract_home_advantage(chain::Chains, ::HierarchicalLeagueHomeAdvantage
     n_samples = length(base)
     ha_matrix = zeros(n_samples, n_leagues)
     
-    for i in 1:n_teams
+    for i in 1:n_leagues
         team_raw = vec(Array(chain[Symbol("ha.γ_league_raw[$i]")]))
         ha_matrix[:, i] = base .+ (team_raw .* sigma)
     end

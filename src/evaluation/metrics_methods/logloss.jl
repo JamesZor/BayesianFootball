@@ -46,16 +46,8 @@ end
 # MAIN COMPUTE METHOD
 # ==============================================================================
 
-function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore)::LogLossResult
+function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore, latents_raw::Any)::LogLossResult
     
-    # 1. Extract Latents
-    latents_raw = Experiments.extract_oos_predictions(ds, exp)
-    
-
-    # REVIEW: - prepare_market_data can be removed - DataLegacy
-    # 2. Prepare Market Data
-    # market_data = Data.prepare_market_data(ds)
-
     # 3. Model Inference (Get the model's probabilities)
     ppd = Predictions.model_inference(latents_raw)
     model_features = transform(ppd.df, :distribution => ByRow(mean) => :prob_model)
@@ -77,8 +69,7 @@ function compute_metric(metric::LogLoss, exp::ExperimentResults, ds::DataStore):
     
     # 6. Calculate LogLoss Arrays
     ll_model_array  = calc_logloss.(analysis_df.prob_model, analysis_df.Y)
-    # ll_market_array = calc_logloss.(analysis_df.prob_fair_close, analysis_df.Y)
-    ll_market_array = calc_logloss.(analysis_df.odds_close, analysis_df.Y)
+    ll_market_array = calc_logloss.(analysis_df.prob_fair_close, analysis_df.Y)
     
     # 7. Summarize
     mean_model  = mean(ll_model_array)

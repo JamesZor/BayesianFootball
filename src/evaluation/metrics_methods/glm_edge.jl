@@ -49,10 +49,7 @@ end
 # MAIN COMPUTE METHOD
 # ==============================================================================
 
-function compute_metric(metric::GLMEdge, exp::ExperimentResults, ds::DataStore)::GLMEdgeResult
-    
-    # 1. Extract Latents
-    latents_raw = Experiments.extract_oos_predictions(ds, exp)
+function compute_metric(metric::GLMEdge, exp::ExperimentResults, ds::DataStore, latents_raw::Any)::GLMEdgeResult
     
     # 2. Model Inference (PPD - Posterior Predictive Distribution)
     ppd = Predictions.model_inference(latents_raw)
