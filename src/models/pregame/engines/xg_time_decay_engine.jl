@@ -126,7 +126,14 @@ end
 end
 
 function Features.required_features(model::DynamicXGTimeDecayModel)
-    return [:team_ids, :goals, :dates, :month, :xg] 
+    return AbstractFeatureConfig[
+        TeamIDsFeature(), 
+        GoalsFeature(), 
+        DatesFeature(), 
+        MonthFeature(), 
+        XGFeature(),
+        TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicXGTimeDecayModel, feature_set::FeatureSet)

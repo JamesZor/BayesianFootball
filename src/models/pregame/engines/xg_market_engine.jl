@@ -139,7 +139,14 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketXGModel)
-    return [:team_ids, :goals, :month, :xg, :market_lambda] 
+    return AbstractFeatureConfig[
+        TeamIDsFeature(), 
+        GoalsFeature(), 
+        MonthFeature(), 
+        XGFeature(), 
+        MarketLambdaFeature(),
+        TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicMarketXGModel, feature_set::FeatureSet)

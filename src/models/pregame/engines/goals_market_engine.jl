@@ -118,7 +118,13 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketGoalsModel)
-    return [:team_ids, :goals, :month, :market_lambda] 
+    return AbstractFeatureConfig[
+        TeamIDsFeature(), 
+        GoalsFeature(), 
+        MonthFeature(), 
+        MarketLambdaFeature(),
+        TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicMarketGoalsModel, feature_set::Features.FeatureSet)

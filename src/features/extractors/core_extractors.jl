@@ -1,12 +1,12 @@
 # src/features/extractors/core_extractors.jl
 
 # Fallback error for missing features
-function add_feature!(F_data::Dict, ::Val{T}, ordered_ids, team_map::Dict, ds::Data.DataStore) where T
-    error("No feature extractor defined for trait :$T")
+function add_feature!(F_data::Dict, config::AbstractFeatureConfig, ordered_ids, team_map::Dict, ds::Data.DataStore)
+    error("No feature extractor defined for config type: $(typeof(config))")
 end
 
 # 1. Team IDs (Mapping match_id to vocabulary indices)
-function add_feature!(F_data::Dict, ::Val{:team_ids}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+function add_feature!(F_data::Dict, ::TeamIDsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
     # Match ID -> (HomeTeamName, AwayTeamName)
     match_team_map = Dict(row.match_id => (row.home_team, row.away_team) for row in eachrow(ds.matches))
     
@@ -15,7 +15,7 @@ function add_feature!(F_data::Dict, ::Val{:team_ids}, ordered_ids, team_map::Dic
 end
 
 # 2. Goals (Actual scores)
-function add_feature!(F_data::Dict, ::Val{:goals}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+function add_feature!(F_data::Dict, ::GoalsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
     # Match ID -> (HomeScore, AwayScore)
     score_map = Dict(row.match_id => (row.home_score, row.away_score) for row in eachrow(ds.matches))
     

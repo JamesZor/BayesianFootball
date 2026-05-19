@@ -8,13 +8,15 @@ Base.@kwdef struct DynamicMarketXGPlayerModel{
     P<:AbstractDynamicsConfig, # Expected: PositionalPlayerDynamics
     D<:AbstractDispersionConfig, 
     H<:AbstractHomeAdvantageConfig,
-    K<:AbstractKappaConfig
+    K<:AbstractKappaConfig,
+    R<:AbstractFeatureConfig   # The player rating feature configuration
   } <: AbstractNegBinModel
       interception_config::I
       player_dynamics_config::P 
       dispersion_config::D
       homeadvantage_config::H
       kappa_config::K
+      player_ratings_feature::R # e.g., PlayerRatingsFeature(BayesianTracker(...))
       ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
       market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
       market_weight::Float64 = 1.0
@@ -161,7 +163,15 @@ end
 # 3. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketXGPlayerModel)
-    return [:team_ids, :goals, :month, :xg, :market_lambda, :player_ratings] 
+    return AbstractFeatureConfig[
+        TeamIDsFeature(), 
+        GoalsFeature(), 
+        MonthFeature(), 
+        XGFeature(), 
+        MarketLambdaFeature(),
+        model.player_ratings_feature,
+        TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicMarketXGPlayerModel, feature_set::FeatureSet)

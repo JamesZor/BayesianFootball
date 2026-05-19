@@ -1,63 +1,56 @@
 # src/features/extractors/player_extractors.jl
 
-"""
-    calc_pre_match_ewma(ratings::AbstractVector; alpha=0.15)
+using DataFrames
+using Statistics
+using Dates
 
-Calculates the EWMA of ratings, but shifted so that the value for index i 
-is the EWMA of indices 1 to i-1. This ensures no look-ahead bias.
 """
-function calc_pre_match_ewma(ratings::AbstractVector; alpha=0.15)
-    n = length(ratings)
-    baselines = fill(NaN, n)
-    
-    if n > 1
-        current_ewma = Float64(ratings[1])
-        for i in 2:n
-            baselines[i] = current_ewma
-            # Update for next step
-            if !isnan(ratings[i])
-                current_ewma = (alpha * ratings[i]) + ((1.0 - alpha) * current_ewma)
-            end
-        end
-    end
-    return baselines
-end
+    add_feature!(F_data::Dict, config::PlayerRatingsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
 
-function add_feature!(F_data::Dict, ::Val{:player_ratings}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+Extracts player positional ratings using a specific tracking algorithm defined in `config.tracker`.
+"""
+function add_feature!(F_data::Dict, config::PlayerRatingsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
+    println("[INFO] Extracting Player Ratings Feature using $(typeof(config.tracker))...")
+
     # 1. Prepare base data with dates for sorting
-    lineups = dropmissing(ds.lineups, :rating)
+    # Use select for efficiency
+    lineups = select(ds.lineups, :match_id, :player_id, :team_side, :position, :rating, :minutes_played)
     matches_dates = select(ds.matches, :match_id, :match_date)
     
-    # Join to get dates and sort
+    # Join to get dates and sort chronologically
     df_lineups = innerjoin(lineups, matches_dates, on = :match_id)
     sort!(df_lineups, :match_date)
 
-    # 2. Calculate Pre-Match EWMA for each player
+    # 2. Calculate Pre-Match Ratings using the tracker
     gdf = groupby(df_lineups, :player_id)
-    transform!(gdf, :rating => (r -> calc_pre_match_ewma(r, alpha=0.15)) => :pre_match_ewma)
+    transform!(gdf, :rating => (r -> calculate_player_ratings(config.tracker, r)) => :pre_match_rating)
 
-    # 3. Handle debuts / cold starts
-    global_avg = mean(df_lineups.rating)
-    df_lineups.pre_match_ewma = coalesce.(replace(df_lineups.pre_match_ewma, NaN => global_avg), global_avg)
+    # 3. Handle debuts / cold starts (NaNs/Missing)
+    # Filter valid ratings to find global mean
+    valid_ratings = filter(x -> !ismissing(x) && !isnan(x), df_lineups.rating)
+    global_avg = isempty(valid_ratings) ? 0.0 : mean(valid_ratings)
+    
+    df_lineups.pre_match_rating = coalesce.(replace(df_lineups.pre_match_rating, NaN => global_avg), global_avg)
 
     # 4. Minute Weighting
     mins = coalesce.(df_lineups.minutes_played, 0.0)
-    df_lineups.weighted_rating = df_lineups.pre_match_ewma .* (clamp.(mins, 0.0, 90.0) ./ 90.0)
+    df_lineups.weighted_rating = df_lineups.pre_match_rating .* (clamp.(mins, 0.0, 90.0) ./ 90.0)
 
     # 5. Positional Aggregation
     function clean_pos(p)
         if ismissing(p) || p == ""
-            return "M" # Default to Midfield if missing
+            return "M" # Default to Midfield
         end
         return p
     end
     df_lineups.clean_position = clean_pos.(df_lineups.position)
 
-    # Aggregate by match, side, and position
+    # Aggregate by match, side, and position (G, D, M, F)
     agg_df = combine(groupby(df_lineups, [:match_id, :team_side, :clean_position]), 
                      :weighted_rating => sum => :total_rating)
 
-    # Pivot to match level
+    # 6. Pivot to match level lookup map
+    # match_id -> (side, pos) -> rating
     ratings_map = Dict{Int, Dict{Tuple{String, String}, Float64}}()
     
     for row in eachrow(agg_df)
@@ -71,7 +64,7 @@ function add_feature!(F_data::Dict, ::Val{:player_ratings}, ordered_ids, team_ma
     # Helper to get rating or 0.0 if not found
     get_r(m_id, side, pos) = get(get(ratings_map, m_id, Dict()), (side, pos), 0.0)
 
-    # 6. Fill F_data with the 8 flat vectors
+    # 7. Fill F_data with the 8 flat vectors for the ordered_ids
     positions = ["G", "D", "M", "F"]
     sides = ["home", "away"]
 
@@ -84,6 +77,6 @@ function add_feature!(F_data::Dict, ::Val{:player_ratings}, ordered_ids, team_ma
     
     # Store the lookup map for ALL matches (supports OOS prediction)
     F_data[:player_ratings_map] = ratings_map
-    # Store the match IDs (Training sequence)
-    F_data[:match_ids] = ordered_ids
+    
+    println("[INFO] Player Ratings Feature extraction complete.")
 end

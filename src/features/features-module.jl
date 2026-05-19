@@ -21,6 +21,11 @@ include("./map_builders.jl")
 include("./builder.jl")
 
 # Relational Extractors
+include("./types.jl")
+include("./trackers/last_value.jl")
+include("./trackers/window_average.jl")
+include("./trackers/ewma.jl")
+include("./trackers/bayesian.jl")
 include("./market_inverse_utils.jl")
 include("./extractors/core_extractors.jl")
 include("./extractors/time_extractors.jl")
