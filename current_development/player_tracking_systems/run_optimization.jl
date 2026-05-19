@@ -30,15 +30,16 @@ println("[INFO] Julia running with $(Threads.nthreads()) threads.")
 ds = Data.load_datastore_sql(Data.Ireland()) 
 
 cv_config = Data.GroupedCVConfig(
+    # Pass a list of lists. Each inner list is processed as a single group.
+    # To combine leagues 56 and 57, use: tournament_groups = [[56, 57]]
     tournament_groups = [Data.tournament_ids(ds.segment)], 
-    target_seasons = ["2026"],  # We want to test on the 25/26 season
+    target_seasons = ["2023","2024","2025","2026"],  # We want to test on the 25/26 season
     history_seasons = 2,        # Use 24/25 as history
-    dynamics_col = :match_biweek,
+    dynamics_col = :match_biweek,# Step forward month-by-month
     warmup_period = 0, 
     stop_early = false
 )
-
-boundaries = Data.create_id_boundaries(ds, cv_config)
+boundaries = Data.create_id_boundaries(ds, cv_config);
 println("[INFO] Created $(length(boundaries)) CV boundaries.")
 
 # 2. Run Optimization

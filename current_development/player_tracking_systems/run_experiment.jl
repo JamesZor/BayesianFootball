@@ -6,6 +6,7 @@ using BayesianFootball
 using DataFrames
 using Statistics
 
+
 # Include source files
 #
 include("src/types.jl")
@@ -117,11 +118,19 @@ julia> show(df_results; truncate = 0)
 # ==========================================
 println("[INFO] Generating Bayesian Hyperparameter Grid...")
 
-# Define the search spaces
-prior_means   = [6.5, 6.8];              # Or just [global_mean]
-prior_vars    = [0.5, 1.0, 2.0];          # Initial uncertainty
-obs_vars      = [0.1, 0.25, 0.5, 1.0];    # Measurement noise
-process_noises= [0.01, 0.05, 0.1, 0.2];   # Time decay
+# Drop the square brackets entirely
+prior_means    = 6.1:0.1:6.8              # 8 values
+prior_vars     = 0.5:0.1:2.0              # 16 values
+obs_vars       = 0.1:0.1:2.0              # 20 values
+process_noises = 0.01:0.05:0.5            # 10 values
+
+bayesian_grid = AbstractRatingTracker[
+    BayesianTracker(pm, pv, ov, pn)
+    for pm in prior_means
+    for pv in prior_vars
+    for ov in obs_vars
+    for pn in process_noises
+];
 
 # Create the full Cartesian product (2 * 3 * 4 * 4 = 96 configurations)
 bayesian_grid = AbstractRatingTracker[
@@ -138,7 +147,7 @@ println("[INFO] Generated $(length(bayesian_grid)) Bayesian configurations.")
 experiment_configs = vcat(
     [LastValueTracker()], 
     bayesian_grid
-)
+);
 
 # Pass this directly into your threaded engine!
 results_df = run_experiment_grid(experiment_configs, ds, boundaries)
