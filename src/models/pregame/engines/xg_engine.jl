@@ -129,12 +129,12 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicXGModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        MonthFeature(), 
-        XGFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 
