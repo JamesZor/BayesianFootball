@@ -21,6 +21,12 @@ function optimize_bayesian_tracker(ds::Data.DataStore, boundaries)
         obs_var = x[3]
         process_noise = x[4]
         
+        # Defensive Check: If Optim somehow violates bounds, penalize heavily
+        # Variances must be strictly positive
+        if prior_var <= 0.0 || obs_var <= 0.0 || process_noise < 0.0
+            return 1e10
+        end
+        
         # Instantiate Config
         config = BayesianTracker(prior_mean, prior_var, obs_var, process_noise)
         
@@ -44,13 +50,18 @@ function optimize_bayesian_tracker(ds::Data.DataStore, boundaries)
     lower_bounds = [6.0, 0.1, 0.1, 0.001]
     upper_bounds = [7.5, 3.0, 3.0, 0.5]
     
-    # Run optimization
+    # Initial guess (x0) - Start in the middle of the bounds
+    x0 = [6.7, 1.0, 1.0, 0.05]
+    
+    # Run optimization using SAMIN (Simulated Annealing) which is excellent 
+    # for box-constrained problems and avoids local minima.
     opt_result = Optim.optimize(
         objective, 
         lower_bounds, 
         upper_bounds, 
-        ParticleSwarm(), 
-        Optim.Options(show_trace=true, iterations=100)
+        x0,
+        SAMIN(), 
+        Optim.Options(show_trace=true, iterations=1000) # SAMIN often needs more iterations but they are fast
     )
     
     return opt_result
