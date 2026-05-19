@@ -27,7 +27,7 @@ cv_config = Data.GroupedCVConfig(
     # Pass a list of lists. Each inner list is processed as a single group.
     # To combine leagues 56 and 57, use: tournament_groups = [[56, 57]]
     tournament_groups = [Data.tournament_ids(ds.segment)], 
-    target_seasons = ["2026"],  # We want to test on the 25/26 season
+    target_seasons = ["2024","2025","2026"],  # We want to test on the 25/26 season
     history_seasons = 2,        # Use 24/25 as history
     dynamics_col = :match_biweek,# Step forward month-by-month
     warmup_period = 0, 

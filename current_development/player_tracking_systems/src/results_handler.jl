@@ -13,10 +13,14 @@ function config_to_row(config::AbstractRatingTracker, metrics::TrackerMetrics)
     # 1. Tracker Type
     row[:tracker_type] = string(typeof(config))
     
-    # 2. Unpack parameters via reflection
+    # 2. Unpack parameters via reflection and create a summary string
+    params_parts = String[]
     for field in propertynames(config)
-        row[field] = getproperty(config, field)
+        val = getproperty(config, field)
+        row[field] = val
+        push!(params_parts, "$(string(field))=$(val)")
     end
+    row[:parameters] = join(params_parts, ", ")
     
     # 3. Add metrics
     row[:log_loss] = metrics.log_loss
