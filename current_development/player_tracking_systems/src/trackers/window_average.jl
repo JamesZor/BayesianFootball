@@ -25,7 +25,7 @@ function calculate_player_ratings(config::WindowAverageTracker, ratings::Abstrac
         if end_idx >= start_idx
             # Extract window from the original ratings (up to i-1)
             window = ratings[start_idx:end_idx]
-            clean_window = filter(!isnan, window)
+            clean_window = filter(x -> !ismissing(x) && !isnan(x), window)
             if !isempty(clean_window)
                 out[i] = config.agg_func(clean_window)
             end

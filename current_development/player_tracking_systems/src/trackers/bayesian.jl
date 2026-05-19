@@ -22,7 +22,7 @@ function calculate_player_ratings(config::BayesianTracker, ratings::AbstractVect
         out[i] = curr_mean
         
         obs = ratings[i]
-        if !isnan(obs)
+        if !ismissing(obs) && !isnan(obs)
             # 1. Prediction Step (Time Update)
             # x_pred = x_prev, var_pred = var_prev + process_noise
             pred_var = curr_var + config.process_noise

@@ -7,6 +7,7 @@ using DataFrames
 using Statistics
 
 # Include source files
+#
 include("src/types.jl")
 include("src/preprocessing.jl")
 include("src/trackers/last_value.jl")
@@ -20,16 +21,36 @@ println("--- Player Tracking System Experiment ---")
 
 # 1. Setup Data and CV Boundaries
 # Using a subset for faster prototyping (e.g. Scottish Premier League)
-ds = Data.load_datastore_sql(Data.ScottishLower()) 
+ds = Data.load_datastore_sql(Data.Ireland()) 
 
 cv_config = Data.GroupedCVConfig(
-    group_col = :season,
-    min_train_groups = 2,
-    test_groups_size = 1
+    # Pass a list of lists. Each inner list is processed as a single group.
+    # To combine leagues 56 and 57, use: tournament_groups = [[56, 57]]
+    tournament_groups = [Data.tournament_ids(ds.segment)], 
+    target_seasons = ["2026"],  # We want to test on the 25/26 season
+    history_seasons = 2,        # Use 24/25 as history
+    dynamics_col = :match_biweek,# Step forward month-by-month
+    warmup_period = 0, 
+    stop_early = false
 )
-
 boundaries = Data.create_id_boundaries(ds, cv_config)
 println("[INFO] Created $(length(boundaries)) CV boundaries.")
+
+#=
+julia> boundaries = Data.create_id_boundaries(ds, cv_config)
+8-element Vector{Tuple{SplitBoundary, GroupedSplitMetaData}}:
+ (SplitBoundary(1, 0, [11907472, 11907470, 11907469, 11907471, 11907468, 11907474, 11907475, 11907476, 11907473, 11907477  …  13242864, 13242865, 13242859, 13242861, 14773611, 13242835, 13242877, 13242866, 13242850, 13242851], Int64[]), GroupedSplit(Tourns: [79], Season: 2026, Week: 0, Hist: 2))
+ (SplitBoundary(2, 1, [11907472, 11907470, 11907469, 11907471, 11907468, 11907474, 11907475, 11907476, 11907473, 11907477  …  13242864, 13242865, 13242859, 13242861, 14773611, 13242835, 13242877, 13242866, 13242850, 13242851], [15238009, 15238008, 15238007, 15238011, 15238058, 15238012, 15238016]), GroupedSplit(Tourns: [79], Season: 2026, Week: 1, Hist: 2))
+ (SplitBoundary(3, 2, [11907472, 11907470, 11907469, 11907471, 11907468, 11907474, 11907475, 11907476, 11907473, 11907477  …  13242864, 13242865, 13242859, 13242861, 14773611, 13242835, 13242877, 13242866, 13242850, 13242851], [15238009, 15238008, 15238007, 15238011, 15238058, 15238012, 15238016, 15238019, 15238020,
+=#
+
+
+#=
+julia> println("[INFO] Created $(length(boundaries)) CV boundaries.")
+[INFO] Created 8 CV boundaries.
+=#
+
+
 
 # 2. Define Experiment Grid
 configs = AbstractRatingTracker[]

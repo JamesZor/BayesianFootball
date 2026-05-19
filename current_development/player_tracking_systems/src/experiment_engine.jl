@@ -16,7 +16,10 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
     
     metrics_list = TrackerMetrics[]
     
-    for (i, boundary) in enumerate(boundaries)
+    for (i, boundary_tuple) in enumerate(boundaries)
+        # Handle both Tuple and SplitBoundary directly (robustness)
+        boundary = boundary_tuple isa Tuple ? boundary_tuple[1] : boundary_tuple
+        
         train_ids = boundary.train_ids
         test_ids = boundary.test_ids
         
@@ -30,7 +33,16 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
             df = innerjoin(df, select(m_data, :match_id, :home_goals, :away_goals), on = :match_id)
             
             # Target: Home Win (1/0) or goal diff
-            df.outcome = [hg > ag ? 1.0 : 0.0 for (hg, ag) in zip(df.home_goals, df.away_goals)]
+            function compute_outcome(hg, ag)
+                if ismissing(hg) || ismissing(ag)
+                    return NaN
+                end
+                return hg > ag ? 1.0 : 0.0
+            end
+            df.outcome = compute_outcome.(df.home_goals, df.away_goals)
+            
+            # Filter out any NaNs from outcome (though typically ds.matches won't have missing goals)
+            df = filter(row -> !isnan(row.outcome), df)
             
             # Features: aggregate ratings
             positions = ["G", "D", "M", "F"]

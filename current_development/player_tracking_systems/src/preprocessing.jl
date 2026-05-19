@@ -27,7 +27,7 @@ function generate_tracker_features(config::AbstractRatingTracker, ds::Data.DataS
 
     # 3. Handle missing/debut ratings (NaNs) by filling with the global mean
     # Filter non-NaNs to find the global average of raw ratings
-    valid_ratings = filter(!isnan, df_lineups.rating)
+    valid_ratings = filter(x -> !ismissing(x) && !isnan(x), df_lineups.rating)
     global_avg = isempty(valid_ratings) ? 0.0 : mean(valid_ratings)
     
     df_lineups.pre_match_rating = coalesce.(replace(df_lineups.pre_match_rating, NaN => global_avg), global_avg)
