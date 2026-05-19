@@ -9,14 +9,19 @@ using BayesianFootball.Data
     evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds, boundaries)
 
 Evaluates a tracker by fitting a GLM on the generated features across CV boundaries.
+Multithreaded across boundaries to maximize throughput.
 """
 function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.DataStore, boundaries)
     # 1. Generate features (match_id -> (side, pos) -> rating)
     ratings_map = generate_tracker_features(config, ds)
     
-    metrics_list = TrackerMetrics[]
+    n_folds = length(boundaries)
     
-    for (i, boundary_tuple) in enumerate(boundaries)
+    # Thread-safe array to collect results
+    results = Vector{TrackerMetrics}(undef, n_folds)
+    
+    Threads.@threads for i in 1:n_folds
+        boundary_tuple = boundaries[i]
         # Handle both Tuple and SplitBoundary directly (robustness)
         boundary = boundary_tuple isa Tuple ? boundary_tuple[1] : boundary_tuple
         
@@ -41,7 +46,7 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
             end
             df.outcome = compute_outcome.(df.home_score, df.away_score)
             
-            # Filter out any NaNs from outcome (though typically ds.matches won't have missing goals)
+            # Filter out any NaNs from outcome
             df = filter(row -> !isnan(row.outcome), df)
             
             # Features: aggregate ratings
@@ -67,11 +72,11 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
         df_test = build_df(test_ids)
         
         if isempty(df_train) || isempty(df_test)
+            results[i] = TrackerMetrics(NaN, NaN, NaN)
             continue
         end
 
         # Fit GLM: Logistic regression on Home Win using rating_diff
-        # We want to see if our rating_diff has predictive power
         model = glm(@formula(outcome ~ rating_diff), df_train, Bernoulli(), LogitLink())
         
         # Predictions
@@ -88,13 +93,21 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
         edge_coef = coef_table.cols[1][edge_idx]
         edge_pvalue = coef_table.cols[4][edge_idx]
         
-        push!(metrics_list, TrackerMetrics(logloss, edge_coef, edge_pvalue))
+        # Thread-safe write
+        results[i] = TrackerMetrics(logloss, edge_coef, edge_pvalue)
+    end
+    
+    # Filter out folds that were skipped (NaN metrics)
+    valid_results = filter(m -> !isnan(m.log_loss), results)
+    
+    if isempty(valid_results)
+        return TrackerMetrics(NaN, NaN, NaN)
     end
     
     # Average metrics
-    avg_logloss = mean([m.log_loss for m in metrics_list])
-    avg_edge_coef = mean([m.glm_edge_coef for m in metrics_list])
-    avg_edge_pvalue = mean([m.glm_edge_pvalue for m in metrics_list])
+    avg_logloss = mean([m.log_loss for m in valid_results])
+    avg_edge_coef = mean([m.glm_edge_coef for m in valid_results])
+    avg_edge_pvalue = mean([m.glm_edge_pvalue for m in valid_results])
     
     return TrackerMetrics(avg_logloss, avg_edge_coef, avg_edge_pvalue)
 end
@@ -102,12 +115,12 @@ end
 """
     run_experiment_grid(configs::Vector{<:AbstractRatingTracker}, ds, boundaries)
 
-Parallel execution of experiment grid.
+Sequential execution of experiment grid, allowing multithreading to happen inside evaluate_tracker_on_boundaries.
 """
 function run_experiment_grid(configs::Vector{<:AbstractRatingTracker}, ds, boundaries)
     results = Vector{Tuple{AbstractRatingTracker, TrackerMetrics}}(undef, length(configs))
     
-    Threads.@threads for i in 1:length(configs)
+    for i in 1:length(configs)
         config = configs[i]
         println("[INFO] Testing config $(i)/$(length(configs)): $(typeof(config))")
         metrics = evaluate_tracker_on_boundaries(config, ds, boundaries)
