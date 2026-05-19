@@ -9,7 +9,7 @@ Base.@kwdef struct DynamicMarketXGPlayerModel{
     D<:AbstractDispersionConfig, 
     H<:AbstractHomeAdvantageConfig,
     K<:AbstractKappaConfig,
-    R<:AbstractFeatureConfig   # The player rating feature configuration
+    R<:Features.AbstractFeatureConfig   # The player rating feature configuration
   } <: AbstractNegBinModel
       interception_config::I
       player_dynamics_config::P 
@@ -163,14 +163,14 @@ end
 # 3. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketXGPlayerModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        MonthFeature(), 
-        XGFeature(), 
-        MarketLambdaFeature(),
+    return Features.AbstractFeatureConfig[
+       Features.TeamIDsFeature(), 
+       Features.GoalsFeature(), 
+       Features.MonthFeature(), 
+       Features.XGFeature(), 
+       Features.MarketLambdaFeature(),
         model.player_ratings_feature,
-        TimeIndicesFeature()
+       Features.TimeIndicesFeature()
     ] 
 end
 

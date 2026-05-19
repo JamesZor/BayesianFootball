@@ -126,13 +126,13 @@ end
 end
 
 function Features.required_features(model::DynamicXGTimeDecayModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        DatesFeature(), 
-        MonthFeature(), 
-        XGFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 

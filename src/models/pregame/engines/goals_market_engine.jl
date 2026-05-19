@@ -118,12 +118,12 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketGoalsModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        MonthFeature(), 
-        MarketLambdaFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.MonthFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 

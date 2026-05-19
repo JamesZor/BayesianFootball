@@ -139,13 +139,13 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicMarketXGModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        MonthFeature(), 
-        XGFeature(), 
-        MarketLambdaFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 

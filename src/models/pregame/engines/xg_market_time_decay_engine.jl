@@ -142,14 +142,14 @@ end
 end
 
 function Features.required_features(model::DynamicMarketXGTimeDecayModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        DatesFeature(), 
-        MonthFeature(), 
-        XGFeature(), 
-        MarketLambdaFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 

@@ -20,12 +20,12 @@ end
 
 
 function Features.required_features(model::DynamicGoalsTimeDecayModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        DatesFeature(), 
-        MonthFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 

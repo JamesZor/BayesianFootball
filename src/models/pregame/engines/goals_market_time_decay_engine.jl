@@ -106,13 +106,13 @@ end
 end
 
 function Features.required_features(model::DynamicMarketGoalsTimeDecayModel)
-    return AbstractFeatureConfig[
-        TeamIDsFeature(), 
-        GoalsFeature(), 
-        DatesFeature(), 
-        MonthFeature(), 
-        MarketLambdaFeature(),
-        TimeIndicesFeature()
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 
