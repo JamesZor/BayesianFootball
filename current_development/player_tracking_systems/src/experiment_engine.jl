@@ -20,8 +20,8 @@ function evaluate_tracker_on_boundaries(config::AbstractRatingTracker, ds::Data.
         # Handle both Tuple and SplitBoundary directly (robustness)
         boundary = boundary_tuple isa Tuple ? boundary_tuple[1] : boundary_tuple
         
-        train_ids = boundary.train_ids
-        test_ids = boundary.test_ids
+        train_ids = boundary.history_match_ids
+        test_ids = boundary.target_match_ids
         
         # Build training and testing DataFrames
         function build_df(ids)
