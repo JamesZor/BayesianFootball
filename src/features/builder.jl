@@ -91,9 +91,9 @@ function create_features(
     F_data[:n_rounds] = n_history + n_target
 
     # 5. DYNAMIC PIPELINE
-    # The model asks for traits, and we dispatch to add_feature! overloads
-    for trait in required_features(model)
-        add_feature!(F_data, Val(trait), ordered_ids, team_map, ds)
+    # The model asks for features, and we dispatch to add_feature! overloads
+    for config in required_features(model)
+        add_feature!(F_data, config, ordered_ids, team_map, ds)
     end
 
     return FeatureSet(F_data)

@@ -142,7 +142,15 @@ end
 end
 
 function Features.required_features(model::DynamicMarketXGTimeDecayModel)
-    return [:team_ids, :goals, :dates, :month, :xg, :market_lambda] 
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::FeatureSet)

@@ -1,7 +1,7 @@
 # src/features/extractors/market_extractors.jl
 
 # 1. Market Lambdas (Solves for implied home/away goals using odds)
-function add_feature!(F_data::Dict, ::Val{:market_lambda}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+function add_feature!(F_data::Dict, ::MarketLambdaFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
     # We rely on market_inverse_utils.jl which is included in the module entry point
     
     id_set = Set(ordered_ids)

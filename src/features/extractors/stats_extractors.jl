@@ -1,7 +1,7 @@
 # src/features/extractors/stats_extractors.jl
 
 # 1. Shots (Aggregate shots for the whole match)
-function add_feature!(F_data::Dict, ::Val{:shots}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+function add_feature!(F_data::Dict, ::ShotsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
     # Filter statistics for "ALL" period and aggregate
     # match_id -> (home_shots, away_shots)
     stats_map = Dict(
@@ -17,7 +17,7 @@ function add_feature!(F_data::Dict, ::Val{:shots}, ordered_ids, team_map::Dict, 
 end
 
 # 2. Expected Goals (xG)
-function add_feature!(F_data::Dict, ::Val{:xg}, ordered_ids, team_map::Dict, ds::Data.DataStore)
+function add_feature!(F_data::Dict, ::XGFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
     stats_map = Dict(
         row.match_id => (row.expectedGoals_home, row.expectedGoals_away) 
         for row in eachrow(ds.statistics) if row.period == "ALL"

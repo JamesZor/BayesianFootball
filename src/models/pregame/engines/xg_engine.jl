@@ -129,7 +129,13 @@ end
 # 2. THE BUILDER
 # ==========================================
 function Features.required_features(model::DynamicXGModel)
-    return [:team_ids, :goals, :month, :xg] 
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.MonthFeature(), 
+        Features.XGFeature(),
+        Features.TimeIndicesFeature()
+    ] 
 end
 
 function build_turing_model(config::DynamicXGModel, feature_set::FeatureSet)

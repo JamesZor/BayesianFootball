@@ -75,7 +75,12 @@ end
 end
 
 function Features.required_features(model::DynamicGoalsModel)
-    return [:team_ids, :goals, :month] 
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.MonthFeature(),
+        Features.TimeIndicesFeature()
+    ] 
 end
 
 
