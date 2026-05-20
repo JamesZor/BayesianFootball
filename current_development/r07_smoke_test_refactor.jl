@@ -93,7 +93,7 @@ for (label, m) in models_to_test
         training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
         
         # Just run the first split manually to save time
-        chain = sample(tm, NUTS(sampler_conf.n_samples, sampler_conf.target_acceptance), sampler_conf.n_iters)
+        chain = sample(tm, NUTS(sampler_conf.n_warmup, sampler_conf.accept_rate), sampler_conf.n_samples)
         
         println("   - Sampling complete (ESS for lp: $(ess_bulk(chain[:lp])))")
         println("✅ PASSED: $label")

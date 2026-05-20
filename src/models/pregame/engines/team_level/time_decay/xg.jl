@@ -150,7 +150,7 @@ function build_turing_model(config::DynamicXGTimeDecayModel, feature_set::Featur
     away_ids   = Vector{Int}(data[:flat_away_ids])
     season_ids = Vector{Int}(data[:season_indices])
     time_idxs  = Vector{Int}(data[:time_indices])
-    month_indices = Vector{Int}(data[:month_indices])
+    month_indices = Vector{Int}(data[:flat_months])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
