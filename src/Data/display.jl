@@ -13,14 +13,18 @@ function Base.show(io::IO, ::MIME"text/plain", ds::DataStore)
     println(io, "=========")
 
     # Define a helper to print each dataframe section consistently
-    function print_df_summary(label, df)
-        # Section Header with Dimensions
-        printstyled(io, "[$label] ", color=:magenta)
+    function print_df_summary(label, field_name, df)
+        # Section Header with Accessor
+        printstyled(io, "[$label] ", color=:magenta, bold=true)
+        printstyled(io, "access via: ", color=:light_black)
+        printstyled(io, "ds.$field_name\n", color=:cyan)
+        
         if isempty(df)
-            printstyled(io, "(Empty)\n", color=:light_black)
+            printstyled(io, "  (Empty)\n", color=:light_black)
         else
             dims = "$(nrow(df)) rows × $(ncol(df)) cols"
-            printstyled(io, "($dims)\n", color=:white)
+            printstyled(io, "  Dimensions: ", color=:light_black)
+            printstyled(io, "$dims\n", color=:white)
             
             # Column Preview (First 5-6 columns to avoid clutter)
             cols = names(df)
@@ -35,18 +39,16 @@ function Base.show(io::IO, ::MIME"text/plain", ds::DataStore)
             end
             println(io)
         end
+        println(io)
     end
 
-    # Print the five main sections
-    print_df_summary("Matches", ds.matches)
-    println(io)
-    print_df_summary("Statistics", ds.statistics)
-    println(io)
-    print_df_summary("Odds", ds.odds)
-    println(io)
-    print_df_summary("Lineups", ds.lineups)
-    println(io)
-    print_df_summary("Incidents", ds.incidents)
+    # Print the main sections
+    print_df_summary("Matches", :matches, ds.matches)
+    print_df_summary("Statistics", :statistics, ds.statistics)
+    print_df_summary("Odds (Sofascore)", :odds, ds.odds)
+    print_df_summary("Odds (Betfair)", :betfair_odds, ds.betfair_odds)
+    print_df_summary("Lineups", :lineups, ds.lineups)
+    print_df_summary("Incidents", :incidents, ds.incidents)
 end
 
 # Compact inline show (for arrays/logging)
@@ -55,10 +57,11 @@ function Base.show(io::IO, ds::DataStore)
     m = nrow(ds.matches)
     s = nrow(ds.statistics)
     o = nrow(ds.odds)
+    bo = nrow(ds.betfair_odds)
     l = nrow(ds.lineups)
     i = nrow(ds.incidents)
     
-    print(io, "DataStore[$seg](matches=$m, stats=$s, odds=$o, lineups=$l, incidents=$i)")
+    print(io, "DataStore[$seg](matches=$m, stats=$s, odds=$o, betfair=$bo, lineups=$l, incidents=$i)")
 end
 
 

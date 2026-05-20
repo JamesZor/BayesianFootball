@@ -196,3 +196,54 @@ function summarize_betfair_market(
     # 7. Append match results and is_winner
     return append_match_results(final_df, ds.matches)
 end
+
+"""
+    check_betfair_coverage(ds::DataStore) -> NamedTuple
+Analyzes the coverage of Betfair odds for the DataStore.
+Returns a NamedTuple containing two DataFrames:
+- `match_level`: Coverage stats per match (how many markets, total ticks, etc.)
+- `market_level`: Coverage stats per market selection (coverage %, avg ticks per match, etc.)
+"""
+function check_betfair_coverage(ds::DataStore)
+    if isempty(ds.matches) || isempty(ds.betfair_odds)
+        @warn "DataStore matches or betfair_odds are empty."
+        return (match_level=DataFrame(), market_level=DataFrame())
+    end
+
+    total_matches = nrow(ds.matches)
+
+    # 1. MATCH LEVEL COVERAGE
+    # Get tick counts per match and selection
+    tick_counts = combine(groupby(ds.betfair_odds, [:match_id, :selection]), nrow => :ticks)
+    
+    match_coverage = combine(groupby(tick_counts, :match_id)) do sdf
+        (
+            markets_covered = nrow(sdf),
+            total_ticks = sum(sdf.ticks),
+            avg_ticks_per_market = mean(sdf.ticks)
+        )
+    end
+
+    matches_summary = select(ds.matches, :match_id, :match_date, :home_team, :away_team)
+    match_level = leftjoin(matches_summary, match_coverage, on=:match_id)
+    
+    match_level.has_odds = .!ismissing.(match_level.markets_covered)
+    match_level.markets_covered = coalesce.(match_level.markets_covered, 0)
+    match_level.total_ticks = coalesce.(match_level.total_ticks, 0)
+    match_level.avg_ticks_per_market = coalesce.(match_level.avg_ticks_per_market, 0.0)
+
+    # 2. MARKET LEVEL COVERAGE
+    market_level = combine(groupby(tick_counts, :selection)) do sdf
+        matches_with_market = nrow(sdf)
+        (
+            matches_covered = matches_with_market,
+            coverage_pct = round(matches_with_market / total_matches * 100, digits=1),
+            avg_ticks_per_match = round(mean(sdf.ticks), digits=1),
+            min_ticks = minimum(sdf.ticks),
+            max_ticks = maximum(sdf.ticks)
+        )
+    end
+    sort!(market_level, :coverage_pct, rev=true)
+
+    return (match_level = match_level, market_level = market_level)
+end
