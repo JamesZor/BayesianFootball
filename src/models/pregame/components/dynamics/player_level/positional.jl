@@ -57,3 +57,81 @@ function extract_dynamics(chain::Chains, ::PositionalPlayerDynamics, prefix::Str
         w_F_def = vec(Array(chain[Symbol("$prefix.w_F_def")]))
     )
 end
+
+# ==========================================
+# 4. HIERARCHICAL PLAYER DYNAMICS (VARYING SLOPES)
+# ==========================================
+
+Base.@kwdef struct HierarchicalPlayerDynamicsConfig <: AbstractDynamicsConfig
+    # Goalkeeper priors
+    w_G_prior::ContinuousUnivariateDistribution = Normal(0.0, 0.5)
+    
+    # Outfield hierarchical priors (Attack)
+    w_Outfield_att_base_prior::ContinuousUnivariateDistribution = Normal(0.08, 0.05)
+    σ_w_att_prior::ContinuousUnivariateDistribution = truncated(Normal(0, 0.05), lower=0.0)
+    
+    # Outfield hierarchical priors (Defense)
+    w_Outfield_def_base_prior::ContinuousUnivariateDistribution = Normal(-0.08, 0.05)
+    σ_w_def_prior::ContinuousUnivariateDistribution = truncated(Normal(0, 0.05), lower=0.0)
+
+    # Required for Time-Decay weights
+    days_half_life::Real = 180.0
+end
+
+"""
+    build_dynamics(config::HierarchicalPlayerDynamicsConfig, n_teams::Int)
+
+Submodel for Hierarchical Player dynamics. Learns team-specific multipliers 
+(tactical cohesion) for outfield players while keeping goalkeepers global.
+"""
+@model function build_dynamics(config::HierarchicalPlayerDynamicsConfig, n_teams::Int)
+    # 1. Goalkeepers (Global)
+    w_G_att ~ config.w_G_prior
+    w_G_def ~ config.w_G_prior
+
+    # 2. Outfield Attack (Hierarchical)
+    w_Outfield_att_base ~ config.w_Outfield_att_base_prior
+    σ_w_att             ~ config.σ_w_att_prior
+    team_att_raw        ~ filldist(Normal(0, 1), n_teams)
+
+    # 3. Outfield Defense (Hierarchical)
+    w_Outfield_def_base ~ config.w_Outfield_def_base_prior
+    σ_w_def             ~ config.σ_w_def_prior
+    team_def_raw        ~ filldist(Normal(0, 1), n_teams)
+
+    return (; 
+        w_G_att, w_G_def,
+        w_Outfield_att_base, σ_w_att, team_att_raw,
+        w_Outfield_def_base, σ_w_def, team_def_raw
+    )
+end
+
+"""
+    extract_dynamics(chain::Chains, config::HierarchicalPlayerDynamicsConfig, prefix::String, n_teams::Int)
+
+Extracts the hierarchical positional weights and team-specific raw values.
+"""
+function extract_dynamics(chain::Chains, ::HierarchicalPlayerDynamicsConfig, prefix::String, n_teams::Int)
+    n_samples = size(chain, 1) * size(chain, 3)
+
+    # 1. Global / Base Components
+    nt = (;
+        w_G_att = vec(Array(chain[Symbol("$prefix.w_G_att")])),
+        w_G_def = vec(Array(chain[Symbol("$prefix.w_G_def")])),
+        w_Outfield_att_base = vec(Array(chain[Symbol("$prefix.w_Outfield_att_base")])),
+        σ_w_att = vec(Array(chain[Symbol("$prefix.σ_w_att")])),
+        w_Outfield_def_base = vec(Array(chain[Symbol("$prefix.w_Outfield_def_base")])),
+        σ_w_def = vec(Array(chain[Symbol("$prefix.σ_w_def")])),
+    )
+
+    # 2. Team-Specific Raw Values
+    team_att_raw = zeros(n_samples, n_teams)
+    team_def_raw = zeros(n_samples, n_teams)
+
+    for i in 1:n_teams
+        team_att_raw[:, i] = vec(Array(chain[Symbol("$prefix.team_att_raw[$i]")]))
+        team_def_raw[:, i] = vec(Array(chain[Symbol("$prefix.team_def_raw[$i]")]))
+    end
+
+    return merge(nt, (; team_att_raw, team_def_raw))
+end

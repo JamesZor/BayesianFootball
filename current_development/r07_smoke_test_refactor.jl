@@ -57,6 +57,12 @@ models_to_test = [
     # 3. Player Level - Standard
     ("Player Standard XG Market", Models.PreGame.DynamicMarketXGPlayerModel(
         interception_config=inter_cfg, player_dynamics_config=player_dyn, dispersion_config=disp_cfg, homeadvantage_config=ha_cfg, kappa_config=kap_cfg, player_ratings_feature=feature_cfg_lv
+    )),
+    ("Player Time-Decay XG Market", Models.PreGame.DynamicMarketXGPlayerTimeDecayModel(
+        interception_config=inter_cfg, player_dynamics_config=player_dyn, dispersion_config=disp_cfg, homeadvantage_config=ha_cfg, kappa_config=kap_cfg, player_ratings_feature=feature_cfg_lv
+    )),
+    ("Player Hierarchical XG Market", Models.PreGame.DynamicMarketXGHierarchicalPlayerTimeDecayModel(
+        interception_config=inter_cfg, player_dynamics_config=Models.PreGame.HierarchicalPlayerDynamicsConfig(), dispersion_config=disp_cfg, homeadvantage_config=ha_cfg, kappa_config=kap_cfg, player_ratings_feature=feature_cfg_lv
     ))
 ]
 
