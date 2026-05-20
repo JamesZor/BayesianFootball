@@ -22,9 +22,9 @@ include("score_computation/poisson.jl")
 include("./score_computation/bivariate_poisson.jl")
 include("score_computation/dixoncoles.jl") # When ready
 # include("score_computation/mvpln.jl") # When ready
-include("./score_computation/mixture_copula.jl")
+# include("./score_computation/mixture_copula.jl")
 include("./score_computation/negativebinomial.jl")
-include("./score_computation/funnel_mc.jl")
+# include("./score_computation/funnel_mc.jl")
 include("./score_computation/dixon_coles_negbin.jl")
 
 # 3. Market Inferences (The Business Logic)
