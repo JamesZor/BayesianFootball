@@ -42,7 +42,7 @@ export
     ScottishLower, Ireland, SouthKorea,
     
     # Functions
-    load_datastore_sql,
+    load_datastore_sql, load_datastore_cached,
     
     # Re-export Markets
     MarketConfig, Market1X2, MarketOverUnder, MarketBTTS

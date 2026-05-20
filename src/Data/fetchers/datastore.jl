@@ -49,3 +49,49 @@ function load_datastore_sql(segment::DataTournemantSegment)::DataStore
         close(db_conn) 
     end
 end
+
+using Serialization
+
+"""
+    load_datastore_cached(segment; force=false, max_age_hours=24) -> DataStore
+Loads the DataStore from a local disk cache to dramatically speed up data loading.
+- If `force=true`, ignores the cache and fetches fresh from SQL.
+- If the cache file is older than `max_age_hours`, automatically fetches fresh from SQL.
+"""
+function load_datastore_cached(segment::DataTournemantSegment; force::Bool=false, max_age_hours::Int=24)::DataStore
+    # Create the cache directory in the project root
+    cache_dir = joinpath(pkgdir(@__MODULE__), ".cache")
+    if !isdir(cache_dir)
+        mkdir(cache_dir)
+    end
+
+    # Define the cache file path based on the segment type
+    seg_name = string(typeof(segment))
+    seg_name_clean = last(split(seg_name, ".")) 
+    cache_file = joinpath(cache_dir, "datastore_$(seg_name_clean).jls")
+
+    # Check if cache exists and is valid
+    if !force && isfile(cache_file)
+        # Check file age
+        mtime_unix = mtime(cache_file)
+        file_age_hours = (time() - mtime_unix) / 3600.0
+
+        if file_age_hours <= max_age_hours
+            @info "Loading DataStore for $(seg_name_clean) from local cache (Age: $(round(file_age_hours, digits=1)) hours)..."
+            return deserialize(cache_file)
+        else
+            @info "Cache for $(seg_name_clean) is expired ($(round(file_age_hours, digits=1)) hours old). Fetching fresh data..."
+        end
+    elseif force
+        @info "Force refresh triggered. Fetching fresh data..."
+    end
+
+    # Fetch fresh data from SQL
+    ds = load_datastore_sql(segment)
+
+    # Save to cache for next time
+    @info "Saving $(seg_name_clean) DataStore to local cache..."
+    serialize(cache_file, ds)
+
+    return ds
+end
