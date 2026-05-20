@@ -228,7 +228,7 @@ function build_turing_model(config::DynamicMarketXGHierarchicalPlayerTimeDecayMo
         home_ids, away_ids, season_ids, month_indices,
         home_goals, away_goals, match_weights,
         h_G, h_D, h_M, h_F, a_G, a_D, a_M, a_F,
-        home_xg, away_xg, idx_xg,
+        home_xg, away_xg, idx_xg, idx_no_xg,
         market_log_h, market_log_a, idx_market,
         n_teams, n_seasons, n_months,
         config

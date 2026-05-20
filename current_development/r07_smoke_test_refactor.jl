@@ -5,6 +5,7 @@ using Revise
 using BayesianFootball
 using DataFrames
 using Turing
+using MCMCChains
 
 # --- Setup ---
 println("--- Smoke Testing Refactored PreGame Models ---")
