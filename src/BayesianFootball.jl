@@ -2,6 +2,14 @@
 
 module BayesianFootball
 
+# --- Environment Setup ---
+using DotEnv
+const env_path = joinpath(pkgdir(@__MODULE__), ".env")
+if isfile(env_path)
+    DotEnv.config(env_path)
+end
+# -------------------------
+
 # 1. Interfaces contains all shared types and contracts.
 include("./types-interfaces.jl") #
 using .TypesInterfaces

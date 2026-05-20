@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "e33230b19136b842751fda4eb1e59c86d44d1a67"
+project_hash = "2bd38924a5c46177a4009d6ff118edc7b0f2b403"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -253,7 +253,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "FreqTables", "GLM", "HypothesisTests", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LibPQ", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "RegularExpressions", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "ShiftedArrays", "SpecialFunctions", "StaticLint", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "FreqTables", "GLM", "HypothesisTests", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LibPQ", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "RegularExpressions", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "ShiftedArrays", "SpecialFunctions", "StaticLint", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "StatsPlots", "SymbolServer", "ThreadPinning", "TimeZones", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"
@@ -745,6 +745,12 @@ version = "0.6.58"
 git-tree-sha1 = "7442a5dfe1ebb773c29cc2962a8980f47221d76c"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.5"
+
+[[deps.DotEnv]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "92e88cb68a5b10545234f46dfaeb2fa8a8a50c45"
+uuid = "4dc1fcf4-5e3b-5448-94ab-0c38ec0385c1"
+version = "1.0.0"
 
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
