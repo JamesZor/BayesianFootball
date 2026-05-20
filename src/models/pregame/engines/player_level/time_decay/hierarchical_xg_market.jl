@@ -224,11 +224,11 @@ function build_turing_model(config::DynamicMarketXGHierarchicalPlayerTimeDecayMo
     market_log_a = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_away]), NaN))
     idx_market = findall(x -> !isnan(x), market_log_h)
 
-    return build_weighted_xg_market_player_engine(
+    return build_hierarchical_xg_market_player_engine(
         home_ids, away_ids, season_ids, month_indices,
         home_goals, away_goals, match_weights,
         h_G, h_D, h_M, h_F, a_G, a_D, a_M, a_F,
-        home_xg, away_xg, idx_xg, idx_no_xg,
+        home_xg, away_xg, idx_xg,
         market_log_h, market_log_a, idx_market,
         n_teams, n_seasons, n_months,
         config

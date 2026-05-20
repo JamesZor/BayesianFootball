@@ -6,6 +6,7 @@
 Base.@kwdef struct PositionalPlayerDynamics <: AbstractDynamicsConfig
     w_att_prior::ContinuousUnivariateDistribution = Normal(0.0, 0.2)
     w_def_prior::ContinuousUnivariateDistribution = Normal(0.0, 0.2)
+    days_half_life::Real = 180.0
 end
 
 # ==========================================
