@@ -6,7 +6,7 @@ Base.@kwdef struct DynamicXGModel{
   D<:AbstractDispersionConfig, 
   H<:AbstractHomeAdvantageConfig,
   K<:AbstractKappaConfig
-    } <: AbstractDynamicNegBinModel
+    } <: AbstractStandardTeamModel
     interception_config::I
     dynamics_config::T
     dispersion_config::D

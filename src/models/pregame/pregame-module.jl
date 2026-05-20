@@ -23,15 +23,20 @@ include("./components/dynamics.jl")
 include("./components/kappa.jl")
 include("./display.jl")
 
-include("./engines/goals_engine.jl")
-include("./engines/goals_time_decay_engine.jl")
-include("./engines/goals_market_time_decay_engine.jl")
-include("./engines/xg_time_decay_engine.jl")
-include("./engines/xg_market_time_decay_engine.jl")
-include("./engines/xg_engine.jl")
-include("./engines/goals_market_engine.jl")
-include("./engines/xg_market_engine.jl")
-include("./engines/xg_market_player_engine.jl")
+# Team Level - Standard
+include("./engines/team_level/standard/goals.jl")
+include("./engines/team_level/standard/goals_market.jl")
+include("./engines/team_level/standard/xg.jl")
+include("./engines/team_level/standard/xg_market.jl")
+
+# Team Level - Time Decay
+include("./engines/team_level/time_decay/goals.jl")
+include("./engines/team_level/time_decay/goals_market.jl")
+include("./engines/team_level/time_decay/xg.jl")
+include("./engines/team_level/time_decay/xg_market.jl")
+
+# Player Level - Standard
+include("./engines/player_level/standard/xg_market.jl")
 export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel
 export TimeDecayDynamics, PositionalPlayerDynamics
 

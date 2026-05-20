@@ -14,5 +14,18 @@ abstract type AbstractInterceptionConfig <: AbstractModelComponent end
 # ==========================================
 # 2. MASTER ARCHITECTURE TYPES
 # ==========================================
+
+# Entity Level Abstractions
+abstract type AbstractTeamModel <: AbstractNegBinModel end
+abstract type AbstractPlayerModel <: AbstractNegBinModel end
+
+# Implementation Style Abstractions (Team)
+abstract type AbstractStandardTeamModel <: AbstractTeamModel end
+abstract type AbstractTimeDecayTeamModel <: AbstractTeamModel end
+
+# Implementation Style Abstractions (Player)
+abstract type AbstractStandardPlayerModel <: AbstractPlayerModel end
+abstract type AbstractTimeDecayPlayerModel <: AbstractPlayerModel end
+
 # Engine model config structs have been moved to their respective engine files 
 # in src/Models/PreGame/engines/ to keep them self-contained.

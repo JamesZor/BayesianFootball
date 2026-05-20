@@ -1,36 +1,26 @@
-# src/models/pregame/engines/goals_time_decay_engine.jl
+# src/models/pregame/engines/goals_market_time_decay_engine.jl
 
-Base.@kwdef struct DynamicGoalsTimeDecayModel{
+Base.@kwdef struct DynamicMarketGoalsTimeDecayModel{
     I<:AbstractInterceptionConfig,
     T<:AbstractDynamicsConfig, 
     D<:AbstractDispersionConfig, 
     H<:AbstractHomeAdvantageConfig
-    } <: AbstractNegBinModel
+    } <: AbstractTimeDecayTeamModel
       interception_config::I
       dynamics_config::T
       dispersion_config::D
       homeadvantage_config::H
+      market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+      market_weight::Float64 = 1.0 # Mixing value: 1.0 = equal weight, <1.0 = reduced market influence
 end
 
-function calculate_match_weights(deltas::Vector{<:Real}, half_life_days::Real)
+function calculate_market_match_weights(deltas::Vector{<:Real}, half_life_days::Real)
     weights = 0.5 .^ (deltas ./ half_life_days)
     return weights
 end
 
-
-
-function Features.required_features(model::DynamicGoalsTimeDecayModel)
-    return Features.AbstractFeatureConfig[
-        Features.TeamIDsFeature(), 
-        Features.GoalsFeature(), 
-        Features.DatesFeature(), 
-        Features.MonthFeature(),
-        Features.TimeIndicesFeature()
-    ] 
-end
-
-
-@model function build_weighted_goals_engine(
+@model function build_weighted_market_goals_engine(
+    # --- Base Data ---
     home_team_indices::Vector{Int},
     away_team_indices::Vector{Int},
     season_indices::Vector{Int},
@@ -39,16 +29,25 @@ end
     home_goals::Vector{Int},
     away_goals::Vector{Int},
     match_weights::Vector{Float64},
+    # --- Market Data ---
+    market_log_λ_h::Vector{Float64},
+    market_log_λ_a::Vector{Float64},
+    idx_market::Vector{Int},
+    idx_no_market::Vector{Int},
+    # --- Dimensions ---
     n_teams::Int,
     n_seasons::Int,
     n_months::Int,
-    config::DynamicGoalsTimeDecayModel
+    config::DynamicMarketGoalsTimeDecayModel
 )
     # 1. LOAD COMPONENTS
     inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     disp  ~ to_submodel(build_dispersion(config.dispersion_config, n_teams, n_months))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
     dyn   ~ to_submodel(build_dynamics(config.dynamics_config, n_teams))
+
+    # Market Variance
+    σ_market ~ config.market_σ
 
     # 2. VECTORIZED INDEXING 
     att_h = view(dyn.α, home_team_indices)
@@ -74,19 +73,50 @@ end
         r_a_flat = disp.a
     end
 
-    # 3. VECTORIZED RATES (λ)
-    λ_h = exp.(inter_match .+ home_adv .+ att_h .+ def_a)
-    λ_a = exp.(inter_match .+             att_a .+ def_h)
+    # 3. VECTORIZED RATES (Log Scale)
+    log_λ_h = clamp.(inter_match .+ home_adv .+ att_h .+ def_a, -10.0, 10.0)
+    log_λ_a = clamp.(inter_match .+             att_a .+ def_h, -10.0, 10.0)
 
-    # 4. TIME-DECAYED LIKELIHOOD
-    log_lik_h = logpdf.(RobustNegativeBinomial.(r_h_flat, λ_h), home_goals)
-    log_lik_a = logpdf.(RobustNegativeBinomial.(r_a_flat, λ_a), away_goals)
+    λ_h = exp.(log_λ_h) .+ 1e-6
+    λ_a = exp.(log_λ_a) .+ 1e-6
 
-    Turing.@addlogprob! sum(log_lik_h .* match_weights)
-    Turing.@addlogprob! sum(log_lik_a .* match_weights)
+    # AD-Safe Rejection
+    if any(isnan, λ_h) || any(isnan, λ_a) || any(isinf, λ_h) || any(isinf, λ_a)
+        Turing.@addlogprob! -Inf
+        return
+    end
+
+    # 4. TIME-DECAYED LIKELIHOOD PIPELINE
+    
+    # A. Goal Likelihood
+    log_lik_goals_h = logpdf.(RobustNegativeBinomial.(r_h_flat, λ_h), home_goals)
+    log_lik_goals_a = logpdf.(RobustNegativeBinomial.(r_a_flat, λ_a), away_goals)
+
+    Turing.@addlogprob! sum(log_lik_goals_h .* match_weights)
+    Turing.@addlogprob! sum(log_lik_goals_a .* match_weights)
+
+    # B. Market Likelihood
+    if !isempty(idx_market)
+        log_lik_market_h = logpdf.(Normal.(log_λ_h[idx_market], σ_market), market_log_λ_h[idx_market])
+        log_lik_market_a = logpdf.(Normal.(log_λ_a[idx_market], σ_market), market_log_λ_a[idx_market])
+        
+        Turing.@addlogprob! sum(log_lik_market_h .* match_weights[idx_market]) * config.market_weight
+        Turing.@addlogprob! sum(log_lik_market_a .* match_weights[idx_market]) * config.market_weight
+    end
 end
 
-function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::FeatureSet)
+function Features.required_features(model::DynamicMarketGoalsTimeDecayModel)
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(), 
+        Features.MarketLambdaFeature(),
+        Features.TimeIndicesFeature()
+    ] 
+end
+
+function build_turing_model(config::DynamicMarketGoalsTimeDecayModel, feature_set::FeatureSet)
     data = feature_set.data
     
     n_teams    = Int(data[:n_teams])
@@ -94,7 +124,7 @@ function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::Feat
     n_months   = 12
     
     date_deltas = Vector{Int}(data[:dates])
-    match_weights = calculate_match_weights(date_deltas, model.dynamics_config.days_half_life)
+    match_weights = 0.5 .^ (date_deltas ./ config.dynamics_config.days_half_life)
     
     home_ids   = Vector{Int}(data[:flat_home_ids])
     away_ids   = Vector{Int}(data[:flat_away_ids])
@@ -104,24 +134,28 @@ function build_turing_model(model::DynamicGoalsTimeDecayModel, feature_set::Feat
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
-    return build_weighted_goals_engine(
-        home_ids,
-        away_ids,
-        season_ids,
-        time_idxs,
-        month_indices,
-        home_goals,
-        away_goals,
+    # Extract Market Lambdas
+    market_log_h = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_home]), NaN))
+    market_log_a = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_away]), NaN))
+
+    # Split logic for missing market data
+    idx_market    = findall(x -> !isnan(x), market_log_h)
+    idx_no_market = findall(isnan, market_log_h)
+
+    return build_weighted_market_goals_engine(
+        home_ids, away_ids,
+        season_ids, time_idxs, month_indices,
+        home_goals, away_goals,
         match_weights,
-        n_teams,
-        n_seasons,
-        n_months,
-        model
+        market_log_h, market_log_a, 
+        idx_market, idx_no_market,
+        n_teams, n_seasons, n_months,
+        config
     )
 end
 
 function extract_parameters(
-    model::DynamicGoalsTimeDecayModel, 
+    model::DynamicMarketGoalsTimeDecayModel, 
     df::AbstractDataFrame, 
     feature_set::FeatureSet,
     chain::Chains
@@ -143,13 +177,13 @@ function extract_parameters(
     n_samples = size(chain, 1) * size(chain, 3) 
     results = Dict{Int, NamedTuple}()
 
+    # 3. FIXTURE LOOP
     for row in eachrow(df)
         mid = Int(row.match_id)
-
+        
         h_idx = get(team_map, row.home_team, -1)
         a_idx = get(team_map, row.away_team, -1)
 
-        # dyn_nt.α is [Samples, Teams]
         α_h = h_idx > 0 ? dyn_nt.α[:, h_idx] : zeros(n_samples)
         β_h = h_idx > 0 ? dyn_nt.β[:, h_idx] : zeros(n_samples)
         α_a = a_idx > 0 ? dyn_nt.α[:, a_idx] : zeros(n_samples)
@@ -164,18 +198,22 @@ function extract_parameters(
         m_idx = month(row.match_date)
         match_disp = reconstruct_dispersion(disp_nt, h_idx, a_idx, m_idx)
 
-        λ_goals_h = exp.(inter_match .+ γ_h .+ α_h .+ β_a)
-        λ_goals_a = exp.(inter_match .+        α_a .+ β_h)
+        # 4. FINAL LIKELIHOOD MATH
+        log_λ_h = clamp.(inter_match .+ γ_h .+ α_h .+ β_a, -10.0, 10.0)
+        log_λ_a = clamp.(inter_match .+        α_a .+ β_h, -10.0, 10.0)
+
+        λ_goals_h = exp.(log_λ_h) .+ 1e-6
+        λ_goals_a = exp.(log_λ_a) .+ 1e-6
 
         results[mid] = (;
             λ_h = λ_goals_h,
             λ_a = λ_goals_a,
-            r_h = match_disp.h,
+            r_h = match_disp.h,  
             r_a = match_disp.a,
             true_xg_h = λ_goals_h, 
-            true_xg_a = λ_goals_a
+            true_xg_a = λ_goals_a,
         )
     end
-
+    
     return results
 end

@@ -10,7 +10,7 @@ Base.@kwdef struct DynamicMarketXGPlayerModel{
     H<:AbstractHomeAdvantageConfig,
     K<:AbstractKappaConfig,
     R<:Features.AbstractFeatureConfig   # The player rating feature configuration
-  } <: AbstractNegBinModel
+  } <: AbstractStandardPlayerModel
       interception_config::I
       player_dynamics_config::P 
       dispersion_config::D

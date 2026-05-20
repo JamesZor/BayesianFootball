@@ -1,51 +1,55 @@
-# src/models/pregame/engines/xg_time_decay_engine.jl
+# src/models/pregame/engines/xg_market_time_decay_engine.jl
 
-using Turing
-using Distributions
-
-Base.@kwdef struct DynamicXGTimeDecayModel{
+Base.@kwdef struct DynamicMarketXGTimeDecayModel{
     I<:AbstractInterceptionConfig,
     T<:AbstractDynamicsConfig, 
     D<:AbstractDispersionConfig, 
     H<:AbstractHomeAdvantageConfig,
     K<:AbstractKappaConfig
-  } <: AbstractNegBinModel
+  } <: AbstractTimeDecayTeamModel
       interception_config::I
       dynamics_config::T
       dispersion_config::D
       homeadvantage_config::H
       kappa_config::K
       ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
+      market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
+      market_weight::Float64 = 1.0
 end
 
 # ==========================================
 # 1. THE TURING ENGINE
 # ==========================================
-@model function build_weighted_xg_engine(
+@model function build_weighted_xg_market_engine(
     # --- Base Data ---
     home_team_indices::Vector{Int},
     away_team_indices::Vector{Int},
     season_indices::Vector{Int},
     time_indices::Vector{Int},
-    month_indices::Vector{Int},
+    month_indices::Vector{Int}, # <-- ADD THIS
     home_goals::Vector{Int},
     away_goals::Vector{Int},
     match_weights::Vector{Float64},
-    # --- Expected Goals Data ---
+    # --- xG Data ---
     home_xg::Vector{Float64},
     away_xg::Vector{Float64},
     idx_xg::Vector{Int},
     idx_no_xg::Vector{Int},
+    # --- Market Data ---
+    market_log_λ_h::Vector{Float64},
+    market_log_λ_a::Vector{Float64},
+    idx_market::Vector{Int},
     # --- Dimensions ---
     n_teams::Int,
     n_seasons::Int,
-    n_months::Int,
-    config::DynamicXGTimeDecayModel
+    n_months::Int, # <-- ADD THIS
+    config::DynamicMarketXGTimeDecayModel
 )
     # ==========================================
     # 1. LOAD COMPONENTS
     # ==========================================
-    ν_xg ~ config.ν_xg
+    ν_xg     ~ config.ν_xg
+    σ_market ~ config.market_σ
 
     inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     disp  ~ to_submodel(build_dispersion(config.dispersion_config, n_teams, n_months))
@@ -92,7 +96,6 @@ end
     λₕ = exp.(log_λₕ) .+ 1e-6
     λₐ = exp.(log_λₐ) .+ 1e-6
 
-    # AD-Safe Rejection
     if any(isnan, λₕ) || any(isnan, λₐ) || any(isinf, λₕ) || any(isinf, λₐ)
         Turing.@addlogprob! -Inf
         return
@@ -102,7 +105,7 @@ end
     # 4. TIME-DECAYED LIKELIHOOD PIPELINE
     # ==========================================
     
-    # Pillar A: Expected Goals (Gamma)
+    # --- Pillar A: xG (Gamma) ---
     if !isempty(idx_xg)
         λₕ_xg = λₕ[idx_xg]
         λₐ_xg = λₐ[idx_xg]
@@ -114,7 +117,7 @@ end
         Turing.@addlogprob! sum(log_lik_xg_a .* match_weights[idx_xg])
     end
 
-    # Pillar B: Actual Goals (NegBin)
+    # --- Pillar B: Actual Goals (NegBin) ---
     λ_goals_h = κ_h_flat .* λₕ
     λ_goals_a = κ_a_flat .* λₐ
 
@@ -123,20 +126,34 @@ end
 
     Turing.@addlogprob! sum(log_lik_goals_h .* match_weights)
     Turing.@addlogprob! sum(log_lik_goals_a .* match_weights)
+
+    # --- Pillar C: The Market (Normal) ---
+    if !isempty(idx_market)
+        # log(Goals) = log(xG * Kappa)
+        market_rate_h = log_λₕ[idx_market] .+ log.(κ_h_flat[idx_market])
+        market_rate_a = log_λₐ[idx_market] .+ log.(κ_a_flat[idx_market])
+
+        log_lik_market_h = logpdf.(Normal.(market_rate_h, σ_market), market_log_λ_h[idx_market])
+        log_lik_market_a = logpdf.(Normal.(market_rate_a, σ_market), market_log_λ_a[idx_market])
+
+        Turing.@addlogprob! sum(log_lik_market_h .* match_weights[idx_market]) * config.market_weight
+        Turing.@addlogprob! sum(log_lik_market_a .* match_weights[idx_market]) * config.market_weight
+    end
 end
 
-function Features.required_features(model::DynamicXGTimeDecayModel)
+function Features.required_features(model::DynamicMarketXGTimeDecayModel)
     return Features.AbstractFeatureConfig[
         Features.TeamIDsFeature(), 
         Features.GoalsFeature(), 
         Features.DatesFeature(), 
         Features.MonthFeature(), 
-        Features.XGFeature(),
+        Features.XGFeature(), 
+        Features.MarketLambdaFeature(),
         Features.TimeIndicesFeature()
     ] 
 end
 
-function build_turing_model(config::DynamicXGTimeDecayModel, feature_set::FeatureSet)
+function build_turing_model(config::DynamicMarketXGTimeDecayModel, feature_set::FeatureSet)
     data = feature_set.data
     
     n_teams   = Int(data[:n_teams])
@@ -150,32 +167,34 @@ function build_turing_model(config::DynamicXGTimeDecayModel, feature_set::Featur
     away_ids   = Vector{Int}(data[:flat_away_ids])
     season_ids = Vector{Int}(data[:season_indices])
     time_idxs  = Vector{Int}(data[:time_indices])
-    month_indices = Vector{Int}(data[:month_indices])
+    month_indices = Vector{Int}(data[:flat_months])
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
     home_xg = Vector{Float64}(coalesce.(data[:flat_home_xg], NaN))
     away_xg = Vector{Float64}(coalesce.(data[:flat_away_xg], NaN))
-
     idx_xg    = findall(x -> !isnan(x), home_xg)
     idx_no_xg = findall(isnan, home_xg)
 
-    return build_weighted_xg_engine(
-        home_ids, away_ids, 
-        season_ids,
-        time_idxs,
-        month_indices,
+    market_log_h = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_home]), NaN))
+    market_log_a = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_away]), NaN))
+    idx_market = findall(x -> !isnan(x), market_log_h)
+
+    return build_weighted_xg_market_engine(
+        home_ids, away_ids,
+        season_ids, time_idxs, month_indices,
         home_goals, away_goals, 
         match_weights,
         home_xg, away_xg, 
         idx_xg, idx_no_xg,
+        market_log_h, market_log_a, idx_market,
         n_teams, n_seasons, n_months,
         config
     )
 end
 
 function extract_parameters(
-    model::DynamicXGTimeDecayModel, 
+    model::DynamicMarketXGTimeDecayModel, 
     df::AbstractDataFrame, 
     feature_set::FeatureSet,
     chain::Chains
@@ -198,44 +217,45 @@ function extract_parameters(
     n_samples = size(chain, 1) * size(chain, 3) 
     results = Dict{Int, NamedTuple}()
 
+    # 3. FIXTURE LOOP
     for row in eachrow(df)
         mid = Int(row.match_id)
-        
-        h_idx = get(team_map, row.home_team, -1)
-        a_idx = get(team_map, row.away_team, -1)
+        t_idx = hasproperty(row, :time_index) ? Int(row.time_index) : n_rounds
 
-        α_h = h_idx > 0 ? dyn_nt.α[:, h_idx] : zeros(n_samples)
-        β_h = h_idx > 0 ? dyn_nt.β[:, h_idx] : zeros(n_samples)
-        α_a = a_idx > 0 ? dyn_nt.α[:, a_idx] : zeros(n_samples)
-        β_a = a_idx > 0 ? dyn_nt.β[:, a_idx] : zeros(n_samples)
+        h_id = get(team_map, row.home_team, -1)
+        a_id = get(team_map, row.away_team, -1)
 
-        γ_h = h_idx > 0 ? ha_mat[:, h_idx] : zeros(n_samples)
+        α_h = h_id > 0 ? dyn_nt.α[:, h_id] : zeros(n_samples)
+        β_h = h_id > 0 ? dyn_nt.β[:, h_id] : zeros(n_samples)
+        α_a = a_id > 0 ? dyn_nt.α[:, a_id] : zeros(n_samples)
+        β_a = a_id > 0 ? dyn_nt.β[:, a_id] : zeros(n_samples)
+
+        γ_h = h_id > 0 ? ha_mat[:, h_id] : zeros(n_samples)
         
-        κ_h = h_idx > 0 ? kap_mat[:, h_idx] : ones(n_samples)
-        κ_a = a_idx > 0 ? kap_mat[:, a_idx] : ones(n_samples)
+        κ_h = h_id > 0 ? kap_mat[:, h_id] : ones(n_samples)
+        κ_a = a_id > 0 ? kap_mat[:, a_id] : ones(n_samples)
 
         s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
         μ_v = inter_mat[:, s_idx] 
 
-        # --- Reconstruct Dispersion ---
+        # --- Reconstruct Dispersion for this match ---
         m_idx = month(row.match_date)
-        match_disp = reconstruct_dispersion(disp_nt, h_idx, a_idx, m_idx)
+        match_disp = reconstruct_dispersion(disp_nt, h_id, a_id, m_idx)
 
-        # 1. Calculate True Underlying xG
-        true_xg_h = exp.(μ_v .+ γ_h .+ α_h .+ β_a)
-        true_xg_a = exp.(μ_v .+        α_a .+ β_h)
+        # 4. FINAL LIKELIHOOD MATH (Mirrors Turing Engine)
+        log_λ_h = clamp.(μ_v .+ γ_h .+ α_h .+ β_a, -20.0, 20.0)
+        log_λ_a = clamp.(μ_v .+        α_a .+ β_h, -20.0, 20.0)
 
-        # 2. Map xG to Actual Goals using Kappa
-        λ_goals_h = κ_h .* true_xg_h
-        λ_goals_a = κ_a .* true_xg_a
+        λ_goals_h = exp.(log_λ_h) .+ 1e-6
+        λ_goals_a = exp.(log_λ_a) .+ 1e-6
 
         results[mid] = (;
             λ_h = λ_goals_h,
             λ_a = λ_goals_a,
             r_h = match_disp.h,  
             r_a = match_disp.a,
-            true_xg_h = true_xg_h, 
-            true_xg_a = true_xg_a
+            true_xg_h = exp.(log_λ_h), 
+            true_xg_a = exp.(log_λ_a),
         )
     end
     
