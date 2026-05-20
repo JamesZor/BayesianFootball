@@ -149,105 +149,19 @@ function loaded_experiment_files(saved_folders::Vector{String})
 
 end
 
-
-function check_parameter_stability(chains::Vector, target_params::Vector{Symbol})
-    # Initialize an empty DataFrame
-    df = DataFrame(Fold = Int[])
-    
-    # FIX: Explicitly tell Julia these columns can contain missing values
-    for p in target_params
-        df[!, Symbol(string(p), "_mean")] = Union{Missing, Float64}[]
-        df[!, Symbol(string(p), "_std")]  = Union{Missing, Float64}[]
-    end
-    
-    # Iterate through each fold's MCMCChain
-    for (fold_idx, chain) in enumerate(chains)
-        row_dict = Dict{Symbol, Any}(:Fold => fold_idx)
-        
-        for p in target_params
-            # Check if the parameter exists in the chain
-            if p in keys(chain)
-                samples = vec(chain[p]) 
-                row_dict[Symbol(string(p), "_mean")] = mean(samples)
-                row_dict[Symbol(string(p), "_std")]  = std(samples)
-            else
-                row_dict[Symbol(string(p), "_mean")] = missing
-                row_dict[Symbol(string(p), "_std")]  = missing
-            end
-        end
-        
-        push!(df, row_dict) # This will now safely accept the missing values!
-    end
-    
-    return df
-end
-
-
 saved_folders = Experiments.list_experiments(save_dir; data_dir="")
 loaded_results = loaded_experiment_files(saved_folders);
 
 expr = loaded_results[1]
-chain_fold_1 = expr.training_results[1][1]
-chain_fold_2 = expr.training_results[2][1]
-chain_fold_3 = expr.training_results[3][1]
-expr
-
-
-config = expr.config
-# 1. Reconstruct Context using the NEW Relational Pipeline
-boundaries_with_meta = Data.create_id_boundaries(ds, config.splitter)
-feature_sets = Features.create_features(
-    boundaries_with_meta, 
-    ds, 
-    config.model, 
-    config.splitter.dynamics_col
-)
-
-
-#=
-julia> expr.training_results[2][2]
-GroupedSplit(Tourns: [79], Season: 2026, Week: 1, Hist: 3)
-=#
-
-#=
-julia> chain_fold_2 = expr.training_results[2][1]
-Chains MCMC chain (500×42×2 Array{Float64, 3}):
-
-Iterations        = 201:1:700
-Number of chains  = 2
-Samples per chain = 500
-Wall duration     = 591.92 seconds
-Compute duration  = 1147.62 seconds
-parameters        = ν_xg, σ_market, inter.μ, disp.log_r, disp.δ_r_home, ha.γ_base, ha.σ_γ, ha.γ_team_raw[1], ha.γ_team_raw[2], ha.γ_team_raw[3], ha.γ_team_raw[4], ha.γ_team_raw[5], ha.γ_team_raw[6], ha.γ_team_raw[7], ha.γ_team_raw[8], ha.γ_team_raw[9], ha.γ_team_raw[10], ha.γ_team_raw[11], ha.γ_team_raw[12], kap.κ_global, p_dyn.w_G_att, p_dyn.w_D_att, p_dyn.w_M_att, p_dyn.w_F_att, p_dyn.w_G_def, p_dyn.w_D_def, p_dyn.w_M_def, p_dyn.w_F_def
-internals         = n_steps, is_accept, acceptance_rate, log_density, hamiltonian_energy, hamiltonian_energy_error, max_hamiltonian_energy_error, tree_depth, numerical_error, step_size, nom_step_size, lp, logprior, loglikelihood
-=#
-
-team_mapping = feature_sets[1][1][:team_map]
-
-#=
-julia> team_mapping = feature_sets[1][1][:team_map]
-Dict{String, Int64} with 12 entries:
-  "sligo-rovers"              => 9
-  "dundalk-fc"                => 5
-  "drogheda-united"           => 4
-  "shamrock-rovers"           => 7
-  "derry-city"                => 3
-  "st-patricks-athletic"      => 10
-  "cork-city"                 => 2
-  "bohemian"                  => 1
-  "university-college-dublin" => 11
-  "waterford-fc"              => 12
-  "galway-united"             => 6
-  "shelbourne"                => 8
-=#
-
-
+expr2 = loaded_results[2]
 
 # 1. Load the logic
 # include("current_development/time_decayed_models/l05_stability_analysis.jl")
 
 # 2. Get your results (assuming you have 'ds' and 'expr' from your runner)
 stability_df = extract_stability_dataframe(ds, expr)
+
+stability_df = extract_stability_dataframe(ds, expr2)
 
 # 3. Analyze Stability
 # Example: Check how 'w_G_att' (Goalkeeper Attacking Weight) evolves over weeks
@@ -261,6 +175,10 @@ att_stability_F = subset(stability_df, :parameter => p -> p .== "w_F_att")
 def_stability_D = subset(stability_df, :parameter => p -> p .== "w_D_def")
 def_stability_M = subset(stability_df, :parameter => p -> p .== "w_M_def")
 def_stability_F = subset(stability_df, :parameter => p -> p .== "w_F_def")
+
+
+
+mu = subset(stability_df, :parameter => p -> p .== "interception")
 
 # Example: Check Home Advantage for a specific team
 shamrock_ha = subset(stability_df, 
