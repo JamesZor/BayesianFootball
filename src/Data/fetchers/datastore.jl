@@ -13,20 +13,21 @@ end
 Executes all data pipelines concurrently and aggregates them into the DataStore struct.
 """
 function get_datastore(conn::LibPQ.Connection, segment::DataTournemantSegment; custom_config = Markets.DEFAULT_MARKET_CONFIG)::DataStore
-    local matches, statistics, incidents, lineups, odds
+    local matches, statistics, incidents, lineups, odds, betfair_odds
 
     @info "Building DataStore for $(typeof(segment))..."
 
-    # Concurrently fire the load_data pipeline for all 5 domains
+    # Concurrently fire the load_data pipeline for all domains
     @sync begin
-        @async matches    = load_data(conn, segment, MatchesData())
-        @async statistics = load_data(conn, segment, StatisticsData())
-        @async lineups    = load_data(conn, segment, LineUpsData())
-        @async incidents  = load_data(conn, segment, IncidentsData())
-        @async odds       = load_data(conn, segment, OddsData(); config = custom_config)
+        @async matches      = load_data(conn, segment, MatchesData())
+        @async statistics   = load_data(conn, segment, StatisticsData())
+        @async lineups      = load_data(conn, segment, LineUpsData())
+        @async incidents    = load_data(conn, segment, IncidentsData())
+        @async odds         = load_data(conn, segment, OddsData(); config = custom_config)
+        @async betfair_odds = load_data(conn, segment, BetfairData())
     end
 
-    return DataStore(segment, matches, statistics, odds, lineups, incidents)
+    return DataStore(segment, matches, statistics, odds, lineups, incidents, betfair_odds)
 end
 
 

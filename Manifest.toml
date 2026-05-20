@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "827253e763a7810d17a51f0338f46d0941820cea"
+project_hash = "e33230b19136b842751fda4eb1e59c86d44d1a67"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -253,7 +253,7 @@ uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
 
 [[deps.BayesianFootball]]
-deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "FreqTables", "GLM", "HypothesisTests", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LibPQ", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "RegularExpressions", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "SpecialFunctions", "StaticLint", "Statistics", "StatsBase", "StatsModels", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
+deps = ["BenchmarkTools", "CSV", "Copulas", "DataFrames", "DataFramesMeta", "Dates", "Distributions", "DynamicPPL", "ForwardDiff", "FreqTables", "GLM", "HypothesisTests", "InlineStrings", "JLD2", "JSON3", "LanguageServer", "LibPQ", "LinearAlgebra", "LogDensityProblems", "LogExpFunctions", "MCMCChains", "Measures", "Memoization", "Optim", "Optimization", "OptimizationBBO", "OptimizationOptimJL", "Parsers", "Plots", "PrettyTables", "Printf", "ProgressMeter", "Random", "RegularExpressions", "ReverseDiff", "Revise", "SciMLBase", "Serialization", "ShiftedArrays", "SpecialFunctions", "StaticLint", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "StatsPlots", "SymbolServer", "ThreadPinning", "Turing", "Zygote"]
 path = "."
 uuid = "4fb1d021-117f-4b4c-bded-956dcfe0d213"
 version = "0.1.0"

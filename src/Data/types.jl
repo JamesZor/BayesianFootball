@@ -12,6 +12,7 @@ abstract type DataTournemantSegment end
 
 
 abstract type FootballDataType end
+struct BetfairData <: FootballDataType end
 
 """
     DataStore
@@ -25,4 +26,5 @@ struct DataStore
     odds::DataFrame
     lineups::DataFrame
     incidents::DataFrame
+    betfair_odds::DataFrame
 end

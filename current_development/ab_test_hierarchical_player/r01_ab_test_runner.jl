@@ -1,6 +1,6 @@
 # current_development/ab_test_hierarchical_player/r01_ab_test_runner.jl
 
-using Pkg; Pkg.activate(".")
+# using Pkg; Pkg.activate(".")
 using Revise
 using BayesianFootball
 using DataFrames
@@ -32,17 +32,17 @@ function create_experiment_tasks(ds::BayesianFootball.Data.DataStore, model, lab
     cv_config = BayesianFootball.Data.GroupedCVConfig(
         tournament_groups = [BayesianFootball.Data.tournament_ids(ds.segment)],
         target_seasons = ["2025", "2026"],
-        history_seasons = 3,
+        history_seasons = 2,
         dynamics_col = :match_month,
         warmup_period = 0,
         stop_early = false # Run the full seasons
     )
 
     sampler_conf = BayesianFootball.Samplers.NUTSConfig(
-        1000, # samples
+        500, # samples
         4,   # chains
-        500, # warmup (increased for better convergence in hierarchical model)
-        0.80, # More conservative acceptance rate
+        200, # warmup (increased for better convergence in hierarchical model)
+        0.65, # More conservative acceptance rate
         10,  
         BayesianFootball.Samplers.UniformInit(-1, 1),
         false, #  display the chain progress 
@@ -93,7 +93,8 @@ save_dir::String = "./data/ab_test_hierarchical_player/"
 
 # 2. Shared Component Configs
 inter_cfg = PreGame.GlobalInterception()
-disp_cfg  = PreGame.AbstractDispersionConfig() 
+# disp_cfg  = PreGame.AbstractDispersionConfig() 
+disp_cfg  = PreGame.HomeAwayDispersion()
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 kap_cfg   = PreGame.HierarchicalTeamKappa()
 
