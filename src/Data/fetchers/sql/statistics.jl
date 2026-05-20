@@ -14,7 +14,12 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::StatisticsData
     JOIN matches m ON s.match_id = m.match_id
     WHERE m.tournament_id = ANY(\$1)
     """
-    return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    try
+        return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    catch e
+        @warn "Failed to fetch StatisticsData: $(e)"
+        return DataFrame()
+    end
 end
 
 function process_data(df::DataFrame, ::StatisticsData)

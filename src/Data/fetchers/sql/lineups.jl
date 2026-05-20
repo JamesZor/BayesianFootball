@@ -13,7 +13,13 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::LineUpsData)
         JOIN matches m ON l.match_id = m.match_id
         WHERE m.tournament_id = ANY(\$1)
     """
-    base_df = DataFrame(LibPQ.execute(conn, base_query, [t_ids]))
+    local base_df
+    try
+        base_df = DataFrame(LibPQ.execute(conn, base_query, [t_ids]))
+    catch e
+        @warn "Failed to fetch LineUpsData (base_query): $(e)"
+        return DataFrame()
+    end
     if nrow(base_df) == 0; return base_df; end
 
     # 2. JSON Stats
@@ -26,7 +32,14 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::LineUpsData)
         jsonb_each(l.statistics) AS stats
         WHERE m.tournament_id = ANY(\$1) AND stats.key != 'ratingVersions'
     """
-    stats_long_df = DataFrame(LibPQ.execute(conn, json_query, [t_ids]))
+    local stats_long_df
+    try
+        stats_long_df = DataFrame(LibPQ.execute(conn, json_query, [t_ids]))
+    catch e
+        @warn "Failed to fetch LineUpsData (json_query): $(e)"
+        base_df.assists .= missing
+        return base_df
+    end
     
     if nrow(stats_long_df) == 0
         base_df.assists .= missing 

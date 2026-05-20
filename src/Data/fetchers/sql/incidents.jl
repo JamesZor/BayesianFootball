@@ -19,7 +19,12 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::IncidentsData)
         JOIN matches m ON i.match_id = m.match_id
         WHERE m.tournament_id = ANY(\$1)
     """
-    return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    try
+        return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    catch e
+        @warn "Failed to fetch IncidentsData: $(e)"
+        return DataFrame()
+    end
 end
 
 # process_data falls back to the default interface (returns raw df)

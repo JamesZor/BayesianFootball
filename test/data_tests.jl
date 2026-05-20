@@ -1,49 +1,70 @@
-# Use @testset to group tests for the Data module
+# test/data_tests.jl
+
+using Test
+using BayesianFootball
+using DataFrames
+using Dates
+
 @testset "Data Module" begin
     
-    # Define the path to our mock data directory
-    # Note: @__DIR__ here refers to the 'test' directory, where runtests.jl is located
-    mock_data_path = joinpath(@__DIR__, "mock_data")
-
-    # Test 1: Can we create a DataFiles object correctly?
-    @testset "File Path Handling" begin
-        @test begin
-            data_files = BayesianFootball.Data.DataFiles(mock_data_path)
-            # Check if the object was created and if the paths are correct
-            data_files isa BayesianFootball.Data.DataFiles &&
-            basename(data_files.match) == "football_data_mixed_matches.csv"
-        end
-    end
-
-    # Test 2: Can we create a DataStore from the mock files?
-    @testset "DataStore Creation" begin
-        @test begin
-            data_files = BayesianFootball.Data.DataFiles(mock_data_path)
-            data_store = BayesianFootball.Data.DataStore(data_files)
-            # Check if we got a DataStore object with three DataFrames
-            data_store isa BayesianFootball.Data.DataStore &&
-            data_store.matches isa DataFrame &&
-            data_store.odds isa DataFrame &&
-            data_store.incidents isa DataFrame
-        end
-    end
-
-    # Test 3: Are the column types correct after loading?
-    @testset "Column Type Validation" begin
-        data_files = BayesianFootball.Data.DataFiles(mock_data_path)
-        data_store = BayesianFootball.Data.DataStore(data_files)
-        matches_df = data_store.matches
-
-        # Test 3a: Check score columns are subtypes of Union{Missing, Int}
-        # This passes for both Int and Union{Missing, Int} column types.
-        @test eltype(matches_df.home_score) <: Union{Missing, Int}
-        @test eltype(matches_df.away_score) <: Union{Missing, Int}
-
-        # Test 3b: Check match_date is a Date
-        @test eltype(matches_df.match_date) == Date
+    @testset "Fractional to Decimal Parsing" begin
+        # Valid cases
+        @test BayesianFootball.Data.parse_fractional_to_decimal("1/1") == 2.0
+        @test BayesianFootball.Data.parse_fractional_to_decimal("1/2") == 1.5
+        @test BayesianFootball.Data.parse_fractional_to_decimal("5/2") == 3.5
+        @test BayesianFootball.Data.parse_fractional_to_decimal("100/30") ≈ 4.333 atol=1e-3
         
-        # Test 3c: Check team name is the correct InlineString type
-        @test eltype(matches_df.home_team) == InlineStrings.String31
+        # Invalid cases
+        @test BayesianFootball.Data.parse_fractional_to_decimal("SP") == 0.0
+        @test BayesianFootball.Data.parse_fractional_to_decimal("1") == 0.0
+        @test BayesianFootball.Data.parse_fractional_to_decimal(missing) == 0.0
     end
 
+    @testset "Betfair Grading" begin
+        # 1X2
+        @test BayesianFootball.Data.grade_selection("1X2", 0.0, :home, 2, 1) == true
+        @test BayesianFootball.Data.grade_selection("1X2", 0.0, :home, 1, 1) == false
+        @test BayesianFootball.Data.grade_selection("1X2", 0.0, :draw, 1, 1) == true
+        @test BayesianFootball.Data.grade_selection("1X2", 0.0, :away, 1, 2) == true
+        
+        # Over/Under
+        @test BayesianFootball.Data.grade_selection("OverUnder", 2.5, :over_25, 2, 1) == true
+        @test BayesianFootball.Data.grade_selection("OverUnder", 2.5, :over_25, 1, 1) == false
+        @test BayesianFootball.Data.grade_selection("OverUnder", 2.5, :under_25, 1, 1) == true
+        
+        # BTTS
+        @test BayesianFootball.Data.grade_selection("BTTS", 0.0, :btts_yes, 1, 1) == true
+        @test BayesianFootball.Data.grade_selection("BTTS", 0.0, :btts_yes, 2, 0) == false
+        @test BayesianFootball.Data.grade_selection("BTTS", 0.0, :btts_no, 2, 0) == true
+        
+        # Correct Score
+        @test BayesianFootball.Data.grade_selection("CorrectScore", 0.0, :cs_21, 2, 1) == true
+        @test BayesianFootball.Data.grade_selection("CorrectScore", 0.0, :cs_21, 1, 2) == false
+        @test BayesianFootball.Data.grade_selection("CorrectScore", 0.0, :cs_any_other_home, 4, 1) == true
+        @test BayesianFootball.Data.grade_selection("CorrectScore", 0.0, :cs_any_other_home, 3, 1) == false
+        
+        # Missing data
+        @test ismissing(BayesianFootball.Data.grade_selection("1X2", 0.0, :home, missing, 1))
+    end
+
+    @testset "Preprocessing: Match Week Logic" begin
+        df = DataFrame(
+            tournament_id = [1, 1, 1, 1],
+            season = [2022, 2022, 2022, 2023],
+            # Matches on Mon, Tue, and next Mon
+            match_date = [Date("2022-08-01"), Date("2022-08-02"), Date("2022-08-08"), Date("2023-08-01")] 
+        )
+        
+        processed_df = BayesianFootball.Data.add_match_week_column(df)
+        
+        @test "match_week" in names(processed_df)
+        # Aug 1 and Aug 2 are in the same week for the 2022 season (Week 1)
+        @test processed_df.match_week[1] == 1
+        @test processed_df.match_week[2] == 1
+        # Aug 8 is the next week (Week 2)
+        @test processed_df.match_week[3] == 2
+        
+        # 2023 season restarts the week counter
+        @test processed_df.match_week[4] == 1
+    end
 end

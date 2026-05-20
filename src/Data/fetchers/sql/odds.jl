@@ -31,7 +31,12 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::OddsData)
         JOIN matches m ON o.match_id = m.match_id
         WHERE m.tournament_id = ANY(\$1)
     """
-    return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    try
+        return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    catch e
+        @warn "Failed to fetch OddsData: $(e)"
+        return DataFrame()
+    end
 end
 
 function process_data(df::DataFrame, ::OddsData; config::MarketConfig = Markets.DEFAULT_MARKET_CONFIG)

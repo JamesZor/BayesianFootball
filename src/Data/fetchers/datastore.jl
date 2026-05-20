@@ -36,8 +36,9 @@ end
 Main entry point for external use. Manages the DB connection lifecycle and returns the data.
 """
 function load_datastore_sql(segment::DataTournemantSegment)::DataStore 
-    # In a production environment, this URL should be loaded from an ENV variable.
-    db_config = DBConfig("postgresql://admin:supersecretpassword@100.124.38.117:5432/sofascrape_db")
+    # Use environment variable for the connection string, with a fallback
+    db_url = get(ENV, "BF_DB_URL", "postgresql://admin:supersecretpassword@100.124.38.117:5432/sofascrape_db")
+    db_config = DBConfig(db_url)
     
     db_conn = connect_to_db(db_config)
     

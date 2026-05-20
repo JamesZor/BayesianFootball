@@ -24,7 +24,12 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::MatchesData)
         WHERE m.status_type = 'finished'
         AND m.tournament_id = ANY(\$1) 
     """
-    return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    try
+        return DataFrame(LibPQ.execute(conn, query, [t_ids]))
+    catch e
+        @warn "Failed to fetch MatchesData: $(e)"
+        return DataFrame()
+    end
 end
 
 function process_data(df::DataFrame, ::MatchesData)

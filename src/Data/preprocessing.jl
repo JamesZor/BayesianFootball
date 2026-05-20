@@ -30,31 +30,8 @@ The first week of matches in a season becomes Week 1, the next Week 2, etc.
 Groups by: [:tournament_id, :season]
 """
 function add_match_week_column(matches_df::AbstractDataFrame)::DataFrame
-    df = copy(matches_df) # Work on a copy to avoid mutating the original
-    
-    # 1. Ensure global sort order first (Tournament -> Season -> Date)
-    # This ensures that when we group, the data is relatively ordered, 
-    # though the transform logic below explicitly handles date sorting too.
-    sort!(df, [:tournament_id, :season, :match_date])
-
-    # 2. Define the per-season logic
-    # We take the vector of dates for a specific season, map them to Week Ending Sundays,
-    # and then index those Sundays 1..N
-    transform!(groupby(df, [:tournament_id, :season]), :match_date => (dates -> begin
-        # A. Map distinct dates to their "Week Ending Sunday"
-        #    (Matches Mon-Sun will share the same sunday_date)
-        week_dates = sunday_of_week.(dates)
-        
-        # B. Find the unique weeks and sort them chronologically
-        unique_weeks = sort(unique(week_dates))
-        
-        # C. Create a map: SundayDate -> Index (1, 2, 3...)
-        week_map = Dict(w => i for (i, w) in enumerate(unique_weeks))
-        
-        # D. Map the original dates row-by-row to their Week Index
-        return [week_map[w] for w in week_dates]
-    end) => :match_week)
-
+    df = copy(matches_df)
+    add_match_week_column!(df)
     return df
 end
 
@@ -125,7 +102,11 @@ Hence need to create them in a decimal form - standardise them.
 Parses a fractional odds string (e.g., "19/10") into a decimal value (e.g., 2.9).
 Returns 0.0 if parsing fails (e.g., for "SP", missing, or "1").
 """
-function parse_fractional_to_decimal(s::AbstractString)
+function parse_fractional_to_decimal(s::Union{Missing, AbstractString})
+    if ismissing(s)
+        return 0.0
+    end
+    
     parts = split(s, '/')
     
     # Must be exactly two parts (numerator and denominator)
@@ -174,8 +155,12 @@ function add_split_col_match_week(data_store::DataStore, week_number::Int64 )::D
     end
     
     return DataStore(
-    all_matches_transformed,
-    data_store.odds,
-    data_store.incidents
-)
+        data_store.segment,
+        all_matches_transformed,
+        data_store.statistics,
+        data_store.odds,
+        data_store.lineups,
+        data_store.incidents,
+        data_store.betfair_odds
+    )
 end 
