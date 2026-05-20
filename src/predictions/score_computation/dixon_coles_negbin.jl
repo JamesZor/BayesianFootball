@@ -1,12 +1,11 @@
 # src/predictions/score_computation/dixon_coles_negbin.jl
 
-using ..Models: PreGame
 using Distributions
 # using LogExpFunctions: logpdf
 
 # 1. Adapter: Maps the flat model output to named parameters
 # Matches the NamedTuple output from your extract_parameters function
-function extract_params(model::Models.PreGame.AbstractDynamicDixonColesNegBinModel, row)
+function extract_params(model::AbstractDynamicDixonColesNegBinModel, row)
     return (
         λ_h = row.λ_h, 
         λ_a = row.λ_a, 
@@ -17,7 +16,7 @@ function extract_params(model::Models.PreGame.AbstractDynamicDixonColesNegBinMod
 end
 
 # 2. Kernel: Params -> ScoreMatrix
-function compute_score_matrix(model::Models.PreGame.AbstractDynamicDixonColesNegBinModel, params; max_goals::Int=12)
+function compute_score_matrix(model::AbstractDynamicDixonColesNegBinModel, params; max_goals::Int=12)
     
     # Extract the arrays of posterior samples
     L_h, L_a = params.λ_h, params.λ_a

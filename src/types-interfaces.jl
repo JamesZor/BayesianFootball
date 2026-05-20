@@ -17,6 +17,7 @@ abstract type AbstractInGameModel <: AbstractFootballModel end
 
 abstract type AbstractPoissonModel <: AbstractPregameModel end
 abstract type AbstractBivariatePoissonModel <: AbstractPregameModel end
+export AbstractPoissonModel
 
 abstract type AbstractStaticPoissonModel <: AbstractPoissonModel end 
 

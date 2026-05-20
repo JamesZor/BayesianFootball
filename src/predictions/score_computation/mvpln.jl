@@ -2,10 +2,9 @@
 
 using Distributions
 using LinearAlgebra
-using ..Models # Access to PreGame.StaticMVPLN
 
 # 1. Adapter: Extracts Linear Predictors + Covariance Params
-function extract_params(model::Models.PreGame.StaticMVPLN, row)
+function extract_params(model::StaticMVPLN, row)
     return (
         loc_h = row.loc_h,  # Linear Predictor Home (μ + γ + α_h + β_a)
         loc_a = row.loc_a,  # Linear Predictor Away (μ + α_a + β_h)
@@ -17,7 +16,7 @@ end
 
 # 2. Kernel: Integrates over the latent variable via Monte Carlo
 function compute_score_matrix(
-    model::Models.PreGame.StaticMVPLN, 
+    model::StaticMVPLN, 
     params; 
     max_goals::Int=12, 
     n_sims::Int=200 # Number of latent draws per posterior sample to approximate the integral

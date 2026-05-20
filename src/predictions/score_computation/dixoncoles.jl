@@ -1,17 +1,16 @@
 # src/predictions/score_computation/dixon_coles.jl
 
-using ..Models: PreGame
 using Distributions
 # using LogExpFunctions: logpdf
 
 # 1. Adapter: Maps the flat model output to named parameters
 # Note: In our model implementation, θ_3 corresponds to the transformed Rho
-function extract_params(model::Models.PreGame.AbstractDixonColesModel, row)
+function extract_params(model::AbstractDixonColesModel, row)
     return (θ_1 = row.θ_1, θ_2 = row.θ_2, ρ = row.θ_3)
 end
 
 # 2. Kernel: Params -> ScoreMatrix
-function compute_score_matrix(model::Models.PreGame.AbstractDixonColesModel, params; max_goals::Int=12)
+function compute_score_matrix(model::AbstractDixonColesModel, params; max_goals::Int=12)
     
     T1, T2, Rho = params.θ_1, params.θ_2, params.ρ
     n_samples = length(T1)

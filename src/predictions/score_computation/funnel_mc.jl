@@ -2,10 +2,9 @@
 # src/prediction/score_computation/funnel_mc.jl
 
 using Distributions
-using ..Models
 using ..MyDistributions
 
-function extract_params(model::Models.PreGame.AbstractFunnelModel, row)
+function extract_params(model::AbstractFunnelModel, row)
     return (
         λ_shots_h   = row.λ_shots_h,
         λ_shots_a   = row.λ_shots_a,
@@ -21,7 +20,7 @@ end
 
 
 function compute_score_matrix(
-  model::Models.PreGame.AbstractFunnelModel,
+  model::AbstractFunnelModel,
   params;
   max_goals::Int=12
 )

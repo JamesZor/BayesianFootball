@@ -1,15 +1,14 @@
 # src/predictions/score_computation/bivariate_poisson.jl
 
 using ..MyDistributions: BivariateLogPoisson
-using ..Models: PreGame
 
 # 1. Adapter: Now expects Thetas
-function extract_params(model::Models.PreGame.AbstractBivariatePoissonModel, row)
+function extract_params(model::AbstractBivariatePoissonModel, row)
     return (θ_1 = row.θ_1, θ_2 = row.θ_2, θ_3 = row.θ_3)
 end
 
 # 2. Kernel: Params -> ScoreMatrix
-function compute_score_matrix(model::Models.PreGame.AbstractBivariatePoissonModel, params; max_goals::Int=12)
+function compute_score_matrix(model::AbstractBivariatePoissonModel, params; max_goals::Int=12)
     
     # Unpack Thetas directly
     T1, T2, T3 = params.θ_1, params.θ_2, params.θ_3

@@ -2,12 +2,11 @@
 # src/predictions/score_computation/negative_binomial.jl
 
 using Distributions
-using ..Models 
 using ..MyDistributions 
 
 
 
-function extract_params(model::Models.PreGame.AbstractNegBinModel, row)
+function extract_params(model::AbstractNegBinModel, row)
     if hasproperty(row, :r)
         return (
             λ_h = row.λ_h, # Vector of Home Means (Rates)
@@ -47,7 +46,7 @@ end
 
 
 function compute_score_matrix(
-    model::Models.PreGame.AbstractNegBinModel, 
+    model::AbstractNegBinModel, 
     params; 
     max_goals::Int=12
 )
