@@ -10,7 +10,7 @@ using Dates
 Extracts player positional ratings using a specific tracking algorithm defined in `config.tracker`.
 """
 function add_feature!(F_data::Dict, config::PlayerRatingsFeature, ordered_ids, team_map::Dict, ds::Data.DataStore)
-    println("[INFO] Extracting Player Ratings Feature using $(typeof(config.tracker))...")
+    # println("[INFO] Extracting Player Ratings Feature using $(typeof(config.tracker))...")
 
     # 1. Prepare base data with dates for sorting
     # Use select for efficiency
