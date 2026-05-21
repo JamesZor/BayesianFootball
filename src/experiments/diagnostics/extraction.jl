@@ -112,7 +112,8 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
                 raw_sym = Symbol("ha.γ_team_raw[$t_idx]") # Best guess for rhat tracking
                 _add_param!(rows, "home_advantage", team_name, raw_sym, samples)
             end
-        catch
+        catch e
+            @warn "Failed to extract home advantage" exception=(e, catch_backtrace())
         end
         
         for p in [Symbol("ha.γ_base"), Symbol("ha.σ_γ"), Symbol("ha.γ_global")]
@@ -133,7 +134,8 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
                 raw_sym = Symbol("kap.κ_team_raw[$t_idx]")
                 _add_param!(rows, "kappa", team_name, raw_sym, samples)
             end
-        catch
+        catch e
+            @warn "Failed to extract kappa" exception=(e, catch_backtrace())
         end
 
         for p in [Symbol("kap.κ_base"), Symbol("kap.σ_κ"), Symbol("kap.κ_global")]
@@ -199,7 +201,8 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
                     end
                 end
             end
-        catch
+        catch e
+            @warn "Failed to extract dispersion" exception=(e, catch_backtrace())
         end
     end
     
