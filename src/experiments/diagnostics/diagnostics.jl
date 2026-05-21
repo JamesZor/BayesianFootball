@@ -10,6 +10,7 @@ module Diagnostics
 
 using DataFrames
 using Statistics
+using StatsBase
 using MCMCChains
 using HypothesisTests
 using ...Data

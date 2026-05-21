@@ -30,6 +30,7 @@ function Base.show(io::IO, ::MIME"text/plain", diag::ChainDiagnostic)
         printstyled(io, "  ⚠️  WARNING: $(nrow(bad_rhat)) instances of high R-hat detected!\n", color=:yellow)
         
         # Group by fold to show which folds had issues
+        # Print all folds in order (even those with 0, if possible? We only have bad_rhat data here though)
         bad_folds = sort(unique(bad_rhat.fold))
         for (i, f) in enumerate(bad_folds)
             f_bad = subset(bad_rhat, :fold => x -> x .== f)
@@ -37,6 +38,12 @@ function Base.show(io::IO, ::MIME"text/plain", diag::ChainDiagnostic)
             printstyled(io, prefix, color=:light_black)
             printstyled(io, "Fold $f: ", color=:white)
             println(io, "$(nrow(f_bad)) unstable parameters (Max R-hat: $(round(maximum(f_bad.rhat), digits=3)))")
+            
+            # Display all the bad parameters for this fold
+            bad_params = sort(unique(f_bad.raw_symbol))
+            param_prefix = (i == length(bad_folds)) ? "        " : "    │   "
+            printstyled(io, param_prefix, color=:light_black)
+            println(io, "⚠️  " * join(string.(bad_params), ", "))
         end
     end
 end
@@ -51,20 +58,31 @@ function Base.show(io::IO, ::MIME"text/plain", diag::StabilityDiagnostic)
     else
         printstyled(io, "  ⚠️  WARNING: $(nrow(unstable)) parameters failed stability checks!\n", color=:yellow)
         
-        # Display the worst offenders
+        # Display all unstable parameters
         sort!(unstable, :adf_pvalue, rev=true)
-        n_show = min(10, nrow(unstable))
+        n_show = nrow(unstable)
         for i in 1:n_show
             row = unstable[i, :]
-            prefix = (i == n_show && nrow(unstable) <= 10) ? "    └── " : "    ├── "
-            printstyled(io, prefix, color=:light_black)
-            printstyled(io, "$(row.parameter) [$(row.entity)] ", color=:white)
+            prefix = (i == n_show) ? "    └── " : "    ├── "
             
             p_val_str = isnan(row.adf_pvalue) ? "NaN" : string(round(row.adf_pvalue, digits=3))
+            
+            # Use yellow warning symbol for each
+            printstyled(io, prefix, "⚠️  ", color=:yellow)
+            printstyled(io, "$(row.parameter) [$(row.entity)] ", color=:white)
             println(io, "- ADF p-val: $p_val_str")
-        end
-        if nrow(unstable) > 10
-            printstyled(io, "    └── ... and $(nrow(unstable) - 10) more.\n", color=:light_black)
+            
+            # Print statistical moments
+            moments_prefix = (i == n_show) ? "        " : "    │   "
+            m_mean = round(row.mean_of_means, digits=3)
+            m_std  = round(row.std_of_means, digits=3)
+            m_min  = round(row.min_val, digits=3)
+            m_max  = round(row.max_val, digits=3)
+            m_skew = round(row.skewness, digits=3)
+            m_kurt = round(row.kurtosis, digits=3)
+            
+            printstyled(io, moments_prefix, color=:light_black)
+            println(io, "Mean: $m_mean | Std: $m_std | Min: $m_min | Max: $m_max | Skew: $m_skew | Kurtosis: $m_kurt")
         end
     end
 end

@@ -43,6 +43,10 @@ function check_stability(chains::ExperimentChains)
             :n_folds => n_folds,
             :mean_of_means => mean(means),
             :std_of_means => std(means),
+            :skewness => StatsBase.skewness(means),
+            :kurtosis => StatsBase.kurtosis(means),
+            :min_val => minimum(means),
+            :max_val => maximum(means),
             :adf_pvalue => adf_pval,
             :is_stable => is_stable
         ))
