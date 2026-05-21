@@ -20,6 +20,25 @@ function Base.show(io::IO, ::MIME"text/plain", task::ExperimentTask)
     printstyled(io, "\n (Bundled DataStore & Config)\n", color=:light_black)
     println(io, "=========")
 
+    # High-level Summary
+    printstyled(io, "  Name:       ", color=:light_black)
+    printstyled(io, task.config.name, "\n", color=:white, bold=true)
+    printstyled(io, "  Model:      ", color=:light_black)
+    printstyled(io, nameof(typeof(task.config.model)), "\n", color=:cyan)
+    printstyled(io, "  Save Dir:   ", color=:light_black)
+    printstyled(io, task.config.save_dir, "\n", color=:white)
+    
+    # Calculate Folds
+    try
+        folds = length(Data.create_id_boundaries(task.ds, task.config.splitter))
+        printstyled(io, "  Total Folds: ", color=:light_black)
+        printstyled(io, folds, "\n", color=:cyan, bold=true)
+    catch
+        printstyled(io, "  Total Folds: ", color=:light_black)
+        printstyled(io, "Unknown (Run create_id_boundaries)\n", color=:cyan)
+    end
+    println(io, "=========\n")
+
     # Data Source
     printstyled(io, "[Data Source] ", color=:cyan, bold=true)
     printstyled(io, "access via: task.ds\n", color=:light_black)
@@ -39,10 +58,6 @@ function Base.show(io::IO, ::MIME"text/plain", config::ExperimentConfig)
     printstyled(io, "[Configuration] ", color=:cyan, bold=true)
     printstyled(io, "access via: task.config\n", color=:light_black)
     
-    printstyled(io, "  Name: ", color=:light_black)
-    printstyled(io, config.name, "\n", color=:white, bold=true)
-    printstyled(io, "  Save Dir: ", color=:light_black)
-    printstyled(io, config.save_dir, "\n", color=:white)
     printstyled(io, "  Tags: ", color=:light_black)
     println(io, isempty(config.tags) ? "None" : join(config.tags, ", "))
     println(io)
@@ -98,8 +113,32 @@ function Base.show(io::IO, ::MIME"text/plain", t::TrainingConfig)
         printstyled(io, "Warmup:  ", color=:white)
         printstyled(io, "$(s.n_warmup)\n", color=:cyan)
         
-        printstyled(io, "      └── ", color=:light_black)
+        printstyled(io, "      ├── ", color=:light_black)
         printstyled(io, "Chains:  ", color=:white)
         printstyled(io, "$(s.n_chains)\n", color=:cyan)
+
+        if hasfield(typeof(s), :initialisation)
+            printstyled(io, "      ├── ", color=:light_black)
+            printstyled(io, "Init:    ", color=:white)
+            printstyled(io, "$(nameof(typeof(s.initialisation)))\n", color=:cyan)
+        end
+        
+        if hasfield(typeof(s), :show_progress)
+            printstyled(io, "      ├── ", color=:light_black)
+            printstyled(io, "Progress:", color=:white)
+            printstyled(io, " $(s.show_progress)\n", color=:cyan)
+        end
+
+        if hasfield(typeof(t.strategy), :max_concurrent_splits)
+            max_threads = s.n_chains * t.strategy.max_concurrent_splits
+            printstyled(io, "      └── ", color=:light_black)
+            printstyled(io, "Max CPU Threads: ", color=:white)
+            printstyled(io, "$max_threads ", color=:cyan, bold=true)
+            printstyled(io, "(Chains: $(s.n_chains) × Splits: $(t.strategy.max_concurrent_splits))\n", color=:light_black)
+        else
+            printstyled(io, "      └── ", color=:light_black)
+            printstyled(io, "Max CPU Threads: ", color=:white)
+            printstyled(io, "$(s.n_chains)\n", color=:cyan, bold=true)
+        end
     end
 end
