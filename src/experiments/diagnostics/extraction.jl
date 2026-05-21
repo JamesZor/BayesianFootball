@@ -74,7 +74,7 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
     rows = []
 
     # Helper to push a parameter
-    function _add_param!(rows, param_name::String, entity::String, raw_symbol::Symbol, samples::AbstractVector)
+    function _add_param!(rows, param_name::AbstractString, entity::AbstractString, raw_symbol::Symbol, samples::AbstractVector)
         rhat = NaN
         ess = NaN
         if haskey(chain_summary, raw_symbol)
