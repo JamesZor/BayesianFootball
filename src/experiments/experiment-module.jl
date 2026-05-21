@@ -19,8 +19,9 @@ include("./display.jl")
 include("./helpers.jl")
 
 include("post_processing.jl")
+include("diagnostics/diagnostics.jl")
 
 export ExperimentConfig, ExperimentResults, run_experiment
 export BENCHMARK_DEFAULTS, create_benchmark_config
-export LatentStates, extract_oos_predictions 
+export LatentStates, extract_oos_predictions, Diagnostics
 end

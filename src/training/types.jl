@@ -63,7 +63,12 @@ function TrainingResults(items::Vector)
     # This comprehension forces Julia to look at the actual types of elements
     # and infer the tightest common type (e.g., Vector{Tuple{Chains, Meta}})
     tightened = [i for i in items] 
-    return TrainingResults(tightened)
+    
+    if tightened isa Vector{<:Tuple}
+        return TrainingResults{eltype(tightened).parameters[1], eltype(tightened).parameters[2]}(tightened)
+    else
+        return TrainingResults{Any, Any}(Vector{Tuple{Any, Any}}())
+    end
 end
 
 # --- Interface Implementation ---
