@@ -52,6 +52,17 @@ model_outfield = PreGame.DynamicMarketXGOutfieldPlayerTimeDecayModel(
     market_weight        = 1.0
 )
 
+model_all = PreGame.DynamicMarketXGPlayerTimeDecayModel(
+    interception_config  = inter_cfg,
+    player_dynamics_config = PreGame.PositionalPlayerDynamics(days_half_life=180.0),
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    kappa_config         = kap_cfg,
+    player_ratings_feature = feature_cfg_bayes,
+    market_weight        = 1.0
+)
+
+
 # ==========================================
 # 3. EXPERIMENT TASK CREATION
 # ==========================================
@@ -59,7 +70,7 @@ println("\n[INFO] Creating Experiment Task...")
 task_outfield = Experiments.create_experiment_task(
     ds, 
     model_outfield, 
-    "ab_outfield_player_", 
+    "ab_outfield_player", 
     save_dir; 
     target_seasons=["2025", "2026"], 
     dynamics_col=:match_month,
@@ -67,6 +78,19 @@ task_outfield = Experiments.create_experiment_task(
     warmup=1000,    # Increased warmup
     chains=4        # Ensure 4 chains for robust R-hat checking
 )
+
+task_all = Experiments.create_experiment_task(
+    ds, 
+    model_all, 
+    "ab_all_player", 
+    save_dir; 
+    target_seasons=["2025", "2026"], 
+    dynamics_col=:match_month,
+    samples=1000,   # Increased samples
+    warmup=1000,    # Increased warmup
+    chains=4        # Ensure 4 chains for robust R-hat checking
+)
+
 
 display(task_outfield)
 
@@ -77,10 +101,13 @@ println("\n" * "="^60)
 println(">>> RUNNING EXPERIMENT: $(task_outfield.config.name)")
 println("="^60)
 
+results_all = Experiments.run_experiment(task_all)
 results_outfield = Experiments.run_experiment(task_outfield)
 
 println("\n[INFO] Saving Experiment...")
 Experiments.save_experiment(results_outfield)
+Experiments.save_experiment(results_all)
+
 println("✅ Success: $(task_outfield.config.name)")
 
 # ==========================================

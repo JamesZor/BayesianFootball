@@ -129,8 +129,8 @@ model_hier = PreGame.DynamicMarketXGHierarchicalPlayerTimeDecayModel(
 
 # 4. Execute Runs
 println("\n[INFO] Starting A/B Test Execution...")
-task_std  = create_experiment_tasks(ds, model_std, "ab_std_player", save_dir)[1]
-task_hier = create_experiment_tasks(ds, model_hier, "ab_hier_player", save_dir)[1]
+task_std  = create_experiment_tasks(ds, model_std, "ab_std_player_larger", save_dir)[1]
+task_hier = create_experiment_tasks(ds, model_hier, "ab_hier_playe_largerr", save_dir)[1]
 
 results_std  = run_experiment_task(task_std)
 results_hier = run_experiment_task(task_hier)
