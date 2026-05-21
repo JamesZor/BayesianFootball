@@ -41,8 +41,8 @@ function generate_pp_goals(results::BayesianFootball.Experiments.ExperimentResul
     
     for (i, row) in enumerate(eachrow(matches_df))
         mid = Int(row.match_id)
-        obs_home_goals[i] = row.home_goals
-        obs_away_goals[i] = row.away_goals
+        obs_home_goals[i] = row.home_score
+        obs_away_goals[i] = row.away_score
         
         match_params = param_dict[mid]
         
@@ -102,5 +102,5 @@ function plot_ppc(pp_goals::Matrix{Int}, obs_goals::Vector{Int}, plot_title::Str
     
     Plots.savefig(p, filename)
     println("✅ PPC Plot saved to $filename")
-    return p
+    return nothing
 end
