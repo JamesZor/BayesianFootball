@@ -16,7 +16,7 @@ The system is designed for high performance, utilizing MCMC sampling (NUTS), ADV
 
 ### Layer 0: Data Module (`src/Data/`)
 The foundational data layer that handles the extraction, transformation, and validation of raw PostgreSQL data into memory-optimized Julia `DataFrames`.
-- **`DataStore`**: A strictly typed container that holds domain-specific DataFrames (Matches, Odds, Statistics, Lineups, Incidents) for a requested tournament segment.
+- **`DataStore`**: A strictly typed container that holds domain-specific DataFrames (Matches, Odds, BetfairOdds, Statistics, Lineups, Incidents) for a requested tournament segment.
 - **SQL Pipeline**: Executes concurrent SQL queries (`@async`) via `LibPQ` and applies strict schemas and mathematical enrichments (e.g., vig removal) during the ETL process.
 - **Fetch -> Process -> QA**: A 3-step contract defined in `fetchers/interfaces.jl` to ensure every data domain meets strict integrity and type safety standards before reaching Layer 1.
 
@@ -45,7 +45,7 @@ using ThreadPinning; pinthreads(:cores)
 ```
 
 ### Standard Training Pipeline
-1. **Load Data**: `ds = Data.load_datastore_sql(Data.ScottishLower())`
+1. **Load Data**: `ds = Data.load_datastore_cached(Data.ScottishLower())`
 2. **Create Features**: `f = Features.create_features(ds)`
 3. **Define Model**: `m = Models.PreGame.DynamicXGModel(...)`
 4. **Build Turing**: `tm = Models.PreGame.build_turing_model(m, f)`

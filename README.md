@@ -7,17 +7,18 @@ This module handles the extraction, transformation, and validation of raw Postgr
 
 ## Basic Usage
 
-The primary entry point for the module is `load_datastore_sql`. It takes a specific tournament segment, executes 5 concurrent SQL queries (`@async`), processes the results, and returns a unified `DataStore` object.
+The primary entry point for the module is `load_datastore_cached` (which falls back to `load_datastore_sql` if the cache is expired). It takes a specific tournament segment, executes concurrent SQL queries (`@async`), processes the results, caches them locally, and returns a unified `DataStore` object.
 
 ```julia
 using BayesianFootball
 
-# 1. Fetch all data for the Scottish Lower leagues
-ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishLower())
+# 1. Fetch all data for the Scottish Lower leagues (uses cache if available)
+ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower())
 
 # 2. Access the individual DataFrames
 matches_df = ds.matches
 odds_df    = ds.odds
+bf_odds_df = ds.betfair_odds
 ```
 
 ## 📦 The `DataStore` Object
@@ -28,6 +29,7 @@ The `DataStore` is a strictly typed container that holds the data for the reques
 * `matches::DataFrame` - Core match details, scores, dates, and xG presence.
 * `statistics::DataFrame` - Match-level statistics (possession, shots, etc.) pivoted into wide `_home` and `_away` format.
 * `odds::DataFrame` - Betting market data, fully enriched by the `Markets` module (includes implied probabilities, vig removal, fair odds, and Closing Line Movement).
+* `betfair_odds::DataFrame` - High-frequency Betfair exchange tick data (traded prices over time leading up to kickoff).
 * `lineups::DataFrame` - Player-level starting XI, substitutes, and individual JSON performance stats.
 * `incidents::DataFrame` - Event-level timeline data (goals, cards, substitutions, VAR decisions).
 
