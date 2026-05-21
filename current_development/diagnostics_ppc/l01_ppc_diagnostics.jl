@@ -18,12 +18,13 @@ function generate_pp_goals(results::BayesianFootball.Experiments.ExperimentResul
     # Get the chain and meta for the specified fold
     chain, meta = results.training_results[fold_idx]
     
-    # We need the matches dataframe for this fold
-    matches_df = subset(ds.matches, :match_id => ByRow(id -> id in meta.target_match_ids))
-    
     # Reconstruct features to pass to extractor
     boundaries = BayesianFootball.Data.create_id_boundaries(ds, results.config.splitter)
     boundary = boundaries[fold_idx][1]
+
+    # We need the matches dataframe for this fold (Out of Sample)
+    matches_df = subset(ds.matches, :match_id => ByRow(id -> id in boundary.target_match_ids))
+    
     feature_set = BayesianFootball.Features.create_features(boundary, ds, results.config.model, :match_month)
     
     # Extract match parameters (λ and r arrays for every sample)
