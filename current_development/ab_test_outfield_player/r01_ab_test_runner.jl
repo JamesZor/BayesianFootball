@@ -85,6 +85,33 @@ println("✅ Success: $(task_outfield.config.name)")
 
 # all_results = [results_std, results_outfield];
 
+saved_folders = Experiments.list_experiments(save_dir; data_dir="")
+
+function loaded_experiment_files(saved_folders::Vector{String})
+  loaded_results = Vector{BayesianFootball.Experiments.ExperimentResults}([])
+  for folder in saved_folders
+      try
+          res = Experiments.load_experiment(folder)
+          push!(loaded_results, res)
+      catch e
+          @warn "Could not load $folder: $e"
+      end
+  end
+
+  if isempty(loaded_results)
+      error("No results loaded! Did you run runner.jl?")
+  end
+
+  return loaded_results
+
+end
+
+all_results = loaded_experiment_files(saved_folders[[1,3]]);
+
+
+
+all_results = [results_outfield];
+
 # 1. Predictive Metrics
 println("\n>>> Evaluating Predictive Performance...")
 metrics = [
