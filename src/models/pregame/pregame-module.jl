@@ -41,9 +41,10 @@ include("./engines/player_level/standard/xg_market.jl")
 # Player Level - Time Decay
 include("./engines/player_level/time_decay/xg_market.jl")
 include("./engines/player_level/time_decay/hierarchical_xg_market.jl")
+include("./engines/player_level/time_decay/outfield_xg_market.jl")
 
-export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel, DynamicMarketXGPlayerTimeDecayModel, DynamicMarketXGHierarchicalPlayerTimeDecayModel
-export TimeDecayDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig
+export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel, DynamicMarketXGPlayerTimeDecayModel, DynamicMarketXGHierarchicalPlayerTimeDecayModel, DynamicMarketXGOutfieldPlayerTimeDecayModel
+export TimeDecayDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig
 export TimeDecayDynamics, PositionalPlayerDynamics
 
 ##
