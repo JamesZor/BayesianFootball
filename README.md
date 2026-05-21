@@ -237,9 +237,22 @@ model_xg = PreGame.DynamicXGModel(
     kappa_config         = kap_cfg
 )
 
-# 3. Pass to the pipeline!
-# (The Experiments module handles the Turing AD compilation internally)
-task = ExperimentTask(ds, exp_config)
+# 3. Create the Experiment Task using the unified factory
+task = BayesianFootball.Experiments.create_experiment_task(
+    ds, 
+    model_xg, 
+    "xg_model_experiment", 
+    "./data/experiments"; 
+    target_seasons=["24/25"], 
+    history_seasons=2,
+    samples=1000,
+    warmup=300
+)
+
+# 4. View the beautifully styled experiment config in the REPL
+display(task)
+
+# 5. Run the experiment (handles Turing compilation, parallel folds, and chains internally)
 results = BayesianFootball.Experiments.run_experiment(task)
 ```
 

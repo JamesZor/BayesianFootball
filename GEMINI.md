@@ -46,10 +46,10 @@ using ThreadPinning; pinthreads(:cores)
 
 ### Standard Training Pipeline
 1. **Load Data**: `ds = Data.load_datastore_cached(Data.ScottishLower())`
-2. **Create Features**: `f = Features.create_features(ds)`
-3. **Define Model**: `m = Models.PreGame.DynamicXGModel(...)`
-4. **Build Turing**: `tm = Models.PreGame.build_turing_model(m, f)`
-5. **Sample**: `chain = Sampling.train(tm, Sampling.NUTSMethod())`
+2. **Define Model**: `model = Models.PreGame.DynamicXGModel(...)`
+3. **Create Task**: `task = Experiments.create_experiment_task(ds, model, "experiment_name", "./save_dir")`
+4. **Run Experiment**: `results = Experiments.run_experiment(task)`
+5. **Save**: `Experiments.save_experiment(results)`
 
 ## 🧪 Prototyping & Iteration (`current_development/`)
 
