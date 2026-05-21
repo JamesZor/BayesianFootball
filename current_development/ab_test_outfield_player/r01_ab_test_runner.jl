@@ -20,70 +20,6 @@ const Evaluation = BayesianFootball.Evaluation
 const BackTesting = BayesianFootball.BackTesting
 const Signals = BayesianFootball.Signals
 
-# --- Helper Functions ---
-
-struct ExperimentTask
-    ds::BayesianFootball.Data.DataStore
-    config::Experiments.ExperimentConfig
-end
-
-function create_experiment_tasks(ds::BayesianFootball.Data.DataStore, model, label::String, save_dir::String)
-    # Target Seasons [2025, 2026] with monthly dynamics
-    cv_config = BayesianFootball.Data.GroupedCVConfig(
-        tournament_groups = [BayesianFootball.Data.tournament_ids(ds.segment)],
-        target_seasons = ["2025", "2026"],
-        history_seasons = 2,
-        dynamics_col = :match_month,
-        warmup_period = 0,
-        stop_early = false # Run the full seasons
-    )
-
-    sampler_conf = BayesianFootball.Samplers.NUTSConfig(
-        500, # samples
-        4,   # chains
-        200, # warmup
-        0.65, # Acceptance rate
-        10,  
-        BayesianFootball.Samplers.UniformInit(-1, 1),
-        false, #  display the chain progress 
-    )
-
-    train_cfg = BayesianFootball.Training.Independent(
-        parallel=true,
-        max_concurrent_splits=4
-    )
-    training_config = BayesianFootball.Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
-
-    configs = [
-        Experiments.ExperimentConfig(
-            name = "$(label)_",
-            model = model, 
-            splitter = cv_config,
-            training_config = training_config,
-            save_dir = save_dir
-        ),
-    ]
-
-    return ExperimentTask.(Ref(ds), configs)
-end
-
-function run_experiment_task(task::ExperimentTask)
-    conf = task.config
-    println("\n" * "="^60)
-    println(">>> RUNNING EXPERIMENT: $(conf.name)")
-    println("="^60)
-
-    try
-        results = Experiments.run_experiment(task.ds, conf)
-        Experiments.save_experiment(results)
-        println("✅ Success: $(conf.name)")
-        return results
-    catch e
-        @error "❌ Failed [$(conf.name)]: $e"
-        rethrow(e)
-    end
-end
-
 # --- Experiment Execution ---
 
 # 1. Load Data (Ireland as requested)
@@ -131,11 +67,19 @@ model_outfield = PreGame.DynamicMarketXGOutfieldPlayerTimeDecayModel(
 
 # 4. Execute Runs
 println("\n[INFO] Starting A/B Test Execution...")
-# task_std  = create_experiment_tasks(ds, model_std, "ab_std_player", save_dir)[1]
-task_outfield = create_experiment_tasks(ds, model_outfield, "ab_outfield_player", save_dir)[1]
+# task_std = Experiments.create_experiment_task(ds, model_std, "ab_std_player_", save_dir; target_seasons=["2025", "2026"], dynamics_col=:match_month)
+task_outfield = Experiments.create_experiment_task(ds, model_outfield, "ab_outfield_player_", save_dir; target_seasons=["2025", "2026"], dynamics_col=:match_month)
 
-# results_std  = run_experiment_task(task_std)
-results_outfield = run_experiment_task(task_outfield)
+# Print out the task to verify the new Base.show works!
+display(task_outfield)
+
+println("\n" * "="^60)
+println(">>> RUNNING EXPERIMENT: $(task_outfield.config.name)")
+println("="^60)
+
+results_outfield = Experiments.run_experiment(task_outfield)
+Experiments.save_experiment(results_outfield)
+println("✅ Success: $(task_outfield.config.name)")
 
 # --- Analysis & Evaluation ---
 

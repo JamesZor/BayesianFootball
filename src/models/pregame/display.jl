@@ -141,6 +141,16 @@ function Base.show(io::IO, ::MIME"text/plain", model::AbstractNegBinModel)
                 end
             end
         else
+            if typeof(val) <: Features.AbstractFeatureConfig
+                str = sprint(show, MIME("text/plain"), val)
+                print(io, str)
+                println(io)
+                if !is_last
+                    println(io)
+                end
+                continue
+            end
+
             # Standard Fields (Distributions, floats, etc.)
             printstyled(io, "  └── ", color=:light_black)
             if typeof(val) <: Distribution

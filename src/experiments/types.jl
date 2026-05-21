@@ -4,7 +4,7 @@ using ..Models: AbstractFootballModel
 using ..Data: AbstractSplitter, AbstractSplitMetaData
 using ..Training: TrainingConfig
 
-export ExperimentConfig, ExperimentResults
+export ExperimentConfig, ExperimentTask, ExperimentResults
 
 """
     ExperimentConfig
@@ -19,6 +19,16 @@ Base.@kwdef struct ExperimentConfig
     tags::Vector{String} = String[]
     description::String = ""
     save_dir::String = "./data/experiments"
+end
+
+"""
+    ExperimentTask
+
+The full definition of an experiment run, combining the data and the configuration.
+"""
+struct ExperimentTask
+    ds::Data.DataStore
+    config::ExperimentConfig
 end
 
 """

@@ -3,7 +3,6 @@
 using Dates
 using DataFrames
 using JLD2, JSON3
-using ProgressMeter
 
 # Internal Imports
 using ..Data
@@ -34,30 +33,32 @@ end
 # 1. EXPERIMENT ORCHESTRATION
 # ==============================================================================
 # new Architecture
+
+function run_experiment(task::ExperimentTask)
+    return run_experiment(task.ds, task.config)
+end
+
 function run_experiment(data_store::Data.DataStore, config::ExperimentConfig)
     _log_header(config.name)
     
     # START TIMER
     start_time = time()
 
-    # 1. Vocabulary (Lightweight)
-    # vocabulary = Features.create_vocabulary(data_store, config.model)
-
-    # 2. Splits
+    # 1. Splits
     _log_step(2, "Generating Data Splits")
     boundaries_with_meta = Data.create_id_boundaries(data_store, config.splitter)
     _log_info("Generated $(length(boundaries_with_meta)) splits")
 
-    # 3. Features
+    # 2. Features
     _log_step(3, "Building Feature Sets")
     feature_sets = Features.create_features(
             boundaries_with_meta,
             data_store,
-            config.model,                # <--- FIX: Pass the model, not the splitter!
-            config.splitter.dynamics_col # <--- FIX: Pass the dynamics column
+            config.model,                
+            config.splitter.dynamics_col
         )
 
-    # 4. Training
+    # 3. Training
     _log_step(4, "Executing Training Strategy")
     training_results = Training.train(
         config.model, 

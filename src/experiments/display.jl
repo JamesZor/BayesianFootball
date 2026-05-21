@@ -7,80 +7,138 @@ using ..Samplers
 using Distributions
 
 # --- 1. Helper for ASCII Trees ---
-# Using standard ASCII to ensure compatibility with bare-bones terminals
 const TREE_V = "|"
 const TREE_J = "+--"
-const TREE_L = "+--" 
-const TREE_S = "   " # Spacer
+const TREE_L = "└──" 
+const TREE_M = "├──"
+const TREE_S = "   "
 
-# --- 2. ExperimentConfig (The Dashboard) ---
-function Base.show(io::IO, ::MIME"text/plain", config::ExperimentConfig)
-    println(io, "Experiment: ", config.name)
-    println(io, "========================================")
+# --- 2. ExperimentTask (The Dashboard) ---
+function Base.show(io::IO, ::MIME"text/plain", task::ExperimentTask)
+    printstyled(io, "ExperimentTask", color=:magenta, bold=true)
+    printstyled(io, " [Ready for run_experiment(task)]", color=:yellow, bold=true)
+    printstyled(io, "\n (Bundled DataStore & Config)\n", color=:light_black)
+    println(io, "=========")
+
+    # High-level Summary
+    printstyled(io, "  Name:       ", color=:light_black)
+    printstyled(io, task.config.name, "\n", color=:white, bold=true)
+    printstyled(io, "  Model:      ", color=:light_black)
+    printstyled(io, nameof(typeof(task.config.model)), "\n", color=:cyan)
+    printstyled(io, "  Save Dir:   ", color=:light_black)
+    printstyled(io, task.config.save_dir, "\n", color=:white)
     
+    # Calculate Folds
+    try
+        folds = length(Data.create_id_boundaries(task.ds, task.config.splitter))
+        printstyled(io, "  Total Folds: ", color=:light_black)
+        printstyled(io, folds, "\n", color=:cyan, bold=true)
+    catch
+        printstyled(io, "  Total Folds: ", color=:light_black)
+        printstyled(io, "Unknown (Run create_id_boundaries)\n", color=:cyan)
+    end
+    println(io, "=========\n")
+
+    # Data Source
+    printstyled(io, "[Data Source] ", color=:cyan, bold=true)
+    printstyled(io, "access via: task.ds\n", color=:light_black)
+    show(io, task.ds)
+    println(io, "\n")
+
+    # Pass the rest to ExperimentConfig display
+    show(io, MIME("text/plain"), task.config)
+end
+
+function Base.show(io::IO, task::ExperimentTask)
+    print(io, "ExperimentTask(ds=$(typeof(task.ds.segment)), config=\"$(task.config.name)\")")
+end
+
+# --- 3. ExperimentConfig ---
+function Base.show(io::IO, ::MIME"text/plain", config::ExperimentConfig)
+    printstyled(io, "[Configuration] ", color=:cyan, bold=true)
+    printstyled(io, "access via: task.config\n", color=:light_black)
+    
+    printstyled(io, "  Tags: ", color=:light_black)
+    println(io, isempty(config.tags) ? "None" : join(config.tags, ", "))
+    println(io)
+
     # Model Section
-    println(io, "[Model]")
-    show(io, MIME("text/plain"), config.model) # Delegate to Model's show
-    println(io, "")
+    printstyled(io, "[Model] ", color=:cyan, bold=true)
+    printstyled(io, "access via: task.config.model\n", color=:light_black)
+    show(io, MIME("text/plain"), config.model) 
+    println(io)
 
     # Splitter Section
-    println(io, "[Data & Splitter]")
-    show(io, MIME("text/plain"), config.splitter) # Delegate to Splitter's show
-    println(io, "")
+    printstyled(io, "[Splitter] ", color=:cyan, bold=true)
+    printstyled(io, "access via: task.config.splitter\n", color=:light_black)
+    show(io, MIME("text/plain"), config.splitter)
+    println(io)
 
     # Training Section
-    println(io, "[Training Strategy]")
-    show(io, MIME("text/plain"), config.training_config) # Delegate to Training
-    println(io, "")
-
-    # Metadata
-    print(io, "[Tags]: ")
-    println(io, isempty(config.tags) ? "None" : join(config.tags, ", "))
+    printstyled(io, "[Training Strategy] ", color=:cyan, bold=true)
+    printstyled(io, "access via: task.config.training_config\n", color=:light_black)
+    show(io, MIME("text/plain"), config.training_config)
+    println(io)
 end
 
-# --- 3. Models (Math Notation) ---
-# This assumes your models have a 'prior' field or similar. 
-# We target the abstract type to cover all models.
-
-function Base.show(io::IO, ::MIME"text/plain", m::AbstractFootballModel)
-    # Get the specific type name (e.g., "StaticPoisson")
-    model_name = nameof(typeof(m))
-    
-    # ASCII Math representation
-    println(io, TREE_S, model_name)
-    println(io, TREE_S, "-----------------")
-    
-    # Introspect fields to find distributions
-    # This automatically finds fields like 'prior' and prints them like "prior ~ Normal(...)"
-    for name in fieldnames(typeof(m))
-        val = getfield(m, name)
-        if val isa Distribution
-            # Convert Distribution to string but clean it up if needed
-            dist_str = string(val) 
-            println(io, TREE_S, "  ", name, " ~ ", dist_str)
-        else
-            println(io, TREE_S, "  ", name, " = ", val)
-        end
-    end
+function Base.show(io::IO, config::ExperimentConfig)
+    print(io, "ExperimentConfig(name=\"$(config.name)\")")
 end
+
+
 
 # --- 5. Training Config ---
-
 function Base.show(io::IO, ::MIME"text/plain", t::TrainingConfig)
-    # Strategy
     strat_type = nameof(typeof(t.strategy))
     strat_info = t.strategy.parallel ? "Parallel (Max=$(t.strategy.max_concurrent_splits))" : "Sequential"
     
-    println(io, TREE_S, "Strategy: ", strat_type)
-    println(io, TREE_S, TREE_L, " Mode: ", strat_info)
+    printstyled(io, "  $strat_type Strategy", color=:green, bold=true)
+    println(io)
+    printstyled(io, "  ├── ", color=:light_black)
+    printstyled(io, "Execution: ", color=:white)
+    printstyled(io, strat_info, "\n", color=:cyan)
     
     # Sampler
-    println(io, TREE_S, "Sampler:  ", nameof(typeof(t.sampler)))
+    sampler_name = nameof(typeof(t.sampler))
+    printstyled(io, "  └── ", color=:light_black)
+    printstyled(io, "$sampler_name Sampler\n", color=:green, bold=true)
+    
     s = t.sampler
-    # Assuming NUTSConfig has these fields
     if hasfield(typeof(s), :n_samples)
-        println(io, TREE_S, TREE_S, "Samples: ", s.n_samples)
-        println(io, TREE_S, TREE_S, "Chains:  ", s.n_chains)
-        println(io, TREE_S, TREE_S, "Warmup:  ", s.n_warmup)
+        printstyled(io, "      ├── ", color=:light_black)
+        printstyled(io, "Samples: ", color=:white)
+        printstyled(io, "$(s.n_samples)\n", color=:cyan)
+        
+        printstyled(io, "      ├── ", color=:light_black)
+        printstyled(io, "Warmup:  ", color=:white)
+        printstyled(io, "$(s.n_warmup)\n", color=:cyan)
+        
+        printstyled(io, "      ├── ", color=:light_black)
+        printstyled(io, "Chains:  ", color=:white)
+        printstyled(io, "$(s.n_chains)\n", color=:cyan)
+
+        if hasfield(typeof(s), :initialisation)
+            printstyled(io, "      ├── ", color=:light_black)
+            printstyled(io, "Init:    ", color=:white)
+            printstyled(io, "$(nameof(typeof(s.initialisation)))\n", color=:cyan)
+        end
+        
+        if hasfield(typeof(s), :show_progress)
+            printstyled(io, "      ├── ", color=:light_black)
+            printstyled(io, "Progress:", color=:white)
+            printstyled(io, " $(s.show_progress)\n", color=:cyan)
+        end
+
+        if hasfield(typeof(t.strategy), :max_concurrent_splits)
+            max_threads = s.n_chains * t.strategy.max_concurrent_splits
+            printstyled(io, "      └── ", color=:light_black)
+            printstyled(io, "Max CPU Threads: ", color=:white)
+            printstyled(io, "$max_threads ", color=:cyan, bold=true)
+            printstyled(io, "(Chains: $(s.n_chains) × Splits: $(t.strategy.max_concurrent_splits))\n", color=:light_black)
+        else
+            printstyled(io, "      └── ", color=:light_black)
+            printstyled(io, "Max CPU Threads: ", color=:white)
+            printstyled(io, "$(s.n_chains)\n", color=:cyan, bold=true)
+        end
     end
 end
