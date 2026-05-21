@@ -137,11 +137,12 @@ results_hier = run_experiment_task(task_hier)
 
 # --- Analysis & Evaluation ---
 
-all_results = [results_std, results_hier]
+all_results = [results_std, results_hier];
 
 # 1. Predictive Metrics
 println("\n>>> Evaluating Predictive Performance...")
 metrics = [
+    Evaluation.RQR(),
     Evaluation.LogLoss(), 
     Evaluation.CRPS(), 
     Evaluation.GLMEdge()
@@ -150,6 +151,9 @@ master_eval_df = Evaluation.evaluate_experiments(metrics, all_results, ds)
 
 Evaluation.display_summary_metric(master_eval_df, :logloss)
 Evaluation.display_summary_metric(master_eval_df, :glmedge)
+Evaluation.display_summary_metric(master_eval_df, :rqr)
+
+
 
 # 2. Backtesting (Bayesian Kelly Staking)
 println("\n>>> Running Backtest Staking Analysis...")
@@ -163,7 +167,54 @@ ledger = BackTesting.run_backtest(
 tearsheet = BackTesting.generate_tearsheet(ledger)
 
 println("\n>>> Backtest Comparison Summary:")
-cols_to_show = [:model_name, :selection, :opportunities, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
+cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
 show(tearsheet[:, cols_to_show], allrows=true)
 
 println("\n\n✅ A/B Test Complete. Results saved to $save_dir")
+
+
+
+# include()
+stability_df = extract_stability_dataframe(ds, results_std)
+
+stability_df = extract_stability_dataframe(ds, results_hier)
+
+parmas = unique(stability_df.parameter)
+
+# 3. Analyze Stability
+# Example: Check how 'w_G_att' (Goalkeeper Attacking Weight) evolves over weeks
+using DataFrames, Statistics
+att_stability_D = subset(stability_df, :parameter => p -> p .== "w_D_att")
+att_stability_M = subset(stability_df, :parameter => p -> p .== "w_M_att")
+att_stability_F = subset(stability_df, :parameter => p -> p .== "w_F_att")
+
+
+
+def_stability_D = subset(stability_df, :parameter => p -> p .== "w_D_def")
+def_stability_M = subset(stability_df, :parameter => p -> p .== "w_M_def")
+def_stability_F = subset(stability_df, :parameter => p -> p .== "w_F_def")
+
+
+
+mu = subset(stability_df, :parameter => p -> p .== "interception", :entity => ByRow(isequal("season_1")))
+
+# Example: Check Home Advantage for a specific team
+shamrock_ha = subset(stability_df, 
+    :parameter => p -> p .== "home_advantage",
+    :entity => e -> e .== "shamrock-rovers"
+)
+
+
+results = results_std.training_results.items
+check_fold_diagnostics(results, 0)
+
+# Folds 5, 6, 11 (Unstable)
+check_fold_diagnostics(results, 5)
+check_fold_diagnostics(results, 6)
+check_fold_diagnostics(results, 11)
+
+
+
+c1 = results_hier.training_results[6][1] 
+
+describe(c1) 
