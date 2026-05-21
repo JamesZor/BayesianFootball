@@ -89,7 +89,9 @@ end
 # 1. Load Data (Ireland as requested)
 println("[INFO] Loading Ireland DataStore...")
 ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.Ireland())
-save_dir::String = "./data/ab_test_outfield_player/"
+# save_dir::String = "./data/ab_test_outfield_player/" # using the other files saved since that were the experiment is
+
+save_dir::String = "./data/ab_test_hierarchical_player/"
 
 # 2. Shared Component Configs
 inter_cfg = PreGame.GlobalInterception()
@@ -104,17 +106,18 @@ feature_cfg_bayes = Features.PlayerRatingsFeature(tracker_bayes)
 
 # 3. Model Definitions
 
+# Model A: is in the save dir 
 # Model A: Standard Player Time-Decay (G, D, M, F)
-model_std = PreGame.DynamicMarketXGPlayerTimeDecayModel(
-    interception_config  = inter_cfg,
-    player_dynamics_config = PreGame.PositionalPlayerDynamics(days_half_life=180.0),
-    dispersion_config    = disp_cfg,
-    homeadvantage_config = ha_cfg,
-    kappa_config         = kap_cfg,
-    player_ratings_feature = feature_cfg_bayes,
-    market_weight        = 1.0
-)
-
+# model_std = PreGame.DynamicMarketXGPlayerTimeDecayModel(
+#     interception_config  = inter_cfg,
+#     player_dynamics_config = PreGame.PositionalPlayerDynamics(days_half_life=180.0),
+#     dispersion_config    = disp_cfg,
+#     homeadvantage_config = ha_cfg,
+#     kappa_config         = kap_cfg,
+#     player_ratings_feature = feature_cfg_bayes,
+#     market_weight        = 1.0
+# )
+#
 # Model B: Simplified Outfield Time-Decay (G, Outfield)
 model_outfield = PreGame.DynamicMarketXGOutfieldPlayerTimeDecayModel(
     interception_config  = inter_cfg,
@@ -128,15 +131,15 @@ model_outfield = PreGame.DynamicMarketXGOutfieldPlayerTimeDecayModel(
 
 # 4. Execute Runs
 println("\n[INFO] Starting A/B Test Execution...")
-task_std  = create_experiment_tasks(ds, model_std, "ab_std_player", save_dir)[1]
+# task_std  = create_experiment_tasks(ds, model_std, "ab_std_player", save_dir)[1]
 task_outfield = create_experiment_tasks(ds, model_outfield, "ab_outfield_player", save_dir)[1]
 
-results_std  = run_experiment_task(task_std)
+# results_std  = run_experiment_task(task_std)
 results_outfield = run_experiment_task(task_outfield)
 
 # --- Analysis & Evaluation ---
 
-all_results = [results_std, results_outfield];
+# all_results = [results_std, results_outfield];
 
 # 1. Predictive Metrics
 println("\n>>> Evaluating Predictive Performance...")
