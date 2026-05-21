@@ -56,6 +56,49 @@ function Base.show(io::IO, config::CVConfig)
 end
 
 
+# --- GroupedCVConfig Display ---
+
+function Base.show(io::IO, ::MIME"text/plain", config::GroupedCVConfig)
+    printstyled(io, "GroupedCVConfig", color=:cyan, bold=true)
+    printstyled(io, " (Multi-Tournament Scheme)\n", color=:light_black)
+    println(io, "===============")
+
+    # 1. Scope (What data are we touching?)
+    printstyled(io, "[Scope]\n", color=:magenta)
+    
+    print(io, "  Target Seasons: ")
+    printstyled(io, isempty(config.target_seasons) ? "ALL" : join(config.target_seasons, ", "), "\n", color=:white, bold=true)
+    
+    print(io, "  Groups:         ")
+    print(io, "$(length(config.tournament_groups)) group(s)")
+    println(io)
+    println(io)
+
+    # 2. Dynamics (How does time move?)
+    printstyled(io, "[Dynamics]\n", color=:magenta)
+    println(io, "  History Depth:  $(config.history_seasons) season(s)")
+    println(io, "  Dynamics Col:   :$(config.dynamics_col)")
+    
+    # Details (Constraints)
+    details = String[]
+    push!(details, "warmup=$(config.warmup_period)")
+    if !isnothing(config.end_dynamics)
+        push!(details, "end=$(config.end_dynamics)")
+    end
+    if config.stop_early
+        push!(details, "stop_early=true")
+    end
+    
+    if !isempty(details)
+        print(io, "  Constraints:    ")
+        printstyled(io, join(details, ", "), "\n", color=:light_black)
+    end
+end
+
+function Base.show(io::IO, config::GroupedCVConfig)
+    print(io, "GroupedCVConfig(Targets=$(config.target_seasons), Hist=$(config.history_seasons))")
+end
+
 # --- ExpandingWindowCV Display ---
 
 function Base.show(io::IO, ::MIME"text/plain", config::ExpandingWindowCV)

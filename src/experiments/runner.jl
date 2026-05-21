@@ -34,6 +34,11 @@ end
 # 1. EXPERIMENT ORCHESTRATION
 # ==============================================================================
 # new Architecture
+
+function run_experiment(task::ExperimentTask)
+    return run_experiment(task.ds, task.config)
+end
+
 function run_experiment(data_store::Data.DataStore, config::ExperimentConfig)
     _log_header(config.name)
     
