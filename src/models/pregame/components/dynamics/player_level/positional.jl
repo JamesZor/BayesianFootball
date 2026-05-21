@@ -136,3 +136,48 @@ function extract_dynamics(chain::Chains, ::HierarchicalPlayerDynamicsConfig, pre
 
     return merge(nt, (; team_att_raw, team_def_raw))
 end
+
+# ==========================================
+# 5. OUTFIELD PLAYER DYNAMICS (2 POSITIONS: G & Outfield)
+# ==========================================
+
+Base.@kwdef struct OutfieldPlayerDynamicsConfig <: AbstractDynamicsConfig
+    w_G_att_prior::ContinuousUnivariateDistribution = Normal(0.0, 0.2)
+    w_G_def_prior::ContinuousUnivariateDistribution = Normal(0.0, 0.2)
+    
+    w_Outfield_att_prior::ContinuousUnivariateDistribution = Normal(0.08, 0.05)
+    w_Outfield_def_prior::ContinuousUnivariateDistribution = Normal(-0.08, 0.05)
+
+    days_half_life::Real = 180.0
+end
+
+"""
+    build_dynamics(config::OutfieldPlayerDynamicsConfig, n_teams::Int)
+
+Submodel for simplified Player dynamics. Reduces the 4 positional groups into 
+Goalkeepers and Outfield (D+M+F). Completely global (non-hierarchical) to improve convergence.
+"""
+@model function build_dynamics(config::OutfieldPlayerDynamicsConfig, n_teams::Int)
+    w_G_att ~ config.w_G_att_prior
+    w_G_def ~ config.w_G_def_prior
+
+    w_Outfield_att ~ config.w_Outfield_att_prior
+    w_Outfield_def ~ config.w_Outfield_def_prior
+
+    return (; 
+        w_G_att, w_G_def,
+        w_Outfield_att, w_Outfield_def
+    )
+end
+
+"""
+    extract_dynamics(chain::Chains, config::OutfieldPlayerDynamicsConfig, prefix::String, n_teams::Int)
+"""
+function extract_dynamics(chain::Chains, ::OutfieldPlayerDynamicsConfig, prefix::String, n_teams::Int)
+    return (;
+        w_G_att = vec(Array(chain[Symbol("$prefix.w_G_att")])),
+        w_G_def = vec(Array(chain[Symbol("$prefix.w_G_def")])),
+        w_Outfield_att = vec(Array(chain[Symbol("$prefix.w_Outfield_att")])),
+        w_Outfield_def = vec(Array(chain[Symbol("$prefix.w_Outfield_def")]))
+    )
+end
