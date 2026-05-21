@@ -39,6 +39,14 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::OddsData)
     end
 end
 
+const ODDS_SCHEMA = Dict{Symbol, Type}(
+    :match_id => Int32,
+    :market_name => String,
+    :selection => Symbol,
+    :odds_open => Float64,
+    :odds_close => Float64
+)
+
 function process_data(df::DataFrame, ::OddsData; config::MarketConfig = Markets.DEFAULT_MARKET_CONFIG)
 
     df.market_group = map_odds_market_group.(df.market_id)
@@ -79,6 +87,9 @@ function process_data(df::DataFrame, ::OddsData; config::MarketConfig = Markets.
 
     # 4. Math Enrichment (Probabilities, Vig, Fair Odds, CLM)
     Markets._enrich_market_data!(long_df)
+
+    # Apply strict schema
+    apply_schema!(long_df, ODDS_SCHEMA)
 
     return long_df
 end

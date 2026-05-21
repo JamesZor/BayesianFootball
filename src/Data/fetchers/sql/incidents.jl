@@ -27,7 +27,30 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::IncidentsData)
     end
 end
 
-# process_data falls back to the default interface (returns raw df)
+const INCIDENTS_SCHEMA = Dict{Symbol, Type}(
+    :id => Int32,
+    :match_id => Int32,
+    :incident_type => InlineStrings.String31,
+    :time => Union{Missing, Int32},
+    :is_home => Union{Missing, Bool},
+    :added_time => Union{Missing, Int32},
+    :player_name => Union{Missing, String},
+    :player_in_name => Union{Missing, String},
+    :player_out_name => Union{Missing, String},
+    :assist1_name => Union{Missing, String},
+    :assist2_name => Union{Missing, String},
+    :incident_class => Union{Missing, InlineStrings.String31},
+    :reason => Union{Missing, InlineStrings.String31},
+    :is_injury => Union{Missing, Bool},
+    :rescinded => Union{Missing, Bool},
+    :period_text => Union{Missing, InlineStrings.String31},
+    :time_seconds => Union{Missing, Float64}
+)
+
+function process_data(df::DataFrame, ::IncidentsData)
+    apply_schema!(df, INCIDENTS_SCHEMA)
+    return df
+end
 
 function validate_data(df::DataFrame, ::IncidentsData)
     if !("incident_type" in names(df))

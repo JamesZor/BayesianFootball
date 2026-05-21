@@ -41,6 +41,23 @@ function validate_data(df::DataFrame, ::FootballDataType)
 end
 
 # ---------------------------------------------------------
+# Schema Enforcement
+# ---------------------------------------------------------
+
+"""
+    apply_schema!(df, schema)
+Enforces strict column types on a DataFrame to strip `Union{Missing, T}` from guaranteed columns.
+"""
+function apply_schema!(df::DataFrame, schema::Dict{Symbol, Type})
+    for (col, T) in schema
+        if string(col) in names(df)
+            df[!, col] = convert.(T, df[!, col])
+        end
+    end
+    return df
+end
+
+# ---------------------------------------------------------
 # The Master Orchestrator
 # ---------------------------------------------------------
 
@@ -51,11 +68,24 @@ The one function to rule them all. Handles ID extraction and the full Fetch->Pro
 function load_data(conn::LibPQ.Connection, segment::DataTournemantSegment, data_type::FootballDataType; kwargs...)::DataFrame
     t_ids = tournament_ids(segment)
     
-    raw_df = fetch_data(conn, t_ids, data_type)
+    local raw_df
+    try
+        raw_df = fetch_data(conn, t_ids, data_type)
+    catch e
+        @warn "SQL Fetch failed for $(typeof(data_type)): $(e)"
+        return DataFrame()
+    end
+    
     if nrow(raw_df) == 0; return raw_df; end
     
-    # Pass kwargs (like config=...) down to the processor
-    clean_df = process_data(raw_df, data_type; kwargs...)
+    local clean_df
+    try
+        # Pass kwargs (like config=...) down to the processor
+        clean_df = process_data(raw_df, data_type; kwargs...)
+    catch e
+        @warn "Processing/Schema Enforcement failed for $(typeof(data_type)): $(e)"
+        return DataFrame()
+    end
     
     # if !validate_data(clean_df, data_type)
     #     @warn "QA Verifier failed for $(typeof(data_type))."

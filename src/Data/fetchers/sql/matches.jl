@@ -32,6 +32,17 @@ function fetch_data(conn::LibPQ.Connection, t_ids::Vector{Int}, ::MatchesData)
     end
 end
 
+const MATCHES_SCHEMA = Dict{Symbol, Type}(
+    :match_id        => Int32,
+    :tournament_id   => Int32,
+    :season_id       => Int32,
+    :home_team       => InlineStrings.String31,
+    :away_team       => InlineStrings.String31,
+    :match_date      => Dates.Date,
+    :home_score      => Union{Missing, Int32},
+    :away_score      => Union{Missing, Int32}
+)
+
 function process_data(df::DataFrame, ::MatchesData)
     # Extract date parts from the timestamp
     df.match_hour = hour.(df.start_timestamp)
@@ -39,13 +50,17 @@ function process_data(df::DataFrame, ::MatchesData)
     df.match_dayofweek = dayofweek.(df.start_timestamp) .- 1
     df.match_date = Date.(df.start_timestamp)
 
-    add_match_week_column!(df)
-
+    # Add match week and biweek
+    df = add_match_week_column(df)
     transform!(df, :match_week => ByRow(w -> cld(w, 4)) => :match_month)
     transform!(df, :match_week => ByRow(w -> cld(w, 2)) => :match_biweek)
     
     # Drop the raw timestamp as we have the parsed components
     select!(df, Not(:start_timestamp))
+    
+    # Apply strict schema
+    apply_schema!(df, MATCHES_SCHEMA)
+    
     return df
 end
 

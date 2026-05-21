@@ -76,5 +76,30 @@ function process_data(df::DataFrame, ::LineUpsData)
     if !isempty(valid_renames)
         rename!(df, valid_renames)
     end
+
+    # Apply Schema
+    schema = Dict{Symbol, Type}(
+        :tournament_id => Int32,
+        :season_id => Int32,
+        :match_id => Int32,
+        :team_side => InlineStrings.String31,
+        :player_id => Int32,
+        :player_name => Union{Missing, String},
+        :position => Union{Missing, InlineStrings.String31},
+        :shirt_number => Union{Missing, Int32},
+        :is_substitute => Union{Missing, Bool},
+        :is_captain => Union{Missing, Bool},
+        :minutes_played => Union{Missing, Int32},
+        :goals => Union{Missing, Int32}
+    )
+    
+    for col in names(df)
+        sym = Symbol(col)
+        if !haskey(schema, sym)
+            schema[sym] = Union{Missing, Float64}
+        end
+    end
+    apply_schema!(df, schema)
+
     return df
 end

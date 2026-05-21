@@ -42,11 +42,29 @@ function process_data(df::DataFrame, ::StatisticsData)
     )
 
     # 3. Join them back together
-    return innerjoin(
+    final_df = innerjoin(
         home_wide, 
         away_wide, 
         on = [:match_id, :tournament_id, :season_id, :period]
     )
+
+    # 4. Apply Schema
+    schema = Dict{Symbol, Type}(
+        :match_id => Int32,
+        :tournament_id => Int32,
+        :season_id => Int32,
+        :period => InlineStrings.String31
+    )
+    # Everything else is Union{Missing, Float64}
+    for col in names(final_df)
+        sym = Symbol(col)
+        if !haskey(schema, sym)
+            schema[sym] = Union{Missing, Float64}
+        end
+    end
+    apply_schema!(final_df, schema)
+    
+    return final_df
 end
 
 function validate_data(df::DataFrame, ::StatisticsData)
