@@ -6,25 +6,178 @@ using DataFrames
 using Statistics
 using Dates
 using Printf
+using PrettyTables
 using BayesianFootball
 import BayesianFootball.Signals: KellyCriterion, BayesianKelly, compute_stake
 
-"""
-    parse_redis_runners(runners, home_team::String, away_team::String; selections=Dict{String,String}())
+# ═══════════════════════════════════════════════════════════════════════════════
+#  MARKET TYPE MAPPING
+# ═══════════════════════════════════════════════════════════════════════════════
 
-Extracts Home, Draw, Away back and lay odds from the Betfair runners dict.
-Resolves runner identity via:
-  - Option 1: `runner_name` field injected directly into the runner payload by the Python streamer.
-  - Option 2: `selections` kwarg mapping `selection_id -> runner_name` from `live_market_meta`.
-  - Fallback: raw runner key (numeric selection ID).
 """
-function parse_redis_runners(runners, home_team::String, away_team::String; selections::Dict{String,String} = Dict{String,String}())
+    ppd_to_betfair_type(market_name::String, market_line::Float64) -> Union{String, Nothing}
+
+Maps a PPD market (name + line) to the corresponding Betfair market type string.
+Examples: ("1X2", 0.0) -> "MATCH_ODDS", ("OverUnder", 2.5) -> "OVER_UNDER_25"
+"""
+function ppd_to_betfair_type(market_name::String, market_line::Float64)
+    if market_name == "1X2"
+        return "MATCH_ODDS"
+    elseif market_name == "OverUnder"
+        line_str = replace(@sprintf("%.1f", market_line), "." => "")
+        return "OVER_UNDER_$line_str"
+    elseif market_name == "BTTS"
+        return "BOTH_TEAMS_TO_SCORE"
+    else
+        return nothing  # DoubleChance etc. not on Betfair
+    end
+end
+
+"""
+    betfair_to_ppd_type(bf_type::String) -> Union{Tuple{String, Float64}, Nothing}
+
+Reverse maps a Betfair market type string to PPD (market_name, market_line).
+Examples: "MATCH_ODDS" -> ("1X2", 0.0), "OVER_UNDER_25" -> ("OverUnder", 2.5)
+"""
+function betfair_to_ppd_type(bf_type::String)
+    if bf_type == "MATCH_ODDS"
+        return ("1X2", 0.0)
+    elseif startswith(bf_type, "OVER_UNDER_")
+        line_str = bf_type[12:end]  # e.g. "25" from "OVER_UNDER_25"
+        line = parse(Float64, line_str[1:end-1] * "." * line_str[end:end])
+        return ("OverUnder", line)
+    elseif bf_type == "BOTH_TEAMS_TO_SCORE"
+        return ("BTTS", 0.0)
+    else
+        return nothing
+    end
+end
+
+"""
+    selection_display_name(selection::Symbol, market_name::String) -> String
+
+Returns a human-readable display name for a PPD selection symbol.
+"""
+function selection_display_name(selection::Symbol, market_name::String)
+    s = string(selection)
+    if market_name == "1X2"
+        return s == "home" ? "Home" : s == "away" ? "Away" : s == "draw" ? "Draw" : titlecase(s)
+    elseif market_name == "OverUnder"
+        # :over_25 -> "Over 2.5", :under_05 -> "Under 0.5"
+        if startswith(s, "over_")
+            digits = s[6:end]
+            return "Over $(digits[1:end-1]).$(digits[end])"
+        elseif startswith(s, "under_")
+            digits = s[7:end]
+            return "Under $(digits[1:end-1]).$(digits[end])"
+        end
+        return s
+    elseif market_name == "BTTS"
+        return s == "btts_yes" ? "Yes" : s == "btts_no" ? "No" : s
+    else
+        return s
+    end
+end
+
+"""
+    market_display_name(market_name::String, market_line::Float64) -> String
+
+Returns a compact display label for the market group header.
+"""
+function market_display_name(market_name::String, market_line::Float64)
+    if market_name == "1X2"
+        return "1X2"
+    elseif market_name == "OverUnder"
+        return "O/U $(@sprintf("%.1f", market_line))"
+    elseif market_name == "BTTS"
+        return "BTTS"
+    else
+        return market_name
+    end
+end
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  RUNNER PARSING (Generalized for all market types)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+"""
+    _resolve_runner_role(runner_name, market_name, market_line, home_norm, away_norm)
+
+Internal: determines which PPD selection symbol a Betfair runner corresponds to.
+"""
+function _resolve_runner_role(runner_name::String, market_name::String, market_line::Float64,
+                               home_norm::String, away_norm::String)
+    normalize_name(name) = lowercase(replace(string(name), "-" => "", "_" => "", " " => ""))
+    name_norm = normalize_name(runner_name)
+    
+    if market_name == "1X2"
+        if occursin(home_norm, name_norm) || occursin(name_norm, home_norm) || name_norm == "home"
+            return :home
+        elseif occursin(away_norm, name_norm) || occursin(name_norm, away_norm) || name_norm == "away"
+            return :away
+        elseif occursin("draw", name_norm) || name_norm == "thedraw"
+            return :draw
+        end
+    elseif market_name == "OverUnder"
+        line_str = replace(@sprintf("%.1f", market_line), "." => "")
+        if occursin("over", name_norm)
+            return Symbol("over_$line_str")
+        elseif occursin("under", name_norm)
+            return Symbol("under_$line_str")
+        end
+    elseif market_name == "BTTS"
+        if occursin("yes", name_norm)
+            return :btts_yes
+        elseif occursin("no", name_norm)
+            return :btts_no
+        end
+    end
+    
+    return nothing
+end
+
+"""
+    _expected_selections(market_name::String, market_line::Float64)
+
+Returns the expected PPD selection symbols for a given market type.
+"""
+function _expected_selections(market_name::String, market_line::Float64)
+    if market_name == "1X2"
+        return [:home, :draw, :away]
+    elseif market_name == "OverUnder"
+        line_str = replace(@sprintf("%.1f", market_line), "." => "")
+        return [Symbol("over_$line_str"), Symbol("under_$line_str")]
+    elseif market_name == "BTTS"
+        return [:btts_yes, :btts_no]
+    else
+        return Symbol[]
+    end
+end
+
+"""
+    parse_runners_for_market(runners, market_name, market_line, home_team, away_team; selections)
+
+Generalized runner parser. Maps Betfair runner payloads to PPD selection symbols
+for any market type (1X2, OverUnder, BTTS).
+
+Runner identity is resolved via:
+  1. `runner_name` field injected by the Python streamer (Option 1)
+  2. `selections` kwarg from `live_market_meta` (Option 2)
+  3. Fallback to raw runner key
+"""
+function parse_runners_for_market(runners, market_name::String, market_line::Float64,
+                                   home_team::String, away_team::String;
+                                   selections::Dict{String,String} = Dict{String,String}())
     odds_dict = Dict{Symbol, NamedTuple}()
     
-    # Standard roles we map to
-    roles = [:home, :draw, :away]
-    for r in roles
-        odds_dict[r] = (back = NaN, lay = NaN, back_size = 0.0, lay_size = 0.0)
+    expected = _expected_selections(market_name, market_line)
+    if isempty(expected)
+        return odds_dict
+    end
+    
+    # Initialize all expected selections with NaN
+    for sel in expected
+        odds_dict[sel] = (back = NaN, lay = NaN, back_size = 0.0, lay_size = 0.0)
     end
     
     if isempty(runners)
@@ -33,14 +186,13 @@ function parse_redis_runners(runners, home_team::String, away_team::String; sele
     
     # Normalization helper
     normalize_name(name) = lowercase(replace(string(name), "-" => "", "_" => "", " " => ""))
-    
     home_norm = normalize_name(home_team)
     away_norm = normalize_name(away_team)
     
     for (k, runner) in runners
-        # Identify runner role
         runner_key = string(k)
-        # Resolve runner name: Option 1 (injected by streamer), Option 2 (metadata selections), fallback to key
+        
+        # Resolve runner name: Option 1 (injected) -> Option 2 (metadata) -> fallback
         runner_name = if haskey(runner, :runner_name) && runner.runner_name !== nothing
             string(runner.runner_name)
         elseif haskey(selections, runner_key)
@@ -49,29 +201,18 @@ function parse_redis_runners(runners, home_team::String, away_team::String; sele
             runner_key
         end
         
-        norm_key = normalize_name(runner_key)
-        norm_name = normalize_name(runner_name)
+        # Map runner to selection based on market type
+        role = _resolve_runner_role(runner_name, market_name, market_line, home_norm, away_norm)
         
-        role = :unknown
-        if norm_key == "home" || norm_name == "home" || occursin(home_norm, norm_name) || occursin(norm_name, home_norm)
-            role = :home
-        elseif norm_key == "away" || norm_name == "away" || occursin(away_norm, norm_name) || occursin(norm_name, away_norm)
-            role = :away
-        elseif norm_key == "draw" || norm_name == "draw" || occursin("draw", norm_name)
-            role = :draw
-        end
-        
-        if role != :unknown
-            # Extract top back & lay prices
-            back_p = NaN
-            back_s = 0.0
+        if role !== nothing && role in expected
+            # Extract back & lay prices
+            back_p = NaN; back_s = 0.0
             if haskey(runner, :best_back) && !isempty(runner.best_back)
                 back_p = Float64(runner.best_back[1].price)
                 back_s = haskey(runner.best_back[1], :size) ? Float64(runner.best_back[1].size) : 0.0
             end
             
-            lay_p = NaN
-            lay_s = 0.0
+            lay_p = NaN; lay_s = 0.0
             if haskey(runner, :best_lay) && !isempty(runner.best_lay)
                 lay_p = Float64(runner.best_lay[1].price)
                 lay_s = haskey(runner.best_lay[1], :size) ? Float64(runner.best_lay[1].size) : 0.0
@@ -84,20 +225,29 @@ function parse_redis_runners(runners, home_team::String, away_team::String; sele
     return odds_dict
 end
 
+# Backward-compatible wrapper for 1X2 markets
+function parse_redis_runners(runners, home_team::String, away_team::String;
+                              selections::Dict{String,String} = Dict{String,String}())
+    return parse_runners_for_market(runners, "1X2", 0.0, home_team, away_team; selections=selections)
+end
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  REDIS INTEGRATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
 """
     get_live_market_mappings(redis_conn)
 
-Scans the `live_market_meta` hash in Redis and builds a lookup dictionary:
-`Dict{Tuple{String, String, String}, String}` mapping `(home_slug, away_slug, market_type) -> market_id`.
+Scans the `live_market_meta` hash in Redis and returns a NamedTuple:
+  - `markets`: Dict{Tuple{String, String, String}, String} mapping (home_slug, away_slug, bf_type) -> market_id
+  - `selections`: Dict{String, Dict{String, String}} mapping market_id -> {selection_id -> runner_name}
 """
 function get_live_market_mappings(redis_conn)
     mapping_lookup = Dict{Tuple{String, String, String}, String}()
-    selections_lookup = Dict{String, Dict{String, String}}()  # market_id -> {selection_id -> runner_name}
+    selections_lookup = Dict{String, Dict{String, String}}()
     try
-        # Retrieve all metadata entries from Redis hash
         meta_dict = Redis.hgetall(redis_conn, "live_market_meta")
 
-        # Parse the JSON values and populate the lookup table
         for (market_id, raw_json) in meta_dict
             try
                 meta = JSON3.read(raw_json)
@@ -128,35 +278,67 @@ function get_live_market_mappings(redis_conn)
 end
 
 """
-    poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, away_slug::String, market_type::String = "1X2")
+    get_available_markets_for_match(market_id_lookup, home_slug, away_slug)
 
-Resolves the Betfair market ID for a match and fetches the runner prices.
-`market_id_lookup` is a NamedTuple with `.markets` and `.selections` from `get_live_market_mappings`.
+Finds all Betfair markets available for a specific match.
+Returns a sorted vector of NamedTuples: (ppd_market, ppd_line, bf_type, market_id)
 """
-function poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, away_slug::String, market_type::String = "1X2")
-    # PPD/todays_matches uses "1X2", but Betfair streaming uses "MATCH_ODDS"
-    bf_market_type = market_type == "1X2" ? "MATCH_ODDS" : market_type
+function get_available_markets_for_match(market_id_lookup, home_slug::String, away_slug::String)
+    available = NamedTuple{(:ppd_market, :ppd_line, :bf_type, :market_id), Tuple{String, Float64, String, String}}[]
+    for ((h, a, bf_type), mid) in market_id_lookup.markets
+        if (h == home_slug && a == away_slug) || (h == away_slug && a == home_slug)
+            ppd_info = betfair_to_ppd_type(bf_type)
+            if ppd_info !== nothing
+                push!(available, (ppd_market=ppd_info[1], ppd_line=ppd_info[2], bf_type=bf_type, market_id=string(mid)))
+            end
+        end
+    end
+    # Sort: 1X2 first, then O/U by line, then BTTS
+    sort!(available, by=x -> (x.ppd_market == "1X2" ? 0 : x.ppd_market == "OverUnder" ? 1 : 2, x.ppd_line))
+    return available
+end
 
-    # Check if a market ID matches the team slugs
+"""
+    fetch_live_odds_for_market(redis_conn, market_id_lookup, home, away, mkt)
+
+Fetches and parses live runner odds from Redis for a specific market.
+`mkt` is a NamedTuple from `get_available_markets_for_match`.
+"""
+function fetch_live_odds_for_market(redis_conn, market_id_lookup, home::String, away::String, mkt)
+    sel_dict = get(market_id_lookup.selections, mkt.market_id, Dict{String, String}())
+    raw_data = Redis.hget(redis_conn, "live_markets", mkt.market_id)
+    
+    if raw_data === nothing
+        return parse_runners_for_market(Dict(), mkt.ppd_market, mkt.ppd_line, home, away)
+    end
+    
+    try
+        data = JSON3.read(raw_data)
+        if haskey(data, :runners)
+            return parse_runners_for_market(data.runners, mkt.ppd_market, mkt.ppd_line, home, away; selections=sel_dict)
+        end
+    catch e
+        @warn "Failed to parse Redis JSON for market $(mkt.market_id): $e"
+    end
+    
+    return parse_runners_for_market(Dict(), mkt.ppd_market, mkt.ppd_line, home, away)
+end
+
+# Legacy convenience methods
+function poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, away_slug::String, market_type::String = "1X2")
+    bf_market_type = market_type == "1X2" ? "MATCH_ODDS" : market_type
     market_id = get(market_id_lookup.markets, (home_slug, away_slug, bf_market_type), nothing)
     if market_id === nothing
-        # Try reversed order just in case
         market_id = get(market_id_lookup.markets, (away_slug, home_slug, bf_market_type), nothing)
     end
-
     if market_id === nothing
-        # Return empty/default runner odds
         return parse_redis_runners(Dict(), home_slug, away_slug)
     end
-
-    # Get Option 2 selections fallback for this market
     sel_dict = get(market_id_lookup.selections, market_id, Dict{String, String}())
-
     raw_data = Redis.hget(redis_conn, "live_markets", market_id)
     if raw_data === nothing
         return parse_redis_runners(Dict(), home_slug, away_slug)
     end
-
     try
         data = JSON3.read(raw_data)
         if haskey(data, :runners)
@@ -165,202 +347,242 @@ function poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, a
     catch e
         @warn "Failed to parse Redis JSON for market $market_id: $e"
     end
-
     return parse_redis_runners(Dict(), home_slug, away_slug)
 end
 
-"""
-    poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
-
-Loads the live runners prices from Redis for a single fixture using automatic metadata lookup.
-"""
 function poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
     market_id_lookup = get_live_market_mappings(redis_conn)
     return poll_redis_live_odds(redis_conn, market_id_lookup, home_team, away_team)
 end
 
-"""
-    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
+# ═══════════════════════════════════════════════════════════════════════════════
+#  BETTING SIGNALS
+# ═══════════════════════════════════════════════════════════════════════════════
 
-Generates EV and Kelly stakes for today's matches using market metadata lookup.
-`market_id_lookup` is a NamedTuple from `get_live_market_mappings`.
 """
-function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
-    # Instantiate signals from core package
+    calculate_betting_signals(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
+
+Generates EV and Kelly stakes for today's matches across ALL available Betfair markets.
+Returns a DataFrame with one row per (match, market, selection).
+"""
+function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame,
+                                    market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
     kelly_std = KellyCriterion(kelly_fraction)
     kelly_bayes = BayesianKelly(min_edge)
     
     df_results = DataFrame(
-        match_id = Int[],
-        home_team = String[],
-        away_team = String[],
-        selection = Symbol[],
-        prob_model = Float64[],
-        odds_back = Float64[],
-        odds_lay = Float64[],
-        ev = Float64[],
-        stake_std_kelly = Float64[],
-        stake_bayes_kelly = Float64[]
+        match_id = Int[], home_team = String[], away_team = String[],
+        market = String[], market_line = Float64[], selection = Symbol[],
+        prob_model = Float64[], odds_back = Float64[], odds_lay = Float64[],
+        ev = Float64[], stake_std_kelly = Float64[], stake_bayes_kelly = Float64[]
     )
-    
-    # standard 1X2 market rows
-    df_1X2 = subset(ppd.df, :market_name => ByRow(==("1X2")))
     
     for row in eachrow(todays_matches)
         mid = Int(row.match_id)
         home = String(row.home_team)
         away = String(row.away_team)
         
-        # Get live odds from Redis
-        live_odds = poll_redis_live_odds(redis_conn, market_id_lookup, home, away)
+        available = get_available_markets_for_match(market_id_lookup, home, away)
         
-        # Get model distributions for this match
-        match_preds = subset(df_1X2, :match_id => ByRow(==(mid)))
-        if isempty(match_preds)
-            continue
-        end
-        
-        for sel in [:home, :away, :draw]
-            # Find the row in PPD for this selection
-            sel_row = subset(match_preds, :selection => ByRow(s -> Symbol(s) == sel))
-            if isempty(sel_row)
-                continue
+        for mkt in available
+            # Get PPD rows for this specific market
+            ppd_rows = subset(ppd.df,
+                :match_id => ByRow(==(mid)),
+                :market_name => ByRow(==(mkt.ppd_market)),
+                :market_line => ByRow(==(mkt.ppd_line))
+            )
+            isempty(ppd_rows) && continue
+            
+            live_odds = fetch_live_odds_for_market(redis_conn, market_id_lookup, home, away, mkt)
+            
+            for sel_row in eachrow(ppd_rows)
+                sel = sel_row.selection
+                dist = sel_row.distribution
+                p_model = mean(dist)
+                
+                odds_info = get(live_odds, sel, (back=NaN, lay=NaN, back_size=0.0, lay_size=0.0))
+                back_odds = odds_info.back
+                lay_odds = odds_info.lay
+                
+                ev = NaN; stake_std = 0.0; stake_bayes = 0.0
+                if !isnan(back_odds) && back_odds > 1.0
+                    ev = (p_model * back_odds) - 1.0
+                    stake_std = compute_stake(kelly_std, dist, back_odds)
+                    stake_bayes = compute_stake(kelly_bayes, dist, back_odds)
+                end
+                
+                push!(df_results, (
+                    match_id=mid, home_team=home, away_team=away,
+                    market=mkt.ppd_market, market_line=mkt.ppd_line, selection=sel,
+                    prob_model=p_model, odds_back=back_odds, odds_lay=lay_odds,
+                    ev=ev, stake_std_kelly=stake_std, stake_bayes_kelly=stake_bayes
+                ))
             end
-            
-            dist = first(sel_row).distribution
-            p_model = mean(dist)
-            
-            # Live odds
-            odds_info = live_odds[sel]
-            back_odds = odds_info.back
-            lay_odds = odds_info.lay
-            
-            ev = NaN
-            stake_std = 0.0
-            stake_bayes = 0.0
-            
-            if !isnan(back_odds) && back_odds > 1.0
-                ev = (p_model * back_odds) - 1.0
-                stake_std = compute_stake(kelly_std, dist, back_odds)
-                stake_bayes = compute_stake(kelly_bayes, dist, back_odds)
-            end
-            
-            push!(df_results, (
-                match_id = mid,
-                home_team = home,
-                away_team = away,
-                selection = sel,
-                prob_model = p_model,
-                odds_back = back_odds,
-                odds_lay = lay_odds,
-                ev = ev,
-                stake_std_kelly = stake_std,
-                stake_bayes_kelly = stake_bayes
-            ))
         end
     end
     
     return df_results
 end
 
-"""
-    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
-
-Generates EV and Kelly stakes for today's matches. Automatically loads metadata mapping.
-"""
-function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame;
+                                    kelly_fraction=0.5, min_edge=0.0)
     market_id_lookup = get_live_market_mappings(redis_conn)
-    return calculate_betting_signals(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=kelly_fraction, min_edge=min_edge)
+    return calculate_betting_signals(ppd, redis_conn, todays_matches, market_id_lookup;
+                                     kelly_fraction=kelly_fraction, min_edge=min_edge)
 end
 
-"""
-    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PRETTY-PRINTED DASHBOARD
+# ═══════════════════════════════════════════════════════════════════════════════
 
-Interactive console dashboard showing live prices, model probabilities, and Kelly stakes.
-`market_id_lookup` is a NamedTuple from `get_live_market_mappings`.
 """
-function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
-    kelly_std = KellyCriterion(kelly_fraction)
-    kelly_bayes = BayesianKelly(min_edge)
+    _build_match_table(ppd, redis_conn, market_id_lookup, home, away, mid, kelly_std, kelly_bayes)
+
+Builds the PrettyTables matrix and metadata for a single match across all available markets.
+Returns (data::Matrix{Any}, hlines::Vector{Int}, has_value_bets::Bool) or nothing if no data.
+"""
+function _build_match_table(ppd::Predictions.PPD, redis_conn, market_id_lookup,
+                             home::String, away::String, mid::Int,
+                             kelly_std, kelly_bayes)
+    available = get_available_markets_for_match(market_id_lookup, home, away)
     
-    println("\n" * "="^85)
-    println(" 📊 LIVE MATCHDAY BETTING DASHBOARD | Kelly Fraction: $kelly_fraction | Min Edge: $min_edge")
-    println("="^85)
+    # Collect all rows across markets
+    table_rows = NamedTuple[]
+    hlines = Int[]  # row indices where horizontal lines should appear between market groups
     
-    # standard 1X2 market rows
-    df_1X2 = subset(ppd.df, :market_name => ByRow(==("1X2")))
-    
-    for row in eachrow(todays_matches)
-        mid = Int(row.match_id)
-        home = String(row.home_team)
-        away = String(row.away_team)
+    for mkt in available
+        ppd_rows = subset(ppd.df,
+            :match_id => ByRow(==(mid)),
+            :market_name => ByRow(==(mkt.ppd_market)),
+            :market_line => ByRow(==(mkt.ppd_line))
+        )
+        isempty(ppd_rows) && continue
         
-        # Get live odds from Redis
-        live_odds = poll_redis_live_odds(redis_conn, market_id_lookup, home, away)
+        live_odds = fetch_live_odds_for_market(redis_conn, market_id_lookup, home, away, mkt)
         
-        # Get model distributions for this match
-        match_preds = subset(df_1X2, :match_id => ByRow(==(mid)))
-        if isempty(match_preds)
-            continue
-        end
+        market_label = market_display_name(mkt.ppd_market, mkt.ppd_line)
+        first_in_group = true
         
-        println("\n⚽ $home vs $away (ID: $mid)")
-        println("   " * "-"^79)
-        println("   Selection   |  Model Prob  |  Back Odds  |  Lay Odds  |    EV    |  Std Kelly  |  Bayes Kelly")
-        println("   " * "-"^79)
-        
-        for sel in [:home, :away, :draw]
-            # Find the row in PPD for this selection
-            sel_row = subset(match_preds, :selection => ByRow(s -> Symbol(s) == sel))
-            if isempty(sel_row)
-                continue
-            end
-            
-            dist = first(sel_row).distribution
+        for sel_row in eachrow(ppd_rows)
+            sel = sel_row.selection
+            dist = sel_row.distribution
             p_model = mean(dist)
             
-            # Live odds
-            odds_info = live_odds[sel]
+            odds_info = get(live_odds, sel, (back=NaN, lay=NaN, back_size=0.0, lay_size=0.0))
             back_odds = odds_info.back
             lay_odds = odds_info.lay
             
-            ev = NaN
-            stake_std = 0.0
-            stake_bayes = 0.0
-            
+            ev = NaN; stake_std = 0.0; stake_bayes = 0.0
             if !isnan(back_odds) && back_odds > 1.0
                 ev = (p_model * back_odds) - 1.0
                 stake_std = compute_stake(kelly_std, dist, back_odds)
                 stake_bayes = compute_stake(kelly_bayes, dist, back_odds)
             end
             
-            # Format selection label
-            sel_label = rpad(uppercase(string(sel)), 12)
+            sel_label = selection_display_name(sel, mkt.ppd_market)
+            is_value = !isnan(ev) && ev > 0.0
             
-            # Format numbers
-            prob_str  = @sprintf("%10.1f%%", p_model * 100)
-            back_str  = isnan(back_odds) ? "    ----  " : @sprintf("%10.2f", back_odds)
-            lay_str   = isnan(lay_odds)  ? "    ----  " : @sprintf("%10.2f", lay_odds)
-            ev_str    = isnan(ev)        ? "   ---- " : (ev > 0 ? @sprintf("  +%5.1f%%", ev * 100) : @sprintf("   %5.1f%%", ev * 100))
-            
-            stake_std_str = stake_std > 0   ? @sprintf("%10.1f%%", stake_std * 100) : "      0.0%"
-            stake_bayes_str = stake_bayes > 0 ? @sprintf("%10.1f%%", stake_bayes * 100) : "      0.0%"
-            
-            # Highlight value bets
-            prefix = ev > 0.0 ? "🔥" : "  "
-            
-            println("   $prefix $sel_label |  $prob_str  | $back_str  | $lay_str  |  $ev_str |  $stake_std_str  |  $stake_bayes_str")
+            push!(table_rows, (
+                market = first_in_group ? market_label : "",
+                selection = is_value ? "🔥 $sel_label" : "   $sel_label",
+                prob = p_model,
+                back = back_odds,
+                lay = lay_odds,
+                ev = ev,
+                kelly_std = stake_std,
+                kelly_bayes = stake_bayes,
+            ))
+            first_in_group = false
+        end
+        
+        # Mark boundary between market groups
+        push!(hlines, length(table_rows))
+    end
+    
+    if isempty(table_rows)
+        return nothing
+    end
+    
+    # Remove the last hline (bottom of table, PrettyTables draws this automatically)
+    if !isempty(hlines) && hlines[end] == length(table_rows)
+        pop!(hlines)
+    end
+    
+    # Build the matrix
+    n = length(table_rows)
+    data = Matrix{Any}(undef, n, 8)
+    has_value = false
+    
+    for (i, r) in enumerate(table_rows)
+        data[i, 1] = r.market
+        data[i, 2] = r.selection
+        data[i, 3] = @sprintf("%.1f%%", r.prob * 100)
+        data[i, 4] = isnan(r.back)  ? "----" : @sprintf("%.2f", r.back)
+        data[i, 5] = isnan(r.lay)   ? "----" : @sprintf("%.2f", r.lay)
+        data[i, 6] = isnan(r.ev)    ? "----" : (r.ev > 0 ? @sprintf("+%.1f%%", r.ev * 100) : @sprintf("%.1f%%", r.ev * 100))
+        data[i, 7] = r.kelly_std > 0   ? @sprintf("%.2f%%", r.kelly_std * 100)   : "----"
+        data[i, 8] = r.kelly_bayes > 0 ? @sprintf("%.2f%%", r.kelly_bayes * 100) : "----"
+        
+        if !isnan(r.ev) && r.ev > 0
+            has_value = true
         end
     end
-    println("="^85 * "\n")
+    
+    return (data=data, hlines=hlines, has_value=has_value)
 end
 
 """
-    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+    print_live_betting_dashboard(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
 
-Interactive console dashboard showing live prices, model probabilities, and Kelly stakes. Automatically loads metadata mapping.
+PrettyTables-formatted live betting dashboard showing model probabilities vs Betfair odds
+across 1X2, Over/Under, and BTTS markets with Kelly staking recommendations.
 """
-function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
+                                      todays_matches::AbstractDataFrame, market_id_lookup;
+                                      kelly_fraction=0.5, min_edge=0.0)
+    kelly_std = KellyCriterion(kelly_fraction)
+    kelly_bayes = BayesianKelly(min_edge)
+    
+    table_format = PrettyTables.TextTableFormat(borders = PrettyTables.text_table_borders__unicode_rounded)
+    
+    println("\n" * "="^95)
+    println(" 📊 LIVE MATCHDAY BETTING DASHBOARD | Kelly: $kelly_fraction | Min Edge: $min_edge | $(Dates.format(now(), "HH:MM:SS"))")
+    println("="^95)
+    
+    for row in eachrow(todays_matches)
+        mid = Int(row.match_id)
+        home = String(row.home_team)
+        away = String(row.away_team)
+        
+        result = _build_match_table(ppd, redis_conn, market_id_lookup, home, away, mid, kelly_std, kelly_bayes)
+        
+        if result === nothing
+            println("\n⚽ $home vs $away (ID: $mid)")
+            println("   ⚠️  No model predictions or live markets found.")
+            continue
+        end
+        
+        value_tag = result.has_value ? " 💰" : ""
+        println("\n⚽ $home vs $away (ID: $mid)$value_tag")
+        
+        pretty_table(
+            result.data;
+            column_labels = ["Market", "Selection", "Model %", "Back", "Lay", "EV", "Kelly", "Bayes K"],
+            table_format = table_format,
+            alignment = [:l, :l, :r, :r, :r, :r, :r, :r],
+            body_hlines = result.hlines
+        )
+    end
+    
+    println("\n" * "="^95)
+    println(" 🔥 = Value Bet (EV > 0) | 💰 = Match has value bets | Kelly = Std Kelly ($kelly_fraction frac)")
+    println("="^95 * "\n")
+end
+
+function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
+                                      todays_matches::AbstractDataFrame;
+                                      kelly_fraction=0.5, min_edge=0.0)
     market_id_lookup = get_live_market_mappings(redis_conn)
-    return print_live_betting_dashboard(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=kelly_fraction, min_edge=min_edge)
+    return print_live_betting_dashboard(ppd, redis_conn, todays_matches, market_id_lookup;
+                                        kelly_fraction=kelly_fraction, min_edge=min_edge)
 end

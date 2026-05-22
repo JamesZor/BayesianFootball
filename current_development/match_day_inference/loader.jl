@@ -10,6 +10,8 @@ using Statistics
 using Redis
 using JSON3
 using CurlHTTP
+using PrettyTables
+using Printf
 
 # Include src modules
 using LibPQ
