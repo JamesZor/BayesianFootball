@@ -110,6 +110,16 @@ Experiments.save_experiment(results_all)
 
 println("✅ Success: $(task_outfield.config.name)")
 
+
+
+
+
+save_dir::String = "data/ab_test_hierarchical_player/"
+saved_fiels = Experiments.list_experiments(save_dir, data_dir="")
+results_all = Experiments.load_experiment(saved_fiels, 1)
+results_outfield = Experiments.load_experiment(saved_fiels, 2)
+
+
 # ==========================================
 # 5. DIAGNOSTICS (NEW STANDARD WORKFLOW)
 # ==========================================
@@ -160,7 +170,7 @@ println("="^50)
 
 ledger = BackTesting.run_backtest(
     ds, 
-    [results_all, results_outfield], 
+    [results_all], 
     [Signals.BayesianKelly()]; 
     market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
 )
@@ -204,3 +214,281 @@ println("\n>>> Backtest Comparison Summary:")
 cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
 show(tearsheet1[:, cols_to_show], allrows=true)
 
+
+using DataFrames, Dates, HypothesisTests, Plots, TimeZones
+
+# ==========================================
+# 1. AGGREGATE TO DAILY RETURNS
+# ==========================================
+# First, create the new :day column safely handling missing ZonedDateTimes
+ledger.df.day = passmissing(d -> Date(d)).(ledger.df.date)
+
+# Now, group by the new column and aggregate
+daily_df = combine(
+    groupby(ledger.df, :day; skipmissing=true), # skipmissing drops rows with no date
+    :pnl => sum => :daily_pnl,
+    :stake => sum => :daily_stake
+)
+
+# Sort chronologically
+sort!(daily_df, :day)
+
+# Calculate Daily ROI (Handling zero-stake days to avoid NaN or Inf)
+daily_df.daily_roi = ifelse.(
+    daily_df.daily_stake .> 0, 
+    daily_df.daily_pnl ./ daily_df.daily_stake, 
+    0.0
+)
+
+# ==========================================
+# 2. THE STATIONARITY TEST (ADF)
+# ==========================================
+# H0 (Null): The series has a unit root (drifting/non-stationary).
+# H1 (Alternate): The series is stationary.
+adf_result = ADFTest(daily_df.daily_roi, Symbol("constant"), 1)
+
+
+#=
+julia> adf_result = ADFTest(daily_df.daily_roi, Symbol("constant"), 1)
+Augmented Dickey-Fuller unit root test
+--------------------------------------
+Population details:
+    parameter of interest:   coefficient on lagged non-differenced variable
+    value under h_0:         0
+    point estimate:          -0.963271
+
+Test summary:
+    outcome with 95% confidence: reject h_0
+    p-value:                     <1e-07
+
+Details:
+    sample size in regression:          90
+    number of lags:                     1
+    ADF statistic:                      -6.16787
+    Critical values at 1%, 5%, and 10%: adjoint([-3.50351, -2.89351, -2.58382])
+=#
+
+
+println("\n--- Regime Stationarity Test (Daily ROI) ---")
+println(adf_result)
+
+# ==========================================
+# 3. EQUITY CURVE & DRAWDOWN ANALYSIS
+# ==========================================
+daily_df.cumulative_pnl = cumsum(daily_df.daily_pnl)
+
+# Calculate running maximum to find drawdowns
+daily_df.peak_pnl = accumulate(max, daily_df.cumulative_pnl)
+daily_df.drawdown = daily_df.cumulative_pnl .- daily_df.peak_pnl
+
+# Plotting
+p1 = plot(daily_df.day, daily_df.cumulative_pnl, 
+    label="Cumulative PnL", lw=2, color=:blue, 
+    title="Model Equity Curve", ylabel="Units", legend=:topleft)
+
+p2 = plot(daily_df.day, daily_df.drawdown, 
+    label="Drawdown", fill=(0, :red), linealpha=0, 
+    title="Underwater Curve (Drawdowns)", ylabel="Units", legend=false)
+
+display(plot(p1, p2, layout=(2,1), size=(800, 600)))
+
+# alpha decay 
+#
+#
+using DataFrames, Dates, HypothesisTests, Plots, TimeZones
+
+# ==========================================
+# 1. AGGREGATE TO DAILY RETURNS PER SELECTION
+# ==========================================
+# Ensure date format is handled safely
+ledger.df.day = passmissing(d -> Date(d)).(ledger.df.date);
+
+# Group by BOTH day and selection
+daily_sel_df = combine(
+    groupby(ledger.df, [:day, :selection]; skipmissing=true),
+    :pnl => sum => :daily_pnl,
+    :stake => sum => :daily_stake
+)
+
+# Sort chronologically within each selection
+sort!(daily_sel_df, [:selection, :day])
+
+# Calculate Daily ROI per selection
+daily_sel_df.daily_roi = ifelse.(
+    daily_sel_df.daily_stake .> 0, 
+    daily_sel_df.daily_pnl ./ daily_sel_df.daily_stake, 
+    0.0
+)
+
+# ==========================================
+# 2. RUN ADF TEST FOR EACH SELECTION
+# ==========================================
+println("\n--- Stationarity Test (ADF) By Selection ---")
+println(rpad("Selection", 15), " | ", rpad("P-Value", 10), " | Status")
+println("-" ^ 50)
+
+valid_selections = String[] # Keep track of which ones have enough data to plot
+
+for sel in unique(daily_sel_df.selection)
+    # Isolate this specific selection's timeline
+    df_sub = filter(row -> row.selection == sel, daily_sel_df)
+    
+    # ADF needs a decent sample size (at least ~15-20 days) to run a valid regression
+    if nrow(df_sub) >= 15
+        try
+            # Run test with 1 lag
+            adf_result = ADFTest(df_sub.daily_roi, Symbol("constant"), 1)
+            p_val = pvalue(adf_result)
+            
+            status = p_val < 0.05 ? "✅ Stationary (Safe)" : "❌ Drifting (Warning)"
+            println(rpad(string(sel), 15), " | ", rpad(round(p_val, digits=6), 10), " | ", status)
+            
+            push!(valid_selections, string(sel))
+        catch e
+            # Catches errors if the ROI is perfectly flat (zero variance)
+            println(rpad(string(sel), 15), " | ", rpad("ERROR", 10), " | Math Failed (Zero Variance?)")
+        end
+    else
+        println(rpad(string(sel), 15), " | ", rpad("SKIP", 10), " | Not enough days (", nrow(df_sub), ")")
+    end
+end
+
+
+#=
+DC_12           | 2.2e-5     | ✅ Stationary (Safe)
+DC_1X           | 0.0        | ✅ Stationary (Safe)
+DC_X2           | 0.0        | ✅ Stationary (Safe)
+away            | 0.0        | ✅ Stationary (Safe)
+btts_no         | 0.0        | ✅ Stationary (Safe)
+btts_yes        | 0.0        | ✅ Stationary (Safe)
+draw            | 0.0        | ✅ Stationary (Safe)
+home            | 0.0        | ✅ Stationary (Safe)
+over_05         | 0.0        | ✅ Stationary (Safe)
+over_15         | 0.0        | ✅ Stationary (Safe)
+over_25         | 0.0        | ✅ Stationary (Safe)
+over_35         | 0.0        | ✅ Stationary (Safe)
+over_45         | 0.0        | ✅ Stationary (Safe)
+over_55         | 0.0        | ✅ Stationary (Safe)
+over_65         | 0.0        | ✅ Stationary (Safe)
+over_75         | ERROR      | Math Failed (Zero Variance?)
+under_05        | 0.0        | ✅ Stationary (Safe)
+under_15        | 0.0        | ✅ Stationary (Safe)
+under_25        | 0.0        | ✅ Stationary (Safe)
+under_35        | 0.0        | ✅ Stationary (Safe)
+under_45        | 0.0        | ✅ Stationary (Safe)
+under_55        | 0.0        | ✅ Stationary (Safe)
+under_65        | 0.0        | ✅ Stationary (Safe)
+under_75        | 6.0e-5     | ✅ Stationary (Safe)
+=#
+
+
+# ==========================================
+# 3. CUMULATIVE PNL & PLOTTING BY SELECTION
+# ==========================================
+# Calculate Cumulative PnL properly grouped by selection
+transform!(groupby(daily_sel_df, :selection),
+    :daily_pnl => cumsum => :cumulative_pnl
+)
+
+
+valid_selections_bak = valid_selections
+v = [  "over_15","over_25"] 
+
+# Filter out the markets that didn't have enough data
+plot_df = filter(row -> string(row.selection) in v, daily_sel_df)
+
+# Plot all valid equity curves on one chart
+p_equity = plot(plot_df.day, plot_df.cumulative_pnl, group=plot_df.selection,
+    title="Equity Curve by Selection",
+    ylabel="Cumulative PnL (Units)",
+    xlabel="Date",
+    legend=:outertopright,  # Puts the legend outside so it doesn't cover lines
+    lw=2, 
+    size=(1000, 600))
+
+display(p_equity)
+
+
+
+using DataFrames, Dates, Statistics
+
+println("\n--- Regime Shift Analysis (H1 vs H2) ---")
+println(rpad("Selection", 15), " | ", rpad("H1 ROI", 10), " | ", rpad("H2 ROI", 10), " | Status")
+println("-" ^ 65)
+
+# Get the raw ledger and ensure we have dates
+df_raw = copy(ledger.df)
+df_raw.day = passmissing(d -> Date(d)).(df_raw.date)
+
+for sel in unique(df_raw.selection)
+    # Isolate this specific selection's bets
+    df_sub = filter(row -> row.selection == sel, df_raw)
+    sort!(df_sub, :day)
+    
+    n_bets = nrow(df_sub)
+    
+    # We only care about markets with enough volume to matter
+    if n_bets >= 30
+        # Slice the dataset exactly in half based on bet count
+        mid_point = div(n_bets, 2)
+        
+        df_h1 = df_sub[1:mid_point, :]
+        df_h2 = df_sub[mid_point+1:end, :]
+        
+        # Calculate ROIs safely
+        roi_h1 = sum(df_h1.pnl) / sum(df_h1.stake)
+        roi_h2 = sum(df_h2.pnl) / sum(df_h2.stake)
+        
+        # Format for printing (convert to percentages)
+        h1_str = "$(round(roi_h1 * 100, digits=1))%"
+        h2_str = "$(round(roi_h2 * 100, digits=1))%"
+        
+        # Determine the Status
+        if roi_h1 > 0 && roi_h2 > 0
+            status = "✅ Elite (Consistent Edge)"
+        elseif roi_h1 > 0 && roi_h2 <= 0
+            status = "❌ Decaying (Edge Vanished in H2)"
+        elseif roi_h1 <= 0 && roi_h2 > 0
+            status = "⚠️ Late Bloomer (Warming Up)"
+        else
+            status = "💀 Dead Market (Consistent Loser)"
+        end
+        
+        println(rpad(string(sel), 15), " | ", rpad(h1_str, 10), " | ", rpad(h2_str, 10), " | ", status)
+    end
+end
+
+
+
+
+#=
+home            | 23.3%      | -26.0%     | ❌ Decaying (Edge Vanished in H2)
+draw            | -3.2%      | 0.6%       | ⚠️ Late Bloomer (Warming Up)
+away            | 99.2%      | -48.7%     | ❌ Decaying (Edge Vanished in H2)
+btts_yes        | 95.1%      | 48.5%      | ✅ Elite (Consistent Edge)
+btts_no         | -4.6%      | -10.1%     | 💀 Dead Market (Consistent Loser)
+DC_1X           | -15.7%     | 16.4%      | ⚠️ Late Bloomer (Warming Up)
+DC_X2           | -47.4%     | -79.3%     | 💀 Dead Market (Consistent Loser)
+DC_12           | -100.0%    | -100.0%    | 💀 Dead Market (Consistent Loser)
+over_05         | 11.4%      | 9.0%       | ✅ Elite (Consistent Edge)
+under_05        | 0.1%       | -14.7%     | ❌ Decaying (Edge Vanished in H2)
+over_15         | 37.5%      | -3.0%      | ❌ Decaying (Edge Vanished in H2)
+under_15        | 1.5%       | -1.2%      | ❌ Decaying (Edge Vanished in H2)
+over_25         | 30.3%      | 22.8%      | ✅ Elite (Consistent Edge)
+under_25        | 3.6%       | 2.8%       | ✅ Elite (Consistent Edge)
+over_35         | 111.6%     | -29.9%     | ❌ Decaying (Edge Vanished in H2)
+under_35        | -2.7%      | 12.1%      | ⚠️ Late Bloomer (Warming Up)
+over_45         | 52.4%      | 22.2%      | ✅ Elite (Consistent Edge)
+under_45        | -5.9%      | -0.0%      | 💀 Dead Market (Consistent Loser)
+over_55         | -100.0%    | -98.3%     | 💀 Dead Market (Consistent Loser)
+under_55        | -3.2%      | -8.5%      | 💀 Dead Market (Consistent Loser)
+over_65         | -100.0%    | -100.0%    | 💀 Dead Market (Consistent Loser)
+under_65        | 1.7%       | 2.2%       | ✅ Elite (Consistent Edge)
+over_75         | NaN%       | NaN%       | 💀 Dead Market (Consistent Loser)
+under_75        | 0.4%       | 0.5%       | ✅ Elite (Consistent Edge)
+=#
+
+# btts_yes        | 95.1%      | 48.5%      | ✅ Elite (Consistent Edge)
+# over_05         | 11.4%      | 9.0%       | ✅ Elite (Consistent Edge)
+# over_25         | 30.3%      | 22.8%      | ✅ Elite (Consistent Edge)
+# under_25        | 3.6%       | 2.8%       | ✅ Elite (Consistent Edge)
