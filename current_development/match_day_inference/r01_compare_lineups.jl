@@ -69,6 +69,19 @@ function clean_pos(pos::String)
     end
 end
 
+# Helper to get Sofascore rating with fallback to team average of rated players
+function get_sofa_rating(p, team_starters, default_val=6.8)
+    if isnothing(p)
+        return 0.0
+    end
+    val = p.sofascore_rating
+    if val > 0.0
+        return val
+    end
+    valid_ratings = Float64[pl.sofascore_rating for pl in team_starters if pl.sofascore_rating > 0.0]
+    return isempty(valid_ratings) ? default_val : mean(valid_ratings)
+end
+
 # ==========================================
 # 4. LINEUP COMPARISON PIPELINE
 # ==========================================
@@ -128,57 +141,140 @@ for row in eachrow(todays_matches)
         
         # Rotated in (in live starters, but not in fallback starters)
         rotated_in = filter(p -> p.player_id ∉ fallback_ids, live_starters)
+        # Rotated out (in fallback starters, but not in live starters)
+        rotated_out = filter(p -> p.player_id ∉ live_ids, fallback_starters)
         
         # Print general stats
         println("    📊 Starter Overlap: $overlap_count/$(length(live_starters)) ($(round(overlap_pct, digits=1))%)")
-        if !isempty(rotated_in)
-            println("    🔄 Rotated In / New Players:")
-            for p in rotated_in
-                is_new = p.player_id ∉ keys(player_ratings)
-                debut_tag = is_new ? " (DEBUTANT 🌟 - Fallback rating: $(round(global_avg, digits=2)))" : ""
-                println("       - [$(p.player_id)] $(p.player_name) [$(p.position)]$debut_tag")
-            end
-        else
+        
+        if isempty(rotated_in) && isempty(rotated_out)
             println("    🔄 No player rotations/changes compared to last game.")
+        else
+            println("    🔄 Lineup Rotations & Swaps (Left: Live In | Right: Fallback Out):")
+            
+            # Pair them up
+            in_remaining = copy(rotated_in)
+            out_remaining = copy(rotated_out)
+            pairs = Any[]
+            
+            # 1. Match same positions first
+            for pos in ["G", "D", "M", "F"]
+                in_idx = findall(p -> clean_pos(p.position) == pos, in_remaining)
+                out_idx = findall(p -> clean_pos(p.position) == pos, out_remaining)
+                
+                num_matches = min(length(in_idx), length(out_idx))
+                for idx in 1:num_matches
+                    push!(pairs, (in_remaining[in_idx[idx]], out_remaining[out_idx[idx]]))
+                end
+                
+                matched_in_indices = Base.sort(in_idx[1:num_matches], rev=true)
+                matched_out_indices = Base.sort(out_idx[1:num_matches], rev=true)
+                
+                for idx in matched_in_indices
+                    deleteat!(in_remaining, idx)
+                end
+                for idx in matched_out_indices
+                    deleteat!(out_remaining, idx)
+                end
+            end
+            
+            # 2. Match remaining players regardless of position (tactical cross-position swaps)
+            num_cross = min(length(in_remaining), length(out_remaining))
+            for idx in 1:num_cross
+                push!(pairs, (in_remaining[idx], out_remaining[idx]))
+            end
+            
+            if num_cross > 0
+                deleteat!(in_remaining, 1:num_cross)
+                deleteat!(out_remaining, 1:num_cross)
+            end
+            
+            # 3. Add leftovers
+            for p in in_remaining
+                push!(pairs, (p, nothing))
+            end
+            for p in out_remaining
+                push!(pairs, (nothing, p))
+            end
+            
+            # 4. Print the paired swaps
+            for (in_p, out_p) in pairs
+                in_str = if !isnothing(in_p)
+                    is_new = in_p.player_id ∉ keys(player_ratings)
+                    rating_val = get(player_ratings, in_p.player_id, global_avg)
+                    sofa_val = get_sofa_rating(in_p, live_starters)
+                    debut_tag = is_new ? " (DEBUTANT 🌟)" : ""
+                    "[$(in_p.player_id)] $(in_p.player_name) [$(in_p.position)] (Our: $(round(rating_val, digits=2)), Sofa: $(round(sofa_val, digits=2))$debut_tag)"
+                else
+                    "None"
+                end
+                
+                out_str = if !isnothing(out_p)
+                    rating_val = get(player_ratings, out_p.player_id, global_avg)
+                    sofa_val = get_sofa_rating(out_p, fallback_starters)
+                    "[$(out_p.player_id)] $(out_p.player_name) [$(out_p.position)] (Our: $(round(rating_val, digits=2)), Sofa: $(round(sofa_val, digits=2)))"
+                else
+                    "None"
+                end
+                
+                println("       - $in_str <-> $out_str")
+            end
         end
         
         # Aggregate Positional Ratings
-        pos_ratings_live = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
-        pos_ratings_fallback = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
+        our_ratings_live = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
+        our_ratings_fallback = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
+        sofa_ratings_live = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
+        sofa_ratings_fallback = Dict("G" => 0.0, "D" => 0.0, "M" => 0.0, "F" => 0.0)
         
         for p in live_starters
             c = clean_pos(p.position)
-            rating = get(player_ratings, p.player_id, global_avg)
-            pos_ratings_live[c] += rating
+            our_rating = get(player_ratings, p.player_id, global_avg)
+            sofa_rating = get_sofa_rating(p, live_starters)
+            our_ratings_live[c] += our_rating
+            sofa_ratings_live[c] += sofa_rating
         end
         
         for p in fallback_starters
             c = clean_pos(p.position)
-            rating = get(player_ratings, p.player_id, global_avg)
-            pos_ratings_fallback[c] += rating
+            our_rating = get(player_ratings, p.player_id, global_avg)
+            sofa_rating = get_sofa_rating(p, fallback_starters)
+            our_ratings_fallback[c] += our_rating
+            sofa_ratings_fallback[c] += sofa_rating
         end
         
         # Build comparison table
-        comp_data = Matrix{Any}(undef, 4, 4)
+        comp_data = Matrix{Any}(undef, 4, 7)
         for (i, pos) in enumerate(["G", "D", "M", "F"])
-            live_val = pos_ratings_live[pos]
-            fall_val = pos_ratings_fallback[pos]
-            diff_val = live_val - fall_val
-            diff_str = diff_val > 0.05 ? "+$(round(diff_val, digits=2))" : 
-                       (diff_val < -0.05 ? "$(round(diff_val, digits=2))" : "0.0")
+            our_fall = our_ratings_fallback[pos]
+            sofa_fall = sofa_ratings_fallback[pos]
+            our_live = our_ratings_live[pos]
+            sofa_live = sofa_ratings_live[pos]
+            
+            our_diff = our_live - our_fall
+            sofa_diff = sofa_live - sofa_fall
+            
+            our_diff_str = our_diff > 0.05 ? "+$(round(our_diff, digits=2))" : 
+                            (our_diff < -0.05 ? "$(round(our_diff, digits=2))" : "0.0")
+            sofa_diff_str = sofa_diff > 0.05 ? "+$(round(sofa_diff, digits=2))" : 
+                            (sofa_diff < -0.05 ? "$(round(sofa_diff, digits=2))" : "0.0")
+            
             comp_data[i, 1] = pos
-            comp_data[i, 2] = round(fall_val, digits=2)
-            comp_data[i, 3] = round(live_val, digits=2)
-            comp_data[i, 4] = diff_str
+            comp_data[i, 2] = round(our_fall, digits=2)
+            comp_data[i, 3] = round(sofa_fall, digits=2)
+            comp_data[i, 4] = round(our_live, digits=2)
+            comp_data[i, 5] = round(sofa_live, digits=2)
+            comp_data[i, 6] = our_diff_str
+            comp_data[i, 7] = sofa_diff_str
         end
         
         table_format = PrettyTables.TextTableFormat(borders = PrettyTables.text_table_borders__unicode_rounded)
         
         pretty_table(
             comp_data;
-            column_labels = ["Pos", "Fallback Sum", "Live Sum", "Delta (Live-Fallback)"],
+            column_labels = ["Pos", "Fallback (Our)", "Fallback (Sofa)", "Live (Our)", "Live (Sofa)", "Delta Our", "Delta Sofa"],
             table_format = table_format,
-            alignment = [:c, :r, :r, :c]
+            alignment = [:c, :r, :r, :r, :r, :c, :c]
         )
     end
 end

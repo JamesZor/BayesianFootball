@@ -23,7 +23,8 @@ function load_lineup_from_json(filepath::String)
                 player_id = Int(p.player.id),
                 player_name = String(p.player.name),
                 position = String(p.position),
-                substitute = Bool(p.substitute)
+                substitute = Bool(p.substitute),
+                sofascore_rating = haskey(p, :avgRating) && !isnothing(p.avgRating) ? Float64(p.avgRating) : 0.0
             )
         end
         
@@ -76,7 +77,8 @@ function get_most_recent_lineup(ds::Data.DataStore, team_name::String)
             player_id = Int(row.player_id),
             player_name = ismissing(row.player_name) ? "Unknown" : String(row.player_name),
             position = ismissing(row.position) ? "M" : String(row.position),
-            substitute = coalesce(row.is_substitute, false)
+            substitute = coalesce(row.is_substitute, false),
+            sofascore_rating = hasproperty(row, :rating) && !ismissing(row.rating) ? Float64(row.rating) : 0.0
         )
     end
 end
@@ -146,7 +148,8 @@ function fetch_lineup_from_sofascore(match_id::Int)
                 player_id = Int(p.player.id),
                 player_name = String(p.player.name),
                 position = String(p.position),
-                substitute = Bool(p.substitute)
+                substitute = Bool(p.substitute),
+                sofascore_rating = haskey(p, :avgRating) && !isnothing(p.avgRating) ? Float64(p.avgRating) : 0.0
             )
         end
         
