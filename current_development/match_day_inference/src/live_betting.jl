@@ -482,12 +482,17 @@ function _build_match_table(ppd::Predictions.PPD, redis_conn, market_id_lookup,
             sel_label = selection_display_name(sel, mkt.ppd_market)
             is_value = !isnan(ev) && ev > 0.0
             
+            model_price = p_model > 0.0 ? 1.0 / p_model : NaN
+            mid_odds = (!isnan(back_odds) && !isnan(lay_odds)) ? (back_odds + lay_odds) / 2.0 : NaN
+            
             push!(table_rows, (
                 market = first_in_group ? market_label : "",
                 selection = is_value ? "🔥 $sel_label" : "   $sel_label",
                 prob = p_model,
+                model_price = model_price,
                 back = back_odds,
                 lay = lay_odds,
+                mid = mid_odds,
                 ev = ev,
                 kelly_std = stake_std,
                 kelly_bayes = stake_bayes,
@@ -510,18 +515,20 @@ function _build_match_table(ppd::Predictions.PPD, redis_conn, market_id_lookup,
     
     # Build the matrix
     n = length(table_rows)
-    data = Matrix{Any}(undef, n, 8)
+    data = Matrix{Any}(undef, n, 10)
     has_value = false
     
     for (i, r) in enumerate(table_rows)
         data[i, 1] = r.market
         data[i, 2] = r.selection
         data[i, 3] = @sprintf("%.1f%%", r.prob * 100)
-        data[i, 4] = isnan(r.back)  ? "----" : @sprintf("%.2f", r.back)
-        data[i, 5] = isnan(r.lay)   ? "----" : @sprintf("%.2f", r.lay)
-        data[i, 6] = isnan(r.ev)    ? "----" : (r.ev > 0 ? @sprintf("+%.1f%%", r.ev * 100) : @sprintf("%.1f%%", r.ev * 100))
-        data[i, 7] = r.kelly_std > 0   ? @sprintf("%.2f%%", r.kelly_std * 100)   : "----"
-        data[i, 8] = r.kelly_bayes > 0 ? @sprintf("%.2f%%", r.kelly_bayes * 100) : "----"
+        data[i, 4] = isnan(r.model_price) ? "----" : @sprintf("%.2f", r.model_price)
+        data[i, 5] = isnan(r.back)  ? "----" : @sprintf("%.2f", r.back)
+        data[i, 6] = isnan(r.lay)   ? "----" : @sprintf("%.2f", r.lay)
+        data[i, 7] = isnan(r.mid)    ? "----" : @sprintf("%.2f", r.mid)
+        data[i, 8] = isnan(r.ev)    ? "----" : (r.ev > 0 ? @sprintf("+%.1f%%", r.ev * 100) : @sprintf("%.1f%%", r.ev * 100))
+        data[i, 9] = r.kelly_std > 0   ? @sprintf("%.2f%%", r.kelly_std * 100)   : "----"
+        data[i, 10] = r.kelly_bayes > 0 ? @sprintf("%.2f%%", r.kelly_bayes * 100) : "----"
         
         if !isnan(r.ev) && r.ev > 0
             has_value = true
@@ -545,9 +552,9 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
     
     table_format = PrettyTables.TextTableFormat(borders = PrettyTables.text_table_borders__unicode_rounded)
     
-    println("\n" * "="^95)
+    println("\n" * "="^115)
     println(" 📊 LIVE MATCHDAY BETTING DASHBOARD | Kelly: $kelly_fraction | Min Edge: $min_edge | $(Dates.format(now(), "HH:MM:SS"))")
-    println("="^95)
+    println("="^115)
     
     for row in eachrow(todays_matches)
         mid = Int(row.match_id)
@@ -567,15 +574,15 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
         
         pretty_table(
             result.data;
-            column_labels = ["Market", "Selection", "Model %", "Back", "Lay", "EV", "Kelly", "Bayes K"],
+            column_labels = ["Market", "Selection", "Model %", "Model Price", "Back", "Lay", "Mid", "EV", "Kelly", "Bayes K"],
             table_format = table_format,
-            alignment = [:l, :l, :r, :r, :r, :r, :r, :r]
+            alignment = [:l, :l, :r, :r, :r, :r, :r, :r, :r, :r]
         )
     end
     
-    println("\n" * "="^95)
+    println("\n" * "="^115)
     println(" 🔥 = Value Bet (EV > 0) | 💰 = Match has value bets | Kelly = Std Kelly ($kelly_fraction frac)")
-    println("="^95 * "\n")
+    println("="^115 * "\n")
 end
 
 function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
