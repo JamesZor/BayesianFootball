@@ -78,8 +78,8 @@ end
 Computes the latest ratings for all players based on the historical datastore and the rating tracker.
 """
 function get_latest_player_ratings(ds::Data.DataStore, tracker::AbstractRatingTracker)
-    lineups = select(ds.lineups, :match_id, :player_id, :team_side, :position, :rating, :minutes_played)
-    matches_dates = select(ds.matches, :match_id, :match_date)
+    lineups = DataFrames.select(ds.lineups, :match_id, :player_id, :team_side, :position, :rating, :minutes_played)
+    matches_dates = DataFrames.select(ds.matches, :match_id, :match_date)
     df_lineups = innerjoin(lineups, matches_dates, on = :match_id)
     sort!(df_lineups, :match_date)
 
