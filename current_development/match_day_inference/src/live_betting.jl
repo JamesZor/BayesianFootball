@@ -75,35 +75,92 @@ function parse_redis_runners(runners, home_team::String, away_team::String)
 end
 
 """
-    poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
+    get_live_market_mappings(redis_conn)
 
-Loads the live runners prices from Redis for a single fixture.
+Scans the `live_market_meta` hash in Redis and builds a lookup dictionary:
+`Dict{Tuple{String, String, String}, String}` mapping `(home_slug, away_slug, market_type) -> market_id`.
 """
-function poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
-    raw_data = Redis.hget(redis_conn, "live_markets", string(match_id))
-    if raw_data === nothing
-        # Try metadata lookup or key search if direct key not found
-        return parse_redis_runners(Dict(), home_team, away_team)
-    end
-    
+function get_live_market_mappings(redis_conn)
+    mapping_lookup = Dict{Tuple{String, String, String}, String}()
     try
-        data = JSON3.read(raw_data)
-        if haskey(data, :runners)
-            return parse_redis_runners(data.runners, home_team, away_team)
+        # Retrieve all metadata entries from Redis hash
+        meta_dict = Redis.hgetall(redis_conn, "live_market_meta")
+
+        # Parse the JSON values and populate the lookup table
+        for (market_id, raw_json) in meta_dict
+            try
+                meta = JSON3.read(raw_json)
+                home_slug = haskey(meta, :home_slug) && meta.home_slug !== nothing ? string(meta.home_slug) : ""
+                away_slug = haskey(meta, :away_slug) && meta.away_slug !== nothing ? string(meta.away_slug) : ""
+                market_type = haskey(meta, :market_type) ? string(meta.market_type) : ""
+
+                if !isempty(home_slug) && !isempty(away_slug) && !isempty(market_type)
+                    mapping_lookup[(home_slug, away_slug, market_type)] = string(market_id)
+                end
+            catch e
+                @warn "Failed to parse metadata JSON for market $market_id: $e"
+            end
         end
     catch e
-        @warn "Failed to parse Redis JSON for match $match_id: $e"
+        @error "Failed to retrieve live_market_meta from Redis: $e"
     end
-    
-    return parse_redis_runners(Dict(), home_team, away_team)
+    return mapping_lookup
 end
 
 """
-    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+    poll_redis_live_odds(redis_conn, market_id_lookup::Dict, home_slug::String, away_slug::String, market_type::String = "1X2")
 
-Generates EV and Kelly stakes for today's matches.
+Resolves the Betfair market ID for a match and fetches the runner prices.
 """
-function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+function poll_redis_live_odds(redis_conn, market_id_lookup::Dict, home_slug::String, away_slug::String, market_type::String = "1X2")
+    # PPD/todays_matches uses "1X2", but Betfair streaming uses "MATCH_ODDS"
+    bf_market_type = market_type == "1X2" ? "MATCH_ODDS" : market_type
+
+    # Check if a market ID matches the team slugs
+    market_id = get(market_id_lookup, (home_slug, away_slug, bf_market_type), nothing)
+    if market_id === nothing
+        # Try reversed order just in case
+        market_id = get(market_id_lookup, (away_slug, home_slug, bf_market_type), nothing)
+    end
+
+    if market_id === nothing
+        # Return empty/default runner odds
+        return parse_redis_runners(Dict(), home_slug, away_slug)
+    end
+
+    raw_data = Redis.hget(redis_conn, "live_markets", market_id)
+    if raw_data === nothing
+        return parse_redis_runners(Dict(), home_slug, away_slug)
+    end
+
+    try
+        data = JSON3.read(raw_data)
+        if haskey(data, :runners)
+            return parse_redis_runners(data.runners, home_slug, away_slug)
+        end
+    catch e
+        @warn "Failed to parse Redis JSON for market $market_id: $e"
+    end
+
+    return parse_redis_runners(Dict(), home_slug, away_slug)
+end
+
+"""
+    poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
+
+Loads the live runners prices from Redis for a single fixture using automatic metadata lookup.
+"""
+function poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away_team::String)
+    market_id_lookup = get_live_market_mappings(redis_conn)
+    return poll_redis_live_odds(redis_conn, market_id_lookup, home_team, away_team)
+end
+
+"""
+    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
+
+Generates EV and Kelly stakes for today's matches using market metadata lookup.
+"""
+function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
     # Instantiate signals from core package
     kelly_std = KellyCriterion(kelly_fraction)
     kelly_bayes = BayesianKelly(min_edge)
@@ -130,7 +187,7 @@ function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matc
         away = String(row.away_team)
         
         # Get live odds from Redis
-        live_odds = poll_redis_live_odds(redis_conn, mid, home, away)
+        live_odds = poll_redis_live_odds(redis_conn, market_id_lookup, home, away)
         
         # Get model distributions for this match
         match_preds = subset(df_1X2, :match_id => ByRow(==(mid)))
@@ -182,11 +239,21 @@ function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matc
 end
 
 """
-    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+
+Generates EV and Kelly stakes for today's matches. Automatically loads metadata mapping.
+"""
+function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+    market_id_lookup = get_live_market_mappings(redis_conn)
+    return calculate_betting_signals(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=kelly_fraction, min_edge=min_edge)
+end
+
+"""
+    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
 
 Interactive console dashboard showing live prices, model probabilities, and Kelly stakes.
 """
-function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
     kelly_std = KellyCriterion(kelly_fraction)
     kelly_bayes = BayesianKelly(min_edge)
     
@@ -203,7 +270,7 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_m
         away = String(row.away_team)
         
         # Get live odds from Redis
-        live_odds = poll_redis_live_odds(redis_conn, mid, home, away)
+        live_odds = poll_redis_live_odds(redis_conn, market_id_lookup, home, away)
         
         # Get model distributions for this match
         match_preds = subset(df_1X2, :match_id => ByRow(==(mid)))
@@ -260,4 +327,14 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_m
         end
     end
     println("="^85 * "\n")
+end
+
+"""
+    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+
+Interactive console dashboard showing live prices, model probabilities, and Kelly stakes. Automatically loads metadata mapping.
+"""
+function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame; kelly_fraction=0.5, min_edge=0.0)
+    market_id_lookup = get_live_market_mappings(redis_conn)
+    return print_live_betting_dashboard(ppd, redis_conn, todays_matches, market_id_lookup; kelly_fraction=kelly_fraction, min_edge=min_edge)
 end
