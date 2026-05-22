@@ -159,14 +159,17 @@ for row in eachrow(todays_matches)
         end
         
         # Build comparison table
-        comp_data = Any[]
-        for pos in ["G", "D", "M", "F"]
+        comp_data = Matrix{Any}(undef, 4, 4)
+        for (i, pos) in enumerate(["G", "D", "M", "F"])
             live_val = pos_ratings_live[pos]
             fall_val = pos_ratings_fallback[pos]
             diff_val = live_val - fall_val
             diff_str = diff_val > 0.05 ? "+$(round(diff_val, digits=2))" : 
                        (diff_val < -0.05 ? "$(round(diff_val, digits=2))" : "0.0")
-            push!(comp_data, [pos, round(fall_val, digits=2), round(live_val, digits=2), diff_str])
+            comp_data[i, 1] = pos
+            comp_data[i, 2] = round(fall_val, digits=2)
+            comp_data[i, 3] = round(live_val, digits=2)
+            comp_data[i, 4] = diff_str
         end
         
         pretty_table(
