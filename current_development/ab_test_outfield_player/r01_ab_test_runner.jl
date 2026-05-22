@@ -118,14 +118,18 @@ println(">>> EXPERIMENT DIAGNOSTICS")
 println("="^50)
 
 # Extract MCMC chains into long-format dataframe
-chains_df = Diagnostics.extract_chains(ds, results_outfield)
+#
+chains_df_all = Diagnostics.extract_chains(ds, results_all)
+chains_df_outfield = Diagnostics.extract_chains(ds, results_outfield)
 
 println("\n--- Convergence Diagnostics (R-hat & ESS) ---")
-conv_diag = Diagnostics.check_convergence(chains_df)
+conv_diag_all = Diagnostics.check_convergence(chains_df_all)
+conv_diag_outfield = Diagnostics.check_convergence(chains_df_outfield)
 display(conv_diag)
 
 println("\n--- Temporal Stability Diagnostics (ADF Stationarity) ---")
-stab_diag = Diagnostics.check_stability(chains_df)
+stab_diag_all = Diagnostics.check_stability(chains_df_all)
+stab_diag_outfield = Diagnostics.check_stability(chains_df_outfield)
 display(stab_diag)
 
 # ==========================================
@@ -141,7 +145,7 @@ metrics = [
     Evaluation.CRPS(), 
     Evaluation.GLMEdge()
 ]
-master_eval_df = Evaluation.evaluate_experiments(metrics, [results_outfield], ds)
+master_eval_df = Evaluation.evaluate_experiments(metrics, [results_all,results_outfield], ds)
 
 Evaluation.display_summary_metric(master_eval_df, :logloss)
 Evaluation.display_summary_metric(master_eval_df, :glmedge)
@@ -156,7 +160,7 @@ println("="^50)
 
 ledger = BackTesting.run_backtest(
     ds, 
-    [results_outfield], 
+    [results_all, results_outfield], 
     [Signals.BayesianKelly()]; 
     market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
 )
@@ -168,3 +172,35 @@ cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_pl
 show(tearsheet[:, cols_to_show], allrows=true)
 
 println("\n\n✅ Complete pipeline executed successfully! Results saved to $save_dir")
+
+
+
+odds =Data.summarize_betfair_market(
+    ds, 
+    open_window=(-100000.0, -10.0), 
+    close_window=(-10.0, 0.0)
+)
+
+ds1 = Data.DataStore(
+  ds.segment,
+  ds.matches,
+  ds.statistics,
+  odds,
+  ds.lineups,
+  ds.incidents,
+  ds.betfair_odds
+  )
+
+ledger1 = BackTesting.run_backtest(
+    ds1, 
+    [results_all, results_outfield], 
+    [Signals.BayesianKelly()]; 
+    market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+tearsheet1 = BackTesting.generate_tearsheet(ledger1)
+
+println("\n>>> Backtest Comparison Summary:")
+cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
+show(tearsheet1[:, cols_to_show], allrows=true)
+
