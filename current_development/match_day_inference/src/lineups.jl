@@ -3,6 +3,7 @@
 using JSON3
 using DataFrames
 using Dates
+using CurlHTTP
 
 """
     load_lineup_from_json(filepath::String)
@@ -105,7 +106,6 @@ Fetches the live lineup directly from Sofascore API for a given match ID.
 Returns a NamedTuple: `(confirmed = Bool, home = Vector, away = Vector)` or `nothing` if failed/empty.
 """
 function fetch_lineup_from_sofascore(match_id::Int)
-    using CurlHTTP
     
     url = "https://api.sofascore.com/api/v1/event/$(match_id)/lineups"
     headers = [
