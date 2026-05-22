@@ -142,7 +142,7 @@ try
     redis_conn = RedisConnection(host=redis_host, port=redis_port)
     
     # Run the live betting dashboard (one-shot display)
-    print_live_betting_dashboard(ppd, redis_conn, todays_matches; kelly_fraction=0.5, min_edge=0.02)
+    print_live_betting_dashboard(ppd, redis_conn, todays_matches; kelly_fraction=0.02, min_edge=0.02)
     
     # Example polling loop (uncomment to run interactive live poller):
     # println("Press Ctrl+C to exit live betting monitor.")
