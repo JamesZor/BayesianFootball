@@ -12,6 +12,9 @@ using JSON3
 using CurlHTTP
 
 # Include src modules
+using LibPQ
+
+include("src/fixtures.jl")
 include("src/lineups.jl")
 include("src/ratings.jl")
 include("src/inference.jl")
