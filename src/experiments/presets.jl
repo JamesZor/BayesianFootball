@@ -70,7 +70,7 @@ function create_experiment_task(
         warmup, 
         accept_rate, 
         max_depth,  
-        Samplers.UniformInit(-1, 1),
+        Samplers.UniformInit(-2, 2),
         false #  display the chain progress 
     )
 
