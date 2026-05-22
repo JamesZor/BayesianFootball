@@ -279,9 +279,9 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_m
         end
         
         println("\n⚽ $home vs $away (ID: $mid)")
-        println("   " * "-"*79)
+        println("   " * "-"^79)
         println("   Selection   |  Model Prob  |  Back Odds  |  Lay Odds  |    EV    |  Std Kelly  |  Bayes Kelly")
-        println("   " * "-"*79)
+        println("   " * "-"^79)
         
         for sel in [:home, :away, :draw]
             # Find the row in PPD for this selection
