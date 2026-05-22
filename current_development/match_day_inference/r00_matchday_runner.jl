@@ -10,6 +10,7 @@ using Revise
 # Load our mini-module loader
 include("loader.jl")
 
+include("./current_development/match_day_inference/loader.jl")
 # Setup CPU thread pinning
 using ThreadPinning
 pinthreads(:cores)
@@ -40,7 +41,7 @@ println("\n=== 2. Resolving Model / Experiment ===")
 # end
 
 # For demonstration / safety fallback, we define a small training setup here:
-save_dir = "./data/matchday_inference_runner_temp/"
+save_dir = "./data/matchday_inference_runner/"
 inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion()
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
@@ -58,12 +59,13 @@ model = PreGame.DynamicMarketXGPlayerTimeDecayModel(
     market_weight        = 1.0
 )
 
+
 # We find the target season and target split
-target_seasons = get_target_seasons_string(ds)
+target_seasons = ["2026"]
 dynamics_col = :match_month
 
 # Warmup to target the most recent completed split
-warmup_period = last(unique(subset(ds.matches, :season => ByRow(isequal(target_seasons[1])))[dynamics_col]))
+warmup_period = last(unique(subset(ds.matches, :season => ByRow(isequal(target_seasons[1])))[!,dynamics_col]))
 
 println("Creating a quick experiment task for the latest split (warmup_period = $warmup_period)...")
 task = Experiments.create_experiment_task(
@@ -74,9 +76,9 @@ task = Experiments.create_experiment_task(
     target_seasons=target_seasons,
     history_seasons = 3,
     dynamics_col=dynamics_col,
-    samples=100,      # Small samples for fast runner testing
-    warmup=50,        # Small warmup for fast runner testing
-    chains=2,         # 2 chains for fast runner testing
+    samples=2000,      # Small samples for fast runner testing
+    warmup=1000,        # Small warmup for fast runner testing
+    chains=16,         # 2 chains for fast runner testing
     max_concurrent_splits = 1
 )
 

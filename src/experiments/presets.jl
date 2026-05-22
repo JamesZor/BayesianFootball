@@ -49,6 +49,7 @@ function create_experiment_task(
     warmup::Int = 200,
     accept_rate::Float64 = 0.65,
     max_depth::Int = 10,
+    show_progress = false,
     
     # --- Training/Execution Defaults ---
     parallel::Bool = true,
@@ -71,7 +72,7 @@ function create_experiment_task(
         accept_rate, 
         max_depth,  
         Samplers.UniformInit(-2, 2),
-        false #  display the chain progress 
+        show_progress #  display the chain progress 
     )
 
     train_cfg = Training.Independent(
