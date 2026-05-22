@@ -569,8 +569,7 @@ function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn,
             result.data;
             column_labels = ["Market", "Selection", "Model %", "Back", "Lay", "EV", "Kelly", "Bayes K"],
             table_format = table_format,
-            alignment = [:l, :l, :r, :r, :r, :r, :r, :r],
-            body_hlines = result.hlines
+            alignment = [:l, :l, :r, :r, :r, :r, :r, :r]
         )
     end
     
