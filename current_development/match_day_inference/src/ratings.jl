@@ -2,8 +2,8 @@
 
 using DataFrames
 using Statistics
-using BayesianFootbal.Features
-import BayesianFootbal.Features: AbstractRatingTracker, BayesianTracker, EWMATracker, LastValueTracker, WindowAverageTracker
+using BayesianFootball.Features
+import BayesianFootball.Features: AbstractRatingTracker, BayesianTracker, EWMATracker, LastValueTracker, WindowAverageTracker
 
 # ==========================================
 # 1. TRACKER-SPECIFIC LATEST RATING EXTRACITON
