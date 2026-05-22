@@ -172,14 +172,19 @@ for row in eachrow(todays_matches)
             comp_data[i, 4] = diff_str
         end
         
+        table_format = PrettyTables.TextTableFormat(borders = PrettyTables.text_table_borders__unicode_rounded)
+        
         pretty_table(
-            comp_data,
-            ["Pos", "Fallback Sum", "Live Sum", "Delta (Live-Fallback)"];
-            tf = PrettyTables.unicode_rounded,
+            comp_data;
+            column_labels = ["Pos", "Fallback Sum", "Live Sum", "Delta (Live-Fallback)"],
+            table_format = table_format,
             alignment = [:c, :r, :r, :c]
         )
     end
 end
+
+
+
 println("\n" * "="^80)
 println("🏁 Lineup analysis complete!")
 println("="^80)
