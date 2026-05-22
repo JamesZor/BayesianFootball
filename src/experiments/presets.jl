@@ -49,7 +49,7 @@ function create_experiment_task(
     warmup::Int = 200,
     accept_rate::Float64 = 0.65,
     max_depth::Int = 10,
-    show_progress = false,
+    show_progress = false, # :perchain
     
     # --- Training/Execution Defaults ---
     parallel::Bool = true,

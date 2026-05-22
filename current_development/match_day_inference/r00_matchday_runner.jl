@@ -65,7 +65,7 @@ target_seasons = ["2026"]
 dynamics_col = :match_month
 
 # Warmup to target the most recent completed split
-warmup_period = last(unique(subset(ds.matches, :season => ByRow(isequal(target_seasons[1])))[!,dynamics_col]))
+warmup_period = last(unique(subset(ds.matches, :season => ByRow(isequal(target_seasons[1])))[!,dynamics_col])) + 1
 
 println("Creating a quick experiment task for the latest split (warmup_period = $warmup_period)...")
 task = Experiments.create_experiment_task(
@@ -75,16 +75,23 @@ task = Experiments.create_experiment_task(
     save_dir; 
     target_seasons=target_seasons,
     history_seasons = 3,
+    warmup_period =  warmup_period,
     dynamics_col=dynamics_col,
     samples=2000,      # Small samples for fast runner testing
     warmup=1000,        # Small warmup for fast runner testing
     chains=16,         # 2 chains for fast runner testing
+    show_progress=:perchain,
     max_concurrent_splits = 1
 )
 
 println("Running model fit...")
-expr = Experiments.run_experiment(task)
-Experiments.save_experiment(expr)
+# expr = Experiments.run_experiment(task)
+# Experiments.save_experiment(expr)
+#
+
+save_dir::String = "./data/ab_test_hierarchical_player/"
+saved_fiels = Experiments.list_experiments(save_dir, data_dir="")
+expr = Experiments.load_experiment(saved_fiels, 2)
 
 # ==========================================
 # 4. FETCH TODAY'S MATCHES
