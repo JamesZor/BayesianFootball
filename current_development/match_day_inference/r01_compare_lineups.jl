@@ -175,7 +175,7 @@ for row in eachrow(todays_matches)
         pretty_table(
             comp_data;
             header = ["Pos", "Fallback Sum", "Live Sum", "Delta (Live-Fallback)"],
-            tf = tf_unicode_rounded,
+            tf = PrettyTables.tf_unicode_rounded,
             alignment = [:c, :r, :r, :c]
         )
     end
