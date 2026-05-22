@@ -218,6 +218,27 @@ function load_experiment(experiment_list::Vector{String}, index::Int)
     return load_experiment(experiment_list[index])
 end
 
+
+function load_experiments(saved_folders::Vector{String})
+  loaded_results = Vector{ExperimentResults}([])
+  for folder in saved_folders
+      try
+          res = load_experiment(folder)
+          push!(loaded_results, res)
+      catch e
+          @warn "Could not load $folder: $e"
+      end
+  end
+
+  if isempty(loaded_results)
+      error("No results loaded! Did you run runner.jl?")
+  end
+
+  return loaded_results
+
+end
+
+
 # ==============================================================================
 # 4. INTERNAL HELPERS
 # ==============================================================================
