@@ -97,3 +97,67 @@ function get_matchday_lineup(ds::Data.DataStore, match_id::Int, home_team::Strin
         return (home = home_players, away = away_players)
     end
 end
+
+"""
+    fetch_lineup_from_sofascore(match_id::Int)
+
+Fetches the live lineup directly from Sofascore API for a given match ID.
+Returns a NamedTuple: `(confirmed = Bool, home = Vector, away = Vector)` or `nothing` if failed/empty.
+"""
+function fetch_lineup_from_sofascore(match_id::Int)
+    using CurlHTTP
+    
+    url = "https://api.sofascore.com/api/v1/event/$(match_id)/lineups"
+    headers = [
+        "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ]
+    
+    # Initialize CurlEasy
+    curl = CurlEasy(
+        url = url,
+        method = CurlHTTP.GET,
+        verbose = false
+    )
+    
+    # Execute request
+    res, http_status, errormessage = curl_execute(curl, "", headers)
+    
+    if http_status != 200
+        return nothing
+    end
+    
+    body = String(curl.userdata[:databuffer])
+    if isempty(body) || body == "null"
+        return nothing
+    end
+    
+    try
+        data = JSON3.read(body)
+        
+        # If the response doesn't have home/away players, it might be empty or not released
+        if !haskey(data, :home) || !haskey(data.home, :players)
+            return nothing
+        end
+        
+        confirmed = haskey(data, :confirmed) ? Bool(data.confirmed) : false
+        
+        extract_players(side_data) = map(side_data.players) do p
+            (
+                player_id = Int(p.player.id),
+                player_name = String(p.player.name),
+                position = String(p.position),
+                substitute = Bool(p.substitute)
+            )
+        end
+        
+        return (
+            confirmed = confirmed,
+            home = extract_players(data.home),
+            away = extract_players(data.away)
+        )
+    catch e
+        @warn "Failed to parse Sofascore lineup response for match $match_id: $e"
+        return nothing
+    end
+end
+
