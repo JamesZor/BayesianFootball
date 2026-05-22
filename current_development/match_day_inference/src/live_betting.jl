@@ -10,12 +10,15 @@ using BayesianFootball
 import BayesianFootball.Signals: KellyCriterion, BayesianKelly, compute_stake
 
 """
-    parse_redis_runners(runners, home_team::String, away_team::String)
+    parse_redis_runners(runners, home_team::String, away_team::String; selections=Dict{String,String}())
 
 Extracts Home, Draw, Away back and lay odds from the Betfair runners dict.
-Supports team-name-based keys, standard "home"/"draw"/"away" keys, and Betfair selection IDs.
+Resolves runner identity via:
+  - Option 1: `runner_name` field injected directly into the runner payload by the Python streamer.
+  - Option 2: `selections` kwarg mapping `selection_id -> runner_name` from `live_market_meta`.
+  - Fallback: raw runner key (numeric selection ID).
 """
-function parse_redis_runners(runners, home_team::String, away_team::String)
+function parse_redis_runners(runners, home_team::String, away_team::String; selections::Dict{String,String} = Dict{String,String}())
     odds_dict = Dict{Symbol, NamedTuple}()
     
     # Standard roles we map to
@@ -37,7 +40,14 @@ function parse_redis_runners(runners, home_team::String, away_team::String)
     for (k, runner) in runners
         # Identify runner role
         runner_key = string(k)
-        runner_name = haskey(runner, :runner_name) ? string(runner.runner_name) : runner_key
+        # Resolve runner name: Option 1 (injected by streamer), Option 2 (metadata selections), fallback to key
+        runner_name = if haskey(runner, :runner_name) && runner.runner_name !== nothing
+            string(runner.runner_name)
+        elseif haskey(selections, runner_key)
+            selections[runner_key]
+        else
+            runner_key
+        end
         
         norm_key = normalize_name(runner_key)
         norm_name = normalize_name(runner_name)
@@ -82,6 +92,7 @@ Scans the `live_market_meta` hash in Redis and builds a lookup dictionary:
 """
 function get_live_market_mappings(redis_conn)
     mapping_lookup = Dict{Tuple{String, String, String}, String}()
+    selections_lookup = Dict{String, Dict{String, String}}()  # market_id -> {selection_id -> runner_name}
     try
         # Retrieve all metadata entries from Redis hash
         meta_dict = Redis.hgetall(redis_conn, "live_market_meta")
@@ -97,6 +108,15 @@ function get_live_market_mappings(redis_conn)
                 if !isempty(home_slug) && !isempty(away_slug) && !isempty(market_type)
                     mapping_lookup[(home_slug, away_slug, market_type)] = string(market_id)
                 end
+
+                # Option 2: Extract selections mapping {selection_id -> runner_name}
+                if haskey(meta, :selections) && meta.selections !== nothing
+                    sel_dict = Dict{String, String}()
+                    for (sid, sname) in pairs(meta.selections)
+                        sel_dict[string(sid)] = string(sname)
+                    end
+                    selections_lookup[string(market_id)] = sel_dict
+                end
             catch e
                 @warn "Failed to parse metadata JSON for market $market_id: $e"
             end
@@ -104,29 +124,33 @@ function get_live_market_mappings(redis_conn)
     catch e
         @error "Failed to retrieve live_market_meta from Redis: $e"
     end
-    return mapping_lookup
+    return (markets=mapping_lookup, selections=selections_lookup)
 end
 
 """
-    poll_redis_live_odds(redis_conn, market_id_lookup::Dict, home_slug::String, away_slug::String, market_type::String = "1X2")
+    poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, away_slug::String, market_type::String = "1X2")
 
 Resolves the Betfair market ID for a match and fetches the runner prices.
+`market_id_lookup` is a NamedTuple with `.markets` and `.selections` from `get_live_market_mappings`.
 """
-function poll_redis_live_odds(redis_conn, market_id_lookup::Dict, home_slug::String, away_slug::String, market_type::String = "1X2")
+function poll_redis_live_odds(redis_conn, market_id_lookup, home_slug::String, away_slug::String, market_type::String = "1X2")
     # PPD/todays_matches uses "1X2", but Betfair streaming uses "MATCH_ODDS"
     bf_market_type = market_type == "1X2" ? "MATCH_ODDS" : market_type
 
     # Check if a market ID matches the team slugs
-    market_id = get(market_id_lookup, (home_slug, away_slug, bf_market_type), nothing)
+    market_id = get(market_id_lookup.markets, (home_slug, away_slug, bf_market_type), nothing)
     if market_id === nothing
         # Try reversed order just in case
-        market_id = get(market_id_lookup, (away_slug, home_slug, bf_market_type), nothing)
+        market_id = get(market_id_lookup.markets, (away_slug, home_slug, bf_market_type), nothing)
     end
 
     if market_id === nothing
         # Return empty/default runner odds
         return parse_redis_runners(Dict(), home_slug, away_slug)
     end
+
+    # Get Option 2 selections fallback for this market
+    sel_dict = get(market_id_lookup.selections, market_id, Dict{String, String}())
 
     raw_data = Redis.hget(redis_conn, "live_markets", market_id)
     if raw_data === nothing
@@ -136,7 +160,7 @@ function poll_redis_live_odds(redis_conn, market_id_lookup::Dict, home_slug::Str
     try
         data = JSON3.read(raw_data)
         if haskey(data, :runners)
-            return parse_redis_runners(data.runners, home_slug, away_slug)
+            return parse_redis_runners(data.runners, home_slug, away_slug; selections=sel_dict)
         end
     catch e
         @warn "Failed to parse Redis JSON for market $market_id: $e"
@@ -156,11 +180,12 @@ function poll_redis_live_odds(redis_conn, match_id::Int, home_team::String, away
 end
 
 """
-    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
+    calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
 
 Generates EV and Kelly stakes for today's matches using market metadata lookup.
+`market_id_lookup` is a NamedTuple from `get_live_market_mappings`.
 """
-function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
+function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
     # Instantiate signals from core package
     kelly_std = KellyCriterion(kelly_fraction)
     kelly_bayes = BayesianKelly(min_edge)
@@ -249,11 +274,12 @@ function calculate_betting_signals(ppd::Predictions.PPD, redis_conn, todays_matc
 end
 
 """
-    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
+    print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
 
 Interactive console dashboard showing live prices, model probabilities, and Kelly stakes.
+`market_id_lookup` is a NamedTuple from `get_live_market_mappings`.
 """
-function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup::Dict; kelly_fraction=0.5, min_edge=0.0)
+function print_live_betting_dashboard(ppd::Predictions.PPD, redis_conn, todays_matches::AbstractDataFrame, market_id_lookup; kelly_fraction=0.5, min_edge=0.0)
     kelly_std = KellyCriterion(kelly_fraction)
     kelly_bayes = BayesianKelly(min_edge)
     
