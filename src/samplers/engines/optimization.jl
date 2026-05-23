@@ -57,6 +57,36 @@ end
 
 # --- 2. The Bridge (Point-Mass Chain) ---
 
+function safe_mode_extractor(estimate)
+    # Check if the utility exists in Turing (handling version differences)
+    if isdefined(Turing, :Optimisation) && isdefined(Turing.Optimisation, :vector_names_and_params)
+        return Turing.Optimisation.vector_names_and_params(estimate)
+    elseif isdefined(Turing, :vector_names_and_params)
+        return Turing.vector_names_and_params(estimate)
+    end
+
+    # Manual extraction fallback
+    vals_dict = hasproperty(estimate, :values) ? estimate.values : estimate.params
+    
+    varnames = String[]
+    vals = Float64[]
+    
+    for (k, v) in pairs(vals_dict)
+        name_base = string(k)
+        if v isa Number
+            push!(varnames, name_base)
+            push!(vals, Float64(v))
+        elseif v isa AbstractArray
+            for i in eachindex(v)
+                push!(varnames, "$(name_base)[$i]")
+                push!(vals, Float64(v[i]))
+            end
+        end
+    end
+    
+    return varnames, vals
+end
+
 """
     mode_result_to_chains(model, estimate::Turing.Optimisation.ModeResult)
 
@@ -65,11 +95,11 @@ This ensures all downstream extractors, predictions, and diagnostic tools that
 expect an array of samples continue to work unmodified.
 """
 function mode_result_to_chains(model, estimate)
-    # Get variable names and their optimized values
-    varnames, values = Turing.Optimisation.vector_names_and_params(estimate)
+    # Get variable names and their optimized values safely
+    varnames, values = safe_mode_extractor(estimate)
     
     # Extract string names for the Chain structure
-    names = String.(Symbol.(varnames))
+    names = String.(varnames)
     
     # Optional: include the log probability in the chain metadata
     push!(names, "lp")
