@@ -55,34 +55,53 @@ function run_sampler(turing_model, config::MLEConfig)
     return mode_result_to_chains(turing_model, mle_estimate)
 end
 
-# --- 2. The Bridge (Point-Mass Chain) ---
+import StatsBase
+
+function _flatten_params!(names, vals, prefix::String, x::Number)
+    push!(names, prefix)
+    push!(vals, Float64(x))
+end
+
+function _flatten_params!(names, vals, prefix::String, x::AbstractArray{<:Number})
+    for i in eachindex(x)
+        push!(names, "$(prefix)[$i]")
+        push!(vals, Float64(x[i]))
+    end
+end
+
+function _flatten_params!(names, vals, prefix::String, x)
+    # Generic fallback for NamedTuple or VarNamedTuple
+    for (k, v) in pairs(x)
+        new_prefix = isempty(prefix) ? string(k) : "$(prefix).$(k)"
+        _flatten_params!(names, vals, new_prefix, v)
+    end
+end
 
 function safe_mode_extractor(estimate)
-    # Check if the utility exists in Turing (handling version differences)
+    # 1. Try standard StatsBase interface (used by newer Turing versions)
+    try
+        names = String.(StatsBase.coefnames(estimate))
+        vals = Float64.(StatsBase.coef(estimate))
+        if !isempty(names) && names[1] != "1"
+            return names, vals
+        end
+    catch
+    end
+
+    # 2. Try Turing.Optimisation.vector_names_and_params (older Turing)
     if isdefined(Turing, :Optimisation) && isdefined(Turing.Optimisation, :vector_names_and_params)
         return Turing.Optimisation.vector_names_and_params(estimate)
     elseif isdefined(Turing, :vector_names_and_params)
         return Turing.vector_names_and_params(estimate)
     end
 
-    # Manual extraction fallback
-    vals_dict = hasproperty(estimate, :values) ? estimate.values : estimate.params
+    # 3. Recursive manual flattening (Rock-solid fallback)
+    # Prefer `params` (VarNamedTuple) over `values` (often just a raw Vector)
+    vals_dict = hasproperty(estimate, :params) ? estimate.params : estimate.values
     
     varnames = String[]
     vals = Float64[]
-    
-    for (k, v) in pairs(vals_dict)
-        name_base = string(k)
-        if v isa Number
-            push!(varnames, name_base)
-            push!(vals, Float64(v))
-        elseif v isa AbstractArray
-            for i in eachindex(v)
-                push!(varnames, "$(name_base)[$i]")
-                push!(vals, Float64(v[i]))
-            end
-        end
-    end
+    _flatten_params!(varnames, vals, "", vals_dict)
     
     return varnames, vals
 end
