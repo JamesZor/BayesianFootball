@@ -117,16 +117,17 @@ function mode_result_to_chains(model, estimate)
     # Get variable names and their optimized values safely
     varnames, values = safe_mode_extractor(estimate)
     
-    # Extract string names for the Chain structure
-    names = String.(varnames)
+    # Extract string names for the Chain structure and force standard Vector type
+    names = Vector{String}(String.(varnames))
+    vals  = Vector{Float64}(values)
     
     # Optional: include the log probability in the chain metadata
     push!(names, "lp")
-    push!(values, estimate.lp)
+    push!(vals, estimate.lp)
     
     # Shape must be (samples, parameters, chains)
-    # Here: 1 sample, length(values) parameters, 1 chain
-    data = reshape(values, 1, length(values), 1)
+    # Here: 1 sample, length(vals) parameters, 1 chain
+    data = reshape(vals, 1, length(vals), 1)
     
     return MCMCChains.Chains(data, names)
 end
