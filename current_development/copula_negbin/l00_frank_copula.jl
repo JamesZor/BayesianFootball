@@ -6,6 +6,7 @@ using LogExpFunctions
 using LinearAlgebra
 using Dates
 using BayesianFootball
+using Random
 
 # ==============================================================================
 # 1. DISTRIBUTION: Frank Copula Negative Binomial
@@ -147,19 +148,77 @@ end
 # ==============================================================================
 
 # Time decay config for the copula engine
-Base.@kwdef struct FrankCopulaTimeDecayDynamics <: BayesianFootball.Models.AbstractDynamicsConfig
+Base.@kwdef struct FrankCopulaTimeDecayDynamics <: BayesianFootball.Models.PreGame.AbstractDynamicsConfig
     days_half_life::Real = 180
     σ_att::ContinuousUnivariateDistribution = Gamma(2.0, 0.15)
     σ_def::ContinuousUnivariateDistribution = Gamma(2.0, 0.15)
     prior_κ::ContinuousUnivariateDistribution = Normal(0.0, 1.0)
 end
 
+### 
+# ==========================================
+# 2. TURING SUBMODEL
+# ==========================================
+@model function BayesianFootball.Models.PreGame.build_dynamics(config::FrankCopulaTimeDecayDynamics, n_teams::Int)
+    # Global variance for attack and defense spread
+    σ_a ~ config.σ_att
+    σ_d ~ config.σ_def
+    
+    # Non-centered parameterization (the Z-scores)
+    raw_a ~ filldist(Normal(0, 1), n_teams)
+    raw_d ~ filldist(Normal(0, 1), n_teams)
+    
+    # Scale them
+    α_scaled = raw_a .* σ_a
+    β_scaled = raw_d .* σ_d
+    
+    # Zero-sum constraint (ensures league average is exactly 0)
+    α = α_scaled .- mean(α_scaled)
+    β = β_scaled .- mean(β_scaled)
+    
+    return (; α, β)
+end
+
+# ==========================================
+# 3. EXTRACTOR
+# ==========================================
+function BayesianFootball.Models.PreGame.extract_dynamics(chain::Chains, ::FrankCopulaTimeDecayDynamics, prefix::String, n_teams::Int)
+    n_samples = size(chain, 1) * size(chain, 3)
+    
+    # 1. Extract the global standard deviations
+    σ_a = vec(Array(chain[Symbol("$prefix.σ_a")]))
+    σ_d = vec(Array(chain[Symbol("$prefix.σ_d")]))
+    
+    # 2. Extract the raw Z-scores
+    raw_a_matrix = zeros(n_samples, n_teams)
+    raw_d_matrix = zeros(n_samples, n_teams)
+    
+    for i in 1:n_teams
+        raw_a_matrix[:, i] = vec(Array(chain[Symbol("$prefix.raw_a[$i]")]))
+        raw_d_matrix[:, i] = vec(Array(chain[Symbol("$prefix.raw_d[$i]")]))
+    end
+    
+    # 3. Reconstruct the scaled parameters
+    α_scaled = raw_a_matrix .* σ_a 
+    β_scaled = raw_d_matrix .* σ_d
+    
+    # 4. Apply the Zero-Sum constraint
+    α_matrix = α_scaled .- mean(α_scaled, dims=2)
+    β_matrix = β_scaled .- mean(β_scaled, dims=2)
+    
+    return (; α = α_matrix, β = β_matrix)
+end
+
+
+
+
+
 # Wrapper Config for the master engine prototype
-Base.@kwdef struct DynamicCopulaGoalsTimeDecayModel <: BayesianFootball.Models.AbstractTimeDecayTeamModel
-    interception_config::BayesianFootball.Models.AbstractInterceptionConfig
-    dynamics_config::FrankCopulaTimeDecayDynamics
-    dispersion_config::BayesianFootball.Models.AbstractDispersionConfig
-    homeadvantage_config::BayesianFootball.Models.AbstractHomeAdvantageConfig
+Base.@kwdef struct DynamicCopulaGoalsTimeDecayModel <: BayesianFootball.Models.PreGame.AbstractTimeDecayTeamModel
+    interception_config::BayesianFootball.Models.PreGame.AbstractInterceptionConfig
+    dynamics_config::BayesianFootball.Models.PreGame.AbstractDynamicsConfig
+    dispersion_config::BayesianFootball.Models.PreGame.AbstractDispersionConfig
+    homeadvantage_config::BayesianFootball.Models.PreGame.AbstractHomeAdvantageConfig
 end
 
 @model function build_weighted_copula_goals_engine(
@@ -176,10 +235,10 @@ end
     config::DynamicCopulaGoalsTimeDecayModel 
 )
     # 1. LOAD COMPONENTS
-    inter ~ BayesianFootball.Models.to_submodel(BayesianFootball.Models.build_interception(config.interception_config, n_seasons))
-    disp  ~ BayesianFootball.Models.to_submodel(BayesianFootball.Models.build_dispersion(config.dispersion_config, n_teams, n_months))
-    ha    ~ BayesianFootball.Models.to_submodel(BayesianFootball.Models.build_home_advantage(config.homeadvantage_config, n_teams))
-    dyn   ~ BayesianFootball.Models.to_submodel(BayesianFootball.Models.build_dynamics(config.dynamics_config, n_teams))
+    inter ~ to_submodel(BayesianFootball.Models.PreGame.build_interception(config.interception_config, n_seasons))
+    disp  ~ to_submodel(BayesianFootball.Models.PreGame.build_dispersion(config.dispersion_config, n_teams, n_months))
+    ha    ~ to_submodel(BayesianFootball.Models.PreGame.build_home_advantage(config.homeadvantage_config, n_teams))
+    dyn   ~ to_submodel(BayesianFootball.Models.PreGame.build_dynamics(config.dynamics_config, n_teams))
     
     # Copula parameter
     κ_frank ~ config.dynamics_config.prior_κ
