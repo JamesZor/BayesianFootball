@@ -52,10 +52,20 @@ function Distributions.logpdf(d::FrankCopulaNegBin, y1::Int, y2::Int)
     dist_h = MyDistributions.RobustNegativeBinomial(d.r_h, d.λ_h)
     dist_a = MyDistributions.RobustNegativeBinomial(d.r_a, d.λ_a)
     
-    u1 = cdf(dist_h, y1)
-    u0 = cdf(dist_h, y1 - 1)
-    v1 = cdf(dist_a, y2)
-    v0 = cdf(dist_a, y2 - 1)
+    # AD-safe CDF computation by summing PMFs. 
+    # Football goals are typically small (0-10), making this O(N) summation very fast 
+    # and avoiding Rmath.jl which breaks ReverseDiff for CDFs.
+    u0 = 0.0
+    for k in 0:(y1-1)
+        u0 += exp(logpdf(dist_h, k))
+    end
+    u1 = u0 + exp(logpdf(dist_h, y1))
+    
+    v0 = 0.0
+    for k in 0:(y2-1)
+        v0 += exp(logpdf(dist_a, k))
+    end
+    v1 = v0 + exp(logpdf(dist_a, y2))
     
     # Ensure probabilities are clipped to [0,1]
     u1 = clamp(u1, 0.0, 1.0)
