@@ -20,9 +20,12 @@ struct FrankCopulaNegBin{T<:Real} <: DiscreteMultivariateDistribution
     κ::T
 end
 
+FrankCopulaNegBin(r_h::T, λ_h::T, r_a::T, λ_a::T, κ::T) where {T<:Real} = FrankCopulaNegBin{T}(r_h, λ_h, r_a, λ_a, κ)
+FrankCopulaNegBin(r_h::Real, λ_h::Real, r_a::Real, λ_a::Real, κ::Real) = FrankCopulaNegBin(promote(r_h, λ_h, r_a, λ_a, κ)...)
+
 Base.length(::FrankCopulaNegBin) = 2
 
-function frank_copula(u::T, v::T, κ::T) where {T<:Real}
+function frank_copula(u, v, κ)
     # Frank Copula: C(u, v) = -1/κ * log(1 + (exp(-κ*u) - 1)*(exp(-κ*v) - 1)/(exp(-κ) - 1))
     
     # AD-safe limit as κ -> 0
@@ -46,8 +49,8 @@ function Distributions.logpdf(d::FrankCopulaNegBin, y1::Int, y2::Int)
     end
     
     # We use RobustNegativeBinomial for stable CDF evaluations
-    dist_h = RobustNegativeBinomial(d.r_h, d.λ_h)
-    dist_a = RobustNegativeBinomial(d.r_a, d.λ_a)
+    dist_h = MyDistributions.RobustNegativeBinomial(d.r_h, d.λ_h)
+    dist_a = MyDistributions.RobustNegativeBinomial(d.r_a, d.λ_a)
     
     u1 = cdf(dist_h, y1)
     u0 = cdf(dist_h, y1 - 1)
