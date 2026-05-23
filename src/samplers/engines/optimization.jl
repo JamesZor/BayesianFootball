@@ -66,7 +66,7 @@ expect an array of samples continue to work unmodified.
 """
 function mode_result_to_chains(model, estimate)
     # Get variable names and their optimized values
-    varnames, values = vector_names_and_params(estimate)
+    varnames, values = Turing.Optimisation.vector_names_and_params(estimate)
     
     # Extract string names for the Chain structure
     names = String.(Symbol.(varnames))
