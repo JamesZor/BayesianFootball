@@ -145,8 +145,12 @@ end
         λₕ_xg = λₕ[idx_xg]
         λₐ_xg = λₐ[idx_xg]
         
-        log_lik_xg_h = logpdf.(Gamma.(ν_xg, λₕ_xg ./ ν_xg), home_xg[idx_xg])
-        log_lik_xg_a = logpdf.(Gamma.(ν_xg, λₐ_xg ./ ν_xg), away_xg[idx_xg])
+        ν_safe = ν_xg + 1e-6
+        θ_h_safe = (λₕ_xg ./ ν_safe) .+ 1e-6
+        θ_a_safe = (λₐ_xg ./ ν_safe) .+ 1e-6
+        
+        log_lik_xg_h = logpdf.(Gamma.(ν_safe, θ_h_safe), home_xg[idx_xg])
+        log_lik_xg_a = logpdf.(Gamma.(ν_safe, θ_a_safe), away_xg[idx_xg])
 
         Turing.@addlogprob! sum(log_lik_xg_h .* match_weights[idx_xg])
         Turing.@addlogprob! sum(log_lik_xg_a .* match_weights[idx_xg])
