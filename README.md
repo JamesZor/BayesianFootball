@@ -210,9 +210,10 @@ src/Calibration/
 
 This module contains the **Layer 1 (L1) Probabilistic Engines**. It is built using a highly modular, "Component-Driven Architecture" powered by `Turing.jl`. Instead of writing massive, monolithic scripts, the mathematical concepts (Home Advantage, Form/Dynamics, Conversion Rates) are isolated into interchangeable Lego blocks.
 
-Currently, this module powers two master engines:
+Currently, this module powers three master engines:
 1. `DynamicGoalsModel` - Trains purely on historical goals.
 2. `DynamicXGModel` - A unified engine that co-trains on both True xG (when available) and actual goals, bridging them via a `Kappa` conversion rate.
+3. `DynamicCopulaGoalsTimeDecayModel` - Evaluates match outcomes using a Frank Copula joint distribution over Negative Binomial marginals to capture team-specific tactical correlation.
 
 ## Basic Usage
 
@@ -227,6 +228,7 @@ disp_cfg  = PreGame.HomeAwayDispersion()
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 dyn_cfg   = PreGame.MultiScaleGRW()
 kap_cfg   = PreGame.GlobalKappa() # Only needed for the xG Model
+cop_cfg   = PreGame.HierarchicalFrankCopulaConfig() # Only needed for Copula models
 
 # 2. Build the Master Model
 model_xg = PreGame.DynamicXGModel(
@@ -236,6 +238,7 @@ model_xg = PreGame.DynamicXGModel(
     homeadvantage_config = ha_cfg,
     kappa_config         = kap_cfg
 )
+
 
 # 3. Create the Experiment Task using the unified factory
 task = BayesianFootball.Experiments.create_experiment_task(

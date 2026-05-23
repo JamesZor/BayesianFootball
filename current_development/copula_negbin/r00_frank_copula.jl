@@ -13,7 +13,7 @@ include("l00_frank_copula.jl")
 println("--- Testing Discrete Frank Copula NegBin Model ---")
 
 # 2. Setup Data
-ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower())
+ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.Ireland())
 
 # 3. Configure the Model
 inter_cfg = BayesianFootball.Models.PreGame.GlobalInterception()
@@ -40,14 +40,47 @@ cv_config = BayesianFootball.Data.GroupedCVConfig(
     stop_early = true # Just 1 fold for smoke testing
 )
 
-println(">>> Building Data Split...")
-boundaries = BayesianFootball.Data.create_id_boundaries(ds, cv_config)
-feature_sets = BayesianFootball.Features.create_features(boundaries, ds, copula_model, cv_config.dynamics_col)
-fs, meta = feature_sets[1]
+# println(">>> Building Data Split...")
+# boundaries = BayesianFootball.Data.create_id_boundaries(ds, cv_config)
+# feature_sets = BayesianFootball.Features.create_features(boundaries, ds, copula_model, cv_config.dynamics_col)
+# fs, meta = feature_sets[1]
+#
+# println(">>> Building Turing Model...")
+# tm = BayesianFootball.Models.PreGame.build_turing_model(copula_model, fs)
+# println("    Model built successfully!")
+#
 
-println(">>> Building Turing Model...")
-tm = BayesianFootball.Models.PreGame.build_turing_model(copula_model, fs)
-println("    Model built successfully!")
+
+sampler_config = Samplers.MLEConfig(
+    maxiters=1000, 
+    show_progress=false
+)
+
+
+train_cfg = Training.Independent(
+    parallel = true,
+    max_concurrent_splits = 8
+)
+
+training_config = Training.TrainingConfig(sampler_config, train_cfg, nothing, false)
+
+
+
+config = Experiments.ExperimentConfig(
+    name = "copula_model_test",
+    model = copula_model, 
+    splitter = cv_config,
+    training_config = training_config,
+    save_dir = "./data/copula_negbin_test/"
+)
+
+task = Experiments.ExperimentTask(ds, config)
+
+map_results = Experiments.run_experiment(task)
+
+
+map_chains = Experiments.Diagnostics.extract_chains(ds, map_results)
+map_chains.df
 
 # 5. Execute MAP Optimization (fastest for smoke test)
 println(">>> Running MAP Optimization...")
@@ -73,3 +106,41 @@ try
 catch e
     @error "❌ FAILED" exception=(e, catch_backtrace())
 end
+
+
+
+nuts_sampler_cfg = Samplers.NUTSConfig(
+            500,  # samples
+            8,    # chains
+            200,  # warmup
+            0.65, # accept_rate
+            10,   # max_depth
+            Samplers.UniformInit(-2, 2),
+            true  # show_progress
+        )
+
+nuts_train_cfg = Training.Independent(
+    parallel = true,
+    max_concurrent_splits = 1
+)
+
+nuts_training_config = Training.TrainingConfig(nuts_sampler_cfg, nuts_train_cfg, nothing, false)
+
+nuts_config = Experiments.ExperimentConfig(
+    name = "copula_model_test_nuts",
+    model = copula_model, 
+    splitter = cv_config,
+    training_config = nuts_training_config,
+    save_dir = "./data/copula_negbin_test/"
+)
+
+nuts_task = Experiments.ExperimentTask(ds, nuts_config)
+
+
+nuts_results = Experiments.run_experiment(nuts_task)
+
+
+
+nuts_chains = Experiments.Diagnostics.extract_chains(ds, nuts_results)
+nuts_chains.df
+
