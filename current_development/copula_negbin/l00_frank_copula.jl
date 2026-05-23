@@ -40,9 +40,7 @@ function frank_copula(u::T, v::T, κ::T) where {T<:Real}
     return -1.0 / κ * log(max(inner, 1e-12))
 end
 
-function Distributions._logpdf(d::FrankCopulaNegBin, x::AbstractVector{<:Real})
-    y1, y2 = Int(x[1]), Int(x[2])
-    
+function Distributions.logpdf(d::FrankCopulaNegBin, y1::Int, y2::Int)
     if y1 < 0 || y2 < 0
         return -Inf
     end
@@ -74,6 +72,14 @@ function Distributions._logpdf(d::FrankCopulaNegBin, x::AbstractVector{<:Real})
     # Ensure PMF is strictly positive to avoid domain errors in log
     pmf_safe = max(pmf, 1e-12)
     return log(pmf_safe)
+end
+
+function Distributions.logpdf(d::FrankCopulaNegBin, y1::Real, y2::Real)
+    return logpdf(d, Int(y1), Int(y2))
+end
+
+function Distributions._logpdf(d::FrankCopulaNegBin, x::AbstractVector{<:Real})
+    return logpdf(d, x[1], x[2])
 end
 
 function Distributions.rand(rng::AbstractRNG, d::FrankCopulaNegBin)
@@ -227,7 +233,8 @@ end
     season_indices::Vector{Int},
     time_indices::Vector{Int},
     month_indices::Vector{Int},
-    goals_matrix::Matrix{Int}, # 2 x N matrix: row 1 is home, row 2 is away
+    home_goals::Vector{Int}, 
+    away_goals::Vector{Int},
     match_weights::Vector{Float64},
     n_teams::Int,
     n_seasons::Int,
@@ -263,8 +270,8 @@ end
         r_h_flat = exp.(clamp.(log_r_h, -10.0, 10.0))
         r_a_flat = exp.(clamp.(log_r_a, -10.0, 10.0))
     else 
-        r_h_flat = fill(disp.h, length(λ_h))
-        r_a_flat = fill(disp.a, length(λ_h))
+        r_h_flat = fill(disp.h, length(home_team_indices))
+        r_a_flat = fill(disp.a, length(home_team_indices))
         # Note: If disp.h is a scalar, we might need to handle it properly, 
         # but time_decay models usually have vector dispersions or broadcasting works.
     end
@@ -274,23 +281,11 @@ end
     λ_a = exp.(inter_match .+             att_a .+ def_h)
 
     # 4. TIME-DECAYED COPULA LIKELIHOOD
-    total_log_lik = 0.0
+    copula_dists = FrankCopulaNegBin.(r_h_flat, λ_h, r_a_flat, λ_a, κ_frank)
     
-    # Using manual loop for ReverseDiff safety and applying match weights explicitly
-    for i in 1:length(λ_h)
-        # Using ternary to handle scalar vs vector dispersion safely
-        r_h_val = r_h_flat isa AbstractVector ? r_h_flat[i] : r_h_flat
-        r_a_val = r_a_flat isa AbstractVector ? r_a_flat[i] : r_a_flat
-        
-        dist = FrankCopulaNegBin(r_h_val, λ_h[i], r_a_val, λ_a[i], κ_frank)
-        
-        # Log probability
-        lp = logpdf(dist, view(goals_matrix, :, i))
-        
-        total_log_lik += lp * match_weights[i]
-    end
+    log_lik_joint = logpdf.(copula_dists, home_goals, away_goals)
     
-    Turing.@addlogprob! total_log_lik
+    Turing.@addlogprob! sum(log_lik_joint .* match_weights)
 end
 
 # ==============================================================================
@@ -325,16 +320,14 @@ function BayesianFootball.Models.PreGame.build_turing_model(model::DynamicCopula
     home_goals = Vector{Int}(data[:flat_home_goals])
     away_goals = Vector{Int}(data[:flat_away_goals])
 
-    # Reformat goals into a 2xN matrix for the multivariate distribution
-    goals_matrix = vcat(home_goals', away_goals')
-
     return build_weighted_copula_goals_engine(
         home_ids,
         away_ids,
         season_ids,
         time_idxs,
         month_indices,
-        goals_matrix,
+        home_goals,
+        away_goals,
         match_weights,
         n_teams,
         n_seasons,
