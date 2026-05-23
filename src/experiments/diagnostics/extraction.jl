@@ -51,17 +51,22 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
     # Pre-calculate MCMC summaries (rhat, ess) for raw parameters
     # This might fail if chain is empty or doesn't have multiple chains, so wrap in try-catch
     chain_summary = Dict{Symbol, NamedTuple}()
-    try
-        summ_df = DataFrame(MCMCChains.summarize(chain))
-        for row in eachrow(summ_df)
-            p = Symbol(row.parameters)
-            chain_summary[p] = (
-                rhat = hasproperty(row, :rhat) ? row.rhat : NaN,
-                ess  = hasproperty(row, :ess) ? row.ess : NaN
-            )
+    
+    if size(chain, 1) == 1
+        @info "Point-mass chain (Optimization) detected. Skipping MCMC diagnostics (rhat, ess)."
+    else
+        try
+            summ_df = DataFrame(MCMCChains.summarize(chain))
+            for row in eachrow(summ_df)
+                p = Symbol(row.parameters)
+                chain_summary[p] = (
+                    rhat = hasproperty(row, :rhat) ? row.rhat : NaN,
+                    ess  = hasproperty(row, :ess) ? row.ess : NaN
+                )
+            end
+        catch
+            # Fallback if summarize fails
         end
-    catch
-        # Fallback if summarize fails
     end
 
     fold_info = Dict(

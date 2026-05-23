@@ -21,7 +21,7 @@ include("./initialisation/map.jl")
 
 # 3. Engines
 include("./engines/nuts.jl")
-include("./engines/map.jl")
+include("./engines/optimization.jl")
 include("./engines/sgld.jl")
 include("./engines/advi.jl")
 
