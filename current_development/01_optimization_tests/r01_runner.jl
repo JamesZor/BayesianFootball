@@ -11,13 +11,11 @@ include("l01_loaders.jl")
 # 1. Load Data
 println("Loading Data...")
 ds = Data.load_datastore_cached(Data.ScottishLower())
-# Just take a subset to run quickly
 # Removed subsetting as dataset is already small enough
 
 # 2. Create MAP Experiment
 println("--- Running MAP Experiment ---")
-map_config = setup_experiment_config(use_map=true)
-map_task = Experiments.ExperimentTask(ds, map_config)
+map_task = create_optim_test_task(ds, use_map=true)
 
 # Time the MAP execution
 map_time = @elapsed begin
@@ -36,8 +34,7 @@ println("Total MAP Predictions: ", nrow(map_preds.df))
 
 # 4. Create NUTS Experiment (for comparison)
 println("\n--- Running NUTS Experiment ---")
-nuts_config = setup_experiment_config(use_map=false)
-nuts_task = Experiments.ExperimentTask(ds, nuts_config)
+nuts_task = create_optim_test_task(ds, use_map=false)
 
 # Time the NUTS execution
 nuts_time = @elapsed begin

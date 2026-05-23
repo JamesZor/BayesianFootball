@@ -2,26 +2,55 @@
 
 using BayesianFootball
 
+const PreGame = BayesianFootball.Models.PreGame
+const Features = BayesianFootball.Features
+const Experiments = BayesianFootball.Experiments
+const Diagnostics = BayesianFootball.Experiments.Diagnostics
+const Evaluation = BayesianFootball.Evaluation
+const BackTesting = BayesianFootball.BackTesting
+const Signals = BayesianFootball.Signals
+
+
 function setup_experiment_config(; use_map=true)
-    # 1. Define Model
-    model = Models.PreGame.DynamicGoalsModel(
-        homeadvantage_config = Models.PreGame.HierarchicalHomeAdvantage(),
-        dispersion_config = Models.PreGame.TeamLevelDispersion(),
-        player_dynamics_config = Models.PreGame.GRWPoisson(
-            σ_att_0 = 0.5, σ_def_0 = 0.5, 
-            σ_att   = 0.1, σ_def   = 0.1
-        )
+    # ==========================================
+    # 2. MODEL DEFINITION
+    # ==========================================
+    # Shared Component Configs
+    inter_cfg = PreGame.GlobalInterception()
+    disp_cfg  = PreGame.HomeAwayDispersion()
+    ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
+    kap_cfg   = PreGame.HierarchicalTeamKappa()
+
+    # Bayesian Tracker for player ratings
+    tracker_bayes = Features.BayesianTracker(6.5, 1.0, 0.5, 0.01)
+    feature_cfg_bayes = Features.PlayerRatingsFeature(tracker_bayes)
+
+    model = PreGame.DynamicMarketXGPlayerTimeDecayModel(
+        interception_config  = inter_cfg,
+        player_dynamics_config = PreGame.PositionalPlayerDynamics(days_half_life=180.0),
+        dispersion_config    = disp_cfg,
+        homeadvantage_config = ha_cfg,
+        kappa_config         = kap_cfg,
+        player_ratings_feature = feature_cfg_bayes,
+        market_weight        = 1.0
     )
 
-    # 2. Define Splitter
-    splitter = Data.RollingWindowSplitter(
-        train_window = Month(12),
-        test_window = Week(1),
-        dynamics_col = :week,
-        step = Week(1)
+    # ==========================================
+    # 2. SPLITTER DEFINITION
+    # ==========================================
+    # Using the modern GroupedCVConfig instead of RollingWindowSplitter
+    cv_config = Data.GroupedCVConfig(
+        tournament_groups = [Data.tournament_ids(ds.segment)],
+        target_seasons = ["2023/2024"], # Just testing 1 season
+        history_seasons = 2,
+        dynamics_col = :match_month,
+        warmup_period = 0,
+        stop_early = false
     )
 
-    # 3. Define Training Config
+    # ==========================================
+    # 3. SAMPLER DEFINITION
+    # ==========================================
     sampler_config = if use_map
         Samplers.MAPConfig(
             maxiters=1000, 
@@ -29,26 +58,34 @@ function setup_experiment_config(; use_map=true)
         )
     else
         Samplers.NUTSConfig(
-            n_samples=500, 
-            n_warmup=200, 
-            n_chains=2
+            500,  # samples
+            2,    # chains
+            200,  # warmup
+            0.65, # accept_rate
+            10,   # max_depth
+            Samplers.UniformInit(-2, 2),
+            true  # show_progress
         )
     end
     
-    training_config = Training.TrainingConfig(
-        sampler = sampler_config,
-        strategy = Training.Independent()
+    # ==========================================
+    # 4. TRAINING & EXPERIMENT DEFINITION
+    # ==========================================
+    train_cfg = Training.Independent(
+        parallel = true,
+        max_concurrent_splits = 4
     )
+    
+    training_config = Training.TrainingConfig(sampler_config, train_cfg, nothing, false)
 
-    # 4. Define Experiment Config
     suffix = use_map ? "MAP" : "NUTS"
-    exp_config = Experiments.ExperimentConfig(
+    config = Experiments.ExperimentConfig(
         name = "Optim_Test_$(suffix)",
-        model = model,
-        splitter = splitter,
+        model = model, 
+        splitter = cv_config,
         training_config = training_config,
         save_dir = "./data/experiments/tests"
     )
-    
-    return exp_config
+
+    return Experiments.ExperimentTask(ds, config)
 end
