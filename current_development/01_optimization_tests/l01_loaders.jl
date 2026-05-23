@@ -43,8 +43,8 @@ function create_optim_test_task(ds::Data.DataStore; use_map=true)
         tournament_groups = [Data.tournament_ids(ds.segment)],
         target_seasons = ["2025"], # Just testing 1 season
         history_seasons = 2,
-        dynamics_col = :match_month,
-        warmup_period = 9,
+        dynamics_col = :match_week,
+        warmup_period = 0,
         stop_early = false
     )
 

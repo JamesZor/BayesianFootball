@@ -8,6 +8,7 @@ using BenchmarkTools
 
 include("l01_loaders.jl")
 
+
 # 1. Load Data
 println("Loading Data...")
 ds = Data.load_datastore_cached(Data.Ireland())
@@ -46,3 +47,21 @@ println("\n--- Speedup Summary ---")
 println("MAP Time:  $(round(map_time, digits=2))s")
 println("NUTS Time: $(round(nuts_time, digits=2))s")
 println("Speedup:   $(round(nuts_time / map_time, digits=2))x")
+
+
+
+
+
+#=
+--- Speedup Summary ---
+
+julia> println("MAP Time:  $(round(map_time, digits=2))s")
+MAP Time:  73.77s
+
+julia> println("NUTS Time: $(round(nuts_time, digits=2))s")
+NUTS Time: 309.85s
+
+julia> println("Speedup:   $(round(nuts_time / map_time, digits=2))x")
+Speedup:   4.2x
+=#
+

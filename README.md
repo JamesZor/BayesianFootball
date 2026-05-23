@@ -441,3 +441,63 @@ src/features/
     ├── stats_extractors.jl    # Shots, Expected Goals (xG)
     └── market_extractors.jl   # Multi-threaded Market Lambda extraction
 ```
+
+---
+
+# ⚡ Samplers & Optimization Module
+
+This module handles model parameter estimation, providing both full Bayesian posterior sampling (MCMC via NUTS) and fast point-estimation optimization methods (Maximum A Posteriori / MAP and Maximum Likelihood Estimation / MLE). 
+
+Point-estimation modes offer massive speedups (typically 30x–50x over MCMC) which are ideal for fast hyperparameter tuning, backtesting, and model calibration.
+
+## Basic Usage
+
+To configure optimization instead of sampling, pass a `MAPConfig` or `MLEConfig` struct into the `TrainingConfig` orchestration layer:
+
+```julia
+using BayesianFootball
+const Samplers = BayesianFootball.Samplers
+
+# 1. Configure the MAP Optimizer (uses L-BFGS with ReverseDiff by default)
+sampler_cfg = Samplers.MAPConfig(
+    optimizer = LBFGS(),
+    maxiters = 1000,
+    adtype = AutoReverseDiff(compile=true),
+    show_progress = true
+)
+
+# 2. Build training config
+training_config = Training.TrainingConfig(sampler_cfg, Training.Independent(), nothing, false)
+
+# 3. Create and run task
+task = Experiments.ExperimentTask(ds, Experiments.ExperimentConfig(..., training_config=training_config))
+results = Experiments.run_experiment(task)
+```
+
+---
+
+## ⚙️ Architecture & Point-Mass Chains Bridge
+
+Turing's optimization functions (`maximum_a_posteriori` and `maximum_likelihood`) output a point estimate (`ModeResult`), whereas downstream prediction, evaluation, and calibration layers expect MCMC posterior samples (`MCMCChains.Chains`).
+
+To bridge this gap seamlessly, the Optimization engine implements a **Point-Mass Chains Bridge** (`mode_result_to_chains`):
+1. **Extraction (`safe_mode_extractor`)**: Safely extracts parameter names and modes from `ModeResult` across different Turing/StatsBase versions, falling back to a recursive flattening of the parameter named tuples.
+2. **Casting (`mode_result_to_chains`)**: Reshapes the scalar parameter modes and the final log density (`lp`) into a 1-sample `Chains` object with shape `(1, parameters, 1)`.
+3. **Compatibility**: Downstream modules process the 1-sample point-mass chain identically to MCMC samples without requiring separate code paths.
+
+---
+
+## 📂 Directory Structure Reference
+
+```text
+src/samplers/
+├── samplers-module.jl         # Top-level module: exports and includes
+├── types.jl                   # Configs (NUTSConfig, MAPConfig, MLEConfig)
+├── interface.jl               # Base abstract type and run_sampler contract
+├── initialisation/            # Prior/custom parameter initialization
+└── engines/
+    ├── nuts.jl                # MCMC NUTS sampling engine
+    ├── optimization.jl        # Point estimation engine (MAP/MLE)
+    └── advi.jl                # Variational Inference engine
+```
+
