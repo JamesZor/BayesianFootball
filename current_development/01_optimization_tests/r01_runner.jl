@@ -10,7 +10,7 @@ include("l01_loaders.jl")
 
 # 1. Load Data
 println("Loading Data...")
-ds = Data.load_datastore_cached(Data.ScottishLower())
+ds = Data.load_datastore_cached(Data.Ireland())
 # Removed subsetting as dataset is already small enough
 
 # 2. Create MAP Experiment

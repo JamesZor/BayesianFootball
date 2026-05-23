@@ -11,7 +11,7 @@ const BackTesting = BayesianFootball.BackTesting
 const Signals = BayesianFootball.Signals
 
 
-function setup_experiment_config(; use_map=true)
+function create_optim_test_task(ds::Data.DataStore; use_map=true)
     # ==========================================
     # 2. MODEL DEFINITION
     # ==========================================
@@ -41,7 +41,7 @@ function setup_experiment_config(; use_map=true)
     # Using the modern GroupedCVConfig instead of RollingWindowSplitter
     cv_config = Data.GroupedCVConfig(
         tournament_groups = [Data.tournament_ids(ds.segment)],
-        target_seasons = ["2023/2024"], # Just testing 1 season
+        target_seasons = ["2025"], # Just testing 1 season
         history_seasons = 2,
         dynamics_col = :match_month,
         warmup_period = 0,
@@ -73,7 +73,7 @@ function setup_experiment_config(; use_map=true)
     # ==========================================
     train_cfg = Training.Independent(
         parallel = true,
-        max_concurrent_splits = 4
+        max_concurrent_splits = 8
     )
     
     training_config = Training.TrainingConfig(sampler_config, train_cfg, nothing, false)
