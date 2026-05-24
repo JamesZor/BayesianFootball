@@ -69,7 +69,12 @@ function extract_params(model::TypesInterfaces.AbstractFrankCopulaNegBinModel, r
 end
 
 # 2. Kernel Wrapper
-function compute_score_matrix(model::TypesInterfaces.AbstractFrankCopulaNegBinModel, params; max_goals::Int=12)
+function compute_score_matrix(model::BayesianFootball.TypesInterfaces.AbstractFrankCopulaNegBinModel, params; max_goals::Int=12)
     S = compute_score_matrix_discrete_copula(params; max_goals=max_goals)
-    return Predictions.ScoreMatrix(S)
+    return BayesianFootball.Predictions.ScoreMatrix(S)
+end
+
+function BayesianFootball.Predictions.get_latent_column_symbols(::BayesianFootball.TypesInterfaces.AbstractFrankCopulaNegBinModel, df::DataFrames.AbstractDataFrame)
+    cols = [:λ_h, :λ_a, :r_h, :r_a, :κ_frank]
+    return [c for c in cols if string(c) in names(df)]
 end

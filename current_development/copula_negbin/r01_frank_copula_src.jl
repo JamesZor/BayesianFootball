@@ -162,6 +162,13 @@ ledger = BackTesting.run_backtest(
     market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
 )
 
+tearsheet = BackTesting.generate_tearsheet(ledger)
+
+println("\n>>> Backtest Comparison Summary:")
+cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
+show(tearsheet[:, cols_to_show], allrows=true)
+
+
 
 #=
 julia> ledger = BackTesting.run_backtest(
