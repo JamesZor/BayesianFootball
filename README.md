@@ -479,6 +479,18 @@ results = Experiments.run_experiment(task)
 
 ---
 
+## ⚡ Queued MCMC Execution
+
+For Bayesian sampling, the system utilizes a high-performance **Queued Execution** architecture via `QueuedNUTSConfig` and `Training.Independent(max_concurrent_tasks)`. 
+
+Instead of locking threads to an entire walk-forward split (which wastes CPU cycles when one MCMC chain takes longer than the others), the system breaks down $K$ splits $\times$ $N$ chains into a flattened global queue.
+
+1. Launch Julia with exactly your target physical cores: `julia --project -t 32`
+2. Lock threads to hardware via `using ThreadPinning; pinthreads(:cores)`.
+3. The `Experiments` module dynamically auto-detects `Threads.nthreads()` and feeds the maximum number of simultaneous single-chain tasks into the execution loop, guaranteeing **100% CPU utilization** until the entire experiment finishes.
+
+---
+
 ## ⚙️ Architecture & Point-Mass Chains Bridge
 
 Turing's optimization functions (`maximum_a_posteriori` and `maximum_likelihood`) output a point estimate (`ModeResult`), whereas downstream prediction, evaluation, and calibration layers expect MCMC posterior samples (`MCMCChains.Chains`).
