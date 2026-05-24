@@ -25,18 +25,19 @@ function NUTSConfig(;
     # Helper to allow passing :map or :uniform symbol for convenience
     init_type=:uniform, 
     map_iters=50,
-    jitter=0.001
-
-
+    jitter=0.001,
+    initialisation=nothing
 )
     # Factory logic to create the correct strategy object
-    strategy = if init_type == :map
+    strategy = if !isnothing(initialisation)
+        initialisation
+    elseif init_type == :map
         MapInit(max_iters=map_iters)
     else
         UniformInit()
     end
 
-    return NUTSConfig(n_samples, n_chains, n_warmup, accept_rate, max_depth, show_progress, strategy) # Wait, show_progress wasn't at the end in the struct
+    return NUTSConfig(n_samples, n_chains, n_warmup, accept_rate, max_depth, strategy, show_progress)
 end
 
 struct QueuedNUTSConfig <: AbstractNUTSConfig 
@@ -58,9 +59,12 @@ function QueuedNUTSConfig(;
     show_progress=false,
     init_type=:uniform, 
     map_iters=50,
-    jitter=0.001
+    jitter=0.001,
+    initialisation=nothing
 )
-    strategy = if init_type == :map
+    strategy = if !isnothing(initialisation)
+        initialisation
+    elseif init_type == :map
         MapInit(max_iters=map_iters)
     else
         UniformInit()
