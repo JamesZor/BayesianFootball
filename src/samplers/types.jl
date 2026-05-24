@@ -1,6 +1,6 @@
 # src/samplers/types.jl
 
-export AbstractSamplerConfig
+export AbstractSamplerConfig, AbstractNUTSConfig
 export AbstractOptimizationConfig, MAPConfig, MLEConfig
 
 """
@@ -8,6 +8,12 @@ export AbstractOptimizationConfig, MAPConfig, MLEConfig
 Abstract parent for all sampling strategies (NUTS, SGLD, VI, MAP).
 """
 abstract type AbstractSamplerConfig end
+
+"""
+    AbstractNUTSConfig
+Abstract parent for NUTS sampling configurations.
+"""
+abstract type AbstractNUTSConfig <: AbstractSamplerConfig end
 
 """
     AbstractOptimizationConfig

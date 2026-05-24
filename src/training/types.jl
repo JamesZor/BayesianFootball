@@ -7,13 +7,14 @@ export TrainingResults
 abstract type AbstractExecutionStrategy end
 
 """
-    Independent(; parallel=false, max_concurrent_splits=...)
+    Independent(; parallel=false, max_concurrent_splits=..., max_concurrent_tasks=...)
 
 Strategy where each data split is processed independently.
 """
 Base.@kwdef struct Independent <: AbstractExecutionStrategy
     parallel::Bool = false
     max_concurrent_splits::Int = max(1, Threads.nthreads() ÷ 2)
+    max_concurrent_tasks::Int = Threads.nthreads()
 end
 
 """
