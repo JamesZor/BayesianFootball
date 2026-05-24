@@ -70,5 +70,6 @@ end
 
 # 2. Kernel Wrapper
 function compute_score_matrix(model::TypesInterfaces.AbstractFrankCopulaNegBinModel, params; max_goals::Int=12)
-    return compute_score_matrix_discrete_copula(params; max_goals=max_goals)
+    S = compute_score_matrix_discrete_copula(params; max_goals=max_goals)
+    return Predictions.ScoreMatrix(S)
 end
