@@ -22,6 +22,9 @@ export DoubleNegativeBinomial
 include("./negative_binomial.jl")
 export RobustNegativeBinomial
 
+include("./frank_copula_negbin.jl")
+export FrankCopulaNegBin, frank_copula
+
 include("./dixon_coles_negbin.jl")
 export DixonColesNegBinLogGroup
 

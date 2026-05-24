@@ -21,6 +21,7 @@ include("./components/interception.jl")
 include("./components/home_advantage.jl")
 include("./components/dynamics.jl")
 include("./components/kappa.jl")
+include("./components/copula.jl")
 include("./display.jl")
 
 # Team Level - Standard
@@ -31,6 +32,7 @@ include("./engines/team_level/standard/xg_market.jl")
 
 # Team Level - Time Decay
 include("./engines/team_level/time_decay/goals.jl")
+include("./engines/team_level/time_decay/copula_goals.jl")
 include("./engines/team_level/time_decay/goals_market.jl")
 include("./engines/team_level/time_decay/xg.jl")
 include("./engines/team_level/time_decay/xg_market.jl")
@@ -43,9 +45,8 @@ include("./engines/player_level/time_decay/xg_market.jl")
 include("./engines/player_level/time_decay/hierarchical_xg_market.jl")
 include("./engines/player_level/time_decay/outfield_xg_market.jl")
 
-export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel, DynamicMarketXGPlayerTimeDecayModel, DynamicMarketXGHierarchicalPlayerTimeDecayModel, DynamicMarketXGOutfieldPlayerTimeDecayModel
-export TimeDecayDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig
-export TimeDecayDynamics, PositionalPlayerDynamics
+export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel, DynamicMarketXGPlayerTimeDecayModel, DynamicMarketXGHierarchicalPlayerTimeDecayModel, DynamicMarketXGOutfieldPlayerTimeDecayModel, DynamicCopulaGoalsTimeDecayModel
+export TimeDecayDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig, HierarchicalFrankCopulaConfig, GlobalFrankCopulaConfig
 
 ##
 

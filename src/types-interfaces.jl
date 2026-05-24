@@ -59,6 +59,10 @@ abstract type AbstractStaticNegBinModel <: AbstractNegBinModel end
 abstract type AbstractDynamicNegBinModel <: AbstractNegBinModel end 
 export AbstractStaticNegBinModel, AbstractDynamicNegBinModel, AbstractNegBinModel
 
+abstract type AbstractFrankCopulaNegBinModel <: AbstractPregameModel end
+abstract type AbstractDynamicFrankCopulaNegBinModel <: AbstractFrankCopulaNegBinModel end
+export AbstractFrankCopulaNegBinModel, AbstractDynamicFrankCopulaNegBinModel
+
 """
     AbstractMultiScaleDynamicModel
 

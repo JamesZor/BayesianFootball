@@ -37,7 +37,7 @@ function evaluate_experiments(metrics::Vector{<:AbstractScoringRule}, experiment
                 combined_row = merge(combined_row, clean_row)
             catch e
                 success = false
-                @warn "Error evaluating \$(typeof(metric)) for \$model_name: \$e"
+                @warn "Error evaluating $(typeof(metric)) for $model_name: $e"
             end
         end
         

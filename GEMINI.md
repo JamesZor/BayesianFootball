@@ -24,7 +24,8 @@ The foundational data layer that handles the extraction, transformation, and val
 Standardized components ("Mathematical Lego Blocks") are assembled into Master Engines:
 - **`DynamicGoalsModel`**: Historical goals-only engine.
 - **`DynamicXGModel`**: Unified engine co-training on True xG and goals via a `Kappa` conversion rate.
-- **Components**: Interception (μ), Dispersion (variance), Home Advantage (hierarchical), and Dynamics (multi-scale GRW).
+- **`DynamicCopulaGoalsModel`**: Evaluates match outcomes using a Frank Copula joint distribution over Negative Binomial marginals to capture team-specific match correlation styles.
+- **Components**: Interception (μ), Dispersion (variance), Home Advantage (hierarchical), Dynamics (multi-scale GRW), and Copula (hierarchical correlation).
 
 ### Layer 2: Calibration (`src/Calibration/`)
 Shifts scalar probabilities and MCMC posterior distributions to align with historical outcomes.
