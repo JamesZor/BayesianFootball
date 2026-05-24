@@ -210,7 +210,64 @@ function _process_parameter_fold(model, feature_tuple, chain, meta)
             @warn "Failed to extract dispersion" exception=(e, catch_backtrace())
         end
     end
-    
+    # --- 7. Copula ---
+    if hasproperty(model, :copula_config)
+        try
+            cop_nt = PreGame.extract_copula(chain, model.copula_config, "copula", n_teams)
+            
+            if hasproperty(cop_nt, :κ_base)
+                _add_param!(rows, "copula_kappa_base", "global", Symbol("copula.κ_base"), cop_nt.κ_base)
+            end
+            if hasproperty(cop_nt, :σ_κ)
+                _add_param!(rows, "copula_sigma", "global", Symbol("copula.σ_κ"), cop_nt.σ_κ)
+            end
+            if hasproperty(cop_nt, :κ) # For the non-hierarchical version
+                _add_param!(rows, "copula_kappa", "global", Symbol("copula.κ"), cop_nt.κ)
+            end
+            
+            if hasproperty(cop_nt, :δ_κ)
+                for t_idx in 1:n_teams
+                    team_name = get(rev_team_map, t_idx, "unknown")
+                    samples = cop_nt.δ_κ[:, t_idx]
+                    raw_sym = Symbol("copula.raw_κ[$t_idx]")
+                    _add_param!(rows, "copula_delta", team_name, raw_sym, samples)
+                end
+            end
+        catch e
+            @warn "Failed to extract copula" exception=(e, catch_backtrace())
+        end
+    end
+
+    # --- 8. Dynamics (Team Level) ---
+    if hasproperty(model, :dynamics_config)
+        try
+            dyn_nt = PreGame.extract_dynamics(chain, model.dynamics_config, "dyn", n_teams)
+            
+            if hasproperty(dyn_nt, :α)
+                for t_idx in 1:n_teams
+                    team_name = get(rev_team_map, t_idx, "unknown")
+                    samples_a = dyn_nt.α[:, t_idx]
+                    raw_sym_a = Symbol("dyn.raw_a[$t_idx]")
+                    _add_param!(rows, "attack_dynamics", team_name, raw_sym_a, samples_a)
+                    
+                    samples_d = dyn_nt.β[:, t_idx]
+                    raw_sym_d = Symbol("dyn.raw_d[$t_idx]")
+                    _add_param!(rows, "defense_dynamics", team_name, raw_sym_d, samples_d)
+                end
+            end
+            
+            for p in [:σ_a, :σ_d]
+                sym = Symbol("dyn." * string(p))
+                if sym in keys(chain)
+                    samples = vec(Array(chain[sym]))
+                    _add_param!(rows, "dynamics_" * string(p), "global", sym, samples)
+                end
+            end
+        catch e
+            @warn "Failed to extract team dynamics" exception=(e, catch_backtrace())
+        end
+    end
+
     # Catch any remaining parameters we might care about like lp (log density)
     if :lp in keys(chain)
         _add_param!(rows, "log_density", "global", :lp, vec(Array(chain[:lp])))

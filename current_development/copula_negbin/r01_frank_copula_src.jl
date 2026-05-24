@@ -39,12 +39,16 @@ cv_config = BayesianFootball.Data.GroupedCVConfig(
 
 # 4. Sampler Config (Using NUTS to properly explore the Hierarchical Copula)
 sampler_config = BayesianFootball.Samplers.NUTSConfig(
-    samples=800,
-    warmup=400,
-    chains=4
-)
+            500,  # samples
+            4,    # chains
+            200,  # warmup
+            0.65, # accept_rate
+            10,   # max_depth
+            Samplers.UniformInit(-2, 2),
+            true  # show_progress
+        )
 
-train_cfg = BayesianFootball.Training.Independent(
+samples=train_cfg = BayesianFootball.Training.Independent(
     parallel = true,
     max_concurrent_splits = 4
 )
@@ -74,3 +78,7 @@ println(">>> Chain Summary:")
 display(describe(chains.df))
 
 println("\nAll done! Model works dynamically from src!")
+
+
+describe(results.training_results[3][1])
+

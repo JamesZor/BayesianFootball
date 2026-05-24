@@ -8,7 +8,6 @@ struct FrankCopulaNegBin{T<:Real} <: DiscreteMultivariateDistribution
     κ::T
 end
 
-FrankCopulaNegBin(r_h::T, λ_h::T, r_a::T, λ_a::T, κ::T) where {T<:Real} = FrankCopulaNegBin{T}(r_h, λ_h, r_a, λ_a, κ)
 FrankCopulaNegBin(r_h::Real, λ_h::Real, r_a::Real, λ_a::Real, κ::Real) = FrankCopulaNegBin(promote(r_h, λ_h, r_a, λ_a, κ)...)
 
 Base.length(::FrankCopulaNegBin) = 2
