@@ -70,6 +70,15 @@ task = BayesianFootball.Experiments.ExperimentTask(ds, config)
 println(">>> Running Hierarchical Copula Experiment...")
 results = BayesianFootball.Experiments.run_experiment(task)
 
+
+println("\n[INFO] Saving Experiment...")
+Experiments.save_experiment(results)
+
+save_dir = "./data/hierarchical_copula_test/"
+
+saved_files = Experiments.list_experiments(save_dir, data_dir="")
+results = Experiments.load_experiment(saved_files, 1)
+
 # 7. Extract Results
 println(">>> Extracting Chains...")
 chains = BayesianFootball.Experiments.Diagnostics.extract_chains(ds, results)
@@ -101,30 +110,34 @@ const Signals = BayesianFootball.Signals
 
 
 metrics = [
-    Evaluation.RQR(),
+    # Evaluation.RQR(),
     Evaluation.LogLoss(), 
-    Evaluation.CRPS(), 
+    # Evaluation.CRPS(), 
     Evaluation.GLMEdge()
 ]
 master_eval_df = Evaluation.evaluate_experiments(metrics, [results], ds)
 
 
-
 #=
+julia> metrics = [
+           # Evaluation.RQR(),
+           Evaluation.LogLoss(), 
+           # Evaluation.CRPS(), 
+           Evaluation.GLMEdge()
+       ]
+2-element Vector{BayesianFootball.Evaluation.AbstractScoringRule}:
+ BayesianFootball.Evaluation.LogLoss()
+ BayesianFootball.Evaluation.GLMEdge(Symbol[])
+
 julia> master_eval_df = Evaluation.evaluate_experiments(metrics, [results], ds)
 ============================================================
  🚀 Running Batch Evaluation...
 ============================================================
-Progress: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| Time: 0:00:02
-┌ Warning: Error evaluating $(typeof(metric)) for $model_name: $e
+[1/1] Evaluating: hierarchical_copula_model_test ... Running Inference on 84 matches...
+┌ Warning: Error evaluating BayesianFootball.Evaluation.LogLoss for hierarchical_copula_model_test: CompositeException(Any[TaskFailedException(Task (failed) @0x00007f4397f2c100), TaskFailedException(Task (failed) @0x00007f4397f2c1f0), TaskFailedException(Task (failed) @0x00007f4397f2c2e0), TaskFailedException(Task (failed) @0x00007f4397f2c3d0), TaskFailedException(Task (failed) @0x00007f4397f2c4c0), TaskFailedException(Task (failed) @0x00007f4397f2c5b0), TaskFailedException(Task (failed) @0x00007f4397f2c6a0), TaskFailedException(Task (failed) @0x00007f4397f2c790), TaskFailedException(Task (failed) @0x00007f4397f2c880), TaskFailedException(Task (failed) @0x00007f4397f2c970), TaskFailedException(Task (failed) @0x00007f4397f2ca60), TaskFailedException(Task (failed) @0x00007f4397f2cb50), TaskFailedException(Task (failed) @0x00007f4397f2cc40), TaskFailedException(Task (failed) @0x00007f4397f2cd30), TaskFailedException(Task (failed) @0x00007f4397f2ce20), TaskFailedException(Task (failed) @0x00007f4397f2cf10)])
 └ @ BayesianFootball.Evaluation ~/BayesianFootball/src/evaluation/batch_runner.jl:40
 Running Inference on 84 matches...
-┌ Warning: Error evaluating $(typeof(metric)) for $model_name: $e
-└ @ BayesianFootball.Evaluation ~/BayesianFootball/src/evaluation/batch_runner.jl:40
-┌ Warning: Error evaluating $(typeof(metric)) for $model_name: $e
-└ @ BayesianFootball.Evaluation ~/BayesianFootball/src/evaluation/batch_runner.jl:40
-Running Inference on 84 matches...
-┌ Warning: Error evaluating $(typeof(metric)) for $model_name: $e
+┌ Warning: Error evaluating BayesianFootball.Evaluation.GLMEdge for hierarchical_copula_model_test: CompositeException(Any[TaskFailedException(Task (failed) @0x00007f4397f2d4b0), TaskFailedException(Task (failed) @0x00007f4397f2d5a0), TaskFailedException(Task (failed) @0x00007f4397f2d690), TaskFailedException(Task (failed) @0x00007f4397f2d780), TaskFailedException(Task (failed) @0x00007f4397f2d870), TaskFailedException(Task (failed) @0x00007f4397f2d960), TaskFailedException(Task (failed) @0x00007f4397f2da50), TaskFailedException(Task (failed) @0x00007f4397f2db40), TaskFailedException(Task (failed) @0x00007f4397f2dc30), TaskFailedException(Task (failed) @0x00007f4397f2dd20), TaskFailedException(Task (failed) @0x00007f4397f2de10), TaskFailedException(Task (failed) @0x00007f4397f2df00), TaskFailedException(Task (failed) @0x00007f4397f2dff0), TaskFailedException(Task (failed) @0x00007f4397f2e0e0), TaskFailedException(Task (failed) @0x00007f4397f2e1d0), TaskFailedException(Task (failed) @0x00007f4397f2e2c0)])
 └ @ BayesianFootball.Evaluation ~/BayesianFootball/src/evaluation/batch_runner.jl:40
 ❌ Failed (Partial or complete failure)
 0×0 DataFrame

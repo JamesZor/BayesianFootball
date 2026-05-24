@@ -82,6 +82,11 @@ function compute_metric(metric::RQR, exp::ExperimentResults, ds::DataStore, late
     # 1. Use provided latents
     latent_cols = Predictions.get_latent_column_symbols(exp.config.model, latents_raw.df)
 
+    # Ensure :match_id is included so we can join!
+    if :match_id ∉ latent_cols
+        push!(latent_cols, :match_id)
+    end
+
     joined = innerjoin(
         select(latents_raw.df, latent_cols),
         select(ds.matches, :match_id, :match_month, :match_date, :home_score, :away_score, :tournament_id, :season, :home_team, :away_team),
