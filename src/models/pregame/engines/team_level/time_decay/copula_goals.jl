@@ -88,7 +88,7 @@ function Features.required_features(model::DynamicCopulaGoalsTimeDecayModel)
     ] 
 end
 
-function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::Features.FeatureSet)
+function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::BayesianFootball.Features.FeatureSet)
     data = feature_set.data
     
     n_teams    = Int(data[:n_teams])
@@ -120,4 +120,69 @@ function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set
         n_months,
         model
     )
+end
+
+function extract_parameters(
+    model::DynamicCopulaGoalsTimeDecayModel, 
+    df::AbstractDataFrame, 
+    feature_set::BayesianFootball.Features.FeatureSet,
+    chain::Chains
+)
+    # 1. Unpack Metadata
+    data = feature_set.data
+    n_teams   = Int(data[:n_teams])
+    n_seasons = Int(data[:n_seasons])
+    n_months  = 12
+    team_map  = data[:team_map]
+
+    # 2. DELEGATE TO COMPONENTS
+    inter_mat = extract_interception(chain, model.interception_config, n_seasons)
+    disp_nt   = extract_dispersion(chain, model.dispersion_config, n_teams, n_months)
+    ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
+    dyn_nt    = extract_dynamics(chain, model.dynamics_config, "dyn", n_teams)
+    cop_nt    = extract_copula(chain, model.copula_config, "copula", n_teams)
+
+    n_samples = size(chain, 1) * size(chain, 3) 
+    results = Dict{Int, NamedTuple}()
+
+    for row in eachrow(df)
+        mid = Int(row.match_id)
+
+        h_idx = get(team_map, row.home_team, -1)
+        a_idx = get(team_map, row.away_team, -1)
+
+        # dyn_nt.α is [Samples, Teams]
+        α_h = h_idx > 0 ? dyn_nt.α[:, h_idx] : zeros(n_samples)
+        β_h = h_idx > 0 ? dyn_nt.β[:, h_idx] : zeros(n_samples)
+        α_a = a_idx > 0 ? dyn_nt.α[:, a_idx] : zeros(n_samples)
+        β_a = a_idx > 0 ? dyn_nt.β[:, a_idx] : zeros(n_samples)
+
+        γ_h = h_idx > 0 ? ha_mat[:, h_idx] : zeros(n_samples)
+        
+        δ_κ_h = h_idx > 0 ? cop_nt.δ_κ[:, h_idx] : zeros(n_samples)
+        δ_κ_a = a_idx > 0 ? cop_nt.δ_κ[:, a_idx] : zeros(n_samples)
+        κ_frank = cop_nt.κ_base .+ δ_κ_h .+ δ_κ_a
+
+        s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
+        inter_match = inter_mat[:, s_idx] 
+
+        # --- Reconstruct Dispersion ---
+        m_idx = month(row.match_date)
+        match_disp = reconstruct_dispersion(disp_nt, h_idx, a_idx, m_idx)
+
+        λ_goals_h = exp.(inter_match .+ γ_h .+ α_h .+ β_a)
+        λ_goals_a = exp.(inter_match .+        α_a .+ β_h)
+
+        results[mid] = (;
+            λ_h = λ_goals_h,
+            λ_a = λ_goals_a,
+            r_h = match_disp.h,
+            r_a = match_disp.a,
+            κ_frank = κ_frank,
+            true_xg_h = λ_goals_h, 
+            true_xg_a = λ_goals_a
+        )
+    end
+
+    return results
 end
