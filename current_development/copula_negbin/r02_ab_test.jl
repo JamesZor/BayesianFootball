@@ -16,7 +16,7 @@ ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishL
 inter_cfg = BayesianFootball.Models.PreGame.GlobalInterception()
 disp_cfg  = BayesianFootball.Models.PreGame.HomeAwayDispersion()
 ha_cfg    = BayesianFootball.Models.PreGame.HierarchicalTeamHomeAdvantage()
-dyn_cfg   = BayesianFootball.Models.PreGame.TimeDecayDynamics(days_half_life=180.0)
+dyn_cfg   = BayesianFootball.Models.PreGame.TimeDecayDynamics(days_half_life=60.0)
 
 # 3. Model Instances
 
@@ -51,19 +51,24 @@ model_hierarchical_copula = BayesianFootball.Models.PreGame.DynamicCopulaGoalsTi
 # 4. CV Configuration
 cv_config = BayesianFootball.Data.GroupedCVConfig(
     tournament_groups = [BayesianFootball.Data.tournament_ids(ds.segment)],
-    target_seasons = ["24/25"],
-    history_seasons = 1,
-    dynamics_col = :match_month,
-    warmup_period = 4,
+    target_seasons = ["22/23","23/24","24/25", "25/26"],
+    history_seasons = 2,
+    dynamics_col = :match_biweek,
+    warmup_period = 0,
     stop_early = true # Just 1 fold for speed
 )
 
 # 5. Sampler Config (NUTS)
 sampler_config = BayesianFootball.Samplers.NUTSConfig(
-    samples=500,
-    warmup=200,
-    chains=4
-)
+            500,  # samples
+            4,    # chains
+            200,  # warmup
+            0.65, # accept_rate
+            10,   # max_depth
+            Samplers.UniformInit(-2, 2),
+            false  # show_progress
+        )
+
 
 train_cfg = BayesianFootball.Training.Independent(
     parallel = true,
@@ -95,6 +100,7 @@ for (name, model) in models_to_test
 
     task = BayesianFootball.Experiments.ExperimentTask(ds, config)
     results = BayesianFootball.Experiments.run_experiment(task)
+    Experiments.save_experiment(results)
     push!(all_results, results)
 end
 
