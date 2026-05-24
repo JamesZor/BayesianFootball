@@ -67,7 +67,7 @@ end
     λ_a = exp.(inter_match .+             att_a .+ def_h)
 
     # 4. TIME-DECAYED COPULA LIKELIHOOD
-    copula_dists = BayesianFootball.MyDistributions.FrankCopulaNegBin.(r_h_flat, λ_h, r_a_flat, λ_a, κ_frank)
+    copula_dists = MyDistributions.FrankCopulaNegBin.(r_h_flat, λ_h, r_a_flat, λ_a, κ_frank)
     
     log_lik_joint = logpdf.(copula_dists, home_goals, away_goals)
     
@@ -78,17 +78,17 @@ end
 # INTERFACES FOR FEATURES & ENGINE
 # ==============================================================================
 
-function BayesianFootball.Features.required_features(model::DynamicCopulaGoalsTimeDecayModel)
-    return BayesianFootball.Features.AbstractFeatureConfig[
-        BayesianFootball.Features.TeamIDsFeature(), 
-        BayesianFootball.Features.GoalsFeature(), 
-        BayesianFootball.Features.DatesFeature(), 
-        BayesianFootball.Features.MonthFeature(),
-        BayesianFootball.Features.TimeIndicesFeature()
+function Features.required_features(model::DynamicCopulaGoalsTimeDecayModel)
+    return Features.AbstractFeatureConfig[
+        Features.TeamIDsFeature(), 
+        Features.GoalsFeature(), 
+        Features.DatesFeature(), 
+        Features.MonthFeature(),
+        Features.TimeIndicesFeature()
     ] 
 end
 
-function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::BayesianFootball.Features.FeatureSet)
+function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::Features.FeatureSet)
     data = feature_set.data
     
     n_teams    = Int(data[:n_teams])
