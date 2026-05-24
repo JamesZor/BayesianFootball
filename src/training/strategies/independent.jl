@@ -122,7 +122,7 @@ function _train_queued(model, config, feature_sets, pending_indices, results)
     end
     
     # We use a progress meter
-    prog = Progress(total_chains_to_run, desc="Sampling Chains: ")
+    prog = Progress(total_chains_to_run, desc="Sampling Chains: ", showspeed=true)
     
     # Create the flattened list of tasks: (split_index, chain_id)
     tasks = Tuple{Int, Int}[]
