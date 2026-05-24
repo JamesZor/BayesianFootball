@@ -155,7 +155,7 @@ function _train_queued(model, config, feature_sets, pending_indices, results)
                     
                     # If all chains for this split are done, combine and save
                     if chains_finished_per_split[i] == n_chains
-                        combined_chain = MCMCChains.chain(split_chains[i]...)
+                        combined_chain = cat(split_chains[i]...; dims=3)
                         results[i] = (combined_chain, metadata)
                         
                         if !isnothing(config.checkpoint_dir)
