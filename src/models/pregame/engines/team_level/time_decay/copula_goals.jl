@@ -88,7 +88,7 @@ function Features.required_features(model::DynamicCopulaGoalsTimeDecayModel)
     ] 
 end
 
-function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::BayesianFootball.Features.FeatureSet)
+function build_turing_model(model::DynamicCopulaGoalsTimeDecayModel, feature_set::Features.FeatureSet)
     data = feature_set.data
     
     n_teams    = Int(data[:n_teams])
@@ -125,7 +125,7 @@ end
 function extract_parameters(
     model::DynamicCopulaGoalsTimeDecayModel, 
     df::AbstractDataFrame, 
-    feature_set::BayesianFootball.Features.FeatureSet,
+    feature_set::Features.FeatureSet,
     chain::Chains
 )
     # 1. Unpack Metadata
