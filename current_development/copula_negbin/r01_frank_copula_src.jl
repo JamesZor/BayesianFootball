@@ -96,8 +96,6 @@ describe(results.training_results[3][1])
 conv_diag_all = BayesianFootball.Experiments.Diagnostics.check_convergence(chains)
 stab_diag_all = BayesianFootball.Experiments.Diagnostics.check_stability(chains)
 
-chains.df
-
 
 const PreGame = BayesianFootball.Models.PreGame
 const Features = BayesianFootball.Features
@@ -110,12 +108,17 @@ const Signals = BayesianFootball.Signals
 
 
 metrics = [
-    # Evaluation.RQR(),
+    Evaluation.RQR(),
     Evaluation.LogLoss(), 
-    # Evaluation.CRPS(), 
+    Evaluation.CRPS(), 
     Evaluation.GLMEdge()
 ]
 master_eval_df = Evaluation.evaluate_experiments(metrics, [results], ds)
+
+Evaluation.display_summary_metric(master_eval_df, :logloss)
+Evaluation.display_summary_metric(master_eval_df, :glmedge)
+Evaluation.display_summary_metric(master_eval_df, :rqr)
+
 
 
 #=

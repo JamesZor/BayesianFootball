@@ -46,3 +46,33 @@ function extract_copula(chain::Chains, ::HierarchicalFrankCopulaConfig, prefix::
     
     return (; κ_base, σ_κ, δ_κ)
 end
+
+# ==========================================
+# 4. GLOBAL COPULA (BASELINE)
+# ==========================================
+Base.@kwdef struct GlobalFrankCopulaConfig <: AbstractCopulaConfig
+    prior_κ::ContinuousUnivariateDistribution = Normal(0.0, 1.0)
+end
+
+@model function build_copula(config::GlobalFrankCopulaConfig, n_teams::Int)
+    κ ~ config.prior_κ
+    # Match hierarchical signature by returning zeros for deltas
+    δ_κ = zeros(n_teams)
+    return (; κ_base=κ, σ_κ=0.0, δ_κ=δ_κ)
+end
+
+function extract_copula(chain::Chains, ::GlobalFrankCopulaConfig, prefix::String, n_teams::Int)
+    n_samples = size(chain, 1) * size(chain, 3)
+    
+    # Check if we logged it as κ or κ_base
+    sym = Symbol("$prefix.κ")
+    if !(sym in keys(chain))
+        sym = Symbol("$prefix.κ_base")
+    end
+    
+    κ_base = vec(Array(chain[sym]))
+    σ_κ = zeros(n_samples)
+    δ_κ = zeros(n_samples, n_teams)
+    
+    return (; κ_base, σ_κ, δ_κ)
+end
