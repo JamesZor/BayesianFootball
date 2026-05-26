@@ -7,10 +7,14 @@ export train
 # --- Core Single-Split Train Function ---
 
 
-function train(model::AbstractFootballModel, config::TrainingConfig, feature_set::FeatureSet)
+function train(model::AbstractFootballModel, config::TrainingConfig, feature_set::FeatureSet; chain_id::Union{Int, Nothing}=nothing)
     # This logic remains the same: Build -> Run Sampler
     turing_model = build_turing_model(model, feature_set) 
-    return run_sampler(turing_model, config.sampler)
+    if isnothing(chain_id)
+        return run_sampler(turing_model, config.sampler)
+    else
+        return run_sampler(turing_model, config.sampler, chain_id)
+    end
 end
 
 # --- Main Driver Function ---

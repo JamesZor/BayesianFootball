@@ -38,11 +38,12 @@ Shifts scalar probabilities and MCMC posterior distributions to align with histo
 
 ### Environment Setup
 The project uses `Revise.jl` for hot-reloading and `ThreadPinning.jl` for CPU efficiency.
+Always launch Julia with your target threads (e.g., `julia --project -t 32`) to maximize concurrent queue execution.
 ```julia
 using Pkg; Pkg.activate(".")
 using Revise
 using BayesianFootball
-using ThreadPinning; pinthreads(:cores)
+using ThreadPinning; pinthreads(:cores) # Must be run before sampling to lock OS threads
 ```
 
 ### Standard Training Pipeline
@@ -84,8 +85,8 @@ Individual test files: `data_tests.jl`, `features_tests.jl`, `pregame_tests.jl`.
 - **`Data`**: SQL extraction, ETL, and `Markets` module (vig removal, fair odds).
 - **`Features`**: AD-safe data flattening and team/time indexing.
 - **`Models`**: Component-driven Turing models (Home Advantage, Dynamics, etc.).
-- **`Samplers`**: Wrappers for NUTS, ADVI, and MAP.
-- **`Training`**: Orchestration of the training process across splits.
+- **`Samplers`**: Wrappers for NUTS, ADVI, MAP, and `QueuedNUTSConfig` for high-performance flattened MCMC queue execution.
+- **`Training`**: Orchestration of the training process across splits. Supports queued Independent scaling via `max_concurrent_tasks`.
 - **`Experiments`**: Result persistence, listing, and loading from disk.
 - **`Predictions`**: Generates Posterior Predictive Distributions (PPD) from chains.
 - **`Calibration`**: L2 probability shifting and evaluation.

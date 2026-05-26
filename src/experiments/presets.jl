@@ -53,7 +53,9 @@ function create_experiment_task(
     
     # --- Training/Execution Defaults ---
     parallel::Bool = true,
-    max_concurrent_splits::Int = 4
+    max_concurrent_splits::Int = 4,
+    use_queue::Bool = true,
+    max_concurrent_tasks::Int = -1
 )
 
     cv_config = Data.GroupedCVConfig(
@@ -65,20 +67,38 @@ function create_experiment_task(
         stop_early = stop_early
     )
 
-    sampler_conf = Samplers.NUTSConfig(
-        samples, 
-        chains, 
-        warmup, 
-        accept_rate, 
-        max_depth,  
-        Samplers.UniformInit(-2, 2),
-        show_progress #  display the chain progress 
-    )
+    if use_queue
+        sampler_conf = Samplers.QueuedNUTSConfig(
+            n_samples = samples, 
+            n_chains = chains, 
+            n_warmup = warmup, 
+            accept_rate = accept_rate, 
+            max_depth = max_depth,  
+            initialisation = Samplers.UniformInit(-2, 2),
+            show_progress = show_progress 
+        )
+        
+        actual_tasks = max_concurrent_tasks == -1 ? Threads.nthreads() : max_concurrent_tasks
+        train_cfg = Training.Independent(
+            parallel = parallel,
+            max_concurrent_tasks = actual_tasks
+        )
+    else
+        sampler_conf = Samplers.NUTSConfig(
+            samples, 
+            chains, 
+            warmup, 
+            accept_rate, 
+            max_depth,  
+            Samplers.UniformInit(-2, 2),
+            show_progress #  display the chain progress 
+        )
 
-    train_cfg = Training.Independent(
-        parallel = parallel,
-        max_concurrent_splits = max_concurrent_splits
-    )
+        train_cfg = Training.Independent(
+            parallel = parallel,
+            max_concurrent_splits = max_concurrent_splits
+        )
+    end
     
     training_config = Training.TrainingConfig(sampler_conf, train_cfg, nothing, false)
 
