@@ -3,6 +3,7 @@
 using DataFrames
 using Dates
 using Turing
+using BayesianFootball
 import BayesianFootball.Data
 import BayesianFootball.Experiments
 import BayesianFootball.Samplers

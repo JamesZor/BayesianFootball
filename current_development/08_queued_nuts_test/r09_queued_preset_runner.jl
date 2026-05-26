@@ -51,9 +51,9 @@ task = Experiments.create_experiment_task(
     save_dir; 
     target_seasons=["2026"], 
     dynamics_col=:match_month,
-    samples=500,    # Reduced for quick testing
-    warmup=100,     # Reduced for quick testing
-    chains=8,       # Standard 4 chains
+    samples=800,    # Reduced for quick testing
+    warmup=200,     # Reduced for quick testing
+    chains=4,       # Standard 4 chains
     use_queue=true  # <--- This triggers the new blazing fast MCMC queue (it defaults to true anyway!)
 )
 
