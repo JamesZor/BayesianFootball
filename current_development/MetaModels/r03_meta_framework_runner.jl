@@ -19,9 +19,10 @@ println("Note: This script assumes you have `ds` and `exp_results` loaded in you
 
 
 ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower())
-save_dir = "./data/copula_ab_test/"
+
+save_dir = "./data/meta_model_layer1/"
 saved_files = Experiments.list_experiments(save_dir, data_dir="")
-expr_results = Experiments.load_experiment(saved_files, 4)
+exp_results = Experiments.load_experiment(saved_files, 1)
 
 # 1. Configure Meta Model with Parametric Composition
 println("1. Configuring ConvexMixtureMetaModel...")
@@ -41,7 +42,7 @@ meta_task = MetaModels.MetaExperimentTask(
     meta_model,
     sampler_config,
     exp_results.config.splitter, # Reuse the L1 splitter
-    :over_15 # Focus on the Over 1.5 goals market
+    :under_25 # Focus on the Over 1.5 goals market
 )
 
 # 3. Run Experiment
@@ -49,6 +50,7 @@ println("3. Running Meta Experiment (MVP)...")
 meta_results, joined_data = MetaModels.run_meta_experiment(meta_task; ds=ds)
 
 chain = meta_results.training_results[1]
+describe(chain)
 
 # 4. Extract and Plot Hierarchical Team Biases
 println("4. Extracting Team Biases...")
@@ -74,3 +76,70 @@ p1 = bar(team_names, delta_means, yerror=delta_stds,
 display(p1)
 
 println("\n=== Meta Model Framework MVP Complete! ===")
+
+
+
+include("current_development/MetaModels/src/MetaModels.jl")
+include("current_development/MetaModels/src/staking.jl")
+
+# --- Compare 3 staking approaches ---
+
+# 1. Raw L1 with BayesianKelly (using L1 PPD distribution directly)
+# Note: joined_data.distribution contains the raw L1 PPD samples
+l1_ledger = DataFrame(
+match_id  = joined_data.match_id,
+stake     = [compute_stake(BayesianKelly(min_edge=0.00), dist, odds)
+                 for (dist, odds) in zip(joined_data.distribution, joined_data.odds_close)],
+is_winner = joined_data.is_winner,
+odds_close = joined_data.odds_close,
+match_date = joined_data.match_date,
+W         = joined_data.W
+)
+
+l1_ledger.pnl = [s > 0 ? (Bool(w) ? s*(o-1) : -s) : 0.0
+                 for (s,w,o) in zip(l1_ledger.stake, l1_ledger.is_winner, l1_ledger.odds_close)]
+
+# 2. Meta Model with BayesianKelly using full Q posterior
+meta_ledger_df = compute_meta_stakes(
+chain, joined_data;
+signal = BayesianKelly(min_edge=0.00)
+)
+
+# 3. Meta Model with tighter edge filter
+meta_ledger_tight = compute_meta_stakes(
+chain, joined_data;
+signal = BayesianKelly(min_edge=-0.01)
+)
+
+# --- Print comparisons ---
+println("\n=== L1 Raw (BayesianKelly, 2% edge) ===")
+bets_l1 = subset(l1_ledger, :stake => ByRow(>(0.0)))
+println("Bets: $(nrow(bets_l1)) | PnL: $(round(sum(bets_l1.pnl), digits=4)) | ROI: $(round(sum(bets_l1.pnl)/sum(bets_l1.stake)*100, digits=2))%")
+
+meta_ledger_summary(meta_ledger_df;   label="Meta Q Posterior (2% edge)")
+meta_ledger_summary(meta_ledger_tight; label="Meta Q Posterior (5% edge)")
+
+
+# Diagnostic: what does the Q edge distribution look like?
+meta_ledger_diag = compute_meta_stakes(
+    chain, joined_data;
+signal = BayesianKelly(min_edge=0.0)
+);
+
+q_edges = meta_ledger_diag.Q_edge
+println("Q Edge distribution (Meta vs Implied):")
+println("  Mean:   ", round(mean(q_edges), digits=4))
+println("  Median: ", round(median(q_edges), digits=4))
+println("  Max:    ", round(maximum(q_edges), digits=4))
+println("  % positive: ", round(mean(q_edges .> 0)*100, digits=1), "%")
+
+# Compare: what were L1's edges on those same matches?
+l1_edges = meta_ledger_diag.L1_edge
+println("\nL1 Edge distribution (L1 vs Implied):")
+println("  Mean:   ", round(mean(l1_edges), digits=4))
+println("  Max:    ", round(maximum(l1_edges), digits=4))
+println("  % positive: ", round(mean(l1_edges .> 0)*100, digits=1), "%")
+
+
+
+

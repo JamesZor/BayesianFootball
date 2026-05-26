@@ -1,0 +1,172 @@
+# current_development/MetaModels/src/staking.jl
+#
+# Generates the posterior distribution of Q_i = θ_t * p_L1 + (1 - θ_t) * m_i
+# for each match in joined_data, then applies BayesianKelly staking.
+#
+# This is the key mathematical advantage of the full Bayesian approach:
+# instead of a point estimate of Q, we pass the full posterior vector to
+# BayesianKelly, which uses McHale's shrinkage to account for uncertainty.
+
+export compute_meta_stakes, meta_ledger
+
+using Statistics
+using LogExpFunctions: logistic
+using BayesianFootball.Signals: BayesianKelly, AnalyticalShrinkageKelly, compute_stake
+using DataFrames
+
+"""
+    extract_Q_posterior(chain, joined_data) -> Matrix{Float64}
+
+For each match in `joined_data`, reconstruct the full posterior distribution
+of the mixture probability Q_i = θ_t * p_L1_i + (1 - θ_t) * m_i.
+
+Returns a Matrix of size (n_samples, n_matches).
+Each column is the posterior distribution of Q for that match.
+"""
+function extract_Q_posterior(chain, joined_data::DataFrame)
+    n_matches = nrow(joined_data)
+    n_weeks   = maximum(joined_data.W)
+
+    # Extract raw posterior samples for all parameters
+    α_samples     = vec(chain[:α_intercept])
+    σ_GRW_samples = vec(chain[Symbol("dyn_θ_logit.σ_GRW")])
+    n_samples     = length(α_samples)
+
+    # Extract all z_w samples: (n_samples, n_weeks)
+    z_w_mat = hcat([vec(chain[Symbol("dyn_θ_logit.z_w[$w]")]) for w in 1:n_weeks]...)
+
+    # Reconstruct weekly θ_t for all posterior samples
+    # Non-centered: cumsum(z_w .* σ_GRW) centered, then logistic(α + drift)
+    θ_t_mat = Matrix{Float64}(undef, n_samples, n_weeks)
+    for s in 1:n_samples
+        drift = cumsum(z_w_mat[s, :] .* σ_GRW_samples[s])
+        drift_centered = drift .- mean(drift)
+        θ_t_mat[s, :] = logistic.(α_samples[s] .+ drift_centered)
+    end
+
+    # For each match, Q_i^(s) = θ_t_w^(s) * p_L1_i + (1 - θ_t_w^(s)) * m_i
+    Q_posterior = Matrix{Float64}(undef, n_samples, n_matches)
+    for i in 1:n_matches
+        w    = joined_data.W[i]
+        p_l1 = clamp(joined_data.p_L1[i], 1e-5, 1.0 - 1e-5)
+        m_i  = clamp(joined_data.prob_fair_close[i], 1e-5, 1.0 - 1e-5)
+        Q_posterior[:, i] = θ_t_mat[:, w] .* p_l1 .+ (1.0 .- θ_t_mat[:, w]) .* m_i
+    end
+
+    return Q_posterior
+end
+
+"""
+    compute_meta_stakes(chain, joined_data; signal, min_edge) -> DataFrame
+
+Applies the given staking signal to the full Meta Model posterior Q distribution.
+Outputs a ledger DataFrame with stakes and PnL.
+
+Arguments:
+- `chain`: The MCMC chain from run_meta_experiment
+- `joined_data`: The joined DataFrame (must have :W, :p_L1, :prob_fair_close, :odds_close, :is_winner)
+- `signal`: An AbstractSignal (default: BayesianKelly with min_edge)
+- `min_edge`: Minimum edge threshold (as a fraction, e.g. 0.02 = 2%)
+"""
+function compute_meta_stakes(
+    chain,
+    joined_data::DataFrame;
+    signal = BayesianKelly(min_edge=0.02),
+    verbose::Bool = true
+)
+    verbose && println("Extracting full Q posterior ($(nrow(joined_data)) matches)...")
+    Q_post = extract_Q_posterior(chain, joined_data)
+
+    n_matches = nrow(joined_data)
+    stakes    = Vector{Float64}(undef, n_matches)
+    q_means   = Vector{Float64}(undef, n_matches)
+    q_stds    = Vector{Float64}(undef, n_matches)
+
+    verbose && println("Computing $(typeof(signal)) stakes...")
+    for i in 1:n_matches
+        q_dist     = Q_post[:, i]
+        odds       = joined_data.odds_close[i]
+        stakes[i]  = compute_stake(signal, q_dist, odds)
+        q_means[i] = mean(q_dist)
+        q_stds[i]  = std(q_dist)
+    end
+
+    # Build ledger
+    ledger = copy(joined_data[!, [:match_id, :selection, :home_team, :away_team,
+                                   :match_date, :W, :p_L1, :prob_fair_close,
+                                   :odds_close, :is_winner]])
+    ledger.Q_mean  = q_means
+    ledger.Q_std   = q_stds
+    ledger.Q_edge  = q_means .- (1.0 ./ ledger.odds_close)   # vs market implied
+    ledger.L1_edge = ledger.p_L1 .- (1.0 ./ ledger.odds_close)
+    ledger.stake   = stakes
+    ledger.pnl     = [
+        stakes[i] > 0 ?
+        (Bool(joined_data.is_winner[i]) ? stakes[i] * (joined_data.odds_close[i] - 1.0) : -stakes[i]) :
+        0.0
+        for i in 1:n_matches
+    ]
+
+    return ledger
+end
+
+"""
+    meta_ledger_summary(ledger::DataFrame) -> Nothing
+
+Prints a headless-friendly summary of the Meta Model staking ledger.
+"""
+function meta_ledger_summary(ledger::DataFrame; label::String="Meta Model")
+    bets    = subset(ledger, :stake => ByRow(>(0.0)))
+    n_bets  = nrow(bets)
+    n_total = nrow(ledger)
+
+    println("\n" * "="^65)
+    println("  STAKING LEDGER: $label")
+    println("="^65)
+    println("  Matches evaluated: $n_total")
+    println("  Bets placed:       $n_bets  ($(round(n_bets/n_total*100, digits=1))% bet rate)")
+
+    if n_bets == 0
+        println("  >> No bets placed (edge filter too tight or no Q > implied)")
+        return
+    end
+
+    total_stake = sum(bets.stake)
+    total_pnl   = sum(bets.pnl)
+    roi         = total_pnl / total_stake * 100
+    win_rate    = mean(Bool.(bets.is_winner)) * 100
+    avg_Q       = mean(bets.Q_mean)
+    avg_impl    = mean(1.0 ./ bets.odds_close)
+    avg_edge    = mean(bets.Q_edge)
+
+    println("  Total Turnover:    $(round(total_stake, digits=4)) units")
+    println("  Total PnL:         $(round(total_pnl,   digits=4)) units")
+    println("  ROI:               $(round(roi, digits=2))%")
+    println("  Win Rate:          $(round(win_rate, digits=1))%")
+    println("  Avg Q_mean:        $(round(avg_Q, digits=4))")
+    println("  Avg Implied Prob:  $(round(avg_impl, digits=4))")
+    println("  Avg Q Edge:        $(round(avg_edge, digits=4))")
+
+    # Weekly breakdown
+    println("\n  Weekly PnL (first 10 active weeks):")
+    weekly = combine(groupby(bets, :W),
+        :pnl   => sum   => :week_pnl,
+        :stake => sum   => :week_stake,
+        :match_id => length => :n_bets
+    )
+    sort!(weekly, :W)
+    for row in first(eachrow(weekly), 10)
+        cum_roi = row.week_pnl / row.week_stake * 100
+        bar = row.week_pnl > 0 ? "▲" : "▼"
+        println("  $bar Week $(lpad(row.W, 3)): PnL=$(rpad(string(round(row.week_pnl, digits=3)), 8)) | $(row.n_bets) bets | ROI=$(round(cum_roi, digits=1))%")
+    end
+
+    # Cumulative PnL by week
+    sort!(bets, :match_date)
+    cum_pnl = cumsum(bets.pnl)
+    best_cum  = round(maximum(cum_pnl), digits=4)
+    worst_cum = round(minimum(cum_pnl), digits=4)
+    final_cum = round(last(cum_pnl), digits=4)
+    println("\n  Cumulative PnL: Best=$best_cum | Worst=$worst_cum | Final=$final_cum")
+    println("="^65)
+end
