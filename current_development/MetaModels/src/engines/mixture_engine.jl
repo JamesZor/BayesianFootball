@@ -14,10 +14,10 @@ Builds the Turing model for the Convex Mixture Meta Model.
     
     # 2. Dynamic Component
     # Use Turing's @submodel macro to compose the dynamics
-    @submodel dyn_θ_logit = build_meta_dynamics(config.dynamics_config, data.n_weeks)
+    dyn_θ_logit ~ to_submodel(build_meta_dynamics(config.dynamics_config, data.n_weeks))
     
     # 3. Hierarchical Team Component
-    @submodel δ_team = build_meta_hierarchy(config.hierarchy_config, data.n_teams)
+    δ_team ~ to_submodel(build_meta_hierarchy(config.hierarchy_config, data.n_teams))
     
     # Weights are 1.0 for now, but can be updated for TimeDecay later
     match_weights = ones(length(data.Y)) 
