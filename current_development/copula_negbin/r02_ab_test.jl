@@ -7,6 +7,11 @@ using DataFrames
 using Turing
 using MCMCChains
 
+using ThreadPinning
+
+pinthreads(:cores)
+
+
 println("--- A/B Testing: Goals vs Global Copula vs Hierarchical Copula ---")
 
 # 1. Setup Data
@@ -48,6 +53,15 @@ model_hierarchical_copula = BayesianFootball.Models.PreGame.DynamicCopulaGoalsTi
     copula_config=hierarchical_cop_cfg
 )
 
+# FIXME:
+model_market = Models.PreGame.DynamicMarketGoalsTimeDecayModel(
+    interception_config  = inter_cfg,
+    dynamics_config      = dyn_cfg,
+    dispersion_config    = disp_cfg,
+    homeadvantage_config = ha_cfg,
+    market_weight        = 0.5
+)
+
 # 4. CV Configuration
 cv_config = BayesianFootball.Data.GroupedCVConfig(
     tournament_groups = [BayesianFootball.Data.tournament_ids(ds.segment)],
@@ -78,9 +92,10 @@ training_config = BayesianFootball.Training.TrainingConfig(sampler_config, train
 
 # 6. Run Experiments Loop
 models_to_test = [
-    ("A_Standard_Goals", model_goals),
-    ("B_Global_Copula", model_global_copula),
-    ("C_Hierarchical_Copula", model_hierarchical_copula)
+    # ("A_Standard_Goals", model_goals),
+    # ("B_Global_Copula", model_global_copula),
+    # ("C_Hierarchical_Copula", model_hierarchical_copula),
+    ("D_Market_Goals", model_market)
 ]
 
 all_results = BayesianFootball.Experiments.ExperimentResults[]
@@ -118,4 +133,41 @@ master_eval_df = BayesianFootball.Evaluation.evaluate_experiments(metrics, all_r
 println("\n>>> Evaluation Results (Sorted by LogLoss):")
 display(sort(master_eval_df, :logloss_overall_diff_ll))
 
+Evaluation.display_summary_metric(master_eval_df, :logloss)
+Evaluation.display_summary_metric(master_eval_df, :glmedge)
+Evaluation.display_summary_metric(master_eval_df, :rqr)
+
+
 println("\nAll done! A/B test complete.")
+
+
+
+ledger = BackTesting.run_backtest(
+    ds, 
+    all_results, 
+    [BayesianFootball.Signals.BayesianKelly()]; 
+    market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+tearsheet = BackTesting.generate_tearsheet(ledger)
+
+println("\n>>> Backtest Comparison Summary:")
+cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
+show(tearsheet[:, cols_to_show], allrows=true)
+
+
+model_names = unique(tearsheet.selection)
+
+model_names = model_names
+
+for m_name in model_names[1:18]
+    println("\nStats for: $m_name")
+    sub = subset(tearsheet, :selection => ByRow(isequal(m_name)))
+    # show(sub)
+    show(sub[:, [:model_name, :selection, :opportunities, :bets_placed, :activity_pct, :turnover, :profit, :roi_pct, :win_rate_pct]])
+end
+
+
+
+
+

@@ -7,8 +7,11 @@ using DataFrames
 using Turing
 using MCMCChains
 
+using ThreadPinning
+pinthreads(:cores)
+
 # Include loader if needed
-include("l08_queued_loader.jl")
+# include("l08_queued_loader.jl")
 
 # --- Setup ---
 println("--- Testing Queued NUTS Execution ---")
@@ -19,7 +22,7 @@ ds = BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.Ireland())
 # We set show_progress=false to disable Turing's inner bar
 sampler_conf = BayesianFootball.Samplers.QueuedNUTSConfig(
     n_warmup = 100,
-    n_chains = 4,   # 4 chains per split
+    n_chains = 6,   # 4 chains per split
     n_samples = 100, 
     accept_rate = 0.65,
     max_depth = 10,
@@ -28,18 +31,21 @@ sampler_conf = BayesianFootball.Samplers.QueuedNUTSConfig(
 )
 
 # Common Components
-inter_cfg = Models.PreGame.GlobalInterception()
-disp_cfg  = Models.PreGame.HomeAwayDispersion()
-ha_cfg    = Models.PreGame.HierarchicalTeamHomeAdvantage()
-std_dyn   = Models.PreGame.MultiScaleGRW()
+inter_cfg = BayesianFootball.Models.PreGame.GlobalInterception()
+disp_cfg  = BayesianFootball.Models.PreGame.HomeAwayDispersion()
+ha_cfg    = BayesianFootball.Models.PreGame.HierarchicalTeamHomeAdvantage()
+dyn_cfg   = BayesianFootball.Models.PreGame.TimeDecayDynamics(days_half_life=60.0)
 
-# Simple Team Model
-test_model = Models.PreGame.DynamicGoalsModel(
+# 3. Model Instances
+
+# Model A: Standard Poisson/NegBin Goals Model (No Copula)
+test_model = BayesianFootball.Models.PreGame.DynamicGoalsTimeDecayModel(
     interception_config=inter_cfg, 
-    dynamics_config=std_dyn, 
+    dynamics_config=dyn_cfg, 
     dispersion_config=disp_cfg, 
     homeadvantage_config=ha_cfg
 )
+
 
 # --- CV Configuration ---
 cv_config = BayesianFootball.Data.GroupedCVConfig(

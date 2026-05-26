@@ -22,17 +22,19 @@ save_dir::String = "./mcmc_checkpoints/queued_preset_test/"
 # ==========================================
 # 2. MODEL DEFINITION
 # ==========================================
-inter_cfg = PreGame.GlobalInterception()
-disp_cfg  = PreGame.HomeAwayDispersion()
-ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
-dyn_cfg   = PreGame.MultiScaleGRW()
 
-model = PreGame.DynamicGoalsModel(
-    interception_config  = inter_cfg,
-    dynamics_config      = dyn_cfg,
-    dispersion_config    = disp_cfg,
-    homeadvantage_config = ha_cfg
+inter_cfg = BayesianFootball.Models.PreGame.GlobalInterception()
+disp_cfg  = BayesianFootball.Models.PreGame.HomeAwayDispersion()
+ha_cfg    = BayesianFootball.Models.PreGame.HierarchicalTeamHomeAdvantage()
+dyn_cfg   = BayesianFootball.Models.PreGame.TimeDecayDynamics(days_half_life=60.0)
+
+model = BayesianFootball.Models.PreGame.DynamicGoalsTimeDecayModel(
+    interception_config=inter_cfg, 
+    dynamics_config=dyn_cfg, 
+    dispersion_config=disp_cfg, 
+    homeadvantage_config=ha_cfg
 )
+
 
 # ==========================================
 # 3. EXPERIMENT TASK CREATION
@@ -49,9 +51,9 @@ task = Experiments.create_experiment_task(
     save_dir; 
     target_seasons=["2026"], 
     dynamics_col=:match_month,
-    samples=100,    # Reduced for quick testing
+    samples=500,    # Reduced for quick testing
     warmup=100,     # Reduced for quick testing
-    chains=4,       # Standard 4 chains
+    chains=8,       # Standard 4 chains
     use_queue=true  # <--- This triggers the new blazing fast MCMC queue (it defaults to true anyway!)
 )
 
@@ -72,3 +74,15 @@ println("\n[INFO] Saving Experiment...")
 Experiments.save_experiment(results)
 
 println("✅ Success! The new preset pipeline is working perfectly!")
+
+
+chains_df_all = Experiments.Diagnostics.extract_chains(ds, results)
+println("\n--- Convergence Diagnostics (R-hat & ESS) ---")
+conv_diag_all = Experiments.Diagnostics.check_convergence(chains_df_all)
+display(conv_diag)
+
+println("\n--- Temporal Stability Diagnostics (ADF Stationarity) ---")
+stab_diag_all = Diagnostics.check_stability(chains_df_all)
+stab_diag_outfield = Diagnostics.check_stability(chains_df_outfield)
+display(stab_diag)
+
