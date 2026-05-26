@@ -222,7 +222,9 @@ function run_meta_experiment(task::MetaExperimentTask; ds::Data.DataStore)
     store_lock       = ReentrantLock()
 
     prog        = Progress(total_tasks, desc="Meta Sampling: ", showspeed=true)
-    concurrency = is_queued ? cfg.max_concurrent_tasks : min(total_tasks, Threads.nthreads())
+    # max_concurrent_tasks lives on the Independent strategy (Layer 1), not QueuedNUTSConfig.
+    # For the Meta Model we default to nthreads() — one chain per available thread.
+    concurrency = min(total_tasks, Threads.nthreads())
     semaphore   = Base.Semaphore(concurrency)
 
     # Flattened task list: (fold_idx_1based, chain_id)
