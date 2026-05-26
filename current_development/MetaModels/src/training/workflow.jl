@@ -37,7 +37,8 @@ function run_meta_experiment(task::MetaExperimentTask; ds::Data.DataStore)
     ppd = BayesianFootball.Predictions.model_inference(latent_states)
     
     println("3. Filtering for Target Selection: $(task.target_selection)")
-    ppd_filtered = subset(ppd, :selection => ByRow(isequal(task.target_selection)))
+    # PPD is a wrapper struct — must access the inner .df field for DataFrames operations
+    ppd_filtered = subset(ppd.df, :selection => ByRow(isequal(task.target_selection)))
     odds_filtered = subset(ds.odds, :selection => ByRow(isequal(task.target_selection)))
     
     println("4. Joining with Market Odds and Match Data...")
