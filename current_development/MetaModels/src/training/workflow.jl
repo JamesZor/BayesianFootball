@@ -22,7 +22,7 @@ struct MetaExperimentTask
     base_results::Experiments.ExperimentResults
     meta_model::AbstractMetaModel
     sampler_config::Samplers.AbstractNUTSConfig
-    splitter::BayesianFootball.Data.AbstractSplitter
+    splitter::Data.AbstractSplitter
     target_selection::Symbol # e.g. :over_15
 end
 
@@ -55,7 +55,7 @@ L1 ExperimentResults training_results.
 function build_meta_fold_data(
     latent_states,
     ppd,
-    ds::BayesianFootball.Data.DataStore,
+    ds::Data.DataStore,
     target_selection::Symbol
 )
     # 1. Filter PPD and odds to the target market
@@ -110,7 +110,7 @@ Executes the Meta Model cross-validation workflow using a Queued NUTS approach.
 One Meta Model is trained per L1 fold window. All fold × chain tasks are
 flattened into a single queue and run concurrently, keeping every CPU busy.
 """
-function run_meta_experiment(task::MetaExperimentTask; ds::BayesianFootball.Data.DataStore)
+function run_meta_experiment(task::MetaExperimentTask; ds::Data.DataStore)
 
     println("\n>> META MODEL EXPERIMENT: $(task.target_selection)")
     println("-"^60)
