@@ -42,10 +42,13 @@ task = Experiments.create_experiment_task(
     use_queue=true,  # <--- This triggers the new blazing fast MCMC queue (it defaults to true anyway!)
     max_concurrent_tasks = 16
 )
+#
+# results = Experiments.run_experiment(task)
+# Experiments.save_experiment(results)
+#
 
-results = Experiments.run_experiment(task)
-Experiments.save_experiment(results)
-
+saved_files1 = Experiments.list_experiments(save_dir, data_dir="")
+results = Experiments.load_experiment(saved_files1, 1) 
 
 #  Diagnostics 
 chains_df_all = Experiments.Diagnostics.extract_chains(ds, results)

@@ -37,7 +37,7 @@ feature_cfg_bayes = Features.PlayerRatingsFeature(tracker_bayes)
 # Outfield Time-Decay xG Model (No Market)
 model_outfield_xg = PreGame.DynamicXGOutfieldPlayerTimeDecayModel(
     interception_config  = inter_cfg,
-    player_dynamics_config = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=180.0),
+    player_dynamics_config = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=30.0),
     dispersion_config    = disp_cfg,
     homeadvantage_config = ha_cfg,
     kappa_config         = kap_cfg,
@@ -47,12 +47,12 @@ model_outfield_xg = PreGame.DynamicXGOutfieldPlayerTimeDecayModel(
 task = Experiments.create_experiment_task(
     ds, 
     model_outfield_xg, 
-    "outfield_xg_player_test", 
+    "outfield_xg_player_30_test", 
     save_dir; 
-    target_seasons = [ "2024", "2025". "2026"],
+    target_seasons = [ "2024", "2025", "2026"],
     dynamics_col = :match_biweek,
     samples=800,    # Reduced for quick testing
-    warmup=200,     # Reduced for quick testing
+    warmup=300,     # Reduced for quick testing
     chains=4,       # Standard 4 chains
     use_queue=true, # Triggers the new blazing fast MCMC queue
     max_concurrent_tasks = 16
@@ -92,3 +92,19 @@ display(sort(master_eval_df, :logloss_overall_diff_ll))
 Evaluation.display_summary_metric(master_eval_df, :logloss)
 Evaluation.display_summary_metric(master_eval_df, :glmedge)
 Evaluation.display_summary_metric(master_eval_df, :rqr)
+
+
+
+ledger = BackTesting.run_backtest(
+    ds, 
+    [results], 
+    [BayesianFootball.Signals.BayesianKelly()]; 
+    market_config = BayesianFootball.Data.Markets.DEFAULT_MARKET_CONFIG
+)
+
+tearsheet = BackTesting.generate_tearsheet(ledger)
+
+println("\n>>> Backtest Comparison Summary:")
+cols_to_show = [:model_name, :selection, :opportunities, :activity_pct, :bets_placed, :turnover, :profit, :roi_pct, :win_rate_pct]
+show(tearsheet[:, cols_to_show], allrows=true)
+

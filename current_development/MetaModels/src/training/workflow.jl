@@ -149,26 +149,16 @@ function run_meta_experiment(task::MetaExperimentTask; ds::Data.DataStore)
     n_teams = length(unique_teams)
 
     # ------------------------------------------------------------------
-    # 3. Derive fold windows from L1 training_results metadata
-    #    Each L1 split has GroupedSplitMetaData with a season string.
-    #    We use unique seasons as fold boundaries.
+    # 3. Derive fold windows from weekly time steps
     # ------------------------------------------------------------------
-    l1_items = task.base_results.training_results.items
-    # Extract unique target_seasons in chronological order
-    seasons  = unique([item[2].target_season for item in l1_items])
-    n_folds  = length(seasons)
-    println("    Found $n_folds fold windows (seasons: $(join(seasons, ", ")))")
+    weeks = sort(unique(joined.W))
+    n_folds = length(weeks)
+    println("    Found $n_folds weekly fold windows.")
 
-    # Map each match to its season fold via ds.matches :season_str or target_season
-    season_to_fold = Dict(s => i for (i, s) in enumerate(seasons))
-
-    # ds.matches must have a season column — check available column names
-    season_col = :season_str in propertynames(ds.matches) ? :season_str : :season
-    joined2 = innerjoin(joined, ds.matches[!, [:match_id, season_col]], on=:match_id)
-    rename!(joined2, season_col => :_season)
-    joined2.fold_idx = [get(season_to_fold, s, 0) for s in joined2._season]
-    filter!(row -> row.fold_idx > 0, joined2)
-    joined = joined2
+    # We map fold_idx directly to the sorted week index
+    week_to_fold = Dict(w => i for (i, w) in enumerate(weeks))
+    joined.fold_idx = [get(week_to_fold, w, 0) for w in joined.W]
+    filter!(row -> row.fold_idx > 0, joined)
 
     # ------------------------------------------------------------------
     # 4. Build MetaModelData for each fold
