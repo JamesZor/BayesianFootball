@@ -8,5 +8,7 @@ include("components/teams.jl")
 include("engines/mixture_engine.jl")
 include("training/workflow.jl")
 include("staking.jl")
+include("utils.jl")
+include("metrics.jl")
 
 end

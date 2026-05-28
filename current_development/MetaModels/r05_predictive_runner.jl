@@ -6,7 +6,6 @@
 #
 # Run with: julia --project -t 32
 
-using Pkg; Pkg.activate(".")
 using BayesianFootball
 using DataFrames
 using Dates
@@ -20,8 +19,13 @@ pinthreads(:cores)
 if isdefined(Main, :MetaModels)
     println("Reloading MetaModels module...")
 end
+
+
+include("./current_development/MetaModels/src/MetaModels.jl")
 include("src/MetaModels.jl")
 using .MetaModels
+
+include("./current_development/MetaModels/src/staking.jl")
 include("src/staking.jl")
 
 println("="^65)
@@ -32,10 +36,12 @@ println("="^65)
 # 1. LOAD DATA AND LAYER 1 RESULTS
 # ===========================================================================
 println("\n[1] Loading DataStore...")
-ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower())
+ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.Ireland())
 
 println("[2] Loading Layer 1 Experiment Results...")
-save_dir   = "./data/meta_model_layer1/"
+# save_dir   = "./data/meta_model_layer1/"
+
+save_dir = "./data/meta_model_layer1/ireland/"
 saved_files = BayesianFootball.Experiments.list_experiments(save_dir, data_dir="")
 exp_results = BayesianFootball.Experiments.load_experiment(saved_files, 1)
 
@@ -45,9 +51,9 @@ exp_results = BayesianFootball.Experiments.load_experiment(saved_files, 1)
 println("\n[3] Configuring ConvexMixtureMetaModel...")
 
 # We use the global hierarchy to speed up the 80 weekly folds (no team biases)
-meta_model = ConvexMixtureMetaModel(
-    dynamics_config  = MetaGRWDynamicsConfig(σ_prior=0.1),
-    hierarchy_config = GlobalMetaHierarchyConfig() 
+meta_model = MetaModels.ConvexMixtureMetaModel(
+    dynamics_config  = MetaModels.MetaGRWDynamicsConfig(σ_prior=0.2),
+    hierarchy_config = MetaModels.GlobalMetaHierarchyConfig() 
 )
 
 # Concurrency is handled by the workflow.jl (defaults to nthreads())
@@ -66,7 +72,7 @@ sampler_config = BayesianFootball.Samplers.QueuedNUTSConfig(
 TARGET_SELECTION = :under_25
 
 println("[4] Creating MetaExperimentTask for selection: $TARGET_SELECTION")
-meta_task = MetaExperimentTask(
+meta_task = MetaModels.MetaExperimentTask(
     exp_results,
     meta_model,
     sampler_config,
@@ -84,58 +90,120 @@ else
     _raw_result
 end
 
+# Check convergence diagnostic (R-hat) across all chains
+MetaModels.check_fold_rhats(meta_results)
+
 # ===========================================================================
-# 5. PREDICTIVE STAKING (1-STEP-AHEAD)
+# 5. PREDICTIVE STAKING & ADVANCED HURDLE EVALUATION
 # ===========================================================================
 println("\n" * "="^65)
 println("  PREDICTIVE STAKING RESULTS (OOS)")
 println("="^65)
 
-ledger = MetaModels.compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=0.02)
+min_edge = 0.00
+
+# This is now fully multi-threaded and automatically joins :distribution
+ledger = MetaModels.compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=min_edge)
 
 if nrow(ledger) == 0
     println("No ledger data returned.")
 else
-    # Calculate baseline (all L1 bets with 2% edge without the Meta gate)
-    # We re-run compute_stake to see what L1 WOULD have done unconditionally.
-    all_stakes = [BayesianFootball.Signals.compute_stake(BayesianFootball.Signals.BayesianKelly(min_edge=0.02), dist, odds)
-                  for (dist, odds) in zip(ledger.distribution, ledger.odds_close)]
-    
-    all_pnls = [s > 0 ? (Bool(w) ? s*(o-1.0) : -s) : 0.0
-                for (s,w,o) in zip(all_stakes, ledger.is_winner, ledger.odds_close)]
-    
-    b_all = count(>(0), all_stakes)
-    p_all = sum(all_pnls)
-    r_all = b_all > 0 ? (p_all / sum(filter(>(0), all_stakes)) * 100) : 0.0
-    
-    # Calculate performance specifically on Good Regime bets
-    good_ledger = subset(ledger, :regime => ByRow(==("GOOD")))
-    b_good = count(>(0), good_ledger.stake)
-    p_good = sum(good_ledger.pnl)
-    r_good = b_good > 0 ? (p_good / sum(filter(>(0), good_ledger.stake)) * 100) : 0.0
-    
-    # Calculate performance specifically on Bad Regime bets (if we HAD bet them)
-    bad_ledger = subset(ledger, :regime => ByRow(==("BAD")))
-    bad_stakes = [BayesianFootball.Signals.compute_stake(BayesianFootball.Signals.BayesianKelly(min_edge=0.02), dist, odds)
-                  for (dist, odds) in zip(bad_ledger.distribution, bad_ledger.odds_close)]
-    bad_pnls = [s > 0 ? (Bool(w) ? s*(o-1.0) : -s) : 0.0
-                for (s,w,o) in zip(bad_stakes, bad_ledger.is_winner, bad_ledger.odds_close)]
-                
-    b_bad = count(>(0), bad_stakes)
-    p_bad = sum(bad_pnls)
-    r_bad = b_bad > 0 ? (p_bad / sum(filter(>(0), bad_stakes)) * 100) : 0.0
-    
-    println("\nPerformance across $(nrow(ledger)) OOS matches:")
-    println("--------------------------------------------------")
-    println("L1 Raw (Unfiltered) : Bets=$(b_all)  PnL=$(round(p_all, digits=4))  ROI=$(round(r_all, digits=2))%")
-    println("Good Regime (Gated) : Bets=$(b_good)  PnL=$(round(p_good, digits=4))  ROI=$(round(r_good, digits=2))%")
-    println("Bad Regime (Skipped): Bets=$(b_bad)  PnL=$(round(p_bad, digits=4))  ROI=$(round(r_bad, digits=2))%")
-    println("--------------------------------------------------")
-    
-    # Diagnostic: Print the first few weeks of expanding threshold
-    println("\nFirst 10 weeks of regime threshold evolution:")
-    diag_df = unique(ledger[!, [:W, :θ_pred, :threshold, :regime]], :W)
-    for row in eachrow(first(diag_df, 10))
-        println("  Week $(row.W): θ_pred=$(round(row.θ_pred, digits=4)) | threshold=$(round(row.threshold, digits=4)) -> $(row.regime)")
-    end
+    # Run the advanced Hurdle, Sharpe and Growth metrics analysis
+    MetaModels.evaluate_predictive_hurdle(ledger; min_edge=min_edge)
 end
+
+
+#=
+Performance across 439 OOS matches: Market line: under_15
+--------------------------------------------------
+L1 Raw (Unfiltered) : Bets=174  PnL=0.7986  ROI=12.27%
+Good Regime (Gated) : Bets=68  PnL=0.0899  ROI=3.16%
+Bad Regime (Skipped): Bets=106  PnL=0.7087  ROI=19.37%
+--------------------------------------------------
+
+First 10 weeks of regime threshold evolution:
+  Week 2: θ_pred=0.5159 | threshold=0.5195 -> BAD
+  Week 3: θ_pred=0.5124 | threshold=0.5177 -> BAD
+  Week 4: θ_pred=0.484 | threshold=0.5159 -> BAD
+  Week 5: θ_pred=0.5211 | threshold=0.5142 -> GOOD
+  Week 7: θ_pred=0.5357 | threshold=0.5159 -> GOOD
+  Week 8: θ_pred=0.5355 | threshold=0.5177 -> GOOD
+  Week 9: θ_pred=0.5381 | threshold=0.5195 -> GOOD
+  Week 10: θ_pred=0.545 | threshold=0.5203 -> GOOD
+  Week 11: θ_pred=0.5437 | threshold=0.5211 -> GOOD
+  Week 12:
+=#
+
+
+#=
+# over_15
+Performance across 439 OOS matches:
+--------------------------------------------------
+L1 Raw (Unfiltered) : Bets=157  PnL=-0.7469  ROI=-4.3%
+Good Regime (Gated) : Bets=41  PnL=-0.5213  ROI=-10.87%
+Bad Regime (Skipped): Bets=116  PnL=-0.2256  ROI=-1.8%
+--------------------------------------------------
+
+First 10 weeks of regime threshold evolution:
+  Week 2: θ_pred=0.5154 | threshold=0.5197 -> BAD
+  Week 3: θ_pred=0.52 | threshold=0.5175 -> GOOD
+  Week 4: θ_pred=0.4938 | threshold=0.5197 -> BAD
+  Week 5: θ_pred=0.5151 | threshold=0.5175 -> BAD
+  Week 7: θ_pred=0.5245 | threshold=0.5154 -> GOOD
+  Week 8: θ_pred=0.5285 | threshold=0.5175 -> GOOD
+  Week 9: θ_pred=0.5321 | threshold=0.5197 -> GOOD
+  Week 10: θ_pred=0.5399 | threshold=0.5198 -> GOOD
+  Week 11: θ_pred=0.547 | threshold=0.52 -> GOOD
+  Week 12: θ_pred=0.5162 | threshold=0.5223 -> BAD
+=#
+
+
+#=
+over_25
+Performance across 439 OOS matches:
+--------------------------------------------------
+L1 Raw (Unfiltered) : Bets=208  PnL=2.1102  ROI=10.45%
+Good Regime (Gated) : Bets=82  PnL=0.0934  ROI=1.11%
+Bad Regime (Skipped): Bets=126  PnL=2.0168  ROI=17.17%
+--------------------------------------------------
+
+First 10 weeks of regime threshold evolution:
+  Week 2: θ_pred=0.5127 | threshold=0.5156 -> BAD
+  Week 3: θ_pred=0.5209 | threshold=0.5142 -> GOOD
+  Week 4: θ_pred=0.4927 | threshold=0.5156 -> BAD
+  Week 5: θ_pred=0.5132 | threshold=0.5142 -> BAD
+  Week 7: θ_pred=0.5056 | threshold=0.5132 -> BAD
+  Week 8: θ_pred=0.4938 | threshold=0.5129 -> BAD
+  Week 9: θ_pred=0.4895 | threshold=0.5127 -> BAD
+  Week 10: θ_pred=0.4773 | threshold=0.5091 -> BAD
+  Week 11: θ_pred=0.4861 | threshold=0.5056 -> BAD
+  Week 12: θ_pred=0.4785 | threshold=0.4997 -> BAD
+
+julia>
+=#
+
+
+
+
+#=
+under_25 
+Performance across 439 OOS matches:
+--------------------------------------------------
+L1 Raw (Unfiltered) : Bets=143  PnL=0.882  ROI=9.69%
+Good Regime (Gated) : Bets=42  PnL=0.6558  ROI=33.07%
+Bad Regime (Skipped): Bets=101  PnL=0.2262  ROI=3.18%
+--------------------------------------------------
+
+First 10 weeks of regime threshold evolution:
+  Week 2: θ_pred=0.5156 | threshold=0.5185 -> BAD
+  Week 3: θ_pred=0.5141 | threshold=0.5171 -> BAD
+  Week 4: θ_pred=0.4976 | threshold=0.5156 -> BAD
+  Week 5: θ_pred=0.5108 | threshold=0.5149 -> BAD
+  Week 7: θ_pred=0.524 | threshold=0.5141 -> GOOD
+  Week 8: θ_pred=0.4979 | threshold=0.5149 -> BAD
+  Week 9: θ_pred=0.4772 | threshold=0.5141 -> BAD
+  Week 10: θ_pred=0.4792 | threshold=0.5125 -> BAD
+  Week 11: θ_pred=0.5027 | threshold=0.5108 -> BAD
+  Week 12: θ_pred=0.4792 | threshold=0.5068 -> BAD
+=#
+

@@ -191,20 +191,13 @@ function compute_predictive_stakes(
     α_prior_mean = mean(fold1_chain[:α_intercept])
     θ_prior = logistic(α_prior_mean)
     
-    history_of_θ = Float64[θ_prior]
-    
-    ledgers = DataFrame[]
-    
-    # We evaluate matches starting from fold 2
-    for k in 1:(n_folds - 1)
-        # The chain trained on data up to fold k
+    # Pre-compute θ_pred for all folds concurrently
+    θ_preds = zeros(n_folds - 1)
+    Threads.@threads for k in 1:(n_folds - 1)
         chain = meta_results.fold_results[k].chain
-        
-        # Determine the terminal week (w_k) that this fold was trained on
         fold_data = meta_results.fold_results[k].fold_data
         w_k = maximum(fold_data.W)
         
-        # Reconstruct θ_t for this terminal week
         α_samples     = vec(chain[:α_intercept])
         σ_GRW_samples = vec(chain[Symbol("dyn_θ_logit.σ_GRW")])
         n_samples     = length(α_samples)
@@ -219,19 +212,24 @@ function compute_predictive_stakes(
             θ_wk_samples[s] = logistic(α_samples[s] + drift_centered[end])
         end
         
-        θ_pred = mean(θ_wk_samples)
+        θ_preds[k] = mean(θ_wk_samples)
+    end
+    
+    history_of_θ = Float64[θ_prior]
+    ledgers = DataFrame[]
+    
+    # We evaluate matches starting from fold 2
+    for k in 1:(n_folds - 1)
+        θ_pred = θ_preds[k]
         
         # The threshold is the expanding median of all history seen so far
         current_threshold = median(history_of_θ)
-        
         is_good_regime = θ_pred >= current_threshold
         
         # Evaluate on the NEXT fold (fold k+1)
         next_fold_data = subset(all_data, :fold_idx => ByRow(==(k+1)))
         
         if nrow(next_fold_data) > 0
-            # For the MVP, we bet using L1's RAW distribution if in Good Regime, 
-            # otherwise we don't bet (stakes = 0).
             stakes = zeros(nrow(next_fold_data))
             if is_good_regime
                 for i in 1:nrow(next_fold_data)
@@ -244,9 +242,11 @@ function compute_predictive_stakes(
             pnls = [s > 0 ? (Bool(w) ? s*(o-1.0) : -s) : 0.0
                     for (s,w,o) in zip(stakes, next_fold_data.is_winner, next_fold_data.odds_close)]
                     
-            ledger = copy(next_fold_data[!, [:match_id, :selection, :home_team, :away_team,
-                                           :match_date, :W, :p_L1, :prob_fair_close,
-                                           :odds_close, :is_winner]])
+            cols_to_copy = intersect(names(next_fold_data), 
+                ["match_id", "selection", "home_team", "away_team", "match_date", 
+                 "W", "p_L1", "prob_fair_close", "odds_close", "is_winner", "distribution"])
+            
+            ledger = copy(next_fold_data[!, cols_to_copy])
             ledger.θ_pred    .= θ_pred
             ledger.threshold .= current_threshold
             ledger.regime    .= is_good_regime ? "GOOD" : "BAD"
