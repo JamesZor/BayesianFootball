@@ -17,11 +17,11 @@ using ThreadPinning
 pinthreads(:cores)
 
 include("./current_development/MetaModels/src/MetaModels.jl")
-include("src/MetaModels.jl")
+# include("src/MetaModels.jl")
 using .MetaModels
 
 include("./current_development/MetaModels/src/staking.jl")
-include("src/staking.jl")
+# include("src/staking.jl")
 
 include("./current_development/MetaModels/l06_metrics.jl")
 
@@ -63,6 +63,7 @@ sampler_config = BayesianFootball.Samplers.QueuedNUTSConfig(
 # ===========================================================================
 # Define the markets to evaluate
 TARGET_SELECTIONS = [:under_15, :under_25, :under_35, :over_15, :over_25, :over_35]
+TARGET_SELECTIONS = [:under_15, :under_25]
 
 min_edge = 0.00
 multi_market_results, multi_market_ledgers = MetaModels.run_multi_market_experiments(

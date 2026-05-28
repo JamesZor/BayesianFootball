@@ -24,8 +24,8 @@ function check_fold_rhats(meta_results)
     for (i, fold_res) in enumerate(meta_results.fold_results)
         chain = fold_res.chain
         
-        # describe(chain)[1] returns the summary stats DataFrame
-        summ = DataFrame(MCMCChains.describe(chain)[1])
+        # MCMCChains.summarize returns a structure that can be converted to DataFrame
+        summ = DataFrame(MCMCChains.summarize(chain))
         
         # Locate the rhat column robustly
         rhat_col_idx = findfirst(c -> lowercase(string(c)) == "rhat", names(summ))
