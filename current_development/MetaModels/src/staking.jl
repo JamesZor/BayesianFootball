@@ -182,7 +182,8 @@ Returns a ledger of performance on the OOS folds.
 function compute_predictive_stakes(
     meta_results,
     all_data::DataFrame;
-    min_edge=0.02
+    min_edge=0.02,
+    staking_odds::Union{DataFrame, Nothing}=nothing
 )
     n_folds = length(meta_results.fold_results)
     
@@ -218,6 +219,16 @@ function compute_predictive_stakes(
     history_of_θ = Float64[θ_prior]
     ledgers = DataFrame[]
     
+    # Optional Staking Odds Override
+    eval_data = copy(all_data)
+    if !isnothing(staking_odds)
+        stake_df = staking_odds[!, [:match_id, :selection, :odds_close]]
+        rename!(stake_df, :odds_close => :stake_odds_close)
+        eval_data = innerjoin(eval_data, stake_df, on=[:match_id, :selection])
+    else
+        eval_data.stake_odds_close = eval_data.odds_close
+    end
+    
     # We evaluate matches starting from fold 2
     for k in 1:(n_folds - 1)
         θ_pred = θ_preds[k]
@@ -227,24 +238,24 @@ function compute_predictive_stakes(
         is_good_regime = θ_pred >= current_threshold
         
         # Evaluate on the NEXT fold (fold k+1)
-        next_fold_data = subset(all_data, :fold_idx => ByRow(==(k+1)))
+        next_fold_data = subset(eval_data, :fold_idx => ByRow(==(k+1)))
         
         if nrow(next_fold_data) > 0
             stakes = zeros(nrow(next_fold_data))
             if is_good_regime
                 for i in 1:nrow(next_fold_data)
                     dist = next_fold_data.distribution[i]
-                    odds = next_fold_data.odds_close[i]
+                    odds = next_fold_data.stake_odds_close[i]
                     stakes[i] = compute_stake(BayesianKelly(min_edge=min_edge), dist, odds)
                 end
             end
             
             pnls = [s > 0 ? (Bool(w) ? s*(o-1.0) : -s) : 0.0
-                    for (s,w,o) in zip(stakes, next_fold_data.is_winner, next_fold_data.odds_close)]
+                    for (s,w,o) in zip(stakes, next_fold_data.is_winner, next_fold_data.stake_odds_close)]
                     
             cols_to_copy = intersect(names(next_fold_data), 
                 ["match_id", "selection", "home_team", "away_team", "match_date", 
-                 "W", "p_L1", "prob_fair_close", "odds_close", "is_winner", "distribution"])
+                 "W", "p_L1", "prob_fair_close", "odds_close", "stake_odds_close", "is_winner", "distribution"])
             
             ledger = copy(next_fold_data[!, cols_to_copy])
             ledger.θ_pred    .= θ_pred
@@ -252,6 +263,10 @@ function compute_predictive_stakes(
             ledger.regime    .= is_good_regime ? "GOOD" : "BAD"
             ledger.stake     = stakes
             ledger.pnl       = pnls
+            
+            # Revert column name for standard reporting downstream
+            rename!(ledger, :stake_odds_close => :odds_close, :odds_close => :anchor_odds)
+
             
             push!(ledgers, ledger)
         end

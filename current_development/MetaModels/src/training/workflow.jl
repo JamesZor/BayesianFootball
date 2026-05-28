@@ -302,7 +302,8 @@ function run_multi_market_experiments(
     meta_model::AbstractMetaModel,
     sampler_config::Samplers.AbstractNUTSConfig,
     ds::Data.DataStore;
-    min_edge=0.00
+    min_edge=0.00,
+    staking_odds::Union{DataFrame, Nothing}=nothing
 )
     multi_market_results = Dict{Symbol, Any}()
     multi_market_ledgers = Dict{Symbol, DataFrame}()
@@ -332,7 +333,7 @@ function run_multi_market_experiments(
         check_fold_rhats(meta_results)
 
         println("\nComputing Predictive Stakes for $selection...")
-        ledger = compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=min_edge)
+        ledger = compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=min_edge, staking_odds=staking_odds)
         
         if nrow(ledger) == 0
             println("Warning: No OOS ledger data generated for $selection.")
