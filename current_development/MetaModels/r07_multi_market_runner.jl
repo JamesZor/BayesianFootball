@@ -16,11 +16,6 @@ using LogExpFunctions: logistic
 using ThreadPinning
 pinthreads(:cores)
 
-# Reload modules
-if isdefined(Main, :MetaModels)
-    println("Reloading MetaModels...")
-end
-
 include("./current_development/MetaModels/src/MetaModels.jl")
 include("src/MetaModels.jl")
 using .MetaModels
@@ -69,52 +64,15 @@ sampler_config = BayesianFootball.Samplers.QueuedNUTSConfig(
 # Define the markets to evaluate
 TARGET_SELECTIONS = [:under_15, :under_25, :under_35, :over_15, :over_25, :over_35]
 
-min_edge = 0.02
-multi_market_results = Dict{Symbol, Any}()
-multi_market_ledgers = Dict{Symbol, DataFrame}()
-
-for selection in TARGET_SELECTIONS
-    println("\n" * "*"^65)
-    println("  STARTING MARKET: $selection")
-    println("*"^65)
-
-    meta_task = MetaModels.MetaExperimentTask(
-        exp_results,
-        meta_model,
-        sampler_config,
-        exp_results.config.splitter,
-        selection
-    )
-
-    println("\nRunning Queued Fold Experiment for $selection...")
-    _raw_result = MetaModels.run_meta_experiment(meta_task; ds=ds)
-    
-    meta_results = if _raw_result isa Tuple
-        _raw_result[1]
-    else
-        _raw_result
-    end
-
-    # Staking & Out-of-Sample Evaluation
-    println("\nComputing Predictive Stakes for $selection...")
-    ledger_raw = MetaModels.compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=min_edge)
-    
-    if nrow(ledger_raw) == 0
-        println("Warning: No OOS ledger data generated for $selection.")
-        continue
-    end
-
-    # Join the distribution from all_data
-    ledger = innerjoin( 
-        ledger_raw, 
-        meta_results.all_data[!, [:match_id, :distribution]],
-        on = :match_id
-    )
-
-    # Store in our dictionaries
-    multi_market_results[selection] = meta_results
-    multi_market_ledgers[selection] = ledger
-end
+min_edge = 0.00
+multi_market_results, multi_market_ledgers = MetaModels.run_multi_market_experiments(
+    TARGET_SELECTIONS,
+    exp_results,
+    meta_model,
+    sampler_config,
+    ds;
+    min_edge=min_edge
+)
 
 # ===========================================================================
 # 5. PERSIST RESULTS TO DISK
@@ -133,6 +91,7 @@ println("="^75)
 
 # Evaluate and print the reports for all successfully evaluated markets
 markets_evaluated = collect(keys(multi_market_ledgers))
-final_metrics = evaluate_multiple_markets(multi_market_ledgers, markets_evaluated; min_edge=min_edge)
+final_metrics = MetaModels.evaluate_multiple_markets(multi_market_ledgers, markets_evaluated; min_edge=min_edge)
 
 println("\nRunner finished successfully.")
+

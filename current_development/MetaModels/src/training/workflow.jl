@@ -12,7 +12,7 @@ import BayesianFootball.Samplers
 import BayesianFootball.Predictions
 import MCMCChains: chainscat
 
-export MetaExperimentTask, MetaExperimentResults, run_meta_experiment, build_meta_fold_data
+export MetaExperimentTask, MetaExperimentResults, run_meta_experiment, build_meta_fold_data, run_multi_market_experiments
 
 # ===========================================================================
 # TYPES
@@ -280,3 +280,69 @@ function run_meta_experiment(task::MetaExperimentTask; ds::Data.DataStore)
         joined
     )
 end
+
+"""
+    run_multi_market_experiments(
+        target_selections::Vector{Symbol},
+        exp_results::Experiments.ExperimentResults,
+        meta_model::AbstractMetaModel,
+        sampler_config::Samplers.AbstractNUTSConfig,
+        ds::Data.DataStore;
+        min_edge=0.00
+    )
+
+Runs the Meta Model pipeline sequentially across multiple target selections.
+Returns two dictionaries:
+- `multi_market_results`: Dict mapping selection to MetaExperimentResults
+- `multi_market_ledgers`: Dict mapping selection to the OOS predictive ledger DataFrame
+"""
+function run_multi_market_experiments(
+    target_selections::Vector{Symbol},
+    exp_results::Experiments.ExperimentResults,
+    meta_model::AbstractMetaModel,
+    sampler_config::Samplers.AbstractNUTSConfig,
+    ds::Data.DataStore;
+    min_edge=0.00
+)
+    multi_market_results = Dict{Symbol, Any}()
+    multi_market_ledgers = Dict{Symbol, DataFrame}()
+
+    for selection in target_selections
+        println("\n" * "*"^65)
+        println("  STARTING MARKET: $selection")
+        println("*"^65)
+
+        meta_task = MetaExperimentTask(
+            exp_results,
+            meta_model,
+            sampler_config,
+            exp_results.config.splitter,
+            selection
+        )
+
+        println("\nRunning Queued Fold Experiment for $selection...")
+        _raw_result = run_meta_experiment(meta_task; ds=ds)
+        
+        meta_results = if _raw_result isa Tuple
+            _raw_result[1]
+        else
+            _raw_result
+        end
+
+        check_fold_rhats(meta_results)
+
+        println("\nComputing Predictive Stakes for $selection...")
+        ledger = compute_predictive_stakes(meta_results, meta_results.all_data; min_edge=min_edge)
+        
+        if nrow(ledger) == 0
+            println("Warning: No OOS ledger data generated for $selection.")
+            continue
+        end
+
+        multi_market_results[selection] = meta_results
+        multi_market_ledgers[selection] = ledger
+    end
+    
+    return multi_market_results, multi_market_ledgers
+end
+
