@@ -61,7 +61,7 @@ task = Experiments.create_experiment_task(
     warmup_period = 5,
     samples=1000, # Not actually used in this manual script
     warmup=500,  
-    chains=8,
+    chains=16,
     use_queue=true,  # <--- Triggers the new high-performance QueuedNUTSConfig
 )
 
@@ -79,6 +79,8 @@ println("\n--- Temporal Stability Diagnostics (ADF Stationarity) ---")
 stab_diag_all = Experiments.Diagnostics.check_stability(chains_df_all)
 
 
+
+describe(results.training_results[1][1])
 
 # Grab the very first split to test
 test_split = first(task.splits)
