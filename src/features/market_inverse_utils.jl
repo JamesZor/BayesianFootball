@@ -3,7 +3,7 @@ using Distributions
 using Optim
 using LinearAlgebra # For diag, tril, triu
 
-using ..MyDistributions: FrankCopulaNegBin
+using ..MyDistributions: FrankCopulaNegBin, DoubleNegativeBinomial
 
 # ---------------------------------------------------------
 # 1. Core Mathematical Helpers
@@ -43,6 +43,30 @@ function _build_probability_matrix_frank_negbin(λh::Float64, λa::Float64, rh::
     for j in 0:max_goals
         for i in 0:max_goals
             P[i+1, j+1] = exp(logpdf(dist, i, j))
+        end
+    end
+    P = max.(P, 0.0)
+    return P ./ sum(P)
+end
+
+function _build_probability_matrix_double_negbin(λh::Float64, λa::Float64, rh::Float64, ra::Float64, max_goals::Integer)::Matrix{Float64}
+    dist = DoubleNegativeBinomial(λh, λa, rh, ra)
+    P = zeros(Float64, max_goals + 1, max_goals + 1)
+    for j in 0:max_goals
+        for i in 0:max_goals
+            P[i+1, j+1] = exp(logpdf(dist, [i, j]))
+        end
+    end
+    P = max.(P, 0.0)
+    return P ./ sum(P)
+end
+
+function _build_probability_matrix_dixon_negbin(λh::Float64, λa::Float64, rh::Float64, ra::Float64, ρ::Float64, max_goals::Integer)::Matrix{Float64}
+    dist = DoubleNegativeBinomial(λh, λa, rh, ra)
+    P = zeros(Float64, max_goals + 1, max_goals + 1)
+    for j in 0:max_goals
+        for i in 0:max_goals
+            P[i+1, j+1] = exp(logpdf(dist, [i, j])) * dixon_coles_tau(i, j, λh, λa, ρ)
         end
     end
     P = max.(P, 0.0)
@@ -120,6 +144,8 @@ _calculate_error(::Val{T}, P::Matrix{Float64}, targets::Dict{Symbol,Float64}) wh
 get_initial_guess(::DoublePoissonMarketFeature) = [log(1.5), log(1.0)]
 get_initial_guess(::DixonColesMarketFeature) = [log(1.5), log(1.0), 0.05]
 get_initial_guess(::RegularizedFrankCopulaMarketFeature) = [log(1.5), log(1.0), log(15.0), log(15.0), 0.1]
+get_initial_guess(::RegularizedDoubleNegativeBinomialMarketFeature) = [log(1.5), log(1.0), log(15.0), log(15.0)]
+get_initial_guess(::RegularizedDixonColesNegativeBinomialMarketFeature) = [log(1.5), log(1.0), log(15.0), log(15.0), 0.05]
 
 function build_probability_matrix(::DoublePoissonMarketFeature, θ::Vector{Float64}, max_goals::Int)
     λh, λa = exp(θ[1]), exp(θ[2])
@@ -136,13 +162,37 @@ function build_probability_matrix(::RegularizedFrankCopulaMarketFeature, θ::Vec
     return _build_probability_matrix_frank_negbin(λh, λa, rh, ra, κ, max_goals)
 end
 
+function build_probability_matrix(::RegularizedDoubleNegativeBinomialMarketFeature, θ::Vector{Float64}, max_goals::Int)
+    λh, λa, rh, ra = exp(θ[1]), exp(θ[2]), exp(θ[3]), exp(θ[4])
+    return _build_probability_matrix_double_negbin(λh, λa, rh, ra, max_goals)
+end
+
+function build_probability_matrix(::RegularizedDixonColesNegativeBinomialMarketFeature, θ::Vector{Float64}, max_goals::Int)
+    λh, λa, rh, ra, ρ = exp(θ[1]), exp(θ[2]), exp(θ[3]), exp(θ[4]), θ[5]
+    return _build_probability_matrix_dixon_negbin(λh, λa, rh, ra, ρ, max_goals)
+end
+
 extract_parameters(::DoublePoissonMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), ρ=0.0)
 extract_parameters(::DixonColesMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), ρ=θ[3])
 extract_parameters(::RegularizedFrankCopulaMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]), κ=θ[5])
+extract_parameters(::RegularizedDoubleNegativeBinomialMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]))
+extract_parameters(::RegularizedDixonColesNegativeBinomialMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]), ρ=θ[5])
 
 compute_loss_penalty(config::AbstractMarketFeatureConfig, θ::Vector{Float64}) = 0.0
 
 function compute_loss_penalty(config::RegularizedFrankCopulaMarketFeature, θ::Vector{Float64})
+    rh, ra = exp(θ[3]), exp(θ[4])
+    penalty = (log(rh) - log(config.prior_r))^2 + (log(ra) - log(config.prior_r))^2
+    return config.penalty_weight * penalty
+end
+
+function compute_loss_penalty(config::RegularizedDoubleNegativeBinomialMarketFeature, θ::Vector{Float64})
+    rh, ra = exp(θ[3]), exp(θ[4])
+    penalty = (log(rh) - log(config.prior_r))^2 + (log(ra) - log(config.prior_r))^2
+    return config.penalty_weight * penalty
+end
+
+function compute_loss_penalty(config::RegularizedDixonColesNegativeBinomialMarketFeature, θ::Vector{Float64})
     rh, ra = exp(θ[3]), exp(θ[4])
     penalty = (log(rh) - log(config.prior_r))^2 + (log(ra) - log(config.prior_r))^2
     return config.penalty_weight * penalty

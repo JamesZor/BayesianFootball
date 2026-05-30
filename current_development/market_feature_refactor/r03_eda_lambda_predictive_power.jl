@@ -7,6 +7,7 @@
 using Revise
 using DataFrames
 using BayesianFootball
+using StatsBase
 
 println("==================================================")
 println(" EDA: Lambda Predictive Power vs Actual Outcomes ")
@@ -36,6 +37,8 @@ dp_config = BayesianFootball.Features.DoublePoissonMarketFeature()
 dc_config = BayesianFootball.Features.DixonColesMarketFeature()
 fc_config = BayesianFootball.Features.RegularizedFrankCopulaMarketFeature(prior_r=15.0, penalty_weight=0.05)
 fc_unreg_config = BayesianFootball.Features.RegularizedFrankCopulaMarketFeature(penalty_weight=0.0)
+dnb_config = BayesianFootball.Features.RegularizedDoubleNegativeBinomialMarketFeature(prior_r=15.0, penalty_weight=0.05)
+dcnb_config = BayesianFootball.Features.RegularizedDixonColesNegativeBinomialMarketFeature(prior_r=15.0, penalty_weight=0.05)
 
 # 3. Prepare result containers
 results = DataFrame(
@@ -46,7 +49,9 @@ results = DataFrame(
     dp_loglike = Float64[],
     dc_loglike = Float64[],
     fc_loglike = Float64[],
-    fc_unreg_loglike = Float64[]
+    fc_unreg_loglike = Float64[],
+    dnb_loglike = Float64[],
+    dcnb_loglike = Float64[]
 )
 
 # Filter odds to just our test matches
@@ -76,22 +81,28 @@ for match_row in eachrow(test_matches)
     res_dc = BayesianFootball.Features.fit_market_implied_parameters(match_odds_df, dc_config)
     res_fc = BayesianFootball.Features.fit_market_implied_parameters(match_odds_df, fc_config)
     res_fc_unreg = BayesianFootball.Features.fit_market_implied_parameters(match_odds_df, fc_unreg_config)
+    res_dnb = BayesianFootball.Features.fit_market_implied_parameters(match_odds_df, dnb_config)
+    res_dcnb = BayesianFootball.Features.fit_market_implied_parameters(match_odds_df, dcnb_config)
     
     # Rebuild the probability matrices
     P_dp = BayesianFootball.Features.build_probability_matrix(dp_config, res_dp.minimizer, 10)
     P_dc = BayesianFootball.Features.build_probability_matrix(dc_config, res_dc.minimizer, 10)
     P_fc = BayesianFootball.Features.build_probability_matrix(fc_config, res_fc.minimizer, 10)
     P_fc_unreg = BayesianFootball.Features.build_probability_matrix(fc_unreg_config, res_fc_unreg.minimizer, 10)
+    P_dnb = BayesianFootball.Features.build_probability_matrix(dnb_config, res_dnb.minimizer, 10)
+    P_dcnb = BayesianFootball.Features.build_probability_matrix(dcnb_config, res_dcnb.minimizer, 10)
     
     # Calculate Log-Likelihood
     ll_dp = log(get_score_prob(P_dp, h_goals, a_goals))
     ll_dc = log(get_score_prob(P_dc, h_goals, a_goals))
     ll_fc = log(get_score_prob(P_fc, h_goals, a_goals))
     ll_fc_unreg = log(get_score_prob(P_fc_unreg, h_goals, a_goals))
+    ll_dnb = log(get_score_prob(P_dnb, h_goals, a_goals))
+    ll_dcnb = log(get_score_prob(P_dcnb, h_goals, a_goals))
     
     push!(results, (
         m_id, h_goals, a_goals,
-        ll_dp, ll_dc, ll_fc, ll_fc_unreg
+        ll_dp, ll_dc, ll_fc, ll_fc_unreg, ll_dnb, ll_dcnb
     ))
 end
 
@@ -103,24 +114,28 @@ sum_ll_dp = sum(results.dp_loglike)
 sum_ll_dc = sum(results.dc_loglike)
 sum_ll_fc = sum(results.fc_loglike)
 sum_ll_fc_unreg = sum(results.fc_unreg_loglike)
+sum_ll_dnb = sum(results.dnb_loglike)
+sum_ll_dcnb = sum(results.dcnb_loglike)
 
 println("\nTotal Log-Likelihood over $(n_samples) matches:")
 println("Double Poisson:  ", round(sum_ll_dp, digits=2))
 println("Dixon-Coles:     ", round(sum_ll_dc, digits=2), " (Diff vs DP: ", round(sum_ll_dc - sum_ll_dp, digits=2), ")")
 println("Frank Copula (Reg): ", round(sum_ll_fc, digits=2), " (Diff vs DP: ", round(sum_ll_fc - sum_ll_dp, digits=2), ")")
 println("Frank Copula (Unreg):", round(sum_ll_fc_unreg, digits=2), " (Diff vs DP: ", round(sum_ll_fc_unreg - sum_ll_dp, digits=2), ")")
+println("Double NegBin:   ", round(sum_ll_dnb, digits=2), " (Diff vs DP: ", round(sum_ll_dnb - sum_ll_dp, digits=2), ")")
+println("Dixon-Coles NegBin:", round(sum_ll_dcnb, digits=2), " (Diff vs DP: ", round(sum_ll_dcnb - sum_ll_dp, digits=2), ")")
 
 # Let's see which model was "closest" to reality most often
-wins_dp = sum((results.dp_loglike .> results.dc_loglike) .& (results.dp_loglike .> results.fc_loglike) .& (results.dp_loglike .> results.fc_unreg_loglike))
-wins_dc = sum((results.dc_loglike .> results.dp_loglike) .& (results.dc_loglike .> results.fc_loglike) .& (results.dc_loglike .> results.fc_unreg_loglike))
-wins_fc = sum((results.fc_loglike .> results.dp_loglike) .& (results.fc_loglike .> results.dc_loglike) .& (results.fc_loglike .> results.fc_unreg_loglike))
-wins_fc_unreg = sum((results.fc_unreg_loglike .> results.dp_loglike) .& (results.fc_unreg_loglike .> results.dc_loglike) .& (results.fc_unreg_loglike .> results.fc_loglike))
+wins = argmax.(eachrow(results[:, [:dp_loglike, :dc_loglike, :fc_loglike, :fc_unreg_loglike, :dnb_loglike, :dcnb_loglike]]))
+wins_counts = countmap(wins)
 
 println("\nNumber of matches where the model assigned the highest probability to the actual score:")
-println("Double Poisson: ", wins_dp)
-println("Dixon-Coles:    ", wins_dc)
-println("Frank Copula (Reg): ", wins_fc)
-println("Frank Copula (Unreg): ", wins_fc_unreg)
+println("Double Poisson:       ", get(wins_counts, "dp_loglike", 0))
+println("Dixon-Coles:          ", get(wins_counts, "dc_loglike", 0))
+println("Frank Copula (Reg):   ", get(wins_counts, "fc_loglike", 0))
+println("Frank Copula (Unreg): ", get(wins_counts, "fc_unreg_loglike", 0))
+println("Double NegBin:        ", get(wins_counts, "dnb_loglike", 0))
+println("Dixon-Coles NegBin:   ", get(wins_counts, "dcnb_loglike", 0))
 
 println("\n==================================================")
 println(" EDA Complete. Run this script via REPL to see the predictive edge of the Copula.")
