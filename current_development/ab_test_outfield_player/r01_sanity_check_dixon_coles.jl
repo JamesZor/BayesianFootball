@@ -6,6 +6,11 @@ using BayesianFootball
 using DataFrames
 using Turing
 
+using ThreadPinning
+
+pinthreads(:cores)
+
+
 const PreGame = BayesianFootball.Models.PreGame
 const Features = BayesianFootball.Features
 const Experiments = BayesianFootball.Experiments
@@ -23,7 +28,7 @@ inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion()
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 kap_cfg   = PreGame.HierarchicalTeamKappa()
-dyn_cfg   = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=30.0)
+dyn_cfg   = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=60.0)
 
 tracker_bayes = Features.BayesianTracker(6.5, 1.0, 0.5, 0.01)
 feature_cfg_bayes = Features.PlayerRatingsFeature(tracker_bayes)
@@ -39,7 +44,7 @@ model_dixon = PreGame.DynamicDixonColesXGOutfieldPlayerTimeDecayModel(
     homeadvantage_config   = ha_cfg,
     kappa_config           = kap_cfg,
     player_ratings_feature = feature_cfg_bayes,
-    market_weight          = 1.0
+    market_weight          = 0.4
 )
 
 # ==========================================
@@ -53,15 +58,26 @@ task = Experiments.create_experiment_task(
     "./tmp_mcmc_checkpoints/"; 
     target_seasons=["2026"], 
     dynamics_col=:match_month,
-    warmup_period = 4,
-    samples=500, # Not actually used in this manual script
-    warmup=200,  
-    chains=4
-    use_queue=true  # <--- Triggers the new high-performance QueuedNUTSConfig
+    warmup_period = 5,
+    samples=1000, # Not actually used in this manual script
+    warmup=500,  
+    chains=8,
+    use_queue=true,  # <--- Triggers the new high-performance QueuedNUTSConfig
 )
 
 
 results = Experiments.run_experiment(task)
+
+
+
+chains_df_all = Experiments.Diagnostics.extract_chains(ds, results)
+
+println("\n--- Convergence Diagnostics (R-hat & ESS) ---")
+conv_diag_all = Experiments.Diagnostics.check_convergence(chains_df_all)
+
+println("\n--- Temporal Stability Diagnostics (ADF Stationarity) ---")
+stab_diag_all = Experiments.Diagnostics.check_stability(chains_df_all)
+
 
 
 # Grab the very first split to test

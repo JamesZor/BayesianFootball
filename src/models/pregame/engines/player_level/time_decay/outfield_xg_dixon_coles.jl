@@ -142,11 +142,14 @@ end
     if !isempty(idx_01) τ_term[idx_01] = 1.0 .+ (λ_goals_h[idx_01] .* ρ) end
     if !isempty(idx_11) τ_term[idx_11] .= 1.0 - ρ end
 
-    # Combine with Safe Log for Tau
-    log_τ = map(x -> x > 0.0 ? log(x) : -Inf, τ_term)
-    log_lik_goals = log_lik_indep_h .+ log_lik_indep_a .+ log_τ
+    # AD-Safe hard rejection for invalid Tau boundaries (prevents HMC flattening)
+    if any(τ_term .<= 0.0)
+        Turing.@addlogprob! -Inf
+        return
+    end
 
-    # Apply Match Weights globally to the combined goals likelihood
+    # Combine into final likelihood vector for all matches
+    log_lik_goals = log_lik_indep_h .+ log_lik_indep_a .+ log.(τ_term)   # Apply Match Weights globally to the combined goals likelihood
     Turing.@addlogprob! sum(log_lik_goals .* match_weights)
 
     # --- Pillar C: The Market (Normal) ---
@@ -156,11 +159,9 @@ end
 
         log_lik_market_h = logpdf.(Normal.(market_rate_h, σ_market), market_log_λ_h[idx_market])
         log_lik_market_a = logpdf.(Normal.(market_rate_a, σ_market), market_log_λ_a[idx_market])
-        log_lik_market_ρ = logpdf.(Normal.(ρ, σ_market), market_ρ[idx_market])
+        log_lik_market_ρ = logpdf(Normal(ρ, σ_market), mean(market_ρ[idx_market]))
 
-        Turing.@addlogprob! sum(log_lik_market_h .* match_weights[idx_market]) * config.market_weight
-        Turing.@addlogprob! sum(log_lik_market_a .* match_weights[idx_market]) * config.market_weight
-        Turing.@addlogprob! sum(log_lik_market_ρ .* match_weights[idx_market]) * config.market_weight
+        Turing.@addlogprob! config.market_weight * (sum(log_lik_market_h .* match_weights[idx_market]) + sum(log_lik_market_a .* match_weights[idx_market]) + log_lik_market_ρ)
     end
 end
 
