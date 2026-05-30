@@ -1,4 +1,4 @@
-# src/models/pregame/engines/player_level/time_decay/outfield_xg_double_poisson.jl
+# src/models/pregame/engines/player_level/time_decay/outfield_xg_dixon_coles.jl
 
 # ==========================================
 # 1. THE MODEL CONFIGURATION
@@ -54,6 +54,11 @@ end
     market_log_λ_h::Vector{Float64},
     market_log_λ_a::Vector{Float64},
     idx_market::Vector{Int},
+    # --- Dixon-Coles Groupings ---
+    idx_00::Vector{Int},
+    idx_10::Vector{Int},
+    idx_01::Vector{Int},
+    idx_11::Vector{Int},
     # --- Dimensions ---
     n_teams::Int,
     n_seasons::Int,
@@ -65,6 +70,7 @@ end
     # ==========================================
     ν_xg     ~ config.ν_xg
     σ_market ~ config.market_σ
+    
     
     inter ~ to_submodel(build_interception(config.interception_config, n_seasons))
     ha    ~ to_submodel(build_home_advantage(config.homeadvantage_config, n_teams))
@@ -117,7 +123,7 @@ end
         Turing.@addlogprob! sum(log_lik_xg_a .* match_weights[idx_xg])
     end
 
-    # --- Pillar B: Actual Goals (Double Poisson) ---
+    # --- Pillar B: Actual Goals (Dixon-Coles Poisson) ---
     λ_goals_h = κ_h_flat .* λₕ
     λ_goals_a = κ_a_flat .* λₐ
 
@@ -136,7 +142,7 @@ end
 
         log_lik_market_h = logpdf.(Normal.(market_rate_h, σ_market), market_log_λ_h[idx_market])
         log_lik_market_a = logpdf.(Normal.(market_rate_a, σ_market), market_log_λ_a[idx_market])
-        
+
         Turing.@addlogprob! config.market_weight * (sum(log_lik_market_h .* match_weights[idx_market]) + sum(log_lik_market_a .* match_weights[idx_market]))
     end
 end
@@ -157,22 +163,22 @@ function Features.required_features(model::DynamicDoublePoissonXGOutfieldPlayerT
     ] 
 end
 
-function build_turing_model(
-    config::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, 
-    feature_set::FeatureSet
-)
+function build_turing_model(config::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, feature_set::FeatureSet)
     data = feature_set.data
-    home_ids = Vector{Int}(data[:flat_home_team_id])
-    away_ids = Vector{Int}(data[:flat_away_team_id])
-    season_ids = Vector{Int}(data[:flat_season_id])
-    month_indices = Vector{Int}(data[:flat_time_indices])
-    home_goals = Vector{Int}(data[:flat_home_score])
-    away_goals = Vector{Int}(data[:flat_away_score])
-    match_weights = Vector{Float64}(data[:flat_match_weight])
     
-    n_teams = data[:n_teams]
-    n_seasons = data[:n_seasons]
-    n_months = data[:n_months]
+    n_teams   = Int(data[:n_teams])
+    n_seasons = Int(data[:n_seasons]) 
+    n_months  = 12
+    
+    date_deltas = Vector{Int}(data[:dates])
+    match_weights = 0.5 .^ (date_deltas ./ config.player_dynamics_config.days_half_life)
+
+    home_ids   = Vector{Int}(data[:flat_home_ids])
+    away_ids   = Vector{Int}(data[:flat_away_ids])
+    season_ids = Vector{Int}(data[:season_indices])
+    month_indices = Vector{Int}(data[:flat_months])
+    home_goals = Vector{Int}(data[:flat_home_goals])
+    away_goals = Vector{Int}(data[:flat_away_goals])
 
     # Player Ratings
     h_G = Vector{Float64}(data[:flat_home_G_rating])
@@ -193,7 +199,9 @@ function build_turing_model(
     # Market
     market_log_h = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_home]), NaN))
     market_log_a = Vector{Float64}(coalesce.(log.(data[:flat_market_λ_away]), NaN))
-    idx_market   = findall(x -> !isnan(x), market_log_h)
+        idx_market   = findall(x -> !isnan(x), market_log_h)
+
+
 
     return build_double_poisson_xg_market_player_engine(
         home_ids, away_ids, season_ids, month_indices,
@@ -212,72 +220,74 @@ end
 function extract_parameters(
     model::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, 
     df::AbstractDataFrame, 
-    feature_set::FeatureSet, 
+    feature_set::FeatureSet,
     chain::Chains
 )
     data = feature_set.data
-    n_matches = nrow(df)
-    results = Vector{NamedTuple}(undef, n_matches)
+    n_teams   = Int(data[:n_teams])
+    n_seasons = Int(data[:n_seasons])
+    team_map  = data[:team_map]
 
-    # 1. Base Rates
-    inter_μ = mean(chain["inter.μ"])
+    inter_mat = extract_interception(chain, model.interception_config, n_seasons)
+    ha_mat    = extract_home_advantage(chain, model.homeadvantage_config, n_teams)
+    kap_mat   = extract_kappa(chain, model.kappa_config, n_teams)
+    p_dyn_nt  = extract_dynamics(chain, model.player_dynamics_config, "p_dyn", n_teams)
+    
+    n_samples = size(chain, 1) * size(chain, 3) 
+    
+    # Extract rho directly from the chain (it's a scalar per sample)
+    ρ_vec = zeros(n_samples)
 
-    # 2. Team Ratings
-    ha_team = [mean(chain["ha.γ_team_raw[$i]"]) for i in 1:data[:n_teams]]
-    ha_base = mean(chain["ha.γ_base"])
-    ha_σ = mean(chain["ha.σ_γ"])
+    results = Dict{Int, NamedTuple}()
+    ratings_map = data[:player_ratings_map]
 
-    kap_team = [mean(chain["kap.κ_team_raw[$i]"]) for i in 1:data[:n_teams]]
-    kap_base = mean(chain["kap.κ_base"])
-    kap_σ = mean(chain["kap.σ_κ"])
+    for row in eachrow(df)
+        mid = Int(row.match_id)
+        h_id = get(team_map, row.home_team, -1)
+        a_id = get(team_map, row.away_team, -1)
 
-    # 3. Time Dynamics (Weights)
-    w_G_att = mean(chain["p_dyn.w_G_att"])
-    w_G_def = mean(chain["p_dyn.w_G_def"])
-    w_O_att = mean(chain["p_dyn.w_Outfield_att"])
-    w_O_def = mean(chain["p_dyn.w_Outfield_def"])
+        m_ratings = get(ratings_map, mid, Dict())
+        h_G = get(m_ratings, ("home", "G"), 0.0)
+        h_D = get(m_ratings, ("home", "D"), 0.0)
+        h_M = get(m_ratings, ("home", "M"), 0.0)
+        h_F = get(m_ratings, ("home", "F"), 0.0)
+        a_G = get(m_ratings, ("away", "G"), 0.0)
+        a_D = get(m_ratings, ("away", "D"), 0.0)
+        a_M = get(m_ratings, ("away", "M"), 0.0)
+        a_F = get(m_ratings, ("away", "F"), 0.0)
 
-    # Loop over matches to construct final parameters
-    @inbounds for mid in 1:n_matches
-        h_id = data[:flat_home_team_id][mid]
-        a_id = data[:flat_away_team_id][mid]
-        
-        # Player specific ratings
-        h_att = (w_G_att * data[:flat_home_G_rating][mid]) + 
-                (w_O_att * (data[:flat_home_D_rating][mid] + data[:flat_home_M_rating][mid] + data[:flat_home_F_rating][mid]))
-                
-        h_def = (w_G_def * data[:flat_home_G_rating][mid]) + 
-                (w_O_def * (data[:flat_home_D_rating][mid] + data[:flat_home_M_rating][mid] + data[:flat_home_F_rating][mid]))
+        h_Outfield = h_D + h_M + h_F
+        a_Outfield = a_D + a_M + a_F
 
-        a_att = (w_G_att * data[:flat_away_G_rating][mid]) + 
-                (w_O_att * (data[:flat_away_D_rating][mid] + data[:flat_away_M_rating][mid] + data[:flat_away_F_rating][mid]))
-                
-        a_def = (w_G_def * data[:flat_away_G_rating][mid]) + 
-                (w_O_def * (data[:flat_away_D_rating][mid] + data[:flat_away_M_rating][mid] + data[:flat_away_F_rating][mid]))
+        att_h = (p_dyn_nt.w_G_att .* h_G) .+ (p_dyn_nt.w_Outfield_att .* h_Outfield)
+        def_h = (p_dyn_nt.w_G_def .* h_G) .+ (p_dyn_nt.w_Outfield_def .* h_Outfield)
+        att_a = (p_dyn_nt.w_G_att .* a_G) .+ (p_dyn_nt.w_Outfield_att .* a_Outfield)
+        def_a = (p_dyn_nt.w_G_def .* a_G) .+ (p_dyn_nt.w_Outfield_def .* a_Outfield)
 
-        # Hierarchical Team adjustments
-        ha_val = ha_base + (ha_team[h_id] * ha_σ)
-        κ_h = exp(kap_base + (kap_team[h_id] * kap_σ))
-        κ_a = exp(kap_base + (kap_team[a_id] * kap_σ))
+        γ_h = h_id > 0 ? ha_mat[:, h_id] : zeros(n_samples)
+        κ_h = h_id > 0 ? kap_mat[:, h_id] : ones(n_samples)
+        κ_a = a_id > 0 ? kap_mat[:, a_id] : ones(n_samples)
 
-        # True log rates (no kappa)
-        log_λ_h = inter_μ + ha_val + h_att + a_def
-        log_λ_a = inter_μ + a_att + h_def
+        s_idx = hasproperty(row, :season_idx) ? Int(row.season_idx) : n_seasons
+        μ_v = inter_mat[:, s_idx] 
 
-        # Expected Goals
-        λ_goals_h = κ_h * exp(log_λ_h) + 1e-6
-        λ_goals_a = κ_a * exp(log_λ_a) + 1e-6
+        log_λ_h = clamp.(μ_v .+ γ_h .+ att_h .+ def_a, -20.0, 20.0)
+        log_λ_a = clamp.(μ_v .+        att_a .+ def_h, -20.0, 20.0)
+
+        λ_goals_h = κ_h .* exp.(log_λ_h) .+ 1e-6
+        λ_goals_a = κ_a .* exp.(log_λ_a) .+ 1e-6
 
         results[mid] = (;
             λ_h = λ_goals_h,
             λ_a = λ_goals_a,
             θ_1 = log.(λ_goals_h),
             θ_2 = log.(λ_goals_a),
-            ρ = 0.0, 
-            true_xg_h = exp(log_λ_h), 
-            true_xg_a = exp(log_λ_a),
+            θ_3 = ρ_vec,
+            ρ = ρ_vec, 
+            true_xg_h = exp.(log_λ_h), 
+            true_xg_a = exp.(log_λ_a),
         )
     end
-
+    
     return results
 end
