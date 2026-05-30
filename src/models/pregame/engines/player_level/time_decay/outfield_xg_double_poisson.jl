@@ -159,8 +159,9 @@ end
 
 function build_turing_model(
     config::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, 
-    data::Dict{Symbol, Any}
+    feature_set::FeatureSet
 )
+    data = feature_set.data
     home_ids = Vector{Int}(data[:flat_home_team_id])
     away_ids = Vector{Int}(data[:flat_away_team_id])
     season_ids = Vector{Int}(data[:flat_season_id])
@@ -210,10 +211,11 @@ end
 # ==========================================
 function extract_parameters(
     model::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, 
-    df::DataFrame, 
-    data::Dict{Symbol, Any}, 
+    df::AbstractDataFrame, 
+    feature_set::FeatureSet, 
     chain::Chains
 )
+    data = feature_set.data
     n_matches = nrow(df)
     results = Vector{NamedTuple}(undef, n_matches)
 
