@@ -153,7 +153,7 @@ function build_probability_matrix(::DoublePoissonMarketFeature, θ::Vector{Float
 end
 
 function build_probability_matrix(::DixonColesMarketFeature, θ::Vector{Float64}, max_goals::Int)
-    λh, λa, ρ = exp(θ[1]), exp(θ[2]), θ[3]
+    λh, λa, ρ = exp(θ[1]), exp(θ[2]), 0.3 * tanh(θ[3])
     return _build_probability_matrix_dixon(λh, λa, ρ, max_goals)
 end
 
@@ -168,15 +168,15 @@ function build_probability_matrix(::RegularizedDoubleNegativeBinomialMarketFeatu
 end
 
 function build_probability_matrix(::RegularizedDixonColesNegativeBinomialMarketFeature, θ::Vector{Float64}, max_goals::Int)
-    λh, λa, rh, ra, ρ = exp(θ[1]), exp(θ[2]), exp(θ[3]), exp(θ[4]), θ[5]
+    λh, λa, rh, ra, ρ = exp(θ[1]), exp(θ[2]), exp(θ[3]), exp(θ[4]), 0.3 * tanh(θ[5])
     return _build_probability_matrix_dixon_negbin(λh, λa, rh, ra, ρ, max_goals)
 end
 
 extract_parameters(::DoublePoissonMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), ρ=0.0)
-extract_parameters(::DixonColesMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), ρ=θ[3])
+extract_parameters(::DixonColesMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), ρ=0.3 * tanh(θ[3]))
 extract_parameters(::RegularizedFrankCopulaMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]), κ=θ[5])
 extract_parameters(::RegularizedDoubleNegativeBinomialMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]))
-extract_parameters(::RegularizedDixonColesNegativeBinomialMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]), ρ=θ[5])
+extract_parameters(::RegularizedDixonColesNegativeBinomialMarketFeature, θ) = (λ_home=exp(θ[1]), λ_away=exp(θ[2]), r_home=exp(θ[3]), r_away=exp(θ[4]), ρ=0.3 * tanh(θ[5]))
 
 compute_loss_penalty(config::AbstractMarketFeatureConfig, θ::Vector{Float64}) = 0.0
 
