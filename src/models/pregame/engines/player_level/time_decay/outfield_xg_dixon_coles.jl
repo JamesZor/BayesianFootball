@@ -9,7 +9,8 @@ Base.@kwdef struct DynamicDixonColesXGOutfieldPlayerTimeDecayModel{
     D<:AbstractDispersionConfig, # Unused mathematically in Poisson, but kept for interface consistency
     H<:AbstractHomeAdvantageConfig,
     K<:AbstractKappaConfig,
-    R<:Features.AbstractFeatureConfig
+    R<:Features.AbstractFeatureConfig,
+    M<:Features.AbstractMarketFeatureConfig
   } <: AbstractTimeDecayPlayerModel
       interception_config::I
       player_dynamics_config::P 
@@ -17,6 +18,7 @@ Base.@kwdef struct DynamicDixonColesXGOutfieldPlayerTimeDecayModel{
       homeadvantage_config::H
       kappa_config::K
       player_ratings_feature::R
+      market_feature_config::M = Features.DixonColesMarketFeature()
       ν_xg::Distribution = truncated(Normal(3.0, 0.5), lower=0.5) 
       market_σ::Distribution = truncated(Normal(0.1, 0.2), lower=0.01) 
       market_weight::Float64 = 1.0
@@ -172,7 +174,7 @@ function Features.required_features(model::DynamicDixonColesXGOutfieldPlayerTime
        Features.DatesFeature(), 
        Features.MonthFeature(), 
        Features.XGFeature(), 
-       Features.DixonColesMarketFeature(), # Pulls λ_h, λ_a, and ρ
+       model.market_feature_config,
        model.player_ratings_feature,
        Features.TimeIndicesFeature()
     ] 

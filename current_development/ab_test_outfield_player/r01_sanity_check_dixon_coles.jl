@@ -23,7 +23,7 @@ inter_cfg = PreGame.GlobalInterception()
 disp_cfg  = PreGame.HomeAwayDispersion()
 ha_cfg    = PreGame.HierarchicalTeamHomeAdvantage()
 kap_cfg   = PreGame.HierarchicalTeamKappa()
-dyn_cfg   = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=180.0)
+dyn_cfg   = PreGame.OutfieldPlayerDynamicsConfig(days_half_life=30.0)
 
 tracker_bayes = Features.BayesianTracker(6.5, 1.0, 0.5, 0.01)
 feature_cfg_bayes = Features.PlayerRatingsFeature(tracker_bayes)
@@ -51,12 +51,18 @@ task = Experiments.create_experiment_task(
     model_dixon, 
     "sanity_check_dixon_coles", 
     "./tmp_mcmc_checkpoints/"; 
-    target_seasons=["2025"], 
+    target_seasons=["2026"], 
     dynamics_col=:match_month,
-    samples=10, # Not actually used in this manual script
-    warmup=10,  
-    chains=1
+    warmup_period = 4,
+    samples=500, # Not actually used in this manual script
+    warmup=200,  
+    chains=4
+    use_queue=true  # <--- Triggers the new high-performance QueuedNUTSConfig
 )
+
+
+results = Experiments.run_experiment(task)
+
 
 # Grab the very first split to test
 test_split = first(task.splits)
