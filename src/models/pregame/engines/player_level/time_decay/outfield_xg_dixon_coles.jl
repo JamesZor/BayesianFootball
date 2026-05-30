@@ -136,7 +136,7 @@ end
     log_lik_indep_a = logpdf.(Poisson.(λ_goals_a), away_goals)
 
     # Calculate Tau correction
-    τ_term = ones(length(home_goals))
+    τ_term = ones(eltype(λ_goals_h), length(home_goals))
     if !isempty(idx_00) τ_term[idx_00] = 1.0 .- (λ_goals_h[idx_00] .* λ_goals_a[idx_00] .* ρ) end
     if !isempty(idx_10) τ_term[idx_10] = 1.0 .+ (λ_goals_a[idx_10] .* ρ) end
     if !isempty(idx_01) τ_term[idx_01] = 1.0 .+ (λ_goals_h[idx_01] .* ρ) end
