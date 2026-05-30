@@ -146,7 +146,8 @@ end
 # ==========================================
 function Features.required_features(model::DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel)
     return Features.AbstractFeatureConfig[
-       Features.HomeAwayFeature(), 
+       Features.TeamIDsFeature(), 
+       Features.GoalsFeature(), 
        Features.DatesFeature(), 
        Features.MonthFeature(), 
        Features.XGFeature(), 
