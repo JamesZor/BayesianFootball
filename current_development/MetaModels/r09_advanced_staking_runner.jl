@@ -33,6 +33,17 @@ println("=======================================================================
 println("  INITIALIZING DUAL-ODDS META MODEL WORKFLOW")
 println("===========================================================================")
 
+
+include("./current_development/MetaModels/src/MetaModels.jl")
+# include("src/MetaModels.jl")
+using .MetaModels
+
+include("./current_development/MetaModels/src/staking.jl")
+# include("src/staking.jl")
+
+include("./current_development/MetaModels/l06_metrics.jl")
+
+
 # ===========================================================================
 # 1. LOAD LAYER 1 RESULTS
 # ===========================================================================
@@ -52,7 +63,7 @@ println("\n    -> Computing SHARP Anchor Odds (-10 to 0 mins)...")
 betfair_sharp = BayesianFootball.Data.summarize_betfair_market(
     ds_raw, 
     open_window=(-100000.0, -10.0), 
-    close_window=(-10.0, 0.0)
+    close_window=(-20.0, 0.0)
 )
 
 # The Meta Model Datastore MUST contain the Sharp Odds
@@ -66,11 +77,11 @@ println("    -> Computing LOOSE Staking Odds (-60 to -20 mins)...")
 betfair_loose = BayesianFootball.Data.summarize_betfair_market(
     ds_raw, 
     open_window=(-100000.0, -60.0), 
-    close_window=(-60.0, -20.0)
+    close_window=(-30.0, 0.0)
 )
 
 # NOTE: To bet against the bookmaker instead of the exchange, simply swap:
-# loose_staking_odds = ds_raw.odds
+loose_staking_odds = ds_raw.odds
 loose_staking_odds = betfair_loose 
 
 # ===========================================================================
@@ -133,3 +144,79 @@ markets_evaluated = collect(keys(multi_market_ledgers))
 final_metrics = MetaModels.evaluate_multiple_markets(multi_market_ledgers, markets_evaluated; min_edge=min_edge)
 
 println("\nRunner finished successfully.")
+
+
+
+
+
+#=
+ds.odds
+julia> final_metrics = MetaModels.evaluate_multiple_markets(multi_market_ledgers, markets_evaluated; min_edge=min_edge)
+
+===================================================================================================================
+  HURDLE METRICS (OOS) — Target Market: over_25
+===================================================================================================================
+Group                 | Bets | Win%   | AvgStake | EmpROI   | ParamROI | EmpSharpe | ParamSharpe | EmpGrowth | ParamGrowth
+-------------------------------------------------------------------------------------------------------------------
+L1 Raw (Unfiltered)   | 196  | 43.4%  | 9.56%    | -5.48%   | -5.48%   | -0.0499   | -0.0501     | 0.257%    | -1.065%    
+Good Regime (Gated)   | 92   | 44.6%  | 9.48%    | -4.40%   | -4.40%   | -0.0405   | -0.0407     | -0.672%   | -0.937%    
+Bad Regime (Skipped)  | 104  | 42.3%  | 9.63%    | -6.44%   | -6.44%   | -0.0578   | -0.0581     | 1.086%    | -1.181%    
+-------------------------------------------------------------------------------------------------------------------
+Fitted Hurdle Parameters (Bernoulli-Gamma):
+  * L1 Raw         : p = 0.4337 | Gamma(α = 17.9302, θ = 0.0658 ) | E[Y] = 1.1794  (ROI if win)
+  * Good Regime    : p = 0.4457 | Gamma(α = 18.7135, θ = 0.0612 ) | E[Y] = 1.1451  (ROI if win)
+  * Bad Regime     : p = 0.4231 | Gamma(α = 17.7149, θ = 0.0684 ) | E[Y] = 1.2114  (ROI if win)
+===================================================================================================================
+
+===================================================================================================================
+  HURDLE METRICS (OOS) — Target Market: under_25
+===================================================================================================================
+Group                 | Bets | Win%   | AvgStake | EmpROI   | ParamROI | EmpSharpe | ParamSharpe | EmpGrowth | ParamGrowth
+-------------------------------------------------------------------------------------------------------------------
+L1 Raw (Unfiltered)   | 134  | 55.2%  | 6.39%    | 3.14%    | 3.14%    | 0.0332    | 0.0333      | -0.162%   | 0.017%     
+Good Regime (Gated)   | 30   | 60.0%  | 4.63%    | 18.31%   | 18.31%   | 0.1836    | 0.1868      | 1.382%    | 0.743%     
+Bad Regime (Skipped)  | 104  | 53.8%  | 6.89%    | -1.24%   | -1.24%   | -0.0133   | -0.0133     | -0.603%   | -0.292%    
+-------------------------------------------------------------------------------------------------------------------
+Fitted Hurdle Parameters (Bernoulli-Gamma):
+  * L1 Raw         : p = 0.5522 | Gamma(α = 15.7762, θ = 0.0550 ) | E[Y] = 0.8677  (ROI if win)
+  * Good Regime    : p = 0.6000 | Gamma(α = 20.1121, θ = 0.0483 ) | E[Y] = 0.9719  (ROI if win)
+  * Bad Regime     : p = 0.5385 | Gamma(α = 16.1125, θ = 0.0518 ) | E[Y] = 0.8342  (ROI if win)
+===================================================================================================================
+=#
+
+
+#=
+# loose odds betfair big window
+julia> final_metrics = MetaModels.evaluate_multiple_markets(multi_market_ledgers, markets_evaluated; min_edge=min_edge)
+
+===================================================================================================================
+  HURDLE METRICS (OOS) — Target Market: over_25
+===================================================================================================================
+Group                 | Bets | Win%   | AvgStake | EmpROI   | ParamROI | EmpSharpe | ParamSharpe | EmpGrowth | ParamGrowth
+-------------------------------------------------------------------------------------------------------------------
+L1 Raw (Unfiltered)   | 192  | 43.2%  | 11.39%   | -0.84%   | -0.84%   | -0.0073   | -0.0073     | 0.063%    | -0.942%    
+Good Regime (Gated)   | 102  | 42.2%  | 12.17%   | -6.13%   | -6.13%   | -0.0548   | -0.0551     | -0.776%   | -1.645%    
+Bad Regime (Skipped)  | 90   | 44.4%  | 10.50%   | 5.15%    | 5.15%    | 0.0427    | 0.0429      | 1.023%    | -0.233%    
+-------------------------------------------------------------------------------------------------------------------
+Fitted Hurdle Parameters (Bernoulli-Gamma):
+  * L1 Raw         : p = 0.4323 | Gamma(α = 16.5001, θ = 0.0784 ) | E[Y] = 1.2937  (ROI if win)
+  * Good Regime    : p = 0.4216 | Gamma(α = 22.0512, θ = 0.0556 ) | E[Y] = 1.2266  (ROI if win)
+  * Bad Regime     : p = 0.4444 | Gamma(α = 14.0702, θ = 0.0971 ) | E[Y] = 1.3659  (ROI if win)
+===================================================================================================================
+
+===================================================================================================================
+  HURDLE METRICS (OOS) — Target Market: under_25
+===================================================================================================================
+Group                 | Bets | Win%   | AvgStake | EmpROI   | ParamROI | EmpSharpe | ParamSharpe | EmpGrowth | ParamGrowth
+-------------------------------------------------------------------------------------------------------------------
+L1 Raw (Unfiltered)   | 156  | 53.2%  | 7.80%    | 2.53%    | 2.53%    | 0.0257    | 0.0259      | -0.659%   | -0.095%    
+Good Regime (Gated)   | 47   | 46.8%  | 5.89%    | -5.85%   | -5.85%   | -0.0567   | -0.0574     | -1.602%   | -0.525%    
+Bad Regime (Skipped)  | 109  | 56.0%  | 8.63%    | 6.14%    | 6.14%    | 0.0638    | 0.0642      | -0.249%   | 0.186%     
+-------------------------------------------------------------------------------------------------------------------
+Fitted Hurdle Parameters (Bernoulli-Gamma):
+  * L1 Raw         : p = 0.5321 | Gamma(α = 15.4452, θ = 0.0600 ) | E[Y] = 0.9270  (ROI if win)
+  * Good Regime    : p = 0.4681 | Gamma(α = 15.1368, θ = 0.0668 ) | E[Y] = 1.0114  (ROI if win)
+  * Bad Regime     : p = 0.5596 | Gamma(α = 16.5491, θ = 0.0542 ) | E[Y] = 0.8966  (ROI if win)
+===================================================================================================================
+=#
+

@@ -1,7 +1,8 @@
 # current_development/MetaModels/src/types.jl
 
 export AbstractMetaModel, AbstractMetaDynamicsConfig, AbstractMetaHierarchyConfig
-export ConvexMixtureMetaModel, MetaGRWDynamicsConfig, GlobalMetaHierarchyConfig, HierarchicalMetaTeamConfig
+export ConvexMixtureMetaModel, AffineCalibrationMetaModel
+export MetaGRWDynamicsConfig, GlobalMetaHierarchyConfig, HierarchicalMetaTeamConfig
 export MetaModelData
 
 # --- Component Base Types ---
@@ -16,13 +17,28 @@ abstract type AbstractMetaModel{
     H<:AbstractMetaHierarchyConfig
 } end
 
-# --- Concrete Engine ---
+# --- Concrete Engine 1: Convex Mixture ---
 """
     ConvexMixtureMetaModel
 
 Implements the Q_i = θ * p_i + (1-θ) * m_i mixture model.
 """
 Base.@kwdef struct ConvexMixtureMetaModel{
+    D<:AbstractMetaDynamicsConfig, 
+    H<:AbstractMetaHierarchyConfig
+} <: AbstractMetaModel{D, H}
+    dynamics_config::D
+    hierarchy_config::H
+end
+
+# --- Concrete Engine 2: Affine Calibration ---
+"""
+    AffineCalibrationMetaModel
+
+Implements a fully Bayesian Dynamic Platt Scaling (Affine Logistic Shift).
+logit(Q_i) = α_t + β_t * logit(p_L1_i)
+"""
+Base.@kwdef struct AffineCalibrationMetaModel{
     D<:AbstractMetaDynamicsConfig, 
     H<:AbstractMetaHierarchyConfig
 } <: AbstractMetaModel{D, H}

@@ -185,6 +185,22 @@ function compute_predictive_stakes(
     min_edge=0.02,
     staking_odds::Union{DataFrame, Nothing}=nothing
 )
+    return compute_predictive_stakes(
+        meta_results, 
+        all_data, 
+        meta_results.task.model; 
+        min_edge=min_edge, 
+        staking_odds=staking_odds
+    )
+end
+
+function compute_predictive_stakes(
+    meta_results,
+    all_data::DataFrame,
+    model::ConvexMixtureMetaModel;
+    min_edge=0.02,
+    staking_odds::Union{DataFrame, Nothing}=nothing
+)
     n_folds = length(meta_results.fold_results)
     
     # 1. Establish the "Cold Start" prior from Fold 1
@@ -281,3 +297,114 @@ function compute_predictive_stakes(
     
     return vcat(ledgers...)
 end
+
+function compute_predictive_stakes(
+    meta_results,
+    all_data::DataFrame,
+    model::AffineCalibrationMetaModel;
+    min_edge=0.02,
+    staking_odds::Union{DataFrame, Nothing}=nothing
+)
+    n_folds = length(meta_results.fold_results)
+    ledgers = DataFrame[]
+    
+    # Optional Staking Odds Override
+    eval_data = copy(all_data)
+    if !isnothing(staking_odds)
+        stake_df = staking_odds[!, [:match_id, :selection, :odds_close]]
+        rename!(stake_df, :odds_close => :stake_odds_close)
+        eval_data = innerjoin(eval_data, stake_df, on=[:match_id, :selection])
+    else
+        eval_data.stake_odds_close = eval_data.odds_close
+    end
+
+    # We evaluate matches starting from fold 2
+    for k in 1:(n_folds - 1)
+        chain = meta_results.fold_results[k].chain
+        fold_data = meta_results.fold_results[k].fold_data
+        w_k = maximum(fold_data.W)
+        
+        # 1. Extract Posterior of the L2 Model
+        α_samples     = vec(chain[:α_intercept])
+        β_samples     = vec(chain[:β_intercept])
+        
+        n_samples = length(α_samples)
+        
+        # Determine if we have dynamic GRW
+        has_dynamics = Symbol("dyn_α_logit.σ_GRW") in names(chain, :parameters)
+        α_wk_samples = copy(α_samples)
+        if has_dynamics
+            σ_GRW_samples = vec(chain[Symbol("dyn_α_logit.σ_GRW")])
+            z_w_mat = hcat([vec(chain[Symbol("dyn_α_logit.z_w[$w]")]) for w in 1:w_k]...)
+            for s in 1:n_samples
+                drift = cumsum(z_w_mat[s, :] .* σ_GRW_samples[s])
+                drift_centered = drift .- mean(drift)
+                α_wk_samples[s] += drift_centered[end]
+            end
+        end
+        
+        has_teams = Symbol("δ_team.σ_team") in names(chain, :parameters)
+
+        next_fold_data = subset(eval_data, :fold_idx => ByRow(==(k+1)))
+        
+        if nrow(next_fold_data) > 0
+            stakes = zeros(nrow(next_fold_data))
+            
+            for i in 1:nrow(next_fold_data)
+                h = next_fold_data.home_idx[i]
+                a = next_fold_data.away_idx[i]
+                
+                p_L1 = clamp(next_fold_data.p_L1[i], 1e-5, 1.0 - 1e-5)
+                logit_p = logit(p_L1)
+                
+                # Generate full posterior of calibrated probabilities
+                Q_posterior = zeros(n_samples)
+                
+                for s in 1:n_samples
+                    t_bias = 0.0
+                    if has_teams && h > 0 && a > 0
+                        σ_team = chain[Symbol("δ_team.σ_team")][s]
+                        z_h = chain[Symbol("δ_team.z_team[$h]")][s]
+                        z_a = chain[Symbol("δ_team.z_team[$a]")][s]
+                        t_bias = (z_h + z_a) * σ_team
+                    end
+                    
+                    α_s = α_wk_samples[s] + t_bias
+                    β_s = β_samples[s]
+                    
+                    logit_Q = α_s + (β_s * logit_p)
+                    Q_posterior[s] = logistic(logit_Q)
+                end
+                
+                # Bet Gate: Affine is fully calibrated, so ALL matches are valid to check Kelly
+                odds = next_fold_data.stake_odds_close[i]
+                stakes[i] = compute_stake(BayesianKelly(min_edge=min_edge), Q_posterior, odds)
+            end
+            
+            pnls = [s > 0 ? (Bool(w) ? s*(o-1.0) : -s) : 0.0
+                    for (s,w,o) in zip(stakes, next_fold_data.is_winner, next_fold_data.stake_odds_close)]
+                    
+            cols_to_copy = intersect(names(next_fold_data), 
+                ["match_id", "selection", "home_team", "away_team", "match_date", 
+                 "W", "p_L1", "prob_fair_close", "odds_close", "stake_odds_close", "is_winner", "distribution"])
+            
+            ledger = copy(next_fold_data[!, cols_to_copy])
+            ledger.θ_pred    .= 1.0 # Affine doesn't use theta regime
+            ledger.threshold .= 0.0
+            ledger.regime    .= "CALIBRATED"
+            ledger.stake     = stakes
+            ledger.pnl       = pnls
+            
+            rename!(ledger, :stake_odds_close => :odds_close, :odds_close => :anchor_odds)
+            
+            push!(ledgers, ledger)
+        end
+    end
+    
+    if isempty(ledgers)
+        return DataFrame()
+    end
+    
+    return vcat(ledgers...)
+end
+

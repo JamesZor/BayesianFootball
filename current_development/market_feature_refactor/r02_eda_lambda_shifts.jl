@@ -16,10 +16,11 @@ println("==================================================")
 # 1. Load Data
 # We'll load the Scottish Lower dataset (or whichever is locally cached)
 println("Loading DataStore...")
-ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower())
+ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.Ireland())
 
 # Filter to get a decent sample of unique match IDs
-unique_match_ids = unique(ds.odds.match_id)[1:min(100, length(unique(ds.odds.match_id)))]
+unique_match_ids = unique(ds.odds.match_id)[1:min(100, length(unique(ds.odds.match_id)))];
+unique_match_ids = unique(ds.odds.match_id)[1:max(100, length(unique(ds.odds.match_id)))];
 println("Running analysis on $(length(unique_match_ids)) matches...")
 
 # 2. Define our Configs
@@ -71,29 +72,77 @@ for match_df in odds_by_match
 end
 
 # 5. Analyze Differences
-results.delta_λ_home_dc = results.dc_λ_home .- results.dp_λ_home
-results.delta_λ_away_dc = results.dc_λ_away .- results.dp_λ_away
+results.delta_λ_home_dc = results.dc_λ_home .- results.dp_λ_home;
+results.delta_λ_away_dc = results.dc_λ_away .- results.dp_λ_away;
 
-results.delta_λ_home_fc = results.fc_λ_home .- results.dp_λ_home
-results.delta_λ_away_fc = results.fc_λ_away .- results.dp_λ_away
+results.delta_λ_home_fc = results.fc_λ_home .- results.dp_λ_home;
+results.delta_λ_away_fc = results.fc_λ_away .- results.dp_λ_away;
 
 println("\n--- Analysis Results ---")
 
 println("\nAverage Dixon-Coles Shift (Stolen Signal):")
 println("Home λ shift: ", round(sum(results.delta_λ_home_dc) / nrow(results), digits=4))
 println("Away λ shift: ", round(sum(results.delta_λ_away_dc) / nrow(results), digits=4))
+#=
+Average Dixon-Coles Shift (Stolen Signal):
+
+julia> println("Home λ shift: ", round(sum(results.delta_λ_home_dc) / nrow(results), digits=4))
+Home λ shift: -0.0012
+
+julia> println("Away λ shift: ", round(sum(results.delta_λ_away_dc) / nrow(results), digits=4))
+Away λ shift: -0.001
+=#
 
 println("\nAverage Frank Copula Shift:")
 println("Home λ shift: ", round(sum(results.delta_λ_home_fc) / nrow(results), digits=4))
 println("Away λ shift: ", round(sum(results.delta_λ_away_fc) / nrow(results), digits=4))
 
+#=
+julia> println("\nAverage Frank Copula Shift:")
+Average Frank Copula Shift:
+
+julia> println("Home λ shift: ", round(sum(results.delta_λ_home_fc) / nrow(results), digits=4))
+Home λ shift: 0.0187
+
+julia> println("Away λ shift: ", round(sum(results.delta_λ_away_fc) / nrow(results), digits=4))
+Away λ shift: 0.0139
+=#
+
+
 println("\nDispersion Stability (Checking Regularization):")
 println("Average r_home: ", round(sum(results.fc_r_home) / nrow(results), digits=2))
 println("Average r_away: ", round(sum(results.fc_r_away) / nrow(results), digits=2))
 
+#=
+julia> println("\nDispersion Stability (Checking Regularization):")
+
+Dispersion Stability (Checking Regularization):
+
+julia> println("Average r_home: ", round(sum(results.fc_r_home) / nrow(results), digits=2))
+Average r_home: 15.09
+
+julia> println("Average r_away: ", round(sum(results.fc_r_away) / nrow(results), digits=2))
+Average r_away: 15.07
+=#
+
+
 println("\nTop 5 matches with highest Correlation (ρ) and their Lambda shifts:")
 sort!(results, :dc_ρ, rev=true)
 display(first(results[:, [:match_id, :dc_ρ, :dp_λ_home, :dc_λ_home, :delta_λ_home_dc]], 5))
+
+#=
+julia> display(first(results[:, [:match_id, :dc_ρ, :dp_λ_home, :dc_λ_home, :delta_λ_home_dc]], 5))
+5×5 DataFrame
+ Row │ match_id  dc_ρ       dp_λ_home  dc_λ_home  delta_λ_home_dc 
+     │ Int64     Float64    Float64    Float64    Float64         
+─────┼────────────────────────────────────────────────────────────
+   1 │ 13250695  0.136561    2.0644      2.04825       -0.0161504
+   2 │ 13250699  0.128089    0.931949    0.95983        0.0278811
+   3 │ 13250680  0.123451    1.79704     1.78488       -0.012161
+   4 │ 15238007  0.0987062   2.06937     2.05847       -0.010898
+   5 │ 15238031  0.0919567   1.0709      1.08487        0.0139621
+=#
+
 
 println("\n==================================================")
 println(" EDA Complete. Run `using Plots; scatter(results.dc_ρ, results.delta_λ_home_dc)` to visualize the bias.")
