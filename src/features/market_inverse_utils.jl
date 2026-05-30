@@ -3,7 +3,7 @@ using Distributions
 using Optim
 using LinearAlgebra # For diag, tril, triu
 
-include("../MyDistributions/frank_copula_negbin.jl")
+using ..MyDistributions: FrankCopulaNegBin
 
 # ---------------------------------------------------------
 # 1. Core Mathematical Helpers
