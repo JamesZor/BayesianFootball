@@ -75,13 +75,19 @@ end
     # ==========================================
     # 2. VECTORIZED INDEXING & MATH
     # ==========================================
-    home_Outfield = home_D_ratings .+ home_M_ratings .+ home_F_ratings
-    away_Outfield = away_D_ratings .+ away_M_ratings .+ away_F_ratings
+    # Mean-center the ratings to perfectly resolve the non-identifiability ridge with inter.μ
+    base_rating = config.player_ratings_feature.tracker.prior_mean
+    
+    h_G_c = home_G_ratings .- base_rating
+    h_O_c = (home_D_ratings .+ home_M_ratings .+ home_F_ratings) .- (10.0 * base_rating)
+    
+    a_G_c = away_G_ratings .- base_rating
+    a_O_c = (away_D_ratings .+ away_M_ratings .+ away_F_ratings) .- (10.0 * base_rating)
 
-    att_h = (p_dyn.w_G_att .* home_G_ratings) .+ (p_dyn.w_Outfield_att .* home_Outfield)
-    def_h = (p_dyn.w_G_def .* home_G_ratings) .+ (p_dyn.w_Outfield_def .* home_Outfield)
-    att_a = (p_dyn.w_G_att .* away_G_ratings) .+ (p_dyn.w_Outfield_att .* away_Outfield)
-    def_a = (p_dyn.w_G_def .* away_G_ratings) .+ (p_dyn.w_Outfield_def .* away_Outfield)
+    att_h = (p_dyn.w_G_att .* h_G_c) .+ (p_dyn.w_Outfield_att .* h_O_c)
+    def_h = (p_dyn.w_G_def .* h_G_c) .+ (p_dyn.w_Outfield_def .* h_O_c)
+    att_a = (p_dyn.w_G_att .* a_G_c) .+ (p_dyn.w_Outfield_att .* a_O_c)
+    def_a = (p_dyn.w_G_def .* a_G_c) .+ (p_dyn.w_Outfield_def .* a_O_c)
 
     home_adv    = view(ha, home_team_indices)
     inter_match = view(inter, season_indices)
@@ -251,13 +257,17 @@ function extract_parameters(
         a_M = get(m_ratings, ("away", "M"), 0.0)
         a_F = get(m_ratings, ("away", "F"), 0.0)
 
-        h_Outfield = h_D + h_M + h_F
-        a_Outfield = a_D + a_M + a_F
+        base_r = model.player_ratings_feature.tracker.prior_mean
+        h_G_c = h_G - base_r
+        h_O_c = (h_D + h_M + h_F) - (10.0 * base_r)
+        
+        a_G_c = a_G - base_r
+        a_O_c = (a_D + a_M + a_F) - (10.0 * base_r)
 
-        att_h = (p_dyn_nt.w_G_att .* h_G) .+ (p_dyn_nt.w_Outfield_att .* h_Outfield)
-        def_h = (p_dyn_nt.w_G_def .* h_G) .+ (p_dyn_nt.w_Outfield_def .* h_Outfield)
-        att_a = (p_dyn_nt.w_G_att .* a_G) .+ (p_dyn_nt.w_Outfield_att .* a_Outfield)
-        def_a = (p_dyn_nt.w_G_def .* a_G) .+ (p_dyn_nt.w_Outfield_def .* a_Outfield)
+        att_h = (p_dyn_nt.w_G_att .* h_G_c) .+ (p_dyn_nt.w_Outfield_att .* h_O_c)
+        def_h = (p_dyn_nt.w_G_def .* h_G_c) .+ (p_dyn_nt.w_Outfield_def .* h_O_c)
+        att_a = (p_dyn_nt.w_G_att .* a_G_c) .+ (p_dyn_nt.w_Outfield_att .* a_O_c)
+        def_a = (p_dyn_nt.w_G_def .* a_G_c) .+ (p_dyn_nt.w_Outfield_def .* a_O_c)
 
         γ_h = h_id > 0 ? ha_mat[:, h_id] : zeros(n_samples)
         κ_h = h_id > 0 ? kap_mat[:, h_id] : ones(n_samples)
