@@ -54,11 +54,6 @@ end
     market_log_λ_h::Vector{Float64},
     market_log_λ_a::Vector{Float64},
     idx_market::Vector{Int},
-    # --- Dixon-Coles Groupings ---
-    idx_00::Vector{Int},
-    idx_10::Vector{Int},
-    idx_01::Vector{Int},
-    idx_11::Vector{Int},
     # --- Dimensions ---
     n_teams::Int,
     n_seasons::Int,
