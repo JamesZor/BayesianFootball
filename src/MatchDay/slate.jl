@@ -242,7 +242,8 @@ end
 # ===================================================================
 
 """
-    price_slate(spec, sys, segment, fit, ds; as_of, bankroll, account_id, slate_id) -> PricedSlate
+    price_slate(spec, sys, segment, fit, ds; as_of, bankroll, account_id, slate_id,
+                calibrator = nothing) -> PricedSlate
 
 Price one settlement window from a canonical fit, end to end.
 
@@ -260,7 +261,9 @@ Differs from [`match_day`](@ref) in three ways, all of which exist because the l
 3. it annotates **capacity** per leg against that book.
 
 `as_of` has no default here, unlike `match_day`. A live slate and a replayed one must be spelled
-identically or the replay is not evidence about the live path.
+identically or the replay is not evidence about the live path. When `calibrator` is supplied,
+the exact quoted book is de-vigged and inverted before the rate draws reach Portfolio; the
+calibrator's fitted price instant is asserted against the fixtures' actual time to kick-off.
 
 Refuses a slate spanning more than one settlement window: `Portfolio` solves per window, so two
 windows in one `PricedSlate` would carry one `k_risk` for two different joint problems.
@@ -268,7 +271,9 @@ windows in one `PricedSlate` would carry one `k_risk` for two different joint pr
 function price_slate(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment, fit, ds;
                      as_of::DateTime, bankroll::Real,
                      account_id::AbstractString = "default",
-                     slate_id::UUID = uuid4())
+                     slate_id::UUID = uuid4(),
+                     calibrator::Union{Nothing,
+                                       Calibration.AbstractGenerativeRateCalibrator} = nothing)
     cards = build_cards(spec, segment, as_of)
     q     = quote_slate(spec, cards, as_of)
 
@@ -279,14 +284,34 @@ function price_slate(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment
     blocked = FixtureCard[c for c in cards if !is_ready(c.readiness)]
 
     window = isempty(cards) ? Date(as_of) : minimum(Date(c.fixture.kickoff) for c in cards)
+    calibration_note = ""
     empty  = () -> PricedSlate(slate_id, String(account_id), window, as_of, Float64(bankroll),
                                _empty_slate_sheet(), q.odds, cards, blocked, q.instruments,
                                q.books, 1.0, 0.0, false, _policy_lambda(sys),
-                               _policy_cap(sys), 0.0, 0, "")
+                               _policy_cap(sys), 0.0, 0, calibration_note)
     isempty(passed) && return empty()
 
     latents, diag = matchday_latents(spec, fit, ds, passed, q.odds, as_of)
     isempty(latents) && return empty()
+
+    if calibrator !== nothing
+        calibrated = calibrate_matchday_latents(calibrator, latents, q.odds, passed, as_of)
+        latents = calibrated.latents
+        coverage = calibrated.coverage
+        calibration_note = @sprintf(
+            "calibration %s: %d/%d accepted, %d refused, %d absent (%.1f%% of quoted)",
+            calibrator.name, coverage.n_accepted, coverage.n_fixtures,
+            coverage.n_refused, coverage.n_absent, 100 * coverage.coverage_quoted)
+        coverage_log = (; calibrator = calibrator.name, coverage...,
+                         refusals = Calibration.inversion_refusals(calibrated.rates))
+        @info "MatchDay calibration coverage" details = coverage_log
+        coverage.n_accepted > 0 || @warn(
+            "price_slate: calibration shifted no fixture; the raw posterior passed through",
+            calibrator = calibrator.name,
+            n_fixtures = coverage.n_fixtures,
+            n_quoted = coverage.n_quoted,
+            refusals = Calibration.inversion_refusals(calibrated.rates))
+    end
 
     sheet = Portfolio.stake_sheet(sys, latents, fit, q.odds, fixture_info(passed);
                                   bankroll = bankroll)
@@ -307,7 +332,8 @@ function price_slate(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment
                        sheet, q.odds, cards, blocked, q.instruments, q.books,
                        Float64(first(sheet.k_risk)), Float64(first(sheet.slate_exposure)),
                        Bool(first(sheet.capped)), _policy_lambda(sys), _policy_cap(sys),
-                       sum(Float64, sheet.risk), diag.split, diag.warning)
+                       sum(Float64, sheet.risk), diag.split,
+                       join(filter(!isempty, [diag.warning, calibration_note]), " | "))
 end
 
 _policy_cap(sys::Portfolio.PortfolioSystem) =

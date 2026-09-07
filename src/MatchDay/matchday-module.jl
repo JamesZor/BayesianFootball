@@ -98,6 +98,7 @@ using ..Portfolio
 # from `fits.jl`; `BackTesting` is not reached at all.
 import ..Training
 import ..Evaluation
+import ..Calibration
 
 # --- order matters -----------------------------------------------------------
 # types.jl names concrete types in its @kwdef defaults; those are evaluated when a constructor
@@ -113,6 +114,7 @@ include("implementations/book.jl")
 include("implementations/gates.jl")
 
 include("inference.jl")
+include("calibration.jl")
 include("pipeline.jl")
 include("fits.jl")
 include("slate.jl")
@@ -151,12 +153,18 @@ export
     # identity
     MatchMetaCrosswalk, LiveNameMatch, ResolverChain, team_name_score, match_event_scores,
 
+    # lineup sources
+    SofaScoreEvents, ExplicitFixtures, ProvisionalDB, LastHistorical, JsonPin, SourceChain,
+    BBCLineupSource, parse_bbc_lineup,
+
     # entry points
     match_day, build_cards, price_cards, fixture_info, order_ticket, blocked_report,
 
     # the slate
     PricedSlate, price_slate, slate_batch_summary, canonical_markets,
-    canonical_scottish_lower_policy,
+    canonical_scottish_lower_policy, matchday_calibration_book,
+    calibrate_matchday_latents, option_b_calibrator,
+    option_b_scottish_lower_policy, option_b_book_spec, option_b_system,
     leg_capacity, annotate_capacity!, sweep_ladder, fill_confidence,
     CanonicalFit, canonical_fit,
 

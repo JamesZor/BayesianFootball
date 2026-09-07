@@ -58,6 +58,7 @@ const TT = BayesianFootball.Training
 const MO = BayesianFootball.Models
 const FE = BayesianFootball.Features
 const PRED = BayesianFootball.Predictions
+const CAL = BayesianFootball.Calibration
 
 # ===================================================================
 # 1. Isolation constants -- the only defence that is not a convention
@@ -657,6 +658,7 @@ mutable struct ModelSlot
     label::String
     experiment::String
     run_name::String
+    calibrator::Union{Nothing,CAL.AbstractGenerativeRateCalibrator}
     status::Symbol                      # :unloaded | :loading | :ready | :failed
     error::String
     fit::Any
@@ -673,7 +675,10 @@ mutable struct ModelSlot
 end
 
 ModelSlot(key, label, experiment, run_name) =
-    ModelSlot(String(key), String(label), String(experiment), String(run_name),
+    ModelSlot(key, label, experiment, run_name, nothing)
+
+ModelSlot(key, label, experiment, run_name, calibrator) =
+    ModelSlot(String(key), String(label), String(experiment), String(run_name), calibrator,
               :unloaded, "", nothing, nothing, nothing, 0, "", nothing, nothing, Int[],
               Pair{Int,String}[], Dict{UInt64,DataFrame}(), 0.0)
 
@@ -686,14 +691,56 @@ They are registered by `(experiment, run_name)` rather than by run id, because t
 sequence number in `mcmc_experiments.runs` and the name is the stable address the registry
 protocol asks for. All three are `status = completed` runs; none of them is fitted here.
 """
-default_model_registry() = ModelSlot[
-    ModelSlot("m00", "m00 Poisson control", "scottish_lower_joint_2426",
-              "m00_poisson_control"),
-    ModelSlot("m05", "m05 Joint production-wealth", "scottish_lower_joint_2426",
-              "m05_joint_production_wealth"),
-    ModelSlot("m12", "m12 Hybrid wealth + player RAPM", "scottish_lower_player_grid_2426",
-              "m12_hybrid_production_wealth_player_rapm"),
-]
+default_model_registry(name::AbstractString = get(ENV, "R08_REGISTRY", "player_grid")) =
+    MODEL_REGISTRIES[_registry_key(name)]()
+
+function _registry_key(name::AbstractString)
+    k = lowercase(strip(String(name)))
+    haskey(MODEL_REGISTRIES, k) || error(
+        "replay: no model registry '$name'. Known: " *
+        join(sort(collect(keys(MODEL_REGISTRIES))), ", ") * ".")
+    return k
+end
+
+"""
+    MODEL_REGISTRIES
+
+The registered `(experiment, run_name)` sets this console can price from, by short name.
+
+**Two of them, because the two are fitted in different experiments and neither is a superset of
+the other.** `player_grid` is the pair the console has always loaded; `joint_player` is the
+`scottish_lower_joint_player_2426` production pair, which was extended to 43 folds for the 26/27
+season while the others stopped at 42. On a card whose next observed round is fold 43, the first
+registry conditions on an earlier fold and `select_split` says so in a warning that is easy to
+miss at 60x — so the choice is a launch flag (`R08_REGISTRY=joint_player`) rather than an edit,
+and the fold each model actually chose is on its info card either way.
+
+They are registered by `(experiment, run_name)` rather than by run id, because the id is a
+sequence number in `mcmc_experiments.runs` and the name is the stable address the registry
+protocol asks for. Every run named here is `status = completed`; none of them is fitted here.
+"""
+const MODEL_REGISTRIES = Dict{String,Function}(
+    "player_grid" => () -> ModelSlot[
+        ModelSlot("m00", "m00 Poisson control", "scottish_lower_joint_2426",
+                  "m00_poisson_control"),
+        ModelSlot("m05", "m05 Joint production-wealth", "scottish_lower_joint_2426",
+                  "m05_joint_production_wealth"),
+        ModelSlot("m12", "m12 Hybrid wealth + player RAPM", "scottish_lower_player_grid_2426",
+                  "m12_hybrid_production_wealth_player_rapm"),
+    ],
+    "joint_player" => () -> ModelSlot[
+        ModelSlot("m00", "m00 Poisson control", "scottish_lower_joint_2426",
+                  "m00_poisson_control"),
+        ModelSlot("m05", "m05 Joint production-wealth", "scottish_lower_joint_player_2426",
+                  "m05_joint_production_wealth"),
+        ModelSlot("m12", "m12 Joint hybrid synergy", "scottish_lower_joint_player_2426",
+                  "m12_joint_hybrid_synergy"),
+        ModelSlot("m05_optB", "m05 Option B calibrated", "scottish_lower_joint_player_2426",
+                  "m05_joint_production_wealth", MD.option_b_calibrator()),
+        ModelSlot("m12_optB", "m12 Option B calibrated", "scottish_lower_joint_player_2426",
+                  "m12_joint_hybrid_synergy", MD.option_b_calibrator()),
+    ],
+)
 
 """
     coverage_split(fs, fixtures) -> (covered, refused)
@@ -825,6 +872,19 @@ function lineup_signature(cards::Vector{<:MD.FixtureCard})
 end
 
 """
+    slot_cache_signature(slot, cards, as_of) -> UInt64
+
+Raw posterior draws move only when the visible XI moves. Calibrated draws also depend on the
+point-in-time book, so their cache key includes `as_of`; otherwise a T-25 calibration could be
+served unchanged at T-24 after the market moved.
+"""
+function slot_cache_signature(slot::ModelSlot, cards::Vector{<:MD.FixtureCard},
+                              as_of::DateTime)
+    lineup = lineup_signature(cards)
+    return slot.calibrator === nothing ? lineup : UInt64(hash((lineup, as_of)))
+end
+
+"""
     slot_latents(slot, spec, ds, cards, odds, as_of) -> DataFrame
 
 Posterior latents for the card, memoised on the lineup.
@@ -843,7 +903,7 @@ materialising into `slot.base_fs` would make the SECOND tick see the first tick'
 function slot_latents(slot::ModelSlot, spec::MD.MatchDaySpec, ds,
                       cards::Vector{<:MD.FixtureCard}, odds::DataFrame, as_of::DateTime)
     isempty(cards) && return DataFrame()
-    sig = lineup_signature(cards)
+    sig = slot_cache_signature(slot, cards, as_of)
     cached = get(slot.latents, sig, nothing)
     cached === nothing || return cached
 
@@ -871,6 +931,14 @@ function slot_latents(slot::ModelSlot, spec::MD.MatchDaySpec, ds,
                       match_week = fill(999, length(fx)))
     raw = MO.PreGame.extract_parameters(model, frame, fs, slot.chain)
     df = MD._raw_to_df(raw)
+    if slot.calibrator !== nothing
+        calibrated = MD.calibrate_matchday_latents(slot.calibrator, df, odds, cards, as_of)
+        coverage_log = (; model = slot.key, calibrator = slot.calibrator.name,
+                         calibrated.coverage...,
+                         refusals = CAL.inversion_refusals(calibrated.rates))
+        @info "Replay calibration coverage" details = coverage_log
+        df = calibrated.latents
+    end
     slot.latents[sig] = df
     return df
 end
@@ -1021,6 +1089,42 @@ mutable struct ReplayState
     # on the store because the cell table is fitted on shots from matches strictly before it --
     # move the scrubber to another Saturday and the fit boundary moves with it.
     pxg_cache::Dict{Date,Any}
+    # ---- the policy configurator (§15) ---------------------------------------------------
+    # What `st.system` currently IS, in the vocabulary the drawer speaks. `st.system` is the
+    # authority and these are a read model of it: `PolicySpec` holds a `TieredTrust` whose table
+    # is keyed on normalised `(group, line, selection)` triples, and reconstructing "the operator
+    # moved the Draw slider to 0.30" from that table is a guess. Recording the INPUT alongside the
+    # object it built is not duplication -- it is the difference between a configurator that can
+    # show its own state and one that infers it.
+    policy_preset::String
+    policy_trust::Dict{String,Float64}
+    policy_flat::Float64
+    policy_kind::String              # "tiered" | "flat"
+    policy_shrink::String            # "baker_mchale" | "fractional" | "none"
+    policy_shrink_k::Float64
+    policy_risk::String              # "slate_drawdown" | "none"
+    policy_note::String
+    policy_seq::Int
+    # ---- §16-18 caches ---------------------------------------------------------------------
+    # Every one of these is keyed on something that only moves when its ANSWER moves, which is
+    # what makes a 2 Hz console affordable against a pipeline that costs 400 ms a tick.
+    #
+    # `shock_cache`   the computed Δp across that drop, per (model, fixture) -- written ONLY once
+    #                 the clock has actually reached the drop, so the badge cannot show a shock
+    #                 the operator's clock has not lived through
+    # `model_lambda`  posterior (λ_h, λ_a) draws summarised per fixture, keyed like `model_probs`
+    # `market_lambda` the inverted book, per (fixture, minute) -- the book moves every minute, so
+    #                 this one genuinely is per minute and the cache exists to make scrubbing
+    #                 backwards free rather than to make forwards cheap
+    # `ref_price`     the anchor the tall ladder centres on, per (fixture, market)
+    #
+    # There is deliberately no separate pre-drop probability cache: `model_probs_at` is already
+    # memoised on the lineup signature, and every minute before the first XI lands shares one
+    # signature, so the pre-drop side of a shock is a cache HIT on the map the ticks already built.
+    shock_cache::Dict{Tuple{String,Int},Any}
+    model_lambda::Dict{Tuple{String,UInt64},Dict{Int,Any}}
+    market_lambda::Dict{Tuple{Int,Int},Any}
+    ref_price::Dict{Tuple{Int,String},Any}
 end
 
 function ReplayState(ds, conn, card::ReplayCard; system::PF.PortfolioSystem,
@@ -1035,7 +1139,15 @@ function ReplayState(ds, conn, card::ReplayCard; system::PF.PortfolioSystem,
                        ReentrantLock(), nothing, false, 0.0, 0,
                        Dict{Tuple{String,UInt64},Dict{Int,Dict{MD.SelectionKey,Float64}}}(),
                        Dict{Tuple{Int,MD.SelectionKey},StakingOverride}(), nothing, T_START, "",
-                       Dict{Int,Any}(), Dict{Tuple{String,String},Any}(), Dict{Date,Any}())
+                       Dict{Int,Any}(), Dict{Tuple{String,String},Any}(), Dict{Date,Any}(),
+                       # The policy read model starts as a DESCRIPTION of the system it was
+                       # handed, not as a default: `r08` passes the canonical policy and the
+                       # drawer must open showing that, not showing what the drawer's own
+                       # defaults would have built.
+                       describe_policy(system)..., 0,
+                       Dict{Tuple{String,Int},Any}(),
+                       Dict{Tuple{String,UInt64},Dict{Int,Any}}(),
+                       Dict{Tuple{Int,Int},Any}(), Dict{Tuple{Int,String},Any}())
 end
 
 active_slot(st::ReplayState) =
@@ -1343,6 +1455,14 @@ function set_matchday!(st::ReplayState, day::Date; tournament_ids::Vector{Int} =
         # two match days can produce the same one (notably the all-`nothing` pre-drop state)
         # while meaning entirely different fixtures.
         empty!(st.model_probs)
+        # The §16-18 caches are keyed on match_id or on the same lineup signature, and BOTH keys
+        # are reused across match days -- a fixture id is unique, but a signature is not, and a
+        # reference price keyed on `(match_id, market)` for a fixture that is not on the new card
+        # is simply dead weight. Clearing all four is one line each and cannot be got wrong.
+        empty!(st.model_lambda)
+        empty!(st.market_lambda)
+        empty!(st.shock_cache)
+        empty!(st.ref_price)
         for slot in st.models
             slot.status === :ready || continue
             try
@@ -2048,7 +2168,7 @@ function model_probs_at(st::ReplayState, as_of::DateTime; slot::ModelSlot = acti
     slot.status === :ready || return empty_map
     ctx = _priced_context(st, slot, as_of)
     (ctx === nothing || isempty(ctx.passed)) && return empty_map
-    sig = lineup_signature(ctx.passed)
+    sig = slot_cache_signature(slot, ctx.passed, as_of)
     ckey = (slot.key, sig)
     hit = get(st.model_probs, ckey, nothing)
     hit === nothing || return hit
@@ -2151,7 +2271,8 @@ other leg on the card. Recomputing an isolated Kelly for the desk would print a 
 Execute would ever place.
 """
 function fixture_ladder(st::ReplayState, match_id::Integer,
-                        market_type::AbstractString = "MATCH_ODDS")
+                        market_type::AbstractString = "MATCH_ODDS";
+                        ticks::Integer = LADDER_TICK_HALF)
     return lock(st.lock) do
         f = card_fixture(st, match_id)
         mt = uppercase(strip(String(market_type)))
@@ -2159,12 +2280,14 @@ function fixture_ladder(st::ReplayState, match_id::Integer,
         id = st.card.identities[f.m_id]
         as_of = as_of_at(st.card, st.clock.t)
         slot = active_slot(st)
+        half = Int(clamp(ticks, 3, LADDER_TICK_HALF_MAX))
 
         book = id isa MD.Resolved ? MD.quotes(st.card.book, id, as_of) :
                Dict{MD.SelectionKey,MD.BookLevels}()
         implied = market_implied(book, runners)
         probs = get(model_probs_at(st, as_of; slot = slot), f.m_id,
                     Dict{MD.SelectionKey,Float64}())
+        refs = reference_prices(st, f, mt, runners)
 
         rows = NamedTuple[]
         for r in runners
@@ -2188,6 +2311,15 @@ function fixture_ladder(st::ReplayState, match_id::Integer,
             edge = (pm === nothing || pmod === nothing) ? nothing : pmod - pm
             ev = (edge === nothing || pm === nothing || pm <= 0) ? nothing :
                  round(100 * edge / pm, digits = 2)
+
+            # The order is read once and handed to BOTH ladders: the compact one highlights the
+            # levels it consumes and the tall one marks the ticks those levels sit at, and two
+            # reads of `_order_marker` could disagree about a level under a concurrent reprice.
+            ord = _order_marker(st, f.m_id, r.key)
+            ref = get(refs, r.key, nothing)
+            mid_tick = mid === nothing ? nothing : tick_index(mid)
+            tall = tick_ladder(lv, ref === nothing ? nothing : ref.tick;
+                               half = half, order = ord)
 
             push!(rows, (
                 symbol      = r.symbol,
@@ -2240,7 +2372,20 @@ function fixture_ladder(st::ReplayState, match_id::Integer,
                 book_ts     = lv === nothing ? nothing : string(lv.ts),
                 book_age_s  = lv === nothing ? nothing :
                               round(Dates.value(as_of - lv.ts) / 1000, digits = 0),
-                order       = _order_marker(st, f.m_id, r.key),
+                order       = ord,
+                # ---- the tall centred ladder (§17) --------------------------------------
+                # `ref` is the anchor the window is centred on and the price drift is measured
+                # from; `drift_ticks` is signed toward a LONGER price, so a positive number is a
+                # runner the market has drifted away from since the reference minute.
+                ref_price   = ref === nothing ? nothing : ref.price,
+                ref_t       = ref === nothing ? nothing : ref.t,
+                ref_tick    = ref === nothing ? nothing : ref.tick,
+                mid_tick    = mid_tick,
+                drift_ticks = (ref === nothing || ref.tick === nothing || mid_tick === nothing) ?
+                              nothing : mid_tick - ref.tick,
+                drift_pct   = (ref === nothing || mid === nothing || ref.price <= 0) ? nothing :
+                              round(100 * (mid - ref.price) / ref.price, digits = 2),
+                tall        = tall,
             ))
         end
         # `kelly_stake` is the order's venue stake, restated on the runner so a desk column can
@@ -2271,6 +2416,15 @@ function fixture_ladder(st::ReplayState, match_id::Integer,
             book_sum = implied.complete ? round(implied.book_sum, digits = 4) : nothing,
             complete = implied.complete,
             lineup_drop_min = lineup_drop_minute(st.card, f),
+            tournament_id = f.tournament_id,
+            league = league_short(f.tournament_id),
+            league_name = league_name(f.tournament_id),
+            # The tall ladder's own metadata. `tick_half` is what the desk ASKED for; a runner
+            # whose touch has drifted outside it carries a wider window of its own and says so
+            # in `tall.n_rows`, which is why the two are reported separately.
+            tick_half = half,
+            tick_half_max = LADDER_TICK_HALF_MAX,
+            ref_t = T_START,
             n_runners = length(rows),
             runners = rows,
         )
@@ -3759,4 +3913,1455 @@ function _model_scorecard(st::ReplayState, model_key::AbstractString, baseline::
         notes = notes,
         at = string(Dates.now()),
     )
+end
+
+# ===================================================================
+# 15. The portfolio policy configurator
+# ===================================================================
+#
+# WHY THIS IS SAFE TO DO IN A RUNNING PROCESS, AND WHY IT WOULD NOT BE ON 8085.
+#
+# `PolicySpec` is by construction "everything that is a pure post-multiplier on an already-built
+# book" (`Portfolio/types.jl`). Rebuilding one costs nothing and invalidates nothing: the fold
+# FeatureSet, the chain, the latents cache and the model-probability cache are all functions of
+# the MODEL and the visible XI, and none of them has ever seen a trust weight. So a policy swap
+# is exactly one `reprice!` -- the stake sheet is re-solved against the same posterior and the
+# same book, which is the comparison an operator is asking for when they move a slider.
+#
+# `BookSpec` is the opposite -- it IS the cache key -- and shrinkage lives in it rather than in
+# the policy. `set_policy!` therefore rebuilds the book only when the shrinkage model actually
+# changes, and says so in the note, because that is the one control on the drawer that changes
+# what a price MEANS rather than how much of it is taken.
+#
+# The live console has no equivalent of this file and must not acquire one. A slider that can
+# reach `FixedCap` on the process holding the real ledger is a slider that can raise the
+# simultaneous-exposure ceiling between the moment a vector is priced and the moment it is
+# committed. Here the ledger is `paper_replay` and the whole point is to sweep.
+
+"""
+    OU_LINES
+
+The Over/Under strike lines this system actually prices, read off `canonical_markets()` rather
+than written down again.
+
+Derived and not declared, because a second list would eventually disagree with the first: adding
+a total to the canonical market set must add its two sliders to the drawer, and dropping one must
+remove them, or the configurator offers a weight on a market the engine never quotes.
+"""
+const OU_LINES = Tuple(sort(unique(Float64[DD.market_line(m)
+                                           for m in MD.canonical_markets().markets
+                                           if DD.market_group(m) == "OverUnder"])))
+
+"""
+    ou_tier(direction, line) -> String
+
+The trust-tier key for one side of one total: `ou_tier("under", 2.5) == "under_25"`.
+
+**This is the canonical selection symbol itself**, spelled the way `betfair_to_key` spells it
+(`:under_25`), and that is deliberate. The drawer, the request body, the read model and the odds
+feed then all name the same thing with the same string, so a tier can only fail to bind if the
+market genuinely is not priced -- never because two files spelled 2.5 differently.
+"""
+ou_tier(direction::AbstractString, line::Real) =
+    String(direction) * "_" * replace(string(round(Float64(line), digits = 1)), "." => "")
+
+"""
+    TRUST_TIERS
+
+Every trust tier the drawer exposes, in the order it draws them: the 1X2 triple, BTTS, then
+Under and Over for each priced total.
+
+**One tier per STRIKE, not one per direction, and that is the whole point of this vector.** The
+40-fold Scottish Lower study found the edge is not a property of "unders" -- it is a property of
+a LINE: Under 2.5 returns +18.7% Kelly ROI off the retail Over bias while Under 0.5 returns
+-30.7%, because at a deep total Jensen's inequality (E[e^-Λ] ≥ e^-E[Λ]) inflates the tail and
+manufactures a Kelly edge that is not there. A single `τ_under` slider cannot express that: it
+either gates the alpha away with the distortion or stakes both.
+"""
+const TRUST_TIERS = (("home", "draw", "away", "btts")...,
+                     (ou_tier(d, L) for L in OU_LINES for d in ("under", "over"))...)
+
+"""
+    TRUST_TIER_META
+
+What each tier IS, for the drawer to lay itself out from and for the operator to read before
+moving it.
+
+Served rather than written into the page for the same reason `ladder_markets` is: the
+configurator must not be able to offer a strike the pricing engine does not quote, and there is
+exactly one place -- `OU_LINES`, above -- where those two facts can be kept in agreement.
+
+`verdict` and `note` carry the audited finding for the lines the study measured, and carry
+nothing for the ones it did not. A blank verdict means "not measured", never "fine".
+"""
+const TRUST_TIER_META = let
+    findings = Dict(
+        "under_25" => (verdict = "alpha",
+                       note = "+18.7% Kelly ROI over the 40-fold study — the retail Over bias " *
+                              "is the source, and this is the one total the audit endorses"),
+        "over_25"  => (verdict = "adverse",
+                       note = "−11.4% Kelly ROI: the other side of the same bias"),
+        "under_05" => (verdict = "distorted",
+                       note = "−30.7% ROI. At a deep total Jensen's inequality " *
+                              "(E[e^−Λ] ≥ e^−E[Λ]) inflates the tail and manufactures a Kelly " *
+                              "edge that is not there"),
+        "under_15" => (verdict = "dilutive",
+                       note = "measured dilutive — it competes for the same drawdown budget " *
+                              "as Under 2.5 without carrying its edge"),
+        "under_35" => (verdict = "dilutive",
+                       note = "measured dilutive — it competes for the same drawdown budget " *
+                              "as Under 2.5 without carrying its edge"),
+    )
+    rows = NamedTuple[
+        (key = "home", label = "Home", group = "1X2", line = 0.0, direction = "home",
+         verdict = "tier1", note = "Tier 1 of the audited conviction ratio, 0.35"),
+        (key = "draw", label = "Draw", group = "1X2", line = 0.0, direction = "draw",
+         verdict = "tier2", note = "Tier 2, 0.25"),
+        (key = "away", label = "Away", group = "1X2", line = 0.0, direction = "away",
+         verdict = "tier2", note = "Tier 2, 0.25"),
+        (key = "btts", label = "BTTS", group = "BTTS", line = 0.0, direction = "btts",
+         verdict = "", note = "both Yes and No — gated at zero in the canonical policy"),
+    ]
+    for L in OU_LINES, d in ("under", "over")
+        k = ou_tier(d, L)
+        f = get(findings, k, (verdict = "", note = "gated at zero in the canonical policy"))
+        push!(rows, (key = k, label = (d == "under" ? "Under " : "Over ") * string(L),
+                     group = "OverUnder", line = L, direction = d,
+                     verdict = f.verdict, note = f.note))
+    end
+    rows
+end
+
+"""
+    canonical_tiers() -> Dict{String,Float64}
+
+`CanonicalScottishLowerTrust` in the drawer's vocabulary: Home 0.35, Under 2.5 0.35, Draw 0.25,
+Away 0.25, and **every other strike at zero** -- Over 2.5, both sides of 0.5, 1.5 and 3.5, and
+BTTS.
+
+Built by zeroing every tier and then naming the four the audit endorsed, rather than by listing
+twelve numbers. Adding a total to `canonical_markets()` must add a GATED slider, not an
+un-audited stake, and this construction makes that the default rather than a thing to remember.
+"""
+function canonical_tiers()
+    t = Dict{String,Float64}(k => 0.0 for k in TRUST_TIERS)
+    t["home"] = 0.35
+    t["draw"] = 0.25
+    t["away"] = 0.25
+    t[ou_tier("under", 2.5)] = 0.35
+    return t
+end
+
+"""
+    POLICY_PRESETS
+
+The named starting points, each a complete argument set for `set_policy!`.
+
+`canonical` is `MD.canonical_scottish_lower_policy()` restated in the drawer's vocabulary and is
+asserted against it by `test_replay_workspace.jl`: a preset that drifted from the production
+policy would be a console that shows one thing and prices another.
+"""
+const POLICY_PRESETS = Dict{String,NamedTuple}(
+    "canonical" => (
+        label = "CanonicalScottishLowerTrust",
+        note  = "P1_conservative_tilt — the audited Scottish Lower production policy. " *
+                "Under 2.5 is the only total staked; 0.5, 1.5 and 3.5 are gated at zero.",
+        kind  = "tiered",
+        trust = canonical_tiers(),
+        flat  = 0.25, lambda = 23.0, cap = 0.25, shrink = "baker_mchale",
+        shrink_k = 0.5, risk = "slate_drawdown"),
+    "flat" => (
+        label = "FlatTrust",
+        note  = "one uniform weight on every selection — the league-agnostic default",
+        kind  = "flat",
+        trust = Dict(t => 0.25 for t in TRUST_TIERS),
+        flat  = 0.25, lambda = 23.0, cap = 0.25, shrink = "baker_mchale",
+        shrink_k = 0.5, risk = "slate_drawdown"),
+    "no_shrinkage" => (
+        label = "NoShrinkage",
+        note  = "canonical tiers with the point-estimate allocation kept as-is — " *
+                "levered, and the comparison that shows what Baker-McHale is buying",
+        kind  = "tiered",
+        trust = canonical_tiers(),
+        flat  = 0.25, lambda = 23.0, cap = 0.25, shrink = "none",
+        shrink_k = 0.5, risk = "slate_drawdown"),
+    "full_kelly" => (
+        label = "Unshrunk / no drawdown budget",
+        note  = "FlatTrust(1.0), no drawdown budget, cap only — the upper bound, not a policy",
+        kind  = "flat",
+        trust = Dict(t => 1.0 for t in TRUST_TIERS),
+        flat  = 1.0, lambda = 23.0, cap = 0.25, shrink = "none",
+        shrink_k = 0.5, risk = "none"),
+)
+
+"The order the presets are drawn in, most conservative first."
+const POLICY_PRESET_ORDER = ("canonical", "flat", "no_shrinkage", "full_kelly")
+
+"""
+    build_trust(kind, tiers, flat_w) -> Portfolio.AbstractTrustModel
+
+Turn the drawer's sliders into the trust model `Portfolio` actually stakes with.
+
+The table is keyed exactly as `TieredTrust` normalises: `("1x2", 0.0, :home)`,
+`("over_under", line, :under)`, `("btts", 0.0, :btts_yes)`. Going through the same normalisation
+the policy file defines (`_tiered_group_key`, `_tiered_selection_key`) rather than writing raw
+`:under_25` keys is what stops the drawer from producing a table that silently misses every
+selection because the odds feed spells the line into the symbol.
+
+**One entry per (line, direction), never one per direction.** `TieredTrust` has always keyed on
+the line -- `("over_under", 2.5, :under)` and `("over_under", 0.5, :under)` are different rows in
+its table -- and the drawer used to collapse them onto one slider written across a fixed set of
+lines. That made the two facts the study separates inexpressible: Under 2.5's +18.7% and Under
+0.5's Jensen-inflated −30.7% shared a control, so gating the distortion also gated the alpha.
+"""
+function build_trust(kind::AbstractString, tiers::AbstractDict, flat_w::Real)
+    k = lowercase(strip(String(kind)))
+    _w(name) = begin
+        v = Float64(get(tiers, name, 0.0))
+        (isfinite(v) && 0.0 <= v <= 1.0) || error(
+            "replay policy: trust tier '$name' must be in [0,1], got $v.")
+        v
+    end
+    if k == "flat"
+        w = Float64(flat_w)
+        (isfinite(w) && 0.0 <= w <= 1.0) || error(
+            "replay policy: flat trust must be in [0,1], got $w.")
+        return PF.FlatTrust(w)
+    end
+    k == "tiered" || error("replay policy: trust kind must be 'tiered' or 'flat', got '$kind'.")
+    table = Dict{Tuple{String,Float64,Symbol},Float64}(
+        ("1x2", 0.0, :home) => _w("home"),
+        ("1x2", 0.0, :draw) => _w("draw"),
+        ("1x2", 0.0, :away) => _w("away"),
+        ("btts", 0.0, :btts_yes) => _w("btts"),
+        ("btts", 0.0, :btts_no)  => _w("btts"),
+    )
+    for L in OU_LINES
+        table[("over_under", Float64(L), :under)] = _w(ou_tier("under", L))
+        table[("over_under", Float64(L), :over)]  = _w(ou_tier("over", L))
+    end
+    return PF.TieredTrust(table; default = 0.0)
+end
+
+"The shrinkage model named by the drawer. Lives in `BookSpec`, not `PolicySpec` -- see §15 head."
+function build_shrinkage(name::AbstractString, k::Real = 0.5)
+    n = lowercase(strip(String(name)))
+    n in ("baker_mchale", "bakermchale", "baker") && return PF.BakerMcHale()
+    n in ("none", "no_shrinkage", "noshrinkage") && return PF.NoShrinkage()
+    n in ("fractional", "fractional_kelly", "half_kelly") && return PF.FractionalKelly(Float64(k))
+    error("replay policy: unknown shrinkage '$name'. Known: baker_mchale, none, fractional.")
+end
+
+"The risk model named by the drawer. `none` keeps the exposure cap -- that one is not optional."
+function build_risk(name::AbstractString, lambda::Real)
+    n = lowercase(strip(String(name)))
+    n in ("none", "norisk", "no_risk") && return PF.NoRisk()
+    n in ("slate_drawdown", "slatedrawdown", "slate") || error(
+        "replay policy: unknown risk model '$name'. Known: slate_drawdown, none.")
+    l = Float64(lambda)
+    (isfinite(l) && l > 0) || error("replay policy: drawdown λ must be positive, got $l.")
+    return PF.SlateDrawdown(l)
+end
+
+"Name the shrinkage model on a built `BookSpec`, for the read model."
+_shrink_name(sys::PF.PortfolioSystem) =
+    sys.book.shrink isa PF.BakerMcHale ? "baker_mchale" :
+    sys.book.shrink isa PF.NoShrinkage ? "none" :
+    sys.book.shrink isa PF.FractionalKelly ? "fractional" : string(typeof(sys.book.shrink))
+
+_shrink_k(sys::PF.PortfolioSystem) =
+    sys.book.shrink isa PF.FractionalKelly ? Float64(sys.book.shrink.k) : 0.5
+
+"""
+    describe_policy(system) -> Tuple
+
+The nine `policy_*` fields of `ReplayState`, read off a `PortfolioSystem` that was built
+somewhere else.
+
+Used exactly once, at construction, so that a console handed `MD.canonical_scottish_lower_policy()`
+opens its drawer showing THAT rather than showing the drawer's own defaults. The trust tiers are
+recovered by asking the trust model for each of the six selections the drawer draws -- via
+`trust_for`, i.e. the same function the allocator calls, so what the slider shows is what the
+stake sheet used.
+"""
+function describe_policy(system::PF.PortfolioSystem)
+    trust = system.policy.trust
+    tiers = Dict{String,Float64}(t => 0.0 for t in TRUST_TIERS)
+    kind = trust isa PF.FlatTrust ? "flat" : "tiered"
+    flat = trust isa PF.FlatTrust ? Float64(trust.w) : 0.25
+    if trust isa PF.TieredTrust
+        g(group, line, sel) = get(trust.table, (group, Float64(line), sel), trust.default)
+        tiers["home"] = g("1x2", 0.0, :home)
+        tiers["draw"] = g("1x2", 0.0, :draw)
+        tiers["away"] = g("1x2", 0.0, :away)
+        tiers["btts"] = g("btts", 0.0, :btts_yes)
+        # Read back per STRIKE. A `TieredTrust` built elsewhere may well carry different weights
+        # on 0.5 and 2.5, and a read model that sampled one line and called it "the under tier"
+        # would open the drawer showing a policy the process is not running.
+        for L in OU_LINES
+            tiers[ou_tier("under", L)] = g("over_under", L, :under)
+            tiers[ou_tier("over", L)]  = g("over_under", L, :over)
+        end
+    elseif trust isa PF.FlatTrust
+        for t in TRUST_TIERS
+            tiers[t] = flat
+        end
+    end
+    risk = system.policy.risk
+    risk_name = risk isa PF.NoRisk ? "none" : "slate_drawdown"
+    # The preset the loaded system MATCHES, if any. Named rather than assumed: the console opens
+    # against the canonical policy today, and a header that hard-coded that would be wrong the
+    # first time somebody starts it with another one.
+    preset = "custom"
+    for name in POLICY_PRESET_ORDER
+        p = POLICY_PRESETS[name]
+        p.kind == kind || continue
+        p.shrink == _shrink_name(system) || continue
+        p.risk == risk_name || continue
+        risk_name == "none" || isapprox(Float64(risk.lambda), p.lambda; atol = 1e-9) || continue
+        isapprox(_policy_cap(system), p.cap; atol = 1e-9) || continue
+        matched = kind == "flat" ? isapprox(flat, p.flat; atol = 1e-9) :
+                  all(isapprox(tiers[t], p.trust[t]; atol = 1e-9) for t in TRUST_TIERS)
+        matched || continue
+        preset = name
+        break
+    end
+    note = preset == "custom" ? "policy supplied by the runner" : POLICY_PRESETS[preset].note
+    return (preset, tiers, flat, kind,
+            _shrink_name(system), _shrink_k(system), risk_name, note)
+end
+
+"""
+    set_policy!(st; preset, kind, trust, flat, lambda, cap_pct, shrink, shrink_k, risk, lines)
+
+Rebuild the staking system in the running process and re-price the visible minute with it.
+
+Every argument is optional and defaults to what is currently loaded, so `{"lambda": 12}` is a
+one-slider request rather than a full policy. Naming a `preset` sets the whole vector first and
+any explicit argument then overrides it, which is how "canonical but with Draw at 0.30" is
+expressed in one call.
+
+Three refusals, all structural rather than advisory:
+
+* `FixedCap` refuses a cap outside `(0,1)` in its own constructor -- a cap of 1 permits a
+  non-positive bankroll, and that is a theorem the ledger relies on.
+* `TieredTrust` / `FlatTrust` refuse a weight outside `[0,1]`.
+* A λ ≤ 0 is refused here, because `SlateDrawdown` would accept it and solve a constraint that
+  is not a drawdown budget.
+
+The clock does not move. The operator is asking "what would THIS policy have staked at THIS
+minute", and re-pricing at a different instant answers a different question -- the same reason
+`set_model!` holds the clock.
+"""
+function set_policy!(st::ReplayState;
+                     preset::Union{Nothing,AbstractString} = nothing,
+                     kind::Union{Nothing,AbstractString} = nothing,
+                     trust::Union{Nothing,AbstractDict} = nothing,
+                     flat::Union{Nothing,Real} = nothing,
+                     lambda::Union{Nothing,Real} = nothing,
+                     cap_pct::Union{Nothing,Real} = nothing,
+                     shrink::Union{Nothing,AbstractString} = nothing,
+                     shrink_k::Union{Nothing,Real} = nothing,
+                     risk::Union{Nothing,AbstractString} = nothing)
+    return lock(st.lock) do
+        # 1. start from the preset if one was named, else from what is loaded
+        base_kind   = st.policy_kind
+        base_trust  = copy(st.policy_trust)
+        base_flat   = st.policy_flat
+        base_lambda = let l = _policy_lambda(st.system); isnan(l) ? 23.0 : l end
+        base_cap    = let c = _policy_cap(st.system);    isnan(c) ? 0.25 : c end
+        base_shrink = st.policy_shrink
+        base_sk     = st.policy_shrink_k
+        base_risk   = st.policy_risk
+
+        if preset !== nothing
+            key = lowercase(strip(String(preset)))
+            key == "custom" || haskey(POLICY_PRESETS, key) || error(
+                "replay policy: unknown preset '$preset'. Known: " *
+                join(POLICY_PRESET_ORDER, ", ") * ", custom.")
+            if key != "custom"
+                p = POLICY_PRESETS[key]
+                base_kind = p.kind; base_trust = copy(p.trust); base_flat = p.flat
+                base_lambda = p.lambda; base_cap = p.cap
+                base_shrink = p.shrink; base_sk = p.shrink_k; base_risk = p.risk
+            end
+        end
+
+        # 2. apply the explicit overrides on top. Absent means LEAVE IT, so `{"lambda": 12}`
+        #    is a one-slider request rather than a policy that silently reset the other five.
+        if kind !== nothing;  base_kind = lowercase(strip(String(kind))); end
+        if trust !== nothing
+            for (k, v) in trust
+                kk = lowercase(strip(String(k)))
+                kk in TRUST_TIERS || error(
+                    "replay policy: unknown trust tier '$k'. Known: " *
+                    join(TRUST_TIERS, ", ") * ".")
+                w = Float64(v)
+                # Validated HERE and not only in `build_trust`, because `build_trust` is not
+                # always the thing that reads it: in `flat` mode the tier table is not built at
+                # all, so an out-of-range tier would be accepted, stored, and would take effect
+                # silently at the moment the operator switched back to tiered. A setting that is
+                # only checked on the path that happens to use it is not checked.
+                (isfinite(w) && 0.0 <= w <= 1.0) || error(
+                    "replay policy: trust tier '$kk' must be in [0,1], got $w.")
+                base_trust[kk] = w
+            end
+        end
+        if flat !== nothing
+            base_flat = Float64(flat)
+            # Same argument in the other direction: in `tiered` mode `build_trust` never reads
+            # the flat weight, so it has to be refused on the way in or not at all.
+            (isfinite(base_flat) && 0.0 <= base_flat <= 1.0) || error(
+                "replay policy: flat trust must be in [0,1], got $base_flat.")
+        end
+        if lambda !== nothing;   base_lambda = Float64(lambda); end
+        if cap_pct !== nothing;  base_cap = Float64(cap_pct) / 100; end
+        if shrink !== nothing;   base_shrink = lowercase(strip(String(shrink))); end
+        if shrink_k !== nothing; base_sk = Float64(shrink_k); end
+        if risk !== nothing;     base_risk = lowercase(strip(String(risk))); end
+        # There is no `lines` argument any more, and its absence is the point of this revision.
+        # It used to say WHICH totals the one `under`/`over` pair was written to; now every
+        # priced strike has its own tier, so the set of lines is `OU_LINES` and nothing else
+        # may name it.
+        # There is deliberately no "did anything change?" flag. The label the header shows is
+        # re-derived from the BUILT system below, so a preset plus an override that moves off it
+        # reports `custom` -- a header that kept the requested name would say `canonical` over a
+        # policy the audit never covered -- and an override that lands back on the preset's own
+        # numbers gets that preset's name back.
+
+        # 3. build. Every constructor validates its own domain; nothing below is asserted twice.
+        (0.0 < base_cap < 1.0) || error(
+            "replay policy: exposure cap must be in (0%, 100%), got $(round(100*base_cap, digits=2))%. " *
+            "A cap of 100% permits a non-positive bankroll, which is why `FixedCap` refuses it.")
+        new_trust  = build_trust(base_kind, base_trust, base_flat)
+        new_risk   = build_risk(base_risk, base_lambda)
+        new_shrink = build_shrinkage(base_shrink, base_sk)
+        policy = PF.PolicySpec(trust = new_trust, risk = new_risk,
+                               cap = PF.FixedCap(base_cap),
+                               filter = st.system.policy.filter,
+                               grouping = st.system.policy.grouping)
+
+        # `BookSpec` IS the book cache key, so it is rebuilt only when the shrinkage model
+        # actually moved. Rebuilding it unconditionally would be correct and would also throw
+        # away the built books on every slider drag.
+        shrink_moved = _shrink_name(st.system) != base_shrink ||
+                       (base_shrink == "fractional" && !isapprox(_shrink_k(st.system), base_sk;
+                                                                 atol = 1e-12))
+        book = shrink_moved ?
+            PF.BookSpec(markets = st.system.book.markets, price = st.system.book.price,
+                        allocator = st.system.book.allocator, shrink = new_shrink,
+                        exec = st.system.book.exec) :
+            st.system.book
+
+        st.system = PF.PortfolioSystem(book, policy)
+
+        # 4. record the read model, then re-derive the preset label from the built object so the
+        #    header cannot claim a preset the system does not actually match.
+        st.policy_kind = base_kind
+        st.policy_trust = base_trust
+        st.policy_flat = base_flat
+        st.policy_shrink = base_shrink
+        st.policy_shrink_k = base_sk
+        st.policy_risk = base_risk
+        derived = describe_policy(st.system)
+        st.policy_preset = derived[1]
+        st.policy_note = derived[8]
+        st.policy_seq += 1
+
+        # 5. re-price. The posterior did not move, so nothing below `stake_sheet` is invalidated
+        #    and the operator sees the SAME model against the SAME book at a different price of
+        #    risk -- which is the comparison the drawer exists to make.
+        #    Any re-solve is retired: it was solved against the previous policy's vector.
+        st.resolved = nothing
+        st.resolve_note = ""
+        slate = reprice!(st)
+
+        return (
+            ok = true,
+            note = "policy $(st.policy_preset): λ=$(round(base_lambda, digits=1)) " *
+                   "cap=$(round(100*base_cap, digits=1))% shrink=$(base_shrink)" *
+                   (shrink_moved ? " (book rebuilt)" : "") *
+                   (slate === nothing ? " — nothing priced at this minute" :
+                    " — $(MD.n_legs(slate)) legs, £$(round(slate.total_risk, digits=2)) risk"),
+            policy = policy_payload(st),
+            n_legs = slate === nothing ? 0 : MD.n_legs(slate),
+            total_risk = slate === nothing ? 0.0 : round(slate.total_risk, digits = 2),
+            k_risk = slate === nothing ? 0.0 : round(slate.k_risk, digits = 4),
+            book_rebuilt = shrink_moved,
+            error_note = st.tick_error,
+        )
+    end
+end
+
+"""
+    _trust_label(st) -> String
+
+The loaded trust vector in one line, naming every STRIKE that carries a weight.
+
+A twelve-tier vector is mostly zeros by design, so listing all of it would bury the two or three
+entries that matter. The 1X2 triple is always shown -- it is always live -- and the totals are
+shown only where the weight is non-zero, which makes "Under 2.5 is on and the other six strikes
+are gated" the thing the header actually says.
+"""
+function _trust_label(st::ReplayState)
+    st.policy_kind == "flat" &&
+        return "FlatTrust($(round(st.policy_flat, digits = 2)))"
+    w(k) = round(get(st.policy_trust, k, 0.0), digits = 2)
+    parts = ["H $(w("home"))", "D $(w("draw"))", "A $(w("away"))"]
+    for L in OU_LINES, d in ("under", "over")
+        v = w(ou_tier(d, L))
+        v > 0 && push!(parts, (d == "under" ? "U" : "O") * string(L) * " " * string(v))
+    end
+    w("btts") > 0 && push!(parts, "BTTS $(w("btts"))")
+    n_gated = count(k -> w(k) == 0, TRUST_TIERS)
+    return "TieredTrust(" * join(parts, " · ") * ")" *
+           (n_gated > 0 ? " · $(n_gated) gated" : "")
+end
+
+"""
+    policy_payload(st) -> NamedTuple
+
+The configurator's whole read model: what is loaded, what the sliders may reach, and what the
+presets would set.
+
+`bounds` is served rather than hard-coded in the page for the same reason `ladder_markets` is:
+the page must not be able to offer a setting the constructors will refuse, and there is exactly
+one place -- here -- where those two facts can be kept in agreement.
+"""
+function policy_payload(st::ReplayState)
+    cap = _policy_cap(st.system)
+    lam = _policy_lambda(st.system)
+    return (
+        preset = st.policy_preset,
+        note = st.policy_note,
+        kind = st.policy_kind,
+        trust = Dict(t => round(get(st.policy_trust, t, 0.0), digits = 4) for t in TRUST_TIERS),
+        # The full tier descriptions, not just their keys: the drawer lays itself out from this,
+        # so a strike the engine stops pricing loses its slider without the page being touched.
+        tiers = TRUST_TIER_META,
+        tier_keys = collect(TRUST_TIERS),
+        flat = round(st.policy_flat, digits = 4),
+        lines = collect(OU_LINES),
+        lambda = isnan(lam) ? nothing : round(lam, digits = 2),
+        cap_pct = isnan(cap) ? nothing : round(100 * cap, digits = 2),
+        shrink = st.policy_shrink,
+        shrink_k = round(st.policy_shrink_k, digits = 3),
+        risk = st.policy_risk,
+        seq = st.policy_seq,
+        trust_label = _trust_label(st),
+        # Which totals are actually STAKED under the loaded policy, as `(line, direction)` pairs.
+        # A twelve-tier vector is mostly zeros by design, and the header needs the two or three
+        # entries that are not -- naming them is the difference between "the O/U tier is on" and
+        # "Under 2.5 is on and the other six strikes are gated".
+        live_totals = [(line = L, direction = d, tier = ou_tier(d, L),
+                        weight = round(get(st.policy_trust, ou_tier(d, L), 0.0), digits = 4))
+                       for L in OU_LINES for d in ("under", "over")
+                       if get(st.policy_trust, ou_tier(d, L), 0.0) > 0],
+        risk_label = st.policy_risk == "none" ? "NoRisk (cap only)" :
+                     "SlateDrawdown(λ=$(isnan(lam) ? "—" : round(lam, digits = 1)))",
+        shrink_label = st.policy_shrink == "baker_mchale" ? "BakerMcHale()" :
+                       st.policy_shrink == "none" ? "NoShrinkage()" :
+                       "FractionalKelly($(round(st.policy_shrink_k, digits = 2)))",
+        presets = [(key = k, label = POLICY_PRESETS[k].label, note = POLICY_PRESETS[k].note,
+                    kind = POLICY_PRESETS[k].kind, flat = POLICY_PRESETS[k].flat,
+                    lambda = POLICY_PRESETS[k].lambda,
+                    cap_pct = round(100 * POLICY_PRESETS[k].cap, digits = 2),
+                    shrink = POLICY_PRESETS[k].shrink, risk = POLICY_PRESETS[k].risk,
+                    trust = Dict(t => get(POLICY_PRESETS[k].trust, t, 0.0)
+                                 for t in TRUST_TIERS))
+                   for k in POLICY_PRESET_ORDER],
+        bounds = (lambda = (5.0, 40.0), cap_pct = (5.0, 50.0), trust = (0.0, 1.0)),
+        shrinks = ["baker_mchale", "fractional", "none"],
+        risks = ["slate_drawdown", "none"],
+    )
+end
+
+# ===================================================================
+# 16. Lineup pricing status and the XI shock
+# ===================================================================
+#
+# THE QUESTION. A card priced at T-45 and a card priced at T-25 are not the same object: the
+# first conditions on no teamsheet at all and the second on eleven names. The console has always
+# DRAWN that difference -- the model bar moves when the XI lands -- but it never MEASURED it, and
+# an operator scrubbing at 60x sees a bar move by an amount they cannot read off the screen.
+#
+# THE FILTRATION, AND WHY THIS IS THE ONE PLACE IT COULD LEAK. Computing Δp needs the model's
+# view AFTER the drop, and at T-45 that view is a fact about the future. `lineup_shock` therefore
+# refuses to compute anything for a fixture whose drop minute the clock has not reached: before
+# it, the badge says "⏳ Pre-Lineup (Est)" and carries no number. This is not a display
+# convention -- `model_probs_at(st, as_of_at(card, drop_t))` would happily answer, and answering
+# it early would put a post-teamsheet probability on a pre-teamsheet console.
+#
+# WHAT IT COSTS. Two cache entries per model. `p_pre` is read at `drop_t - 1` and `p_post` at
+# `drop_t`, both memoised on the lineup signature, and every minute before the first drop shares
+# one signature -- so the whole day's shocks cost the two extractions the replay was already
+# paying for.
+
+"The selections the shock badge reports, in the order the card draws them."
+const SHOCK_KEYS = (
+    (key = (group = "1X2", line = 0.0, selection = :home),      label = "Home"),
+    (key = (group = "1X2", line = 0.0, selection = :draw),      label = "Draw"),
+    (key = (group = "1X2", line = 0.0, selection = :away),      label = "Away"),
+    (key = (group = "OverUnder", line = 2.5, selection = :under_25), label = "U2.5"),
+    (key = (group = "OverUnder", line = 2.5, selection = :over_25),  label = "O2.5"),
+    (key = (group = "BTTS", line = 0.0, selection = :btts_yes), label = "BTTS"),
+)
+
+"""
+A lineup move worth interrupting an operator for, in probability POINTS.
+
+2.0pp on a 1X2 runner is roughly a 5-tick move on an even-money shot and about £14 of stake on a
+£2,400 bankroll at the canonical trust tiers -- i.e. the smallest shift that changes what gets
+placed rather than merely what gets displayed.
+"""
+const SHOCK_HIGH_IMPACT_PP = 2.0
+
+"""
+    lineup_shock(st; model) -> NamedTuple
+
+Every fixture's lineup pricing status and, where the clock has passed the teamsheet drop, the
+exact model probability move across it.
+
+Four statuses, and they are four different facts rather than four degrees of one:
+
+* `no_scrape`  -- this match day has no archived lineup for the fixture at all. The player pillar
+                  contributes zero for the whole replay; there is no shock to measure and there
+                  never will be on this card.
+* `pre_lineup` -- the scrape exists and the clock has not reached it. Priced on ESTIMATES.
+                  Δp is deliberately absent: see the filtration note above.
+* `confirmed`  -- the clock is at or past the drop. Δp is the measured move.
+* `no_model`   -- the model could not price the fixture on one of the two sides of the drop
+                  (gated, or not covered by the fold), so the difference is not defined.
+
+`delta_pp` is in probability POINTS on the model's own scale, signed toward the selection. It is
+NOT an odds move and must not be read as one: a 2.9pp move on a 0.30 runner is a 10% relative
+reprice and on a 0.65 runner it is 4%.
+"""
+function lineup_shock(st::ReplayState; slot::ModelSlot = active_slot(st))
+    return lock(st.lock) do
+        t_now = st.clock.t
+        out = NamedTuple[]
+        n_high = 0; n_confirmed = 0; n_pre = 0; n_none = 0
+        for f in st.card.fixtures
+            drop_t = lineup_drop_minute(st.card, f)
+            lu_at  = get(st.card.lineup_drop, f.m_id, nothing)
+            covered = f.m_id in slot.covered
+            base = (match_id = f.m_id, fixture = f.home * " v " * f.away,
+                    home = f.home, away = f.away,
+                    tournament_id = f.tournament_id,
+                    league = league_short(f.tournament_id),
+                    drop_min = drop_t,
+                    drop_at = lu_at === nothing ? nothing : string(lu_at),
+                    lead_min = drop_t === nothing ? nothing : -drop_t,
+                    source = lu_at === nothing ? "none" : "sofascore",
+                    covered = covered)
+
+            if drop_t === nothing
+                n_none += 1
+                push!(out, merge(base, (status = "no_scrape", moves = NamedTuple[],
+                                        max_abs_pp = nothing, high_impact = false,
+                                        note = "no archived teamsheet on this match day — " *
+                                               "the player pillar contributes zero throughout")))
+                continue
+            end
+            if t_now < drop_t
+                n_pre += 1
+                push!(out, merge(base, (status = "pre_lineup", moves = NamedTuple[],
+                                        max_abs_pp = nothing, high_impact = false,
+                                        note = "priced on ESTIMATES — the XI lands in " *
+                                               "$(drop_t - t_now) simulated minute" *
+                                               (drop_t - t_now == 1 ? "" : "s"))))
+                continue
+            end
+
+            cached = get(st.shock_cache, (slot.key, f.m_id), nothing)
+            if cached === nothing
+                cached = _measure_shock(st, slot, f, drop_t)
+                # Only a MEASURED answer is cached. A `no_model` verdict can be a transient
+                # gate refusal at one minute, and caching it would keep the badge blank for the
+                # rest of the replay.
+                cached.status == "confirmed" && (st.shock_cache[(slot.key, f.m_id)] = cached)
+            end
+            cached.status == "confirmed" && (n_confirmed += 1)
+            cached.high_impact && (n_high += 1)
+            push!(out, merge(base, cached))
+        end
+        return (ok = true, model = slot.key, model_label = slot.label,
+                model_status = String(slot.status), t = t_now,
+                threshold_pp = SHOCK_HIGH_IMPACT_PP,
+                n_confirmed = n_confirmed, n_pre_lineup = n_pre, n_no_scrape = n_none,
+                n_high_impact = n_high, fixtures = out)
+    end
+end
+
+"""
+The model's probability move across ONE fixture's teamsheet drop.
+
+Both sides come from `model_probs_at`, i.e. from the same pipeline the card grid prices with, at
+`drop_t - 1` and `drop_t`. The minute before is used rather than T-60 deliberately: the book,
+the gate and every other input are as close to identical as the archive allows across those two
+minutes, so what is left in the difference is the XI and nothing else.
+"""
+function _measure_shock(st::ReplayState, slot::ModelSlot, f::MD.Fixture, drop_t::Int)
+    slot.status === :ready || return (status = "no_model", moves = NamedTuple[],
+        max_abs_pp = nothing, high_impact = false,
+        note = "model $(slot.key) is $(slot.status)")
+
+    pre_t = max(T_START, drop_t - 1)
+    pre_all  = model_probs_at(st, as_of_at(st.card, pre_t); slot = slot)
+    post_all = model_probs_at(st, as_of_at(st.card, drop_t); slot = slot)
+    pre  = get(pre_all,  f.m_id, nothing)
+    post = get(post_all, f.m_id, nothing)
+    (pre === nothing || post === nothing) && return (status = "no_model", moves = NamedTuple[],
+        max_abs_pp = nothing, high_impact = false,
+        note = pre === nothing ?
+            "the gate refused this fixture at T$(_signed(pre_t))m, so there is no pre-XI price " *
+            "to measure the drop against" :
+            "the gate refused this fixture at T$(_signed(drop_t))m, so there is no post-XI price")
+
+    moves = NamedTuple[]
+    worst = 0.0
+    for s in SHOCK_KEYS
+        a = get(pre, s.key, nothing); b = get(post, s.key, nothing)
+        (a === nothing || b === nothing) && continue
+        d = 100 * (b - a)
+        abs(d) > abs(worst) && (worst = d)
+        push!(moves, (label = s.label, selection = String(s.key.selection),
+                      market = s.key.group, line = s.key.line,
+                      p_pre = round(a, digits = 4), p_post = round(b, digits = 4),
+                      delta_pp = round(d, digits = 2),
+                      fair_pre = a > 0 ? round(1 / a, digits = 3) : nothing,
+                      fair_post = b > 0 ? round(1 / b, digits = 3) : nothing))
+    end
+    isempty(moves) && return (status = "no_model", moves = moves, max_abs_pp = nothing,
+        high_impact = false,
+        note = "no canonical selection was priced on both sides of the drop")
+
+    high = abs(worst) >= SHOCK_HIGH_IMPACT_PP
+    lead = -drop_t
+    return (status = "confirmed", moves = moves,
+            max_abs_pp = round(worst, digits = 2), high_impact = high,
+            note = high ?
+                "HIGH IMPACT — the XI moved this model by $(round(abs(worst), digits=1))pp " *
+                "at T$(_signed(drop_t))m (T−$(lead)m out)" :
+                "XI priced at T$(_signed(drop_t))m; largest move " *
+                "$(round(abs(worst), digits=1))pp")
+end
+
+"""
+    league_short(tid) / league_name(tid)
+
+The division a tournament id names.
+
+A table rather than a query because the console's own tournament set is a two-element constant
+(`R08_TIDS`) and a lookup that could fail would put a spinner on a badge. Anything unrecognised
+degrades to `T<id>` rather than to an error -- a third division added to the card must not stop
+the radar rendering.
+"""
+const LEAGUE_LABELS = Dict{Int,NamedTuple{(:name, :short, :accent),Tuple{String,String,String}}}(
+    56 => (name = "Scottish League One", short = "L1", accent = "#38bdf8"),
+    57 => (name = "Scottish League Two", short = "L2", accent = "#c084fc"),
+)
+
+league_short(tid::Integer) = get(LEAGUE_LABELS, Int(tid), (short = "T$(tid)",)).short
+league_name(tid::Integer)  =
+    haskey(LEAGUE_LABELS, Int(tid)) ? LEAGUE_LABELS[Int(tid)].name : "Tournament $(tid)"
+league_accent(tid::Integer) =
+    haskey(LEAGUE_LABELS, Int(tid)) ? LEAGUE_LABELS[Int(tid)].accent : "#7c8798"
+
+"""
+    league_blocks(st, cards) -> Vector{NamedTuple}
+
+Per-division subtotals: how many fixtures the card holds, how many of them the slate actually
+bet, what that costs and what it is worth.
+
+`ev_pct` is RISK-WEIGHTED, the same way `card_payload` weights a fixture's own legs, and for the
+same reason: a division whose only bet is £2 at +9% has not out-earned one carrying £120 at +4%,
+and an unweighted mean would say it had.
+"""
+function league_blocks(st::ReplayState, cards)
+    tids = sort(unique(Int[f.tournament_id for f in st.card.fixtures]))
+    out = NamedTuple[]
+    for tid in tids
+        fx = [f for f in st.card.fixtures if f.tournament_id == tid]
+        cs = [c for c in cards if c.tournament_id == tid]
+        risk = sum(Float64[c.risk for c in cs]; init = 0.0)
+        legs = sum(Int[c.n_legs for c in cs]; init = 0)
+        ev = risk > 0 ? sum(Float64[c.ev_pct * c.risk for c in cs]) / risk : 0.0
+        push!(out, (
+            tournament_id = tid,
+            name = league_name(tid),
+            short = league_short(tid),
+            accent = league_accent(tid),
+            n_fixtures = length(fx),
+            n_carded = length(cs),
+            n_legs = legs,
+            risk = round(risk, digits = 2),
+            ev_pct = round(ev, digits = 2),
+            exposure_pct = st.bankroll > 0 ? round(100 * risk / st.bankroll, digits = 2) : 0.0,
+        ))
+    end
+    return out
+end
+
+# ===================================================================
+# 17. The tall centred ladder -- drift, momentum, and where our order sits
+# ===================================================================
+#
+# WHAT THE THREE-LEVEL LADDER CANNOT SHOW. `fixture_ladder`'s compact view draws the three
+# archived levels of each side against each other, which answers "can this order fill?" and
+# answers it well. It cannot answer the other half of a trading desk's question -- "where has
+# this price COME FROM?" -- because three levels are three levels wherever the price is, and a
+# runner that has drifted 14 ticks since T-60 looks exactly like one that has not moved at all.
+#
+# THE ANCHOR. So the tall ladder is drawn on a FIXED tick window centred on a REFERENCE price,
+# and the reference is the first archived mid at or after T-60m. Fixing the window and letting
+# the shelves move inside it is what makes drift visible: the bid stack sliding downward is a
+# price lengthening, and it is the same gesture on every runner because the axis is ticks rather
+# than currency (see `BETFAIR_TICK_BANDS` -- 0.05 is five ticks at 1.50 and one tick at 3.50).
+#
+# THE FILTRATION AGAIN. The reference is found by scanning forward from T-60 to the CURRENT
+# clock minute and stopping at the first mid, never past it. Early in a replay a runner with no
+# book yet therefore has no anchor and the ladder says so; it does not reach for the price the
+# book will have at T-20. The answer is cached once found, at which point it is fixed for the
+# rest of the replay.
+#
+# WHAT IS STILL NOT PRETENDED. `order_book_1m` archives no traded price series (§11 head), so
+# there are no per-tick traded volumes and none are invented. What the ladder marks instead is
+# the runner's cumulative `market_matched`, the reference tick, and the tick the mid is on now --
+# three things the archive actually knows.
+
+"""
+Half-width of the tall ladder, in ticks. 12 gives a 25-row window.
+
+Wide enough to contain the whole T-60 → kick-off drift of a Scottish Lower 1X2 runner (measured
+median 6 ticks, 95th percentile 19) without scrolling, and narrow enough that every row is
+readable at the console's smallest font.
+"""
+const LADDER_TICK_HALF = 12
+
+"The widest window the desk will build, so a query string cannot ask for a 4,000-row ladder."
+const LADDER_TICK_HALF_MAX = 40
+
+"""
+    tick_price(idx) -> Float64 | nothing
+
+The decimal price at ladder position `idx`, counting from 1.01 = 0. The inverse of `tick_index`,
+and asserted against it by `test_replay_workspace.jl` across every band boundary.
+
+`nothing` off the ends of the ladder rather than a clamped price: a row that does not exist must
+be absent, not drawn at 1000.0 where it would read as a real level.
+"""
+function tick_price(idx::Integer)
+    i = Int(idx)
+    i < 0 && return nothing
+    base = 0
+    for (lo, hi, step) in BETFAIR_TICK_BANDS
+        n = round(Int, (hi - lo) / step)
+        if i < base + n
+            return round(lo + (i - base) * step, digits = 2)
+        end
+        base += n
+    end
+    return nothing
+end
+
+"Total number of positions on the Betfair ladder, 1.01 through 1000.0."
+const N_TICKS = sum(round(Int, (hi - lo) / step) for (lo, hi, step) in BETFAIR_TICK_BANDS)
+
+"""
+    reference_prices(st, fixture, market, runners) -> Dict{SelectionKey,NamedTuple}
+
+The anchor each runner's tall ladder is centred on: the first archived mid at or after T-60m,
+with the minute it was found at.
+
+Scanned forward from `T_START` to the CURRENT clock minute and no further -- see the §17 head.
+Cached once every runner has one, because at that point the answer can no longer change; a
+partial answer is deliberately NOT cached, so the anchor appears as soon as the book does.
+"""
+function reference_prices(st::ReplayState, f::MD.Fixture, mt::AbstractString,
+                          runners::Vector{<:NamedTuple})
+    ck = (f.m_id, String(mt))
+    now_t = clamp_t(st.clock.t)
+    id = st.card.identities[f.m_id]
+    id isa MD.Resolved || return Dict{MD.SelectionKey,Any}()
+
+    # The cache carries HOW FAR the scan got as well as what it found, so a runner whose book
+    # never opens costs one minute of scanning per minute of clock rather than a fresh sweep of
+    # the whole window on every 2.5 Hz poll. Resuming is also what keeps the answer honest: the
+    # scan never runs past the current minute, so a reference can only ever be a price the
+    # console has already scrubbed through.
+    hit = get(st.ref_price, ck, nothing)
+    refs = hit === nothing ? Dict{MD.SelectionKey,Any}() : hit.refs
+    from_t = hit === nothing ? T_START : hit.scanned_to + 1
+    (length(refs) == length(runners) || from_t > now_t) && return refs
+
+    scanned_to = from_t - 1
+    for t in from_t:now_t
+        scanned_to = t
+        book = MD.quotes(st.card.book, id, as_of_at(st.card, t))
+        for r in runners
+            haskey(refs, r.key) && continue
+            lv = get(book, r.key, nothing)
+            lv === nothing && continue
+            bb, bl = MD.best_back(lv), MD.best_lay(lv)
+            p = (!isnan(bb) && !isnan(bl)) ? (bb + bl) / 2 :
+                !isnan(bb) ? bb : !isnan(bl) ? bl : NaN
+            isnan(p) && continue
+            refs[r.key] = (price = round(p, digits = 3), t = t, tick = tick_index(p))
+        end
+        length(refs) == length(runners) && break
+    end
+    st.ref_price[ck] = (refs = refs, scanned_to = scanned_to)
+    return refs
+end
+
+"""
+    tick_ladder(lv, ref_tick; half, order) -> NamedTuple
+
+One runner's book laid out on a continuous tick window, highest price at the top.
+
+Every row is a PRICE that exists on the exchange ladder, whether or not anything rests at it, so
+an empty shelf between the touch and the last trade is drawn as the gap it is rather than
+collapsed away. Rows carry both sides; on a real book only one side is ever populated at a given
+tick, and drawing them in one column is what puts the spread where the eye already looks for it.
+
+The window is `ref_tick ± half`, WIDENED where necessary to contain the current touch plus two
+ticks of margin. Widening rather than scrolling is deliberate: an operator watching three
+runners must be able to compare shelf positions between them, and that only works while the
+reference row is at the same height in each.
+"""
+function tick_ladder(lv::Union{Nothing,MD.BookLevels}, ref_tick::Union{Nothing,Int};
+                     half::Int = LADDER_TICK_HALF, order = nothing)
+    back_at = Dict{Int,Float64}(); lay_at = Dict{Int,Float64}()
+    fill_at = Dict{Int,Float64}()
+    best_back_tick = nothing; best_lay_tick = nothing
+    if lv !== nothing
+        nb = min(LADDER_DEPTH, length(lv.back), length(lv.back_size))
+        for i in 1:nb
+            p = Float64(lv.back[i]); s = Float64(lv.back_size[i])
+            (p > 1.0 && s > 0) || continue
+            ti = tick_index(p); ti === nothing && continue
+            back_at[ti] = get(back_at, ti, 0.0) + s
+            (i == 1) && (best_back_tick = ti)
+        end
+        nl = min(LADDER_DEPTH, length(lv.lay), length(lv.lay_size))
+        for i in 1:nl
+            p = Float64(lv.lay[i]); s = Float64(lv.lay_size[i])
+            (p > 1.0 && s > 0) || continue
+            ti = tick_index(p); ti === nothing && continue
+            lay_at[ti] = get(lay_at, ti, 0.0) + s
+            (i == 1) && (best_lay_tick = ti)
+        end
+    end
+    # Where our own order would be consumed, level by level, on the side it actually touches.
+    if order !== nothing && lv !== nothing
+        side = order.side
+        prices = side == "back" ? lv.back : lv.lay
+        for (i, amount) in enumerate(order.level_fills)
+            amount > 0 || continue
+            i <= length(prices) || break
+            ti = tick_index(Float64(prices[i])); ti === nothing && continue
+            fill_at[ti] = get(fill_at, ti, 0.0) + Float64(amount)
+        end
+    end
+
+    anchor = ref_tick === nothing ?
+             (best_back_tick !== nothing ? best_back_tick :
+              best_lay_tick !== nothing ? best_lay_tick : nothing) : ref_tick
+    anchor === nothing && return (rows = NamedTuple[], lo = 0, hi = 0, anchor = nothing,
+                                  max_size = 0.0, n_rows = 0)
+
+    lo = anchor - half; hi = anchor + half
+    for ti in (best_back_tick, best_lay_tick)
+        ti === nothing && continue
+        lo = min(lo, ti - 2); hi = max(hi, ti + 2)
+    end
+    lo = max(0, lo); hi = min(N_TICKS - 1, hi)
+
+    max_size = 0.0
+    for ti in lo:hi
+        max_size = max(max_size, get(back_at, ti, 0.0), get(lay_at, ti, 0.0))
+    end
+
+    rows = NamedTuple[]
+    for ti in hi:-1:lo
+        p = tick_price(ti)
+        p === nothing && continue
+        b = get(back_at, ti, 0.0); l = get(lay_at, ti, 0.0)
+        push!(rows, (
+            tick = ti,
+            price = p,
+            offset = ti - anchor,          # + is a longer price than the anchor
+            back = b > 0 ? round(b, digits = 2) : nothing,
+            lay  = l > 0 ? round(l, digits = 2) : nothing,
+            fill = haskey(fill_at, ti) ? round(fill_at[ti], digits = 2) : nothing,
+            best_back = best_back_tick !== nothing && ti == best_back_tick,
+            best_lay  = best_lay_tick  !== nothing && ti == best_lay_tick,
+            anchor = ti == anchor,
+            # The dead band between the two touches. Not "no liquidity" -- no PRICE, because
+            # nothing can rest inside its own spread.
+            in_spread = best_back_tick !== nothing && best_lay_tick !== nothing &&
+                        ti > best_back_tick && ti < best_lay_tick,
+        ))
+    end
+    return (rows = rows, lo = lo, hi = hi, anchor = anchor,
+            max_size = round(max_size, digits = 2), n_rows = length(rows))
+end
+
+# ===================================================================
+# 18. Market-implied λ, and the model's posterior beside it
+# ===================================================================
+#
+# THE QUESTION THIS ANSWERS. Every panel above compares the model and the market in PROBABILITY
+# space, one selection at a time: p_model 0.42 against p_market 0.39 on the home win. That is
+# the right space to stake in and the wrong space to think in, because it says nothing about WHY
+# the two disagree. A 3pp gap on Home and a 2pp gap on Under 2.5 are either one disagreement
+# about how many goals this match has in it, or two unrelated ones -- and in probability space
+# those two cases look identical.
+#
+# In RATE space they do not. Inverting the book's 1X2 and Over/Under prices back through a
+# double-Poisson gives the (λ_home, λ_away) the market is quoting, and putting that next to the
+# posterior the model actually holds turns six selection-level gaps into one two-dimensional
+# statement: "we think this home attack is worth 1.62 and the book is pricing 1.41."
+#
+# HOW IT IS INVERTED. `Features.fit_market_implied_parameters`, i.e. the same Nelder-Mead
+# inversion the market-feature pillar uses to build its own covariates -- reached through that
+# function rather than reimplemented here, because a second copy of the score-matrix convention
+# is how a console ends up quoting λ on a different scale from the features the model was
+# trained on. The targets are the DE-VIGGED MIDS (`market_implied`), for the reasons that
+# function gives: the raw back-side sum exceeds one, and the mid is the measurement.
+#
+# WHAT IT IS NOT. The inversion assumes independence and a Poisson goal law. The model may not
+# -- m05 and m12 both carry richer score grids -- so `λ_market` is "the rate a double-Poisson
+# would need to reproduce this book", not "the book's opinion of the rate". Against a posterior
+# from a model whose own λ enters a different grid, the comparison is still the right one to
+# draw (both are the mean goal rate of their own generating process) and the caveat is carried
+# on the payload rather than left to be rediscovered.
+
+"The markets the inversion reads, and the target symbol each contributes."
+const LAMBDA_MARKETS = ("MATCH_ODDS", "OVER_UNDER_25", "BOTH_TEAMS_TO_SCORE")
+
+"""
+    devigged_targets(st, fixture, as_of) -> (targets, sources, complete_1x2)
+
+Every canonical selection's de-vigged mid probability at one instant, gathered across the three
+markets the inversion can read.
+
+De-vigged WITHIN each market and not across all of them: the three books have three different
+overrounds and normalising them jointly would move probability between markets that never traded
+against each other.
+"""
+function devigged_targets(st::ReplayState, f::MD.Fixture, as_of::DateTime)
+    id = st.card.identities[f.m_id]
+    targets = Dict{Symbol,Float64}()
+    sources = String[]
+    complete_1x2 = false
+    id isa MD.Resolved || return (targets, sources, complete_1x2)
+    book = MD.quotes(st.card.book, id, as_of)
+    for mt in LAMBDA_MARKETS
+        runners = try
+            market_runners(mt, f)
+        catch
+            continue
+        end
+        imp = market_implied(book, runners)
+        # An INCOMPLETE market is dropped rather than contributed raw. `market_implied` reports
+        # a partial book un-normalised, and feeding un-normalised probabilities to a
+        # sum-of-squares against a normalised model would bias λ toward whichever runner
+        # survived.
+        imp.complete || continue
+        for r in runners
+            haskey(imp.probs, r.key) || continue
+            targets[r.key.selection] = imp.probs[r.key]
+        end
+        push!(sources, mt)
+        mt == "MATCH_ODDS" && (complete_1x2 = true)
+    end
+    return (targets, sources, complete_1x2)
+end
+
+"""
+    invert_market_lambdas(match_id, targets, sources) -> NamedTuple | nothing
+
+`(λ_home, λ_away)` such that a double-Poisson reproduces the book, by least squares over every
+target the book supplied.
+
+`nothing` when 1X2 is absent or incomplete. Two free parameters can be identified from the
+Over/Under line alone only up to the home/away split, and an inversion run on totals alone
+returns a λ pair whose SUM is meaningful and whose components are the optimiser's starting
+guess -- a number that looks like an answer and is not.
+"""
+function invert_market_lambdas(match_id::Integer, targets::Dict{Symbol,Float64},
+                               sources::Vector{String})
+    ("MATCH_ODDS" in sources) || return nothing
+    (haskey(targets, :home) && haskey(targets, :draw) && haskey(targets, :away)) || return nothing
+
+    lines = Symbol[:result_1x2]
+    (haskey(targets, :over_25) || haskey(targets, :under_25)) && push!(lines, :over_25)
+    (haskey(targets, :btts_yes) || haskey(targets, :btts_no)) && push!(lines, :btts)
+
+    df = DataFrame(match_id = fill(Int(match_id), length(targets)),
+                   selection = collect(keys(targets)),
+                   prob_fair_close = collect(values(targets)))
+    fitted = try
+        FE.fit_market_implied_parameters(df,
+            FE.DoublePoissonMarketFeature(lines = Tuple(lines)); max_goals = 10)
+    catch e
+        return (ok = false, error = sprint(showerror, e), lines = String.(lines))
+    end
+    θ = fitted.minimizer
+    λh, λa = exp(θ[1]), exp(θ[2])
+    (isfinite(λh) && isfinite(λa) && λh > 0 && λa > 0) || return nothing
+    return (ok = true, lambda_home = round(λh, digits = 3), lambda_away = round(λa, digits = 3),
+            total = round(λh + λa, digits = 3),
+            supremacy = round(λh - λa, digits = 3),
+            lines = String.(lines), n_targets = length(targets), sources = sources)
+end
+
+"""
+    market_lambda_at(st, fixture, t) -> NamedTuple | nothing
+
+The inverted book at ONE replay minute, memoised on `(match_id, minute)`.
+
+Per minute rather than per lineup, and that asymmetry against `model_probs_at` is the whole
+finding this panel exists to show: the posterior steps once, when the XI lands, and the book
+moves continuously. A cache keyed on the lineup would collapse the second series onto the first.
+"""
+function market_lambda_at(st::ReplayState, f::MD.Fixture, t::Integer)
+    ck = (f.m_id, Int(t))
+    haskey(st.market_lambda, ck) && return st.market_lambda[ck]
+    targets, sources, _ = devigged_targets(st, f, as_of_at(st.card, Int(t)))
+    out = invert_market_lambdas(f.m_id, targets, sources)
+    st.market_lambda[ck] = out
+    return out
+end
+
+"""
+    _lambda_draws(model, row) -> (λ_h, λ_a) | nothing
+
+The posterior draws for one fixture's two goal rates.
+
+`Predictions.extract_params` first, because that is the adapter each score-computation kernel
+declares for its own latent columns and it is the only thing that knows, for a given model, which
+column IS the rate. Two fallbacks behind it: the Dixon-Coles family names its rates `θ_1`/`θ_2`,
+and a container that carries neither is reported as having no rate rather than guessed at.
+"""
+function _lambda_draws(model, row)
+    p = try
+        PRED.extract_params(model, row)
+    catch
+        nothing
+    end
+    if p !== nothing
+        hasproperty(p, :λ_h) && hasproperty(p, :λ_a) && return (p.λ_h, p.λ_a)
+        hasproperty(p, :θ_1) && hasproperty(p, :θ_2) && return (p.θ_1, p.θ_2)
+    end
+    hasproperty(row, :λ_h) && hasproperty(row, :λ_a) && return (row.λ_h, row.λ_a)
+    return nothing
+end
+
+"Mean and the 10/50/90 quantiles of a posterior draw vector, or `nothing` on an empty one."
+function _summarise_draws(v)
+    x = Float64[Float64(z) for z in v if isfinite(z)]
+    isempty(x) && return nothing
+    return (mean = round(Statistics.mean(x), digits = 3),
+            q10 = round(Statistics.quantile(x, 0.10), digits = 3),
+            q50 = round(Statistics.quantile(x, 0.50), digits = 3),
+            q90 = round(Statistics.quantile(x, 0.90), digits = 3),
+            sd  = round(length(x) > 1 ? Statistics.std(x) : 0.0, digits = 3),
+            n   = length(x))
+end
+
+"""
+    model_lambdas_at(st, as_of; slot) -> Dict{Int,NamedTuple}
+
+The posterior `(λ_home, λ_away)` per fixture at one instant, memoised on the lineup signature.
+
+Same key and same justification as `model_probs_at`: within a replay the posterior is a function
+of the visible XI and of nothing else that moves, so a 165-minute λ trajectory costs two
+extractions for the hybrid pillar and one for the team-level ones.
+"""
+function model_lambdas_at(st::ReplayState, as_of::DateTime; slot::ModelSlot = active_slot(st))
+    empty_map = Dict{Int,Any}()
+    slot.status === :ready || return empty_map
+    ctx = _priced_context(st, slot, as_of)
+    (ctx === nothing || isempty(ctx.passed)) && return empty_map
+    sig = slot_cache_signature(slot, ctx.passed, as_of)
+    ckey = (slot.key, sig)
+    hit = get(st.model_lambda, ckey, nothing)
+    hit === nothing || return hit
+    out = Dict{Int,Any}()
+    try
+        latents = slot_latents(slot, ctx.spec, st.ds, ctx.passed, ctx.q.odds, as_of)
+        model = slot.fit.config.model
+        for row in eachrow(latents)
+            d = _lambda_draws(model, row)
+            d === nothing && continue
+            h = _summarise_draws(d[1]); a = _summarise_draws(d[2])
+            (h === nothing || a === nothing) && continue
+            out[Int(row.match_id)] = (home = h, away = a,
+                                      total = round(h.mean + a.mean, digits = 3),
+                                      supremacy = round(h.mean - a.mean, digits = 3))
+        end
+    catch
+        # A latents extraction that throws is already reported by the tick that hit it; the
+        # gauge answers with no model needle rather than with a 500.
+    end
+    st.model_lambda[ckey] = out
+    return out
+end
+
+"""
+The minutes the λ trajectory is sampled at.
+
+Coarser than the price chart's grid (`_history_grid`) and for the opposite reason: each point
+here costs a Nelder-Mead inversion rather than a dictionary lookup, and the market's rate moves
+smoothly enough between them that a 5-minute grid loses nothing an operator would act on. The
+current minute and the drop minute are always pinned.
+"""
+function _lambda_grid(from_t::Int, to_t::Int, drop_t::Union{Nothing,Int})
+    g = collect(from_t:5:to_t)
+    push!(g, to_t)
+    drop_t === nothing || append!(g, (drop_t - 1, drop_t))
+    return sort!(unique!(Int[t for t in g if from_t <= t <= to_t]))
+end
+
+"""
+    lambda_view(st, match_id; trajectory, from) -> NamedTuple
+
+The Lambda Radar: the model's posterior goal rates against the rates the book is quoting, now
+and over the replay so far.
+
+`discrepancy` is the reading the panel exists to produce, and it is stated per SIDE rather than
+as one number. A model whose home λ is above the market's and whose away λ is below it is
+saying something specific -- this is a bigger home-side mismatch than the book thinks -- and a
+single "the model is 0.1 goals higher" would hide the sign.
+
+`inside` reports whether the market's rate falls inside the posterior's 10-90% band. That is the
+honest strength test: an 0.2-goal gap against a tight posterior is a disagreement and the same
+gap against a wide one is noise, and the band is what tells them apart.
+"""
+function lambda_view(st::ReplayState, match_id::Integer;
+                     trajectory::Bool = true, from::Integer = T_START)
+    return lock(st.lock) do
+        f = card_fixture(st, match_id)
+        slot = active_slot(st)
+        t_now = clamp_t(st.clock.t)
+        as_of = as_of_at(st.card, t_now)
+        drop_t = lineup_drop_minute(st.card, f)
+
+        mkt = market_lambda_at(st, f, t_now)
+        mdl = get(model_lambdas_at(st, as_of; slot = slot), f.m_id, nothing)
+
+        function _disc(side::Symbol)
+            (mdl === nothing || mkt === nothing || !(mkt isa NamedTuple) ||
+             !hasproperty(mkt, :ok) || !mkt.ok) && return nothing
+            m = side === :home ? mdl.home : mdl.away
+            k = side === :home ? mkt.lambda_home : mkt.lambda_away
+            d = m.mean - k
+            return (model = m.mean, market = k, delta = round(d, digits = 3),
+                    delta_pct = k > 0 ? round(100 * d / k, digits = 2) : nothing,
+                    inside = k >= m.q10 && k <= m.q90,
+                    verdict = abs(d) < 0.05 ? "agreed" :
+                              d > 0 ? "model higher — the book is UNDERPRICING this attack" :
+                                      "model lower — the book is OVERPRICING this attack")
+        end
+
+        traj = NamedTuple[]
+        if trajectory
+            from_t = clamp_t(from)
+            for t in _lambda_grid(from_t, t_now, drop_t)
+                k = market_lambda_at(st, f, t)
+                ok = k !== nothing && k isa NamedTuple && hasproperty(k, :ok) && k.ok
+                mm = get(model_lambdas_at(st, as_of_at(st.card, t); slot = slot), f.m_id, nothing)
+                push!(traj, (
+                    t = t,
+                    market_home = ok ? k.lambda_home : nothing,
+                    market_away = ok ? k.lambda_away : nothing,
+                    market_total = ok ? k.total : nothing,
+                    model_home = mm === nothing ? nothing : mm.home.mean,
+                    model_away = mm === nothing ? nothing : mm.away.mean,
+                    model_total = mm === nothing ? nothing : mm.total,
+                ))
+            end
+        end
+
+        mkt_ok = mkt !== nothing && mkt isa NamedTuple && hasproperty(mkt, :ok) && mkt.ok
+        return (
+            ok = true,
+            match_id = f.m_id,
+            fixture = f.home * " v " * f.away,
+            home = f.home, away = f.away,
+            tournament_id = f.tournament_id,
+            league = league_short(f.tournament_id),
+            t = t_now, as_of = string(as_of),
+            in_play = t_now >= T_KICKOFF,
+            model = slot.key, model_label = slot.label, model_status = String(slot.status),
+            lineup_drop_min = drop_t,
+            market = mkt_ok ? mkt : nothing,
+            market_note = mkt_ok ? "" :
+                (mkt === nothing ?
+                 "no complete MATCH_ODDS book at this minute — two rates cannot be identified " *
+                 "from a totals line alone" :
+                 (hasproperty(mkt, :error) ? "inversion refused: " * mkt.error :
+                  "inversion produced no finite rate")),
+            model_lambda = mdl,
+            model_note = mdl === nothing ?
+                (slot.status === :ready ?
+                 "this fixture is not priced at this minute (gated, or outside the fold)" :
+                 "model $(slot.key) is $(slot.status)") : "",
+            home_disc = _disc(:home),
+            away_disc = _disc(:away),
+            total_disc = (mdl === nothing || !mkt_ok) ? nothing :
+                (model = mdl.total, market = mkt.total,
+                 delta = round(mdl.total - mkt.total, digits = 3)),
+            supremacy_disc = (mdl === nothing || !mkt_ok) ? nothing :
+                (model = mdl.supremacy, market = mkt.supremacy,
+                 delta = round(mdl.supremacy - mkt.supremacy, digits = 3)),
+            trajectory = traj,
+            markers = (lineups = T_LINEUP, exec = T_EXEC, kickoff = T_KICKOFF),
+            exec_window = (from = T_WINDOW_OPEN, to = T_WINDOW_CLOSE),
+            caveat = "λ_market is the double-Poisson rate pair that reproduces this book's " *
+                     "de-vigged mids. The model's own score grid may not be double-Poisson, so " *
+                     "the two are comparable as mean goal rates and not as generating processes.",
+        )
+    end
+end
+
+# ===================================================================
+# 19. Model provenance -- what the header's tooltip is allowed to claim
+# ===================================================================
+#
+# The model buttons have always carried a fold index and a coverage count. Neither of those says
+# whether the CHAIN behind the fold is usable, and that is the fact that decides whether a price
+# should be believed: an unconverged posterior is too NARROW, so every p_model - p_market edge
+# reads larger than the evidence supports and Kelly stake is monotone in the edge. The audit is
+# already computed -- `canonical_fit` runs `Evaluation.convergence_verdict` at load time and
+# carries the verdict -- so this section only has to surface it, and must not re-derive it.
+
+"""
+    fit_diagnostics(slot) -> NamedTuple
+
+The convergence audit behind one model slot: R̂, ESS, divergences, and the verdict.
+
+NEVER THROWS, for the same reason `convergence_verdict` does not: a `Fit` reconstructed from an
+older serialisation may carry no `ConvergenceSummary` at all, and a missing audit must degrade to
+"unknown" rather than take out the model selector that exists to warn about it. An unknown
+verdict is reported as unknown and is NOT reported as passing.
+"""
+function fit_diagnostics(slot::ModelSlot)
+    unknown = (available = false, converged = nothing, max_rhat = nothing,
+               min_ess_bulk = nothing, min_ess_tail = nothing, n_divergent = nothing,
+               divergence_rate = nothing, n_folds = nothing, failed_gates = String[],
+               note = "no convergence audit is attached to this fit")
+    slot.status === :ready || return merge(unknown,
+        (note = "model $(slot.key) is $(slot.status)",))
+    cf = slot.fit
+    cf === nothing && return unknown
+    diag = try
+        getfield(getfield(cf, :fit), :diagnostics)
+    catch
+        nothing
+    end
+    converged = try
+        getfield(cf, :converged)
+    catch
+        nothing
+    end
+    gates = try
+        String.(getfield(cf, :failed_gates))
+    catch
+        String[]
+    end
+    diag === nothing && return merge(unknown, (converged = converged, failed_gates = gates))
+    g(name) = try
+        getfield(diag, name)
+    catch
+        nothing
+    end
+    nd = g(:n_divergent)
+    return (
+        available = true,
+        converged = converged === nothing ? g(:passed) : converged,
+        max_rhat = g(:max_rhat) === nothing ? nothing : round(Float64(g(:max_rhat)), digits = 4),
+        min_ess_bulk = g(:min_ess_bulk) === nothing ? nothing :
+                       round(Float64(g(:min_ess_bulk)), digits = 1),
+        min_ess_tail = g(:min_ess_tail) === nothing ? nothing :
+                       round(Float64(g(:min_ess_tail)), digits = 1),
+        n_divergent = nd === nothing ? nothing : Int(nd),
+        divergence_rate = g(:divergence_rate) === nothing ? nothing :
+                          round(100 * Float64(g(:divergence_rate)), digits = 3),
+        n_folds = g(:n_folds) === nothing ? nothing : Int(g(:n_folds)),
+        failed_gates = gates,
+        note = converged === false ?
+            "REFUSE unless you mean it: an unconverged posterior is too narrow, so every edge " *
+            "reads larger than the evidence supports and stake size is monotone in the edge." :
+            "",
+    )
+end
+
+"""
+    model_architecture(slot) -> String
+
+One line naming what this model actually is, read off the fitted config rather than off a table.
+
+A hard-coded description would be a second place the architecture is written down, and the one
+that never gets updated. `typeof(config.model)` is the architecture; this only makes it readable.
+"""
+function model_architecture(slot::ModelSlot)
+    slot.status === :ready && slot.fit !== nothing || return ""
+    name = try
+        string(nameof(typeof(slot.fit.config.model)))
+    catch
+        return ""
+    end
+    parts = String[]
+    occursin("Joint", name) && push!(parts, "two-arm joint likelihood")
+    occursin("Funnel", name) && push!(parts, "shots funnel")
+    (occursin("PlusMinus", name) || occursin("Rapm", name) || occursin("RAPM", name)) &&
+        push!(parts, "RAPM lineup pillar")
+    occursin("Wealth", name) && push!(parts, "squad-wealth prior")
+    occursin("Player", name) && push!(parts, "player pillar")
+    occursin("TimeDecay", name) && push!(parts, "time-decayed team state")
+    occursin("League", name) && push!(parts, "league effect")
+    occursin("NegBin", name) && push!(parts, "negative-binomial score grid")
+    isempty(parts) && push!(parts, "team-state only")
+    slot.calibrator === nothing || push!(parts,
+        "Option B " * CAL.calibrator_label(slot.calibrator) *
+        " at T$(Int(round(slot.calibrator.book_as_of_minutes)))")
+    return name * " — " * join(parts, " + ")
+end
+
+"""
+    model_registry_payload(st) -> Vector{NamedTuple}
+
+The model selector's whole read model: every slot, its fold, its coverage, its audit and its
+architecture.
+
+Built once per push and NOT per model button, because `fit_diagnostics` reaches into the loaded
+`Fit` and doing that inside an `x-for` would read it once per re-render.
+"""
+function model_registry_payload(st::ReplayState)
+    n_fx = length(st.card.fixtures)
+    active = active_slot(st).key
+    return [(
+        key = m.key, label = m.label, run_name = m.run_name, experiment = m.experiment,
+        calibrated = m.calibrator !== nothing,
+        calibrator = m.calibrator === nothing ? nothing : m.calibrator.name,
+        calibrator_label = m.calibrator === nothing ? nothing : CAL.calibrator_label(m.calibrator),
+        book_as_of_minutes = m.calibrator === nothing ? nothing : m.calibrator.book_as_of_minutes,
+        status = String(m.status), error = m.error,
+        fold_idx = m.fold_idx, fold_warning = m.fold_warning,
+        n_covered = length(m.covered), n_refused = length(m.refused),
+        n_fixtures = n_fx,
+        coverage = n_fx > 0 ? "$(length(m.covered))/$(n_fx)" : "0/0",
+        complete = length(m.covered) == n_fx && n_fx > 0,
+        refused = [(match_id = p.first, reason = p.second) for p in m.refused],
+        load_seconds = round(m.load_seconds, digits = 1),
+        n_latent_states = length(m.latents),
+        architecture = model_architecture(m),
+        diagnostics = fit_diagnostics(m),
+        active = m.key == active,
+    ) for m in st.models]
 end

@@ -124,7 +124,8 @@ _empty_odds() = DataFrame(match_id = Int[], market_name = String[], market_line 
                           selection = Symbol[], odds_close = Float64[])
 
 """
-    match_day(spec, sys, segment, expr, ds; as_of = now(), bankroll = 1.0) -> MatchDayResult
+    match_day(spec, sys, segment, expr, ds; as_of = now(), bankroll = 1.0,
+              calibrator = nothing) -> MatchDayResult
 
 Run the whole pipeline.
 
@@ -135,7 +136,8 @@ A refusal is a value: `result.blocked` carries every card the gate stopped and w
 today" and "the pipeline is broken" are never the same empty DataFrame.
 """
 function match_day(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment, expr, ds;
-                   as_of::DateTime = now(), bankroll::Real = 1.0)
+                   as_of::DateTime = now(), bankroll::Real = 1.0,
+                   calibrator::Union{Nothing,Calibration.AbstractGenerativeRateCalibrator} = nothing)
     cards = build_cards(spec, segment, as_of)
     isempty(cards) && return MatchDayResult(_empty_sheet(), FixtureCard[], FixtureCard[],
                                             _empty_odds(), Dict(), as_of)
@@ -153,6 +155,20 @@ function match_day(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment, 
     latents, diag = matchday_latents(spec, expr, ds, passed, odds, as_of)
     isempty(diag.warning) || @warn "MatchDay: $(diag.warning)"
     isempty(latents) && return MatchDayResult(_empty_sheet(), cards, blocked, odds, insts, as_of)
+
+    if calibrator !== nothing
+        calibrated = calibrate_matchday_latents(calibrator, latents, odds, passed, as_of)
+        latents = calibrated.latents
+        coverage_log = (; calibrator = calibrator.name, calibrated.coverage...,
+                         refusals = Calibration.inversion_refusals(calibrated.rates))
+        @info "MatchDay calibration coverage" details = coverage_log
+        calibrated.coverage.n_accepted > 0 || @warn(
+            "match_day: calibration shifted no fixture; the raw posterior passed through",
+            calibrator = calibrator.name,
+            n_fixtures = calibrated.coverage.n_fixtures,
+            n_quoted = calibrated.coverage.n_quoted,
+            refusals = Calibration.inversion_refusals(calibrated.rates))
+    end
 
     sheet = Portfolio.stake_sheet(sys, latents, expr, odds, fixture_info(passed);
                                   bankroll = bankroll)

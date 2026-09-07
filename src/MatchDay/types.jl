@@ -204,7 +204,7 @@ struct Lineup
     home::Vector{Player}
     away::Vector{Player}
     confirmed::Bool
-    source::Symbol                       # :json_pin | :provisional | :last_historical
+    source::Symbol                       # :bbc | :json_pin | :provisional | :last_historical
     scraped_at::DateTime
 end
 

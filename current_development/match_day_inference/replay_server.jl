@@ -74,6 +74,15 @@ function replay_payload(st::ReplayState)
             blocked = base.blocked,
             settlement = st.settlement,
             ticket = ticket_payload(st),
+            # The policy the batch above was solved under. On the payload rather than behind a
+            # route because it is the one thing that can change what every other number in this
+            # object MEANS, and a header that reports £412 of risk without saying which λ solved
+            # it is reporting half a fact.
+            policy = policy_payload(st),
+            # Per-division subtotals. Derived from `cards`, which is already built here -- a
+            # separate route would re-run `card_payload` to answer a question about the object
+            # this function is already holding.
+            leagues = league_blocks(st, base.cards),
         )
     end
 end
@@ -278,26 +287,33 @@ function _replay_block(st::ReplayState)
         account_id     = st.account_id,
         n_executed     = length(st.executed),
         active_model   = slot.key,
-        models         = [(key = m.key, label = m.label, run_name = m.run_name,
-                           experiment = m.experiment, status = String(m.status),
-                           error = m.error, fold_idx = m.fold_idx,
-                           n_covered = length(m.covered), n_refused = length(m.refused),
-                           refused = [(match_id = p.first, reason = p.second)
-                                      for p in m.refused],
-                           load_seconds = round(m.load_seconds, digits = 1),
-                           n_latent_states = length(m.latents),
-                           active = m.key == slot.key)
-                          for m in st.models],
+        # `model_registry_payload` rather than the inline comprehension this used to carry: the
+        # selector now shows the fold's convergence audit and the architecture behind it, and
+        # both are read off the loaded `Fit`. Building that inside the payload literal would put
+        # a `getfield` chain in the middle of a NamedTuple and hide the one thing about it worth
+        # knowing -- that it never throws on a fit with no audit attached.
+        models         = model_registry_payload(st),
         # `lineup_drop_min` here is a POSITIVE lead time ("the XI arrived 39 minutes out"),
         # which is how the fixture dropdown labels it; the ladder and history payloads carry the
         # same instant SIGNED, because there it is an axis coordinate. Both are derived from
         # `lineup_drop_minute`, so the two never disagree about which minute it was -- they
         # disagreed by one on a sub-minute scrape while this one rounded and that one did not.
         fixtures       = [(match_id = f.m_id, fixture = f.home * " v " * f.away,
+                           home = f.home, away = f.away,
+                           tournament_id = f.tournament_id,
+                           league = league_short(f.tournament_id),
+                           league_name = league_name(f.tournament_id),
                            lineup_drop_min = let d = lineup_drop_minute(card, f)
                                d === nothing ? nothing : -d
                            end)
                           for f in card.fixtures],
+        # The divisions ON THIS CARD, with the accent each badge is drawn in. Served rather than
+        # hard-coded in the page for the reason `ladder_markets` is: the page must not be able to
+        # offer a filter for a league the card does not carry.
+        leagues        = [(tournament_id = tid, name = league_name(tid),
+                           short = league_short(tid), accent = league_accent(tid),
+                           n_fixtures = count(f -> f.tournament_id == tid, card.fixtures))
+                          for tid in sort(unique(Int[f.tournament_id for f in card.fixtures]))],
         book_from      = card.book_span[1] === nothing ? nothing : string(card.book_span[1]),
         book_to        = card.book_span[2] === nothing ? nothing : string(card.book_span[2]),
         n_lineups      = length(card.lineup_drop),
@@ -395,6 +411,8 @@ const REPLAY_ROUTES = [
     "GET  /", "GET  /api/snapshot", "GET  /api/health", "GET  /api/replay/matchdays",
     "GET  /api/replay/ladder", "GET  /api/replay/history",
     "GET  /api/replay/stats", "GET  /api/replay/model_scorecard",
+    "GET  /api/replay/policy", "GET  /api/replay/lineup_shock", "GET  /api/replay/lambda",
+    "POST /api/replay/set_policy",
     "POST /api/replay/play", "POST /api/replay/pause", "POST /api/replay/speed",
     "POST /api/replay/step", "POST /api/replay/jump", "POST /api/replay/seek",
     "POST /api/replay/set_model", "POST /api/replay/set_matchday",
@@ -439,7 +457,8 @@ function route_replay(srv::ReplayServer, req::HTTP.Request)
         q = _query_args(uri)
         return _json(_intent(() -> fixture_ladder(st,
             Int(round(_num(q, "match_id", Float64(_default_match(st))))),
-            _str(q, "market", "MATCH_ODDS"))))
+            _str(q, "market", "MATCH_ODDS");
+            ticks = Int(round(_num(q, "ticks", Float64(LADDER_TICK_HALF)))))))
     elseif method == "GET" && target == "/api/replay/history"
         q = _query_args(uri)
         return _json(_intent(() -> selection_history(st,
@@ -460,6 +479,23 @@ function route_replay(srv::ReplayServer, req::HTTP.Request)
         q = _query_args(uri)
         return _json(_intent(() -> model_scorecard(st, _str(q, "model", st.active);
                                                    baseline = _str(q, "baseline", "m00"))))
+    elseif method == "GET" && target == "/api/replay/policy"
+        # A GET beside the POST, and not merely for symmetry: the drawer must be able to read
+        # back what the process actually built rather than trusting the echo of its own request,
+        # because `set_policy!` can legitimately land somewhere other than where the sliders were
+        # (a preset override, a re-derived label, a cap the constructor clamped).
+        return _json(_intent(() -> (ok = true, policy = policy_payload(st))))
+    elseif method == "GET" && target == "/api/replay/lineup_shock"
+        q = _query_args(uri)
+        return _json(_intent(() -> lineup_shock(st;
+            slot = haskey(q, "model") ? find_slot(st, _str(q, "model", st.active)) :
+                   active_slot(st))))
+    elseif method == "GET" && target == "/api/replay/lambda"
+        q = _query_args(uri)
+        return _json(_intent(() -> lambda_view(st,
+            Int(round(_num(q, "match_id", Float64(_default_match(st)))));
+            trajectory = _str(q, "trajectory", "1") != "0",
+            from = Int(round(_num(q, "from", Float64(T_START)))))))
     end
 
     args = _body_args(req, uri)
@@ -498,6 +534,25 @@ function route_replay(srv::ReplayServer, req::HTTP.Request)
                  model = slot.key) :
                 (ok = false, error = "model $(slot.key) failed to load: $(slot.error)")
         end))
+    elseif method == "POST" && target == "/api/replay/set_policy"
+        # Every field is optional and absent means "leave it". `{"lambda": 12}` is therefore a
+        # one-slider request rather than a policy that silently reset the other five controls to
+        # this handler's defaults -- which is exactly what `_num(args, "lambda", 23.0)` would
+        # have made of it, and is why nothing here uses the defaulting helpers.
+        #
+        # `lines` is gone from this body on purpose. It used to say which totals the single
+        # `under`/`over` pair applied to; every priced strike now carries its own tier, so the
+        # line set is `OU_LINES` and a request cannot redefine it.
+        return _json(_intent(() -> set_policy!(st;
+            preset   = haskey(args, "preset")   ? _str(args, "preset", "canonical") : nothing,
+            kind     = haskey(args, "kind")     ? _str(args, "kind", "tiered") : nothing,
+            trust    = _trust_arg(args),
+            flat     = haskey(args, "flat")     ? _num(args, "flat", 0.25) : nothing,
+            lambda   = haskey(args, "lambda")   ? _num(args, "lambda", 23.0) : nothing,
+            cap_pct  = haskey(args, "cap_pct")  ? _num(args, "cap_pct", 25.0) : nothing,
+            shrink   = haskey(args, "shrink")   ? _str(args, "shrink", "baker_mchale") : nothing,
+            shrink_k = haskey(args, "shrink_k") ? _num(args, "shrink_k", 0.5) : nothing,
+            risk     = haskey(args, "risk")     ? _str(args, "risk", "slate_drawdown") : nothing)))
     elseif method == "POST" && target == "/api/replay/set_matchday"
         return _json(_intent(() -> begin
             day = Date(_str(args, "day", string(st.card.day)))
@@ -598,6 +653,40 @@ end
 function _str(args::Dict{String,Any}, key::AbstractString, default::AbstractString)
     v = get(args, String(key), nothing)
     return v === nothing ? String(default) : String(string(v))
+end
+
+"""
+The `trust` object of a `set_policy` body, as a plain `Dict{String,Float64}`.
+
+Two spellings are accepted and both are how a client would naturally write it: a nested object
+(`{"trust": {"under_25": 0.4}}`) and flat `trust_*` keys (`?trust_under_25=0.4`), the second
+because a query string has no nesting and `curl -X POST '...?trust_under_25=0.4'` must reach the
+same control the drawer does. `nothing` when neither is present, which is what `set_policy!`
+reads as "leave the tiers alone".
+
+The Over/Under keys are per STRIKE -- `under_05`, `over_05`, `under_15`, … -- and are the
+canonical selection symbols themselves, so a request names a total the same way the odds feed
+does. There is deliberately no bare `under` or `over` key: it would have to pick a line, and
+picking one silently is what this revision exists to stop.
+"""
+function _trust_arg(args::Dict{String,Any})
+    out = Dict{String,Float64}()
+    nested = get(args, "trust", nothing)
+    if nested !== nothing
+        try
+            for (k, v) in pairs(nested)
+                p = v isa Number ? Float64(v) : tryparse(Float64, string(v))
+                p === nothing || (out[lowercase(String(k))] = p)
+            end
+        catch
+            # A `trust` that is not an object is a client bug; the flat keys below still apply.
+        end
+    end
+    for t in TRUST_TIERS
+        k = "trust_" * t
+        haskey(args, k) && (out[t] = _num(args, k, 0.0))
+    end
+    return isempty(out) ? nothing : out
 end
 
 # ===================================================================

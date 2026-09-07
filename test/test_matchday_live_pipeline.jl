@@ -22,6 +22,7 @@ const MD = BayesianFootball.MatchDay
 const PF = BayesianFootball.Portfolio
 const PD = BayesianFootball.Data
 const PP = BayesianFootball.Predictions
+const FE = BayesianFootball.Features
 
 # ===================================================================
 # Fixtures
@@ -254,6 +255,72 @@ end
     @test isnan(MD.relative_spread(_levels([2.0], [10.0], Float64[], Float64[])))
     @test isnan(MD.relative_spread(_levels(Float64[], Float64[], [2.1], [10.0])))
     @test isnan(MD.relative_spread(_levels([2.2], [10.0], [2.1], [10.0])))   # crossed
+end
+
+@testset "L8b Option B calibrates the exact T-25 MatchDay book" begin
+    fixture = MD.Fixture(501, "home", "away", DateTime(2026, 9, 5, 15), 56)
+    card = MD.FixtureCard(fixture, MD.Unresolved(fixture, :test),
+                          DateTime(2026, 9, 5, 14, 35))
+
+    matrix = FE.build_probability_matrix(FE.DoublePoissonMarketFeature(),
+                                         log.([1.42, 0.96]), 10)
+    probs = Dict{Symbol,Float64}(
+        :home => sum(tril(matrix, -1)),
+        :draw => sum(diag(matrix)),
+        :away => sum(triu(matrix, 1)),
+        :btts_yes => sum(@view matrix[2:end, 2:end]),
+    )
+    probs[:btts_no] = 1.0 - probs[:btts_yes]
+    for k in 0:3
+        under = sum(matrix[i + 1, j + 1] for i in 0:10, j in 0:10 if i + j <= k)
+        probs[Symbol("under_$(k)5")] = under
+        probs[Symbol("over_$(k)5")] = 1.0 - under
+    end
+
+    rows = NamedTuple[]
+    market_rows = [("1X2", 0.0, [:home, :draw, :away]),
+                   ("BTTS", 0.0, [:btts_yes, :btts_no])]
+    append!(market_rows,
+            [("OverUnder", k + 0.5,
+              [Symbol("over_$(k)5"), Symbol("under_$(k)5")]) for k in 0:3])
+    for (group, line, selections) in market_rows, selection in selections
+        push!(rows, (match_id = 501, market_name = group, market_line = line,
+                     selection, odds_close = 1.0 / probs[selection]))
+    end
+    odds = DataFrame(rows)
+    latents = DataFrame(match_id = [501],
+                        λ_h = [[1.65, 1.72, 1.80, 1.88]],
+                        λ_a = [[0.78, 0.84, 0.91, 0.98]],
+                        provenance = ["preserved"])
+
+    result = MD.calibrate_matchday_latents(MD.option_b_calibrator(), latents, odds, [card],
+                                           DateTime(2026, 9, 5, 14, 35))
+    @test result.coverage.n_accepted == 1
+    @test result.diagnostics.inverted == [true]
+    @test result.latents.provenance == ["preserved"]
+    @test result.latents.λ_h != latents.λ_h
+    fallback = MD.calibrate_matchday_latents(MD.option_b_calibrator(), latents,
+                                             odds[1:0, :], [card],
+                                             DateTime(2026, 9, 5, 14, 35))
+    @test fallback.coverage.n_accepted == 0
+    @test fallback.latents.λ_h == latents.λ_h
+    @test fallback.latents.λ_a == latents.λ_a
+    for group in groupby(result.book, [:match_id, :market_name, :market_line])
+        @test sum(group.prob_fair_close) ≈ 1.0
+    end
+
+    # A T-25 recipe meeting a T-24 quote is a refusal, never a relabelled book.
+    @test_throws ErrorException MD.calibrate_matchday_latents(
+        MD.option_b_calibrator(), latents, odds, [card], DateTime(2026, 9, 5, 14, 36))
+
+    system = MD.option_b_system()
+    @test system.policy.risk.lambda == 8.0
+    @test system.policy.cap.cap == 0.25
+    @test system.book.shrink.k == 0.30
+    @test system.policy.trust.table[("1x2", 0.0, :home)] == 1.0
+    @test system.policy.trust.table[("over_under", 2.5, :under)] == 1.0
+    @test system.policy.trust.table[("over_under", 1.5, :over)] ≈ 1.0 / 1.4
+    @test system.policy.trust.default == 0.0
 end
 
 @testset "L9 MaxSpread catches the book MinMatched waves through" begin

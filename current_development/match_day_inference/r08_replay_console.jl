@@ -88,10 +88,16 @@ const R08_SCHEMA    = REPLAY_SCHEMA            # "paper_replay" -- never paper_r
 const R08_HOST      = "0.0.0.0"
 const R08_PORT      = REPLAY_PORT              # 8086 -- never 8085
 const R08_MODEL     = get(ENV, "R08_MODEL", "m00")
+# Which `(experiment, run_name)` set the model buttons address. `player_grid` is the pair this
+# console has always loaded; `joint_player` is the 43-fold 26/27 production pair. See
+# `MODEL_REGISTRIES` -- the fold each model actually selects is on its info card either way, so
+# this changes which chains are offered and never which fold is claimed.
+const R08_REGISTRY  = get(ENV, "R08_REGISTRY", "joint_player")
 
 println("\n" * "="^78)
 println("  MatchDay REPLAY console")
 println("  match day : ", R08_DAY)
+println("  registry  : ", R08_REGISTRY)
 println("  schema    : ", R08_SCHEMA, "   (live paper_runbook is untouched)")
 println("  port      : ", R08_PORT, "        (live console on 8085 is untouched)")
 println("="^78 * "\n")
@@ -130,20 +136,19 @@ card = load_replay_card(conn, R08_DAY; tournament_ids = R08_TIDS)
 # ===================================================================
 # 5. Portfolio policy
 # ===================================================================
-# Identical to `r07_serve_console.jl`. The canonical policy applies the audited Scottish Lower
-# trust tiers, while `SlateDrawdown` still solves ONE `k` for the whole settlement window and
-# `FixedCap` bounds total simultaneous exposure. The stake vector is only valid as a vector --
-# which is why execution is one transaction and not one per leg.
-system = PF.PortfolioSystem(
-    PF.BookSpec(markets = MD.canonical_markets(), price = PF.DeArb()),
-    MD.canonical_scottish_lower_policy())
+# Option B's portfolio contract is held beside its calibrator in MatchDay: Home and Under 2.5
+# at full trust; Draw, Away and Over 1.5 at 1/1.4; every other runner gated; λ=8, 25% cap and
+# 30% fractional Kelly. Raw and calibrated model slots use the SAME system, so switching between
+# `m12` and `m12_optB` isolates the rate transform rather than silently changing two things.
+system = MD.option_b_system()
 
 # %%
 # ===================================================================
 # 6. Replay state, ledger, and the first model
 # ===================================================================
 state = ReplayState(ds, conn, card; system = system, bankroll = R08_BANKROLL,
-                    account_id = R08_ACCOUNT, schema = R08_SCHEMA, active = R08_MODEL)
+                    account_id = R08_ACCOUNT, schema = R08_SCHEMA, active = R08_MODEL,
+                    models = default_model_registry(R08_REGISTRY))
 
 account = ensure_replay_account!(state)
 @info "replay account" account.account_id balance = account.balance reserved = account.reserved
@@ -189,8 +194,11 @@ println("  LAN URL   : http://192.168.1.88:", R08_PORT)
 println("  Schema    : ", R08_SCHEMA, "   (live 8085 console and paper_runbook untouched)")
 println()
 println("  VCR      space play/pause · ← → step 1m · x XI drop · e exec · k kickoff · f settle")
+println("  Windows  1-8 toggle · t tile · d tile pop-out desks · ↗ on a card pops one out")
 println("  API      POST /api/replay/{play,pause,speed,step,jump,seek,set_model,set_matchday,")
-println("                             execute,settle,reset}")
+println("                             set_policy,execute,settle,reset}")
+println("           GET  /api/replay/{ladder,history,stats,model_scorecard,policy,")
+println("                             lineup_shock,lambda,matchdays}")
 println("  Press Ctrl+C to stop the server.")
 println("="^78 * "\n")
 

@@ -3,8 +3,8 @@
 # Fixture sources, identity resolvers, lineup sources.
 
 export SofaScoreEvents, ExplicitFixtures, MatchMetaCrosswalk, LiveNameMatch, ResolverChain,
-       ProvisionalDB, LastHistorical, JsonPin, SourceChain,
-       team_name_score, match_event_scores
+       ProvisionalDB, LastHistorical, JsonPin, SourceChain, BBCLineupSource,
+       parse_bbc_lineup, team_name_score, match_event_scores
 
 # ===================================================================
 # Fixture sources
@@ -251,6 +251,595 @@ end
 # ===================================================================
 
 """
+    BBCLineupSource(; ds = nothing, timeout_seconds = 3.0, max_retries = 1,
+                     user_agent = ...)
+
+Native BBC Sport lineup source.  BBC's CDN is deliberately kept outside the DataStore: the
+source is an execution-time adapter, while the resolved players and event crosswalk are written
+back to `betdb.bbc` for the next call.  A failed lookup is a normal `nothing` result, so a
+`SourceChain` can continue to its configured fallback.
+"""
+Base.@kwdef struct BBCLineupSource <: AbstractLineupSource
+    ds::Any = nothing
+    timeout_seconds::Float64 = 3.0
+    max_retries::Int = 1
+    user_agent::String = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+end
+
+const BBC_CDN_BASE = "https://web-cdn.api.bbci.co.uk/wc-poll-data/container/"
+const BBC_TOURNAMENT_URNS = Dict(
+    54 => "urn:bbc:sportsdata:football:tournament:scottish-premiership",
+    55 => "urn:bbc:sportsdata:football:tournament:scottish-championship",
+    56 => "urn:bbc:sportsdata:football:tournament:scottish-league-one",
+    57 => "urn:bbc:sportsdata:football:tournament:scottish-league-two",
+    1  => "urn:bbc:sportsdata:football:tournament:premier-league",
+    2  => "urn:bbc:sportsdata:football:tournament:championship",
+    3  => "urn:bbc:sportsdata:football:tournament:league-one",
+    84 => "urn:bbc:sportsdata:football:tournament:league-two",
+)
+
+struct _BBCRawPlayer
+    bbc_player_id::String
+    name::String
+    surname::String
+    shirt_number::Union{Nothing,Int}
+    position::Symbol
+    substitute::Bool
+    captain::Bool
+end
+
+struct _BBCPlayerResolution
+    player_id::Int
+    sofascore_name::String
+    outcome::String
+end
+
+struct _BBCPersistedPlayer
+    bbc_player_id::String
+    player_id::Int
+    bbc_name::String
+    sofascore_name::String
+    substitute::Bool
+    shirt_number::Union{Nothing,Int}
+    position::Symbol
+    map_outcome::String
+    team_slug::String
+    captain::Bool
+end
+
+# JSON3 objects intentionally go through this small adapter.  It handles both JSON3.Object and
+# ordinary Dict payloads, and makes a schema variation a failed source lookup rather than an
+# exception escaping the slate loop.
+function _bbc_get(value, key::Symbol, default = nothing)
+    value === nothing && return default
+    try
+        return haskey(value, key) ? get(value, key, default) : default
+    catch
+        return default
+    end
+end
+
+_bbc_string(value, default = "") =
+    value === nothing || ismissing(value) ? default : String(value)
+
+function _bbc_event_id(value)
+    (value === nothing || ismissing(value)) && return nothing
+    text = String(value)
+    isempty(text) && return nothing
+    prefix = "urn:bbc:sportsdata:football:event:"
+    return startswith(text, prefix) ? text[length(prefix) + 1:end] : text
+end
+
+function _bbc_http_json(s::BBCLineupSource, endpoint::AbstractString,
+                        query::Vector{Pair{String,String}}; base_url::String = BBC_CDN_BASE)
+    attempts = max(0, s.max_retries) + 1
+    for attempt in 1:attempts
+        try
+            response = HTTP.request("GET", base_url * endpoint;
+                                    headers = ["User-Agent" => s.user_agent], query = query,
+                                    connect_timeout = max(1, ceil(Int, s.timeout_seconds)),
+                                    # HTTP.jl's timeout keywords are integer-valued in the
+                                    # pinned release; retain sub-second configuration by rounding
+                                    # up rather than failing the request at dispatch time.
+                                    readtimeout = max(1, ceil(Int, s.timeout_seconds)), retry = false,
+                                    status_exception = false)
+            status = Int(response.status)
+            if status >= 500
+                attempt < attempts && continue
+                @warn "BBCLineupSource: CDN returned HTTP $status" endpoint
+                return nothing
+            elseif status >= 400
+                @warn "BBCLineupSource: CDN returned HTTP $status" endpoint
+                return nothing
+            end
+            return JSON3.read(String(response.body))
+        catch e
+            # HTTP 1.11/1.12 exposes transport failures through Base.IOError,
+            # HTTP.Exceptions.RequestError and TimeoutError (there is no HTTP.IOError
+            # binding in the pinned release).  Retrying these and only these preserves the
+            # requested fail-soft behaviour without retrying malformed JSON indefinitely.
+            retryable = e isa Base.IOError || e isa HTTP.TimeoutError ||
+                        e isa HTTP.Exceptions.RequestError || e isa HTTP.Exceptions.ConnectError
+            if retryable && attempt < attempts
+                continue
+            end
+            @warn "BBCLineupSource: request failed" endpoint exception = e
+            return nothing
+        end
+    end
+    return nothing
+end
+
+function _bbc_date(value)
+    text = _bbc_string(value)
+    length(text) >= 10 || return nothing
+    try
+        return Date(text[1:10])
+    catch
+        return nothing
+    end
+end
+
+function _bbc_fixture_events(value)
+    events = Any[]
+    function walk(node)
+        node === nothing && return
+        if node isa AbstractDict || node isa JSON3.Object
+            home = _bbc_get(node, :home)
+            away = _bbc_get(node, :away)
+            raw_event_id = _bbc_get(node, :id)
+            raw_event_id === nothing && (raw_event_id = _bbc_get(node, :urn))
+            event_id = _bbc_event_id(raw_event_id)
+            start = _bbc_get(node, :startDateTime)
+            if home !== nothing && away !== nothing && event_id !== nothing && start !== nothing
+                push!(events, node)
+                return
+            end
+            for value_ in values(node)
+                walk(value_)
+            end
+        elseif node isa AbstractVector || node isa JSON3.Array
+            for value_ in node
+                walk(value_)
+            end
+        end
+    end
+    walk(value)
+    return events
+end
+
+function _bbc_team_value(team, key::Symbol)
+    name = _bbc_get(team, :name)
+    value = _bbc_get(team, key)
+    value !== nothing && return _bbc_string(value)
+    name === nothing && return ""
+    return _bbc_string(_bbc_get(name, key))
+end
+
+function _bbc_team_slug(team)
+    urn = _bbc_string(_bbc_get(team, :urn))
+    marker = "urn:bbc:sportsdata:football:team:"
+    return startswith(urn, marker) ? urn[length(marker) + 1:end] : urn
+end
+
+function _bbc_map_score(fixture_name::String, team, maps::DataFrame)
+    score = team_name_score(fixture_name, _bbc_team_value(team, :fullName))
+    score = max(score, team_name_score(fixture_name, _bbc_team_value(team, :shortName)))
+    slug = _bbc_team_slug(team)
+    for row in eachrow(maps)
+        _bbc_string(row.bbc_slug) == slug || continue
+        sofa = _bbc_string(row.sofascore_slug)
+        !isempty(sofa) && (score = max(score, team_name_score(fixture_name, sofa)))
+        bbc_name = :bbc_name in propertynames(row) ? _bbc_string(row.bbc_name) : ""
+        !isempty(bbc_name) && (score = max(score, team_name_score(fixture_name, bbc_name)))
+    end
+    return score
+end
+
+function _bbc_discover_event(s::BBCLineupSource, f::Fixture)
+    urn = get(BBC_TOURNAMENT_URNS, f.tournament_id, nothing)
+    urn === nothing && return nothing
+    day = string(Date(f.kickoff))
+    payload = _bbc_http_json(s, "sport-data-scores-fixtures",
+        ["selectedStartDate" => day, "selectedEndDate" => day,
+         "todayDate" => day, "urn" => urn, "useSdApi" => "false"])
+    payload === nothing && return nothing
+
+    maps = try
+        _query("SELECT bbc_slug, sofascore_slug, bbc_name FROM bbc.team_map")
+    catch e
+        @warn "BBCLineupSource: team map lookup failed" exception = e
+        DataFrame(bbc_slug = String[], sofascore_slug = String[], bbc_name = String[])
+    end
+    candidates = Any[]
+    for event in _bbc_fixture_events(payload)
+        event_date = _bbc_date(_bbc_get(event, :startDateTime))
+        event_date === nothing && continue
+        abs(Dates.value(event_date - Date(f.kickoff))) <= 1 || continue
+        home = _bbc_get(event, :home); away = _bbc_get(event, :away)
+        hs = _bbc_map_score(f.home, home, maps)
+        as = _bbc_map_score(f.away, away, maps)
+        (hs >= 0.75 && as >= 0.75) || continue
+        push!(candidates, (event = event, score = hs + as))
+    end
+    isempty(candidates) && return nothing
+    sort!(candidates, by = x -> x.score, rev = true)
+    if length(candidates) > 1 && candidates[1].score - candidates[2].score < 0.25
+        @warn "BBCLineupSource: fixture discovery was ambiguous" match_id = f.m_id
+        return nothing
+    end
+    raw_event_id = _bbc_get(candidates[1].event, :id)
+    raw_event_id === nothing && (raw_event_id = _bbc_get(candidates[1].event, :urn))
+    event_id = _bbc_event_id(raw_event_id)
+    event_id === nothing && return nothing
+    _bbc_persist_event!(f, event_id)
+    return event_id
+end
+
+function _bbc_event_for(s::BBCLineupSource, f::Fixture)
+    try
+        rows = _query("SELECT bbc_event_id FROM bbc.match_meta WHERE match_id = \$1", (f.m_id,))
+        if !isempty(rows) && !ismissing(rows.bbc_event_id[1])
+            event_id = _bbc_event_id(rows.bbc_event_id[1])
+            event_id !== nothing && return event_id
+        end
+    catch e
+        # Discovery can still work when the optional crosswalk row is absent or the DB is
+        # temporarily unavailable; the later persistence attempt is itself fail-soft.
+        @warn "BBCLineupSource: event-id lookup failed" match_id = f.m_id exception = e
+    end
+    return _bbc_discover_event(s, f)
+end
+
+"""Return the surname used by the shirt+surname fallback."""
+function _bbc_surname(name::AbstractString)
+    words = split(strip(name))
+    isempty(words) && return ""
+    return lowercase(replace(last(words), r"[^A-Za-z0-9]" => ""))
+end
+
+function _bbc_edit_distance(a::AbstractString, b::AbstractString)
+    aa, bb = collect(a), collect(b)
+    previous = collect(0:length(bb))
+    for (i, ca) in enumerate(aa)
+        current = Vector{Int}(undef, length(bb) + 1); current[1] = i
+        for j in eachindex(bb)
+            current[j + 1] = min(current[j] + 1, previous[j + 1] + 1,
+                                  previous[j] + (ca == bb[j] ? 0 : 1))
+        end
+        previous = current
+    end
+    return previous[end]
+end
+
+function _bbc_name_score(a::AbstractString, b::AbstractString)
+    aa, bb = _bbc_surname(a), _bbc_surname(b)
+    (isempty(aa) || isempty(bb)) && return 0.0
+    aa == bb && return 1.0
+    (occursin(aa, bb) || occursin(bb, aa)) && return 0.9
+    return 1.0 - _bbc_edit_distance(aa, bb) / max(length(aa), length(bb))
+end
+
+function _bbc_tier2_id(s::BBCLineupSource, raw::_BBCRawPlayer, f::Fixture, side::String)
+    s.ds === nothing && return nothing
+    hasproperty(s.ds, :lineups) || return nothing
+    lineups = s.ds.lineups
+    (:match_id in propertynames(lineups) && :player_id in propertynames(lineups) &&
+     :shirt_number in propertynames(lineups) && :player_name in propertynames(lineups) &&
+     :team_side in propertynames(lineups)) || return nothing
+    raw.shirt_number === nothing && return nothing
+
+    matches = hasproperty(s.ds, :matches) ? s.ds.matches : nothing
+    has_match_identity = matches !== nothing &&
+                         (:match_id in propertynames(matches) &&
+                          :home_team in propertynames(matches) &&
+                          :away_team in propertynames(matches))
+    teams = Dict{Int,Tuple{String,String}}()
+    if has_match_identity
+        for row in eachrow(matches)
+            teams[Int(row.match_id)] = (String(row.home_team), String(row.away_team))
+        end
+    end
+
+    target_team = side == "home" ? f.home : f.away
+    candidates = NamedTuple{(:id, :name, :score),Tuple{Int,String,Float64}}[]
+    for row in eachrow(lineups)
+        ismissing(row.shirt_number) && continue
+        Int(row.shirt_number) == raw.shirt_number || continue
+        row_side = String(row.team_side)
+        if has_match_identity
+            historical = get(teams, Int(row.match_id), nothing)
+            historical === nothing && continue
+            historical_team = row_side == "home" ? historical[1] : historical[2]
+            team_name_score(target_team, historical_team) >= 0.75 || continue
+        else
+            # A minimal test/store without match identity can only distinguish the side.
+            row_side == side || continue
+        end
+        ismissing(row.player_id) && continue
+        name = ismissing(row.player_name) ? "" : String(row.player_name)
+        score = max(_bbc_name_score(raw.name, name), _bbc_name_score(raw.surname, name))
+        score >= 0.60 || continue
+        push!(candidates, (id = Int(row.player_id), name = name, score = score))
+    end
+    isempty(candidates) && return nothing
+
+    by_id = Dict{Int,NamedTuple{(:id, :name, :score),Tuple{Int,String,Float64}}}()
+    for candidate in candidates
+        old = get(by_id, candidate.id, nothing)
+        (old === nothing || candidate.score > old.score) && (by_id[candidate.id] = candidate)
+    end
+    ranked = sort!(collect(values(by_id)), by = x -> x.score, rev = true)
+    (length(ranked) == 1 || ranked[1].score - ranked[2].score >= 0.20) || return nothing
+    return _BBCPlayerResolution(ranked[1].id, ranked[1].name, "fuzzy")
+end
+
+function _bbc_synthetic_id(bbc_player_id::String)
+    # Keep the reserved value away from zero (the existing BBC fallback uses zero as "unmapped").
+    return -Int(mod(hash(bbc_player_id), UInt(999_999_999)) + UInt(1))
+end
+
+function _bbc_map_dict(player_map)
+    out = Dict{String,_BBCPlayerResolution}()
+    player_map === nothing && return out
+    if player_map isa AbstractDict
+        for (key, value) in player_map
+            value === nothing && continue
+            if value isa _BBCPlayerResolution
+                out[String(key)] = value
+            elseif value isa NamedTuple && hasproperty(value, :id)
+                out[String(key)] = _BBCPlayerResolution(
+                    Int(value.id), hasproperty(value, :name) ? String(value.name) : "", "db")
+            else
+                out[String(key)] = _BBCPlayerResolution(Int(value), "", "db")
+            end
+        end
+    elseif player_map isa DataFrame
+        for row in eachrow(player_map)
+            id = :sofascore_player_id in propertynames(row) ? row.sofascore_player_id : missing
+            ismissing(id) && continue
+            name = (:sofascore_name in propertynames(row) && !ismissing(row.sofascore_name)) ?
+                   String(row.sofascore_name) : ""
+            out[String(row.bbc_player_id)] = _BBCPlayerResolution(Int(id), name, "db")
+        end
+    end
+    return out
+end
+
+function _bbc_raw_player(raw, substitute::Bool)
+    # Explicitly strip the player prefix; event and player URNs have different namespaces.
+    player_prefix = "urn:bbc:sportsdata:football:player:"
+    raw_urn = _bbc_string(_bbc_get(raw, :urn))
+    startswith(raw_urn, player_prefix) || return nothing
+    player_id = raw_urn[length(player_prefix) + 1:end]
+    isempty(player_id) && return nothing
+    name = _bbc_get(raw, :name)
+    last = _bbc_string(_bbc_get(name, :last))
+    first = _bbc_string(_bbc_get(name, :first))
+    display = _bbc_string(_bbc_get(raw, :displayName))
+    full_name = if !isempty(first) || !isempty(last)
+        strip(first * " " * last)
+    elseif !isempty(display)
+        display
+    else
+        _bbc_string(_bbc_get(name, :short), "Unknown")
+    end
+    number = _bbc_get(raw, :shirtNumber)
+    shirt = try
+        number === nothing ? nothing : Int(number)
+    catch
+        tryparse(Int, _bbc_string(number))
+    end
+    raw_captain = _bbc_get(raw, :isCaptain)
+    captain = raw_captain === nothing || ismissing(raw_captain) ? false : Bool(raw_captain)
+    return _BBCRawPlayer(player_id, full_name, last, shirt,
+                         clean_position(_bbc_string(_bbc_get(raw, :position), "M")),
+                         substitute, captain)
+end
+
+function _bbc_players(team, substitute::Bool)
+    players = _bbc_get(_bbc_get(team, :players), substitute ? :substitutes : :starters)
+    players isa AbstractVector || players isa JSON3.Array || return _BBCRawPlayer[]
+    out = _BBCRawPlayer[]
+    for raw in players
+        player = _bbc_raw_player(raw, substitute)
+        player === nothing || push!(out, player)
+    end
+    return out
+end
+
+function _bbc_resolve_player(s::BBCLineupSource, raw::_BBCRawPlayer, f::Fixture,
+                             side::String, mapped::Dict{String,_BBCPlayerResolution})
+    resolution = get(mapped, raw.bbc_player_id, nothing)
+    resolution === nothing && (resolution = _bbc_tier2_id(s, raw, f, side))
+    resolution === nothing && (resolution = _BBCPlayerResolution(
+        _bbc_synthetic_id(raw.bbc_player_id), "", "synthetic"))
+    return resolution
+end
+
+"""
+    parse_bbc_lineup(payload, fixture, as_of; ds = nothing, player_map = nothing)
+
+Parse a BBC `match-lineups` payload without performing I/O.  This is the deterministic seam used
+by unit tests and by callers that already have a response.  `player_map` may be a DataFrame from
+`bbc.player_map` or a `Dict{String,Int}`.  Unknown players receive a negative synthetic ID.
+"""
+function parse_bbc_lineup(payload, f::Fixture, as_of::DateTime;
+                          ds = nothing, player_map = nothing)
+    data = payload
+    if payload isa AbstractString
+        data = try
+            JSON3.read(payload)
+        catch
+            return nothing
+        end
+    end
+    home_team, away_team = _bbc_get(data, :homeTeam), _bbc_get(data, :awayTeam)
+    (home_team === nothing || away_team === nothing) && return nothing
+    home_raw = vcat(_bbc_players(home_team, false), _bbc_players(home_team, true))
+    away_raw = vcat(_bbc_players(away_team, false), _bbc_players(away_team, true))
+    (count(x -> !x.substitute, home_raw) >= 11 &&
+     count(x -> !x.substitute, away_raw) >= 11) || return nothing
+
+    source = BBCLineupSource(ds = ds)
+    mapped = _bbc_map_dict(player_map)
+    function convert(raws, side)
+        out = Player[]
+        for raw in raws
+            resolved = _bbc_resolve_player(source, raw, f, side, mapped)
+            position = resolved.outcome == "synthetic" ? :M : raw.position
+            push!(out, Player(resolved.player_id, raw.name, position, raw.substitute))
+        end
+        return out
+    end
+    return Lineup(convert(home_raw, "home"), convert(away_raw, "away"), true, :bbc, as_of)
+end
+
+function _bbc_player_map(s::BBCLineupSource, ids::Vector{String})
+    isempty(ids) && return DataFrame(bbc_player_id = String[], sofascore_player_id = Union{Missing,Int}[],
+                                     sofascore_name = Union{Missing,String}[])
+    try
+        return _query("SELECT bbc_player_id, sofascore_player_id, sofascore_name FROM bbc.player_map " *
+                      "WHERE bbc_player_id = ANY(\$1)", (ids,))
+    catch e
+        @warn "BBCLineupSource: player map lookup failed" exception = e
+        return DataFrame(bbc_player_id = String[], sofascore_player_id = Union{Missing,Int}[],
+                         sofascore_name = Union{Missing,String}[])
+    end
+end
+
+function _bbc_persist_event!(f::Fixture, event_id::String)
+    try
+        c = _conn()
+        try
+            LibPQ.execute(c, """
+                INSERT INTO bbc.match_meta (match_id, bbc_event_id, status, retry_count)
+                VALUES (\$1, \$2, \$3, 0)
+                ON CONFLICT (match_id) DO UPDATE SET
+                    bbc_event_id = EXCLUDED.bbc_event_id, status = EXCLUDED.status,
+                    last_updated = now()
+            """, (f.m_id, event_id, "EVENT_DISCOVERED"))
+        finally
+            close(c)
+        end
+    catch e
+        @warn "BBCLineupSource: could not persist discovered event" match_id = f.m_id exception = e
+    end
+    return nothing
+end
+
+function _bbc_persist_lineup!(f::Fixture, event_id::String, players)
+    try
+        c = _conn()
+        try
+            LibPQ.execute(c, "BEGIN")
+            for side in (players.home, players.away)
+                for p in side
+                    LibPQ.execute(c, """
+                    INSERT INTO bbc.player_map
+                        (bbc_player_id, sofascore_player_id, sofascore_name, bbc_name,
+                         bbc_team_slug, is_verified)
+                    VALUES (\$1, \$2, \$3, \$4, \$5, false)
+                    ON CONFLICT (bbc_player_id) DO UPDATE SET
+                        sofascore_player_id = COALESCE(EXCLUDED.sofascore_player_id,
+                                                      bbc.player_map.sofascore_player_id),
+                        sofascore_name = COALESCE(EXCLUDED.sofascore_name,
+                                                 bbc.player_map.sofascore_name),
+                        bbc_name = EXCLUDED.bbc_name,
+                        bbc_team_slug = EXCLUDED.bbc_team_slug,
+                        updated_at = now()
+                    """, (p.bbc_player_id,
+                          p.map_outcome == "synthetic" ? missing : p.player_id,
+                          isempty(p.sofascore_name) ? missing : p.sofascore_name,
+                          p.bbc_name, p.team_slug))
+                end
+            end
+            LibPQ.execute(c, "DELETE FROM bbc.match_lineup WHERE match_id = \$1", (f.m_id,))
+            for (is_home, side) in ((true, players.home), (false, players.away))
+                for p in side
+                    LibPQ.execute(c, """
+                        INSERT INTO bbc.match_lineup
+                            (match_id, bbc_player_id, is_home_team, is_substitute,
+                             shirt_number, position, is_captain, bbc_name,
+                             sofascore_player_id, map_outcome)
+                        VALUES (\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10)
+                    """, (f.m_id, p.bbc_player_id, is_home, p.substitute,
+                          something(p.shirt_number, missing), String(p.position), p.captain,
+                          p.bbc_name, p.player_id, p.map_outcome))
+                end
+            end
+            LibPQ.execute(c, """
+                UPDATE bbc.match_meta
+                SET has_lineup = true, status = 'SUCCESS', last_updated = now()
+                WHERE match_id = \$1 AND bbc_event_id = \$2
+            """, (f.m_id, event_id))
+            LibPQ.execute(c, "COMMIT")
+        catch
+            try LibPQ.execute(c, "ROLLBACK") catch end
+            rethrow()
+        finally
+            close(c)
+        end
+    catch e
+        @warn "BBCLineupSource: could not persist lineup" match_id = f.m_id exception = e
+    end
+    return nothing
+end
+
+function _bbc_lineup_from_event(s::BBCLineupSource, f::Fixture, as_of::DateTime,
+                                event_id::String; base_url::String = BBC_CDN_BASE)
+    try
+        payload = _bbc_http_json(s, "match-lineups", Pair{String,String}[
+            "urn" => "urn:bbc:sportsdata:football:event:" * event_id]; base_url)
+        payload === nothing && return nothing
+        ids = String[]
+        # Read the IDs before the pure parser so a DB outage still permits synthetic fallback.
+        for team_key in (:homeTeam, :awayTeam)
+            team = _bbc_get(payload, team_key)
+            for substitute in (false, true)
+                for raw in _bbc_players(team, substitute)
+                    push!(ids, raw.bbc_player_id)
+                end
+            end
+        end
+        mapped = _bbc_map_dict(_bbc_player_map(s, unique(ids)))
+        parsed = parse_bbc_lineup(payload, f, as_of; ds = s.ds, player_map = mapped)
+        parsed === nothing && (@warn "BBCLineupSource: incomplete lineup" match_id = f.m_id; return nothing)
+        # Preserve transport fields that the public `Player` deliberately does not carry.
+        persisted = (_BBCPersistedPlayer[], _BBCPersistedPlayer[])
+        for (team, side, output) in ((_bbc_get(payload, :homeTeam), "home", persisted[1]),
+                                     (_bbc_get(payload, :awayTeam), "away", persisted[2]))
+            team_slug = _bbc_team_slug(team)
+            raws = vcat(_bbc_players(team, false), _bbc_players(team, true))
+            for raw in raws
+                resolved = _bbc_resolve_player(s, raw, f, side, mapped)
+                position = resolved.outcome == "synthetic" ? :M : raw.position
+                push!(output, _BBCPersistedPlayer(
+                    raw.bbc_player_id, resolved.player_id, raw.name,
+                    resolved.sofascore_name, raw.substitute, raw.shirt_number,
+                    position, resolved.outcome, team_slug, raw.captain))
+            end
+        end
+        _bbc_persist_lineup!(f, event_id, (home = persisted[1], away = persisted[2]))
+        return parsed
+    catch e
+        @warn "BBCLineupSource: lineup lookup failed" match_id = f.m_id exception = e
+        return nothing
+    end
+end
+
+function lineup(s::BBCLineupSource, f::Fixture, as_of::DateTime)
+    try
+        event_id = _bbc_event_for(s, f)
+        event_id === nothing && return nothing
+        return _bbc_lineup_from_event(s, f, as_of, event_id)
+    catch e
+        @warn "BBCLineupSource: event discovery failed" match_id = f.m_id exception = e
+        return nothing
+    end
+end
+
+"""
     ProvisionalDB()
 
 `sofascore.lineup_provisional`, filtered to rows scraped at or before `as_of`.
@@ -369,8 +958,10 @@ end
 "Normalise a raw position label to `:G`, `:D`, `:M`, `:F`. Unknown labels become `:M`."
 function clean_position(pos::AbstractString)
     p = uppercase(strip(pos))
-    (p == "G" || p == "GK" || p == "GOALKEEPER") && return :G
-    (p == "D" || p == "DF" || p == "DEFENDER")   && return :D
-    (p == "F" || p == "FW" || p == "A" || p == "FORWARD") && return :F
+    (p in ("G", "GK") || occursin("GOALKEEPER", p)) && return :G
+    (p in ("D", "DF") || occursin("DEFENDER", p) || occursin("BACK", p)) && return :D
+    (p in ("F", "FW", "A") || occursin("FORWARD", p) ||
+     occursin("STRIKER", p) || occursin("WINGER", p) ||
+     occursin("ATTACKER", p)) && return :F
     return :M
 end

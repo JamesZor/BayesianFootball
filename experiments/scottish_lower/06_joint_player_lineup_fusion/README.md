@@ -250,6 +250,31 @@ and a 20% exposure cap, net of 2% commission.
 | `m10_joint_player_shots_bench` | 1,462 | +112.23% | 10.05% | 10.26% | −20.03% | 1.217 | 34.13% |
 | `m09_joint_player_shots_outfield` | 1,463 | +111.56% | 9.99% | 10.20% | −19.96% | 1.216 | 33.90% |
 
+### 2.1 Production Staking Policy — `CanonicalScottishLowerTrust()` (`P1_conservative_tilt`)
+
+The baseline above used `FlatTrust(1.0)` across 1X2, Over/Under 2.5, and BTTS. A follow-up forensic portfolio audit across all 13 directions in the Scottish Lower market universe (`eda/README.md`, `eda/MULTITIER_TRUST_REPORT.md`, and `experiments/scottish_lower/MARKET_LINE_EDA_REPORT.md`) proved that this baseline suffered from **fringe cannibalization** and **asymmetric alpha**. 
+
+The audited production policy is **`CanonicalScottishLowerTrust()`** (`P1_conservative_tilt`), implemented in `src/Portfolio/implementations/trust.jl` and `src/MatchDay/slate.jl`:
+- **Tier 1 (Super-Alpha, $\tau = 0.35$):** `1X2 Home` (+11.7% ROI) and `Under 2.5` (+18.7% ROI, IR 1.24).
+- **Tier 2 (Diversifiers, $\tau = 0.25$):** `1X2 Draw` (+10.3% ROI) and `1X2 Away` (+5.6% ROI).
+- **Gated Lines ($\tau = 0.00$):** `Over 2.5` (-11.4% ROI from retail public over-bias), `O/U 0.5` (-30.7% ROI from Jensen's inequality tail inflation: $\mathbb{E}[e^{-\Lambda}] \ge e^{-\mathbb{E}[\Lambda]}$ manufacturing fake longshot edges), `O/U 1.5`, `O/U 3.5`, and `BTTS` (toxic/dilutive).
+
+Under `CanonicalScottishLowerTrust()` (`SlateDrawdown(23.0)`, `FixedCap(0.25)`, `DailySlate()`), tested across the identical 99–100 Scottish Lower slates:
+
+| Model | Policy | Bets | Return | Flat ROI | Annual Sharpe | Calmar | Max DD | Win rate |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `m12_joint_hybrid_synergy` | `CanonicalScottishLowerTrust()` (P1) | 1,267 | **+155.93%** | **+13.58%** | **1.636** | **7.880** | **−19.79%** | 32.60% |
+| `m12_joint_hybrid_synergy` | Flat Research Baseline (P0) | 1,462 | +136.61% | +11.48% | 1.416 | 6.753 | −20.23% | 34.47% |
+| `m05_joint_production_wealth` | `CanonicalScottishLowerTrust()` (P1) | 1,242 | +138.94% | +13.49% | 1.629 | 7.668 | −18.12% | 32.69% |
+| `m05_joint_production_wealth` | Flat Research Baseline (P0) | 1,455 | +131.17% | +11.64% | 1.481 | 6.885 | −19.05% | 34.43% |
+
+*(On the 100-slate grid in `eda/MULTITIER_TRUST_REPORT.md`, `m12` under P1 reached **+160.76%** return, **1.645 Sharpe**, and **8.06 Calmar**; sensitivity model `m13` reached **+165.34% return** and **1.689 Sharpe**).*
+
+**Key Takeaways:**
+1. **Scale-Invariance Law:** Because `SlateDrawdown(23.0)` dynamically normalizes slate tail risk via $k_{\text{risk}}$, absolute trust levels are irrelevant—only the **conviction ratio $1.4 : 1.0$** ($0.35 / 0.25$) matters. Setting $\tau = (0.50, 0.25)$ vs $(0.40, 0.20)$ yields bit-for-bit identical bets.
+2. **Capital Reallocation:** Shifting capital from ~7% ROI diversifiers (Draw/Away) into ~13–19% ROI alpha lines (Home/Under 2.5) mechanically adds +2pp of flat ROI and +0.22 Sharpe while *reducing* maximum drawdown.
+3. `P1_conservative_tilt` is the canonical policy loaded by MatchDay live (`r07`) and replay (`r08`) consoles.
+
 ### 3. Run addresses
 
 | Model | `runs.run_id` | `portfolio_runs.portfolio_run_id` |

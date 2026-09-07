@@ -119,9 +119,14 @@ function settle_slate!(conn, slate_id::UUID, results::Dict{Int,Tuple{Int,Int}};
             (string(o.order_id), at, String(result_source), h, a, uppercase(String(s.outcome)),
              s.gross_return, s.commission, s.net_pnl))
 
+        # Clamp to remaining reserved on the account to absorb penny rounding
+        # between individual order limits and batch reservation.
+        acct_now = account_row(conn, o.account_id; schema = schema)
+        delta_res = -min(acct_now.reserved, s.risk_settled)
+
         post_ledger!(conn, LedgerDelta(kind = :SETTLE, account_id = o.account_id,
                                        delta_balance = s.gross_return - s.commission,
-                                       delta_reserved = -s.risk_settled,
+                                       delta_reserved = delta_res,
                                        order_id = o.order_id, slate_id = slate_id,
                                        note = "settle $(s.outcome)"); schema = schema)
         update_order_state!(conn, o.order_id, SETTLED, "settled $(s.outcome)";
