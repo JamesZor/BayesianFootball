@@ -1,0 +1,10 @@
+metric,value
+whole_slate_paired_runner_observations,60.0
+whole_slate_fixture_clusters,10.0
+whole_slate_cor_wom_t25_future_best_back_change,-0.11650412498835039
+whole_slate_cor_liquidity_change_future_best_back_change,0.0035072908400854523
+whole_slate_median_liquidity_change,0.0
+whole_slate_t25_depth_total,6730.7291000000005
+whole_slate_t5_depth_total,6445.689300000001
+whole_slate_depth_ratio_total_t5_over_t25,0.9576509772173122
+whole_slate_median_runner_depth_ratio_t5_over_t25,1.0
