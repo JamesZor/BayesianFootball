@@ -12,9 +12,81 @@ using ..Features
 # --- Include and export sub-modules ---
 include("pregame/pregame-module.jl")
 include("ingame/ingame-module.jl")
+include("latents/latents-module.jl")
+using .Latents
+using .PreGame: CountModelBuilder, PoissonCountModel, NegBinCountModel,
+    ComposableCountModel, AbstractCovariateRole, SupremacyRole, LevelRole,
+    AbstractPlayerAggregation, OutfieldPlayerAggregation,
+    BenchWeightedPlayerAggregation, PositionalPlayerAggregation,
+    MinuteWeightedPlayerAggregation, PlayerLineupPillar, PlayerLineupDynamics,
+    AbstractPredictorTerm, AbstractCovariateConfig,
+    LogSumWealthFeature, SLFPLogSumWealthFeature,
+    AbstractAgeWeightingCurve, RichardsSigmoid, ShiftedGamma, GaussianPrime,
+    age_weight, ProductionWealthFeature, WealthCovariate,
+    ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
+    PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+    predictor_name, predictor_features, predictor_design, predictor_sites,
+    predictor_extract, predictor_oos,
+    covariate_name, covariate_role, covariate_prior, covariate_features,
+    covariate_column, covariate_oos, covariate_sides,
+    AbstractRateGuard, ClampGuard, NoGuard,
+    AbstractObservationConfig, PoissonObservation, NegativeBinomialObservation,
+    NegBinObservation,
+    DixonColesCorrelation, FrankCopulaCorrelation,
+    JointGammaPoissonObservation, JointGammaPoissonDesign,
+    AbstractKappaMode, SharedKappa, HierarchicalKappa,
+    SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+    observation_features, observation_design,
+    add!, add, replace!, validate, build, build_count_model,
+    cb_predictor_terms, cb_predictor_names, cb_covariates, cb_covariate_names,
+    cb_varinfo_sites, cb_chain_columns, cb_parameter_count,
+    GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
+    GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
+    TimeDecayDynamics, StaticZeroDynamics, PositionalPlayerDynamics,
+    GlobalDispersion, HomeAwayDispersion
 
-# Expose the sub-modules to the rest of the package
-export PreGame, InGame
+# Expose the sub-modules and typed posterior API to the rest of the package.
+export PreGame, InGame, Latents
+export AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLatents
+export AbstractLatentFamily, PoissonCountFamily, NegBinCountFamily,
+       RecombinationFamily, SmilePoissonFamily, SmileNegBinFamily
+export n_matches, n_draws, n_strikes, latent_match_ids, latent_matrices,
+       match_index, latent_bytes, latent_allocations, observation_family,
+       recomb_total_home, recomb_total_away, smile_intensity
+export extract_latents, latent_family, latents_from_legacy_dataframe,
+       to_legacy_dataframe
+export CountModelBuilder, PoissonCountModel, NegBinCountModel, ComposableCountModel
+export AbstractCovariateRole, SupremacyRole, LevelRole
+export AbstractPlayerAggregation, OutfieldPlayerAggregation,
+       BenchWeightedPlayerAggregation, PositionalPlayerAggregation,
+       MinuteWeightedPlayerAggregation, PlayerLineupPillar, PlayerLineupDynamics
+export AbstractPredictorTerm, AbstractCovariateConfig,
+       LogSumWealthFeature, SLFPLogSumWealthFeature,
+       AbstractAgeWeightingCurve, RichardsSigmoid, ShiftedGamma, GaussianPrime,
+       age_weight, ProductionWealthFeature, BenchDepthFeature, LateGameChanceFeature,
+       WealthCovariate,
+       ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
+       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate
+export predictor_name, predictor_features, predictor_design, predictor_sites,
+       predictor_extract, predictor_oos
+export covariate_name, covariate_role, covariate_prior, covariate_features,
+       covariate_column, covariate_oos, covariate_sides
+export AbstractRateGuard, ClampGuard, NoGuard
+export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservation,
+       NegBinObservation,
+       GlobalDispersion, HomeAwayDispersion,
+       DixonColesCorrelation, FrankCopulaCorrelation,
+       JointGammaPoissonObservation, JointGammaPoissonDesign,
+       AbstractKappaMode, SharedKappa, HierarchicalKappa,
+       SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+       observation_features, observation_design
+export add!, add, replace!, validate, build, build_count_model
+export cb_predictor_terms, cb_predictor_names, cb_covariates,
+       cb_covariate_names, cb_varinfo_sites, cb_chain_columns, cb_parameter_count
+export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception
+export GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage
+export TimeDecayDynamics, StaticZeroDynamics, PositionalPlayerDynamics
+export GlobalDispersion, HomeAwayDispersion
 # We must re-export the contract function so other modules can use it.
 export required_mapping_keys
 

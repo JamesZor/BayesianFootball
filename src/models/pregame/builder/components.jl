@@ -1,0 +1,1309 @@
+# ==============================================================================
+# 05 — Composable Count Model Builder : THE COMPONENT LIBRARY
+# ==============================================================================
+#
+# Loader. Definitions only, no execution.
+#
+# WHAT THIS FILE IS. Two new component families, both of which the existing
+# `src/models/pregame/components/` library is missing, and whose absence is the
+# actual cause of the engine explosion documented in
+# docs/architecture/composable_model_builder_specification.md §1:
+#
+#   1. COVARIATES  (AbstractCovariateConfig)
+#      A scalar weight `w` times a per-match design vector `x`, entering the two
+#      log-intensities. Wealth and travel distance are both instances. Today each
+#      one costs a struct, a `@model`, a `required_features`, and an
+#      `extract_parameters` — and each PAIR costs another set (`_engw`, `_engd`,
+#      `_engj` in 02_poisson_wealth/l00_feature_poisson.jl are the same eleven
+#      lines three times).
+#
+#   2. OBSERVATIONS  (AbstractObservationConfig)
+#      The count likelihood the two log-intensities are fed into. Poisson,
+#      Negative Binomial, Dixon-Coles, Frank copula. Every one of these shares the
+#      IDENTICAL linear predictor; only the observation layer differs. Today that
+#      difference is an entire engine file.
+#
+# The existing `src` component families (interception, dynamics, home advantage,
+# dispersion) are NOT re-implemented here. They are reused verbatim, which is what
+# makes the parity claim in r01_demo.jl meaningful.
+#
+# ==============================================================================
+
+# Dependencies and aliases are loaded once by builder-module.jl. Production
+# builder code never includes files from current_development/.
+
+
+# ==============================================================================
+# 1. COVARIATE ROLES — how a covariate reaches the two sides
+# ==============================================================================
+#
+# A covariate contributes `q = w .* x` to the log-intensities. There are exactly
+# two ways it can land, and which one it is, is a property of the covariate, not
+# of the engine:
+#
+#   SUPREMACY   η_h += q,  η_a -= q      shifts WHO scores; total goals unchanged
+#   LEVEL       η_h += q,  η_a += q      shifts HOW MANY goals; supremacy unchanged
+#
+# Wealth and travel distance are both supremacy covariates (a richer or a
+# less-travelled side is better, symmetrically). A pitch or referee effect would be
+# a level covariate. This is dispatch, not a branch: `covariate_sides` is resolved
+# from the type at compile time, so it costs nothing on the ReverseDiff tape.
+
+abstract type AbstractCovariateRole end
+
+"η_h += q, η_a -= q — moves the result, holds the total."
+struct SupremacyRole <: AbstractCovariateRole end
+
+"η_h += q, η_a += q — moves the total, holds the result."
+struct LevelRole <: AbstractCovariateRole end
+
+covariate_sides(::SupremacyRole, q) = (q, -q)
+covariate_sides(::LevelRole,     q) = (q,  q)
+
+
+# ==============================================================================
+# 2. THE COVARIATE CONTRACT
+# ==============================================================================
+#
+# Six methods. Implement them and the builder derives everything else: the site
+# name in the chain, the entry in `required_features`, the design vector at fit
+# time, the design vector at prediction time, and the extraction of `w`.
+#
+# There are deliberately NO working fallbacks. A covariate that forgets a method
+# fails in `build_count_model()` with the method's name, not during sampling.
+
+"""
+    covariate_name(c) -> Symbol
+
+The chain site prefix. `:wealth` produces the sampling site `wealth.w`. Must be
+unique within a model and must not collide with a structural prefix
+(`inter`, `ha`, `dyn`, `disp`, `dc`, `cop`) — `build_count_model()` enforces both.
+"""
+covariate_name(c::AbstractCovariateConfig) = _cov_missing(c, :covariate_name)
+
+"""
+    covariate_role(c) -> AbstractCovariateRole
+
+`SupremacyRole()` or `LevelRole()`. See §1.
+"""
+covariate_role(c::AbstractCovariateConfig) = _cov_missing(c, :covariate_role)
+
+"""
+    covariate_prior(c) -> UnivariateDistribution
+
+The prior on the scalar weight `w`.
+"""
+covariate_prior(c::AbstractCovariateConfig) = _cov_missing(c, :covariate_prior)
+
+"""
+    covariate_features(c) -> Vector{<:AbstractFeatureConfig}
+
+What `Features.create_features` must extract for this covariate. The builder
+concatenates these onto the structural features to derive `required_features`.
+"""
+covariate_features(c::AbstractCovariateConfig) = _cov_missing(c, :covariate_features)
+
+"""
+    covariate_column(c, feature_set) -> Vector{Float64}
+
+The fit-time design vector, one entry per fitted match, in `ordered_match_ids`
+order. Must be finite everywhere.
+
+MISSINGNESS IS A ZERO, NOT A MASK. For a linear term `w * x`, imputing an absent
+covariate to `0.0` is *exactly* a binary mask (`w * 0 == 0`), so the AD guide's
+masking rule is satisfied without carrying a second vector. This only holds because
+the term is linear in `x`; a non-linear covariate would need a real mask.
+"""
+covariate_column(c::AbstractCovariateConfig, fs) = _cov_missing(c, :covariate_column)
+
+"""
+    covariate_oos(c, feature_set, df) -> Vector{Float64}
+
+The prediction-time design vector, one entry per row of `df`. Separate from
+`covariate_column` because extraction has no `DataStore` argument and must reach
+out-of-sample fixtures through a point-in-time bridge stashed at feature-build time.
+"""
+covariate_oos(c::AbstractCovariateConfig, fs, df) = _cov_missing(c, :covariate_oos)
+
+_cov_missing(c, hook::Symbol) = error("$(typeof(c)) must implement $(hook)")
+
+# Unified predictor-term contract. Ordinary scalar covariates adapt their existing
+# six-method contract; richer terms (the lineup pillar is the first) specialize
+# these hooks directly.
+predictor_name(t::AbstractPredictorTerm) =
+    error("$(typeof(t)) must implement predictor_name")
+predictor_features(t::AbstractPredictorTerm) =
+    error("$(typeof(t)) must implement predictor_features")
+predictor_design(t::AbstractPredictorTerm, fs, n_matches::Int) =
+    error("$(typeof(t)) must implement predictor_design")
+predictor_sites(t::AbstractPredictorTerm) =
+    error("$(typeof(t)) must implement predictor_sites")
+predictor_extract(chain::Chains, t::AbstractPredictorTerm, prefix::String) =
+    error("$(typeof(t)) must implement predictor_extract")
+predictor_oos(t::AbstractPredictorTerm, draw, source, context) =
+    error("$(typeof(t)) must implement predictor_oos")
+
+predictor_name(c::AbstractCovariateConfig) = covariate_name(c)
+predictor_features(c::AbstractCovariateConfig) = covariate_features(c)
+function predictor_design(c::AbstractCovariateConfig, fs, n_matches::Int)
+    x = covariate_column(c, fs)
+    x isa Vector{Float64} || error(
+        "covariate_column($(nameof(typeof(c)))) must return Vector{Float64}, got $(typeof(x))")
+    length(x) == n_matches || error(
+        "covariate $(covariate_name(c)) column has length $(length(x)); expected $n_matches")
+    all(isfinite, x) || error(
+        "covariate $(covariate_name(c)) column has non-finite entries; " *
+        "an absent value must be imputed to 0.0 by the feature extractor")
+    return x
+end
+predictor_sites(c::AbstractCovariateConfig) = [Symbol(predictor_name(c), ".w")]
+function predictor_extract(chain::Chains, c::AbstractCovariateConfig, prefix::String)
+    return (; w = vec(Array(chain[Symbol("$prefix.w")])))
+end
+function predictor_oos(c::AbstractCovariateConfig, draw, bridge, row)
+    q = draw.w .* get(bridge, Int(row.match_id), 0.0)
+    h, a = covariate_sides(covariate_role(c), q)
+    return (; h, a)
+end
+
+
+# ==============================================================================
+# 3. CONCRETE COVARIATES
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 3a. Age-weighting curves for production wealth
+# ------------------------------------------------------------------------------
+
+"Abstract contract for a scalar, allocation-free player-age productivity curve."
+abstract type AbstractAgeWeightingCurve end
+
+"""
+    RichardsSigmoid(x0 = 23.0, k = 0.80, nu = 2.0)
+
+Asymmetric maturation curve
+`ϕ(age) = (1 + exp(-k * (age - x0)))^(-1 / nu)`.
+"""
+Base.@kwdef struct RichardsSigmoid <: AbstractAgeWeightingCurve
+    x0::Float64 = 23.0
+    k::Float64 = 0.80
+    nu::Float64 = 2.0
+end
+
+"""
+    ShiftedGamma(a0 = 16.0, peak = 27.5, alpha = 3.5)
+
+Shifted gamma curve divided by its value at the mode, so `ϕ(peak) == 1`.
+Ages at or below `a0` have zero production weight.
+"""
+Base.@kwdef struct ShiftedGamma <: AbstractAgeWeightingCurve
+    a0::Float64 = 16.0
+    peak::Float64 = 27.5
+    alpha::Float64 = 3.5
+end
+
+"""
+    GaussianPrime(mu = 26.5, sigma = 4.5)
+
+Symmetric prime-age benchmark, normalized to one at `mu`.
+"""
+Base.@kwdef struct GaussianPrime <: AbstractAgeWeightingCurve
+    mu::Float64 = 26.5
+    sigma::Float64 = 4.5
+end
+
+"""
+    age_weight(curve, age) -> Float64
+
+Evaluate a candidate player-age productivity curve. These scalar kernels allocate
+nothing and are suitable for the inner player-valuation loop.
+"""
+@inline function age_weight(curve::RichardsSigmoid, age::Real)
+    return (1.0 + exp(-curve.k * (age - curve.x0)))^(-1.0 / curve.nu)
+end
+
+@inline function age_weight(curve::ShiftedGamma, age::Real)
+    age <= curve.a0 && return 0.0
+    x = age - curve.a0
+    mode = curve.peak - curve.a0
+    exponent = curve.alpha - 1.0
+    return (x / mode)^exponent * exp(-(exponent / mode) * (x - mode))
+end
+
+@inline function age_weight(curve::GaussianPrime, age::Real)
+    z = (age - curve.mu) / curve.sigma
+    return exp(-0.5 * z * z)
+end
+
+@inline (curve::AbstractAgeWeightingCurve)(age::Real) = age_weight(curve, age)
+
+function _cb_validate_age_curve(curve::RichardsSigmoid)
+    isfinite(curve.x0) || error("RichardsSigmoid.x0 must be finite")
+    isfinite(curve.k) && curve.k > 0.0 ||
+        error("RichardsSigmoid.k must be finite and > 0")
+    isfinite(curve.nu) && curve.nu > 0.0 ||
+        error("RichardsSigmoid.nu must be finite and > 0")
+    return nothing
+end
+
+function _cb_validate_age_curve(curve::ShiftedGamma)
+    isfinite(curve.a0) || error("ShiftedGamma.a0 must be finite")
+    isfinite(curve.peak) && curve.peak > curve.a0 ||
+        error("ShiftedGamma.peak must be finite and > a0")
+    isfinite(curve.alpha) && curve.alpha > 1.0 ||
+        error("ShiftedGamma.alpha must be finite and > 1")
+    return nothing
+end
+
+function _cb_validate_age_curve(curve::GaussianPrime)
+    isfinite(curve.mu) || error("GaussianPrime.mu must be finite")
+    isfinite(curve.sigma) && curve.sigma > 0.0 ||
+        error("GaussianPrime.sigma must be finite and > 0")
+    return nothing
+end
+
+"""
+    LogSumWealthFeature
+
+Point-in-time starting-XI squad wealth used by the verified Scottish builder:
+`(log(sum(value_home)) - log(sum(value_away))) / log_scale`. Invalid player
+values use `fallback_default`; a fixture is neutral unless both sides contain at
+least one valid, kickoff-safe valuation.
+"""
+Base.@kwdef struct LogSumWealthFeature <: CB_Features.AbstractFeatureConfig
+    fallback_default::Float64 = 100_000.0
+    log_scale::Float64 = 1.0
+end
+
+# Name retained for scripts written against the verified prototype.
+const SLFPLogSumWealthFeature = LogSumWealthFeature
+
+function _cb_wealth_datetime(value)
+    ismissing(value) && return nothing
+    value isa DateTime && return value
+    value isa Date && return DateTime(value)
+    if hasproperty(value, :zone) # TimeZones.ZonedDateTime
+        return DateTime(value, Dates.UTC)
+    elseif value isa AbstractString
+        return tryparse(DateTime, String(value))
+    else
+        return tryparse(DateTime, string(value))
+    end
+end
+
+function _cb_match_kickoffs(matches)
+    out = Dict{Int,DateTime}()
+    columns = propertynames(matches)
+    for row in eachrow(matches)
+        match_id = Int(row.match_id)
+        if :start_timestamp in columns
+            stamp = _cb_wealth_datetime(row.start_timestamp)
+            if stamp !== nothing
+                out[match_id] = stamp
+                continue
+            end
+        end
+        if :match_date in columns && !ismissing(row.match_date)
+            hour = :match_hour in columns ? Int(coalesce(row.match_hour, 0)) : 0
+            out[match_id] = DateTime(row.match_date) + Hour(hour)
+        end
+    end
+    return out
+end
+
+function _cb_logsum_wealth_side(row, columns)
+    if :team_side in columns
+        ismissing(row.team_side) && return nothing
+        side = row.team_side
+        # The production fetcher emits lowercase `home`/`away`; compare those
+        # directly so the per-player hot path does not allocate a String.
+        side == "home" && return true
+        side == "away" && return false
+        normalized = lowercase(String(side))
+        normalized == "home" && return true
+        normalized == "away" && return false
+        return nothing
+    elseif :is_home_team in columns
+        ismissing(row.is_home_team) && return nothing
+        return Bool(row.is_home_team)
+    elseif :is_home in columns
+        ismissing(row.is_home) && return nothing
+        return Bool(row.is_home)
+    end
+    return nothing
+end
+
+function _cb_logsum_wealth_lookup(lineups, matches, ids, config::LogSumWealthFeature)
+    config.fallback_default > 0.0 || error("fallback_default must be > 0")
+    config.log_scale > 0.0 || error("log_scale must be > 0")
+
+    wanted = Set(Int.(ids))
+    values = Dict{Tuple{Int,Bool},Vector{Float64}}()
+    valid_counts = Dict{Tuple{Int,Bool},Int}()
+    kickoffs = _cb_match_kickoffs(matches)
+    columns = propertynames(lineups)
+
+    for row in eachrow(lineups)
+        match_id = Int(row.match_id)
+        match_id in wanted || continue
+        if :is_substitute in columns && coalesce(row.is_substitute, false)
+            continue
+        end
+
+        side = _cb_logsum_wealth_side(row, columns)
+        side === nothing && continue
+        key = (match_id, side)
+        side_values = get!(values, key, Float64[])
+
+        raw = :proposed_market_value in columns ? row.proposed_market_value :
+              :market_value in columns ? row.market_value : missing
+        valuation_stamp = :valuation_timestamp in columns ?
+                          _cb_wealth_datetime(row.valuation_timestamp) : nothing
+        kickoff = get(kickoffs, match_id, nothing)
+        stamp_ok = (valuation_stamp === nothing) || (kickoff === nothing) ||
+                   (valuation_stamp < kickoff)
+
+        parsed = if ismissing(raw)
+            nothing
+        else
+            try
+                Float64(raw)
+            catch
+                nothing
+            end
+        end
+        if parsed !== nothing && stamp_ok && isfinite(parsed) && parsed > 0.0
+            push!(side_values, parsed)
+            valid_counts[key] = get(valid_counts, key, 0) + 1
+        else
+            push!(side_values, config.fallback_default)
+        end
+    end
+
+    out = Dict{Int,Float64}()
+    for match_id in wanted
+        home = get(values, (match_id, true), Float64[])
+        away = get(values, (match_id, false), Float64[])
+        if isempty(home) || isempty(away) ||
+           get(valid_counts, (match_id, true), 0) == 0 ||
+           get(valid_counts, (match_id, false), 0) == 0
+            continue
+        end
+        out[match_id] = (log(sum(home)) - log(sum(away))) / config.log_scale
+    end
+    return out
+end
+
+function CB_Features.add_feature!(F_data::Dict, config::LogSumWealthFeature,
+                                  ordered_ids, team_map::Dict,
+                                  ds::CB_Features.Data.DataStore)
+    selected = _cb_logsum_wealth_lookup(ds.lineups, ds.matches, ordered_ids, config)
+    F_data[:flat_delta_wealth_logsum] = Float64[
+        get(selected, Int(match_id), 0.0) for match_id in ordered_ids]
+    F_data[:flat_wealth_fallback] = Int[
+        haskey(selected, Int(match_id)) ? 0 : 1 for match_id in ordered_ids]
+    F_data[:wealth_logsum_by_match_id] = selected
+
+    # Extraction bridge is point-in-time per fixture: the PIT guard above accepts
+    # no valuation timestamp at or after that fixture's own kickoff.
+    all_ids = Int.(ds.matches.match_id)
+    F_data[:wealth_oos_bridge_by_match_id] =
+        _cb_logsum_wealth_lookup(ds.lineups, ds.matches, all_ids, config)
+    return nothing
+end
+
+const _CB_SECONDS_PER_YEAR = 365.25 * 86_400.0
+
+"""
+    ProductionWealthFeature(
+        curve = RichardsSigmoid(),
+        fallback_default = 100_000.0,
+        fallback_age = 26.5,
+        log_scale = 1.0,
+    )
+
+Point-in-time age-adjusted starting-XI wealth:
+
+`(log(Σ value_home * ϕ(age)) - log(Σ value_away * ϕ(age))) / log_scale`.
+
+Player age is measured at that fixture's kickoff from the SofaScore Unix DOB
+stamp. A missing or malformed DOB uses the prime-neutral `fallback_age`; its raw
+value never reaches the curve. A valuation stamped at or after kickoff is not
+used (the safe `fallback_default` is substituted), and a fixture is neutral
+unless both sides have at least one positive kickoff-safe valuation.
+"""
+Base.@kwdef struct ProductionWealthFeature{
+    C<:AbstractAgeWeightingCurve,
+} <: CB_Features.AbstractFeatureConfig
+    curve::C = RichardsSigmoid()
+    fallback_default::Float64 = 100_000.0
+    fallback_age::Float64 = 26.5
+    log_scale::Float64 = 1.0
+end
+
+function _cb_unix_seconds(value)
+    ismissing(value) && return nothing
+    value isa DateTime && return datetime2unix(value)
+    value isa Date && return datetime2unix(DateTime(value))
+    if value isa Real
+        parsed = Float64(value)
+        return isfinite(parsed) ? parsed : nothing
+    end
+    parsed = tryparse(Float64, String(value))
+    return parsed !== nothing && isfinite(parsed) ? parsed : nothing
+end
+
+@inline function _cb_player_age(kickoff::Union{Nothing,DateTime}, dob_value,
+                                fallback_age::Float64)
+    kickoff === nothing && return fallback_age
+    dob = _cb_unix_seconds(dob_value)
+    dob === nothing && return fallback_age
+    kickoff_seconds = datetime2unix(kickoff)
+    # A DOB at or after kickoff is invalid. Ignore it rather than allowing a
+    # negative age to alter the valuation; the documented prime-age fallback is
+    # the neutral replacement for an unmapped or invalid player.
+    0.0 < dob < kickoff_seconds || return fallback_age
+    age = (kickoff_seconds - dob) / _CB_SECONDS_PER_YEAR
+    return isfinite(age) && age > 0.0 ? age : fallback_age
+end
+
+function _cb_validate_production_feature(config::ProductionWealthFeature)
+    isfinite(config.fallback_default) && config.fallback_default > 0.0 ||
+        error("fallback_default must be finite and > 0")
+    isfinite(config.fallback_age) && config.fallback_age > 0.0 ||
+        error("fallback_age must be finite and > 0")
+    isfinite(config.log_scale) && config.log_scale > 0.0 ||
+        error("log_scale must be finite and > 0")
+    _cb_validate_age_curve(config.curve)
+    fallback_weight = age_weight(config.curve, config.fallback_age)
+    isfinite(fallback_weight) && fallback_weight > 0.0 ||
+        error("the configured curve must have a finite positive weight at fallback_age")
+    return nothing
+end
+
+function _cb_production_wealth_lookup(lineups, matches, ids,
+                                      config::ProductionWealthFeature)
+    _cb_validate_production_feature(config)
+
+    wanted = Set(Int.(ids))
+    totals = Dict{Tuple{Int,Bool},Float64}()
+    valid_counts = Dict{Tuple{Int,Bool},Int}()
+    sizehint!(totals, 2 * length(wanted))
+    sizehint!(valid_counts, 2 * length(wanted))
+    kickoffs = _cb_match_kickoffs(matches)
+    columns = propertynames(lineups)
+
+    for row in eachrow(lineups)
+        match_id = Int(row.match_id)
+        match_id in wanted || continue
+        if :is_substitute in columns && coalesce(row.is_substitute, false)
+            continue
+        end
+
+        side = _cb_logsum_wealth_side(row, columns)
+        side === nothing && continue
+        key = (match_id, side)
+
+        raw_value = :proposed_market_value in columns ? row.proposed_market_value :
+                    :market_value in columns ? row.market_value : missing
+        parsed_value = if ismissing(raw_value)
+            nothing
+        else
+            try
+                Float64(raw_value)
+            catch
+                nothing
+            end
+        end
+
+        valuation_stamp = :valuation_timestamp in columns ?
+                          _cb_wealth_datetime(row.valuation_timestamp) : nothing
+        kickoff = get(kickoffs, match_id, nothing)
+        # Match-row values do not always carry a separate observation timestamp.
+        # In that case (or when kickoff metadata is unavailable), accept them; if
+        # both stamps exist, enforce strict pre-kickoff availability.
+        stamp_ok = (valuation_stamp === nothing) || (kickoff === nothing) ||
+                   (valuation_stamp < kickoff)
+        value = config.fallback_default
+        valid_value = false
+        if parsed_value !== nothing && stamp_ok &&
+           isfinite(parsed_value) && parsed_value > 0.0
+            value = parsed_value
+            valid_value = true
+        end
+
+        dob_value = :date_of_birth_timestamp in columns ?
+                    row.date_of_birth_timestamp : missing
+        age = _cb_player_age(kickoff, dob_value, config.fallback_age)
+        production_value = value * age_weight(config.curve, age)
+        isfinite(production_value) && production_value > 0.0 || continue
+
+        totals[key] = get(totals, key, 0.0) + production_value
+        if valid_value
+            valid_counts[key] = get(valid_counts, key, 0) + 1
+        end
+    end
+
+    out = Dict{Int,Float64}()
+    for match_id in wanted
+        home_key = (match_id, true)
+        away_key = (match_id, false)
+        home = get(totals, home_key, 0.0)
+        away = get(totals, away_key, 0.0)
+        if home <= 0.0 || away <= 0.0 ||
+           get(valid_counts, home_key, 0) == 0 ||
+           get(valid_counts, away_key, 0) == 0
+            continue
+        end
+        delta = (log(home) - log(away)) / config.log_scale
+        isfinite(delta) && (out[match_id] = delta)
+    end
+    return out
+end
+
+function CB_Features.add_feature!(F_data::Dict, config::ProductionWealthFeature,
+                                  ordered_ids, team_map::Dict,
+                                  ds::CB_Features.Data.DataStore)
+    selected = _cb_production_wealth_lookup(
+        ds.lineups, ds.matches, ordered_ids, config)
+    F_data[:flat_delta_production_wealth] = Float64[
+        get(selected, Int(match_id), 0.0) for match_id in ordered_ids]
+    F_data[:flat_production_wealth_fallback] = Int[
+        haskey(selected, Int(match_id)) ? 0 : 1 for match_id in ordered_ids]
+    F_data[:production_wealth_by_match_id] = selected
+
+    # Keep an all-fixture causal bridge for prediction-time extraction. Every
+    # fixture is evaluated against its own kickoff; no future-stamped valuation
+    # can enter an earlier match through this bridge.
+    all_ids = Int.(ds.matches.match_id)
+    F_data[:production_wealth_oos_bridge_by_match_id] =
+        _cb_production_wealth_lookup(ds.lineups, ds.matches, all_ids, config)
+    return nothing
+end
+
+"""
+    WealthCovariate
+
+Point-in-time starting-XI squad market valuation differential,
+`x = (log Σ value_home − log Σ value_away) / log_scale`.
+
+Uses `LogSumWealthFeature`, preserving the verified prototype's feature equation,
+kickoff filtration, and neutral fallback. The prior default is arm 02's.
+"""
+Base.@kwdef struct WealthCovariate{
+    F<:Union{LogSumWealthFeature,CB_Features.SquadWealthFeature},
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F = LogSumWealthFeature()
+    prior::D   = truncated(Normal(0.10, 0.05), lower = 0.0)
+    role::R    = SupremacyRole()
+end
+
+covariate_name(::WealthCovariate)      = :wealth
+covariate_role(c::WealthCovariate)     = c.role
+covariate_prior(c::WealthCovariate)    = c.prior
+covariate_features(c::WealthCovariate) = CB_Features.AbstractFeatureConfig[c.feature]
+
+function covariate_column(c::WealthCovariate, fs)
+    key = c.feature isa LogSumWealthFeature ? :flat_delta_wealth_logsum :
+          :flat_delta_wealth
+    haskey(fs.data, key) || error(
+        "WealthCovariate with $(nameof(typeof(c.feature))) requires :$key")
+    return Vector{Float64}(fs.data[key])
+end
+
+function covariate_oos(c::WealthCovariate, fs, df)
+    # A materialised column wins, so a caller can price a hypothetical lineup.
+    if c.feature isa LogSumWealthFeature
+        hasproperty(df, :delta_wealth_logsum) && return Float64.(df.delta_wealth_logsum)
+        bridge = get(fs.data, :wealth_oos_bridge_by_match_id, Dict{Int,Float64}())
+    else
+        hasproperty(df, :delta_wealth) && return Float64.(df.delta_wealth)
+        bridge = get(fs.data, :wealth_by_match_id, Dict{Int32,Float64}())
+    end
+    return Float64[get(bridge, Int(r.match_id), 0.0) for r in eachrow(df)]
+end
+
+"""
+    ProductionWealthCovariate
+
+Age-adjusted point-in-time starting-XI production wealth. The design column is
+built by `ProductionWealthFeature` and enters the home/away log-rates as a
+supremacy term. Its default prior matches the raw wealth covariate, making the
+curve transform—not a prior change—the distinction between the two components.
+"""
+Base.@kwdef struct ProductionWealthCovariate{
+    F<:ProductionWealthFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F = ProductionWealthFeature()
+    prior::D = truncated(Normal(0.10, 0.05), lower = 0.0)
+    role::R = SupremacyRole()
+end
+
+covariate_name(::ProductionWealthCovariate) = :production_wealth
+covariate_role(c::ProductionWealthCovariate) = c.role
+covariate_prior(c::ProductionWealthCovariate) = c.prior
+covariate_features(c::ProductionWealthCovariate) =
+    CB_Features.AbstractFeatureConfig[c.feature]
+
+function covariate_column(::ProductionWealthCovariate, fs)
+    haskey(fs.data, :flat_delta_production_wealth) || error(
+        "ProductionWealthCovariate requires :flat_delta_production_wealth")
+    return Vector{Float64}(fs.data[:flat_delta_production_wealth])
+end
+
+function covariate_oos(::ProductionWealthCovariate, fs, df)
+    # A caller may override the causal bridge with a materialised hypothetical
+    # lineup, following the same extraction convention as WealthCovariate.
+    hasproperty(df, :delta_production_wealth) &&
+        return Float64.(df.delta_production_wealth)
+    bridge = get(fs.data, :production_wealth_oos_bridge_by_match_id,
+                 Dict{Int,Float64}())
+    return Float64[get(bridge, Int(row.match_id), 0.0) for row in eachrow(df)]
+end
+
+"""
+    BenchDepthCovariate(; role=SupremacyRole(), log_transform=true)
+
+Point-in-time substitute-bench valuation differential. The feature standardizes
+its design on the frozen history block; sparse benches are the structural zero.
+"""
+struct BenchDepthCovariate{
+    F<:CB_Features.BenchDepthFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F
+    prior::D
+    role::R
+end
+
+function BenchDepthCovariate(;
+    feature::Union{Nothing,CB_Features.BenchDepthFeature}=nothing,
+    prior::UnivariateDistribution=Normal(0.0, 0.10),
+    role::AbstractCovariateRole=SupremacyRole(),
+    log_transform::Bool=true,
+    scale::Union{Float64,Nothing}=nothing,
+    min_bench_count::Int=3,
+)
+    selected = feature === nothing ? CB_Features.BenchDepthFeature(
+        ; log_transform, scale, min_bench_count) : feature
+    return BenchDepthCovariate(selected, prior, role)
+end
+
+covariate_name(::BenchDepthCovariate) = :bench_depth
+covariate_role(c::BenchDepthCovariate) = c.role
+covariate_prior(c::BenchDepthCovariate) = c.prior
+covariate_features(c::BenchDepthCovariate) =
+    CB_Features.AbstractFeatureConfig[c.feature]
+
+function covariate_column(::BenchDepthCovariate, fs)
+    haskey(fs.data, :flat_delta_bench_depth) ||
+        error("BenchDepthCovariate requires :flat_delta_bench_depth")
+    return Vector{Float64}(fs.data[:flat_delta_bench_depth])
+end
+
+function covariate_oos(::BenchDepthCovariate, fs, df)
+    hasproperty(df, :delta_bench_depth) && return Float64.(df.delta_bench_depth)
+    bridge = get(fs.data, :bench_depth_by_match_id, Dict{Int,Float64}())
+    return Float64[get(bridge, Int(row.match_id), 0.0) for row in eachrow(df)]
+end
+
+"""
+    DistanceCovariate
+
+Static away-travel burden between the two grounds. Uses the production
+`Features.DistanceFeature`: catalog-fixed standardisation, Haversine miles, and
+a deterministic 45-mile fallback for unmapped grounds. The prior default is arm 03's.
+"""
+Base.@kwdef struct DistanceCovariate{
+    F<:CB_Features.DistanceFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F = CB_Features.DistanceFeature(metric = :log_dist_z)
+    prior::D   = truncated(Normal(0.04, 0.03), lower = 0.0)
+    role::R    = SupremacyRole()
+end
+
+covariate_name(::DistanceCovariate)      = :distance
+covariate_role(c::DistanceCovariate)     = c.role
+covariate_prior(c::DistanceCovariate)    = c.prior
+covariate_features(c::DistanceCovariate) = CB_Features.AbstractFeatureConfig[c.feature]
+
+covariate_column(::DistanceCovariate, fs) = Vector{Float64}(fs.data[:flat_distance])
+
+# Column of the distance table that each metric selects. Distance is a static
+# function of the two grounds, so an OOS fixture can simply be recomputed —
+# there is no point-in-time bridge to maintain.
+const _CB_DIST_COLUMN = Dict(
+    :log_dist_z    => :log_dist_z,
+    :dist_z        => :dist_z,
+    :hav_miles     => :hav_miles,
+    :road_miles    => :road_miles,
+    :drive_minutes => :drive_minutes,
+)
+
+function covariate_oos(c::DistanceCovariate, fs, df)
+    hasproperty(df, c.feature.metric) &&
+        return Float64.(getproperty(df, c.feature.metric))
+    # Legacy Scottish arm materialised its default log-distance under this name.
+    c.feature.metric === :log_dist_z && hasproperty(df, :distance_z) &&
+        return Float64.(df.distance_z)
+
+    table = CB_Features.build_match_distance_table(
+        DataFrame(df);
+        geocodes_df = CB_Features.load_stadium_catalog(c.feature.geocodes_csv),
+    )
+    col = get(_CB_DIST_COLUMN, c.feature.metric, :log_dist_z)
+    return Float64.(getproperty(table, col))
+end
+
+"""
+    PxGCovariate
+
+Point-in-time proxy-expected-goals FORM, built by `Features.PxGFeature` from BBC live-text
+commentary (falling back to match-page shot counts, then goals). Every value is assembled from
+matches that kicked off strictly earlier, so a fixture never sees itself or its same-slot siblings.
+
+The role selects which of the feature's two assembled columns is read, which is the whole point of
+having both:
+
+  * `SupremacyRole()` (default) — `(att_h + def_a) - (att_a + def_h)`, the expected-pxG difference.
+    A side that creates more than the league average, or faces a defence that concedes more than the
+    league average, is pushed up. Moves the result, holds the total.
+  * `LevelRole()` — `(att_h + def_a) + (att_a + def_h)`, the expected-pxG total. Moves the total,
+    holds the result. Use this to give the count model a per-fixture volume adjustment.
+
+Both columns are DEVIATIONS from the running league mean, so a cold-start fixture contributes
+exactly `0.0` and the term `w * 0` vanishes without a mask.
+"""
+Base.@kwdef struct PxGCovariate{
+    F<:CB_Features.PxGFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F = CB_Features.PxGFeature()
+    prior::D   = truncated(Normal(0.15, 0.10), lower = 0.0)
+    role::R    = SupremacyRole()
+end
+
+covariate_name(::PxGCovariate)      = :pxg
+covariate_role(c::PxGCovariate)     = c.role
+covariate_prior(c::PxGCovariate)    = c.prior
+covariate_features(c::PxGCovariate) = CB_Features.AbstractFeatureConfig[c.feature]
+
+# Dispatch on the role, not a branch: the column a pxG covariate reads IS its role.
+_cb_pxg_keys(::SupremacyRole) = (:flat_pxg_supremacy, :pxg_supremacy_by_match_id, :pxg_supremacy)
+_cb_pxg_keys(::LevelRole)     = (:flat_pxg_level,     :pxg_level_by_match_id,     :pxg_level)
+
+function covariate_column(c::PxGCovariate, fs)
+    key, _, _ = _cb_pxg_keys(c.role)
+    haskey(fs.data, key) || error("PxGCovariate($(nameof(typeof(c.role)))) requires :$key")
+    return Vector{Float64}(fs.data[key])
+end
+
+function covariate_oos(c::PxGCovariate, fs, df)
+    _, bridge_key, df_col = _cb_pxg_keys(c.role)
+    # A materialised column wins, so a caller can price a hypothetical form state.
+    hasproperty(df, df_col) && return Float64.(getproperty(df, df_col))
+    bridge = get(fs.data, bridge_key, Dict{Int,Float64}())
+    return Float64[get(bridge, Int(row.match_id), 0.0) for row in eachrow(df)]
+end
+
+"""
+    LateGameChanceCovariate(; role=SupremacyRole())
+
+Exponentially smoothed home-away differential in the historical share of proxy
+xG generated from minute 70 onward. The prior is intentionally signed because
+late chance share is a game-state proxy rather than an intrinsically positive
+strength measure.
+"""
+struct LateGameChanceCovariate{
+    F<:CB_Features.LateGameChanceFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F
+    prior::D
+    role::R
+end
+
+function LateGameChanceCovariate(;
+    feature::Union{Nothing,CB_Features.LateGameChanceFeature}=nothing,
+    prior::UnivariateDistribution=Normal(0.0, 0.10),
+    role::AbstractCovariateRole=SupremacyRole(),
+    minute_threshold::Int=70,
+    half_life_matches::Float64=16.0,
+    scale::Union{Float64,Nothing}=nothing,
+)
+    selected = feature === nothing ? CB_Features.LateGameChanceFeature(
+        ; minute_threshold, half_life_matches, scale) : feature
+    return LateGameChanceCovariate(selected, prior, role)
+end
+
+covariate_name(::LateGameChanceCovariate) = :late_game_chance
+covariate_role(c::LateGameChanceCovariate) = c.role
+covariate_prior(c::LateGameChanceCovariate) = c.prior
+covariate_features(c::LateGameChanceCovariate) =
+    CB_Features.AbstractFeatureConfig[c.feature]
+
+function covariate_column(::LateGameChanceCovariate, fs)
+    haskey(fs.data, :flat_delta_late_game_chance) ||
+        error("LateGameChanceCovariate requires :flat_delta_late_game_chance")
+    return Vector{Float64}(fs.data[:flat_delta_late_game_chance])
+end
+
+function covariate_oos(::LateGameChanceCovariate, fs, df)
+    hasproperty(df, :delta_late_game_chance) &&
+        return Float64.(df.delta_late_game_chance)
+    bridge = get(fs.data, :late_game_chance_by_match_id, Dict{Int,Float64}())
+    return Float64[get(bridge, Int(row.match_id), 0.0) for row in eachrow(df)]
+end
+
+"""
+    PxGRapmCovariate
+
+Starting-XI regularized adjusted plus-minus differential,
+`x = (sum of home XI ratings - sum of away XI ratings) / scale`, built by
+`Features.PxGRapmFeature` from stint segments.
+
+The ridge is fit on the fold's frozen history block, sparse players are shrunk toward the neutral
+zero player on their own segment exposure, and an unrated player contributes exactly `0.0`. The
+default target is `:y_xg` (pxG-APM), the least team-loaded of the four responses — which matters
+because the engine already carries team strength in `dyn.alpha`/`dyn.beta` and a covariate that
+re-derives it is fighting its own model.
+
+`SupremacyRole()` is the only sensible role: the column is antisymmetric in the two sides by
+construction, so a level reading would price "both teams are good" as "more goals", which is not
+what a plus-minus differential measures.
+"""
+Base.@kwdef struct PxGRapmCovariate{
+    F<:CB_Features.PxGRapmFeature,
+    D<:UnivariateDistribution,
+    R<:AbstractCovariateRole,
+} <: AbstractCovariateConfig
+    feature::F = CB_Features.PxGRapmFeature()
+    prior::D   = truncated(Normal(0.05, 0.05), lower = 0.0)
+    role::R    = SupremacyRole()
+end
+
+covariate_name(::PxGRapmCovariate)      = :pxg_rapm
+covariate_role(c::PxGRapmCovariate)     = c.role
+covariate_prior(c::PxGRapmCovariate)    = c.prior
+covariate_features(c::PxGRapmCovariate) = CB_Features.AbstractFeatureConfig[c.feature]
+
+function covariate_column(::PxGRapmCovariate, fs)
+    haskey(fs.data, :flat_pxg_rapm) || error("PxGRapmCovariate requires :flat_pxg_rapm")
+    return Vector{Float64}(fs.data[:flat_pxg_rapm])
+end
+
+function covariate_oos(::PxGRapmCovariate, fs, df)
+    # A materialised column wins, so a caller can price a hypothetical teamsheet.
+    hasproperty(df, :pxg_rapm) && return Float64.(df.pxg_rapm)
+    bridge = get(fs.data, :pxg_rapm_by_match_id, Dict{Int,Float64}())
+    return Float64[get(bridge, Int(row.match_id), 0.0) for row in eachrow(df)]
+end
+
+
+# ==============================================================================
+# ==============================================================================
+# 3b. THE NUMERICAL GUARD
+# ==============================================================================
+#
+# Whether the log-intensities are bounded before they reach `exp` is a MODELLING
+# DECISION, not a house style, and the Scottish arms disagree about it: arm 00's
+# engine has no guard, arms 02/03/04 clamp to [-10, 10]. Hard-coding either one
+# into a shared engine silently overrides one of them.
+#
+# It is also not free. On fold 1 the clamp is the ENTIRE measured difference
+# between this engine and arm 00's (r01_demo.jl §8). Making it a component means
+# that cost is a choice with a name rather than a line nobody reads.
+
+abstract type AbstractRateGuard <: CB_PG.AbstractModelComponent end
+
+"""
+    ClampGuard(lo = -10.0, hi = 10.0)
+
+Bound η before `exp`, so an excursion during warm-up cannot produce `Inf`.
+Arms 02/03/04's behaviour, and the default: a guard that is never needed costs a
+few microseconds, and one that is needed and absent costs the run.
+"""
+Base.@kwdef struct ClampGuard <: AbstractRateGuard
+    lo::Float64 = -10.0
+    hi::Float64 = 10.0
+end
+
+"""
+    NoGuard()
+
+No bound. Arm 00's behaviour. Identical results wherever the clamp would not
+bind — which `cb_clamp_headroom` measures rather than assumes.
+"""
+struct NoGuard <: AbstractRateGuard end
+
+apply_guard(g::ClampGuard, η) = clamp.(η, g.lo, g.hi)
+apply_guard(::NoGuard, η)     = η
+
+guard_describe(g::ClampGuard) = "clamp to [$(g.lo), $(g.hi)]"
+guard_describe(::NoGuard)     = "none — η is unbounded before exp"
+
+
+
+# 4. THE OBSERVATION LAYER
+# ==============================================================================
+#
+# THE ARCHITECTURAL POINT OF THIS FILE. Poisson, Negative Binomial, Dixon-Coles and
+# the Frank copula are not four models. They are one linear predictor
+#
+#     η_h = μ_s + δ_m + γ_h + α_h + β_a + Σ_k q_k,h
+#     η_a = μ_s + δ_m       + α_a + β_h + Σ_k q_k,a
+#
+# read by four different observation densities. Splitting them into four engine
+# files means every covariate added later must be added four times.
+#
+# Each observation config also declares which `TypesInterfaces` supertype the built
+# model must carry, because that supertype is what routes score-matrix computation
+# in `src/predictions/score_computation/`. Getting it wrong does not error — it
+# silently prices with the wrong grid. `build_count_model()` therefore takes the supertype FROM
+# the observation config rather than letting the caller pick it.
+
+abstract type AbstractObservationConfig <: CB_PG.AbstractModelComponent end
+
+"""
+    PoissonObservation
+
+`y ~ Poisson(exp(η))`, evaluated in log-intensity space as
+`y·η − exp(η) − log Γ(y+1)`. No dispersion parameter. The default.
+"""
+struct PoissonObservation <: AbstractObservationConfig end
+
+"""
+    NegativeBinomialObservation
+
+`y ~ RobustNegativeBinomial(r, exp(η))`. Wraps any `src` dispersion config
+(`GlobalDispersion`, `HomeAwayDispersion`) with their existing priors and
+`disp.*` chain schema. The builder applies its own smooth AD-safe log-dispersion
+bound; advanced volatility remains an explicit validation refusal until its
+per-match reconstruction is AD-safe.
+"""
+Base.@kwdef struct NegativeBinomialObservation{D<:CB_PG.AbstractDispersionConfig} <: AbstractObservationConfig
+    dispersion::D = CB_PG.GlobalDispersion()
+end
+
+# Concise public spelling used by model recipes and the player-lineup work package.
+const NegBinObservation = NegativeBinomialObservation
+
+"""
+    DixonColesCorrelation
+
+Low-score correction τ(y_h, y_a; λ_h, λ_a, ρ) on top of the double-Poisson
+likelihood.
+
+DECLARED, NOT WIRED. The builder accepts it, validation reports it, and
+`build_count_model()` refuses it with the reason. Wiring it belongs in `engine.jl` (the τ
+masks are pre-computable in the builder exactly as the AD guide §4 describes) plus
+a `DixonColesRates` extraction that carries ρ — but there is no hand-written
+Scottish arm to check the result against, and an unverified likelihood is worth
+less than an honest gap. See the specification §7.2.
+"""
+Base.@kwdef struct DixonColesCorrelation{C<:CB_PG.AbstractDixonColesConfig} <: AbstractObservationConfig
+    correlation::C = CB_PG.GlobalDixonColesConfig()
+end
+
+# ==============================================================================
+# 1b. KAPPA MODES — how the finishing factor reaches a match
+# ==============================================================================
+#
+# `κ` converts the latent chance quality `μ` into goals. The two-arm joint model
+# identifies it because the Gamma arm measures `μ` directly, so κ is not a free
+# rescale of the intensity — it is the league's finishing factor, read off the gap
+# between measured chances and scored goals.
+#
+# The question this family answers is whether that factor is ONE number for the
+# league or one per team. It is a mode, not a covariate: a covariate moves `η` and
+# is therefore measured by BOTH arms, whereas κ sits between the arms and is seen
+# only by the goals arm. A team that reliably out-finishes its chances is a
+# statement about the Poisson arm alone, and nothing else in the model can express
+# it.
+#
+# Dispatch, not a branch. `_observe` resolves the mode from the observation's type
+# parameter at compile time, so the shared-κ tape is byte-for-byte the tape it was
+# before this family existed.
+#
+# NAMING. `CB_PG.GlobalKappa` / `CB_PG.HierarchicalTeamKappa` already exist as
+# `AbstractKappaConfig` components for the hand-written xG engines, where κ lives
+# in NATURAL space behind a softplus. These are a different parameterisation (log
+# space, zero-centred deltas) for a different likelihood, so they get different
+# names rather than silently shadowing those.
+
+abstract type AbstractKappaMode end
+
+"""
+    SharedKappa
+
+One `log κ` for the whole league — the original two-arm behaviour, and still the
+default. Chain sites: `obs.log_κ`.
+"""
+struct SharedKappa <: AbstractKappaMode end
+
+"""
+    HierarchicalKappa
+
+A team-specific finishing multiplier, partially pooled around the league factor:
+
+    log κ_t = log κ_global + δ_κ[t]
+    δ_κ     = σ_κ · (raw − mean(raw)),   raw[t] ~ Normal(0, 1)
+
+NON-CENTRED, AND ZERO-CENTRED. The non-centred draw is the usual funnel fix, and it
+is what `TimeDecayDynamics` already does for α/β. The zero-centring is the part that
+matters for THIS component: without it `log κ_global` and the mean of `δ_κ` are the
+same direction in parameter space, and the sampler is free to trade one against the
+other forever. Subtracting the mean makes the deltas a pure contrast set, so
+`log κ_global` keeps the meaning it has in the shared model — the league finishing
+factor — and every team delta is read against it.
+
+`σ_κ` is the whole finding. Its posterior answers "how much team finishing variance
+is actually there?", and a σ_κ that collapses onto its lower bound is a real result:
+the league finishes as one, and the shared model was right.
+
+The default `σ_κ ~ truncated(Normal(0, 0.10), 0, Inf)` is deliberately tight. On a
+two-division Scottish fold a team contributes ~40 matches, and a half-open prior with
+a wide scale would let a 30% finishing edge be fitted out of Poisson noise.
+
+Chain sites: `obs.log_κ`, `obs.σ_κ`, `obs.κ_team_raw[1:n_teams]`.
+"""
+Base.@kwdef struct HierarchicalKappa{S<:ContinuousUnivariateDistribution} <: AbstractKappaMode
+    σ_prior::S = truncated(Normal(0.0, 0.10), 0.0, Inf)
+end
+
+"How many scalar parameters the mode adds beyond `obs.log_κ`, given the team count."
+kappa_mode_width(::SharedKappa, n_teams::Int) = 0
+kappa_mode_width(::HierarchicalKappa, n_teams::Int) = 1 + n_teams
+
+"""
+    JointGammaPoissonObservation
+
+TWO ARMS ON ONE LATENT. The shared log-intensity `η = log μ` is read by two densities at once:
+
+    ARM 1 (proxy xG)   pxg_h ~ Gamma(ν, μ_h / ν)      evaluated where the mask is 1
+    ARM 2 (goals)      y_h   ~ Poisson(κ · μ_h)       evaluated everywhere
+
+`Gamma(shape = ν, scale = μ/ν)` has mean `μ` and variance `μ²/ν`, so ν is a pure precision: the
+proxy measurement is unbiased for the latent by construction, and ν says how tightly. κ is the
+finishing factor that converts the same latent into goals; `log κ ~ Normal(0, 0.2)` keeps it near 1
+because pxG is already calibrated in goal units, and its posterior is a direct readout of whether
+the league finished above or below its chances.
+
+WHY THIS IS NOT A COVARIATE. A covariate adds information to the PREDICTOR. This adds a second
+LIKELIHOOD to the same predictor. The value of that shows up exactly where a covariate cannot help:
+the proxy arm sharpens μ on the seasons with BBC live text, and the goals arm — which needs no text
+at all — carries that sharpened μ back across the whole history. Neither arm is a fallback for the
+other; they are two measurements of one quantity.
+
+THE MASK IS REAL, NOT A ZERO. `MatchProxyXGFeature` emits `:flat_pxg_obs_available`, and matches
+before 23/24 sit at 0. The builder's usual "an absent value is a 0.0" shortcut does not apply,
+because the Gamma density is not linear in its observation and has no support at 0 — so the mask is
+carried explicitly and folded into the likelihood weights ONCE, in `observation_design`, outside
+`@model`. A masked-out match contributes a finite term multiplied by an exact zero.
+
+FIELDS
+  * `feature`         — the `MatchProxyXGFeature` supplying the arm-1 observation and its mask.
+  * `shape_prior`     — the prior on ν. Truncated well above 0: a Gamma shape at 0 is a density
+                        with no mode and an infinite spike at the origin.
+  * `log_kappa_prior` — the prior on `log κ` (the league factor in both modes).
+  * `kappa`           — `SharedKappa()` (one factor for the league) or
+                        `HierarchicalKappa()` (a partially pooled factor per team).
+"""
+Base.@kwdef struct JointGammaPoissonObservation{
+    F<:CB_Features.AbstractFeatureConfig,
+    S<:ContinuousUnivariateDistribution,
+    K<:ContinuousUnivariateDistribution,
+    M<:AbstractKappaMode,
+} <: AbstractObservationConfig
+    feature::F = CB_Features.MatchProxyXGFeature()
+    shape_prior::S = truncated(Normal(4.0, 1.5), 0.5, Inf)
+    log_kappa_prior::K = Normal(0.0, 0.2)
+    kappa::M = SharedKappa()
+end
+
+"The two-arm joint observation with one league-wide finishing factor."
+const SharedKappaJoint = JointGammaPoissonObservation{F,S,K,SharedKappa} where {F,S,K}
+
+"The two-arm joint observation with a partially pooled per-team finishing factor."
+const HierarchicalKappaJoint =
+    JointGammaPoissonObservation{F,S,K,<:HierarchicalKappa} where {F,S,K}
+
+"""
+    JointGammaPoissonDesign
+
+Everything the joint likelihood reads that is DATA. Built once per fold in `observation_design` and
+frozen into a concrete struct so the engine argument is type-stable and the compiled tape sees one
+shape.
+
+`log_pxg_*` is precomputed because `log(x)` of an observation is data, not a parameter, and
+`mask_weights` folds the availability mask into the time-decay weights in the same pass — one
+broadcast at fit time instead of two on every gradient evaluation.
+
+`home_idx` / `away_idx` are the same team indices the linear predictor uses, carried here as
+concrete `Vector{Int}` so a per-team κ is one vectorised `getindex` on the tape rather than a
+lookup the observation has to reconstruct. They are read from the `FeatureSet` — NOT passed down
+from `cb_design` — so the design object stays self-contained and one argument wide. `SharedKappa`
+never touches them; they cost two integer vectors and no tape instructions.
+"""
+struct JointGammaPoissonDesign
+    pxg_h::Vector{Float64}
+    pxg_a::Vector{Float64}
+    log_pxg_h::Vector{Float64}
+    log_pxg_a::Vector{Float64}
+    mask_weights::Vector{Float64}
+    home_idx::Vector{Int}
+    away_idx::Vector{Int}
+    n_observed::Int
+end
+
+"""
+    FrankCopulaCorrelation
+
+Frank copula joint likelihood over the two negative-binomial marginals.
+
+DECLARED, NOT WIRED — same reasoning as `DixonColesCorrelation`. See the
+specification §7.2.
+"""
+Base.@kwdef struct FrankCopulaCorrelation{C<:CB_PG.AbstractCopulaConfig} <: AbstractObservationConfig
+    correlation::C = CB_PG.HierarchicalFrankCopulaConfig()
+end
+
+"""
+    CBPoissonFamilyObservation
+
+The observations whose SCORE GRID is the double-Poisson grid, and which therefore assemble into
+`PoissonCountModel`. Membership of this Union is the single place that decision is recorded; the
+struct's type parameter reads it, and `_assemble` dispatches on it.
+"""
+const CBPoissonFamilyObservation = Union{PoissonObservation, JointGammaPoissonObservation}
+
+
+# --- observation traits -------------------------------------------------------
+
+"The `TypesInterfaces` supertype the built model must carry, so that score-matrix
+dispatch in `src/predictions/` reaches the matching grid."
+observation_family(::PoissonObservation)           = :poisson
+observation_family(::NegativeBinomialObservation)  = :negbin
+observation_family(::DixonColesCorrelation)        = :dixon_coles
+observation_family(::FrankCopulaCorrelation)       = :frank_copula
+# Two arms, ONE prediction family: the goals arm is Poisson, so the score grid is the double-Poisson
+# grid. The proxy arm is a fit-time likelihood only — it never prices a market.
+observation_family(::JointGammaPoissonObservation)  = :poisson
+
+"Is the observation density implemented in the production builder engine?"
+observation_wired(::AbstractObservationConfig)     = false
+observation_wired(::PoissonObservation)            = true
+observation_wired(::JointGammaPoissonObservation)  = true
+# The two scalar dispersion variants return a plain `(h, a)` pair, which the engine can
+# broadcast without a branch. `AdvancedVolatilityDispersion` returns per-team and per-month
+# volatility components that have to be re-assembled per match, and the `src` NegBin engine
+# does that with a `hasproperty` branch inside `@model` — a construct the AD guide forbids
+# and which this engine will not inherit. Wiring it means a `_reconstruct_dispersion`
+# submodel that dispatches on the dispersion type, not a branch. See specification §7.2.
+observation_wired(o::NegativeBinomialObservation)  =
+    o.dispersion isa Union{CB_PG.GlobalDispersion, CB_PG.HomeAwayDispersion}
+
+"Chain-site prefixes the observation layer owns, for the site-collision check."
+observation_prefixes(::PoissonObservation)          = Symbol[]
+observation_prefixes(::NegativeBinomialObservation) = [:disp]
+observation_prefixes(::DixonColesCorrelation)       = [:dc]
+observation_prefixes(::FrankCopulaCorrelation)      = [:cop]
+observation_prefixes(::JointGammaPoissonObservation) = [:obs]
+
+"What still has to be built before this observation can be used."
+observation_gap(o::AbstractObservationConfig) = "no observation method in builder/engine.jl"
+observation_gap(o::NegativeBinomialObservation) =
+    "$(nameof(typeof(o.dispersion))) needs a per-match dispersion reconstruction submodel; " *
+    "GlobalDispersion and HomeAwayDispersion are wired — specification §7.2"
+observation_gap(::DixonColesCorrelation) =
+    "τ low-score correction and DixonColesRates (ρ) extraction — specification §7.2"
+observation_gap(::FrankCopulaCorrelation) =
+    "Frank copula joint density over NegBin marginals and κ extraction — specification §7.2"
+
+
+# --- what an observation asks the feature builder for --------------------------
+#
+# Until the joint arm existed, every observation read only the goals the structural block already
+# required, so `required_features` was derived from the covariates alone. An observation with its
+# own data channel needs its own hook — one method, exactly like a covariate's.
+
+"""
+    observation_features(o) -> Vector{<:AbstractFeatureConfig}
+
+Extra features this observation's likelihood reads. Concatenated onto the structural and covariate
+features by `Features.required_features`. Most observations read nothing beyond the goals.
+"""
+observation_features(::AbstractObservationConfig) = CB_Features.AbstractFeatureConfig[]
+observation_features(o::JointGammaPoissonObservation) =
+    CB_Features.AbstractFeatureConfig[o.feature]
+
+"""
+    observation_design(o, feature_set, n_matches, match_weights) -> Any
+
+The observation layer's own design data, assembled once per fold OUTSIDE `@model` and handed to
+`_observe` as a single argument. `nothing` for an observation that needs none, which dispatches the
+argument away at compile time exactly as `_cov_shift(η, ::Nothing)` does for covariates.
+
+`match_weights` is passed in rather than recomputed because the masked arm must run on the SAME
+time-decay clock as the goals arm; deriving it twice is two places for the half-life to drift.
+"""
+observation_design(::AbstractObservationConfig, feature_set, n_matches::Int,
+                   match_weights::Vector{Float64}) = nothing
+
+function observation_design(o::JointGammaPoissonObservation, feature_set, n_matches::Int,
+                            match_weights::Vector{Float64})
+    d = feature_set.data
+    for key in (:flat_pxg_home, :flat_pxg_away, :flat_pxg_obs_available)
+        haskey(d, key) || error(
+            "JointGammaPoissonObservation needs $(key) in the FeatureSet. It is emitted by " *
+            "MatchProxyXGFeature, which the observation declares through `observation_features`; " *
+            "a missing key means the model was built without going through `required_features`.")
+    end
+
+    pxg_h = Vector{Float64}(d[:flat_pxg_home])
+    pxg_a = Vector{Float64}(d[:flat_pxg_away])
+    mask  = Vector{Float64}(d[:flat_pxg_obs_available])
+    home_idx = Vector{Int}(d[:flat_home_ids])
+    away_idx = Vector{Int}(d[:flat_away_ids])
+
+    for (name, v) in (("flat_pxg_home", pxg_h), ("flat_pxg_away", pxg_a),
+                      ("flat_pxg_obs_available", mask))
+        length(v) == n_matches ||
+            error("$(name) has length $(length(v)); expected $(n_matches)")
+        all(isfinite, v) || error("$(name) has non-finite entries")
+    end
+
+    # A per-team κ indexes a length-`n_teams` tracked vector with these. An index outside
+    # `1:n_teams` is an out-of-bounds read on the tape, which is a segfault-class failure three
+    # hours into a grid rather than an error here.
+    n_teams = Int(d[:n_teams])
+    for (name, v) in (("flat_home_ids", home_idx), ("flat_away_ids", away_idx))
+        length(v) == n_matches ||
+            error("$(name) has length $(length(v)); expected $(n_matches)")
+        all(i -> 1 <= i <= n_teams, v) ||
+            error("$(name) carries a team index outside 1:$(n_teams)")
+    end
+    all(x -> x == 0.0 || x == 1.0, mask) ||
+        error("flat_pxg_obs_available must be exactly 0.0 or 1.0; a partial mask would weight the " *
+              "Gamma arm by an undeclared amount")
+
+    # Only the MASKED entries have to be inside the Gamma support. An unavailable match carries a
+    # finite dummy whose term is multiplied by an exact zero, so it never reaches the density —
+    # but it must still be positive, because `log` of it is taken unconditionally.
+    all(x -> x > 0.0, pxg_h) && all(x -> x > 0.0, pxg_a) || error(
+        "proxy xG must be strictly positive everywhere; Gamma has no support at 0 and the " *
+        "log-observation is precomputed for every match, masked or not. " *
+        "MatchProxyXGFeature enforces this with its `floor` and `dummy` fields.")
+
+    return JointGammaPoissonDesign(pxg_h, pxg_a, log.(pxg_h), log.(pxg_a),
+                                   mask .* match_weights, home_idx, away_idx, Int(sum(mask)))
+end

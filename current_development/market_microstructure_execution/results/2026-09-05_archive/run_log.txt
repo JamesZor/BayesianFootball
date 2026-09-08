@@ -1,0 +1,22 @@
+Archive microstructure runner completed at 2026-09-07T23:02:48.350
+Frozen orders: 17; fixture inventory: 10
+Mapped runner/order coverage: 17/17
+Timely T-25 selections (last quote at/before T-25, age <=90s): 16/17
+Recorded ledger fill timestamp range: 2026-09-05T14:50:21.555+00:00 .. 2026-09-05T14:50:21.555+00:00
+Raw ledger TouchOnly fill fraction: 0.33898424145924555759
+Simulated realized market P&L uses market-net positive-gross commission, not ExecutionState haircut.
+4×7 DataFrame
+ Row │ policy_name                        target_risk  simulated_risk  mean_order_fill_pct  orders_with_fill  orders  portfolio_fill_pct
+     │ String                             Float64      Float64         Float64              Int64             Int64   Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ archive_touch_t25                       427.07         130.71              0.335455                13      17            0.306062
+   2 │ archive_sweep3_t25                      427.07         199.663             0.538408                13      17            0.467519
+   3 │ staged_t25_t5_no_replenishment          427.07         175.689             0.496965                13      17            0.411383
+   4 │ staged_t25_t5_refreshed_upper_bo…       427.07         210.161             0.583311                13      17            0.492099
+3×2 DataFrame
+ Row │ metric                             value
+     │ String                             Float64?
+─────┼──────────────────────────────────────────────
+   1 │ n_complete_pairs                   16.0
+   2 │ cor_wom_t25_future_price_change    -0.186751
+   3 │ cor_liquidity_change_future_pric…   0.186932

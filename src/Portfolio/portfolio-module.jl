@@ -33,25 +33,46 @@ existing file changes.
 
 # Health warning
 
-On the only out-of-sample evaluation available (ScottishLower, 628 matches), the default policy
-returns a flat ROI whose match-clustered 95% bootstrap interval **includes zero**. `FlatTrust`
-is the default because every attempt to *learn* per-selection trust lost money out of sample.
-Treat the non-default components as slots for testing and rejecting ideas cheaply.
+The generic `PolicySpec` remains league-agnostic and conservative. Scottish Lower production
+uses the separately audited `CanonicalScottishLowerTrust()` through MatchDay's canonical policy
+factory; league-specific directional findings must not become an implicit default for every
+portfolio simulation.
 """
 module Portfolio
 
 using DataFrames
 using Dates
+using JSON3
+using LibPQ
 using Statistics
 using LinearAlgebra
 using Random
 using Printf          # display.jl
 using Optim
+using SHA
+using UUIDs
 
 using ..Data
 using ..Predictions
 using ..Experiments
 using ..BackTesting
+
+# The market interface functions. `Data` re-exports the concrete market types but not
+# `market_group` / `market_line` / `outcomes` / `AbstractMarket`, so those come from the submodule.
+using ..Data.Markets: AbstractMarket, market_group, market_line, outcomes
+
+# Qualified rather than `using`, so every call site says where the name comes from and no exported
+# name from these modules (`n_matches`, `add!`, `replace!`, `report_table`, ...) can shadow or be
+# shadowed by one of ours.
+#
+#   Models      the typed posterior containers the zero-allocation builder reads
+#   Training    `Fit` -- the run container the convergence gate reads a FIELD off
+#   Evaluation  `convergence_verdict` / `fit_latents` / `as_typed_latents`, reused verbatim so
+#               staking and evaluation cannot gate on two different verdicts
+import ..Models
+import ..Training
+import ..Evaluation
+import ..TypesInterfaces
 
 # --- order matters -----------------------------------------------------------
 # types.jl declares the abstract types AND the config structs, whose @kwdef defaults name
@@ -79,6 +100,24 @@ include("matchday.jl")
 include("metrics.jl")
 include("calibrate.jl")
 
+# --- the zero-allocation path ------------------------------------------------
+# Additive to everything above: `book.jl`'s builder, `simulate.jl`'s trajectory and every legacy
+# signature are unchanged. These files add the typed-container fast path (one workspace per FOLD
+# rather than one tensor per FIXTURE), the convergence gate in front of the bankroll, and the
+# richer result / report objects.
+#
+# `alignment.jl` before `pricing.jl` because the builder reads an `OddsIndex`; `pricing.jl` before
+# `simulation.jl` because the simulator's `BuildReport` method needs the builder that produces one;
+# `compat.jl` last of the four because its aliases resolve at definition time.
+
+include("alignment.jl")
+include("pricing.jl")
+include("simulation.jl")
+include("reporting.jl")
+include("db_storage.jl")
+include("extension.jl")
+include("compat.jl")
+
 # last: it dispatches on every type and component defined above
 include("display.jl")
 
@@ -90,10 +129,33 @@ export
     AbstractTrustModel, AbstractRiskModel, AbstractExposureCap, AbstractSelectionFilter,
     AbstractSlateGrouping,
 
+    # concrete implementations
+    DeArb, Normalise, RawPrice,
+    PerBetCommission, TurnoverCommission,
+    KellyLogUtility, IndependentKelly,
+    BakerMcHale, NoShrinkage,
+    FlatTrust, SelectionTrust, TieredTrust, CanonicalScottishLowerTrust, ScheduledTrust,
+    StaticFamilyTrust, ShrinkToMarketTrust,
+    SlateDrawdown, MatchDrawdown, FixedFraction,
+    FixedCap, PerMatchCap,
+    DailySlate, WeeklySlate, MatchSlate,
+
     # domain
     Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory,
 
     # config
-    ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem
+    ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem,
+
+    # the zero-allocation path: alignment, workspace, build report
+    OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildReport,
+    build_odds_index, build_books, price_portfolio_books!, price_book!,
+    simulate_portfolio, run_portfolio_simulation,
+
+    # simulation results
+    DailyState, PortfolioSummary, BootstrapCI, PortfolioResult, PortfolioReport,
+    portfolio_summary, portfolio_report,
+
+    # PostgreSQL persistence
+    save_portfolio_db, load_portfolio_db, portfolio_spec_hash, extend_portfolio
 
 end

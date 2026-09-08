@@ -6,20 +6,27 @@ into a model-ready FeatureSet using the new relational SplitBoundary architectur
 """
 module Features
 
+using CSV
 using DataFrames
 using Dates
+using Statistics
 using Base.Threads
 using ..Data
 using ..TypesInterfaces
 
 export FeatureSet, create_features, required_features, add_feature!
-export AbstractFeatureConfig, TeamIDsFeature, GoalsFeature, LeagueFeature, XGFeature, ShotsFeature, BigChanceFeature, ShotsInsideBoxFeature, FinalThirdEntriesFeature, TouchesInOppBoxFeature, ShotsFunnelFeature, MarketSmileFeature, TimeIndicesFeature, DatesFeature, MonthFeature, MidweekFeature, PlasticPitchFeature, AbstractRatingTracker, PlayerRatingsFeature
+export AbstractFeatureConfig, TeamIDsFeature, GoalsFeature, LeagueFeature, XGFeature, ShotsFeature, BigChanceFeature, ShotsInsideBoxFeature, FinalThirdEntriesFeature, TouchesInOppBoxFeature, ShotsFunnelFeature, MarketSmileFeature, TimeIndicesFeature, DatesFeature, MonthFeature, MidweekFeature, PlasticPitchFeature, DistanceFeature, AbstractRatingTracker, PlayerRatingsFeature
 export LastValueTracker, WindowAverageTracker, EWMATracker, BayesianTracker
 # Plus-minus (RAPM) rating family — one struct per PM target, all sharing one extractor.
 export AbstractPlusMinusFeature, ShotsPlusMinusFeature, ShotsOnTargetPlusMinusFeature,
        GoalsPlusMinusFeature, XGPlusMinusFeature, pm_target, rating_base
 # Recombination & Open-Play Features
 export OpenPlayGoalsFeature, OpenPlayPxGFeature, SquadWealthFeature, RefereeOfficiatingFeature
+# Point-in-time squad and chance-form feeds for the composable count builder.
+export BenchDepthFeature, PxGFeature, PxGRapmFeature, LateGameChanceFeature,
+       pxg_match_observations, pxg_rapm_deltas
+# Match-level pxG as a masked OBSERVATION, for the two-arm joint likelihood.
+export MatchProxyXGFeature
 
 # Core Architecture
 include("./model_requirements.jl")
@@ -37,12 +44,21 @@ include("./market_inverse_utils.jl")
 include("./plus_minus/plus_minus.jl")
 include("./extractors/core_extractors.jl")
 include("./extractors/time_extractors.jl")
+include("./extractors/distance_extractors.jl")
 include("./extractors/stats_extractors.jl")
 include("./extractors/bbc_extractors.jl")
 include("./extractors/market_extractors.jl")
 include("./extractors/player_extractors.jl")
 include("./extractors/plus_minus_extractors.jl")
 include("./extractors/open_play_extractors.jl")
+# Unified-builder covariate feeds. Loaded after plus_minus/ and the shot parser, whose segment,
+# shot-xG and ridge machinery both of these reuse verbatim.
+include("./pxg.jl")
+# Reuses `pxg_match_observations`' measurement ladder, so it must follow pxg.jl.
+include("./match_proxy_xg.jl")
+include("./pxg_rapm.jl")
+include("./bench_depth.jl")
+include("./late_game.jl")
 include("./display.jl")
 
 end # module

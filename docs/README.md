@@ -13,10 +13,41 @@ longer-lived material.
 
 ## `guides/` — how to do a thing
 
+- [`julia_coding_context_for_agents.md`](guides/julia_coding_context_for_agents.md) — language
+  traps, style, Turing API facts and the verification ladder. Read before writing Julia.
+- [`experiment_database_and_config_truth_guide.md`](guides/experiment_database_and_config_truth_guide.md)
+  — the `mcmc_experiments` database on `mcmc-beast:5432`: schema reference, config truth
+  engine, password-safe connection, incremental extension. **§2 draws the line between it and
+  `betdb`, the operational database on `archpc:5433`** — read that section first if you are
+  unsure which database a task needs.
 - [`feature_validation_methodology.md`](guides/feature_validation_methodology.md) — the test
   battery a candidate feature has to pass before it earns a place in a model.
 - [`hurdle_columns_guide.md`](guides/hurdle_columns_guide.md) — column reference for the
   Hurdle ROI distributional metric (`src/backtesting/metrics/hurdle_roi.jl`).
+
+## `architecture/` — how the system is put together
+
+- [`ai_agent_infrastructure_and_execution_context.md`](architecture/ai_agent_infrastructure_and_execution_context.md)
+  — the two-host topology, the **two databases**, thread pinning, rsync and cache safety, the
+  model equations, the `05 → 10` pipeline stages, and the standard agent prompting block.
+- [`composable_model_builder_specification.md`](architecture/composable_model_builder_specification.md)
+  — the `CountModelBuilder` contract.
+- [`feature_engineering_protocol.md`](architecture/feature_engineering_protocol.md) — the
+  extractor contract and point-in-time guards.
+- [`rfc_layer2_calibration_v2.md`](architecture/rfc_layer2_calibration_v2.md) — **Layer-2
+  generative rate calibration as a production tier.** The market-rate inversion, the three
+  location laws and four dispersion maps, the tradeable T−25 book, the `CalibratedFit`
+  contract that lets a calibrated posterior reach `Portfolio` with no change to it, and the
+  `calibration_runs` / `calibration_artifacts` schema. Also records what it deliberately does
+  *not* claim, and the one place it departs from its own work package (`CalibratedLatents` is
+  an alias, not a wrapper — §3.1) and why. Measured evidence lives with the stream:
+  [`current_development/calibration_generative_eda/README.md`](../current_development/calibration_generative_eda/README.md).
+
+For the operational layer, the live and replay consoles are documented where they live:
+[`current_development/match_day_inference/README.md`](../current_development/match_day_inference/README.md)
+(architecture, routes, keyboard map, what the consoles refuse to pretend) and
+[`QUICKSTART_LIVE.md`](../current_development/match_day_inference/QUICKSTART_LIVE.md)
+(operator loop).
 
 ## `setup/` — environment and tooling
 
@@ -26,6 +57,10 @@ longer-lived material.
   code-index setup.
 - [`kaimon_antigravity_playbook.md`](setup/kaimon_antigravity_playbook.md) — delegating
   token-heavy work to the Antigravity MCP.
+- [`agy_remote_execution_guide.md`](setup/agy_remote_execution_guide.md) — the two-host
+  execution protocol, pre-flight connectivity checks and the tmux window map.
+- [`agy_tmux_agent_and_repl_control_guide.md`](setup/agy_tmux_agent_and_repl_control_guide.md)
+  — driving subagent panes and the warm Julia REPL over tmux.
 
 ## `research/` — findings and background reading
 
@@ -58,7 +93,9 @@ description of the current system.
   [`meta_model_research_notes.md`](archive/meta_model_research_notes.md) — the Layer 3
   meta-model. Blending the market at L3 did not beat blending it inside L1.
 - [`l2_bayesian_calibration_research.md`](archive/l2_bayesian_calibration_research.md) —
-  Layer 2 Bayesian calibration. Did not improve betting returns.
+  Layer 2 Bayesian calibration. Did not improve betting returns. **Not** the current Layer-2
+  calibrator: that is generative *rate* calibration, in
+  [`architecture/rfc_layer2_calibration_v2.md`](architecture/rfc_layer2_calibration_v2.md).
 - [`hurdle_metric_plan.md`](archive/hurdle_metric_plan.md),
   [`hurdle_results_analysis.md`](archive/hurdle_results_analysis.md) — design notes and
   results for the Hurdle metric. The metric itself is live in `src/`; these are its

@@ -6,7 +6,8 @@
 # market-pillar engines consume odds as a model feature. Any diagram of this as a straight line
 # is wrong.
 
-export match_day, fixture_info, build_cards, price_cards, order_ticket
+export match_day, fixture_info, build_cards, price_cards, quote_slate,
+       relative_spread, order_ticket
 
 """
     fixture_info(cards) -> Dict{Int,Portfolio.FixtureInfo}
@@ -51,9 +52,28 @@ downstream component stay unaware that lays exist.
 
 Also stamps book age and matched volume onto each card for the gates.
 """
-function price_cards(spec::MatchDaySpec, cards::Vector{<:FixtureCard}, as_of::DateTime)
-    rows = NamedTuple[]
+price_cards(spec::MatchDaySpec, cards::Vector{<:FixtureCard}, as_of::DateTime) =
+    let q = quote_slate(spec, cards, as_of)
+        (q.odds, q.instruments)
+    end
+
+"""
+    quote_slate(spec, cards, as_of) -> (; odds, instruments, books)
+
+`price_cards` plus the **depth it collapsed**.
+
+`price_cards` returns only what `Portfolio` needs, which is one scalar price per selection. The
+ledger's fill model and the console's ladder both need the levels that price came from, and
+re-reading them is a second database round trip against a book that has moved. `books` is keyed
+`(match_id, SelectionKey)` so a sheet row reaches its own depth without a second lookup table.
+
+Stamps four pieces of card metadata for the gates: `:book_age`, `:max_matched`,
+`:spread_median` and `:spread_max`, all as of this quote.
+"""
+function quote_slate(spec::MatchDaySpec, cards::Vector{<:FixtureCard}, as_of::DateTime)
+    rows  = NamedTuple[]
     insts = Dict{Tuple{Int,SelectionKey},Instrument}()
+    books = Dict{Tuple{Int,SelectionKey},BookLevels}()
 
     for c in cards
         resolved(c) || continue
@@ -66,8 +86,13 @@ function price_cards(spec::MatchDaySpec, cards::Vector{<:FixtureCard}, as_of::Da
         matched = [b.matched for b in values(book) if !isnan(b.matched)]
         _set_card_meta!(c, :max_matched, isempty(matched) ? NaN : maximum(matched))
 
+        spreads = [s for s in (relative_spread(b) for b in values(book)) if !isnan(s)]
+        _set_card_meta!(c, :spread_median, isempty(spreads) ? NaN : median(spreads))
+        _set_card_meta!(c, :spread_max,    isempty(spreads) ? NaN : maximum(spreads))
+
         ks = collect(keys(book))
         for key in ks
+            books[(c.fixture.m_id, key)] = book[key]
             comp = complement_of(key, ks)
             inst = instrument(spec.instrument, key, comp, book, spec.quote_rule)
             inst === nothing && continue
@@ -79,14 +104,28 @@ function price_cards(spec::MatchDaySpec, cards::Vector{<:FixtureCard}, as_of::Da
     end
 
     odds = isempty(rows) ? _empty_odds() : DataFrame(rows)
-    return odds, insts
+    return (; odds, instruments = insts, books)
+end
+
+"""
+    relative_spread(b::BookLevels) -> Float64
+
+`(lay - back) / mid` at the touch. `NaN` when either side is empty or the book is crossed --
+callers treat `NaN` as "not measurable" rather than as zero, because a one-sided book is the
+widest book there is, not the tightest.
+"""
+function relative_spread(b::BookLevels)
+    bb, bl = best_back(b), best_lay(b)
+    (isnan(bb) || isnan(bl) || bl <= bb) && return NaN
+    return (bl - bb) / ((bl + bb) / 2)
 end
 
 _empty_odds() = DataFrame(match_id = Int[], market_name = String[], market_line = Float64[],
                           selection = Symbol[], odds_close = Float64[])
 
 """
-    match_day(spec, sys, segment, expr, ds; as_of = now(), bankroll = 1.0) -> MatchDayResult
+    match_day(spec, sys, segment, expr, ds; as_of = now(), bankroll = 1.0,
+              calibrator = nothing) -> MatchDayResult
 
 Run the whole pipeline.
 
@@ -97,7 +136,8 @@ A refusal is a value: `result.blocked` carries every card the gate stopped and w
 today" and "the pipeline is broken" are never the same empty DataFrame.
 """
 function match_day(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment, expr, ds;
-                   as_of::DateTime = now(), bankroll::Real = 1.0)
+                   as_of::DateTime = now(), bankroll::Real = 1.0,
+                   calibrator::Union{Nothing,Calibration.AbstractGenerativeRateCalibrator} = nothing)
     cards = build_cards(spec, segment, as_of)
     isempty(cards) && return MatchDayResult(_empty_sheet(), FixtureCard[], FixtureCard[],
                                             _empty_odds(), Dict(), as_of)
@@ -115,6 +155,20 @@ function match_day(spec::MatchDaySpec, sys::Portfolio.PortfolioSystem, segment, 
     latents, diag = matchday_latents(spec, expr, ds, passed, odds, as_of)
     isempty(diag.warning) || @warn "MatchDay: $(diag.warning)"
     isempty(latents) && return MatchDayResult(_empty_sheet(), cards, blocked, odds, insts, as_of)
+
+    if calibrator !== nothing
+        calibrated = calibrate_matchday_latents(calibrator, latents, odds, passed, as_of)
+        latents = calibrated.latents
+        coverage_log = (; calibrator = calibrator.name, calibrated.coverage...,
+                         refusals = Calibration.inversion_refusals(calibrated.rates))
+        @info "MatchDay calibration coverage" details = coverage_log
+        calibrated.coverage.n_accepted > 0 || @warn(
+            "match_day: calibration shifted no fixture; the raw posterior passed through",
+            calibrator = calibrator.name,
+            n_fixtures = calibrated.coverage.n_fixtures,
+            n_quoted = calibrated.coverage.n_quoted,
+            refusals = Calibration.inversion_refusals(calibrated.rates))
+    end
 
     sheet = Portfolio.stake_sheet(sys, latents, expr, odds, fixture_info(passed);
                                   bankroll = bankroll)

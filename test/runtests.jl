@@ -18,16 +18,65 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
     println("Running Pre Game Module tests...")
     include("pregame_tests.jl")
 
+    println("Running composable count-model builder tests...")
+    include("builder_tests.jl")
+
+    println("Running player-lineup dynamics tests...")
+    include("test_player_lineup_dynamics.jl")
+
+    println("Running production-wealth feature tests...")
+    include("test_production_wealth_feature.jl")
+
+    println("Running pxG and RAPM covariate feature tests...")
+    include("test_pxg_rapm_features.jl")
+
+    println("Running bench-depth and late-game feature tests...")
+    include("test_bench_and_late_game_features.jl")
+
+    println("Running two-arm joint Gamma/Poisson observation tests...")
+    include("test_joint_gamma_poisson.jl")
+
     println("Running Portfolio Module tests...")
     include("portfolio_tests.jl")
 
     println("Running MatchDay Module tests...")
     include("matchday_tests.jl")
 
+    println("Running native BBC MatchDay lineup tests...")
+    include("test_matchday_bbc_lineup.jl")
+
+    println("Running MatchDay live pipeline (slate, ledger, console) tests...")
+    include("test_matchday_live_pipeline.jl")
+
     println("Running Caching and OOS Predictions tests...")
     include("caching_tests.jl")
 
     println("Running Recombination and Squad Wealth Engine tests...")
     include("recombination_tests.jl")
+
+    println("Running typed posterior latent tests...")
+    include("latents_tests.jl")
+
+    println("Running unified inference and fit lifecycle tests...")
+    include("inference_tests.jl")
+
+    println("Running experiment database storage tests...")
+    include("test_db_storage.jl")
+
+    println("Running incremental live extension tests...")
+    include("test_extension.jl")
+
+    println("Running unified evaluation framework tests...")
+    include("evaluation_tests.jl")
+
+    println("Running unified portfolio framework tests...")
+    include("unified_portfolio_tests.jl")
+
+    # Layer-2 generative rate calibration. T1-T9 are pure; T10 needs `mcmc_experiments`
+    # and skips WITH A MESSAGE when it is out of reach. It loads the validated prototype
+    # from `current_development/calibration_generative_eda/` as its reference
+    # implementation, so it also fails if that stream is moved or edited.
+    println("Running Layer-2 calibration v2 tests...")
+    include("test_calibration_v2.jl")
 end
 
