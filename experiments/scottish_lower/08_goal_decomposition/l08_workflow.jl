@@ -15,6 +15,7 @@ import DataFrames
 import Dates
 import LinearAlgebra
 import SHA
+import Serialization
 import TOML
 import UUIDs
 
@@ -22,6 +23,26 @@ const L08_DATA = BayesianFootball.Data
 const L08_FEATURES = BayesianFootball.Features
 const L08_PORTFOLIO = BayesianFootball.Portfolio
 const L08_TRAINING = BayesianFootball.Training
+
+# Historical Gen-3 baseline artefacts predate the fourth (`SharedKappa`) type
+# parameter on `JointGammaPoissonObservation`. Keep their established reader
+# shim local to the experiment workflow that loads those immutable runs.
+function Serialization.deserialize(
+        serializer::Serialization.AbstractSerializer,
+        observation_type::Type{<:BayesianFootball.Models.PreGame.JointGammaPoissonObservation})
+    observation_type isa DataType && return invoke(
+        Serialization.deserialize,
+        Tuple{Serialization.AbstractSerializer,DataType}, serializer, observation_type)
+
+    fields = Any[]
+    for _ in 1:3
+        tag = Int32(read(serializer.io, UInt8)::UInt8)
+        push!(fields, Serialization.handle_deserialize(serializer, tag))
+    end
+    pregame = BayesianFootball.Models.PreGame
+    return pregame.JointGammaPoissonObservation(
+        fields[1], fields[2], fields[3], pregame.SharedKappa())
+end
 
 "Load the git-ignored operational DB environment at runtime; package precompilation cannot retain it."
 function l08_load_runtime_env!()
@@ -303,7 +324,7 @@ function l08_assert_prepare!(name::AbstractString, model, feature_sets, oos, spl
     total = sum(DataFrames.nrow, oos)
     total > 0 || error("$name has no OOS fixtures")
     for (idx, feature_set) in enumerate(feature_sets)
-        training_ids = Set(Int.(first(feature_set).data[:flat_match_ids]))
+        training_ids = Set(Int.(first(feature_set).data[:goal_decomposition_training_ids]))
         held_out = Set(Int.(oos[idx].match_id))
         isempty(intersect(training_ids, held_out)) || error(
             "$name fold $idx leaks held-out IDs into training features")
