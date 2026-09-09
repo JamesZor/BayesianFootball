@@ -1,7 +1,9 @@
 # Scottish Lower 08 — goal decomposition
 
-**Status: BBC referee registry regenerated and incident tests passed (47/47).
-Model/AD verification is in progress. No MCMC or production result yet.**
+**Status: incident tests 47/47; real Fold 1 deterministic model tests 51/51;
+strict four-model Fold 1 smoke 64/64. All four compiled gradients allocate zero
+bytes and all four posterior fits passed the six-part convergence gate. The
+40-fold production grid is pending.**
 
 Investigates separate non-penalty/non-own goals, penalty attempts and conversion,
 and own-goal receipts. Total intensities are recombined per posterior draw and
@@ -15,7 +17,8 @@ MatchDay code remain unchanged.
 - `l08_incident_data.jl` / `r08_eda.jl`: reproducible extraction and EDA.
 - `l08_decomposed_models.jl`: three requested candidates, an identical-spine
   total-goals-only control, and feature/latent adapters.
-- `l08_model_checks.jl`: deterministic model and AD verification.
+- `l08_model_checks.jl` / `test08_model_contract.jl`: executed deterministic
+  model, exact-prior/Jacobian, AD, filtration, extraction and native-grid verification.
 - `test08_incident_contract.jl`: synthetic attribution/missingness and actual
   registry conservation checks (**47/47 passed**, local Julia 1.12.1).
 - `l08_eda_statistics.jl` / `r08_eda_statistics.jl`: adjusted statistical tests
@@ -52,6 +55,56 @@ the work package. Missing incident feeds never become zero-count observations.
 “Regular” goals may include set pieces and are not tactical open-play labels.
 Historical benchmark scores are recomputed on identical fixtures and markets;
 conditional Poisson superposition is not an unconditional Poisson claim.
+
+## Executed deterministic gates
+
+`julia --project -t 8 experiments/scottish_lower/08_goal_decomposition/test08_model_contract.jl`
+passed **51/51** on local Julia 1.12.1 (2m14s). The source-hashed evidence is
+`results/deterministic_checks_julia_1.12.1.toml`.
+
+| Arm | Parameters | Tape instructions | Warm gradient allocations |
+|---|---:|---:|---:|
+| m00 recombined control | 97 | 232 | 0 bytes |
+| m01 decomposition | 97 | 232 | 0 bytes |
+| m02 team penalties | 149 | 307 | 0 bytes |
+| m03 own pressure | 98 | 244 | 0 bytes |
+
+All 40 broad probes agreed with fresh ReverseDiff and ForwardDiff (maximum
+relative error <2.3e-15). Doubling fixture rows left tape lengths unchanged.
+The independent distribution-object density, including exact HalfNormal/Beta
+Jacobians, agreed within 1.7e-15 relative error. Perturbing 759 future registry
+rows changed neither fitted features nor prior anchors. Synthetic extraction
+matched independently summed rates and native 12×12 kernels; these two synthetic
+parameter draws are **not posterior samples or convergence evidence**. Their
+reported truncated-grid tail mass is not normalized away.
+
+## Executed Fold 1 smoke
+
+`L08_RUN_SMOKE=true julia --project -t 8 experiments/scottish_lower/08_goal_decomposition/r08_smoke.jl`
+passed **64/64** on archpc (Julia 1.12.1). All four fits used 4 chains × 1,000
+warmup × 1,000 retained draws, had zero divergences, built finite per-draw 12×12
+score grids, and passed exact fit/latent and portfolio-ledger round trips.
+Detailed diagnostics and immutable run UUIDs are recorded in
+`results/smoke_fold1_2026-09-09.md`.
+
+| Arm | max R-hat | minimum ESS | divergences |
+|---|---:|---:|---:|
+| m00 recombined control | 1.0041 | 2,104 | 0/4,000 |
+| m01 decomposition | 1.0044 | 1,758 | 0/4,000 |
+| m02 team penalties | 1.0051 | 1,659 | 0/4,000 |
+| m03 own pressure | 1.0042 | 1,479 | 0/4,000 |
+
+### Approved new-team policy
+
+The canonical 40-fold audit identified six initially refused fixtures:
+Arbroath and Inverness in Fold 1, East Kilbride in Fold 21; see
+`results/preflight_unseen_team_refusals.csv`. The user explicitly approved
+**prior-only hierarchical effects for teams declared from upcoming fixture
+identities** so all 710 fixtures remain in scope. Declaration reads no outcomes,
+adds no fitted rows, and samples attack/defence uncertainty (also penalty effects
+in m02), rather than plugging in league-average rates. Unexpected, undeclared
+teams still refuse by fixture ID. Missing/unseen referees retain exactly zero
+effect, not a fitted UNKNOWN group.
 
 ## Remote execution
 

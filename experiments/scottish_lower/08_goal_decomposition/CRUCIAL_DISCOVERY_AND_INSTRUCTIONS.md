@@ -84,3 +84,19 @@ Referee names and official IDs are fully tracked in the BBC dataset in PostgreSQ
    - Run the 40-fold walk-forward grid with 16 physical cores pinned:
      `JULIA_PKG_PRECOMPILE_AUTO=0 julia --project -t 16 r08_production_grid.jl`
    - Run evaluation (`r08_evaluate.jl`) and portfolio backtests (`r08_portfolio.jl`) benchmarked against `m05_joint_production_wealth` and `m00_recombined_control`.
+
+---
+
+## 5. STRICT DIRECTIVE: TERMINATE ALL SUBAGENTS TO PREVENT TOKEN BURN
+
+1. **Close All 6 Active Subagents Immediately**:
+   - The session has 6 subagents running (`models`, `eda`, `runners`, `baseline-evidence`, `evaluation`, `statistics`).
+   - `eda`, `statistics`, and `baseline-evidence` finished their tasks hours ago and are obsolete.
+   - You MUST terminate/close all subagents immediately to stop token consumption and context bloat.
+2. **Execute Directly as a Single Agent**:
+   - Do NOT spawn any new subagents.
+   - Execute all remaining tasks directly in this single agent session:
+     a) Run `r08_smoke.jl` on Fold 1 locally.
+     b) Git commit and push all suite 08 files to `origin/feat/scottish-lower-goal-decomposition`.
+     c) Pull to `root@mcmc-beast:/root/BF_goal_decomposition` and launch `r08_production_grid.jl` with 16 physical cores pinned.
+     d) Run evaluation (`r08_evaluate.jl`) and portfolio backtesting (`r08_portfolio.jl`).

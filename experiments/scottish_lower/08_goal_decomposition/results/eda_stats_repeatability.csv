@@ -1,0 +1,2 @@
+metric,early_matches,late_matches,teams,correlation,null_mean,null_interval_low,null_interval_high,p_value_positive,monte_carlo_se,replicates,seed
+nonoverlapping_block_team_penalty_rate_correlation,987,1005,21,0.08276286600411308,0.0005092665183200995,-0.4136118634072238,0.41527042842841977,0.3473263368315842,0.01064371795574309,2000,20260908

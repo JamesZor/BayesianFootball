@@ -5,8 +5,11 @@
 Phase 1 incident extraction and initial statistical checks have run. The BBC
 referee-source correction has been extracted and verified (47 incident-contract
 assertions passed); referee-adjusted inferential analysis is still pending.
-No smoke sampling, production grid, or portfolio result is claimed yet.
-Measured evidence belongs in `EMPIRICAL.md` and `STATISTICAL_FINDINGS.md`.
+The strict four-model Fold 1 smoke passed 64/64, including the six-part
+convergence audit, posterior score grids, and fit/portfolio persistence. No
+40-fold production or benchmark portfolio result is claimed yet. Measured
+evidence belongs in `EMPIRICAL.md`, `STATISTICAL_FINDINGS.md`, and
+`results/smoke_fold1_2026-09-09.md`.
 
 ## 1. Question and falsifiable hypotheses
 
@@ -455,3 +458,72 @@ component-label missingness mechanism is ignorable. The small fraction
 quarantined limits its volume, not automatically the magnitude of bias.
 
 Implementation files for later phases are not validated sampling results.
+
+## 10. Executed deterministic model contract
+
+The real Fold 1 test passed **51/51** on local Julia 1.12.1, with no MCMC.
+`results/deterministic_checks_julia_1.12.1.toml` records source hashes and measurements.
+All four compiled gradients allocate **zero bytes** after warmup, as do native
+in-place 12×12 score grids. Tape lengths are 232/232/307/244 and remain exactly
+unchanged when fixture rows are doubled. Forty broad parameter probes agree with
+fresh ReverseDiff and ForwardDiff to <2.3e-15 relative error. An independent
+scalar distribution-object log joint agrees to <1.7e-15, including the following
+exact changes of variables.
+
+### Allocation-free parameterization, unchanged priors
+
+Scalar Normal sites are length-one Normal vectors, so Turing exposes
+`TrackedArray` rather than mixing scalar trackers into fused broadcasts.
+Counts used in arithmetic are `Float64`, and constant centering projection
+matrices replace scalar means in hot broadcasts. These are computational
+representations, not changed statistical assumptions.
+
+For a desired HalfNormal scale with standard deviation s, sample u from a
+standard Normal base, set sigma = s exp(u), and add
+
+```
+log(2) + u - exp(2u)/2 + u^2/2
+```
+
+to the log density. This cancels the Normal base and gives exactly
+`logpdf(HalfNormal(s), sigma) + log(sigma)`, including the Jacobian.
+For the desired Beta(a,b) conversion prior, sample x from a standard Normal
+base and let k = logistic(x). Add
+
+```
+-a*log1pexp(-x) - b*log1pexp(x) - logbeta(a,b) + x^2/2 + log(2pi)/2
+```
+
+to obtain exactly the Beta density plus its logit Jacobian. This is **not** a
+logistic-Normal replacement prior. The Binomial likelihood is evaluated directly
+from logits with `log1pexp`, remaining finite even when floating-point logistic
+rounds to zero or one. No parameter-dependent clamp or guard is taped.
+
+### New teams: explicitly approved prior-predictive extension
+
+Strict fitted-team refusal initially blocked six canonical fixtures: Arbroath
+and Inverness in Fold 1, and East Kilbride in Fold 21. The complete audit is
+`results/preflight_unseen_team_refusals.csv`. The user explicitly approved
+adding teams from the upcoming fixture identities to the hierarchical latent
+vocabulary, without reading outcomes or adding observations. New teams receive
+sampled attack/defence effects, and sampled drawing/conceding effects in m02;
+they are **not** assigned deterministic league-mean rates. Unexpected teams not
+declared by that slate still refuse by fixture ID. All four arms use this same
+policy; their component-label contrast therefore retains an identical spine.
+
+Fold 1 consequently has 25 teams (23 observed, two prior-only), 39 fitted
+referees, 720 training rows and 20 held-out fixtures. Parameter counts are
+97/97/149/98. Mutating supplied held-out scores leaves the declaration unchanged.
+Perturbing 759 strictly future component/referee rows changes neither fitted
+features nor the historical prior anchor. Missing/unseen referees receive
+exactly zero effect; the new-team extension does not alter that rule.
+
+Extraction was exercised with two synthetic parameter draws and independently
+summed component rates. It matches the native Poisson kernel without renormalizing
+its finite-grid tail. These synthetic draws can have large tail mass and are
+**not** posterior samples, smoke convergence evidence or benchmark results.
+The subsequent real Fold 1 smoke passed those MCMC convergence and exact
+fit/portfolio persistence gates for all four models (64/64; zero divergences;
+maximum R-hat 1.0051; minimum ESS 1,479). Production comparisons remain a
+separate gate. Full smoke diagnostics and immutable run addresses are in
+`results/smoke_fold1_2026-09-09.md`.

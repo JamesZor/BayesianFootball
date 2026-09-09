@@ -1,0 +1,11 @@
+left_name,left_run_id,right_name,right_run_id,left_fixtures,right_fixtures,intersection_fixtures,left_only_fixtures,right_only_fixtures
+m00_baseline,013af743-853d-481a-abc7-03a233fc8420,m00_poisson_control,d63f8877-b825-40ae-9ae5-d829e8b8a7f7,710,749,710,0,39
+m00_baseline,013af743-853d-481a-abc7-03a233fc8420,m05_joint_production_wealth,5eff755c-3591-48d1-a2cc-5fc2744ddf88,710,710,710,0,0
+m00_baseline,013af743-853d-481a-abc7-03a233fc8420,m05_production_wealth,16f9e83d-4865-4298-9b4e-ae33f9852f0d,710,710,710,0,0
+m00_baseline,013af743-853d-481a-abc7-03a233fc8420,m08_joint_composite,61fc5d87-1bd6-46d1-bb2b-c2aaad39e348,710,710,710,0,0
+m05_joint_production_wealth,5eff755c-3591-48d1-a2cc-5fc2744ddf88,m00_poisson_control,d63f8877-b825-40ae-9ae5-d829e8b8a7f7,710,749,710,0,39
+m05_joint_production_wealth,5eff755c-3591-48d1-a2cc-5fc2744ddf88,m08_joint_composite,61fc5d87-1bd6-46d1-bb2b-c2aaad39e348,710,710,710,0,0
+m05_production_wealth,16f9e83d-4865-4298-9b4e-ae33f9852f0d,m00_poisson_control,d63f8877-b825-40ae-9ae5-d829e8b8a7f7,710,749,710,0,39
+m05_production_wealth,16f9e83d-4865-4298-9b4e-ae33f9852f0d,m05_joint_production_wealth,5eff755c-3591-48d1-a2cc-5fc2744ddf88,710,710,710,0,0
+m05_production_wealth,16f9e83d-4865-4298-9b4e-ae33f9852f0d,m08_joint_composite,61fc5d87-1bd6-46d1-bb2b-c2aaad39e348,710,710,710,0,0
+m08_joint_composite,61fc5d87-1bd6-46d1-bb2b-c2aaad39e348,m00_poisson_control,d63f8877-b825-40ae-9ae5-d829e8b8a7f7,710,749,710,0,39

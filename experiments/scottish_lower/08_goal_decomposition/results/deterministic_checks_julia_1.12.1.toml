@@ -1,0 +1,108 @@
+incident_sha = "7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951"
+julia_version = "1.12.1"
+mcmc_executed = false
+
+[models.m00_recombined_control]
+compiled_forward = 3.7799234278580724e-16
+compiled_fresh = 0.0
+duplicate_instructions = 232
+future_rows_perturbed = 759
+gradient_allocations = 0
+gradient_milliseconds = 0.20822000000000002
+gradient_probes = 40
+independent_logjoint_relative_error = 1.2942872244332656e-15
+instructions = 232
+max_perturbed_forward = 2.097876831695062e-15
+max_perturbed_fresh = 0.0
+parameters = 97
+prior_only_teams = ["arbroath", "inverness-caledonian-thistle"]
+
+    [models.m00_recombined_control.extraction]
+    fixtures = 20
+    grid_allocations = 0
+    max_grid_error = 8.326672684688674e-17
+    max_rate_error = 1.3322676295501878e-15
+    max_tail_mass = 0.3644686970795157
+    missing_referee_zero = true
+    synthetic_draws = 2
+    unseen_team_refused = true
+
+[models.m01_decomposed_baseline]
+compiled_forward = 7.018745995922215e-16
+compiled_fresh = 0.0
+duplicate_instructions = 232
+future_rows_perturbed = 759
+gradient_allocations = 0
+gradient_milliseconds = 0.208
+gradient_probes = 40
+independent_logjoint_relative_error = 1.699949442703858e-15
+instructions = 232
+max_perturbed_forward = 2.267854403968146e-15
+max_perturbed_fresh = 0.0
+parameters = 97
+prior_only_teams = ["arbroath", "inverness-caledonian-thistle"]
+
+    [models.m01_decomposed_baseline.extraction]
+    fixtures = 20
+    grid_allocations = 0
+    max_grid_error = 8.326672684688674e-17
+    max_rate_error = 1.3322676295501878e-15
+    max_tail_mass = 0.3644686970795157
+    missing_referee_zero = true
+    synthetic_draws = 2
+    unseen_team_refused = true
+
+[models.m02_decomposed_team_penalties]
+compiled_forward = 7.266577805266781e-16
+compiled_fresh = 0.0
+duplicate_instructions = 307
+future_rows_perturbed = 759
+gradient_allocations = 0
+gradient_milliseconds = 0.21899
+gradient_probes = 40
+independent_logjoint_relative_error = 9.88161122525221e-16
+instructions = 307
+max_perturbed_forward = 2.1127128581799266e-15
+max_perturbed_fresh = 0.0
+parameters = 149
+prior_only_teams = ["arbroath", "inverness-caledonian-thistle"]
+
+    [models.m02_decomposed_team_penalties.extraction]
+    fixtures = 20
+    grid_allocations = 0
+    max_grid_error = 9.71445146547012e-17
+    max_rate_error = 1.3322676295501878e-15
+    max_tail_mass = 0.364649035975787
+    missing_referee_zero = true
+    synthetic_draws = 2
+    unseen_team_refused = true
+
+[models.m03_decomposed_pressure_own_goals]
+compiled_forward = 1.9965483089425045e-16
+compiled_fresh = 0.0
+duplicate_instructions = 244
+future_rows_perturbed = 759
+gradient_allocations = 0
+gradient_milliseconds = 0.21678999999999998
+gradient_probes = 40
+independent_logjoint_relative_error = 1.6876188100856977e-15
+instructions = 244
+max_perturbed_forward = 2.2031068071207778e-15
+max_perturbed_fresh = 0.0
+parameters = 98
+prior_only_teams = ["arbroath", "inverness-caledonian-thistle"]
+
+    [models.m03_decomposed_pressure_own_goals.extraction]
+    fixtures = 20
+    grid_allocations = 0
+    max_grid_error = 8.326672684688674e-17
+    max_rate_error = 1.3322676295501878e-15
+    max_tail_mass = 0.36356937504855724
+    missing_referee_zero = true
+    synthetic_draws = 2
+    unseen_team_refused = true
+
+[source_hashes]
+"l08_decomposed_models.jl" = "e32e741bb7dcf710bd36d430edc2300cc4967ac4eaac536ee1372e81423f950f"
+"l08_model_checks.jl" = "67167f2c56233e67ab27eb415df2fc3ba3817ea328ba10e5299fe094ee7b4e90"
+"test08_model_contract.jl" = "96d981c582ab74dfee89f732a4155f4ff6ddb525816283ec252d56fe0b114ea6"
