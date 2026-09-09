@@ -1,0 +1,3 @@
+7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951
+extraction_utc=2026-09-09T03:43:14.628
+format=GoalComponentRegistry/v1
