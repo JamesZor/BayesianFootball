@@ -25,6 +25,7 @@ MatchDay code remain unchanged.
   against the frozen registry, without MCMC.
 - `l08_workflow.jl`: experiment registration, persistence and orchestration helpers.
 - `r08_smoke.jl`: strict single-fold promotion ladder.
+- `r08_sampling_budget_benchmark.jl`: matched Fold 1 NUTS budget/target-acceptance benchmark (TODO 001).
 - `r08_production_grid.jl`: prepare-only checks and remote walk-forward queue.
 - `r08_portfolio.jl`: paired exchange backtests, not reused bookmaker artifacts.
 
@@ -105,6 +106,24 @@ adds no fitted rows, and samples attack/defence uncertainty (also penalty effect
 in m02), rather than plugging in league-average rates. Unexpected, undeclared
 teams still refuse by fixture ID. Missing/unseen referees retain exactly zero
 effect, not a fitted UNKNOWN group.
+
+## Fold 1 sampling-budget benchmark (TODO 001)
+
+`r08_sampling_budget_benchmark.jl` ran on mcmc-beast (Julia 1.12.6, 16 pinned threads)
+on 2026-09-10. It compared A (4 × 1,000/1,000, δ 0.95, the production sampler), B
+(500/500, δ 0.95) and C (500/500, δ 0.90) on m00 and m01, with four independent 4-chain
+fits per cell (96 chains). Measured values, per-fit gates and raw-artefact paths are in
+[`results/sampling_budget_fold1_2026-09-10.md`](results/sampling_budget_fold1_2026-09-10.md).
+Headline results:
+
+- B costs 0.59–0.61× A's core time, not 0.5×. ESS/draw is unchanged or lower, so min
+  ESS per wall-second is highest under A in both arms.
+- Every Fold 1 fit clears ESS ≥ 400. Scaled by the worst-fold/fold-1 ratio of the 40
+  m00 grid checkpoints (0.34), B and C project to about 190–340 at the worst fold.
+- One divergence each occurred under A (m00) and C (m00), so the zero-divergence gate
+  fails the control itself on 1 of 4 fits. Tree depth never exceeded 7 (cap 10).
+- Recommendation: keep A. The larger lever is runtime throughput (TODO 003): chains in
+  the lightly loaded queue tail ran up to 2× faster than chains under full load.
 
 ## Remote execution
 

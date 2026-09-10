@@ -1,0 +1,31 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 66.9 hours)...
+
+============================================================================================================
+ EXPERIMENT 08 · FOLD 1 NUTS SAMPLING-BUDGET BENCHMARK (TODO 001)
+============================================================================================================
+  mode      : PREFLIGHT ONLY
+  host      : mcmc-beast · Julia 1.12.6 · 16 default + 1 interactive threads · BLAS 1
+  models    : m00_recombined_control, m01_decomposed_baseline
+  config A  : 4 chains × 1000 warmup × 1000 retained · δ = 0.95 · max_depth 10
+  config B  : 4 chains × 500 warmup × 500 retained · δ = 0.95 · max_depth 10
+  config C  : 4 chains × 500 warmup × 500 retained · δ = 0.90 · max_depth 10
+  replicates: 4 independent 4-chain fits per cell
+  metric    : Turing.Inference.NUTS{ADTypes.AutoForwardDiff{nothing, Nothing}, AdvancedHMC.DiagEuclideanMetric}
+  snapshot  : 8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567
+  incidents : 7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951
+  git       : af2c65ea0b32d098cd2fd13526f80ca512261c20
+  output    : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/preflight_20260910
+  m00_recombined_control             training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  m01_decomposed_baseline            training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  manifest  : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/preflight_20260910/manifest_sampling_budget_preflight_d112f34edd9166ed.toml
+
+PREFLIGHT ONLY passed.  Set L08_RUN_BENCH=true only on an idle mcmc-beast.
+
+============================================================================================================
+ PRODUCTION GRID m00 · CONFIG A · 40 FOLD CHECKPOINTS
+============================================================================================================
+  fold 1 min ESS 2003 · worst fold 6 min ESS 680 (sigma_regular_raw[1]) · ratio 0.339
+  max R-hat 1.0101 (fold 21) · divergences 1 (folds 3) · max depth 8 · capped 0 · mean leapfrog 25.4–34.1
+
+Outputs in /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/preflight_20260910
+Finished: 2026-09-10T10:57:47.764

@@ -1,0 +1,172 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 66.9 hours)...
+
+============================================================================================================
+ EXPERIMENT 08 · FOLD 1 NUTS SAMPLING-BUDGET BENCHMARK (TODO 001)
+============================================================================================================
+  mode      : SAMPLING AUTHORISED
+  host      : mcmc-beast · Julia 1.12.6 · 16 default + 1 interactive threads · BLAS 1
+  models    : m00_recombined_control, m01_decomposed_baseline
+  config A  : 4 chains × 1000 warmup × 1000 retained · δ = 0.95 · max_depth 10
+  config B  : 4 chains × 500 warmup × 500 retained · δ = 0.95 · max_depth 10
+  config C  : 4 chains × 500 warmup × 500 retained · δ = 0.90 · max_depth 10
+  replicates: 4 independent 4-chain fits per cell
+  metric    : AdvancedHMC.DiagEuclideanMetric
+  snapshot  : 8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567
+  incidents : 7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951
+  git       : af2c65ea0b32d098cd2fd13526f80ca512261c20
+  output    : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/abc_20260910
+  m00_recombined_control             training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  m01_decomposed_baseline            training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  manifest  : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/abc_20260910/manifest_sampling_budget_authorised_0904bb15e311a0bd.toml
+  warm-up m00_recombined_control              70.7 s · 97 parameters (contract 97)
+  warm-up m01_decomposed_baseline             40.7 s · 97 parameters (contract 97)
+
+------------------------------------------------------------------------------------------------------------
+ QUEUE · 96 chains · 16 slots · started 2026-09-10T11:00:42.500
+------------------------------------------------------------------------------------------------------------
+  [11:19:31]   1/96  m01_decomposed_baseline            C   rep 1 chain 1   1128.6 s  thread  8  ok
+  [11:20:52]   2/96  m01_decomposed_baseline            C   rep 1 chain 3   1209.9 s  thread 11  ok
+  [11:21:12]   3/96  m01_decomposed_baseline            B   rep 1 chain 2   1229.6 s  thread 13  ok
+  [11:21:13]   4/96  m01_decomposed_baseline            C   rep 1 chain 2   1231.2 s  thread 16  ok
+  [11:22:22]   5/96  m00_recombined_control             C   rep 1 chain 2   1300.3 s  thread 15  ok
+  [11:23:26]   6/96  m01_decomposed_baseline            B   rep 1 chain 1   1364.0 s  thread  5  ok
+  [11:23:50]   7/96  m00_recombined_control             C   rep 1 chain 1   1388.1 s  thread  4  ok
+  [11:25:36]   8/96  m01_decomposed_baseline            B   rep 1 chain 3   1493.5 s  thread 12  ok
+  [11:26:56]   9/96  m00_recombined_control             B   rep 1 chain 2   1574.3 s  thread 14  ok
+  [11:30:02]  10/96  m00_recombined_control             B   rep 1 chain 1   1760.3 s  thread  2  ok
+  [11:30:21]  11/96  m00_recombined_control             B   rep 1 chain 3   1778.4 s  thread 17  ok
+  [11:34:34]  12/96  m01_decomposed_baseline            A   rep 1 chain 1   2031.4 s  thread  3  ok
+  [11:39:49]  13/96  m00_recombined_control             C   rep 1 chain 3   1217.7 s  thread  8  ok
+  [11:42:16]  14/96  m00_recombined_control             C   rep 1 chain 4   1193.1 s  thread 15  ok
+  [11:44:05]  15/96  m01_decomposed_baseline            A   rep 1 chain 2   2603.1 s  thread  9  ok
+  [11:44:49]  16/96  m01_decomposed_baseline            B   rep 1 chain 4   1415.9 s  thread 16  ok
+  [11:45:40]  17/96  m01_decomposed_baseline            C   rep 1 chain 4   1309.8 s  thread  4  ok
+  [11:47:40]  18/96  m00_recombined_control             A   rep 1 chain 2   2817.7 s  thread 10  ok
+  [11:48:35]  19/96  m00_recombined_control             A   rep 1 chain 3   2873.3 s  thread  6  ok
+  [11:49:17]  20/96  m00_recombined_control             B   rep 1 chain 4   1550.4 s  thread  5  ok
+  [11:50:04]  21/96  m00_recombined_control             A   rep 1 chain 1   2962.0 s  thread  7  ok
+  [11:50:12]  22/96  m01_decomposed_baseline            C   rep 2 chain 1   1191.0 s  thread 17  ok
+  [11:51:01]  23/96  m01_decomposed_baseline            B   rep 2 chain 1   1259.0 s  thread  2  ok
+  [11:56:16]  24/96  m01_decomposed_baseline            A   rep 1 chain 3   2123.8 s  thread 11  ok
+  [11:59:04]  25/96  m01_decomposed_baseline            A   rep 1 chain 4   2008.0 s  thread 12  ok
+  [11:59:13]  26/96  m00_recombined_control             C   rep 2 chain 1   1479.6 s  thread  3  ok
+  [12:01:28]  27/96  m01_decomposed_baseline            A   rep 2 chain 1   2071.1 s  thread 14  ok
+  [12:04:44]  28/96  m00_recombined_control             A   rep 1 chain 4   2612.6 s  thread 13  ok
+  [12:06:16]  29/96  m01_decomposed_baseline            C   rep 2 chain 2   1286.6 s  thread 16  ok
+  [12:08:31]  30/96  m00_recombined_control             B   rep 2 chain 1   1574.9 s  thread 15  ok
+  [12:09:09]  31/96  m01_decomposed_baseline            B   rep 2 chain 2   1233.0 s  thread  6  ok
+  [12:11:39]  32/96  m00_recombined_control             C   rep 2 chain 3   1294.8 s  thread  7  ok
+  [12:13:16]  33/96  m01_decomposed_baseline            C   rep 2 chain 3   1384.5 s  thread 17  ok
+  [12:15:26]  34/96  m00_recombined_control             C   rep 2 chain 2   1569.2 s  thread  5  ok
+  [12:17:55]  35/96  m00_recombined_control             B   rep 2 chain 2   1814.7 s  thread 10  ok
+  [12:18:23]  36/96  m01_decomposed_baseline            B   rep 2 chain 3   1149.5 s  thread  3  ok
+  [12:22:56]  37/96  m00_recombined_control             A   rep 2 chain 1   2586.4 s  thread  8  ok
+  [12:24:36]  38/96  m00_recombined_control             B   rep 2 chain 3   1700.5 s  thread 11  ok
+  [12:25:05]  39/96  m01_decomposed_baseline            C   rep 2 chain 4   1128.7 s  thread 16  ok
+  [12:27:02]  40/96  m01_decomposed_baseline            A   rep 2 chain 2   2576.7 s  thread  9  ok
+  [12:30:20]  41/96  m00_recombined_control             B   rep 2 chain 4   1732.1 s  thread 14  ok
+  [12:31:34]  42/96  m01_decomposed_baseline            B   rep 2 chain 4   1345.9 s  thread  6  ok
+  [12:32:13]  43/96  m00_recombined_control             C   rep 2 chain 4   1234.1 s  thread  7  ok
+  [12:32:57]  44/96  m01_decomposed_baseline            A   rep 2 chain 3   2515.6 s  thread  2  ok
+  [12:33:54]  45/96  m00_recombined_control             C   rep 3 chain 1   1237.9 s  thread 17  ok
+  [12:35:40]  46/96  m00_recombined_control             A   rep 2 chain 2   2999.6 s  thread  4  ok
+  [12:39:03]  47/96  m01_decomposed_baseline            C   rep 3 chain 1   1240.3 s  thread  3  ok
+  [12:42:39]  48/96  m01_decomposed_baseline            B   rep 3 chain 1   1484.6 s  thread 10  ok
+  [12:47:03]  49/96  m00_recombined_control             A   rep 2 chain 3   2879.9 s  thread 12  ok
+  [12:49:42]  50/96  m00_recombined_control             B   rep 3 chain 1   1606.6 s  thread  8  ok
+  [12:50:34]  51/96  m00_recombined_control             C   rep 3 chain 2   1529.2 s  thread 16  ok
+  [12:51:36]  52/96  m01_decomposed_baseline            A   rep 2 chain 4   2585.9 s  thread 15  ok
+  [12:53:04]  53/96  m00_recombined_control             A   rep 2 chain 4   2899.1 s  thread 13  ok
+  [12:54:23]  54/96  m01_decomposed_baseline            C   rep 3 chain 2   1330.2 s  thread  7  ok
+  [12:56:44]  55/96  m01_decomposed_baseline            C   rep 3 chain 3   1264.4 s  thread  4  ok
+  [12:56:51]  56/96  m01_decomposed_baseline            B   rep 3 chain 2   1433.5 s  thread  2  ok
+  [13:01:07]  57/96  m00_recombined_control             B   rep 3 chain 2   1772.2 s  thread  6  ok
+  [13:01:57]  58/96  m00_recombined_control             A   rep 3 chain 1   2791.3 s  thread  5  ok
+  [13:02:07]  59/96  m01_decomposed_baseline            A   rep 3 chain 2   1907.7 s  thread 14  ok
+  [13:04:45]  60/96  m01_decomposed_baseline            A   rep 3 chain 1   2408.8 s  thread 11  ok
+  [13:05:20]  61/96  m00_recombined_control             B   rep 3 chain 3   1577.4 s  thread  3  ok
+  [13:08:33]  62/96  m00_recombined_control             C   rep 3 chain 3   1554.1 s  thread 10  ok
+  [13:09:55]  63/96  m01_decomposed_baseline            A   rep 3 chain 3   2160.7 s  thread 17  ok
+  [13:11:16]  64/96  m01_decomposed_baseline            C   rep 3 chain 4   1179.2 s  thread 15  ok
+  [13:15:21]  65/96  m01_decomposed_baseline            B   rep 3 chain 4   1257.8 s  thread  7  ok
+  [13:15:31]  66/96  m01_decomposed_baseline            B   rep 3 chain 3   1549.3 s  thread  8  ok
+  [13:16:27]  67/96  m00_recombined_control             A   rep 3 chain 2   2965.1 s  thread  9  ok
+  [13:18:06]  68/96  m00_recombined_control             C   rep 3 chain 4   1281.9 s  thread  4  ok
+  [13:19:48]  69/96  m00_recombined_control             B   rep 3 chain 4   1604.2 s  thread 13  ok
+  [13:24:38]  70/96  m01_decomposed_baseline            B   rep 4 chain 1   1193.0 s  thread 11  ok
+  [13:25:06]  71/96  m00_recombined_control             C   rep 4 chain 1   1439.9 s  thread  6  ok
+  [13:25:10]  72/96  m01_decomposed_baseline            C   rep 4 chain 1   1189.2 s  thread  3  ok
+  [13:27:39]  73/96  m01_decomposed_baseline            A   rep 3 chain 4   2224.9 s  thread 16  ok
+  [13:32:20]  74/96  m00_recombined_control             A   rep 3 chain 3   2716.4 s  thread 12  ok
+  [13:35:37]  75/96  m00_recombined_control             B   rep 4 chain 1   1623.9 s  thread 10  ok
+  [13:36:20]  76/96  m00_recombined_control             C   rep 4 chain 2   1585.3 s  thread 17  ok
+  [13:36:39]  77/96  m01_decomposed_baseline            B   rep 4 chain 2   1523.8 s  thread 15  ok
+  [13:41:08]  78/96  m01_decomposed_baseline            C   rep 4 chain 2   1381.9 s  thread  4  ok
+  [13:42:29]  79/96  m00_recombined_control             B   rep 4 chain 2   1627.9 s  thread  7  ok
+  [13:42:50]  80/96  m00_recombined_control             A   rep 3 chain 4   2759.7 s  thread  2  ok
+  [13:43:51]  81/96  m01_decomposed_baseline            B   rep 4 chain 3   1442.9 s  thread 13  ok
+  [13:44:09]  82/96  m01_decomposed_baseline            A   rep 4 chain 1   2532.1 s  thread  5  ok
+  [13:46:58]  83/96  m00_recombined_control             A   rep 4 chain 1   2690.9 s  thread 14  ok
+  [13:49:57]  84/96  m01_decomposed_baseline            C   rep 4 chain 3   1487.5 s  thread  3  ok
+  [13:50:49]  85/96  m00_recombined_control             B   rep 4 chain 3   1390.3 s  thread 16  ok
+  [13:52:40]  86/96  m00_recombined_control             C   rep 4 chain 3   1219.7 s  thread 12  ok
+  [13:55:49]  87/96  m01_decomposed_baseline            A   rep 4 chain 2   2417.2 s  thread  8  ok
+  [13:56:07]  88/96  m00_recombined_control             B   rep 4 chain 4   1167.7 s  thread 15  ok
+  [13:57:19]  89/96  m01_decomposed_baseline            C   rep 4 chain 4    868.9 s  thread  2  ok
+  [13:57:21]  90/96  m00_recombined_control             A   rep 4 chain 2   2454.0 s  thread  9  ok
+  [13:57:22]  91/96  m00_recombined_control             C   rep 4 chain 4    973.8 s  thread  4  ok
+  [13:57:34]  92/96  m00_recombined_control             A   rep 4 chain 3   1976.1 s  thread 11  ok
+  [13:57:44]  93/96  m01_decomposed_baseline            B   rep 4 chain 4    914.7 s  thread  7  ok
+  [13:57:59]  94/96  m01_decomposed_baseline            A   rep 4 chain 3   1972.5 s  thread  6  ok
+  [13:59:08]  95/96  m01_decomposed_baseline            A   rep 4 chain 4   1411.0 s  thread 10  ok
+  [13:59:14]  96/96  m00_recombined_control             A   rep 4 chain 4   1374.5 s  thread 17  ok
+  queue wall 10712.2 s (178.5 min)
+
+============================================================================================================
+ PER-FIT DIAGNOSTICS
+============================================================================================================
+ model                      cfg rep   wall s   core s   R-hat    bulk    tail    ESS/s   div   cap   BFMI  load gates
+ m00_recombined_control     A     1   2962.0  11265.7  1.0053    1710    2015    0.577     0     0  0.739  16.0 STRICT
+ m00_recombined_control     A     2   2999.6  11364.9  1.0066    1622    2007    0.541     0     0  0.835  16.0 STRICT
+ m00_recombined_control     A     3   2965.1  11232.5  1.0073    1761    2160    0.594     1     0  0.753  16.0 FAIL
+ m00_recombined_control     A     4   2690.9   8495.5  1.0057    2082    2137    0.774     0     0  0.747  14.2 STRICT
+ m01_decomposed_baseline    A     1   2603.1   8766.2  1.0063    1984    1881    0.723     0     0  0.749  16.0 STRICT
+ m01_decomposed_baseline    A     2   2585.9   9749.2  1.0062    2041    2253    0.789     0     0  0.759  16.0 STRICT
+ m01_decomposed_baseline    A     3   2408.8   8702.1  1.0044    1858    1469    0.610     0     0  0.755  16.0 STRICT
+ m01_decomposed_baseline    A     4   2532.1   8332.8  1.0068    1598    2060    0.631     0     0  0.726  14.3 STRICT
+ m00_recombined_control     B     1   1778.4   6663.5  1.0087     941     890    0.500     0     0  0.789  16.0 STRICT
+ m00_recombined_control     B     2   1814.7   6822.1  1.0085     841    1027    0.464     0     0  0.687  16.0 STRICT
+ m00_recombined_control     B     3   1772.2   6560.3  1.0077    1000     889    0.502     0     0  0.786  16.0 STRICT
+ m00_recombined_control     B     4   1627.9   5809.8  1.0129    1005     849    0.522     0     0  0.721  15.2 STRICT
+ m01_decomposed_baseline    B     1   1493.5   5503.0  1.0082     752     583    0.390     0     0  0.783  16.0 STRICT
+ m01_decomposed_baseline    B     2   1345.9   4987.4  1.0097     737     615    0.457     0     0  0.667  16.0 STRICT
+ m01_decomposed_baseline    B     3   1549.3   5725.2  1.0102     789     935    0.509     0     0  0.758  16.0 STRICT
+ m01_decomposed_baseline    B     4   1523.8   5074.4  1.0080     986    1084    0.647     0     0  0.733  15.0 STRICT
+ m00_recombined_control     C     1   1388.1   5099.2  1.0075     721     557    0.401     0     0  0.748  16.0 STRICT
+ m00_recombined_control     C     2   1569.2   5577.8  1.0099     869     897    0.554     0     0  0.836  16.0 STRICT
+ m00_recombined_control     C     3   1554.1   5603.1  1.0078     757     924    0.487     0     0  0.732  16.0 STRICT
+ m00_recombined_control     C     4   1585.3   5218.6  1.0097     758    1030    0.478     1     0  0.781  14.8 FAIL
+ m01_decomposed_baseline    C     1   1309.8   4879.5  1.0123    1128    1014    0.774     0     0  0.814  16.0 STRICT
+ m01_decomposed_baseline    C     2   1384.5   4990.8  1.0078     859     665    0.480     0     0  0.824  16.0 STRICT
+ m01_decomposed_baseline    C     3   1330.2   5014.0  1.0092     955     764    0.574     0     0  0.771  16.0 STRICT
+ m01_decomposed_baseline    C     4   1487.5   4927.5  1.0107     893    1113    0.600     0     0  0.778  14.8 STRICT
+
+============================================================================================================
+ CELL SUMMARY (medians over replicates; ratios against A of the same model)
+============================================================================================================
+ model                      cfg strict   prod   wall s  core×A   R-hat  minESS    ESS/s ESS/s×A   depth   div
+ m00_recombined_control     A      3/4    3/4   2963.6   1.000  1.0073    1622    0.586   1.000    4.85     1
+ m01_decomposed_baseline    A      4/4    4/4   2559.0   1.000  1.0068    1469    0.677   1.000    4.49     0
+ m00_recombined_control     B      4/4    4/4   1775.3   0.588  1.0129     841    0.501   0.856    4.90     0
+ m01_decomposed_baseline    B      4/4    4/4   1508.7   0.606  1.0102     583    0.483   0.714    4.26     0
+ m00_recombined_control     C      3/4    3/4   1561.7   0.480  1.0099     557    0.483   0.824    4.36     1
+ m01_decomposed_baseline    C      4/4    4/4   1357.3   0.568  1.0123     665    0.587   0.868    4.06     0
+
+============================================================================================================
+ PRODUCTION GRID m00 · CONFIG A · 40 FOLD CHECKPOINTS
+============================================================================================================
+  fold 1 min ESS 2003 · worst fold 6 min ESS 680 (sigma_regular_raw[1]) · ratio 0.339
+  max R-hat 1.0101 (fold 21) · divergences 1 (folds 3) · max depth 8 · capped 0 · mean leapfrog 25.4–34.1
+
+Outputs in /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/abc_20260910
+Finished: 2026-09-10T13:59:35.779
