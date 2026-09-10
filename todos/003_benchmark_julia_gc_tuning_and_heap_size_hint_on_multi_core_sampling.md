@@ -109,6 +109,11 @@ Because NUTS generates high volumes of short-lived trajectory tree objects (`Adv
   `prodfix_default_20260910` on the fixed production path with no override: 16-chain
   config-B batch in 24.8 s (1,654 s before), 22.1 GiB allocated, **16/16 chains
   bit-identical to GC-E**.
+- [2026-09-10 @claude] The fix is committed as `37532512` and pushed. mcmc-beast was
+  cleaned and fast-forwarded to `4231f9bb`. The TODO 002 production grid resumed on the
+  fixed sampler at 19:10 CEST. m01 runs with sampling threads at about 79% CPU and the
+  GC and other threads at 13% of process CPU, against 48% and 38% before the fix. Grid
+  progress is 2.05 s/it, against about 3.5 min/it on 09-09.
 
 ## Verification & Findings
 
