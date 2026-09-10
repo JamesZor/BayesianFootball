@@ -10,9 +10,10 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | ID | Title | Status | Priority | Assignee | Last Updated |
 |---|---|---|---|---|---|
 | [001](001_sampling_budget_benchmark.md) | Benchmark MCMC Sampling Budget and Target Acceptance on Fold 1 | COMPLETED | P1 | claude | 2026-09-10 |
-| [002](002_complete_experiment_08_goal_decomposition_production_grid.md) | Complete Experiment 08 Goal Decomposition Production Grid | ACTIVE | P1 | unassigned | 2026-09-10 |
+| [002](002_complete_experiment_08_goal_decomposition_production_grid.md) | Complete Experiment 08 Goal Decomposition Production Grid | IN_PROGRESS | P1 | claude | 2026-09-10 |
 | [003](003_benchmark_julia_gc_tuning_and_heap_size_hint_on_multi_core_sampling.md) | Benchmark Julia GC Tuning and Heap Size Hint on Multi-Core Sampling | COMPLETED | P1 | claude | 2026-09-10 |
 | [004](004_scope_turing_jl_v0_46_and_dynamicppl_v0_42_upgrade.md) | Scope Turing.jl v0.46 and DynamicPPL v0.42 Upgrade | ACTIVE | P1 | claude | 2026-09-10 |
+| [005](005_rerun_scottish_lower_experiment_01_poisson_grid_with_reversediff_and_verify_post.md) | Rerun Scottish Lower Experiment 01 Poisson grid with ReverseDiff and verify posterior parity | IN_PROGRESS | P1 | pi | 2026-09-10 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
