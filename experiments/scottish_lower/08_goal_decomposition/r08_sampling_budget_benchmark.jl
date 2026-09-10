@@ -34,6 +34,13 @@
 #   depth-capped rate < 5%. The committed production gate (ESS ≥ 200, otherwise
 #   identical) is reported alongside; divergence counts are always explicit.
 #
+# GC RUNTIME TELEMETRY (TODO 003). The queue is bracketed by `Base.gc_num()`, a
+# per-OS-thread CPU split (Julia mutator threads vs every other thread, which during
+# sampling is the GC) read from /proc/self/task, and a 2-second RSS sampler. Julia
+# runtime flags (`--gcthreads`, `--heap-size-hint`) are set on the command line and
+# read back from the runtime, never assumed. `L08_BENCH_REFERENCE=<tag>` compares
+# every chain bit-for-bit against a previous run with the same (rep, chain) seeds.
+#
 # WHAT THIS IS NOT. It writes no rows to any database and persists no Fit. Fold 1
 # is one of 40 folds; §7 audits the existing production-grid checkpoints so the
 # fold-1 ESS margin can be compared with the worst fold. Sampling is disabled
@@ -84,6 +91,8 @@ const R08B_SEED_BASE = 20_260_910
 const R08B_TAG = get(ENV, "L08_BENCH_TAG", Dates.format(Dates.now(), "yyyymmdd_HHMMSS"))
 const R08B_OUT = joinpath(@__DIR__, "results", "sampling_budget_fold1", R08B_TAG)
 const R08B_GRID_CHECKPOINTS = joinpath(@__DIR__, "results", "m00_recombined_control", "checkpoints")
+const R08B_GRID_AUDIT = lowercase(get(ENV, "L08_BENCH_GRID_AUDIT", "true")) in ("1", "true", "yes")
+const R08B_REFERENCE = get(ENV, "L08_BENCH_REFERENCE", "")
 const R08B_SOURCE_FILES = [
     joinpath(@__DIR__, "l08_workflow.jl"),
     joinpath(@__DIR__, "l08_decomposed_models.jl"),
@@ -97,6 +106,9 @@ const R08B_CONFIGS = Dict(
     "B"  => (warmup =   500, retained =   500, delta = 0.95, max_depth = 10),
     "C"  => (warmup =   500, retained =   500, delta = 0.90, max_depth = 10),
     "D8" => (warmup =   500, retained =   500, delta = 0.95, max_depth =  8),
+    # Harness smoke test only (exercises every post-queue code path in minutes);
+    # never a candidate configuration and never reported as one.
+    "T"  => (warmup =    50, retained =    50, delta = 0.95, max_depth = 10),
 )
 const R08B_GATES = (max_rhat = 1.05, min_ess_strict = 400.0, min_ess_production = 200.0,
                     min_bfmi = 0.30, max_treedepth_rate = 0.05)
@@ -182,6 +194,10 @@ for name in R08B_CONFIG_NAMES
 end
 println("  replicates: ", R08B_REPS, " independent 4-chain fits per cell")
 println("  metric    : ", metric_type)
+println("  GC runtime: ", Threads.ngcthreads(), " GC threads · heap-size-hint ",
+        Base.JLOptions().heap_size_hint == 0 ? "default" :
+            @sprintf("%.1f GiB", Base.JLOptions().heap_size_hint / 2^30),
+        " · physical memory ", @sprintf("%.1f GiB", Sys.total_memory() / 2^30))
 println("  snapshot  : ", registry.snapshot_hash)
 println("  incidents : ", incident_snapshot_hash)
 println("  git       : ", git_commit)
@@ -212,6 +228,9 @@ manifest_path = l08_write_manifest!(registry;
         "interactive_threads" => Threads.nthreads(:interactive),
         "thread_pinning" => "pinthreads(:cores)",
         "metric" => metric_type,
+        "gc_threads" => Threads.ngcthreads(),
+        "heap_size_hint_bytes" => Int(Base.JLOptions().heap_size_hint),
+        "reference_tag" => R08B_REFERENCE,
         "initialisation" => string(L08_SAMPLER.initialisation),
         "incident_snapshot_hash" => incident_snapshot_hash,
         "configurations" => Dict(name => Dict(string(k) => v for (k, v) in pairs(R08B_CONFIGS[name]))
@@ -241,6 +260,78 @@ function r08b_internals(chain)
         mean_acceptance = ar === nothing ? NaN : mean(ar),
         n_divergent = div === nothing ? -1 : count(>(0), div),
     )
+end
+
+"OS thread id of the calling thread."
+r08b_gettid() = Int(ccall(:gettid, Cint, ()))
+
+"OS thread ids of every Julia mutator thread: each default-pool thread plus the main thread."
+function r08b_mutator_tids()
+    tids = zeros(Int, Threads.nthreads())
+    Threads.@threads :static for i in 1:Threads.nthreads()
+        tids[i] = r08b_gettid()
+    end
+    length(unique(tids)) == Threads.nthreads() || @warn "default-pool thread ids are not distinct: $tids"
+    return sort!(unique!(vcat(tids, getpid())))
+end
+
+"CPU seconds (user + system) consumed so far by every OS thread of this process."
+function r08b_thread_cpu()
+    ticks = ccall(:sysconf, Clong, (Cint,), 2)  # _SC_CLK_TCK
+    out = Dict{Int,Float64}()
+    for tid in readdir("/proc/self/task")
+        stat = try
+            read("/proc/self/task/$tid/stat", String)
+        catch
+            continue  # thread exited between readdir and read
+        end
+        fields = split(stat[findlast(')', stat) + 2:end])  # fields[k - 2] is stat field k
+        out[parse(Int, tid)] = (parse(Int, fields[12]) + parse(Int, fields[13])) / ticks
+    end
+    return out
+end
+
+"Current resident set size in bytes."
+function r08b_rss_bytes()
+    for line in eachline("/proc/self/status")
+        startswith(line, "VmRSS:") && return parse(Int, split(line)[2]) * 1024
+    end
+    return 0
+end
+
+"GC counters accumulated between two `Base.gc_num()` readings."
+function r08b_gc_delta(before, after)
+    d = Base.GC_Diff(after, before)
+    diff(f) = hasfield(typeof(after), f) ? getfield(after, f) - getfield(before, f) : missing
+    return (
+        gc_time_s = d.total_time / 1e9,
+        gc_pauses = d.pause,
+        gc_full_sweeps = d.full_sweep,
+        allocated_gib = d.allocd / 2^30,
+        time_to_safepoint_s = coalesce(diff(:total_time_to_safepoint), 0) / 1e9,
+        mark_time_s = coalesce(diff(:total_mark_time), 0) / 1e9,
+        sweep_time_s = coalesce(diff(:total_sweep_time), 0) / 1e9,
+        max_pause_ms_lifetime = hasfield(typeof(after), :max_pause) ? after.max_pause / 1e6 : NaN,
+    )
+end
+
+"Every chain of this run against the same (model, config, rep, chain) key of a reference run."
+function r08b_compare_reference(tasks, chains, ref_path)
+    reference = deserialize(ref_path)
+    n_compared = n_identical = 0
+    worst = 0.0
+    for (i, t) in enumerate(tasks)
+        key = (t.model, t.config, t.rep, t.chain)
+        (haskey(reference, key) && chains[i] !== nothing) || continue
+        a, b = Array(reference[key]), Array(chains[i])
+        n_compared += 1
+        same = size(a) == size(b) && isequal(a, b)
+        n_identical += same
+        if !same && size(a) == size(b)
+            worst = max(worst, maximum(abs.(a .- b)))
+        end
+    end
+    return (; n_compared, n_identical, max_abs_difference = worst)
 end
 
 "Mean number of chains running (self included) over each record's lifetime."
@@ -327,6 +418,17 @@ else
     close(queue)
     chains = Vector{Any}(nothing, length(tasks))
     records = Vector{Any}(nothing, length(tasks))
+    mutator_tids = r08b_mutator_tids()
+    rss_samples = Int[]
+    rss_running = Threads.Atomic{Bool}(true)
+    rss_task = Threads.@spawn :interactive begin
+        while rss_running[]
+            push!(rss_samples, r08b_rss_bytes())
+            sleep(2)
+        end
+    end
+    gc_before = Base.gc_num()
+    cpu_before = r08b_thread_cpu()
     origin = time()
     print_lock = ReentrantLock()
     done = Threads.Atomic{Int}(0)
@@ -357,11 +459,63 @@ else
         end
     end
     queue_wall = time() - origin
+    gc_after = Base.gc_num()
+    cpu_after = r08b_thread_cpu()
+    rss_running[] = false
+    wait(rss_task)
     @printf("  queue wall %.1f s (%.1f min)\n", queue_wall, queue_wall / 60)
 
     # Raw chains first: every derived number below can be recomputed from this file.
     raw_path = joinpath(R08B_OUT, "chains.jls")
     serialize(raw_path, Dict((t.model, t.config, t.rep, t.chain) => chains[i] for (i, t) in enumerate(tasks)))
+
+    try
+        cpu_delta = Dict(tid => cpu_after[tid] - get(cpu_before, tid, 0.0) for tid in keys(cpu_after))
+        mutator_cpu = sum(get(cpu_delta, tid, 0.0) for tid in mutator_tids)
+        other = [(tid, s) for (tid, s) in cpu_delta if !(tid in mutator_tids)]
+        other_cpu = sum(last, other; init = 0.0)
+        gc = r08b_gc_delta(gc_before, gc_after)
+        runtime_row = (
+            tag = R08B_TAG,
+            gc_threads = Threads.ngcthreads(),
+            heap_size_hint_gib = Base.JLOptions().heap_size_hint / 2^30,
+            queue_wall_s = queue_wall,
+            n_chains = length(tasks),
+            mutator_threads = length(mutator_tids),
+            mutator_cpu_s = mutator_cpu,
+            mutator_utilisation = mutator_cpu / (queue_wall * R08B_SLOTS),
+            other_threads_active = count(x -> last(x) > 1.0, other),
+            other_cpu_s = other_cpu,
+            other_cpu_share = other_cpu / (mutator_cpu + other_cpu),
+            gc.gc_time_s, gc_wall_share = gc.gc_time_s / queue_wall,
+            gc.gc_pauses, gc.gc_full_sweeps, gc.allocated_gib,
+            allocation_gib_per_s = gc.allocated_gib / queue_wall,
+            gc.time_to_safepoint_s, gc.mark_time_s, gc.sweep_time_s, gc.max_pause_ms_lifetime,
+            rss_peak_queue_gib = isempty(rss_samples) ? NaN : maximum(rss_samples) / 2^30,
+            rss_mean_queue_gib = isempty(rss_samples) ? NaN : mean(rss_samples) / 2^30,
+            maxrss_process_gib = Sys.maxrss() / 2^30,
+        )
+        CSV.write(joinpath(R08B_OUT, "gc_runtime.csv"), DataFrame([runtime_row]))
+        CSV.write(joinpath(R08B_OUT, "rss_samples.csv"),
+                  DataFrame(t_s = 2.0 .* (0:length(rss_samples) - 1), rss_bytes = rss_samples))
+        println("\n", "="^108)
+        println(" GC RUNTIME TELEMETRY (queue only)")
+        println("="^108)
+        for (k, v) in pairs(runtime_row)
+            println("  ", rpad(string(k), 24), v isa AbstractFloat ? @sprintf("%.4g", v) : v)
+        end
+    catch e
+        @error "GC runtime telemetry failed; raw chains are already saved" exception = (e, catch_backtrace())
+    end
+
+    if !isempty(R08B_REFERENCE)
+        ref_cmp = r08b_compare_reference(tasks, chains,
+            joinpath(@__DIR__, "results", "sampling_budget_fold1", R08B_REFERENCE, "chains.jls"))
+        @printf("  reference %s: %d/%d chains bit-identical (max |Δ| among others %.3g)\n",
+            R08B_REFERENCE, ref_cmp.n_identical, ref_cmp.n_compared, ref_cmp.max_abs_difference)
+        CSV.write(joinpath(R08B_OUT, "reference_comparison.csv"),
+                  DataFrame([(; reference = R08B_REFERENCE, ref_cmp...)]))
+    end
 
     chain_df = DataFrame(identity.(records))
     chain_df.mean_concurrency = r08b_mean_concurrency(chain_df.start_s, chain_df.stop_s)
@@ -445,7 +599,7 @@ end
 # ==============================================================================
 # Read-only. Fold 1 is not the hardest fold; this measures how far below fold 1 the
 # worst fold's ESS sits under A, which bounds what a fold-1 saving can promise.
-if isdir(R08B_GRID_CHECKPOINTS)
+if R08B_GRID_AUDIT && isdir(R08B_GRID_CHECKPOINTS)
     grid_chains = R08B_INF.load_checkpoints(R08B_GRID_CHECKPOINTS, L08_EXPECTED_FOLDS)
     grid_rows = NamedTuple[]
     for (fold, chain) in enumerate(grid_chains)
@@ -479,7 +633,7 @@ if isdir(R08B_GRID_CHECKPOINTS)
             sum(grid_df.n_depth_capped), minimum(grid_df.mean_leapfrog), maximum(grid_df.mean_leapfrog))
     end
 else
-    println("\n  no production-grid checkpoints at $R08B_GRID_CHECKPOINTS; §7 skipped")
+    println("\n  §7 skipped (L08_BENCH_GRID_AUDIT=false or no checkpoints at $R08B_GRID_CHECKPOINTS)")
 end
 
 # %%
