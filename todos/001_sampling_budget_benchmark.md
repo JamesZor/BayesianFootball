@@ -75,6 +75,12 @@ confound.
   chains, 178.5 min, no failures. Also audited the 40 m00 production-grid checkpoints
   read-only. Declined the `max_depth = 8` follow-up because depth never exceeded 7
   (grid: 8) against a cap of 10. Closed as COMPLETED.
+- [2026-09-10 @claude] **Caveat from TODO 003.** Every timing above ran on the
+  ForwardDiff path: `run_sampler`'s `adtype` keyword is ignored by Turing 0.41.4. The
+  ESS, divergence and worst-fold findings do not depend on the AD backend and stand.
+  The cost ratios (B 0.59–0.61× A, implied ~430–500 s fixed cost per chain) should be
+  re-measured once `run_sampler` is fixed. At the measured 65.6× speedup (a config-B
+  batch in 25 s), the draw budget is no longer the grid's bottleneck.
 
 ## Verification & Findings
 
@@ -132,6 +138,10 @@ ESS 2,003 and a worst fold of fold 6 at 680, **0.339×** fold 1, with one diverg
   not fold 1: projected worst-fold ESS about 510 at about 0.8× core time. This
   projection is untested.
 - The divergence tolerance is TODO 002's policy decision.
+
+Caveat (2026-09-10, TODO 003): all timings above were measured with the sampler
+unintentionally running ForwardDiff. The ESS-based findings stand; re-measure the cost
+ratios after the `run_sampler` AD fix.
 
 Boundaries: fold 1 only; two of the four arms (m00, m01); one host and runtime
 configuration. The worst-fold projections rest on one 40-fold m00 fit, and m01 borrows

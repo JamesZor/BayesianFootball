@@ -93,6 +93,7 @@ const R08B_OUT = joinpath(@__DIR__, "results", "sampling_budget_fold1", R08B_TAG
 const R08B_GRID_CHECKPOINTS = joinpath(@__DIR__, "results", "m00_recombined_control", "checkpoints")
 const R08B_GRID_AUDIT = lowercase(get(ENV, "L08_BENCH_GRID_AUDIT", "true")) in ("1", "true", "yes")
 const R08B_REFERENCE = get(ENV, "L08_BENCH_REFERENCE", "")
+const R08B_AD_FIX = lowercase(get(ENV, "L08_BENCH_AD_FIX", "false")) in ("1", "true", "yes")
 const R08B_SOURCE_FILES = [
     joinpath(@__DIR__, "l08_workflow.jl"),
     joinpath(@__DIR__, "l08_decomposed_models.jl"),
@@ -125,6 +126,28 @@ r08b_sampler(cfg) = QueuedNUTSConfig(
     max_depth = cfg.max_depth,
 )
 const R08B_SAMPLERS = Dict(name => r08b_sampler(R08B_CONFIGS[name]) for name in R08B_CONFIG_NAMES)
+
+# BENCHMARK-ONLY AD override (TODO 003), off by default. Turing 0.41 reads the AD backend
+# from the sampler object (`spl.adtype`) and ignores an `adtype` keyword on `sample`, which
+# is where `Samplers.run_sampler` passes `AutoReverseDiff(compile = true)`. Production
+# chains therefore run the `NUTS` default, AutoForwardDiff. With L08_BENCH_AD_FIX=true this
+# process redefines the queued method with the backend in the constructor; nothing else
+# changes. `src/` is untouched.
+if R08B_AD_FIX
+    Core.eval(BayesianFootball.Samplers, quote
+        function run_sampler(turing_model, config::QueuedNUTSConfig, chain_id::Int)
+            init_params = get_init_params(turing_model, config.initialisation, config.n_chains)[chain_id]
+            logger = config.silence_initial_stepsize ? ConsoleLogger(stderr, Logging.Warn) : current_logger()
+            return with_logger(logger) do
+                sample(turing_model,
+                       NUTS(config.n_warmup, config.accept_rate; max_depth = config.max_depth,
+                            adtype = AutoReverseDiff(compile = true)),
+                       config.n_samples;
+                       progress = false, initial_params = init_params)
+            end
+        end
+    end)
+end
 
 # Configuration A must be the production recipe itself, not a near copy.
 let a = r08b_sampler(R08B_CONFIGS["A"])
@@ -194,6 +217,9 @@ for name in R08B_CONFIG_NAMES
 end
 println("  replicates: ", R08B_REPS, " independent 4-chain fits per cell")
 println("  metric    : ", metric_type)
+println("  AD        : ", R08B_AD_FIX ?
+    "AutoReverseDiff(compile = true) in the NUTS constructor (L08_BENCH_AD_FIX override)" :
+    "production run_sampler path (NUTS default $(Turing.NUTS(10, 0.95).adtype); sample-kwarg adtype ignored)")
 println("  GC runtime: ", Threads.ngcthreads(), " GC threads · heap-size-hint ",
         Base.JLOptions().heap_size_hint == 0 ? "default" :
             @sprintf("%.1f GiB", Base.JLOptions().heap_size_hint / 2^30),
@@ -231,6 +257,7 @@ manifest_path = l08_write_manifest!(registry;
         "gc_threads" => Threads.ngcthreads(),
         "heap_size_hint_bytes" => Int(Base.JLOptions().heap_size_hint),
         "reference_tag" => R08B_REFERENCE,
+        "ad_fix_override" => R08B_AD_FIX,
         "initialisation" => string(L08_SAMPLER.initialisation),
         "incident_snapshot_hash" => incident_snapshot_hash,
         "configurations" => Dict(name => Dict(string(k) => v for (k, v) in pairs(R08B_CONFIGS[name]))

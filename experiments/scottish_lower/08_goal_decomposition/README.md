@@ -26,6 +26,7 @@ MatchDay code remain unchanged.
 - `l08_workflow.jl`: experiment registration, persistence and orchestration helpers.
 - `r08_smoke.jl`: strict single-fold promotion ladder.
 - `r08_sampling_budget_benchmark.jl`: matched Fold 1 NUTS budget/target-acceptance benchmark (TODO 001).
+- `r08_gradient_path_probe.jl` / `r08_ad_fix_equivalence.jl`: TODO 003 per-gradient allocation probe and AD-fix posterior-equivalence check.
 - `r08_production_grid.jl`: prepare-only checks and remote walk-forward queue.
 - `r08_portfolio.jl`: paired exchange backtests, not reused bookmaker artifacts.
 
@@ -124,6 +125,22 @@ Headline results:
   fails the control itself on 1 of 4 fits. Tree depth never exceeded 7 (cap 10).
 - Recommendation: keep A. The larger lever is runtime throughput (TODO 003): chains in
   the lightly loaded queue tail ran up to 2× faster than chains under full load.
+
+## GC runtime benchmark and sampler AD finding (TODO 003)
+
+[`results/gc_runtime_fold1_2026-09-10.md`](results/gc_runtime_fold1_2026-09-10.md) covers
+the GC runtime flags, all on m00, config B and 16 chains:
+
+- `--heap-size-hint=48G` is neutral (1.013×).
+- Adding `--gcthreads=2` is 18.5% slower.
+- `--gcthreads=16,1` livelocked.
+
+Every run was bit-identical to TODO 001. The GC pressure has one cause:
+`Samplers.run_sampler` passes `adtype` to `sample`, which Turing 0.41.4 ignores, so
+**every NUTS chain here, including the smoke, TODO 001 and the production grid, ran
+ForwardDiff.** With `adtype` in the `NUTS` constructor (a benchmark-only override;
+`src/` unchanged), the same batch ran **65.6× faster** (1,654 s → 25.2 s) with an
+equivalent posterior.
 
 ## Remote execution
 

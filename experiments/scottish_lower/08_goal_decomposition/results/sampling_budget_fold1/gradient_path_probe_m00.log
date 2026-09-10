@@ -1,0 +1,44 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 74.5 hours)...
+  l08 compiled tape          :       2688 bytes    0.2013 ms per gradient
+  sampler adtype gradient    :       5472 bytes    0.2012 ms per gradient
+  plain logdensity (no AD)   :     192560 bytes    0.1157 ms per call
+  deepcopy(varinfo)          :      30512 bytes    0.0401 ms per call
+  Transition re-evaluation   :     229776 bytes    0.1800 ms per call (11 recorded values)
+  bare AHMC.transition       :      27431 bytes    0.2222 ms per leapfrog (12533 / 12503 leapfrogs, ε 0.05)
+┌ Info: Found initial step size
+└   ϵ = 0.05
+  Turing-state gradient      :      13856 bytes    0.2029 ms per gradient
+  same varinfo type as probe : true
+  same prep type as probe    : true
+  Turing varinfo type        : DynamicPPL.VarInfo{@NamedTuple{mu_regular::DynamicPPL.Metadata{Dict{AbstractPPL.VarName{:mu_regular, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{AbstractPPL.VarName{:mu_regular, typeof(identity)}}, Vector{Float64}}, ha_regular::DynamicPPL.Metadata{Dict{AbstractPPL.VarName{:ha_regular, typeof(identity)}, Int64}, Vector{DistributionsAD.Turi
+  probe  varinfo type        : DynamicPPL.VarInfo{@NamedTuple{mu_regular::DynamicPPL.Metadata{Dict{AbstractPPL.VarName{:mu_regular, typeof(identity)}, Int64}, Vector{DistributionsAD.TuringScalMvNormal{Vector{Float64}, Float64}}, Vector{AbstractPPL.VarName{:mu_regular, typeof(identity)}}, Vector{Float64}}, ha_regular::DynamicPPL.Metadata{Dict{AbstractPPL.VarName{:ha_regular, typeof(identity)}, Int64}, Vector{DistributionsAD.Turi
+  AbstractMCMC.step (Turing) :      31538 bytes per leapfrog, 1.9 MiB per step (3090 leapfrogs / 50 steps)
+  NUTS default adtype        : ADTypes.AutoForwardDiff()
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+  sample, adtype in NUTS()   :      32952 bytes    0.2331 ms per leapfrog (12537 leapfrogs, 2.9 s, GC 0.0 s)
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Info: Found initial step size
+└   ϵ = 0.05
+┌ Warning: 1 of 200 transitions record no n_steps; per-leapfrog figures use the rest
+└ @ Main ~/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/r08_gradient_path_probe.jl:211
+
+====================================================================================================
+ GRADIENT-PATH ALLOCATION PROBE · m00_recombined_control · fold 1 · 1 thread · Julia 1.12.6
+====================================================================================================
+  l08 compiled tape (ReverseDiff.gradient!)                                    2688 bytes     0.2013 ms  (n = 2000)
+  sampler adtype (logdensity_and_gradient)                                     5472 bytes     0.2012 ms  (n = 2000)
+  Turing.sample, adtype as sample kwarg (run_sampler) per leapfrog         18551650 bytes     3.4031 ms  (n = 12537)
+  Turing.sample, adtype in NUTS constructor per leapfrog                      32952 bytes     0.2331 ms  (n = 12537)
+  AbstractMCMC.step by hand, adtype in NUTS constructor per leapfrog          31538 bytes        NaN ms  (n = 3090)
+  bare AHMC.transition per leapfrog                                           27431 bytes     0.2222 ms  (n = 12533)
+  per call: plain logdensity (no AD)                                         192560 bytes     0.1157 ms  (n = 200)
+  per call: deepcopy(varinfo)                                                 30512 bytes     0.0401 ms  (n = 200)
+  per iteration: Transition re-evaluation                                    229776 bytes     0.1800 ms  (n = 50)
+  per iteration: Turing.sample, adtype as sample kwarg                   1162910168 bytes   213.3206 ms  (n = 200)
+  NUTS run: 200 iterations, 12537 leapfrog steps, 42.7 s, 216.61 GiB allocated, GC 13.6 s (32%), 2864 pauses
+  allocation per NUTS iteration: 1109.0 MiB
+Outputs in /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gradient_path_probe_m00_recombined_control
