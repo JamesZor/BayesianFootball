@@ -129,10 +129,10 @@ const R08B_SAMPLERS = Dict(name => r08b_sampler(R08B_CONFIGS[name]) for name in 
 
 # BENCHMARK-ONLY AD override (TODO 003), off by default. Turing 0.41 reads the AD backend
 # from the sampler object (`spl.adtype`) and ignores an `adtype` keyword on `sample`, which
-# is where `Samplers.run_sampler` passes `AutoReverseDiff(compile = true)`. Production
-# chains therefore run the `NUTS` default, AutoForwardDiff. With L08_BENCH_AD_FIX=true this
-# process redefines the queued method with the backend in the constructor; nothing else
-# changes. `src/` is untouched.
+# is where `Samplers.run_sampler` used to pass `AutoReverseDiff(compile = true)`, so chains
+# ran the `NUTS` default, AutoForwardDiff. `src/` now builds the sampler through
+# `Samplers.nuts_algorithm` with the backend in the constructor, so this override is
+# redundant. It is kept only to reproduce run `gcE_default_adfix_20260910` exactly.
 if R08B_AD_FIX
     Core.eval(BayesianFootball.Samplers, quote
         function run_sampler(turing_model, config::QueuedNUTSConfig, chain_id::Int)
@@ -219,7 +219,9 @@ println("  replicates: ", R08B_REPS, " independent 4-chain fits per cell")
 println("  metric    : ", metric_type)
 println("  AD        : ", R08B_AD_FIX ?
     "AutoReverseDiff(compile = true) in the NUTS constructor (L08_BENCH_AD_FIX override)" :
-    "production run_sampler path (NUTS default $(Turing.NUTS(10, 0.95).adtype); sample-kwarg adtype ignored)")
+    isdefined(BayesianFootball.Samplers, :nuts_algorithm) ?
+        "production run_sampler path: $(BayesianFootball.Samplers.nuts_algorithm(L08_SAMPLER).adtype)" :
+        "production run_sampler path, pre-fix src (NUTS default $(Turing.NUTS(10, 0.95).adtype); sample-kwarg adtype ignored)")
 println("  GC runtime: ", Threads.ngcthreads(), " GC threads · heap-size-hint ",
         Base.JLOptions().heap_size_hint == 0 ? "default" :
             @sprintf("%.1f GiB", Base.JLOptions().heap_size_hint / 2^30),

@@ -91,6 +91,21 @@ end
 
 # --- 3. Execution ---
 
+"""
+    nuts_algorithm(config::AbstractNUTSConfig) -> Turing.NUTS
+
+The Turing sampler object both `run_sampler` methods hand to `sample`.
+
+The AD backend MUST be set here, in the `NUTS` constructor: Turing reads it from the
+sampler object (`spl.adtype`) and silently ignores an `adtype` keyword on `sample`. That
+keyword was previously used, so every NUTS chain ran `NUTS`'s default AutoForwardDiff —
+about 15× slower per gradient and ~560× the allocation of the compiled ReverseDiff tape
+(Experiment 08 TODO 003, `results/gc_runtime_fold1_2026-09-10.md`).
+"""
+nuts_algorithm(config::AbstractNUTSConfig) =
+    NUTS(config.n_warmup, config.accept_rate;
+         max_depth = config.max_depth, adtype = AutoReverseDiff(compile = true))
+
 function run_sampler(turing_model, config::NUTSConfig)
     # Delegate initialisation logic to the strategy
     init_params = get_init_params(turing_model, config.initialisation, config.n_chains)
@@ -100,12 +115,11 @@ function run_sampler(turing_model, config::NUTSConfig)
     chain = with_logger(logger) do
         sample(
             turing_model, 
-            NUTS(config.n_warmup, config.accept_rate, max_depth=config.max_depth), 
-            MCMCThreads(), 
-            config.n_samples, 
+            nuts_algorithm(config),
+            MCMCThreads(),
+            config.n_samples,
             config.n_chains,
             progress = config.show_progress,
-            adtype = AutoReverseDiff(compile=true),
             initial_params = init_params # Injection
         )
     end
@@ -125,10 +139,9 @@ function run_sampler(turing_model, config::QueuedNUTSConfig, chain_id::Int)
     chain = with_logger(logger) do
         sample(
             turing_model, 
-            NUTS(config.n_warmup, config.accept_rate, max_depth=config.max_depth), 
-            config.n_samples, 
+            nuts_algorithm(config),
+            config.n_samples,
             progress = false, # explicitly disable to avoid conflict with ProgressMeter
-            adtype = AutoReverseDiff(compile=true),
             initial_params = init_params # Injection
         )
     end

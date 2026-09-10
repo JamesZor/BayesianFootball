@@ -111,6 +111,16 @@ z = Δmean / √(MCSE²₁ + MCSE²₂) has mean +0.06 and sd 0.90, with 2 value
 (N(0,1) expects 4.4) and one above |3| (`raw_attack[14]`, 3.12; about a 16% chance
 across 97 parameters). The ratio of posterior sds has median 0.992 (range 0.955–1.049).
 
+## Fix applied and verified (same day)
+
+`src/samplers/engines/nuts.jl` now builds the sampler through `Samplers.nuts_algorithm`
+with `adtype = AutoReverseDiff(compile = true)` in the `NUTS` constructor, and the ignored
+`sample` keyword is removed. `test/sampler_adtype_tests.jl` failed on the unfixed code:
+the model was evaluated with `ForwardDiff.Dual`. After the fix it passes 18/18
+([log](sampling_budget_fold1/sampler_adtype_tests_green.log)). The unmodified runner on
+the fixed production path (`prodfix_default_20260910`) completed the 16-chain batch in
+**24.8 s**, with 22.1 GiB allocated, and its draws are **16/16 bit-identical to GC-E**.
+
 ## Recommendations
 
 1. **Do not adopt `--heap-size-hint=48G`, `--gcthreads=2` or `--gcthreads=N,1`** as runner

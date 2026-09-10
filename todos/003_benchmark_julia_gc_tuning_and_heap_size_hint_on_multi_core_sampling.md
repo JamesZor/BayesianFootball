@@ -96,6 +96,19 @@ Because NUTS generates high volumes of short-lived trajectory tree objects (`Adv
   wall. Posterior equivalence with `r08_ad_fix_equivalence.jl`: z sd 0.90, max |z| 3.12
   of 97, sd ratio 0.955–1.049. Closed as COMPLETED; the `src/` fix is left for an owner
   decision.
+- [2026-09-10 @claude] At the user's request, applied the fix in
+  `src/samplers/engines/nuts.jl`. The new `Samplers.nuts_algorithm(config)` builds
+  `NUTS(n_warmup, accept_rate; max_depth, adtype = AutoReverseDiff(compile = true))`,
+  both `run_sampler` methods use it, and the ignored `sample` keyword is removed. Added
+  `test/sampler_adtype_tests.jl` (registered in `runtests.jl`). It checks the sampler
+  object's adtype and config passthrough for both configs, and uses a probe model
+  recording its evaluation number type to assert `run_sampler` sees
+  `ReverseDiff.TrackedReal` and never `ForwardDiff.Dual`. **Red** on the unfixed beast
+  src: 2/2 behavioural assertions failed, with `ForwardDiff.Dual` observed. **Green**
+  after syncing: 18/18 passed (mcmc-beast, Julia 1.12.6). End-to-end run
+  `prodfix_default_20260910` on the fixed production path with no override: 16-chain
+  config-B batch in 24.8 s (1,654 s before), 22.1 GiB allocated, **16/16 chains
+  bit-identical to GC-E**.
 
 ## Verification & Findings
 
