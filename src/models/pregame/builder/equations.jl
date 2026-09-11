@@ -17,8 +17,8 @@
 # moved it.
 #
 # SCOPE. Valid for the component set the demo exercises — GlobalInterception,
-# GlobalHomeAdvantage, TimeDecayDynamics, and a Poisson, scalar-dispersion NegBin
-# or two-arm JointGammaPoisson observation.
+# GlobalHomeAdvantage, TimeDecayDynamics, and a Poisson, scalar-dispersion NegBin,
+# two-arm JointGammaPoisson or two-arm JointGammaNegBin observation.
 # `cb_equation_data` refuses anything else rather than silently referencing the
 # wrong maths, exactly as the arms' references do.
 #
@@ -48,9 +48,9 @@ Base.@kwdef struct CBParams
     raw_a::Vector{Float64}          # dyn.raw_a[1:n_teams]
     raw_d::Vector{Float64}          # dyn.raw_d[1:n_teams]
     w::Vector{Float64}              # <covariate>.w, in build order
-    log_r::Union{Nothing, Float64} = nothing   # disp.log_r (NegBin only)
-    ν::Union{Nothing, Float64} = nothing       # obs.ν      (joint only)
-    log_κ::Union{Nothing, Float64} = nothing   # obs.log_κ  (joint only)
+    log_r::Union{Nothing, Float64} = nothing   # disp.log_r (either NegBin arm)
+    ν::Union{Nothing, Float64} = nothing       # obs.ν      (either joint arm)
+    log_κ::Union{Nothing, Float64} = nothing   # obs.log_κ  (either joint arm)
     σ_κ::Union{Nothing, Float64} = nothing            # obs.σ_κ          (hierarchical κ only)
     κ_raw::Union{Nothing, Vector{Float64}} = nothing  # obs.κ_team_raw   (hierarchical κ only)
 end
@@ -76,11 +76,11 @@ function cb_params_from_varinfo(model::ComposableCountModel, vi)
         raw_a = Float64.(v["dyn.raw_a"]),
         raw_d = Float64.(v["dyn.raw_d"]),
         w     = Float64[Float64(v["$(covariate_name(c)).w"]) for c in model.covariates],
-        log_r = model.observation isa NegativeBinomialObservation ?
+        log_r = model.observation isa CBNegBinFamilyObservation ?
                 Float64(v["disp.log_r"]) : nothing,
-        ν     = model.observation isa JointGammaPoissonObservation ?
+        ν     = model.observation isa JointGammaObservation ?
                 Float64(v["obs.ν"]) : nothing,
-        log_κ = model.observation isa JointGammaPoissonObservation ?
+        log_κ = model.observation isa JointGammaObservation ?
                 Float64(v["obs.log_κ"]) : nothing,
         σ_κ   = model.observation isa HierarchicalKappaJoint ?
                 Float64(v["obs.σ_κ"]) : nothing,
@@ -123,10 +123,10 @@ function cb_equation_data(model::ComposableCountModel, feature_set)
         error("reference covers TimeDecayDynamics only; got $(nameof(typeof(model.dynamics)))")
     (model.observation isa PoissonObservation ||
      model.observation isa JointGammaPoissonObservation ||
-     (model.observation isa NegativeBinomialObservation &&
+     (model.observation isa CBNegBinFamilyObservation &&
       model.observation.dispersion isa CB_PG.GlobalDispersion)) ||
-        error("reference covers PoissonObservation, JointGammaPoissonObservation and " *
-              "NegBin+GlobalDispersion only")
+        error("reference covers PoissonObservation, JointGammaPoissonObservation, " *
+              "NegBin+GlobalDispersion and JointGammaNegBin+GlobalDispersion only")
 
     d  = feature_set.data
     yh = Vector{Int}(d[:flat_home_goals])
@@ -134,7 +134,7 @@ function cb_equation_data(model::ComposableCountModel, feature_set)
 
     # Read straight out of the FeatureSet, NOT out of `observation_design` — the reference must
     # not borrow the thing it is checking. `nothing` where the observation has no proxy arm.
-    joint = model.observation isa JointGammaPoissonObservation
+    joint = model.observation isa JointGammaObservation
     return (;
         home    = Vector{Int}(d[:flat_home_ids]),
         away    = Vector{Int}(d[:flat_away_ids]),
@@ -194,10 +194,10 @@ function cb_logjoint(model::ComposableCountModel, p::CBParams, data)
     for (k, c) in enumerate(model.covariates)
         lp += logpdf(covariate_prior(c), p.w[k])
     end
-    if model.observation isa NegativeBinomialObservation
+    if model.observation isa CBNegBinFamilyObservation
         lp += logpdf(model.observation.dispersion.log_r, p.log_r)
     end
-    if model.observation isa JointGammaPoissonObservation
+    if model.observation isa JointGammaObservation
         lp += logpdf(model.observation.shape_prior, p.ν) +
               logpdf(model.observation.log_kappa_prior, p.log_κ)
     end
@@ -266,6 +266,44 @@ function cb_loglik(::HierarchicalKappaJoint, p::CBParams, data, η_h, η_a)
 
     goals = sum(data.weights .* logpdf.(Poisson.(κ_team[data.home] .* μ_h), data.yh)) +
             sum(data.weights .* logpdf.(Poisson.(κ_team[data.away] .* μ_a), data.ya))
+
+    proxy = sum(data.weights .* data.mask .* logpdf.(Gamma.(p.ν, μ_h ./ p.ν), data.pxg_h)) +
+            sum(data.weights .* data.mask .* logpdf.(Gamma.(p.ν, μ_a ./ p.ν), data.pxg_a))
+
+    return goals + proxy
+end
+
+"""
+The two-arm joint log-likelihood with an OVERDISPERSED goals arm, written — like its Poisson
+sibling — from the DISTRIBUTIONS rather than from the engine's hand-expanded form.
+
+This arm is where a second implementation earns the most. `engine.jl` inlines
+
+    log NegBin(y; r, λ) = log Γ(y+r) − log Γ(r) − log Γ(y+1)
+                          + r·(log r − log(r+λ)) + y·(log λ − log(r+λ))
+
+at `λ = κ·μ`, which means one expression now carries BOTH the finishing factor and the dispersion.
+The two failure modes that expression has are precisely the ones that still sample cleanly and
+still look like a posterior: κ applied to the Gamma arm as well as the goals arm (which makes κ a
+rescale of the latent and destroys its identification), and `r` written against `η` instead of `ζ`
+(which prices dispersion around the chance rate rather than the goal rate). Neither is visible in a
+traceplot. Both change this number.
+
+`NegativeBinomial(r, p)` in `Distributions` is parameterised by the SUCCESS PROBABILITY, so the
+mean-parameterised form the engine uses enters here as `p = r / (r + λ)` — the same identity
+`_nbinom_logpdf_robust` expands, taken through the library rather than by hand.
+"""
+function cb_loglik(::JointGammaNegBinObservation, p::CBParams, data, η_h, η_a)
+    μ_h = exp.(η_h)
+    μ_a = exp.(η_a)
+    κ = exp(p.log_κ)
+    r = exp(_cb_bound_dispersion_log(p.log_r))
+
+    λ_h = κ .* μ_h
+    λ_a = κ .* μ_a
+
+    goals = sum(data.weights .* logpdf.(NegativeBinomial.(r, r ./ (r .+ λ_h)), data.yh)) +
+            sum(data.weights .* logpdf.(NegativeBinomial.(r, r ./ (r .+ λ_a)), data.ya))
 
     proxy = sum(data.weights .* data.mask .* logpdf.(Gamma.(p.ν, μ_h ./ p.ν), data.pxg_h)) +
             sum(data.weights .* data.mask .* logpdf.(Gamma.(p.ν, μ_a ./ p.ν), data.pxg_a))

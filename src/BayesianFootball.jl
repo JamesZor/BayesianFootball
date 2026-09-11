@@ -96,6 +96,8 @@ using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLaten
                 GlobalDispersion, HomeAwayDispersion,
                 DixonColesCorrelation, FrankCopulaCorrelation,
                 JointGammaPoissonObservation, JointGammaPoissonDesign,
+                JointGammaNegBinObservation, JointGammaObservation,
+                CBNegBinFamilyObservation,
                 AbstractKappaMode, SharedKappa, HierarchicalKappa,
                 SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
                 observation_features, observation_design,
@@ -147,6 +149,8 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
        GlobalDispersion, HomeAwayDispersion,
        DixonColesCorrelation, FrankCopulaCorrelation,
        JointGammaPoissonObservation, JointGammaPoissonDesign,
+       JointGammaNegBinObservation, JointGammaObservation,
+       CBNegBinFamilyObservation,
        AbstractKappaMode, SharedKappa, HierarchicalKappa,
        SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
        observation_features, observation_design

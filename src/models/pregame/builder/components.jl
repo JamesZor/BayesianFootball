@@ -1166,6 +1166,71 @@ struct JointGammaPoissonDesign
 end
 
 """
+    JointGammaNegBinObservation
+
+THE SAME TWO ARMS, WITH AN OVERDISPERSED GOALS ARM. The shared log-intensity `η = log μ` is read by
+
+    ARM 1 (proxy xG)   pxg_h ~ Gamma(ν, μ_h / ν)                  evaluated where the mask is 1
+    ARM 2 (goals)      y_h   ~ RobustNegativeBinomial(r, κ · μ_h)  evaluated everywhere
+
+`JointGammaPoissonObservation` with its Poisson arm replaced by the negative binomial, and nothing
+else moved: the Gamma arm, the `obs.ν` / `obs.log_κ` sites and their priors are byte-for-byte the
+shared-κ joint's, so a contrast against that model isolates the goal likelihood alone.
+
+WHAT THE DISPERSION IS FOR, AND WHAT IT IS NOT FOR. `MultiScaleGRW` already produces marginal
+overdispersion, because a latent rate that moves between fixtures makes `Var(Y) > E[Y]` even with a
+conditional Poisson. `r` prices what is left AFTER the latent has absorbed what it can — residual
+conditional overdispersion. Experiment 02 measured `r̂ ≈ 26` on this league, about 5% extra variance,
+and found it worth `Δ LogLoss = +0.0001` on 1X2. That is the honest prior for this component: 1X2 is
+a sum of scoreline diagonals and averages the tail shift away.
+
+WHY IT IS NEVERTHELESS WORTH FITTING. Totals and BTTS are not diagonal sums, they are tail
+partitions of the same grid, and a negative binomial moves mass in exactly the places they read:
+more at 0, less at 1–2, more at 4+. Whether that is a real gain or a wash is the measurement Task
+014 exists to make — and it is measurable precisely because the Poisson arm of this same two-arm
+model is a pinned control.
+
+`log r ~ Normal(3.1, 0.4)` puts the prior mass on `r ∈ [10, 70]`, i.e. mild overdispersion; it is
+`GlobalDispersion`'s own default and the prior Experiment 02 sampled under.
+
+ONE FINISHING FACTOR ONLY. There is no `HierarchicalKappa` counterpart here. A per-team κ and a
+dispersion `r` both widen the goals arm, and identifying the two against each other on ~40 matches
+per club is a study of its own, not a free type parameter. `SharedKappa` is the mode, by
+construction rather than by default.
+
+FIELDS
+  * `dispersion`      — `GlobalDispersion` or `HomeAwayDispersion`; the `disp.*` chain sites and
+                        priors are the ones `NegativeBinomialObservation` already uses.
+  * `feature`         — the `MatchProxyXGFeature` supplying the arm-1 observation and its mask.
+  * `shape_prior`     — the prior on ν, the Gamma arm's precision. Truncated well above 0.
+  * `log_kappa_prior` — the prior on `log κ`, the league finishing factor.
+"""
+Base.@kwdef struct JointGammaNegBinObservation{
+    D<:CB_PG.AbstractDispersionConfig,
+    F<:CB_Features.AbstractFeatureConfig,
+    S<:ContinuousUnivariateDistribution,
+    K<:ContinuousUnivariateDistribution,
+} <: AbstractObservationConfig
+    dispersion::D = CB_PG.GlobalDispersion()
+    feature::F = CB_Features.MatchProxyXGFeature()
+    shape_prior::S = truncated(Normal(4.0, 1.5), 0.5, Inf)
+    log_kappa_prior::K = Normal(0.0, 0.2)
+end
+
+"""
+    JointGammaObservation
+
+The observations carrying a masked Gamma proxy-xG arm beside a count arm on the same latent.
+
+They differ in the count density and therefore in the score grid, but everything the PROXY arm
+touches is identical: the same `MatchProxyXGFeature`, the same `JointGammaPoissonDesign`, the same
+`obs.ν` / `obs.log_κ` block, the same validation rules about `ν > 0` and a finite `η` floor. This
+Union is where "the Gamma arm behaves the same in both" is stated once instead of being kept in
+step by hand across six methods.
+"""
+const JointGammaObservation = Union{JointGammaPoissonObservation, JointGammaNegBinObservation}
+
+"""
     FrankCopulaCorrelation
 
 Frank copula joint likelihood over the two negative-binomial marginals.
@@ -1186,6 +1251,21 @@ struct's type parameter reads it, and `_assemble` dispatches on it.
 """
 const CBPoissonFamilyObservation = Union{PoissonObservation, JointGammaPoissonObservation}
 
+"""
+    CBNegBinFamilyObservation
+
+The observations whose SCORE GRID is the double-negative-binomial grid, and which therefore
+assemble into `NegBinCountModel`. The counterpart of `CBPoissonFamilyObservation`, and the same
+single point of record: `NegBinCountModel`'s type parameter reads this Union and `_assemble`
+dispatches on it.
+
+Widening it is safe for exactly the reason widening the Poisson one was. The grid reads
+`λ_h, λ_a, r_h, r_a` and nothing else; both members deliver all four out of `_cb_rates`, and the
+Gamma arm the joint member adds is a fit-time likelihood that never reaches a score matrix.
+"""
+const CBNegBinFamilyObservation =
+    Union{NegativeBinomialObservation, JointGammaNegBinObservation}
+
 
 # --- observation traits -------------------------------------------------------
 
@@ -1198,6 +1278,13 @@ observation_family(::FrankCopulaCorrelation)       = :frank_copula
 # Two arms, ONE prediction family: the goals arm is Poisson, so the score grid is the double-Poisson
 # grid. The proxy arm is a fit-time likelihood only — it never prices a market.
 observation_family(::JointGammaPoissonObservation)  = :poisson
+# Two arms, ONE prediction family — and here that family is the negative binomial, because the
+# GOALS arm is what prices a market. This single line is the whole of the score-grid integration:
+# `:negbin` routes the assembled model to `NegBinCountModel <: AbstractNegBinModel`, which
+# `latent_family` maps to `NegBinCountFamily()`, which builds a `CountLatents{Float64,<:NamedTuple}`
+# carrying `r_h`/`r_a`, which `compute_score_grid!` evaluates as the 12x12 double-negative-binomial
+# grid. 1X2, every totals line and BTTS are then three partitions of that one tensor.
+observation_family(::JointGammaNegBinObservation)   = :negbin
 
 "Is the observation density implemented in the production builder engine?"
 observation_wired(::AbstractObservationConfig)     = false
@@ -1211,6 +1298,9 @@ observation_wired(::JointGammaPoissonObservation)  = true
 # submodel that dispatches on the dispersion type, not a branch. See specification §7.2.
 observation_wired(o::NegativeBinomialObservation)  =
     o.dispersion isa Union{CB_PG.GlobalDispersion, CB_PG.HomeAwayDispersion}
+# Same rule, same reason: the joint NegBin arm calls the same `_build_count_dispersion` submodel.
+observation_wired(o::JointGammaNegBinObservation)  =
+    o.dispersion isa Union{CB_PG.GlobalDispersion, CB_PG.HomeAwayDispersion}
 
 "Chain-site prefixes the observation layer owns, for the site-collision check."
 observation_prefixes(::PoissonObservation)          = Symbol[]
@@ -1218,6 +1308,10 @@ observation_prefixes(::NegativeBinomialObservation) = [:disp]
 observation_prefixes(::DixonColesCorrelation)       = [:dc]
 observation_prefixes(::FrankCopulaCorrelation)      = [:cop]
 observation_prefixes(::JointGammaPoissonObservation) = [:obs]
+# BOTH blocks. The joint NegBin arm owns the Gamma/kappa sites under `obs.` and the dispersion
+# sites under `disp.`, so the site-collision check has to know about both or a covariate named
+# `:disp` would silently collide with `disp.log_r`.
+observation_prefixes(::JointGammaNegBinObservation)  = [:obs, :disp]
 
 "What still has to be built before this observation can be used."
 observation_gap(o::AbstractObservationConfig) = "no observation method in builder/engine.jl"
@@ -1226,6 +1320,9 @@ observation_gap(o::NegativeBinomialObservation) =
     "GlobalDispersion and HomeAwayDispersion are wired — specification §7.2"
 observation_gap(::DixonColesCorrelation) =
     "τ low-score correction and DixonColesRates (ρ) extraction — specification §7.2"
+observation_gap(o::JointGammaNegBinObservation) =
+    "$(nameof(typeof(o.dispersion))) needs a per-match dispersion reconstruction submodel; " *
+    "GlobalDispersion and HomeAwayDispersion are wired — specification §7.2"
 observation_gap(::FrankCopulaCorrelation) =
     "Frank copula joint density over NegBin marginals and κ extraction — specification §7.2"
 
@@ -1243,7 +1340,7 @@ Extra features this observation's likelihood reads. Concatenated onto the struct
 features by `Features.required_features`. Most observations read nothing beyond the goals.
 """
 observation_features(::AbstractObservationConfig) = CB_Features.AbstractFeatureConfig[]
-observation_features(o::JointGammaPoissonObservation) =
+observation_features(o::JointGammaObservation) =
     CB_Features.AbstractFeatureConfig[o.feature]
 
 """
@@ -1259,12 +1356,16 @@ time-decay clock as the goals arm; deriving it twice is two places for the half-
 observation_design(::AbstractObservationConfig, feature_set, n_matches::Int,
                    match_weights::Vector{Float64}) = nothing
 
-function observation_design(o::JointGammaPoissonObservation, feature_set, n_matches::Int,
+# ONE method for both joint arms. The Gamma arm's design is the part of the two-arm likelihood the
+# goal density cannot see: the proxy observations, their logs, and the availability mask folded into
+# the decay weights. Swapping Poisson for negative binomial changes none of it, so sharing the
+# method is what keeps that true rather than something to re-check.
+function observation_design(o::JointGammaObservation, feature_set, n_matches::Int,
                             match_weights::Vector{Float64})
     d = feature_set.data
     for key in (:flat_pxg_home, :flat_pxg_away, :flat_pxg_obs_available)
         haskey(d, key) || error(
-            "JointGammaPoissonObservation needs $(key) in the FeatureSet. It is emitted by " *
+            "$(nameof(typeof(o))) needs $(key) in the FeatureSet. It is emitted by " *
             "MatchProxyXGFeature, which the observation declares through `observation_features`; " *
             "a missing key means the model was built without going through `required_features`.")
     end
