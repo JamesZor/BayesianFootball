@@ -27,9 +27,9 @@
 #   G5  save_fit → load_fit round-trip through PostgresStorage("smoke_grw_player")
 #       reproduces fold count, latents and every chain value exactly
 #
-#   Advisory: bulk/tail ESS. With 2 chains × 100 draws there are 200 draws in total,
-#   so ESS ≥ 400 is arithmetically unreachable at this budget; it is reported, not
-#   gated.
+#   G3 also gates bulk/tail ESS ≥ 400 whenever the budget holds ≥ 800 draws. At
+#   the work package's 2 × 100 there are 200 draws in total, so ESS ≥ 400 is
+#   arithmetically unreachable and is reported, not gated.
 #
 # PERSISTENCE CAVEAT. Each invocation writes four runs into `smoke_grw_player`,
 # named with a per-invocation suffix so `save_fit`'s config-hash deduplication can
@@ -38,6 +38,7 @@
 # USAGE (mcmc-beast, from /root/BF_grw_player_hybrid)
 #
 #   /root/.juliaup/bin/julia --project -t 16 current_development/grw_player_hybrid/r01_smoke.jl
+#   R01_SAMPLES=400 R01_WARMUP=400 R01_CHAINS=4 julia ... r01_smoke.jl   # the gate run
 # ==============================================================================
 
 # %%
@@ -61,9 +62,23 @@ include(joinpath(@__DIR__, "l01_loader.jl"))
 # ===================================================================
 # 2. Configuration
 # ===================================================================
-const R01_CONFIG = GPHConfig()
+# The work package's budget is 2 chains × (50 warmup + 100 retained). Measured on
+# 2026-09-11 at that budget: 0 divergences in 1,600 transitions, but max R̂
+# 1.05–1.13 and bulk ESS 17–51 — 50 warmup draws do not adapt the step size, and
+# ESS ≥ 400 cannot exist in 200 draws. The gate is therefore run at Task 007's
+# preflight budget (4 × (400 + 400)) via the overrides below; the small budget stays
+# the default so the original measurement is reproducible.
+const R01_CONFIG = let env(k, d) = parse(Int, get(ENV, k, string(d)))
+    base = GPHConfig()
+    GPHConfig(smoke_samples = env("R01_SAMPLES", base.smoke_samples),
+              smoke_warmup = env("R01_WARMUP", base.smoke_warmup),
+              smoke_chains = env("R01_CHAINS", base.smoke_chains))
+end
+# ESS ≥ 400 is gated only when the budget can reach it.
+const R01_GATE_ESS = R01_CONFIG.smoke_chains * R01_CONFIG.smoke_samples >= 2 * R01_CONFIG.min_ess
 const R01_SUFFIX = "_smoke_" * Dates.format(now(), "yyyymmddHHMMSS")
-const R01_OUT_DIR = joinpath(R01_CONFIG.save_root, "smoke")
+const R01_OUT_DIR = joinpath(R01_CONFIG.save_root, "smoke",
+    "$(R01_CONFIG.smoke_chains)x$(R01_CONFIG.smoke_warmup)w$(R01_CONFIG.smoke_samples)s")
 const R01_GIT = try readchomp(`git rev-parse --short HEAD`) catch; "unknown" end
 
 println("\n" * "="^96)
@@ -155,6 +170,8 @@ for (name, _) in r01_models
     d.n_divergent == 0 || push!(failures, "G2 divergences=$(d.n_divergent)")
     d.max_rhat < R01_CONFIG.max_rhat || push!(failures,
         @sprintf("G3 max R̂ %.4f (fold %d)", d.max_rhat, d.worst_rhat_fold))
+    R01_GATE_ESS && min(d.min_ess_bulk, d.min_ess_tail) < R01_CONFIG.min_ess && push!(failures,
+        @sprintf("G3 min ESS bulk %.0f / tail %.0f", d.min_ess_bulk, d.min_ess_tail))
 
     latent = try
         gph_latent_audit(fit)

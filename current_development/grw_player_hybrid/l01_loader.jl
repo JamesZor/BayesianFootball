@@ -564,17 +564,17 @@ function gph_latent_audit(fit)
     lat = fit.latents
     lat isa CountLatents || error("latents are $(typeof(lat)), expected CountLatents")
     allunique(lat.match_ids) || error("duplicate OOS match IDs in latents")
-    for (side, draws) in (("home", lat.lambda_home), ("away", lat.lambda_away))
+    for (side, draws) in (("home", lat.λ_home), ("away", lat.λ_away))
         all(isfinite, draws) || error("non-finite λ_$side draws")
         all(>(0.0), draws) || error("non-positive λ_$side draws")
     end
-    μ_h = vec(mean(lat.lambda_home; dims = 2))
-    μ_a = vec(mean(lat.lambda_away; dims = 2))
-    v_h = vec(var(lat.lambda_home; dims = 2))
-    v_a = vec(var(lat.lambda_away; dims = 2))
+    μ_h = vec(mean(lat.λ_home; dims = 2))
+    μ_a = vec(mean(lat.λ_away; dims = 2))
+    v_h = vec(var(lat.λ_home; dims = 2))
+    v_a = vec(var(lat.λ_away; dims = 2))
     all(isfinite, vcat(μ_h, μ_a, v_h, v_a)) || error("non-finite latent mean or variance")
     all(>(0.0), vcat(v_h, v_a)) || error("a fixture has zero posterior rate variance")
-    return (; n_matches = length(lat.match_ids), n_draws = size(lat.lambda_home, 2),
+    return (; n_matches = length(lat.match_ids), n_draws = size(lat.λ_home, 2),
               mean_lambda_h = mean(μ_h), mean_lambda_a = mean(μ_a),
               min_sd = sqrt(minimum(vcat(v_h, v_a))),
               max_sd = sqrt(maximum(vcat(v_h, v_a))))
@@ -598,8 +598,8 @@ function gph_save_and_verify(db, fit)
     reloaded = load_fit(db, run_id)
     length(reloaded.folds) == length(fit.folds) || error("round-trip fold count differs")
     reloaded.latents.match_ids == fit.latents.match_ids || error("round-trip match IDs differ")
-    reloaded.latents.lambda_home == fit.latents.lambda_home || error("round-trip λ_home differs")
-    reloaded.latents.lambda_away == fit.latents.lambda_away || error("round-trip λ_away differs")
+    reloaded.latents.λ_home == fit.latents.λ_home || error("round-trip λ_home differs")
+    reloaded.latents.λ_away == fit.latents.λ_away || error("round-trip λ_away differs")
     reloaded.diagnostics.max_rhat == fit.diagnostics.max_rhat || error("round-trip R̂ differs")
     for (a, b) in zip(fit.folds, reloaded.folds)
         parent(a.chain.value) == parent(b.chain.value) || error(
