@@ -248,14 +248,14 @@ function _extension_scores(latents::CountLatents, fixtures::AbstractDataFrame)
             rps = total_rps / n_scored)
 end
 
-function _extension_config(config::FitConfig, splitter, execution, elapsed::Float64)
+function _extension_config(config::FitConfig, splitter, execution, elapsed::Float64; sampler = config.sampler)
     tags = filter(config.tags) do tag
         !startswith(tag, "time:") && !startswith(tag, "extension:")
     end
     push!(tags, "time:" * format_elapsed(elapsed))
     push!(tags, "extension:" * Dates.format(now(), "yyyymmdd_HHMMSS"))
     return FitConfig(name = config.name, model = config.model, splitter = splitter,
-                     sampler = config.sampler, execution = execution, tags = tags,
+                     sampler = sampler, execution = execution, tags = tags,
                      description = config.description, save_dir = config.save_dir)
 end
 
@@ -296,7 +296,7 @@ Sample only walk-forward positions absent from `fold_results`, audit and extract
 posterior, then atomically append relational rows and replace the exact Fit artefact.
 """
 function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
-                    execution = nothing, splitter = nothing, quiet::Bool = false)
+                    execution = nothing, splitter = nothing, sampler = nothing, quiet::Bool = false)
     started = time()
     run = _extension_run(db, key)
     existing = load_fit(db, run.run_id)
@@ -306,6 +306,30 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
     active_execution = execution === nothing ? existing.config.execution : execution
     active_execution isa AbstractExecution || error(
         "extend_fit: execution must be an AbstractExecution; got $(typeof(active_execution)).")
+
+    # Match sampling draw count to existing folds if sampler config differs
+    active_sampler = if sampler !== nothing
+        sampler
+    elseif !isempty(existing.folds) && existing.config.sampler isa QueuedNUTSConfig
+        actual_samples = size(existing.folds[1].chain)[1]
+        if actual_samples != existing.config.sampler.n_samples
+            QueuedNUTSConfig(
+                n_samples = actual_samples,
+                n_warmup = existing.config.sampler.n_warmup,
+                n_chains = existing.config.sampler.n_chains,
+                accept_rate = existing.config.sampler.accept_rate,
+                max_depth = existing.config.sampler.max_depth,
+                initialisation = existing.config.sampler.initialisation,
+                show_progress = existing.config.sampler.show_progress,
+                silence_initial_stepsize = existing.config.sampler.silence_initial_stepsize,
+            )
+        else
+            existing.config.sampler
+        end
+    else
+        existing.config.sampler
+    end
+
     plan = _extension_delta(db, run, ds, active_splitter)
 
     if isempty(plan.delta)
@@ -318,8 +342,8 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
     feature_sets = Features.create_features(selected_boundaries, ds, existing.config.model,
                                             active_splitter)
     selected_oos = Any[plan.oos[i] for i in plan.delta]
-    wrapped_sampler = _ExtensionSampler(existing.config.sampler, plan.delta)
-    resolved = resolve_execution(active_execution, existing.config.sampler)
+    wrapped_sampler = _ExtensionSampler(active_sampler, plan.delta)
+    resolved = resolve_execution(active_execution, active_sampler)
     results = run_folds(existing.config.model, wrapped_sampler, resolved, feature_sets;
                         on_progress = quiet ? _inf_noop : _inf_progress(started))
     successful = findall(!isnothing, results)
@@ -332,7 +356,7 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
     successful_oos = Any[selected_oos[i] for i in successful]
     delta_diagnostics = audit_convergence(new_folds;
         thresholds = existing.diagnostics.thresholds,
-        max_depth = sampler_max_depth(existing.config.sampler))
+        max_depth = sampler_max_depth(active_sampler))
     per_fold_latents, new_latents = _extension_extract_latents(
         existing.config.model, new_folds, successful_features, successful_oos)
 
@@ -340,14 +364,15 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
     sort!(combined_folds, by = fold -> fold.fold)
     combined_diagnostics = audit_convergence(combined_folds;
         thresholds = existing.diagnostics.thresholds,
-        max_depth = sampler_max_depth(existing.config.sampler))
+        max_depth = sampler_max_depth(active_sampler))
     combined_latents = existing.latents === nothing ? new_latents :
                        new_latents === nothing ? existing.latents :
                        merge_latents(Any[existing.latents, new_latents])
 
     extension_elapsed = time() - started
     total_elapsed = run.duration + extension_elapsed
-    config = _extension_config(existing.config, active_splitter, active_execution, total_elapsed)
+    config = _extension_config(existing.config, active_splitter, active_execution, total_elapsed;
+                              sampler = active_sampler)
     metadata = FitMetadata(now(), total_elapsed, VERSION, Threads.nthreads(), git_commit_id())
     extended = Fit(config, combined_folds, combined_latents, combined_diagnostics,
                    metadata, default_save_path(config, metadata))
