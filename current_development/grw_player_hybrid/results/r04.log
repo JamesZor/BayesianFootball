@@ -1,0 +1,50 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 4.4 hours)...
+
+================================================================================================
+  r04 PROPER SCORES — GRW × lineup ladder vs TimeDecay controls and Betfair close
+  bootstrap  : 10000 fixture-clustered paired resamples, seed 20260911
+================================================================================================
+  Betfair close: 14617 rows over 1627 fixtures | families: 1X2=[:away, :draw, :home]  BTTS=[:btts_no, :btts_yes]  OU2.5=[:over_25, :under_25]
+  m00_baseline_grw               MultiScaleGRW   43 folds   769 → 710 fixtures  run 158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11
+  m05_wealth_grw                 MultiScaleGRW   43 folds   769 → 710 fixtures  run b0961bc4-c40c-4dbe-9c05-57df7ae0839e
+  m10_lineup_grw                 MultiScaleGRW   43 folds   769 → 710 fixtures  run b13c8fb9-ce34-4210-aa3f-9d2ed493c286
+  m12_joint_hybrid_synergy_grw   MultiScaleGRW   43 folds   769 → 710 fixtures  run 3a9a4c7e-378b-45d0-a2d2-c8b69b46786b
+  m05_joint_td_raw               TimeDecay(180)  43 folds   759 → 710 fixtures  run ed541a7c-01e2-447e-a771-783517728d47
+  m12_hybrid_td_raw              TimeDecay(180)  43 folds   759 → 710 fixtures  run 132df5c2-c742-4e95-8693-3aeb2b2cbaef
+  m05_joint_grw_raw              MultiScaleGRW   43 folds   769 → 710 fixtures  run f870dbb7-9df0-4dae-a84a-cf570cf8113e
+
+  reproduction: m12_hybrid_td_raw LogLoss 0.64337 (published 0.64337)  ECE 0.0100 (published 0.0100)
+
+=== PROPER SCORES (scope = all) ===
+7×9 DataFrame
+ Row │ model                         dynamics        n_obs  logloss   market_logloss  brier     rps       ece         market_ece
+     │ String                        String          Int64  Float64   Float64         Float64   Float64   Float64     Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_joint_td_raw              TimeDecay(180)   2899  0.642986        0.641816  0.225864  0.224153  0.0149304    0.0139075
+   2 │ m05_wealth_grw                MultiScaleGRW    2899  0.643151        0.641816  0.226027  0.223829  0.0123395    0.0139075
+   3 │ m05_joint_grw_raw             MultiScaleGRW    2899  0.643158        0.641816  0.226029  0.223849  0.0117394    0.0139075
+   4 │ m12_hybrid_td_raw             TimeDecay(180)   2899  0.64337         0.641816  0.226046  0.224472  0.00995617   0.0139075
+   5 │ m00_baseline_grw              MultiScaleGRW    2899  0.644334        0.641816  0.226544  0.224918  0.0183962    0.0139075
+   6 │ m12_joint_hybrid_synergy_grw  MultiScaleGRW    2899  0.644367        0.641816  0.226586  0.224933  0.0086268    0.0139075
+   7 │ m10_lineup_grw                MultiScaleGRW    2899  0.645607        0.641816  0.227125  0.22631   0.00916046   0.0139075
+
+=== PAIRED ΔLogLoss (left − right), scope = all ===
+13×9 DataFrame
+ Row │ left                          right              n_obs  n_fixtures  delta         lo            hi          p_negative  significant
+     │ String                        String             Int64  Int64       Float64       Float64       Float64     Float64     Bool
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m00_baseline_grw              betfair_close       2899         627   0.00251826   -0.0046871    0.00968842      0.2405        false
+   2 │ m05_wealth_grw                betfair_close       2899         627   0.00133577   -0.0049463    0.00741106      0.3288        false
+   3 │ m10_lineup_grw                betfair_close       2899         627   0.00379158   -0.00344817   0.0110949       0.1539        false
+   4 │ m12_joint_hybrid_synergy_grw  betfair_close       2899         627   0.00255144   -0.00396041   0.00893746      0.2181        false
+   5 │ m05_joint_td_raw              betfair_close       2899         627   0.00117083   -0.00519109   0.00748445      0.3611        false
+   6 │ m12_hybrid_td_raw             betfair_close       2899         627   0.00155424   -0.00526768   0.00825055      0.3276        false
+   7 │ m05_joint_grw_raw             betfair_close       2899         627   0.0013425    -0.00493913   0.0074088       0.3278        false
+   8 │ m12_joint_hybrid_synergy_grw  m12_hybrid_td_raw   2899         627   0.000997194  -0.0029893    0.00496832      0.3117        false
+   9 │ m05_wealth_grw                m05_joint_td_raw    2899         627   0.000164947  -0.00367571   0.0040283       0.4571        false
+  10 │ m12_joint_hybrid_synergy_grw  m05_wealth_grw      2899         627   0.00121566   -0.000733172  0.00321803      0.1192        false
+  11 │ m10_lineup_grw                m00_baseline_grw    2899         627   0.00127331   -0.00103974   0.00357499      0.1371        false
+  12 │ m05_wealth_grw                m05_joint_grw_raw   2899         627  -6.72498e-6   -0.000238787  0.00022739      0.5199        false
+  13 │ m12_joint_hybrid_synergy_grw  m05_joint_grw_raw   2899         627   0.00120894   -0.0007777    0.00322058      0.121         false
+
+R04_DONE report=/root/BF_grw_player_hybrid/current_development/grw_player_hybrid/results/evaluation/r04_evaluation_report.md

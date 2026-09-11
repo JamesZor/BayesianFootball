@@ -1,0 +1,16 @@
+┌ Info: Found initial step size
+└   ϵ = 0.05
+Test Summary:                              | Pass  Total  Time
+Player lineup feature aggregation contract |   42     42  1.0s
+Test Summary:                                               | Pass  Total   Time
+CountModelBuilder accepts all player aggregation strategies |   25     25  16.4s
+Test Summary:                    | Pass  Total  Time
+Hybrid structural model contract |   58     58  1.4s
+Test Summary:                                           | Pass  Total  Time
+Player lineup dynamics supports every wired observation |    7      7  9.2s
+Test Summary:                                       | Pass  Total  Time
+Player lineup OOS extraction uses the lineup bridge |    4      4  2.2s
+Test Summary:                                               | Pass  Total   Time
+Player lineup ReverseDiff tape is fast and gradient-correct |    5      5  10.5s
+Test Summary:                                              | Pass  Total   Time
+Single-fold mock inference samples non-zero lineup weights |    8      8  16.8s

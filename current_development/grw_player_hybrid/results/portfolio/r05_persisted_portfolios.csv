@@ -1,0 +1,5 @@
+model,model_run_id,portfolio_run_id
+m00_baseline_grw,158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11,ec5bf23e-c500-4253-a7fb-9e952d732eba
+m05_wealth_grw,b0961bc4-c40c-4dbe-9c05-57df7ae0839e,3982ffb9-1d1c-482c-92d0-995b6bca6d8e
+m10_lineup_grw,b13c8fb9-ce34-4210-aa3f-9d2ed493c286,f988117b-78cc-46fa-bc30-913659bafdf8
+m12_joint_hybrid_synergy_grw,3a9a4c7e-378b-45d0-a2d2-c8b69b46786b,c2aedffe-6e77-4f29-a79b-b8c688ae33bc
