@@ -102,13 +102,14 @@ using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLaten
                 add!, add, replace!, validate,
                build_count_model, build, cb_predictor_terms, cb_predictor_names,
                cb_covariates, cb_covariate_names, cb_varinfo_sites, cb_chain_columns,
-               cb_parameter_count
+               cb_parameter_count, GRWDynamicsDesign
 using .Models: GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
                GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
-               TimeDecayDynamics, StaticZeroDynamics, PositionalPlayerDynamics
+               TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics
 export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
        GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
-       TimeDecayDynamics, StaticZeroDynamics, PositionalPlayerDynamics, build
+       TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, build
+export GRWDynamicsDesign
 using .Predictions: GridWorkspace, SmileScoreGrid, alloc_score_grid,
                     alloc_smile_buffers, alloc_market_book, compute_score_grid!,
                     compute_score_grid, fill_smile_buffers!, price_market!,

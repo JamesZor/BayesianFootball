@@ -1,0 +1,143 @@
+
+============================================================================================================
+ TASK 007 · MULTISCALE GAUSSIAN RANDOM WALK · PHASE1
+============================================================================================================
+  started    : 2026-09-11T03:39:33.759
+  repository : /root/BF_multiscale_grw
+  threads    : 16 physical-core-pinned Julia threads
+  BLAS       : 1 thread
+  output     : /root/BF_multiscale_grw/current_development/multiscale_grw/results
+  database   : scottish_lower_multiscale_grw_2426
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 160.4 hours)...
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+  matches    : 2019
+  odds       : 46001
+  registry   : models=Dict("m05_production_wealth_grw" => 921, "m05_joint_production_wealth_grw" => 923, "m00_baseline_grw" => 919) splitter=925 sampler=926
+
+G-A PASS · 40 scored boundaries · 710 held-out fixtures · dynamics_col=:match_biweek
+
+Model recipes
+  m00_baseline_grw                         : PoissonCountModel(PoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: none; guard: ClampGuard)
+  m05_production_wealth_grw                : PoissonCountModel(PoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: production_wealth; guard: ClampGuard)
+  m05_joint_production_wealth_grw          : PoissonCountModel(JointGammaPoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: production_wealth; guard: ClampGuard)
+  dynamics priors: α σ₀~Gamma(2,0.06), σₛ~Gamma(2,0.03), σₖ~Gamma(2,0.015);
+                   β σ₀~Gamma(2,0.10), σₛ~Gamma(2,0.055), σₖ~Gamma(2,0.012)
+
+------------------------------------------------------------------------------------------------------------
+ PHASE1 PRODUCTION GRID
+------------------------------------------------------------------------------------------------------------
+  sampler   : QueuedNUTSConfig(800 warmup, 800 retained, 4 chains, target 0.90)
+  execution : 40 folds × 4 single-threaded chains through the native queue
+
+------------------------------------------------------------------------------------------------
+ FIT: m00_baseline_grw · 2026-09-11T03:39:49.351
+------------------------------------------------------------------------------------------------
+
+>> FIT: m00_baseline_grw
+------------------------------------------------------------------
+ [1] Generating data splits...
+     > 40 splits
+ [2] Building feature sets...
+ [3] Resolving out-of-sample fixtures...
+     > all 40 folds restored from checkpoints
+ [5] Auditing convergence...
+     > FAIL  R̂≤1.0135  ESS≥667  div 0/128000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  710 fixtures × 3200 draws
+------------------------------------------------------------------
+DONE in 38.8s
+  strict gate missed; appending 800 retained draws per chain before the final verdict
+
+>> FIT: m00_baseline_grw
+------------------------------------------------------------------
+ [1] Generating data splits...
+     > 40 splits
+ [2] Building feature sets...
+ [3] Resolving out-of-sample fixtures...
+     > all 40 folds restored from checkpoints
+ [5] Auditing convergence...
+     > FAIL  R̂≤1.0164  ESS≥836  div 0/128000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  710 fixtures × 3200 draws
+------------------------------------------------------------------
+DONE in 29.8s
+ERROR: LoadError: MethodError: no method matching audit_convergence(::Vector{FoldFit}; thresholds::ConvergenceThresholds, sampler_max_depth::Int64)
+This method does not support all of the given keyword arguments (and may not support any).
+
+Closest candidates are:
+  audit_convergence(::Vector{<:FoldFit}; thresholds, max_depth) got unsupported keyword argument "sampler_max_depth"
+   @ BayesianFootball ~/BF_multiscale_grw/src/training/inference/convergence.jl:209
+  audit_convergence(!Matched::Fit; kwargs...)
+   @ BayesianFootball ~/BF_multiscale_grw/src/training/inference/convergence.jl:216
+
+Stacktrace:
+ [1] kwerr(::@NamedTuple{thresholds::ConvergenceThresholds, sampler_max_depth::Int64}, ::Function, ::Vector{FoldFit})
+   @ Base ./error.jl:175
+ [2] l01_extend_sampling(fit::Fit{FitConfig{PoissonCountModel{GlobalInterception, BayesianFootball.Models.PreGame.MultiScaleGRW, GlobalHomeAdvantage, Tuple{}, PoissonObservation, ClampGuard}, BayesianFootball.Data.GroupedCVConfig, QueuedNUTSConfig, QueuedExecution}, Vector{FoldFit{MCMCChains.Chains{Float64, AxisArrays.AxisArray{Float64, 3, Array{Float64, 3}, Tuple{AxisArrays.Axis{:iter, StepRange{Int64, Int64}}, AxisArrays.Axis{:var, Vector{Symbol}}, AxisArrays.Axis{:chain, UnitRange{Int64}}}}, Missing, @NamedTuple{parameters::Vector{Symbol}, internals::Vector{Symbol}}, @NamedTuple{varname_to_symbol::OrderedCollections.OrderedDict{AbstractPPL.VarName, Symbol}, start_time::Vector{Float64}, stop_time::Vector{Float64}, samplerstate::Vector{Nothing}}}, BayesianFootball.Data.GroupedSplitMetaData}}, CountLatents{Float64, Nothing}}, fit_config::FitConfig{PoissonCountModel{GlobalInterception, BayesianFootball.Models.PreGame.MultiScaleGRW, GlobalHomeAdvantage, Tuple{}, PoissonObservation, ClampGuard}, BayesianFootball.Data.GroupedCVConfig, QueuedNUTSConfig, QueuedExecution}, ds::BayesianFootball.Data.DataStore, config::L01Config; n_samples::Int64, n_warmup::Int64)
+   @ Main.MultiScaleGRWPrototype ~/BF_multiscale_grw/current_development/multiscale_grw/l01_loader.jl:893
+ [3] r01_run_phase(names::Tuple{String, String}; stage::String)
+   @ Main ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:336
+ [4] r01_run_phase
+   @ ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:314 [inlined]
+ [5] r01_run_phase1()
+   @ Main ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:394
+ [6] top-level scope
+   @ ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:426
+ [7] include(mod::Module, _path::String)
+   @ Base ./Base.jl:306
+ [8] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:317
+ [9] _start()
+   @ Base ./client.jl:550
+in expression starting at /root/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:422

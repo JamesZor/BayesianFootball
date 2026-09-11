@@ -1,0 +1,121 @@
+
+============================================================================================================
+ TASK 007 · MULTISCALE GAUSSIAN RANDOM WALK · PHASE1
+============================================================================================================
+  started    : 2026-09-11T01:23:13.550
+  repository : /root/BF_multiscale_grw
+  threads    : 16 physical-core-pinned Julia threads
+  BLAS       : 1 thread
+  output     : /root/BF_multiscale_grw/current_development/multiscale_grw/results
+  database   : scottish_lower_multiscale_grw_2426
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 158.2 hours)...
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+  matches    : 2019
+  odds       : 46001
+  registry   : models=Dict("m05_production_wealth_grw" => 921, "m05_joint_production_wealth_grw" => 923, "m00_baseline_grw" => 919) splitter=925 sampler=926
+
+G-A PASS · 40 scored boundaries · 710 held-out fixtures · dynamics_col=:match_biweek
+
+Model recipes
+  m00_baseline_grw                         : PoissonCountModel(PoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: none; guard: ClampGuard)
+  m05_production_wealth_grw                : PoissonCountModel(PoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: production_wealth; guard: ClampGuard)
+  m05_joint_production_wealth_grw          : PoissonCountModel(JointGammaPoissonObservation; GlobalInterception + GlobalHomeAdvantage + MultiScaleGRW; predictors: production_wealth; guard: ClampGuard)
+  dynamics priors: α σ₀~Gamma(2,0.06), σₛ~Gamma(2,0.03), σₖ~Gamma(2,0.015);
+                   β σ₀~Gamma(2,0.10), σₛ~Gamma(2,0.055), σₖ~Gamma(2,0.012)
+
+------------------------------------------------------------------------------------------------------------
+ PHASE1 PRODUCTION GRID
+------------------------------------------------------------------------------------------------------------
+  sampler   : QueuedNUTSConfig(800 warmup, 800 retained, 4 chains, target 0.90)
+  execution : 40 folds × 4 single-threaded chains through the native queue
+
+------------------------------------------------------------------------------------------------
+ FIT: m00_baseline_grw · 2026-09-11T01:23:29.117
+------------------------------------------------------------------------------------------------
+
+>> FIT: m00_baseline_grw
+------------------------------------------------------------------
+ [1] Generating data splits...
+     > 40 splits
+ [2] Building feature sets...
+ [3] Resolving out-of-sample fixtures...
+ [4] Sampling 40 of 40 folds (QueuedNUTSConfig, QueuedExecution)...
+     > [Started 01:23:30 | Elapsed 00:01:09] Sampling:   1%  ETA: 0:01:15 ( 0.47  s/it)[K     > [Started 01:23:30 | Elapsed 00:01:15] Sampling:   2%  ETA: 0:05:37 ( 2.15  s/it)[K     > [Started 01:23:30 | Elapsed 00:01:22] Sampling:   3%  ETA: 0:07:20 ( 2.84  s/it)[K     > [Started 01:23:30 | Elapsed 00:01:25] Sampling:   4%  ETA: 0:07:23 ( 2.88  s/it)[K     > [Started 01:23:30 | Elapsed 00:01:32] Sampling:   4%  ETA: 0:08:38 ( 3.39  s/it)[K     > [Started 01:23:30 | Elapsed 00:01:42] Sampling:   5%  ETA: 0:10:51 ( 4.28  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:05] Sampling:   6%  ETA: 0:15:47 ( 6.27  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:11] Sampling:   6%  ETA: 0:15:39 ( 6.26  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:12] Sampling:   7%  ETA: 0:14:29 ( 5.84  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:13] Sampling:   8%  ETA: 0:13:20 ( 5.41  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:21] Sampling:   8%  ETA: 0:13:38 ( 5.56  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:21] Sampling:   9%  ETA: 0:12:41 ( 5.21  s/it)[K     > [Started 01:23:30 | Elapsed 00:02:46] Sampling:   9%  ETA: 0:15:50 ( 6.55  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:07] Sampling:  10%  ETA: 0:17:47 ( 7.41  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:14] Sampling:  11%  ETA: 0:17:34 ( 7.37  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:29] Sampling:  11%  ETA: 0:18:27 ( 7.80  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:30] Sampling:  12%  ETA: 0:17:35 ( 7.48  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:35] Sampling:  12%  ETA: 0:17:07 ( 7.33  s/it)[K     > [Started 01:23:30 | Elapsed 00:03:55] Sampling:  13%  ETA: 0:18:23 ( 7.94  s/it)[K     > [Started 01:23:30 | Elapsed 00:04:19] Sampling:  14%  ETA: 0:19:54 ( 8.65  s/it)[K     > [Started 01:23:30 | Elapsed 00:04:27] Sampling:  14%  ETA: 0:19:46 ( 8.66  s/it)[K     > [Started 01:23:30 | Elapsed 00:04:35] Sampling:  15%  ETA: 0:19:33 ( 8.63  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:00] Sampling:  16%  ETA: 0:20:53 ( 9.28  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:01] Sampling:  16%  ETA: 0:19:59 ( 8.95  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:02] Sampling:  17%  ETA: 0:19:11 ( 8.65  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:16] Sampling:  18%  ETA: 0:19:29 ( 8.86  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:24] Sampling:  18%  ETA: 0:19:14 ( 8.81  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:32] Sampling:  19%  ETA: 0:19:02 ( 8.78  s/it)[K     > [Started 01:23:30 | Elapsed 00:05:36] Sampling:  19%  ETA: 0:18:36 ( 8.65  s/it)[K     > [Started 01:23:30 | Elapsed 00:06:31] Sampling:  20%  ETA: 0:21:33 (10.10  s/it)[K     > [Started 01:23:30 | Elapsed 00:06:33] Sampling:  21%  ETA: 0:20:49 ( 9.83  s/it)[K     > [Started 01:23:30 | Elapsed 00:06:50] Sampling:  21%  ETA: 0:21:06 (10.04  s/it)[K     > [Started 01:23:30 | Elapsed 00:06:56] Sampling:  22%  ETA: 0:20:42 ( 9.94  s/it)[K     > [Started 01:23:30 | Elapsed 00:06:57] Sampling:  22%  ETA: 0:20:01 ( 9.69  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:14] Sampling:  23%  ETA: 0:20:15 ( 9.88  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:21] Sampling:  24%  ETA: 0:19:56 ( 9.80  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:22] Sampling:  24%  ETA: 0:19:19 ( 9.58  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:35] Sampling:  25%  ETA: 0:19:20 ( 9.67  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:35] Sampling:  26%  ETA: 0:18:43 ( 9.44  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:44] Sampling:  26%  ETA: 0:18:33 ( 9.43  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:50] Sampling:  27%  ETA: 0:18:12 ( 9.34  s/it)[K     > [Started 01:23:30 | Elapsed 00:07:59] Sampling:  28%  ETA: 0:18:02 ( 9.33  s/it)[K     > [Started 01:23:30 | Elapsed 00:08:28] Sampling:  28%  ETA: 0:18:43 ( 9.77  s/it)[K     > [Started 01:23:30 | Elapsed 00:10:20] Sampling:  34%  ETA: 0:17:34 (10.04  s/it)[K     > [Started 01:23:30 | Elapsed 00:10:25] Sampling:  35%  ETA: 0:17:14 ( 9.94  s/it)[K     > [Started 01:23:30 | Elapsed 00:10:28] Sampling:  36%  ETA: 0:16:51 ( 9.82  s/it)[K     > [Started 01:23:30 | Elapsed 00:10:51] Sampling:  36%  ETA: 0:17:05 (10.05  s/it)[K     > [Started 01:23:30 | Elapsed 00:10:52] Sampling:  37%  ETA: 0:16:40 ( 9.90  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:06] Sampling:  38%  ETA: 0:16:37 ( 9.97  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:08] Sampling:  38%  ETA: 0:16:14 ( 9.84  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:39] Sampling:  39%  ETA: 0:16:37 (10.17  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:40] Sampling:  39%  ETA: 0:16:12 (10.02  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:47] Sampling:  40%  ETA: 0:15:58 ( 9.98  s/it)[K     > [Started 01:23:30 | Elapsed 00:11:55] Sampling:  41%  ETA: 0:15:45 ( 9.95  s/it)[K     > [Started 01:23:30 | Elapsed 00:12:04] Sampling:  41%  ETA: 0:15:33 ( 9.93  s/it)[K     > [Started 01:23:30 | Elapsed 00:12:05] Sampling:  42%  ETA: 0:15:11 ( 9.80  s/it)[K     > [Started 01:23:30 | Elapsed 00:12:32] Sampling:  42%  ETA: 0:15:26 (10.06  s/it)[K     > [Started 01:23:30 | Elapsed 00:13:14] Sampling:  43%  ETA: 0:15:57 (10.51  s/it)[K     > [Started 01:23:30 | Elapsed 00:13:26] Sampling:  44%  ETA: 0:15:48 (10.54  s/it)[K     > [Started 01:23:30 | Elapsed 00:13:51] Sampling:  44%  ETA: 0:15:56 (10.74  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:04] Sampling:  45%  ETA: 0:15:48 (10.77  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:04] Sampling:  46%  ETA: 0:15:25 (10.63  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:06] Sampling:  46%  ETA: 0:15:04 (10.52  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:10] Sampling:  47%  ETA: 0:14:46 (10.43  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:18] Sampling:  48%  ETA: 0:14:33 (10.40  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:21] Sampling:  48%  ETA: 0:14:15 (10.30  s/it)[K     > [Started 01:23:30 | Elapsed 00:14:51] Sampling:  49%  ETA: 0:14:25 (10.54  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:02] Sampling:  49%  ETA: 0:14:14 (10.55  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:08] Sampling:  50%  ETA: 0:14:00 (10.50  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:23] Sampling:  51%  ETA: 0:13:53 (10.55  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:28] Sampling:  51%  ETA: 0:13:38 (10.49  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:29] Sampling:  52%  ETA: 0:13:19 (10.37  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:38] Sampling:  52%  ETA: 0:13:07 (10.36  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:44] Sampling:  53%  ETA: 0:12:53 (10.30  s/it)[K     > [Started 01:23:30 | Elapsed 00:15:58] Sampling:  54%  ETA: 0:12:46 (10.35  s/it)[K     > [Started 01:23:30 | Elapsed 00:16:01] Sampling:  54%  ETA: 0:12:29 (10.27  s/it)[K     > [Started 01:23:30 | Elapsed 00:16:18] Sampling:  55%  ETA: 0:12:24 (10.33  s/it)[K     > [Started 01:23:30 | Elapsed 00:16:27] Sampling:  56%  ETA: 0:12:13 (10.32  s/it)[K     > [Started 01:23:30 | Elapsed 00:16:53] Sampling:  56%  ETA: 0:12:15 (10.50  s/it)[K     > [Started 01:23:30 | Elapsed 00:16:59] Sampling:  57%  ETA: 0:12:01 (10.45  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:00] Sampling:  58%  ETA: 0:11:43 (10.34  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:01] Sampling:  58%  ETA: 0:11:27 (10.25  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:18] Sampling:  59%  ETA: 0:11:21 (10.32  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:19] Sampling:  59%  ETA: 0:11:04 (10.22  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:27] Sampling:  60%  ETA: 0:10:53 (10.20  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:35] Sampling:  61%  ETA: 0:10:41 (10.18  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:40] Sampling:  61%  ETA: 0:10:28 (10.12  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:49] Sampling:  62%  ETA: 0:10:16 (10.11  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:49] Sampling:  62%  ETA: 0:10:01 (10.01  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:53] Sampling:  63%  ETA: 0:09:47 ( 9.95  s/it)[K     > [Started 01:23:30 | Elapsed 00:17:57] Sampling:  64%  ETA: 0:09:33 ( 9.89  s/it)[K     > [Started 01:23:30 | Elapsed 00:18:11] Sampling:  64%  ETA: 0:09:26 ( 9.93  s/it)[K     > [Started 01:23:30 | Elapsed 00:18:27] Sampling:  65%  ETA: 0:09:19 ( 9.99  s/it)[K     > [Started 01:23:30 | Elapsed 00:18:30] Sampling:  66%  ETA: 0:09:06 ( 9.92  s/it)[K     > [Started 01:23:30 | Elapsed 00:18:53] Sampling:  66%  ETA: 0:09:02 (10.04  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:04] Sampling:  67%  ETA: 0:08:53 (10.05  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:05] Sampling:  68%  ETA: 0:08:38 ( 9.97  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:11] Sampling:  68%  ETA: 0:08:27 ( 9.93  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:26] Sampling:  69%  ETA: 0:08:19 ( 9.98  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:33] Sampling:  69%  ETA: 0:08:08 ( 9.95  s/it)[K     > [Started 01:23:30 | Elapsed 00:19:38] Sampling:  70%  ETA: 0:07:55 ( 9.91  s/it)[K     > [Started 01:23:30 | Elapsed 00:20:25] Sampling:  71%  ETA: 0:08:01 (10.24  s/it)[K     > [Started 01:23:30 | Elapsed 00:20:43] Sampling:  71%  ETA: 0:07:54 (10.31  s/it)[K     > [Started 01:23:30 | Elapsed 00:20:48] Sampling:  72%  ETA: 0:07:42 (10.26  s/it)[K     > [Started 01:23:30 | Elapsed 00:20:54] Sampling:  72%  ETA: 0:07:30 (10.22  s/it)[K     > [Started 01:23:30 | Elapsed 00:20:59] Sampling:  73%  ETA: 0:07:18 (10.18  s/it)[K     > [Started 01:23:30 | Elapsed 00:21:16] Sampling:  74%  ETA: 0:07:10 (10.24  s/it)[K     > [Started 01:23:30 | Elapsed 00:21:25] Sampling:  74%  ETA: 0:06:59 (10.22  s/it)[K     > [Started 01:23:30 | Elapsed 00:21:28] Sampling:  75%  ETA: 0:06:47 (10.17  s/it)[K     > [Started 01:23:30 | Elapsed 00:23:08] Sampling:  76%  ETA: 0:07:05 (10.91  s/it)[K     > [Started 01:23:30 | Elapsed 00:23:26] Sampling:  76%  ETA: 0:06:57 (10.97  s/it)[K     > [Started 01:23:30 | Elapsed 00:23:35] Sampling:  77%  ETA: 0:06:45 (10.95  s/it)[K     > [Started 01:23:30 | Elapsed 00:23:51] Sampling:  78%  ETA: 0:06:36 (10.99  s/it)[K     > [Started 01:23:30 | Elapsed 00:23:53] Sampling:  78%  ETA: 0:06:22 (10.92  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:07] Sampling:  79%  ETA: 0:06:12 (10.94  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:12] Sampling:  79%  ETA: 0:06:00 (10.90  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:14] Sampling:  80%  ETA: 0:05:46 (10.82  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:22] Sampling:  81%  ETA: 0:05:35 (10.81  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:42] Sampling:  81%  ETA: 0:05:26 (10.87  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:52] Sampling:  82%  ETA: 0:05:15 (10.87  s/it)[K     > [Started 01:23:30 | Elapsed 00:24:58] Sampling:  82%  ETA: 0:05:03 (10.84  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:02] Sampling:  83%  ETA: 0:04:51 (10.78  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:24] Sampling:  84%  ETA: 0:04:43 (10.87  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:25] Sampling:  84%  ETA: 0:04:30 (10.79  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:29] Sampling:  85%  ETA: 0:04:18 (10.74  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:39] Sampling:  86%  ETA: 0:04:07 (10.74  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:49] Sampling:  86%  ETA: 0:03:56 (10.73  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:56] Sampling:  87%  ETA: 0:03:45 (10.70  s/it)[K     > [Started 01:23:30 | Elapsed 00:25:57] Sampling:  88%  ETA: 0:03:33 (10.63  s/it)[K     > [Started 01:23:30 | Elapsed 00:26:08] Sampling:  88%  ETA: 0:03:22 (10.64  s/it)[K     > [Started 01:23:30 | Elapsed 00:26:23] Sampling:  89%  ETA: 0:03:12 (10.67  s/it)[K     > [Started 01:23:30 | Elapsed 00:26:38] Sampling:  89%  ETA: 0:03:02 (10.70  s/it)[K     > [Started 01:23:30 | Elapsed 00:26:47] Sampling:  90%  ETA: 0:02:51 (10.68  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:02] Sampling:  91%  ETA: 0:02:41 (10.72  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:09] Sampling:  91%  ETA: 0:02:30 (10.69  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:12] Sampling:  92%  ETA: 0:02:18 (10.64  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:15] Sampling:  92%  ETA: 0:02:07 (10.59  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:28] Sampling:  93%  ETA: 0:01:57 (10.60  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:44] Sampling:  94%  ETA: 0:01:46 (10.64  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:51] Sampling:  94%  ETA: 0:01:36 (10.62  s/it)[K     > [Started 01:23:30 | Elapsed 00:27:55] Sampling:  95%  ETA: 0:01:25 (10.57  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:05] Sampling:  96%  ETA: 0:01:14 (10.57  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:07] Sampling:  96%  ETA: 0:01:03 (10.51  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:10] Sampling:  97%  ETA: 0:00:52 (10.47  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:13] Sampling:  98%  ETA: 0:00:42 (10.41  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:17] Sampling:  98%  ETA: 0:00:31 (10.38  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:19] Sampling:  99%  ETA: 0:00:21 (10.32  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:44] Sampling:  99%  ETA: 0:00:10 (10.42  s/it)[K     > [Started 01:23:30 | Elapsed 00:28:46] Sampling: 100% Time: 0:27:37 (10.36  s/it)[K
+ [5] Auditing convergence...
+     > FAIL  R̂≤1.0129  ESS≥499  div 0/128000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  710 fixtures × 3200 draws
+------------------------------------------------------------------
+DONE in 29m 25s
+ERROR: LoadError: m00_baseline_grw failed strict promotion: max R-hat 1.0129 at fold 37 (gate < 1.010)
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:44
+ [2] l01_assert_promotion(name::String, diagnostics::ConvergenceSummary)
+   @ Main.MultiScaleGRWPrototype ~/BF_multiscale_grw/current_development/multiscale_grw/l01_loader.jl:859
+ [3] r01_run_phase(names::Tuple{String, String}; stage::String)
+   @ Main ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:331
+ [4] r01_run_phase
+   @ ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:312 [inlined]
+ [5] r01_run_phase1()
+   @ Main ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:379
+ [6] top-level scope
+   @ ~/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:411
+ [7] include(mod::Module, _path::String)
+   @ Base ./Base.jl:306
+ [8] exec_options(opts::Base.JLOptions)
+   @ Base ./client.jl:317
+ [9] _start()
+   @ Base ./client.jl:550
+in expression starting at /root/BF_multiscale_grw/current_development/multiscale_grw/r01_runner.jl:407

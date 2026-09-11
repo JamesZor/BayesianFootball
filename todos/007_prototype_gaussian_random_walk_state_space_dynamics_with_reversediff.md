@@ -4,12 +4,12 @@
 |---|---|
 | ID | 007 |
 | Title | Prototype Gaussian Random Walk State Space Dynamics with ReverseDiff |
-| Status | DONE |
+| Status | COMPLETED |
 | Priority | P2 |
 | Assignee | pi |
 | Created | 2026-09-10 |
 | Updated | 2026-09-11 |
-| Related Files / Commits / PRs | [src/models/pregame/components/dynamics/team_level/multiscale.jl](../src/models/pregame/components/dynamics/team_level/multiscale.jl); [current_development/multiscale_grw/](../current_development/multiscale_grw/); `feat/multiscale-grw-dynamics` |
+| Related Files / Commits / PRs | [src/models/pregame/components/dynamics/team_level/multiscale.jl](../src/models/pregame/components/dynamics/team_level/multiscale.jl); [src/models/pregame/builder/grw_dynamics.jl](../src/models/pregame/builder/grw_dynamics.jl); [test/test_multiscale_grw.jl](../test/test_multiscale_grw.jl); [current_development/multiscale_grw/](../current_development/multiscale_grw/); `feat/multiscale-grw-dynamics` |
 
 ## Context & Problem Statement
 
@@ -30,6 +30,8 @@ We need to prototype, benchmark, and evaluate a true latent state-space GRW comp
 - [x] Persist run artifacts to PostgreSQL `mcmc_experiments` with `ad_backend = 'reversediff'`. Confirmed by direct query of the `runs`/`fold_results` tables: `m00_baseline_grw` → `f64a00a2-34a0-4f31-8c58-c093c92d54b7`, `m05_production_wealth_grw` → `b2d8036d-8fbd-45f9-92b5-cc7675926232`, `m05_joint_production_wealth_grw` → `f870dbb7-9df0-4dae-a84a-cf570cf8113e`; all `status = completed`, `ad_backend = reversediff`.
 - [x] Benchmark out-of-sample proper scores (LogLoss, CRPS, Brier, RPS) and sampling times against `TimeDecayDynamics(180.0)`. All three candidates beat their matched TimeDecay controls on all four proper scores — see Verification & Findings.
 - [x] Phase 2: execute the two-arm Joint Gamma-Poisson candidate (`m05_joint_production_wealth_grw`) against the `TimeDecayDynamics` joint control, gated on both Phase 1 candidates passing strict convergence. Completed 2026-09-11; passed strict gates (R̂ 1.0069, bulk ESS 1331, tail ESS 1086, 0 divergences of 256000) and beat the joint control on all four proper scores. Run UUID `f870dbb7-9df0-4dae-a84a-cf570cf8113e`.
+- [x] Layer 4 portfolio backtest and Layer 2 generative rate calibration over all three GRW fits, their three matched TimeDecay controls and `m12_joint_hybrid_synergy`, under one canonical Betfair staking contract. 21 arm/variant simulations over a 622-fixture buildable panel; artifacts in `current_development/multiscale_grw/results/` — see Verification & Findings.
+- [x] Graduate `MultiScaleGRW` into `src/` as a natively supported `CountModelBuilder` dynamics component, with the state-count contract corrected and regression-tested. Component rewritten in `src/models/pregame/components/dynamics/team_level/multiscale.jl`; builder seam added as `src/models/pregame/builder/grw_dynamics.jl`; exported through `PreGame` → `Models` → `BayesianFootball`; 124 assertions in `test/test_multiscale_grw.jl`, full suite 3962 pass / 0 fail.
 
 ## Ideas & Candidate Solutions
 
@@ -46,6 +48,8 @@ We need to prototype, benchmark, and evaluate a true latent state-space GRW comp
 - [2026-09-10 @antigravity] Created task in BACKLOG following ReverseDiff 24× speedup breakthrough and user proposal. Outlined mathematical formulation and acceptance criteria.
 - [2026-09-10 @pi] Claimed in session `pi_solo:1`, worktree `/home/james/bet_project/.worktrees/BayesianFootball-grw-dynamics` on branch `feat/multiscale-grw-dynamics`; remote compute target `/root/BF_multiscale_grw` on `mcmc-beast`. Design locked via `/grill-me`: revive `MultiScaleGRW` in `current_development/multiscale_grw/` (l01_loader.jl + r01_runner.jl); Phase 1 (Poisson m00/m05) -> 2-fold preflight -> 40-fold grid on beast -> benchmark vs TimeDecayDynamics; Phase 2 (Two-arm Joint Gamma-Poisson m05) overnight.
 - [2026-09-11 @pi] Two-fold preflight passed for all three candidates. Phase 1 production grid (40 folds × 4 chains, 800 warmup + 800 samples) launched; `m00_baseline_grw` initially missed the strict R̂ ≤ 1.01 gate (R̂ 1.0135), as did `m05_production_wealth_grw` on its first pass (R̂ 1.0122, then a second attempt at 1.0132). Implemented `l01_extend_sampling` in `l01_loader.jl` to append a further independent 800-warmup/800-sample run, concatenate raw chain draws, and re-audit convergence on the full concatenated chain while persisting only a 1-in-4 thinned draw subset (full 6400-draw serialized artifact was ~1.18GB and exceeded the PostgreSQL `bytea` text-protocol path; thinned artifact is ~295MB and saves cleanly). Both candidates passed strict gates after one extension pass each and were persisted to `mcmc_experiments` (`scottish_lower_multiscale_grw_2426`). Phase 1 runner reported `PHASE 1 PROMOTION PASS`.
+- [2026-09-11 @pi] Ran the Layer 4 / Layer 2 benchmark (`current_development/multiscale_grw/r02_portfolio_calibration.jl`, ~13 min on beast). Four bugs were each caught by an assertion rather than by inspection, which is the argument for writing the assertions: `MarketRateFit` exposes `.accepted` not `.inverted`; `@sprintf` rejects a concatenated format string; a fit's latents must be **restricted to the panel before building** (arms hold 710 fixtures, the book quotes 635, so an unrestricted build skipped 75); and the panel must be **buildable**, not merely quoted (13 quoted fixtures were refused for `no usable selections`). A pre-written narrative bullet claiming the closing-instant calibrator collapses the edge was **contradicted by the run** — measured median `w` is 0.97 at the close versus 0.29 at T-25 — so the prose was replaced by `l02_calibration_note`, which derives the claim from the measured weights instead of asserting it.
+- [2026-09-11 @pi] Graduated `MultiScaleGRW` into `src/`. Found and fixed the legacy state-count off-by-one (`1 + n_history + n_target` vs the contracted `n_history + n_target`) while porting the validated prototype math. Builder seam isolated in `src/models/pregame/builder/grw_dynamics.jl` (included after `engine.jl`, since it adds methods to hooks that file declares) rather than scattered across `builder.jl`/`engine.jl`/`player_dynamics.jl`. The prototype's specialised `extract_parameters` override was **not** graduated: the generic composable extractor is fully hook-driven via `_cb_extract_dynamics`/`_cb_oos_dynamics` and computes the identical final state, so the override was redundant. Verified on beast: `test/test_multiscale_grw.jl` 124/124 (including ReverseDiff vs ForwardDiff gradient agreement and compiled-tape replay at a perturbed point), full `runtests.jl` 3962 pass / 1 pre-existing broken / 0 fail in 5m45s.
 - [2026-09-11 @pi] Phase 2 launched on `mcmc-beast` (tmux `multiscale_grw_phase2`, `L01_STAGE=phase2`) after confirming the Phase 1 promotion gate and an idle machine. Base pass: 46m40s, R̂ 1.0161 / ESS 507 / **0 divergences of 128000** — same profile as Phase 1, good geometry but short of the strict R̂ gate. One `l01_extend_sampling` pass (44m15s, again 0 divergences) brought the combined chain to R̂ 1.0069 / bulk ESS 1331 / tail ESS 1086 and the run was persisted. `PHASE 2 PASS` recorded. Notably the joint candidate's advantage over its TimeDecay control is roughly 5× smaller than the Poisson candidates' (Δ LogLoss -0.00031 vs -0.00170/-0.00148): the second likelihood arm already supplies much of the temporal sharpening that the GRW state buys in the single-arm models, so the two mechanisms are substantially substitutive rather than additive.
 
 ## Verification & Findings
@@ -88,3 +92,50 @@ All three GRW candidates beat their matched TimeDecay control on every one of th
 **Unmet performance target.** Zero-allocation gradient replay was not achieved: ~35–37KB per compiled-tape gradient call for the Poisson candidates and ~129–133KB for the joint candidate. The TimeDecay control allocates ~43,888 bytes in the identical harness, so this is a property of the installed ReverseDiff stack rather than a regression introduced by `MultiScaleGRW`. Recorded as an unmet target, not a gated pass.
 
 **Cost.** MultiScaleGRW is materially more expensive than TimeDecay at equal fold count once the extension pass required to clear the strict R̂ gate is counted (`m05_production_wealth_grw` 60.7 min vs the control's ~2.0 min; the joint candidate 90.9 min). A promotion decision should weigh a ~-0.0015 LogLoss gain on single-arm models against roughly a 30× sampling cost, and note that the gain nearly vanishes in the joint configuration that is closest to the current production shape.
+
+### Layer 4 portfolio backtest
+
+Seven arms priced through one identical staking contract — `FlatTrust(0.30)` / `SlateDrawdown(23.0)` / `FixedCap(0.20)`, daily slate, 1X2 + O/U 2.5 + BTTS, Baker-McHale shrinkage — over a **622-fixture** panel, 4,000 bootstrap resamples, seed 1. The panel is the intersection of all seven arms' held-out fixtures with the Betfair book, then narrowed to the fixtures every arm can actually *build* (635 quoted → 622 buildable; the 13 dropped all failed with `no usable selections`). Only the posterior differs between rows.
+
+| Model | Return % | CAGR % | g/slate | Sharpe | Calmar | MDD % |
+|---|---:|---:|---:|---:|---:|---:|
+| `m05_production_wealth_grw` | **+174.88** | **+79.72** | **+0.01021** | **1.715** | **8.86** | -19.7 |
+| `m00_baseline_grw` | +153.84 | +71.61 | +0.00941 | 1.636 | 8.41 | -18.3 |
+| `m12_joint_hybrid_synergy` | +129.32 | +61.80 | +0.00838 | 1.355 | 6.59 | -19.6 |
+| `m05_joint_production_wealth_grw` | +125.06 | +60.05 | +0.00819 | 1.647 | 6.25 | -20.0 |
+| `m05_production_wealth` *(control)* | +124.25 | +59.71 | +0.00816 | 1.305 | 5.91 | -21.0 |
+| `m05_joint_production_wealth` *(control)* | +117.34 | +56.84 | +0.00784 | 1.395 | 6.30 | -18.6 |
+| `m00_baseline` *(control)* | +115.48 | +56.06 | +0.00775 | 1.215 | 5.47 | -21.1 |
+
+Each GRW arm beats its own matched control, and the ordering of the *margins* tracks the proper-score ordering exactly: `m00_baseline_grw` +38.4 pp (ΔLogLoss -0.00170), `m05_production_wealth_grw` +50.6 pp (-0.00148), `m05_joint_production_wealth_grw` **+7.7 pp** (-0.00031). The backtest therefore **re-expresses the proper-score finding at a different magnification rather than discovering independent alpha**, and it reproduces the substitutability result: the GRW's edge over its control nearly vanishes once the proxy-xG arm is present.
+
+The two best GRW arms also beat `m12_joint_hybrid_synergy`, the current production hybrid, on return, growth, Sharpe and Calmar. **At n = 622 the 95% bootstrap growth interval overlaps zero for most arms, so this ranking is not statistically separable** and no arm should be promoted on these figures alone.
+
+### Layer 2 generative rate calibration
+
+Every arm was re-priced through `GenerativeRateCalibrator` at two instants: `scot_lower_t25_inv` (`InverseGaussianLaw(w_base = 0.25, sigma = 0.35)` at T-25) and `scot_lower_close_std` (`StandardGaussianLaw(w_base = 0.30, sigma = 0.40)` at T+0), both with `PoolDispersion()`. 14 calibrated containers, all coherent: worst `max_family_spread` across the 1X2 / totals / BTTS partitions of the shared score tensor was **6.66e-16**, worst deviation from unit mass 1.83e-4. Coherence here is structural, not audited.
+
+Best calibrated arm, `m05_production_wealth_grw` at T-25: **MDD -9.47%** (from -19.75%), **Sharpe 2.014** (from 1.715), **Calmar 12.32** (from 8.86), on +116.72% return.
+
+The headline is a **risk transformation, not a return improvement**. Median across the seven arms:
+
+| Instant | median `w` | market share | var retention | Δreturn pp | ΔMDD pp | ΔSharpe |
+|---|---:|---:|---:|---:|---:|---:|
+| `t25_inv` | 0.290 | 0.710 | 0.084 | -48.45 | **+7.09** | +0.128 |
+| `close_std` | 0.974 | 0.026 | 0.949 | -10.76 | +3.11 | +0.150 |
+
+At T-25 the pool keeps only ~29% model weight and ~8% of the posterior variance, so the book supplies most of the location: drawdown roughly halves and Sharpe and Calmar rise sharply, but ~48 pp of return is surrendered. **Read the weight column before the return column** — a calibrated arm's Sharpe is substantially the market's, and the two instants are not interchangeable (a spec moved between them gives up 0.0015-0.0020 LogLoss). Calibration also compresses the spread between arms, which is the expected consequence of every arm being shrunk toward the same book.
+
+### Graduation to `src/`
+
+`MultiScaleGRW` is now a first-class `CountModelBuilder` component:
+
+```julia
+model = CountModelBuilder(:m00_baseline_grw) |>
+    add(GlobalInterception()) |> add(MultiScaleGRW()) |>
+    add(GlobalHomeAdvantage()) |> add(PoissonObservation()) |> build
+```
+
+The graduation **fixed a silent off-by-one** carried by the previously unexported component: its `cumsum(hcat(init, season, target))` emitted `1 + n_history + n_target` states against a `:n_rounds` contract of `n_history + n_target`, so every fixture read the wrong state. There are `n_history - 1` macro transitions, not `n_history`. `dynamics_design` now asserts the identity rather than trusting it, and the accumulator geometry is pinned test-by-test. The two legacy arities (`build_dynamics(config, n_teams, n_history, n_target)` and the 6-arg `extract_dynamics`) are retained for the four hand-written `standard/` engines and were re-implemented on the corrected math.
+
+The cumulative sum is expressed as multiplication by three constant 0/1 accumulator matrices rather than `cumsum`/`hcat`, because ReverseDiff preallocates a matrix-multiply output in the compiled tape but cannot preallocate `hcat` scratch. `MultiScaleGRW` takes **unit likelihood weights** — recency is latent state, and layering time decay on top would discount the same evidence twice. `cb_chain_columns` now **refuses** the GRW's `z_season`/`z_target` sites rather than defaulting them to width 1: their widths are fold-dependent and the scalar default would silently undercount θ.

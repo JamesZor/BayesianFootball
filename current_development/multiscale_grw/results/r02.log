@@ -1,0 +1,120 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 169.7 hours)...
+
+==============================================================================
+ 1. CONTRACT
+==============================================================================
+  book   : BayesianFootball.Data.Markets.MarketConfig(BayesianFootball.Data.Markets.AbstractMarket[Market[1X2], Market[O/U 2.5]]) | Baker-McHale | 2% commission
+  policy : FlatTrust(0.30), SlateDrawdown(23.0), FixedCap(0.20), DailySlate
+
+==============================================================================
+ 2. LOADING SEVEN PERSISTED POSTERIORS
+==============================================================================
+  m00_baseline_grw                     710 fixtures | f64a00a2-34a0-4f31-8c58-c093c92d54b7
+  m05_production_wealth_grw            710 fixtures | b2d8036d-8fbd-45f9-92b5-cc7675926232
+  m05_joint_production_wealth_grw      710 fixtures | f870dbb7-9df0-4dae-a84a-cf570cf8113e
+  m00_baseline                         710 fixtures | 2722f7e2-0ee6-4040-95cc-55420800b1c3
+  m05_production_wealth                710 fixtures | 9239e392-897f-490e-aad4-9e3cc7c6cf5b
+  m05_joint_production_wealth          710 fixtures | 92a55d0b-86ba-4f08-a706-0684c95bec75
+  m12_joint_hybrid_synergy             710 fixtures | 928dad3b-ccaf-4909-b6b7-4f1a815e1cab
+
+  Betfair book : 14617 graded selections over 1627 fixtures
+  quoted panel : 635 fixtures common to all seven arms AND quoted
+  dropped      : 13 not buildable by every arm
+                 no usable selections     13
+  FROZEN PANEL : 622 fixtures
+  panel book   : 5786 selections
+
+==============================================================================
+ 3. LAYER 2 — POINT-IN-TIME BOOKS AND MARKET INVERSION
+==============================================================================
+  t25_inv    T-25 : 10373 selections | 1572 fixtures | 7687 refusals
+             inverted 567 / 622 panel fixtures
+  close_std  T+0 : 16446 selections | 1638 fixtures | 5867 refusals
+             inverted 618 / 622 panel fixtures
+
+==============================================================================
+ 4. PORTFOLIO SIMULATION — RAW AND CALIBRATED
+==============================================================================
+  m00_baseline_grw                   raw       bets  1324 | return  +153.84% | g +0.00941 | Sharpe  1.636 | MDD  -18.3%
+                                     t25_inv   bets  1243 | return  +110.70% | g +0.00753 | Sharpe  1.937 | MDD   -9.2% | w̃ 0.29
+                                     close_std bets  1312 | return  +104.63% | g +0.00723 | Sharpe  1.555 | MDD  -15.6% | w̃ 0.97
+  m05_production_wealth_grw          raw       bets  1298 | return  +174.88% | g +0.01021 | Sharpe  1.715 | MDD  -19.7%
+                                     t25_inv   bets  1223 | return  +116.72% | g +0.00781 | Sharpe  2.014 | MDD   -9.5% | w̃ 0.29
+                                     close_std bets  1295 | return  +122.54% | g +0.00808 | Sharpe  1.667 | MDD  -16.3% | w̃ 0.98
+  m05_joint_production_wealth_grw    raw       bets  1263 | return  +125.06% | g +0.00819 | Sharpe  1.647 | MDD  -20.0%
+                                     t25_inv   bets  1195 | return   +61.24% | g +0.00483 | Sharpe  1.523 | MDD  -12.7% | w̃ 0.28
+                                     close_std bets  1254 | return  +100.44% | g +0.00702 | Sharpe  1.644 | MDD  -16.8% | w̃ 0.98
+  m00_baseline                       raw       bets  1301 | return  +115.48% | g +0.00775 | Sharpe  1.215 | MDD  -21.1%
+                                     t25_inv   bets  1227 | return   +80.74% | g +0.00598 | Sharpe  1.464 | MDD  -12.8% | w̃ 0.30
+                                     close_std bets  1287 | return  +111.69% | g +0.00758 | Sharpe  1.410 | MDD  -17.3% | w̃ 0.97
+  m05_production_wealth              raw       bets  1298 | return  +124.25% | g +0.00816 | Sharpe  1.305 | MDD  -21.0%
+                                     t25_inv   bets  1211 | return   +76.61% | g +0.00575 | Sharpe  1.443 | MDD  -12.8% | w̃ 0.29
+                                     close_std bets  1288 | return  +117.09% | g +0.00783 | Sharpe  1.476 | MDD  -16.6% | w̃ 0.97
+  m05_joint_production_wealth        raw       bets  1301 | return  +117.34% | g +0.00784 | Sharpe  1.395 | MDD  -18.6%
+                                     t25_inv   bets  1219 | return   +70.74% | g +0.00540 | Sharpe  1.485 | MDD  -11.9% | w̃ 0.29
+                                     close_std bets  1296 | return  +114.30% | g +0.00770 | Sharpe  1.545 | MDD  -14.9% | w̃ 0.98
+  m12_joint_hybrid_synergy           raw       bets  1328 | return  +129.32% | g +0.00838 | Sharpe  1.355 | MDD  -19.6%
+                                     t25_inv   bets  1213 | return   +76.38% | g +0.00573 | Sharpe  1.539 | MDD  -13.6% | w̃ 0.29
+                                     close_std bets  1316 | return  +124.39% | g +0.00816 | Sharpe  1.503 | MDD  -18.1% | w̃ 0.97
+
+==============================================================================
+ 5. DERIVATIVE COHERENCE (calibrated containers)
+==============================================================================
+  worst max_family_spread across 14 calibrated containers : 6.661e-16
+  (1X2 / O/U / BTTS are partitions of one score tensor, so this is ~0 by construction)
+
+==============================================================================
+ 6. HEADLINE — RAW POSTERIORS
+==============================================================================
+7×11 DataFrame
+ Row │ model                            family      n_bets  total_return_pct  cagr_pct  growth_per_slate  sharpe_ann  calmar   max_drawdown_pct  win_rate_pct  expected_edge_pct
+     │ String                           String      Int64   Float64           Float64   Float64           Float64     Float64  Float64           Float64       Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_production_wealth_grw        GRW           1298           174.878   79.7199        0.0102137      1.71499  8.85666          -19.7453       34.8998            5.0223
+   2 │ m00_baseline_grw                 GRW           1324           153.842   71.6129        0.00940949     1.63562  8.40706          -18.2991       35.423             5.03454
+   3 │ m12_joint_hybrid_synergy         Production    1328           129.323   61.7983        0.00838346     1.35451  6.58822          -19.6295       34.1114            4.66761
+   4 │ m05_joint_production_wealth_grw  GRW           1263           125.064   60.0493        0.00819409     1.64712  6.24834          -20.0156       34.2043            4.49515
+   5 │ m05_production_wealth            TimeDecay     1298           124.247   59.7123        0.00815737     1.3045   5.91103          -21.0196       32.9738            4.87214
+   6 │ m05_joint_production_wealth      TimeDecay     1301           117.342   56.8424        0.00784145     1.39531  6.29943          -18.6274       33.8201            4.55215
+   7 │ m00_baseline                     TimeDecay     1301           115.479   56.0613        0.00775447     1.21516  5.47095          -21.1076       32.3597            4.97756
+
+==============================================================================
+ 7. RAW vs CALIBRATED
+==============================================================================
+21×8 DataFrame
+ Row │ model                            variant    n_bets  total_return_pct  growth_per_slate  sharpe_ann  max_drawdown_pct  expected_edge_pct
+     │ String                           String     Int64   Float64           Float64           Float64     Float64           Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m00_baseline                     close_std    1287          111.692         0.00757537     1.4105          -17.3139             4.3777
+   2 │ m00_baseline                     raw          1301          115.479         0.00775447     1.21516         -21.1076             4.97756
+   3 │ m00_baseline                     t25_inv      1227           80.7392        0.00597863     1.4642          -12.8387             3.31754
+   4 │ m00_baseline_grw                 close_std    1312          104.625         0.00723243     1.55492         -15.6125             4.33513
+   5 │ m00_baseline_grw                 raw          1324          153.842         0.00940949     1.63562         -18.2991             5.03454
+   6 │ m00_baseline_grw                 t25_inv      1243          110.7           0.00752791     1.9373           -9.24864            3.40062
+   7 │ m05_joint_production_wealth      close_std    1296          114.305         0.00769927     1.54508         -14.8841             4.03579
+   8 │ m05_joint_production_wealth      raw          1301          117.342         0.00784145     1.39531         -18.6274             4.55215
+   9 │ m05_joint_production_wealth      t25_inv      1219           70.7431        0.00540394     1.48542         -11.8983             2.97823
+  10 │ m05_joint_production_wealth_grw  close_std    1254          100.441         0.00702375     1.64377         -16.7589             4.01736
+  11 │ m05_joint_production_wealth_grw  raw          1263          125.064         0.00819409     1.64712         -20.0156             4.49515
+  12 │ m05_joint_production_wealth_grw  t25_inv      1195           61.2381        0.00482537     1.52306         -12.6588             2.90454
+  13 │ m05_production_wealth            close_std    1288          117.087         0.00782959     1.47601         -16.6341             4.27971
+  14 │ m05_production_wealth            raw          1298          124.247         0.00815737     1.3045          -21.0196             4.87214
+  15 │ m05_production_wealth            t25_inv      1211           76.6142        0.00574543     1.44316         -12.8277             3.26828
+  16 │ m05_production_wealth_grw        close_std    1295          122.538         0.00808008     1.66707         -16.3236             4.31187
+  17 │ m05_production_wealth_grw        raw          1298          174.878         0.0102137      1.71499         -19.7453             5.0223
+  18 │ m05_production_wealth_grw        t25_inv      1223          116.72          0.00781249     2.01388          -9.472              3.38252
+  19 │ m12_joint_hybrid_synergy         close_std    1316          124.385         0.00816359     1.50257         -18.0677             4.17316
+  20 │ m12_joint_hybrid_synergy         raw          1328          129.323         0.00838346     1.35451         -19.6295             4.66761
+  21 │ m12_joint_hybrid_synergy         t25_inv      1213           76.3772        0.00573187     1.53928         -13.5514             3.09147
+
+==============================================================================
+ 8. WRITING RESULTS
+==============================================================================
+  summary   : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_portfolio_summary.csv
+  tearsheet : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_portfolio_backtesting_tearsheet.csv
+  coherence : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_coherence.csv
+  weights   : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_calibration_weights.csv
+  dropped   : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_dropped_fixtures.csv
+  report    : /root/BF_multiscale_grw/current_development/multiscale_grw/results/r02_portfolio_calibration_report.md
+
+Done. 21 arm/variant rows over 622 fixtures.

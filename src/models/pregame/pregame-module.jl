@@ -94,14 +94,14 @@ using .Builder: CountModelBuilder, PoissonCountModel, NegBinCountModel,
     add!, add, replace!, validate, build, build_count_model,
     cb_predictor_terms, cb_predictor_names, cb_covariates, cb_covariate_names,
     cb_varinfo_sites, cb_chain_columns,
-    cb_parameter_count
+    cb_parameter_count, GRWDynamicsDesign
 
 export DynamicGoalsModel, DynamicGoalsTimeDecayModel, DynamicMarketGoalsTimeDecayModel, DynamicXGModel, DynamicXGTimeDecayModel, DynamicMarketGoalsModel, DynamicMarketXGModel, DynamicMarketXGTimeDecayModel, DynamicMarketXGPlayerModel, DynamicMarketXGPlayerTimeDecayModel, DynamicMarketXGHierarchicalPlayerTimeDecayModel, DynamicMarketXGOutfieldPlayerTimeDecayModel, DynamicXGOutfieldPlayerTimeDecayModel, DynamicCopulaGoalsTimeDecayModel, DynamicDixonColesXGOutfieldPlayerTimeDecayModel, DynamicDixonColesXGFullPositionPlayerTimeDecayModel, DynamicDoublePoissonXGOutfieldPlayerTimeDecayModel, DynamicSmileDoublePoissonXGOutfieldPlayerTimeDecayModel, DynamicSmileDoublePoissonGoalsLeagueTimeDecayModel, DynamicFunnelDoublePoissonGoalsLeagueTimeDecayModel, DynamicDoubleNegBinXGOutfieldPlayerTimeDecayModel, DynamicDoublePoissonXGOutfieldPlayerTimeDecayNoMarketModel, DynamicDixonColesXGOutfieldPlayerTimeDecayNoMarketModel, DynamicDoublePoissonBigChanceOutfieldPlayerTimeDecayModel, DynamicGoalsPlusMinusLeagueTimeDecayModel, DynamicFunnelPlusMinusGoalsLeagueTimeDecayModel
 export DynamicRecombinedGoalsModel, DynamicPxGRecombModel
 export AbstractRecombinationConfig, EmpiricalRecombinationConfig, HierarchicalOfficiatingConfig
 export AbstractSquadWealthConfig, NoSquadWealthConfig, LinearSquadWealthConfig
 export AbstractPxGObservationConfig, NoPxGObservationConfig, GammaPxGObservationConfig
-export TimeDecayDynamics, StaticZeroDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig, HierarchicalFrankCopulaConfig, GlobalFrankCopulaConfig
+export TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig, HierarchicalFrankCopulaConfig, GlobalFrankCopulaConfig
 export GlobalDispersion, HomeAwayDispersion
 
 ##
@@ -135,6 +135,7 @@ export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,
        cb_covariate_names, cb_varinfo_sites, cb_chain_columns,
        cb_parameter_count
+export GRWDynamicsDesign
 export build_turing_model, extract_parameters
 
 end # module

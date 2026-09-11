@@ -20,6 +20,9 @@ include("player_dynamics.jl")
 include("components.jl")
 include("builder.jl")
 include("engine.jl")
+# The MultiScaleGRW seam. After `engine.jl`, because it adds methods to the generic
+# dynamics hooks that file declares.
+include("grw_dynamics.jl")
 include("equations.jl")
 
 export CountModelBuilder, PoissonCountModel, NegBinCountModel, ComposableCountModel
@@ -50,5 +53,6 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
 export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,
        cb_covariate_names, cb_varinfo_sites, cb_chain_columns, cb_parameter_count
+export GRWDynamicsDesign
 
 end
