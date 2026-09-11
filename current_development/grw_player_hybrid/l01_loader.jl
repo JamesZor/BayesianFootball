@@ -401,7 +401,7 @@ function gph_filtration_report(ds, inputs)
     date_of = Dict(Int(r.match_id) => Date(r.match_date) for r in eachrow(ds.matches))
     rows = NamedTuple[]
     for (i, fs) in enumerate(inputs.feature_sets)
-        b = inputs.boundaries[i]
+        b = first(inputs.boundaries[i])
         d = first(fs).data
         train_ids = vcat(b.history_match_ids, b.target_match_ids)
         oos = inputs.oos[i]
