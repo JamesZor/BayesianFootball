@@ -648,6 +648,19 @@ end
 # rather than by widening `_cb_site_width`'s structural signature with an argument it never reads.
 function _cb_site_width(m::ComposableCountModel, site::Symbol, n_teams::Int, n_seasons::Int)
     site === Symbol("obs.κ_team_raw") && return n_teams
+    site === Symbol("dyn.α.z_init") && return n_teams
+    site === Symbol("dyn.β.z_init") && return n_teams
+    # MultiScaleGRW's `z_season` and `z_target` are (teams x steps) MATRICES whose
+    # width depends on the fold's time geometry — how many history seasons and how
+    # many observed target steps. That is not derivable from `(n_teams, n_seasons)`,
+    # so this function cannot answer honestly and refuses instead of returning the
+    # scalar default, which would silently undercount θ by thousands of entries.
+    (site === Symbol("dyn.α.z_season") || site === Symbol("dyn.β.z_season") ||
+     site === Symbol("dyn.α.z_target") || site === Symbol("dyn.β.z_target")) && error(
+        "site $site has a fold-dependent width: MultiScaleGRW's innovation grids are " *
+        "(n_teams x n_steps) and n_steps comes from the fold's time geometry, not from " *
+        "n_teams/n_seasons. Read the realised width from the fitted chain, or from the " *
+        "GRWDynamicsDesign built by `dynamics_design`.")
     return _cb_site_width(m.interception, m.home_advantage, site, n_teams, n_seasons)
 end
 

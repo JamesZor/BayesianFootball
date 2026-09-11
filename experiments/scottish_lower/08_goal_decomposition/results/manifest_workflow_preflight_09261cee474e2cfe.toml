@@ -1,0 +1,16 @@
+julia_version = "1.12.1"
+target_seasons = ["24/25", "25/26"]
+datastore_snapshot_hash = "8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567"
+experiment = "scottish_lower_goal_decomposition_2426"
+stage = "workflow_preflight"
+expected_folds = 40
+expected_oos = 710
+chains = 4
+
+[source_hashes]
+"experiments/scottish_lower/08_goal_decomposition/l08_workflow.jl" = "74672daa5c769fcd4a15643600e02abd02fbd6ca60cef06499d8fd94dc1e081a"
+"experiments/scottish_lower/08_goal_decomposition/r08_workflow_preflight.jl" = "e3a904b8e023eca4a0c0f66bd7dc0aea1df887ead7b4b971a81c909082485577"
+
+[extra]
+probe = "native_constructor"
+datastore_rows = 2019

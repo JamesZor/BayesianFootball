@@ -1,0 +1,20 @@
+Precompiling packages...
+Info Given BayesianFootball was explicitly requested, output will be shown live [0K
+[0KWARNING: Imported binding Portfolio.TurnoverCommission was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.IndependentKelly was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.StaticFamilyTrust was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.ShrinkToMarketTrust was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.MatchDrawdown was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.FixedFraction was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.PerMatchCap was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.WeeklySlate was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.MatchSlate was undeclared at import time during import to BayesianFootball.
+  14854.2 ms  ✓ BayesianFootball
+  1 dependency successfully precompiled in 16 seconds. 570 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└  
+Test Summary:           | Pass  Total   Time
+NUTS sampler AD backend |   18     18  12.0s
+TEST_EXIT 0

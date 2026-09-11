@@ -1,0 +1,2 @@
+total_attempts,total_converted,pooled_mle,beta_prior_a,beta_prior_b,beta_posterior_mean,beta_interval_low,beta_interval_high,teams,teams_with_no_attempts,observed_pearson_x2,null_mean,p_value,monte_carlo_se,replicates,seed
+545,419,0.7688073394495413,1.0,1.0,0.7678244972577697,0.7315692233305287,0.8022249762023552,31,2,40.33140900373051,28.47907971616171,0.06846576711644178,0.005645632501467719,2000,20260908

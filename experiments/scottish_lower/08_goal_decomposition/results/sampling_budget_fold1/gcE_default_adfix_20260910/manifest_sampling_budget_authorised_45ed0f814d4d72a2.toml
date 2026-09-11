@@ -1,0 +1,46 @@
+julia_version = "1.12.6"
+target_seasons = ["24/25", "25/26"]
+datastore_snapshot_hash = "8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567"
+experiment = "scottish_lower_goal_decomposition_2426"
+stage = "sampling_budget_authorised"
+expected_folds = 40
+expected_oos = 710
+chains = 4
+
+[source_hashes]
+"experiments/scottish_lower/08_goal_decomposition/l08_workflow.jl" = "32acd30f5dab3e2e5a619378caf1d1621c6509eb7795a87fbffb5cb0b6e59c72"
+"experiments/scottish_lower/08_goal_decomposition/l08_model_checks.jl" = "67167f2c56233e67ab27eb415df2fc3ba3817ea328ba10e5299fe094ee7b4e90"
+"experiments/scottish_lower/08_goal_decomposition/r08_sampling_budget_benchmark.jl" = "7d7c7d9eb9cd7adbc929488f61a80d6084a755c6a4eb37ba702a1e4ab7e4f643"
+"experiments/scottish_lower/08_goal_decomposition/l08_decomposed_models.jl" = "e32e741bb7dcf710bd36d430edc2300cc4967ac4eaac536ee1372e81423f950f"
+"experiments/scottish_lower/08_goal_decomposition/l08_incident_data.jl" = "7b7cc8bf0366734fa8ce7d924eedad10f1a20bbeafbe6c224b0c833bcd011640"
+
+[extra]
+todo = "001_sampling_budget_benchmark"
+ad_fix_override = true
+models = ["m00_recombined_control"]
+queue_slots = 16
+incident_snapshot_hash = "7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951"
+seed_base = 20260910
+fold = 1
+primary_metric = "min over parameters of min(bulk ESS, tail ESS) of the pooled 4-chain fit, divided by the fit's wall-seconds (slowest chain)"
+gc_threads = 16
+blas_threads = 1
+reported_gate = "committed production gate: identical but ESS >= 200"
+initialisation = "UniformInit(range=[-0.001, 0.001])"
+metric = "AdvancedHMC.DiagEuclideanMetric"
+reference_tag = "abc_20260910"
+thread_pinning = "pinthreads(:cores)"
+git_commit = "af2c65ea0b32d098cd2fd13526f80ca512261c20"
+host = "mcmc-beast"
+replicates = 4
+interactive_threads = 1
+seed_rule = "seed = seed_base + 1000 * rep + chain, common to every model and configuration"
+secondary_metric = "the same min ESS divided by core-seconds (sum of the 4 chains' elapsed)"
+heap_size_hint_bytes = 0
+hard_gates = "every replicate: max R-hat <= 1.05; min bulk and tail ESS >= 400; zero divergences; min BFMI >= 0.30; depth-capped rate < 0.05"
+
+    [extra.configurations.B]
+    max_depth = 10
+    retained = 500
+    delta = 0.95
+    warmup = 500

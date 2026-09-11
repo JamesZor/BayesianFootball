@@ -1,0 +1,16 @@
+metric,value
+penalty_goal_rows,428
+penalty_missed_rows,127
+penalty_rows_total,555
+duplicate_database_incident_ids,0
+duplicate_provider_incident_ids,0
+penalty_goals_missing_cumulative_score,0
+penalty_rows_missing_side,0
+rescinded_penalty_rows,0
+penalty_rows_missing_minute,0
+penalty_rows_minute_gt_120,0
+same_match_time_side_candidates,0
+scored_missed_same_stamp_retake_candidates,0
+independent_award_event_available,false
+explicit_shootout_or_retake_marker_available,false
+explicit_var_cancellation_marker_available,false

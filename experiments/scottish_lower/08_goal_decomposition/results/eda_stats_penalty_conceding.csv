@@ -1,0 +1,2 @@
+role,statistic,null_mean,null_interval_low,null_interval_high,p_value,monte_carlo_se,teams,events,side_match_exposure,cold_start_rows,pressure_adjustment,referee_adjustment,referees,replicates,seed
+conceding,37.46667029659069,27.967323965061375,15.91507167144432,44.22280018271698,0.10294852573713144,0.006793525402848048,31,545,3984,31,history_only_nonpenalty_rate,bbc_referee_fixed_effect; UNKNOWN retained,59,2000,20260908

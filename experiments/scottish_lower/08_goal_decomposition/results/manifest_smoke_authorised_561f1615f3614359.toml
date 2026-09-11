@@ -1,0 +1,51 @@
+julia_version = "1.12.1"
+target_seasons = ["24/25", "25/26"]
+datastore_snapshot_hash = "2f78cd1b605ef9bf493029d8e2b2ee26d1aeb7dff69bf349f8be3f3c96df14a3"
+experiment = "scottish_lower_goal_decomposition_2426"
+stage = "smoke_authorised"
+expected_folds = 40
+expected_oos = 710
+chains = 4
+
+[source_hashes]
+"experiments/scottish_lower/08_goal_decomposition/r08_smoke.jl" = "8221df15770e94863f813973a744e841daaa809841898557af9748c3cf63927d"
+"experiments/scottish_lower/08_goal_decomposition/l08_workflow.jl" = "fe7a4dc510039dac648e0ddd4bef1fa69442068cc7e709ca01abfe1441631e73"
+"experiments/scottish_lower/08_goal_decomposition/l08_model_checks.jl" = "67167f2c56233e67ab27eb415df2fc3ba3817ea328ba10e5299fe094ee7b4e90"
+"experiments/scottish_lower/08_goal_decomposition/l08_decomposed_models.jl" = "e32e741bb7dcf710bd36d430edc2300cc4967ac4eaac536ee1372e81423f950f"
+"experiments/scottish_lower/08_goal_decomposition/l08_incident_data.jl" = "7b7cc8bf0366734fa8ce7d924eedad10f1a20bbeafbe6c224b0c833bcd011640"
+
+[extra]
+candidate_names = ["m00_recombined_control", "m01_decomposed_baseline", "m02_decomposed_team_penalties", "m03_decomposed_pressure_own_goals"]
+smoke_fold = 1
+
+    [extra.gradient_checks.m00_recombined_control]
+    compiled_forward = 3.7799234278580724e-16
+    gradient_allocations = 0
+    instructions = 232
+    gradient_milliseconds = 0.20724
+    perturbed = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    compiled_fresh = 0.0
+
+    [extra.gradient_checks.m02_decomposed_team_penalties]
+    compiled_forward = 7.266577805266781e-16
+    gradient_allocations = 0
+    instructions = 307
+    gradient_milliseconds = 0.21979
+    perturbed = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    compiled_fresh = 0.0
+
+    [extra.gradient_checks.m03_decomposed_pressure_own_goals]
+    compiled_forward = 1.9965483089425045e-16
+    gradient_allocations = 0
+    instructions = 244
+    gradient_milliseconds = 0.21431999999999998
+    perturbed = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    compiled_fresh = 0.0
+
+    [extra.gradient_checks.m01_decomposed_baseline]
+    compiled_forward = 7.018745995922215e-16
+    gradient_allocations = 0
+    instructions = 232
+    gradient_milliseconds = 0.20867999999999998
+    perturbed = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    compiled_fresh = 0.0

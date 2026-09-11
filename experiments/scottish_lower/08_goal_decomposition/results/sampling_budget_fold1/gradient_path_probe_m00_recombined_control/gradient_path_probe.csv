@@ -1,0 +1,11 @@
+path,bytes_per_gradient,ms_per_gradient,gradients
+l08 compiled tape (ReverseDiff.gradient!),2688.0,0.2012620055,2000
+sampler adtype (logdensity_and_gradient),5472.0,0.201213335,2000
+"Turing.sample, adtype as sample kwarg (run_sampler) per leapfrog",1.855164979883545e7,3.4030557995533224,12537
+"Turing.sample, adtype in NUTS constructor per leapfrog",32952.2731115897,0.2331037493818298,12537
+"AbstractMCMC.step by hand, adtype in NUTS constructor per leapfrog",31538.48802588997,NaN,3090
+bare AHMC.transition per leapfrog,27430.59634564749,0.222230277533392,12533
+per call: plain logdensity (no AD),192560.0,0.11573079,200
+per call: deepcopy(varinfo),30512.0,0.040092675,200
+per iteration: Transition re-evaluation,229776.0,0.18002278,50
+"per iteration: Turing.sample, adtype as sample kwarg",1.16291016764e9,213.320552795,200

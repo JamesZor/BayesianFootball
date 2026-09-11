@@ -1,0 +1,91 @@
+=== gcT2_hint48_gc2_20260910 · config T · reference gcT1_default_20260910 · flags: --heap-size-hint=48G --gcthreads=2 · 2026-09-10T14:17:07+02:00
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 70.2 hours)...
+
+============================================================================================================
+ EXPERIMENT 08 · FOLD 1 NUTS SAMPLING-BUDGET BENCHMARK (TODO 001)
+============================================================================================================
+  mode      : SAMPLING AUTHORISED
+  host      : mcmc-beast · Julia 1.12.6 · 16 default + 1 interactive threads · BLAS 1
+  models    : m00_recombined_control
+  config T  : 4 chains × 50 warmup × 50 retained · δ = 0.95 · max_depth 10
+  replicates: 4 independent 4-chain fits per cell
+  metric    : AdvancedHMC.DiagEuclideanMetric
+  GC runtime: 2 GC threads · heap-size-hint 48.0 GiB · physical memory 125.7 GiB
+  snapshot  : 8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567
+  incidents : 7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951
+  git       : af2c65ea0b32d098cd2fd13526f80ca512261c20
+  output    : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gcT2_hint48_gc2_20260910
+  m00_recombined_control             training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  manifest  : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gcT2_hint48_gc2_20260910/manifest_sampling_budget_authorised_b8c2997d790ef268.toml
+  warm-up m00_recombined_control              72.6 s · 97 parameters (contract 97)
+
+------------------------------------------------------------------------------------------------------------
+ QUEUE · 16 chains · 16 slots · started 2026-09-10T14:18:55.268
+------------------------------------------------------------------------------------------------------------
+  [14:29:23]   1/16  m00_recombined_control             T   rep 3 chain 1    627.9 s  thread 12  ok
+  [14:29:49]   2/16  m00_recombined_control             T   rep 4 chain 3    653.4 s  thread 15  ok
+  [14:30:06]   3/16  m00_recombined_control             T   rep 4 chain 1    670.5 s  thread 10  ok
+  [14:30:06]   4/16  m00_recombined_control             T   rep 1 chain 4    671.2 s  thread  4  ok
+  [14:30:07]   5/16  m00_recombined_control             T   rep 3 chain 3    672.2 s  thread 13  ok
+  [14:30:11]   6/16  m00_recombined_control             T   rep 4 chain 2    675.9 s  thread 11  ok
+  [14:30:11]   7/16  m00_recombined_control             T   rep 4 chain 4    676.0 s  thread 16  ok
+  [14:30:13]   8/16  m00_recombined_control             T   rep 2 chain 4    677.8 s  thread 17  ok
+  [14:30:24]   9/16  m00_recombined_control             T   rep 3 chain 4    688.9 s  thread  6  ok
+  [14:30:27]  10/16  m00_recombined_control             T   rep 2 chain 1    692.3 s  thread  7  ok
+  [14:30:32]  11/16  m00_recombined_control             T   rep 1 chain 2    696.8 s  thread  9  ok
+  [14:30:36]  12/16  m00_recombined_control             T   rep 3 chain 2    700.5 s  thread 14  ok
+  [14:30:46]  13/16  m00_recombined_control             T   rep 2 chain 3    710.8 s  thread  8  ok
+  [14:30:53]  14/16  m00_recombined_control             T   rep 1 chain 1    718.0 s  thread  3  ok
+  [14:31:21]  15/16  m00_recombined_control             T   rep 1 chain 3    745.4 s  thread  2  ok
+  [14:31:21]  16/16  m00_recombined_control             T   rep 2 chain 2    745.9 s  thread  5  ok
+  queue wall 746.0 s (12.4 min)
+
+============================================================================================================
+ GC RUNTIME TELEMETRY (queue only)
+============================================================================================================
+  tag                     gcT2_hint48_gc2_20260910
+  gc_threads              2
+  heap_size_hint_gib      48
+  queue_wall_s            746
+  n_chains                16
+  mutator_threads         17
+  mutator_cpu_s           4490
+  mutator_utilisation     0.3761
+  other_threads_active    1
+  other_cpu_s             369.3
+  other_cpu_share         0.07601
+  gc_time_s               458.6
+  gc_wall_share           0.6148
+  gc_pauses               21762
+  gc_full_sweeps          1298
+  allocated_gib           4247
+  allocation_gib_per_s    5.693
+  time_to_safepoint_s     3.287
+  mark_time_s             324
+  sweep_time_s            134.6
+  max_pause_ms_lifetime   310.1
+  rss_peak_queue_gib      3.003
+  rss_mean_queue_gib      2.519
+  maxrss_process_gib      3.129
+  reference gcT1_default_20260910: 16/16 chains bit-identical (max |Δ| among others 0)
+
+============================================================================================================
+ PER-FIT DIAGNOSTICS
+============================================================================================================
+ model                      cfg rep   wall s   core s   R-hat    bulk    tail    ESS/s   div   cap   BFMI  load gates
+ m00_recombined_control     T     1    745.4   2831.4  1.0761     157      60    0.080     0     0  0.727  15.4 FAIL
+ m00_recombined_control     T     2    745.9   2826.9  1.0727      91      67    0.090     0     0  0.661  15.4 FAIL
+ m00_recombined_control     T     3    700.5   2689.6  1.1168      89      40    0.058     0     0  0.648  15.8 FAIL
+ m00_recombined_control     T     4    676.0   2675.8  1.0989      87      54    0.080     0     0  0.584  15.9 FAIL
+
+============================================================================================================
+ CELL SUMMARY (medians over replicates; ratios against A of the same model)
+============================================================================================================
+ model                      cfg strict   prod   wall s  core×A   R-hat  minESS    ESS/s ESS/s×A   depth   div
+ m00_recombined_control     T      0/4    0/4    723.0     NaN  1.1168      40    0.080     NaN    7.09     0
+
+  §7 skipped (L08_BENCH_GRID_AUDIT=false or no checkpoints at /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/m00_recombined_control/checkpoints)
+
+Outputs in /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gcT2_hint48_gc2_20260910
+Finished: 2026-09-10T14:31:34.486
+=== gcT2_hint48_gc2_20260910 exit 0 · 2026-09-10T14:31:34+02:00

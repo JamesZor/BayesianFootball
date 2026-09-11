@@ -21,6 +21,9 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
     println("Running composable count-model builder tests...")
     include("builder_tests.jl")
 
+    println("Running MultiScaleGRW dynamics tests...")
+    include("test_multiscale_grw.jl")
+
     println("Running player-lineup dynamics tests...")
     include("test_player_lineup_dynamics.jl")
 
@@ -59,6 +62,11 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
 
     println("Running unified inference and fit lifecycle tests...")
     include("inference_tests.jl")
+
+    # The NUTS samplers must hand AutoReverseDiff(compile = true) to Turing through the
+    # sampler object; an `adtype` keyword on `sample` is silently ignored (TODO 003).
+    println("Running NUTS sampler AD-backend regression tests...")
+    include("sampler_adtype_tests.jl")
 
     println("Running experiment database storage tests...")
     include("test_db_storage.jl")

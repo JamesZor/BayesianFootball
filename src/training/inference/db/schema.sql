@@ -11,8 +11,11 @@ CREATE TABLE IF NOT EXISTS runs (
     git_branch VARCHAR NOT NULL,
     created_at TIMESTAMP NOT NULL,
     finished_at TIMESTAMP,
-    duration_seconds DOUBLE PRECISION
+    duration_seconds DOUBLE PRECISION,
+    ad_backend VARCHAR
 );
+
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS ad_backend VARCHAR;
 
 CREATE TABLE IF NOT EXISTS configs (
     config_id UUID PRIMARY KEY REFERENCES runs(run_id) ON DELETE CASCADE,

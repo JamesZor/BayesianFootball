@@ -1,0 +1,25 @@
+=== gcD_gc16_sweep1_20260910 · config B · reference abc_20260910 · flags: --gcthreads=16,1 · 2026-09-10T16:07:15+02:00
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 72.0 hours)...
+
+============================================================================================================
+ EXPERIMENT 08 · FOLD 1 NUTS SAMPLING-BUDGET BENCHMARK (TODO 001)
+============================================================================================================
+  mode      : SAMPLING AUTHORISED
+  host      : mcmc-beast · Julia 1.12.6 · 16 default + 1 interactive threads · BLAS 1
+  models    : m00_recombined_control
+  config B  : 4 chains × 500 warmup × 500 retained · δ = 0.95 · max_depth 10
+  replicates: 4 independent 4-chain fits per cell
+  metric    : AdvancedHMC.DiagEuclideanMetric
+  GC runtime: 17 GC threads · heap-size-hint default · physical memory 125.7 GiB
+  snapshot  : 8e4aae645abbd90dd7e10ecf007dba3bbc22fa53b83b9809fbd4c8e19d85e567
+  incidents : 7571c87570578c63ac9a72c0f24f0d113b082b52b2559b5237485bca47e79951
+  git       : af2c65ea0b32d098cd2fd13526f80ca512261c20
+  output    : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gcD_gc16_sweep1_20260910
+  m00_recombined_control             training   720 · OOS  20 · teams  25 · referees  39 · params  97
+  manifest  : /root/BF_goal_decomposition/experiments/scottish_lower/08_goal_decomposition/results/sampling_budget_fold1/gcD_gc16_sweep1_20260910/manifest_sampling_budget_authorised_7fa99d932ffda42c.toml
+  warm-up m00_recombined_control              71.2 s · 97 parameters (contract 97)
+
+------------------------------------------------------------------------------------------------------------
+ QUEUE · 16 chains · 16 slots · started 2026-09-10T16:09:01.587
+------------------------------------------------------------------------------------------------------------
+=== gcD_gc16_sweep1_20260910 exit 137 · 2026-09-10T17:36:35+02:00

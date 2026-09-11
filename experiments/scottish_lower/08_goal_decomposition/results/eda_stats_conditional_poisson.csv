@@ -1,0 +1,2 @@
+test,observations,residual_df,observed_pearson_x2,observed_dispersion,null_x2_mean,null_x2_interval_low,null_x2_interval_high,p_value,monte_carlo_se,replicates,seed
+conditional_poisson_pearson_refit_bootstrap,3984,3915,4042.0418629576434,1.0324500288525271,3913.2967077066933,3745.267658191535,4088.74690137308,0.07792207792207792,0.00847221631246148,1000,20260908

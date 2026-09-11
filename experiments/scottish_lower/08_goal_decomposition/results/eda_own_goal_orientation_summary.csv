@@ -1,0 +1,5 @@
+recipient,expected_recipient,agrees,n
+away,away,true,56
+home,home,true,51
+ambiguous,away,false,2
+ambiguous,home,false,1

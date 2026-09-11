@@ -642,13 +642,23 @@ function save_fit(fit::Fit, storage::PostgresStorage)
 
         _db_exec(conn, "BEGIN;")
         try
-            _db_exec(conn, """
-                INSERT INTO runs (run_id, name, experiment_name, status, git_commit, git_branch,
-                                  created_at, finished_at, duration_seconds)
-                VALUES (\$1::uuid, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9);
-            """, (string(run_id), fit.config.name, storage.experiment_name, "completed",
-                  metadata.git_commit, _db_git_branch(), created_at, metadata.timestamp,
-                  metadata.elapsed_seconds))
+            if _db_has_column(conn, "runs", "ad_backend")
+                _db_exec(conn, """
+                    INSERT INTO runs (run_id, name, experiment_name, status, git_commit, git_branch,
+                                      created_at, finished_at, duration_seconds, ad_backend)
+                    VALUES (\$1::uuid, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10);
+                """, (string(run_id), fit.config.name, storage.experiment_name, "completed",
+                      metadata.git_commit, _db_git_branch(), created_at, metadata.timestamp,
+                      metadata.elapsed_seconds, "reversediff"))
+            else
+                _db_exec(conn, """
+                    INSERT INTO runs (run_id, name, experiment_name, status, git_commit, git_branch,
+                                      created_at, finished_at, duration_seconds)
+                    VALUES (\$1::uuid, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9);
+                """, (string(run_id), fit.config.name, storage.experiment_name, "completed",
+                      metadata.git_commit, _db_git_branch(), created_at, metadata.timestamp,
+                      metadata.elapsed_seconds))
+            end
             _db_exec(conn, """
                 INSERT INTO configs (config_id, config_hash, model_config, split_config,
                                      sampler_config)

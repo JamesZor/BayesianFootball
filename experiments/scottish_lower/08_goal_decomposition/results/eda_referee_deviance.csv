@@ -1,0 +1,5 @@
+cohort,minimum_matches,referees,matches,attempts,deviance,degrees_of_freedom,asymptotic_p
+all_finished_raw_incident_counts,1,58,2009,551,70.47208962567862,57,0.10832045989568262
+all_finished_raw_incident_counts,20,40,1854,501,54.849682905959554,39,0.04746302421393654
+reconciled_components,1,58,1982,541,67.13900544448187,57,0.16849697569631344
+reconciled_components,20,39,1812,486,50.75902962669624,38,0.08068329669766405
