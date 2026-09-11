@@ -134,15 +134,26 @@ for arm in r04_arms
 end
 r04_scores = DataFrame(r04_score_rows)
 
-# Reproduction gate: the pinned control, scored here, must be the published number. If
-# it is not, every contrast below is against the wrong thing.
-r04_m12_ctl = only(filter(r -> r.model == "m12_poisson" && r.scope == "all", r04_scores))
-@printf("\n  reproduction: m12_poisson LogLoss %.5f (published %.5f)  ECE %.4f (published %.4f)\n",
-        r04_m12_ctl.logloss, R04_M12_POISSON_LOGLOSS, r04_m12_ctl.ece, R04_M12_POISSON_ECE)
-abs(r04_m12_ctl.logloss - R04_M12_POISSON_LOGLOSS) < 5e-5 ||
+# Reproduction gate: the pinned control, scored here, must be the published number. If it
+# is not, every contrast below is against the wrong thing.
+#
+# Scored on GJN_LEGACY_MARKETS, NOT on this study's wider set. Task 013's 0.64437 is a
+# pooled figure over 1X2 + O/U 2.5 + BTTS and its 2,899 rows; pooling six markets and
+# comparing against a three-market number would fail for a reason unrelated to whether
+# the control loaded correctly. The gate reproduces the published basis exactly.
+r04_legacy_ctx = gjn_context(r04_fits["m12_poisson"], r04_odds, r04_ds;
+                             markets = GJN_LEGACY_MARKETS)
+r04_legacy = evaluate_predictions(r04_legacy_ctx; n_bins = 10)
+@printf("\n  reproduction (1X2 + O/U 2.5 + BTTS, %d rows): m12_poisson LogLoss %.5f (published %.5f)  ECE %.4f (published %.4f)\n",
+        r04_legacy.model.n_obs, r04_legacy.model.logloss, R04_M12_POISSON_LOGLOSS,
+        r04_legacy.model.ece, R04_M12_POISSON_ECE)
+r04_legacy.model.n_obs == 2899 ||
+    error("reproduction basis is $(r04_legacy.model.n_obs) rows; Task 013 published 2899")
+abs(r04_legacy.model.logloss - R04_M12_POISSON_LOGLOSS) < 5e-5 ||
     error("m12_poisson control does not reproduce its published LogLoss")
-abs(r04_m12_ctl.ece - R04_M12_POISSON_ECE) < 5e-4 ||
+abs(r04_legacy.model.ece - R04_M12_POISSON_ECE) < 5e-4 ||
     error("m12_poisson control does not reproduce its published ECE")
+r04_m12_ctl = only(filter(r -> r.model == "m12_poisson" && r.scope == "all", r04_scores))
 
 for scope in vcat(["all"], GJN_SCOPES)
     sub = sort(filter(:scope => ==(scope), r04_scores), :logloss)
@@ -169,13 +180,16 @@ r04_boot.significant = (r04_boot.hi .< 0) .| (r04_boot.lo .> 0)
 
 # Every arm against the closing line, for context on where all of them sit.
 r04_market_rows = NamedTuple[]
-for arm in r04_arms, scope in vcat([nothing], GJN_SCOPES)
-    any(r04_obs[arm.label].family .== something(scope, "")) || scope === nothing || continue
-    b = gjn_paired_bootstrap(r04_obs[arm.label], :market; B = R04_BOOTSTRAP_B,
-                             seed = R04_SEED, family = scope, column = :ll)
-    b.n_obs == 0 && continue
-    push!(r04_market_rows, (; model = arm.label,
-                              scope = scope === nothing ? "all" : scope, b...))
+for arm in r04_arms
+    frame = r04_obs[arm.label]
+    quoted = [f for f in GJN_SCOPES if any(frame.family .== f)]
+    for scope in vcat([nothing], quoted)
+        b = gjn_paired_bootstrap(frame, :market; B = R04_BOOTSTRAP_B,
+                                 seed = R04_SEED, family = scope, column = :ll)
+        b.n_obs == 0 && continue
+        push!(r04_market_rows, (; model = arm.label,
+                                  scope = scope === nothing ? "all" : scope, b...))
+    end
 end
 r04_market = DataFrame(r04_market_rows)
 r04_market.significant = (r04_market.hi .< 0) .| (r04_market.lo .> 0)
@@ -202,8 +216,12 @@ open(joinpath(R04_OUT_DIR, "r04_evaluation_report.md"), "w") do io
     println(io, "Generated ", Dates.format(now(), "yyyy-mm-dd HH:MM"),
             ". Panel: ", length(r04_panel), " fixtures (24/25 + 25/26 walk-forward). ",
             "Book: de-vigged Betfair TWA(−20, 0] close. Control reproduction: `m12_poisson` ",
-            @sprintf("LogLoss %.5f / ECE %.4f", r04_m12_ctl.logloss, r04_m12_ctl.ece),
-            " vs published ", R04_M12_POISSON_LOGLOSS, " / ", R04_M12_POISSON_ECE, ".\n")
+            @sprintf("LogLoss %.5f / ECE %.4f", r04_legacy.model.logloss, r04_legacy.model.ece),
+            " vs published ", R04_M12_POISSON_LOGLOSS, " / ", R04_M12_POISSON_ECE,
+            " on Task 013's own 1X2 + O/U 2.5 + BTTS basis (", r04_legacy.model.n_obs, " rows).\n")
+    println(io, "Scored markets here are wider than Task 013's: 1X2, BTTS and O/U 1.5 / 2.5 / ",
+            "3.5 / 4.5. The `all` scope therefore pools more rows than the 2,899 that ",
+            "reproduction figure is computed on, and is not comparable with it.\n")
 
     println(io, "Read the totals and BTTS scopes as the test and the 1X2 scope as the control: ",
             "a negative binomial redistributes mass within a fixed mean, so a change on ",

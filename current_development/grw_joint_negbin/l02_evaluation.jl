@@ -37,6 +37,44 @@ const GJN_MD = BayesianFootball.MatchDay
 # the market families the ladder is being judged on.
 const GJN_SCOPES = ["1X2", "OU1.5", "OU2.5", "OU3.5", "OU4.5", "BTTS"]
 
+"""
+    GJN_MARKETS
+
+The markets the evaluation context PRICES.
+
+This has to be stated explicitly, and it is the single most important line in this file.
+`Evaluation.DEFAULT_SCORED_MARKETS` is 1X2, O/U 2.5 and BTTS — that is what a `LogLoss()`
+with no selection filter asks for, and it is what Task 013 and Experiment 06 scored. A
+context built on the default would silently price no O/U 1.5, 3.5 or 4.5 at all, and the
+totals hypothesis would be tested on the one line least able to show it: 2.5 sits nearest
+the mean, which is exactly where a mean-preserving change of shape does the least.
+
+The Betfair archive quotes O/U 0.5 through 5.5 on this league, so the lines below are
+available rather than invented. 0.5 and 5.5 are left out deliberately: both are heavily
+one-sided, and adding markets after seeing which ones moved is how a null becomes a
+finding by accident. This set is the work package's, fixed before any score was computed.
+"""
+const GJN_MARKETS = Data.AbstractMarket[
+    Data.Market1X2(), Data.MarketBTTS(),
+    Data.MarketOverUnder(1.5), Data.MarketOverUnder(2.5),
+    Data.MarketOverUnder(3.5), Data.MarketOverUnder(4.5),
+]
+
+"""
+    GJN_LEGACY_MARKETS
+
+`Evaluation.DEFAULT_SCORED_MARKETS` — 1X2, O/U 2.5, BTTS — used for ONE purpose: the
+reproduction gate.
+
+Task 013's published `m12` LogLoss of 0.64437 is a pooled score over these three markets
+and their 2,899 rows. Reproducing it requires scoring on the same basis; pooling six
+markets and comparing to a three-market figure would fail the gate for a reason that has
+nothing to do with whether the control loaded correctly.
+"""
+const GJN_LEGACY_MARKETS = Data.AbstractMarket[
+    Data.Market1X2(), Data.MarketOverUnder(2.5), Data.MarketBTTS(),
+]
+
 # ==============================================================================
 # 1. Arms
 # ==============================================================================
@@ -195,8 +233,14 @@ end
 const GJN_METRICS = GJN_EVAL.AbstractScoringRule[
     GJN_EVAL.LogLoss(), GJN_EVAL.CRPS(), GJN_EVAL.PredictionScore()]
 
-gjn_context(fit, odds, ds) = build_evaluation_context(
-    fit_latents(fit), odds, ds.matches, GJN_METRICS; threaded = true)
+"""
+    gjn_context(fit, odds, ds; markets) -> EvaluationContext
+
+`markets` is passed explicitly rather than derived from the metrics — see `GJN_MARKETS`
+for why the derived default would quietly drop the lines this study exists to score.
+"""
+gjn_context(fit, odds, ds; markets = GJN_MARKETS) = build_evaluation_context(
+    fit_latents(fit), odds, ds.matches, GJN_METRICS; markets, threaded = true)
 
 """
     gjn_scores(label, ctx, families) -> Vector{NamedTuple}

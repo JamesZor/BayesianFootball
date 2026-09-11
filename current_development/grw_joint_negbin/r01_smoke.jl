@@ -30,8 +30,8 @@
 #   G5  save_fit → load_fit round-trip through PostgresStorage("smoke_grw_joint_negbin")
 #       reproduces fold count, latents, `observation_params` and every chain value
 #   G6  the dispersion reaches the pricing tensor: the model's own 12×12 grid differs
-#       from the double-Poisson grid at the SAME λ draws, and differs MORE on the tail
-#       markets (O/U 3.5, BTTS) than on 1X2
+#       from the double-Poisson grid at the SAME λ draws, LOWERS P(BTTS) on every
+#       fixture, and moves BTTS more than it moves 1X2
 #
 # WHY THE GATE RUNS AT THE PRODUCTION SAMPLER. Task 013 measured the work package's
 # sketched smoke budget (2 × (50 + 100)) and found it fails R̂ and ESS as a BUDGET
@@ -209,12 +209,25 @@ for (name, _) in r01_models
     grid = try
         g = gjn_grid_gate(fit)
         push!(r01_grids, insertcols(g, 1, :model => name))
-        # The dispersion must MOVE the tensor, and must move the tail more than the result.
-        maximum(abs.(g.d_over35)) > 1.0e-6 || error(
-            "the NegBin grid is indistinguishable from the double-Poisson grid on O/U 3.5; " *
+        # The dispersion must MOVE the tensor, and must move BTTS more than 1X2.
+        #
+        # BTTS, not a totals line, is the discriminator. A negative binomial's headline
+        # effect at a fixed mean is extra mass at ZERO on each side, and BTTS is the one
+        # market that reads that effect unopposed — P(both score) falls. On a totals line
+        # the extra zeros push the total DOWN while the fatter right tail pushes it UP, and
+        # the two very nearly cancel: measured on fold 1–2 at r̂ ≈ 30, |Δ| is 0.0131 on BTTS,
+        # 0.0055 on O/U 2.5 and 0.0001 on O/U 3.5 — the 3.5 line sits almost exactly where
+        # the cancellation is complete, which makes it the worst available check that the
+        # dispersion is wired at all.
+        maximum(abs.(g.d_btts)) > 1.0e-6 || error(
+            "the NegBin grid is indistinguishable from the double-Poisson grid on BTTS; " *
             "r never reached compute_score_grid!")
-        mean(abs.(g.d_over35)) > mean(abs.(g.d_home)) || error(
-            "dispersion moves 1X2 at least as much as O/U 3.5, which is not how a negative " *
+        all(g.d_btts .< 0.0) || error(
+            "the NegBin grid does not LOWER P(BTTS) against the double-Poisson grid at the " *
+            "same λ; extra mass at zero goals per side is the one effect that cannot have " *
+            "the other sign — check the r_h/r_a wiring")
+        mean(abs.(g.d_btts)) > mean(abs.(g.d_home)) || error(
+            "dispersion moves 1X2 at least as much as BTTS, which is not how a negative " *
             "binomial redistributes mass — check the r_h/r_a wiring")
         all(m -> 0.90 <= m <= 1.0 + 1e-9, g.mass) || error(
             "score tensor mass outside [0.90, 1.0]: the tail has escaped the 12×12 grid")
@@ -238,14 +251,17 @@ for (name, _) in r01_models
                        r_q05 = disp.q05, r_q95 = disp.q95,
                        latent_mean_lambda_h = latent === nothing ? NaN : latent.mean_lambda_h,
                        latent_min_sd = latent === nothing ? NaN : latent.min_sd,
+                       grid_d_btts = grid === nothing ? NaN : mean(abs.(grid.d_btts)),
+                       grid_d_over25 = grid === nothing ? NaN : mean(abs.(grid.d_over25)),
                        grid_d_over35 = grid === nothing ? NaN : mean(abs.(grid.d_over35)),
                        grid_d_home = grid === nothing ? NaN : mean(abs.(grid.d_home)),
                        gate_pass = isempty(failures),
                        gate_failures = join(failures, "; ")))
-    @printf("  %-34s R̂=%.4f  ESS=%6.1f/%6.1f  div=%d  r̂=%.1f  Δou35=%.4f Δ1x2=%.4f  %s\n",
+    @printf("  %-34s R̂=%.4f  ESS=%6.1f/%6.1f  div=%d  r̂=%.1f  Δbtts=%+.4f Δou25=%+.4f Δ1x2=%.4f  %s\n",
             name, d.max_rhat, d.min_ess_bulk, d.min_ess_tail, d.n_divergent,
             disp.median_r,
-            grid === nothing ? NaN : mean(abs.(grid.d_over35)),
+            grid === nothing ? NaN : mean(grid.d_btts),
+            grid === nothing ? NaN : mean(grid.d_over25),
             grid === nothing ? NaN : mean(abs.(grid.d_home)),
             isempty(failures) ? "PASS" : "FAIL: " * join(failures, "; "))
 end
@@ -293,8 +309,11 @@ open(joinpath(R01_OUT_DIR, "r01_smoke_report.md"), "w") do io
     if nrow(r01_grid_frame) > 0
         println(io, "\n## Score grid: NegBin vs double-Poisson at the same λ (G6)\n")
         println(io, "`d_*` is this model's grid minus the double-Poisson grid built from the ",
-                "SAME posterior λ draws. A negative binomial moves mass to 0 and to 4+, so the ",
-                "tail markets must move more than 1X2.\n")
+                "SAME posterior λ draws.\n")
+        println(io, "A negative binomial at a fixed mean adds mass at 0 and at 4+. BTTS reads ",
+                "the extra zeros unopposed and must FALL. On a totals line the two shifts ",
+                "oppose each other and very nearly cancel — which is why BTTS, not O/U 3.5, ",
+                "is what G6 gates on.\n")
         print(io, gjn_markdown_table(select(r01_grid_frame,
             :model, :fixture, :lambda_h, :lambda_a, :r, :mass,
             :d_home, :d_over25, :d_over35, :d_btts)))

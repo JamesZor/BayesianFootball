@@ -1,0 +1,54 @@
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.3 hours)...
+     > [Started 01:00:36 | Elapsed 00:01:56] Sampling:   1%  ETA: 0:00:46 ( 0.29  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:03] Sampling:   2%  ETA: 0:06:38 ( 2.54  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:06] Sampling:   2%  ETA: 0:06:26 ( 2.47  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:10] Sampling:   3%  ETA: 0:07:20 ( 2.84  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:11] Sampling:   4%  ETA: 0:06:30 ( 2.53  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:12] Sampling:   4%  ETA: 0:05:45 ( 2.25  s/it)[K     > [Started 01:00:36 | Elapsed 00:02:41] Sampling:   5%  ETA: 0:14:28 ( 5.71  s/it)[K     > [Started 01:00:36 | Elapsed 00:03:05] Sampling:   6%  ETA: 0:19:16 ( 7.65  s/it)[K
