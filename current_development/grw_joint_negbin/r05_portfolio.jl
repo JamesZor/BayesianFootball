@@ -18,9 +18,13 @@
 #   disjoint bets      turnover, strike rate and ROI of each model's exclusive bets
 #   cap-weighted WR    stake-weighted strike rate vs the plain one
 #
-# WHY THE ATTRIBUTION IS THE INTERESTING PART HERE. Option B stakes 1X2 and O/U 2.5.
-# A negative binomial changes the O/U 2.5 price and barely touches 1X2, so the two
-# ledgers should overlap heavily on the result market and diverge on the total. The
+# WHY THE ATTRIBUTION IS THE INTERESTING PART HERE. Option B's TieredTrust stakes FIVE
+# selections — 1X2 home/draw/away, Under 2.5 at full trust, and Over 1.5 at 1/1.4. (The
+# work package describes the basket as "1X2 + O/U 2.5"; Over 1.5 is in it too, and it
+# matters here because it is a second totals line this component moves.)
+#
+# A negative binomial changes the two totals prices and barely touches 1X2, so the two
+# ledgers should overlap heavily on the result market and diverge on the totals. The
 # shared/exclusive split is what separates "it priced the same bets differently" from
 # "it took different bets", and at this sample size that decomposition is more
 # informative than the bankroll ranking it sits beside.
@@ -239,8 +243,9 @@ open(joinpath(R05_OUT_DIR, "r05_portfolio_report.md"), "w") do io
                        :capture_ratio => r05_f3)))
 
     println(io, "\n## Return by selection family\n")
-    println(io, "Option B stakes 1X2 and O/U 2.5. The totals rows are where the two ",
-            "likelihoods are expected to differ; the 1X2 rows are the control.\n")
+    println(io, "Option B stakes 1X2 home/draw/away, Under 2.5 and Over 1.5. The two totals ",
+            "rows are where the likelihoods are expected to differ; the 1X2 rows are the ",
+            "control.\n")
     print(io, gjn_markdown_table(select(sort(r05_families, [:selection_family, :model]),
         :model, :likelihood, :selection_family, :n_bets, :win_rate_pct, :roi_pct,
         :edge_mean_pp, :capture_ratio);

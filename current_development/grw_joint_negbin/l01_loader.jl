@@ -794,13 +794,22 @@ Postgres. It would simply not be the model the study claims to have run. So for 
 the first `n_fixtures` held-out fixtures this builds the model's OWN grid and, beside it,
 the double-Poisson grid at the SAME `λ` draws, and reports the market-by-market gap.
 
-`poisson_gap` must be strictly positive and must GROW with the tail: a negative binomial
-puts more mass at 0 and at 4+, so `Δ over 3.5` and `Δ BTTS` are where it shows. A gap at
-machine zero means `r_h`/`r_a` never reached `compute_score_grid!`.
+Every `d_*` must be non-trivial somewhere, and `d_btts` must be strictly NEGATIVE: a
+negative binomial at a fixed mean adds mass at zero on each side, so P(both score) can only
+fall. A `d_btts` at machine zero means `r_h`/`r_a` never reached `compute_score_grid!`.
 
-The 1X2 column is carried because it is the control: the same mechanism that moves the
-totals markets is expected to leave the result market nearly untouched, and seeing that
-here — before any proper score — is what makes the eventual evaluation legible.
+WHY BTTS IS THE DISCRIMINATOR AND A TOTALS LINE IS NOT. On a totals line the extra mass at
+zero pushes the total DOWN while the fatter right tail pushes it UP, and the two nearly
+cancel — measured at `r̂ ≈ 30` on this league, |Δ| is 0.0131 on BTTS, 0.0055 on O/U 2.5 and
+0.0001 on O/U 3.5. BTTS reads the extra zeros unopposed and is the only partition that does.
+
+O/U 1.5 is carried alongside 2.5 because the production Option B basket stakes BOTH — Under
+2.5 at full trust and Over 1.5 at `1/1.4` — so those two lines are where this component can
+actually reach a stake.
+
+The 1X2 column is the control: the same mechanism that moves the totals markets is expected
+to leave the result market nearly untouched, and seeing that here — before any proper score —
+is what makes the eventual evaluation legible.
 """
 function gjn_grid_gate(fit; n_fixtures::Int = 6)
     lat = fit.latents
@@ -826,10 +835,12 @@ function gjn_grid_gate(fit; n_fixtures::Int = 6)
                        mass = nb.mass,
                        p_home = nb.home, p_draw = nb.draw, p_away = nb.away,
                        d_home = nb.home - po.home,
+                       d_over15 = nb.over15 - po.over15,
                        d_over25 = nb.over25 - po.over25,
                        d_over35 = nb.over35 - po.over35,
+                       d_over45 = nb.over45 - po.over45,
                        d_btts = nb.btts - po.btts,
-                       p_over25 = nb.over25, p_btts = nb.btts))
+                       p_over15 = nb.over15, p_over25 = nb.over25, p_btts = nb.btts))
     end
     return DataFrame(rows)
 end
