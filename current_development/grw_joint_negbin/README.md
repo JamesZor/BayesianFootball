@@ -226,7 +226,28 @@ _Pending._
 
 _Pending._
 
-## 7. Reproducing
+## 7. Hierarchical dispersion — the conditional step
+
+The work package's Step 5 makes a hierarchical dispersion extension conditional: run it only
+"if `GlobalDispersion` demonstrates significant alpha or improved totals calibration".
+
+The component is **already wired for it**. `observation_wired(::JointGammaNegBinObservation)`
+admits `GlobalDispersion` and `HomeAwayDispersion` on the same rule the single-arm NegBin
+uses, `_cb_dispersion_draws` reconstructs both, and `_cb_rates` carries asymmetric `r_h`/`r_a`
+into the score grid, which already reads them per side. Adding the arm is a one-line change to
+the ladder:
+
+```julia
+gjn_dispersion() = HomeAwayDispersion(log_r = Normal(3.1, 0.4), δ_r_home = Normal(0.0, 0.5))
+```
+
+It is **not** run unless §5 gives a reason to. Fitting a second dispersion parameter because
+the first one was measured, rather than because the measurement asked for it, is how a null
+becomes a search. `AdvancedVolatilityDispersion` remains refused at build time for both NegBin
+observations — its per-match reconstruction is not AD-safe, which is a pre-existing gap
+recorded in `observation_gap`.
+
+## 8. Reproducing
 
 ```bash
 # on mcmc-beast, from /root/BF_grw_joint_negbin
