@@ -21,7 +21,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [010](010_design_and_prototype_autonomous_agent_bayesian_model_search_loop.md) | Design and Prototype Autonomous Agent Bayesian Model Search Loop | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [011](011_fuse_goal_decomposition_with_proxy_xg_and_player_lineup_dynamics.md) | Fuse Goal Decomposition with Proxy xG and Player Lineup Dynamics | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [012](012_standardise_model_attribution_and_capture_ratio_in_portfolio_engine.md) | Standardise Model Attribution and Capture Ratio in Portfolio Engine | BACKLOG | P2 | unassigned | 2026-09-11 |
-| [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | ACTIVE | P1 | claude | 2026-09-11 |
+| [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | IN_PROGRESS | P1 | claude | 2026-09-11 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

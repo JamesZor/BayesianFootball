@@ -1,0 +1,151 @@
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 1.6 hours)...
+     > [Started 20:01:55 | Elapsed 00:00:25] Sampling:  25%  ETA: 0:00:01 ( 0.14  s/it)[K     > [Started 20:01:55 | Elapsed 00:00:26] Sampling:  75%  ETA: 0:00:00 ( 0.19  s/it)[K     > [Started 20:01:55 | Elapsed 00:00:26] Sampling: 100% Time: 0:00:01 ( 0.14  s/it)[K
+     > [Started 20:03:33 | Elapsed 00:00:43] Sampling:  38%  ETA: 0:00:00 (53.51 ms/it)[K     > [Started 20:03:33 | Elapsed 00:00:43] Sampling:  50%  ETA: 0:00:01 ( 0.13  s/it)[K     > [Started 20:03:33 | Elapsed 00:00:46] Sampling:  62%  ETA: 0:00:02 ( 0.75  s/it)[K     > [Started 20:03:33 | Elapsed 00:00:47] Sampling: 100% Time: 0:00:04 ( 0.59  s/it)[K
+
+================================================================================================
+  r01 SMOKE GATE — MultiScaleGRW × PlayerLineupPillar, folds 1–2
+  sampler    : QueuedNUTS  4 chains × 500 warmup + 1000 retained, δ = 0.8, max depth 10
+  experiment : smoke_grw_player   (name suffix _smoke_20260911195944)
+  git        : 9f08f31e   threads: 16
+================================================================================================
+
+  matches in store : 2029   latest kickoff: 2026-09-05
+  m00_baseline_grw                 covariates:  | obs: PoissonObservation
+  m05_wealth_grw                   covariates: ProductionWealthCovariate | obs: JointGammaPoissonObservation
+  m10_lineup_grw                   covariates: PlayerLineupPillar | obs: PoissonObservation
+  m12_joint_hybrid_synergy_grw     covariates: PlayerLineupPillar, ProductionWealthCovariate | obs: JointGammaPoissonObservation
+
+--- features + gradient audit: m00_baseline_grw
+2×9 DataFrame
+ Row │ fold   n_train  n_oos  n_history  n_target  n_teams  last_train  first_oos   ordered
+     │ Int64  Int64    Int64  Int64      Int64     Int64    Date        Date        Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │     1      720     20          2         0       23  2024-05-04  2024-08-03     true
+   2 │     2      740     19          2         1       25  2024-08-10  2024-08-17     true
+  fold 1  θ=  98  tape=  735  grad=0.054 ms  alloc=  35440 B  RD/FD=1.0e-15  perturbed=0.0e+00
+  fold 2  θ= 158  tape= 1309  grad=0.074 ms  alloc=  36608 B  RD/FD=7.1e-16  perturbed=0.0e+00
+
+--- features + gradient audit: m05_wealth_grw
+2×9 DataFrame
+ Row │ fold   n_train  n_oos  n_history  n_target  n_teams  last_train  first_oos   ordered
+     │ Int64  Int64    Int64  Int64      Int64     Int64    Date        Date        Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │     1      720     20          2         0       23  2024-05-04  2024-08-03     true
+   2 │     2      740     19          2         1       25  2024-08-10  2024-08-17     true
+  fold 1  θ= 101  tape=  791  grad=0.087 ms  alloc= 128752 B  RD/FD=4.0e-16  perturbed=0.0e+00
+  fold 2  θ= 161  tape= 1365  grad=0.106 ms  alloc= 132992 B  RD/FD=5.7e-16  perturbed=0.0e+00
+
+--- features + gradient audit: m10_lineup_grw
+2×9 DataFrame
+ Row │ fold   n_train  n_oos  n_history  n_target  n_teams  last_train  first_oos   ordered
+     │ Int64  Int64    Int64  Int64      Int64     Int64    Date        Date        Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │     1      720     20          2         0       23  2024-05-04  2024-08-03     true
+   2 │     2      740     19          2         1       25  2024-08-10  2024-08-17     true
+  fold 1  θ= 100  tape=  760  grad=0.062 ms  alloc=  82096 B  RD/FD=5.4e-16  perturbed=0.0e+00
+  fold 2  θ= 160  tape= 1334  grad=0.081 ms  alloc=  84800 B  RD/FD=7.1e-16  perturbed=0.0e+00
+
+--- features + gradient audit: m12_joint_hybrid_synergy_grw
+2×9 DataFrame
+ Row │ fold   n_train  n_oos  n_history  n_target  n_teams  last_train  first_oos   ordered
+     │ Int64  Int64    Int64  Int64      Int64     Int64    Date        Date        Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │     1      720     20          2         0       23  2024-05-04  2024-08-03     true
+   2 │     2      740     19          2         1       25  2024-08-10  2024-08-17     true
+  fold 1  θ= 103  tape=  816  grad=0.091 ms  alloc= 175408 B  RD/FD=5.2e-16  perturbed=0.0e+00
+  fold 2  θ= 163  tape= 1390  grad=0.110 ms  alloc= 181184 B  RD/FD=5.5e-16  perturbed=0.0e+00
+
+--- sampling: m00_baseline_grw
+ [4] Sampling 2 of 2 folds (QueuedNUTSConfig, QueuedExecution)...
+ [5] Auditing convergence...
+     > PASS  R̂≤1.0085  ESS≥1130  div 0/8000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  39 fixtures × 4000 draws
+------------------------------------------------------------------
+DONE in 34.1s
+
+--- sampling: m05_wealth_grw
+ [4] Sampling 2 of 2 folds (QueuedNUTSConfig, QueuedExecution)...
+ [5] Auditing convergence...
+     > PASS  R̂≤1.0051  ESS≥1394  div 0/8000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  39 fixtures × 4000 draws
+------------------------------------------------------------------
+DONE in 39.9s
+
+--- sampling: m10_lineup_grw
+ [4] Sampling 2 of 2 folds (QueuedNUTSConfig, QueuedExecution)...
+ [5] Auditing convergence...
+     > PASS  R̂≤1.0060  ESS≥1195  div 0/8000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  39 fixtures × 4000 draws
+------------------------------------------------------------------
+DONE in 22.6s
+
+--- sampling: m12_joint_hybrid_synergy_grw
+ [4] Sampling 2 of 2 folds (QueuedNUTSConfig, QueuedExecution)...
+ [5] Auditing convergence...
+     > PASS  R̂≤1.0124  ESS≥886  div 0/8000
+ [6] Extracting out-of-sample latents...
+     > CountLatents  39 fixtures × 4000 draws
+------------------------------------------------------------------
+DONE in 48.2s
+  m00_baseline_grw                 R̂=1.0085  ESS bulk=1130.0 tail=1407.1  div=0  latents=39×4000  run=05e8ea2e-4ba4-48f6-a5b8-222192b33a6f  PASS
+  m05_wealth_grw                   R̂=1.0051  ESS bulk=1393.7 tail=1548.3  div=0  latents=39×4000  run=3386e82a-dce8-4ba1-b188-50cf09c8ad0a  PASS
+  m10_lineup_grw                   R̂=1.0060  ESS bulk=1195.2 tail=1642.9  div=0  latents=39×4000  run=08245882-1765-4da5-88b5-03f8c360fc64  PASS
+  m12_joint_hybrid_synergy_grw     R̂=1.0124  ESS bulk= 954.2 tail= 885.7  div=0  latents=39×4000  run=2c25fbfa-a9c3-4f18-91c9-f6d217f317aa  PASS
+
+R01_VERDICT PASS  (4/4 models)
+R01_DONE report=/root/BF_grw_player_hybrid/current_development/grw_player_hybrid/results/smoke/4x500w1000s/r01_smoke_report.md

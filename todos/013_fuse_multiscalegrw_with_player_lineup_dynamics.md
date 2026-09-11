@@ -4,7 +4,7 @@
 |---|---|
 | ID | 013 |
 | Title | Fuse MultiScaleGRW with Player Lineup Dynamics |
-| Status | ACTIVE |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | claude |
 | Created | 2026-09-11 |
@@ -51,6 +51,10 @@ Constraints:
 - [2026-09-11 @antigravity] Conducted `/grill-me` alignment interview with human trader. Finalised ablation ladder, evaluation scope, and Option B portfolio attribution requirements.
 - [2026-09-11 @antigravity] Evaluated prototype MultiScaleGRW on 2026/27 opening slates at T−25 order book: +25.59% ROI vs +13.69% for `m12`.
 - [2026-09-11 @antigravity] Created Task 013, branched `feat/grw-player-lineup-hybrid` off `feat/multiscale-grw-dynamics`, locked `Manifest.toml` to `Distributions` v0.25.126. Handing off to Claude CLI agent on `mcmc-beast`.
+
+- [2026-09-11 @claude] Built `current_development/grw_player_hybrid/` (`l01_loader.jl` inference, `l02_evaluation.jl` scoring/portfolio/attribution, runners `r01`–`r06`). Recipes are Exp 06 `l60` verbatim except `TimeDecayDynamics(180)` → `MultiScaleGRW()`; split is the canonical `GroupedCVConfig` (the prompt's `CVConfig(window_seasons = 3)` would not produce the 40-fold/710 grid the controls were scored on). The prompt's `PlayerLineupPillar(rating = :shots_rapm, fit_on = :history)` shorthand maps to `ShotsPlusMinusFeature(λ = 1000, half_life_days = 730, fit_on = :history)` + `BenchWeightedPlayerAggregation(0.10)`.
+- [2026-09-11 @claude] Smoke gate (folds 1–2). At the work-package budget (2 × (50 + 100)): 0 divergences but R̂ 1.05–1.13 and ESS 17–51 — a budget artefact, not a geometry one. At 4 × (400 + 400): all gates but ESS (m00 348, m12 343). At the production sampler 4 × (500 + 1000): **PASS 4/4** — R̂ ≤ 1.0124, min ESS 886, 0 divergences, RD ≡ FD to 1e-15 on both GRW branches, latents finite, Postgres round-trip exact. Tape sizes for m00/m05 match Task 007 instruction-for-instruction; the lineup pillar adds 2 parameters and 25 tape instructions. Reports under `current_development/grw_player_hybrid/results/smoke/`.
+- [2026-09-11 @claude] Launched r02 40-fold production grid on mcmc-beast (tmux `grw_player_r02`), namespace `scottish_lower_grw_player_hybrid`.
 
 ## Verification & Findings
 
