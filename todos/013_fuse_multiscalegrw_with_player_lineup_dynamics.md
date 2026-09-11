@@ -9,7 +9,7 @@
 | Assignee | claude |
 | Created | 2026-09-11 |
 | Updated | 2026-09-11 |
-| Related Files / Commits / PRs | [current_development/grw_player_hybrid/](../current_development/grw_player_hybrid/README.md); `src/models/pregame/components/dynamics/team_level/multiscale.jl`; `src/models/pregame/builder/grw_dynamics.jl`; `current_development/match_day_inference/l10_t25_backtest.jl`; `feat/grw-player-lineup-hybrid` |
+| Related Files / Commits / PRs | [current_development/grw_player_hybrid/](../current_development/grw_player_hybrid/README.md); `src/models/pregame/components/dynamics/team_level/multiscale.jl`; `src/models/pregame/builder/grw_dynamics.jl`; `current_development/match_day_inference/l10_t25_backtest.jl`; `feat/grw-player-lineup-hybrid`; PR #30 |
 
 ## Context & Problem Statement
 
