@@ -37,16 +37,20 @@
 #
 # PERSISTENCE CAVEAT
 #
-# The audit runs on all 4 × 1,000 retained draws. The artefact persists every 2nd draw
-# (2,000 per fold) with latents re-extracted from exactly those draws — see
-# `GJNConfig.persist_stride`. A model that fails its gate is NOT persisted; its per-fold
-# checkpoints stay on disk under `results/<model>/checkpoints/` and a rerun resumes from
-# them. A recipe already persisted in this namespace is loaded, not resampled.
+# The audit runs on every retained draw. The artefact persists every `persist_stride`-th,
+# with latents re-extracted from exactly those draws. A model that fails its gate is NOT
+# persisted; its per-fold checkpoints stay on disk under
+# `results/<model>/checkpoints_<chains>x<warmup>w<samples>s/` and a rerun AT THE SAME BUDGET
+# resumes from them. A recipe already persisted in this namespace is loaded, not resampled.
 #
 # USAGE (mcmc-beast, from /root/BF_grw_joint_negbin)
 #
 #   /root/.juliaup/bin/julia --project -t 16 current_development/grw_joint_negbin/r02_production_grid.jl
 #   R02_MODELS=m05_wealth_grw_negbin  julia ... r02_production_grid.jl
+#
+#   # a model that failed the audit on ESS alone, re-run at a larger budget:
+#   R02_MODELS=m12_joint_hybrid_synergy_negbin R02_WARMUP=1000 R02_SAMPLES=2500 R02_STRIDE=5 \
+#     julia ... r02_production_grid.jl
 # ==============================================================================
 
 # %%
@@ -70,10 +74,35 @@ include(joinpath(@__DIR__, "l01_loader.jl"))
 # ===================================================================
 # 2. Configuration
 # ===================================================================
-const R02_CONFIG = GJNConfig()
+# The production budget, overridable per invocation.
+#
+# WHY THE OVERRIDE EXISTS. A model can fail the six-part audit on ESS alone — enough draws
+# to settle R̂ and produce no divergences, but not enough to resolve the tails of every
+# parameter at every fold. That is a BUDGET shortfall, not a geometry pathology, and the
+# fix is more draws rather than a different model. Keeping the knob here, stamped into the
+# checkpoint path and reported in the run row, means a re-run at a larger budget is a
+# recorded fact rather than an edit to the file.
+#
+# `R02_STRIDE` exists because the two move together. The audit runs on every retained draw;
+# the artefact keeps every `persist_stride`-th. Task 013 measured a 40-fold GRW fit at 4,000
+# draws per fold as ~725 MB, and its hex text form has to stay under PostgreSQL's 1 GB field
+# limit — so raising `samples` without raising `persist_stride` in step will eventually push
+# `save_fit` over that edge.
+const R02_CONFIG = let env(k, d) = parse(Int, get(ENV, k, string(d)))
+    base = GJNConfig()
+    GJNConfig(samples = env("R02_SAMPLES", base.samples),
+              warmup = env("R02_WARMUP", base.warmup),
+              chains = env("R02_CHAINS", base.chains),
+              persist_stride = env("R02_STRIDE", base.persist_stride))
+end
 const R02_SELECTED = let raw = strip(get(ENV, "R02_MODELS", ""))
     isempty(raw) ? copy(GJN_MODEL_NAMES) : String.(strip.(split(raw, ",")))
 end
+# Stamped with the budget. `fit_model` RESUMES from whatever per-fold checkpoints it finds,
+# so re-running a failed model at a larger budget against the old directory would hand back
+# the old draws and reproduce the failure exactly — with a new config hash to make it look
+# like a fresh result.
+const R02_BUDGET_TAG = "$(R02_CONFIG.chains)x$(R02_CONFIG.warmup)w$(R02_CONFIG.samples)s"
 all(in(GJN_MODEL_NAMES), R02_SELECTED) ||
     error("R02_MODELS names an unknown model: $(setdiff(R02_SELECTED, GJN_MODEL_NAMES))")
 const R02_OUT_DIR = R02_CONFIG.save_root
@@ -90,6 +119,7 @@ println("  sampler    : QueuedNUTS  ", R02_CONFIG.chains, " chains × ", R02_CON
 println("  queue      : ", R02_CONFIG.max_concurrent_tasks, " concurrent fold×chain tasks on ",
         Threads.nthreads(), " threads (BLAS pinned to 1)")
 println("  experiment : ", R02_CONFIG.experiment, "   persist stride: ", R02_CONFIG.persist_stride)
+println("  checkpoints: <model>/checkpoints_", R02_BUDGET_TAG)
 println("  git        : ", R02_GIT)
 println("="^96)
 
@@ -165,7 +195,7 @@ for (name, model) in r02_models
     # --- 8. training ------------------------------------------------------------
     # NUTS chains are single-threaded; QueuedExecution flattens 40 folds × 4 chains
     # into one 160-task queue and keeps all 16 pinned threads busy until it drains.
-    checkpoint_dir = joinpath(R02_OUT_DIR, name, "checkpoints")
+    checkpoint_dir = joinpath(R02_OUT_DIR, name, "checkpoints_" * R02_BUDGET_TAG)
     fit = gjn_sample(fit_config, inputs, R02_CONFIG; checkpoint_dir)
 
     # --- 9. convergence (six-part audit on every retained draw) ---------------

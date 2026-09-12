@@ -4,9 +4,9 @@ Does replacing the two-arm joint likelihood's conditional **Poisson** goals dens
 **negative binomial** improve the pricing of Totals and BTTS on Scottish League One/Two
 (tournaments 56/57), walk-forward over 24/25 + 25/26?
 
-> **Status: results pending.** The component is implemented, the smoke gate passes 4/4 at
-> the production sampler, and the 40-fold grid is running. Sections 3 onward are filled in
-> from the runners' own reports as they land; nothing is written here that a CSV in
+> **Status: grid 3/4 persisted, `m12` re-running at a larger budget.** The component is
+> implemented, the smoke gate passes 4/4, and §4 carries the production convergence table.
+> §5 and §6 land once the ladder is complete. Nothing is written here that a CSV in
 > `results/` does not contain.
 
 ## 1. The question, and why 1X2 is the wrong place to look for it
@@ -215,8 +215,59 @@ so less conditional overdispersion is left for `r` to price.
 
 ## 4. Production grid (`r02_production_grid.jl`)
 
-_Pending — 40 folds × 4 models, `QueuedNUTSConfig(1000 retained, 500 warmup, 4 chains,
-δ = 0.80, depth 10)`, 16 pinned threads, namespace `scottish_lower_grw_joint_negbin`._
+40 match-biweek folds, 710 held-out fixtures, namespace `scottish_lower_grw_joint_negbin`,
+16 pinned threads. Audit on every retained draw; artefact keeps every `persist_stride`-th.
+
+| model | folds | OOS | max R̂ | ESS bulk | ESS tail | divergences | depth | BFMI | wall | run UUID |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| `m00_baseline_grw_negbin` | 40 | 710 | 1.0111 | 834 | 670 | 0 / 160k | 0.61% | 0.732 | 59 min | `0c0da991-7d4c-4f01-90e2-2af157f27aaa` |
+| `m05_wealth_grw_negbin` | 40 | 710 | 1.0102 | 1049 | 807 | 0 / 160k | 0.01% | 0.681 | 57 min | `019d41d4-9e0e-41eb-bbc1-8984263f0f14` |
+| `m10_lineup_grw_negbin` | 40 | 710 | 1.0105 | 1057 | 882 | 0 / 160k | 0.55% | 0.744 | 63 min | `f7fd8385-fa15-4f6a-ae89-e23447907a80` |
+
+Sampler for those three: `QueuedNUTS 4 × (500 warmup + 1000 retained)`, δ = 0.80, depth 10,
+`persist_stride = 2`.
+
+### `m12` failed the audit at this budget, and was not persisted
+
+| model | max R̂ | ESS bulk | **ESS tail** | divergences | BFMI | verdict |
+|---|---:|---:|---:|---:|---:|---|
+| `m12_joint_hybrid_synergy_negbin` | 1.0099 | 689 | **236** (fold 8) | 0 / 160k | 0.593 | **FAIL** |
+
+Everything except tail ESS is comfortable — R̂ 1.0099 clears even Task 007's strict 1.01,
+there are no divergences in 160,000 transitions, tree-depth saturation is 0.02% and BFMI is
+0.59. One fold could not resolve the tail of some parameter in 4,000 draws.
+
+That is a **budget** shortfall, not a geometry pathology, so the fix is draws rather than a
+different model. `r02` refuses to persist a model that fails its gate, which is what makes
+this recoverable rather than a silently degraded arm in the ladder: `m12` is being re-run at
+`4 × (1000 warmup + 2500 retained)` — 10,000 audited draws per fold, `persist_stride = 5` so
+the artefact stays the same 2,000 draws per fold the other three carry.
+
+The checkpoint directory is stamped with the budget (`checkpoints_4x1000w2500s`). Without
+that, `fit_model` would have resumed the failed run's per-fold checkpoints and handed back
+the same draws under a new config hash — reproducing the failure while looking like a fresh
+result.
+
+### Posterior dispersion `r` (reported, not gated)
+
+| model | median `r` | mean `r` | 90% interval |
+|---|---:|---:|---|
+| `m00_baseline_grw_negbin` | 28.40 | 30.29 | [17.09, 49.92] |
+| `m05_wealth_grw_negbin` | 29.53 | 31.50 | [17.77, 51.93] |
+| `m10_lineup_grw_negbin` | 28.99 | 30.91 | [17.46, 50.82] |
+| `m12_joint_hybrid_synergy_negbin` | 29.50 | 31.43 | [17.82, 51.61] |
+
+`r̂` is the study's own subject, so it is reported and never gated: a posterior that piles up
+at large `r` is a negative binomial saying it is a Poisson, which is a **result** — the latent
+state already absorbed the overdispersion — not a failure.
+
+All four sit at `r̂ ≈ 28–30`, a little above Experiment 02's `26.0–26.5` on a TimeDecay state,
+in the expected direction. The per-fixture range is wide (`r` spans ~8 to ~178 across draws
+and fixtures), so the league-level median understates how much the tail moves on individual
+fixtures. At the grid level this is still a small effect: the full-grid G6 figures on the
+persisted runs are |Δ BTTS| 0.0128–0.0130, |Δ O/U 3.5| 0.0009–0.0014, |Δ 1X2| 0.0008–0.0011 —
+within noise of the folds 1–2 smoke figures, i.e. the mechanism's size is stable across the
+whole walk-forward.
 
 ## 5. Proper scores (`r04_evaluate.jl`)
 
