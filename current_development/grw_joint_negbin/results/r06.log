@@ -1,0 +1,95 @@
+
+================================================================================================
+  r06 RAW vs CALIBRATED PORTFOLIO — Option B, close and T−25
+================================================================================================
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 10.1 hours)...
+  book   : BookSpec(DeArb, KellyLogUtility, FractionalKelly, key=ead32da610f483c6)
+  policy : PolicySpec(TieredTrust(table=Dict(("1x2", 0.0, :draw) => 0.7142857142857143, ("1x2", 0.0, :home) => 1.0, ("over_under", 1.5, :over) => 0.7142857142857143, ("over_under", 2.5, :under) => 1.0, ("1x2", 0.0, :away) => 0.7142857142857143), default=0.0), SlateDrawdown(lambda=8.0, mode=sequential, joint_draws=50000, seed=1), FixedCap(cap=0.25))
+  arms   : 8 over a common 710-fixture walk-forward panel
+  book close_pit T+0   16446 rows | 1638 fixtures | staleness med 4 p90 28 | overround 1.0020 | 5867 refused markets
+  book t25 T−25        10373 rows | 1572 fixtures | staleness med 8 p90 51 | overround 1.0015 | 7687 refused markets
+
+------------------------------------------------------------------------------------------------
+  ENVIRONMENT CLOSE — de-vigged Betfair TWA(−20, 0] close
+------------------------------------------------------------------------------------------------
+  panel  : 710 walk-forward → 635 quoted → 632 buildable by every arm (3 dropped)
+  invert : 627/632 panel fixtures accepted (99.2% of all, 99.2% of quoted)
+           refused    2  too few quoted selections (2 < 3)
+           refused    1  residual SSE 7.191e-03 exceeds 5.000e-03
+           refused    1  residual SSE 6.868e-03 exceeds 5.000e-03
+           refused    1  residual SSE 5.201e-03 exceeds 5.000e-03
+  m00_baseline_grw_negbin            raw             return   +461.37%  ROI +12.05%  Sharpe  1.353  MDD  -38.78%  bets 1300  capture 1.017
+  m00_baseline_grw_negbin            close_std       return   +402.48%  ROI +11.45%  Sharpe  1.339  MDD  -38.68%  bets 1295  capture 1.015
+  m00_baseline_grw_negbin            close_std_t007  return   +323.53%  ROI +10.47%  Sharpe  1.243  MDD  -39.20%  bets 1293  capture 1.005
+  m05_wealth_grw_negbin              raw             return   +384.62%  ROI +11.64%  Sharpe  1.434  MDD  -42.49%  bets 1235  capture 1.041
+  m05_wealth_grw_negbin              close_std       return   +331.67%  ROI +11.24%  Sharpe  1.408  MDD  -41.82%  bets 1227  capture 1.030
+  m05_wealth_grw_negbin              close_std_t007  return   +307.61%  ROI +10.96%  Sharpe  1.371  MDD  -42.52%  bets 1228  capture 1.036
+  m10_lineup_grw_negbin              raw             return   +370.28%  ROI +11.02%  Sharpe  1.243  MDD  -45.14%  bets 1301  capture 0.924
+  m10_lineup_grw_negbin              close_std       return   +354.66%  ROI +10.86%  Sharpe  1.276  MDD  -44.91%  bets 1291  capture 0.928
+  m10_lineup_grw_negbin              close_std_t007  return   +332.71%  ROI +10.56%  Sharpe  1.278  MDD  -45.10%  bets 1297  capture 0.919
+  m12_joint_hybrid_synergy_negbin    raw             return   +297.52%  ROI +10.50%  Sharpe  1.196  MDD  -50.23%  bets 1244  capture 1.007
+  m12_joint_hybrid_synergy_negbin    close_std       return   +270.65%  ROI +10.27%  Sharpe  1.206  MDD  -48.60%  bets 1243  capture 0.990
+  m12_joint_hybrid_synergy_negbin    close_std_t007  return   +252.12%  ROI  +9.97%  Sharpe  1.191  MDD  -49.62%  bets 1244  capture 1.003
+  m00_poisson                        raw             return   +491.55%  ROI +12.32%  Sharpe  1.412  MDD  -38.85%  bets 1296  capture 1.036
+  m00_poisson                        close_std       return   +418.92%  ROI +11.62%  Sharpe  1.388  MDD  -38.82%  bets 1292  capture 1.029
+  m00_poisson                        close_std_t007  return   +328.23%  ROI +10.55%  Sharpe  1.276  MDD  -40.31%  bets 1290  capture 1.037
+  m05_poisson                        raw             return   +385.78%  ROI +11.68%  Sharpe  1.453  MDD  -42.67%  bets 1247  capture 1.080
+  m05_poisson                        close_std       return   +331.95%  ROI +11.27%  Sharpe  1.429  MDD  -42.87%  bets 1233  capture 1.058
+  m05_poisson                        close_std_t007  return   +300.96%  ROI +10.88%  Sharpe  1.377  MDD  -44.45%  bets 1234  capture 1.073
+  m10_poisson                        raw             return   +348.82%  ROI +10.75%  Sharpe  1.214  MDD  -48.01%  bets 1299  capture 0.957
+  m10_poisson                        close_std       return   +322.68%  ROI +10.44%  Sharpe  1.232  MDD  -47.63%  bets 1287  capture 0.958
+  m10_poisson                        close_std_t007  return   +291.20%  ROI  +9.97%  Sharpe  1.209  MDD  -48.16%  bets 1290  capture 0.961
+  m12_poisson                        raw             return   +351.90%  ROI +11.36%  Sharpe  1.309  MDD  -52.61%  bets 1253  capture 1.043
+  m12_poisson                        close_std       return   +313.93%  ROI +11.05%  Sharpe  1.314  MDD  -51.38%  bets 1243  capture 1.039
+  m12_poisson                        close_std_t007  return   +287.51%  ROI +10.66%  Sharpe  1.293  MDD  -52.50%  bets 1246  capture 1.054
+
+------------------------------------------------------------------------------------------------
+  ENVIRONMENT T25 — tradeable T−25 point-in-time order book
+------------------------------------------------------------------------------------------------
+  panel  : 710 walk-forward → 611 quoted → 611 buildable by every arm (0 dropped)
+  invert : 580/611 panel fixtures accepted (94.9% of all, 94.9% of quoted)
+           refused   29  too few quoted selections (2 < 3)
+           refused    1  residual SSE 5.113e-03 exceeds 5.000e-03
+           refused    1  residual SSE 5.723e-03 exceeds 5.000e-03
+  m00_baseline_grw_negbin            raw             return   +386.54%  ROI +12.18%  Sharpe  1.188  MDD  -47.00%  bets 1149  capture 0.981
+  m00_baseline_grw_negbin            t25_inv         return   +342.76%  ROI +16.64%  Sharpe  1.740  MDD  -28.16%  bets 1063  capture 0.999
+  m05_wealth_grw_negbin              raw             return   +514.38%  ROI +14.04%  Sharpe  1.581  MDD  -41.96%  bets 1122  capture 1.066
+  m05_wealth_grw_negbin              t25_inv         return   +253.59%  ROI +16.70%  Sharpe  1.902  MDD  -23.31%  bets  998  capture 1.035
+  m10_lineup_grw_negbin              raw             return   +426.16%  ROI +12.54%  Sharpe  1.260  MDD  -46.00%  bets 1153  capture 0.944
+  m10_lineup_grw_negbin              t25_inv         return   +296.71%  ROI +15.62%  Sharpe  1.640  MDD  -28.87%  bets 1071  capture 0.928
+  m12_joint_hybrid_synergy_negbin    raw             return   +684.13%  ROI +15.65%  Sharpe  1.740  MDD  -39.48%  bets 1119  capture 1.076
+  m12_joint_hybrid_synergy_negbin    t25_inv         return   +300.93%  ROI +17.73%  Sharpe  1.971  MDD  -24.50%  bets 1011  capture 0.979
+  m00_poisson                        raw             return   +424.15%  ROI +12.53%  Sharpe  1.271  MDD  -47.09%  bets 1155  capture 1.022
+  m00_poisson                        t25_inv         return   +359.25%  ROI +17.79%  Sharpe  1.837  MDD  -27.16%  bets 1027  capture 1.013
+  m05_poisson                        raw             return   +531.78%  ROI +14.15%  Sharpe  1.658  MDD  -41.86%  bets 1124  capture 1.110
+  m05_poisson                        t25_inv         return   +245.85%  ROI +17.39%  Sharpe  1.976  MDD  -21.99%  bets  969  capture 1.067
+  m10_poisson                        raw             return   +420.16%  ROI +12.36%  Sharpe  1.291  MDD  -47.40%  bets 1143  capture 0.947
+  m10_poisson                        t25_inv         return   +299.79%  ROI +16.41%  Sharpe  1.714  MDD  -29.93%  bets 1046  capture 0.949
+  m12_poisson                        raw             return   +754.05%  ROI +16.12%  Sharpe  1.863  MDD  -39.50%  bets 1118  capture 1.122
+  m12_poisson                        t25_inv         return   +302.08%  ROI +18.81%  Sharpe  2.080  MDD  -24.31%  bets  984  capture 1.013
+
+  r05 REPRODUCTION GATE: 8 arms compared, worst |Δ return| 0.000000 pp, 0 bet-count mismatches
+  close    raw             m00_baseline_grw_negbin            shared 1258 (94%)  sizing ΔPnL -0.0376  shared ROI +12.09% vs +12.34%
+  close    raw             m05_wealth_grw_negbin              shared 1188 (92%)  sizing ΔPnL +0.0136  shared ROI +11.71% vs +11.73%
+  close    raw             m10_lineup_grw_negbin              shared 1255 (93%)  sizing ΔPnL +0.0470  shared ROI +10.96% vs +10.73%
+  close    raw             m12_joint_hybrid_synergy_negbin    shared 1209 (94%)  sizing ΔPnL -0.1270  shared ROI +10.54% vs +11.40%
+  close    close_std       m00_baseline_grw_negbin            shared 1246 (93%)  sizing ΔPnL -0.0109  shared ROI +11.51% vs +11.65%
+  close    close_std       m05_wealth_grw_negbin              shared 1180 (92%)  sizing ΔPnL +0.0023  shared ROI +11.31% vs +11.42%
+  close    close_std       m10_lineup_grw_negbin              shared 1242 (93%)  sizing ΔPnL +0.0744  shared ROI +10.78% vs +10.42%
+  close    close_std       m12_joint_hybrid_synergy_negbin    shared 1202 (94%)  sizing ΔPnL -0.1149  shared ROI +10.27% vs +11.10%
+  close    close_std_t007  m00_baseline_grw_negbin            shared 1244 (93%)  sizing ΔPnL +0.0035  shared ROI +10.49% vs +10.57%
+  close    close_std_t007  m05_wealth_grw_negbin              shared 1180 (92%)  sizing ΔPnL +0.0181  shared ROI +11.04% vs +11.04%
+  close    close_std_t007  m10_lineup_grw_negbin              shared 1244 (93%)  sizing ΔPnL +0.1063  shared ROI +10.49% vs +9.95%
+  close    close_std_t007  m12_joint_hybrid_synergy_negbin    shared 1203 (93%)  sizing ΔPnL -0.0971  shared ROI +9.96% vs +10.71%
+  t25      raw             m00_baseline_grw_negbin            shared 1116 (94%)  sizing ΔPnL -0.0949  shared ROI +12.06% vs +12.66%
+  t25      raw             m05_wealth_grw_negbin              shared 1081 (93%)  sizing ΔPnL -0.0188  shared ROI +14.04% vs +14.26%
+  t25      raw             m10_lineup_grw_negbin              shared 1113 (94%)  sizing ΔPnL +0.0492  shared ROI +12.61% vs +12.40%
+  t25      raw             m12_joint_hybrid_synergy_negbin    shared 1084 (94%)  sizing ΔPnL -0.0839  shared ROI +15.68% vs +16.28%
+  t25      t25_inv         m00_baseline_grw_negbin            shared  993 (91%)  sizing ΔPnL -0.0228  shared ROI +16.83% vs +17.95%
+  t25      t25_inv         m05_wealth_grw_negbin              shared  929 (89%)  sizing ΔPnL +0.0380  shared ROI +16.62% vs +17.27%
+  t25      t25_inv         m10_lineup_grw_negbin              shared 1009 (91%)  sizing ΔPnL -0.0052  shared ROI +15.64% vs +16.57%
+  t25      t25_inv         m12_joint_hybrid_synergy_negbin    shared  943 (90%)  sizing ΔPnL +0.0134  shared ROI +17.82% vs +18.84%
+
+R06_DONE report=/root/BF_grw_joint_negbin/current_development/grw_joint_negbin/results/calibrated_portfolio/r06_calibrated_portfolio_report.md
+R06_SUMMARY=/root/BF_grw_joint_negbin/current_development/grw_joint_negbin/results/r06_calibrated_portfolio_summary.csv
+R06_EXIT=0

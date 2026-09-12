@@ -26,3 +26,6 @@ Manifest.toml
 
 # Per-stream runner output directories.
 current_development/*/out/
+
+# Task 014 prototype: large per-fold sampler checkpoints
+current_development/grw_joint_negbin/results/*/checkpoints/

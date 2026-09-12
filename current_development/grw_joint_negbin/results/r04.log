@@ -1,0 +1,160 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 6.4 hours)...
+
+================================================================================================
+  r04 PROPER SCORES — NegBin ladder vs Task 013 Poisson controls and the Betfair close
+  bootstrap  : 10000 fixture-clustered paired resamples, seed 20260914
+  scopes     : all, 1X2, OU1.5, OU2.5, OU3.5, OU4.5, BTTS
+================================================================================================
+  Betfair close: 14617 rows over 1627 fixtures
+    1X2     selections: away, draw, home
+    OU1.5   selections: over_15, under_15
+    OU2.5   selections: over_25, under_25
+    OU3.5   selections: over_35, under_35
+    OU4.5   selections: over_45, under_45
+    BTTS    selections: btts_no, btts_yes
+  m00_baseline_grw_negbin            NegBin               40 folds   710 → 710 fixtures  run 0c0da991-7d4c-4f01-90e2-2af157f27aaa
+  m05_wealth_grw_negbin              Joint Gamma-NegBin   40 folds   710 → 710 fixtures  run 019d41d4-9e0e-41eb-bbc1-8984263f0f14
+  m10_lineup_grw_negbin              NegBin               40 folds   710 → 710 fixtures  run f7fd8385-fa15-4f6a-ae89-e23447907a80
+  m12_joint_hybrid_synergy_negbin    Joint Gamma-NegBin   40 folds   710 → 710 fixtures  run c3d2aede-ddd5-4590-9c75-5937de4b1bbc
+  m00_poisson                        Poisson              43 folds   769 → 710 fixtures  run 158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11
+  m05_poisson                        Joint Gamma-Poisson  43 folds   769 → 710 fixtures  run b0961bc4-c40c-4dbe-9c05-57df7ae0839e
+  m10_poisson                        Poisson              43 folds   769 → 710 fixtures  run b13c8fb9-ce34-4210-aa3f-9d2ed493c286
+  m12_poisson                        Joint Gamma-Poisson  43 folds   769 → 710 fixtures  run 3a9a4c7e-378b-45d0-a2d2-c8b69b46786b
+
+  reproduction (1X2 + O/U 2.5 + BTTS, 2899 rows): m12_poisson LogLoss 0.64437 (published 0.64437)  ECE 0.0086 (published 0.0086)
+
+=== PROPER SCORES · scope = all ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_poisson                      Joint Gamma-Poisson   4054  0.611701        0.619076  0.211703  0.0137431   0.0107731
+   2 │ m05_wealth_grw_negbin            Joint Gamma-NegBin    4054  0.611734        0.619076  0.211694  0.0146346   0.0107731
+   3 │ m12_poisson                      Joint Gamma-Poisson   4054  0.612758        0.619076  0.212201  0.0122872   0.0107731
+   4 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin    4054  0.612897        0.619076  0.212255  0.0107405   0.0107731
+   5 │ m00_poisson                      Poisson               4054  0.614138        0.619076  0.212742  0.016783    0.0107731
+   6 │ m00_baseline_grw_negbin          NegBin                4054  0.614272        0.619076  0.2128    0.0116787   0.0107731
+   7 │ m10_poisson                      Poisson               4054  0.614947        0.619076  0.213159  0.0119568   0.0107731
+   8 │ m10_lineup_grw_negbin            NegBin                4054  0.61502         0.619076  0.213176  0.0117936   0.0107731
+
+=== PROPER SCORES · scope = 1X2 ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_wealth_grw_negbin            Joint Gamma-NegBin    1785  0.615534        0.613118  0.212824  0.0119169   0.0185806
+   2 │ m05_poisson                      Joint Gamma-Poisson   1785  0.615584        0.613118  0.212856  0.0124276   0.0185806
+   3 │ m00_poisson                      Poisson               1785  0.616658        0.613118  0.213295  0.0189223   0.0185806
+   4 │ m00_baseline_grw_negbin          NegBin                1785  0.616888        0.613118  0.213395  0.0128981   0.0185806
+   5 │ m12_poisson                      Joint Gamma-Poisson   1785  0.617009        0.613118  0.213498  0.0140357   0.0185806
+   6 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin    1785  0.617176        0.613118  0.213564  0.0124487   0.0185806
+   7 │ m10_lineup_grw_negbin            NegBin                1785  0.618522        0.613118  0.214129  0.0104477   0.0185806
+   8 │ m10_poisson                      Poisson               1785  0.618673        0.613118  0.214207  0.0108137   0.0185806
+
+=== PROPER SCORES · scope = OU1.5 ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_poisson                      Joint Gamma-Poisson    430  0.520704        0.527281  0.170254  0.0321738   0.0102642
+   2 │ m05_wealth_grw_negbin            Joint Gamma-NegBin     430  0.522087        0.527281  0.170697  0.0270413   0.0102642
+   3 │ m12_poisson                      Joint Gamma-Poisson    430  0.524401        0.527281  0.171589  0.0435597   0.0102642
+   4 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin     430  0.525014        0.527281  0.171764  0.0219043   0.0102642
+   5 │ m00_poisson                      Poisson                430  0.531872        0.527281  0.174283  0.0212516   0.0102642
+   6 │ m00_baseline_grw_negbin          NegBin                 430  0.532378        0.527281  0.174478  0.03579     0.0102642
+   7 │ m10_poisson                      Poisson                430  0.532712        0.527281  0.174519  0.031835    0.0102642
+   8 │ m10_lineup_grw_negbin            NegBin                 430  0.533548        0.527281  0.174827  0.0340886   0.0102642
+
+=== PROPER SCORES · scope = OU2.5 ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece         market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64     Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m00_baseline_grw_negbin          NegBin                 758  0.687089        0.689878  0.246994  0.0254224    0.0182987
+   2 │ m10_lineup_grw_negbin            NegBin                 758  0.687524        0.689878  0.247216  0.0152665    0.0182987
+   3 │ m00_poisson                      Poisson                758  0.687552        0.689878  0.247213  0.0222304    0.0182987
+   4 │ m10_poisson                      Poisson                758  0.6876          0.689878  0.247248  0.010884     0.0182987
+   5 │ m05_wealth_grw_negbin            Joint Gamma-NegBin     758  0.689299        0.689878  0.248119  0.0309342    0.0182987
+   6 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin     758  0.689549        0.689878  0.248247  0.00885728   0.0182987
+   7 │ m12_poisson                      Joint Gamma-Poisson    758  0.689727        0.689878  0.248333  0.0132773    0.0182987
+   8 │ m05_poisson                      Joint Gamma-Poisson    758  0.689861        0.689878  0.248389  0.0311491    0.0182987
+
+=== PROPER SCORES · scope = OU3.5 ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_wealth_grw_negbin            Joint Gamma-NegBin     528  0.611797        0.610459  0.21036   0.0363034   0.0148456
+   2 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin     528  0.612132        0.610459  0.210668  0.0239192   0.0148456
+   3 │ m12_poisson                      Joint Gamma-Poisson    528  0.612295        0.610459  0.210665  0.0180126   0.0148456
+   4 │ m05_poisson                      Joint Gamma-Poisson    528  0.612349        0.610459  0.210545  0.0465219   0.0148456
+   5 │ m10_lineup_grw_negbin            NegBin                 528  0.619588        0.610459  0.213687  0.0353482   0.0148456
+   6 │ m10_poisson                      Poisson                528  0.61998         0.610459  0.213793  0.0252901   0.0148456
+   7 │ m00_baseline_grw_negbin          NegBin                 528  0.620124        0.610459  0.213672  0.0311546   0.0148456
+   8 │ m00_poisson                      Poisson                528  0.620701        0.610459  0.213828  0.0305723   0.0148456
+
+=== PROPER SCORES · scope = OU4.5 ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier      ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64    Float64    Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m10_poisson                      Poisson                197  0.329771        0.507908  0.0902692  0.0886508   0.0963368
+   2 │ m10_lineup_grw_negbin            NegBin                 197  0.331197        0.507908  0.0905862  0.0949612   0.0963368
+   3 │ m00_poisson                      Poisson                197  0.331758        0.507908  0.0906696  0.092813    0.0963368
+   4 │ m00_baseline_grw_negbin          NegBin                 197  0.333581        0.507908  0.0912402  0.0966351   0.0963368
+   5 │ m12_poisson                      Joint Gamma-Poisson    197  0.341706        0.507908  0.0932692  0.082302    0.0963368
+   6 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin     197  0.342639        0.507908  0.0936333  0.0863141   0.0963368
+   7 │ m05_poisson                      Joint Gamma-Poisson    197  0.345764        0.507908  0.0944995  0.0850412   0.0963368
+   8 │ m05_wealth_grw_negbin            Joint Gamma-NegBin     197  0.346743        0.507908  0.0947988  0.0895354   0.0963368
+
+=== PROPER SCORES · scope = BTTS ===
+8×8 DataFrame
+ Row │ model                            likelihood           n_obs  logloss   market_logloss  brier     ece        market_ece
+     │ String                           String               Int64  Float64   Float64         Float64   Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m05_poisson                      Joint Gamma-Poisson    356  0.681922        0.683371  0.24445   0.0366172    0.030044
+   2 │ m05_wealth_grw_negbin            Joint Gamma-NegBin     356  0.682357        0.683371  0.244653  0.0191885    0.030044
+   3 │ m12_poisson                      Joint Gamma-Poisson    356  0.684962        0.683371  0.245908  0.0402103    0.030044
+   4 │ m12_joint_hybrid_synergy_negbin  Joint Gamma-NegBin     356  0.685077        0.683371  0.245965  0.0679265    0.030044
+   5 │ m00_poisson                      Poisson                356  0.691081        0.683371  0.248968  0.0353256    0.030044
+   6 │ m10_poisson                      Poisson                356  0.691247        0.683371  0.249056  0.0204806    0.030044
+   7 │ m00_baseline_grw_negbin          NegBin                 356  0.691675        0.683371  0.249267  0.0144654    0.030044
+   8 │ m10_lineup_grw_negbin            NegBin                 356  0.691769        0.683371  0.249319  0.0128236    0.030044
+
+=== PAIRED ΔLogLoss · NegBin − its Poisson control ===
+28×9 DataFrame
+ Row │ contrast                           scope   n_obs  n_fixtures  delta         lo            hi           p_better  significant
+     │ String                             String  Int64  Int64       Float64       Float64       Float64      Float64   Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m00_baseline_grw_negbin − m00_po…  all      4054         630   0.00013395   -0.000592351  0.0008275      0.3441        false
+   2 │ m00_baseline_grw_negbin − m00_po…  1X2      1785         595   0.000230022  -0.000326153  0.000785963    0.2077        false
+   3 │ m00_baseline_grw_negbin − m00_po…  OU1.5     430         215   0.000505607  -0.00200918   0.00281075     0.3404        false
+   4 │ m00_baseline_grw_negbin − m00_po…  OU2.5     758         379  -0.000462887  -0.00176274   0.000794221    0.7623        false
+   5 │ m00_baseline_grw_negbin − m00_po…  OU3.5     528         264  -0.00057715   -0.0019628    0.000706139    0.8085        false
+   6 │ m00_baseline_grw_negbin − m00_po…  OU4.5     197         104   0.00182343   -0.00130107   0.00421107     0.1036        false
+   7 │ m00_baseline_grw_negbin − m00_po…  BTTS      356         178   0.000593875  -0.00302042   0.0040794      0.3754        false
+   8 │ m05_wealth_grw_negbin − m05_pois…  all      4054         630   3.3723e-5    -0.000608622  0.000655225    0.4556        false
+   9 │ m05_wealth_grw_negbin − m05_pois…  1X2      1785         595  -4.93525e-5   -0.000540505  0.000439125    0.576         false
+  10 │ m05_wealth_grw_negbin − m05_pois…  OU1.5     430         215   0.00138296   -0.000996612  0.00354385     0.124         false
+  11 │ m05_wealth_grw_negbin − m05_pois…  OU2.5     758         379  -0.000562664  -0.00183194   0.000712785    0.8141        false
+  12 │ m05_wealth_grw_negbin − m05_pois…  OU3.5     528         264  -0.00055136   -0.00163434   0.000489823    0.8507        false
+  13 │ m05_wealth_grw_negbin − m05_pois…  OU4.5     197         104   0.000979067  -0.00152562   0.00310333     0.2006        false
+  14 │ m05_wealth_grw_negbin − m05_pois…  BTTS      356         178   0.00043504   -0.00311668   0.00387021     0.4074        false
+  15 │ m10_lineup_grw_negbin − m10_pois…  all      4054         630   7.25112e-5   -0.000626456  0.000743059    0.4177        false
+  16 │ m10_lineup_grw_negbin − m10_pois…  1X2      1785         595  -0.000150459  -0.000677884  0.000383199    0.7082        false
+  17 │ m10_lineup_grw_negbin − m10_pois…  OU1.5     430         215   0.000836208  -0.00179025   0.00320832     0.2506        false
+  18 │ m10_lineup_grw_negbin − m10_pois…  OU2.5     758         379  -7.5619e-5    -0.0013888    0.00126046     0.5429        false
+  19 │ m10_lineup_grw_negbin − m10_pois…  OU3.5     528         264  -0.000391533  -0.00172075   0.000877664    0.7214        false
+  20 │ m10_lineup_grw_negbin − m10_pois…  OU4.5     197         104   0.00142636   -0.00100938   0.00345326     0.1147        false
+  21 │ m10_lineup_grw_negbin − m10_pois…  BTTS      356         178   0.000522518  -0.00305073   0.00403816     0.3908        false
+  22 │ m12_joint_hybrid_synergy_negbin …  all      4054         630   0.000139458  -0.000527492  0.00076975     0.3331        false
+  23 │ m12_joint_hybrid_synergy_negbin …  1X2      1785         595   0.000167007  -0.0002681    0.000602876    0.2241        false
+  24 │ m12_joint_hybrid_synergy_negbin …  OU1.5     430         215   0.000613225  -0.00191592   0.00294774     0.3083        false
+  25 │ m12_joint_hybrid_synergy_negbin …  OU2.5     758         379  -0.000178212  -0.00143247   0.00105004     0.6121        false
+  26 │ m12_joint_hybrid_synergy_negbin …  OU3.5     528         264  -0.00016338   -0.00131385   0.000911971    0.6163        false
+  27 │ m12_joint_hybrid_synergy_negbin …  OU4.5     197         104   0.000933628  -0.00215232   0.00323365     0.2367        false
+  28 │ m12_joint_hybrid_synergy_negbin …  BTTS      356         178   0.000115156  -0.00340549   0.00357193     0.4803        false
+
+R04_SIGNIFICANT 1 of 56 matched contrasts
+R04_DONE report=/root/BF_grw_joint_negbin/current_development/grw_joint_negbin/results/evaluation/r04_evaluation_report.md
+R04_EXIT=0

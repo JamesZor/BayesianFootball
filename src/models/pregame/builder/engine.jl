@@ -206,10 +206,15 @@ end
 
 
 """
-The two scalars the shared-κ joint observation owns. Declared in one submodel so the chain carries
-`obs.ν` and `obs.log_κ`, in this order — which is the θ layout `cb_varinfo_sites` reports.
+The two scalars a shared-κ joint observation owns, whichever count density sits on the other arm.
+Declared in one submodel so the chain carries `obs.ν` and `obs.log_κ`, in this order — which is the
+θ layout `cb_varinfo_sites` reports.
+
+Shared by `JointGammaPoissonObservation` and `JointGammaNegBinObservation` deliberately: the two
+models differ only in the goals density, and reading the SAME two sites out of both is what lets a
+Poisson-arm posterior and a NegBin-arm posterior be compared parameter by parameter.
 """
-@model function _joint_gamma_poisson_params(o::JointGammaPoissonObservation)
+@model function _joint_gamma_poisson_params(o::JointGammaObservation)
     ν ~ o.shape_prior
     log_κ ~ o.log_kappa_prior
     return (; ν, log_κ)
@@ -326,6 +331,73 @@ between a tape whose length is set by the model and one whose length is set by t
     ζ_a = η_a .+ obs.log_κ_team[od.away_idx]
     ll_h = yh .* ζ_h .- exp.(ζ_h) .- lfh
     ll_a = ya .* ζ_a .- exp.(ζ_a) .- lfa
+    goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
+
+    # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
+    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
+    inv_μ_h = exp.(.-η_h)
+    inv_μ_a = exp.(.-η_a)
+    g_h = (ν - 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* inv_μ_h .- ν .* η_h .+ log_norm
+    g_a = (ν - 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* inv_μ_a .- ν .* η_a .+ log_norm
+    proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
+
+    return goals_ll + proxy_ll
+end
+
+
+"""
+Two arms on one latent `μ = exp(η)`, with an OVERDISPERSED goals arm.
+
+    ARM 1   pxg ~ Gamma(ν, μ/ν)                     masked to the matches that have a measurement
+    ARM 2   y   ~ RobustNegativeBinomial(r, κ·μ)     every match in the fold
+
+Arm 1 is byte-for-byte `_observe(::SharedKappaJoint, …)`'s Gamma broadcast, and it is meant to stay
+that way: the identification argument for κ is that the proxy is unbiased for `μ`, so the proxy arm
+must not see κ — and now also must not see `r`. Dispersion is a statement about how goals scatter
+around `κ·μ`; the pxG measurement's own scatter is what `ν` already is. Letting `r` into arm 1 would
+be fitting one quantity with two parameters.
+
+Arm 2 is `_observe(::NegativeBinomialObservation, …)`'s density evaluated at `ζ = η + log κ` instead
+of at `η`, written out in the same log-intensity form for the same reason: constructing a
+`DiscreteDistribution` inside the broadcast pushes ForwardDiff duals through the generic
+integer-support path when ReverseDiff compiles the tape. `log Γ(y+1)` is data, precomputed in
+`build_turing_model`.
+
+    log NegBin(y; r, λ) = log Γ(y+r) − log Γ(r) − log Γ(y+1)
+                          + r·(log r − log(r+λ)) + y·(log λ − log(r+λ))
+
+DECLARATION ORDER is `obs` then `disp`, so θ reads `obs.ν`, `obs.log_κ`, `disp.log_r`. The sites are
+read by NAME everywhere downstream, so the order is a layout convention rather than a correctness
+condition — but it is the one `cb_varinfo_sites` reports and the extractors are written against, so
+it is stated here rather than left to whichever submodel happened to come first.
+
+The arms are not fused into one broadcast, for the measured reason recorded in
+`_observe(::PoissonObservation, …)` — see docs/tickets/T002.
+"""
+@model function _observe(o::JointGammaNegBinObservation,
+                         η_h, η_a,
+                         yh::Vector{Int}, ya::Vector{Int}, wts::Vector{Float64},
+                         lfh::Vector{Float64}, lfa::Vector{Float64},
+                         n_teams::Int, n_months::Int, od::JointGammaPoissonDesign)
+    obs  ~ to_submodel(_joint_gamma_poisson_params(o))
+    disp ~ to_submodel(_build_count_dispersion(o.dispersion, n_teams, n_months))
+    ν = obs.ν
+
+    # --- ARM 2: NegBin goals on λ = κ·μ, over the whole fold -------------------
+    ζ_h = η_h .+ obs.log_κ
+    ζ_a = η_a .+ obs.log_κ
+    λ_h = exp.(ζ_h)
+    λ_a = exp.(ζ_a)
+    total_h = log.(disp.h .+ λ_h)
+    total_a = log.(disp.a .+ λ_a)
+    ll_h = SpecialFunctions.loggamma.(yh .+ disp.h) .-
+           SpecialFunctions.loggamma.(disp.h) .- lfh .+
+           disp.h .* (log.(disp.h) .- total_h) .+
+           yh .* (ζ_h .- total_h)
+    ll_a = SpecialFunctions.loggamma.(ya .+ disp.a) .-
+           SpecialFunctions.loggamma.(disp.a) .- lfa .+
+           disp.a .* (log.(disp.a) .- total_a) .+
+           ya .* (ζ_a .- total_a)
     goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
 
     # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
@@ -706,20 +778,47 @@ function CB_PG.extract_kappa(chain::Chains, o::JointGammaPoissonObservation, n_t
               σ_κ = nt.σ_κ, δ_κ = nt.δ_κ, κ_team = nt.κ_team, summary)
 end
 
-function _cb_extract_observation(o::NegativeBinomialObservation{<:CB_PG.GlobalDispersion},
-                                 chain, n_teams)
+"""
+    _cb_dispersion_draws(config, chain) -> (; h, a)
+
+Posterior draws of `r` per side, reconstructed by applying the SAME smooth bound the engine applied
+(`_cb_bound_dispersion_log`) to the SAME `disp.*` sites.
+
+Factored out of `_cb_extract_observation` because two observation families now read it — the
+single-arm NegBin and the two-arm joint NegBin — and a dispersion bound that is reconstructed
+differently from how it was sampled is a silent posterior shift, not an error.
+"""
+function _cb_dispersion_draws(::CB_PG.GlobalDispersion, chain::Chains)
     log_r = vec(Array(chain[Symbol("disp.log_r")]))
     r = exp.(_cb_bound_dispersion_log.(log_r))
     return (; h = r, a = r)
 end
 
-function _cb_extract_observation(o::NegativeBinomialObservation{<:CB_PG.HomeAwayDispersion},
-                                 chain, n_teams)
+function _cb_dispersion_draws(::CB_PG.HomeAwayDispersion, chain::Chains)
     log_r = vec(Array(chain[Symbol("disp.log_r")]))
     home_offset = vec(Array(chain[Symbol("disp.δ_r_home")]))
     r_a = exp.(_cb_bound_dispersion_log.(log_r))
     r_h = exp.(_cb_bound_dispersion_log.(log_r .+ home_offset))
     return (; h = r_h, a = r_a)
+end
+
+_cb_extract_observation(o::NegativeBinomialObservation, chain, n_teams) =
+    _cb_dispersion_draws(o.dispersion, chain)
+
+"""
+The joint NegBin block: the Gamma arm's `ν`, the league finishing factor `κ`, and the dispersion
+draws — read from the same three site names the engine declared.
+
+`r_h`/`r_a` are named rather than returned as `(; h, a)` because `_cb_rates` hands this straight to
+`tpl_dispersion_fields`, which looks for `:r_h`/`:r_a` (or `:r`) on the prediction NamedTuple. The
+single-arm NegBin gets away with `(; h, a)` only because its `_cb_rates` renames them on the way
+out; this one carries κ and ν alongside, so it names them here.
+"""
+function _cb_extract_observation(o::JointGammaNegBinObservation, chain, n_teams)
+    ν = vec(Array(chain[Symbol("obs.ν")]))
+    κ = exp.(vec(Array(chain[Symbol("obs.log_κ")])))
+    r = _cb_dispersion_draws(o.dispersion, chain)
+    return (; ν, κ, r_h = r.h, r_a = r.a)
 end
 
 # The prediction NamedTuple must carry exactly what the score grid for this family
@@ -758,4 +857,25 @@ end
 function _cb_rates(::NegativeBinomialObservation, λ_h, λ_a, disp_nt, h_idx, a_idx, m_idx)
     r = CB_PG.reconstruct_dispersion(disp_nt, h_idx, a_idx, m_idx)
     return (; λ_h, λ_a, r_h = r.h, r_a = r.a, true_xg_h = λ_h, true_xg_a = λ_a)
+end
+
+"""
+The joint NegBin rates: the score grid's `λ = κ·μ` and `r`, with the Gamma arm's `μ` carried beside
+them as `true_xg_*`.
+
+Same split as `_cb_rates(::SharedKappaJoint, …)` and for the same reason — `μ` is the quantity the
+proxy arm measured and `λ` is what the goals arm scored, and κ is exactly the league finishing
+factor between them. `extract_latents(::NegBinCountFamily, …)` reads `λ_h`, `λ_a`, `r_h`, `r_a`;
+μ, κ and ν ride along as diagnostics without reaching the grid.
+
+No `reconstruct_dispersion` call: `GlobalDispersion` and `HomeAwayDispersion` are already resolved
+into per-draw vectors by `_cb_dispersion_draws`, and those are the only two dispersions this
+observation is wired for.
+"""
+function _cb_rates(::JointGammaNegBinObservation, μ_h, μ_a, obs_nt, h_idx, a_idx, m_idx)
+    λ_h = obs_nt.κ .* μ_h
+    λ_a = obs_nt.κ .* μ_a
+    return (; λ_h, λ_a, r_h = obs_nt.r_h, r_a = obs_nt.r_a,
+              μ_h, μ_a, κ = obs_nt.κ, ν = obs_nt.ν,
+              true_xg_h = μ_h, true_xg_a = μ_a)
 end

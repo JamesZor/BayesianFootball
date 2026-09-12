@@ -614,6 +614,14 @@ explicit.
 
 Fixtures in `keep_ids` that the container does not hold are ignored — the caller is
 naming a filter, not asserting coverage.
+
+BOTH FAMILIES. A negative-binomial container carries `(; r_h, r_a)`, two
+`(n_matches × n_draws)` matrices on the SAME row index as `λ_home`/`λ_away`
+(`tpl_validate_observation` admits that shape and no other), so the dispersion is
+restricted by the same `rows` in the same pass. Dropping it instead — returning `nothing`
+— would hand back a container that prices on the double-Poisson grid, which is not a
+subset of the posterior but a different model; that is why this refused NegBin input
+rather than guessing until the shape was pinned down.
 """
 function restrict_latents(l::Models.CountLatents{Float64}, keep_ids)
     want = Set{Int}(Int(m) for m in keep_ids)
@@ -621,9 +629,6 @@ function restrict_latents(l::Models.CountLatents{Float64}, keep_ids)
     rows = findall(i -> ids[i] in want, eachindex(ids))
     isempty(rows) && error("restrict_latents: no fixture of the container is in `keep_ids`.")
     obs = l.observation_params
-    obs === nothing || error(
-        "restrict_latents: this container carries observation parameters ($(typeof(obs))); " *
-        "subsetting them is not defined here. Extend this method before using it on a " *
-        "negative-binomial posterior.")
-    return Models.CountLatents(ids[rows], l.λ_home[rows, :], l.λ_away[rows, :], nothing)
+    kept = obs === nothing ? nothing : (; r_h = obs.r_h[rows, :], r_a = obs.r_a[rows, :])
+    return Models.CountLatents(ids[rows], l.λ_home[rows, :], l.λ_away[rows, :], kept)
 end

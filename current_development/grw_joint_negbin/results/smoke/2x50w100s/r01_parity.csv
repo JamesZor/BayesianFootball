@@ -1,0 +1,4 @@
+arm,points,worst_abs,worst_rel,pass
+joint_gamma_poisson_td,4,2.2737367544323206e-13,1.4212843578189715e-16,true
+joint_gamma_negbin_td,4,1.3642420526593924e-12,8.725240195327747e-16,true
+negbin_td,4,0.0,0.0,true
