@@ -4,11 +4,11 @@
 |---|---|
 | ID | 008 |
 | Title | Hierarchical Scottish Pitch Type and Match Timing Home Advantage |
-| Status | BACKLOG |
+| Status | IN_PROGRESS |
 | Priority | P2 |
-| Assignee | unassigned |
+| Assignee | claude |
 | Created | 2026-09-10 |
-| Updated | 2026-09-10 |
+| Updated | 2026-09-12 |
 | Related Files / Commits / PRs | [src/models/pregame/components/home_advantage.jl](../src/models/pregame/components/home_advantage.jl); [src/models/pregame/components/interfaces.jl](../src/models/pregame/components/interfaces.jl); [src/features/extractors/](../src/features/extractors/); [experiments/scottish_lower/](../experiments/scottish_lower/) |
 
 ## Context & Problem Statement
@@ -47,6 +47,9 @@ With ReverseDiff's fast gradient tape, we can replace the crude scalar $\gamma_{
 ## Work Log & Progress
 
 - [2026-09-10 @antigravity] Created task in BACKLOG following user proposal and Scottish Lower domain analysis. Defined surface asymmetry and scheduling specifications.
+- [2026-09-12 @antigravity] Claimed task for `claude_hier_ha` in worktree `feat/hierarchical-home-advantage`. Following post-match settlement analysis of the 2026-09-12 slate (where 6 artificial-turf home teams won and the model suffered an away underdog bias), structured task into two phases:
+  - **Phase 1 (Team-Level Random Effects)**: Benchmark existing `HierarchicalTeamHomeAdvantage()` across `m05_joint_production_wealth`, `m12_joint_hybrid_synergy`, and `m12_joint_hybrid_synergy_grw` on 2-fold smoke and 40-fold walk-forward grid; perform counterfactual re-pricing of 2026-09-12 slate.
+  - **Phase 2 (Contextual Pitch & Travel)**: Implement `HierarchicalContextualHomeAdvantage` with `is_synthetic_pitch` and `travel_distance` covariates.
 
 ## Verification & Findings
 
