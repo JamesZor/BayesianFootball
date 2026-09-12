@@ -9,7 +9,7 @@
 | Assignee | claude |
 | Created | 2026-09-11 |
 | Updated | 2026-09-12 |
-| Related Files / Commits / PRs | `src/models/pregame/builder/{components,builder,engine,equations}.jl`, `current_development/grw_joint_negbin/`, `feat/grw-joint-negbin-observation`, `3ee5de61`, `27e62d76`, `b9ace463` |
+| Related Files / Commits / PRs | `src/models/pregame/builder/{components,builder,engine,equations}.jl`, `current_development/grw_joint_negbin/`, `feat/grw-joint-negbin-observation`, `3ee5de61`, `27e62d76`, `b9ace463`, `3107848b`, PR #31 |
 
 ## Context & Problem Statement
 
