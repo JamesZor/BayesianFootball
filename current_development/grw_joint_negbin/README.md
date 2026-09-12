@@ -4,9 +4,9 @@ Does replacing the two-arm joint likelihood's conditional **Poisson** goals dens
 **negative binomial** improve the pricing of Totals and BTTS on Scottish League One/Two
 (tournaments 56/57), walk-forward over 24/25 + 25/26?
 
-> **Status: ladder complete (4/4 persisted); proper scores and portfolio running.** §5 and
-> §6 land when `r04` and `r05` finish. Nothing is written here that a CSV in `results/`
-> does not contain.
+> **Status: complete. The hypothesis is not supported — see §7.** The component works and
+> is fully verified; the effect it produces is real, directionally correct, and too small to
+> pay on this league. Nothing here is written that a CSV in `results/` does not contain.
 
 ## 1. The question, and why 1X2 is the wrong place to look for it
 
@@ -282,13 +282,148 @@ whole walk-forward.
 
 ## 5. Proper scores (`r04_evaluate.jl`)
 
-_Pending._
+710 walk-forward fixtures, **4,054 scored rows** over six markets (1X2 1785, O/U 1.5 430,
+O/U 2.5 758, O/U 3.5 528, O/U 4.5 197, BTTS 356) on 630 quoted fixtures, against the
+de-vigged Betfair TWA(−20, 0] close.
+
+**Reproduction gate passed exactly**: `m12_poisson` scores LogLoss **0.64437** / ECE
+**0.0086** on Task 013's own 1X2 + O/U 2.5 + BTTS basis (2,899 rows) against its published
+0.64437 / 0.0086.
+
+### The headline: a null
+
+**1 of 56 matched contrasts is significant at 95%**, and it is `m00_negbin − m00_poisson` on
+**O/U 4.5 Brier** — where the negative binomial is **worse** (Δ +0.00057, CI [+0.00005,
++0.00102], n = 197). Over 56 contrasts at 95% roughly 2.8 false positives are expected by
+chance, so one — pointing the wrong way, on the thinnest market — is what a pure null looks
+like.
+
+ΔLogLoss, NegBin minus its Poisson counterpart (negative favours NegBin), 10,000
+fixture-clustered resamples:
+
+| scope | `m00` | `m05` | `m10` | `m12` | sign |
+|---|---:|---:|---:|---:|---|
+| 1X2 | +0.00023 | −0.00005 | −0.00015 | +0.00017 | mixed |
+| O/U 1.5 | +0.00051 | +0.00138 | +0.00084 | +0.00061 | **worse 4/4** |
+| O/U 2.5 | −0.00046 | −0.00056 | −0.00008 | −0.00018 | **better 4/4** |
+| O/U 3.5 | −0.00058 | −0.00055 | −0.00039 | −0.00016 | **better 4/4** |
+| O/U 4.5 | +0.00182 | +0.00098 | +0.00143 | +0.00093 | **worse 4/4** |
+| BTTS | +0.00059 | +0.00044 | +0.00052 | +0.00012 | worse 4/4 |
+
+Every interval spans zero. But the **signs are not random**: the negative binomial helps on
+the two middle totals lines and hurts on the two outer ones, 8/8 each way. These four
+contrasts share a fixture set and overlapping model components, so they are not independent
+tests and no p-value is claimed for the pattern — it is reported because it is mechanically
+what §3's G6 table predicts, not because it clears a threshold.
+
+### Calibration (ECE) is the one place something moves
+
+| scope | Δ ECE `m00` | `m05` | `m10` | `m12` |
+|---|---:|---:|---:|---:|
+| 1X2 | −0.0060 | −0.0005 | −0.0004 | −0.0016 |
+| BTTS | −0.0209 | −0.0174 | −0.0077 | **+0.0277** |
+| O/U 4.5 | +0.0038 | +0.0045 | +0.0063 | +0.0040 |
+
+BTTS ECE improves substantially for three of four rungs and collapses for `m12`. **Do not
+lean on this.** ECE over 10 bins and 356 BTTS rows is a very noisy statistic — Task 013 said
+the same of its own ECE ranking on 2,899 rows — and a measure that moves by −0.021 on three
+arms and +0.028 on the fourth, with no LogLoss or Brier movement anywhere near significance,
+is better read as noise than as calibration.
+
+### A caveat on O/U 4.5
+
+The models score **0.33** against a market LogLoss of **0.51** on that line. A model beating
+the de-vigged close by 0.18 on a proper score is not plausible as skill; it says the O/U 4.5
+closing quotes are thin and badly formed (197 rows, heavily one-sided). The one "significant"
+contrast in the study lives on this market, which is a further reason to read it as an
+artefact.
+
+### Against the Betfair close
+
+Every arm, NegBin and Poisson alike, sits −0.004 to −0.007 on pooled LogLoss against the
+close with intervals spanning zero (e.g. `m05_negbin` −0.00734 [−0.02741, +0.00545] vs
+`m05_poisson` −0.00738 [−0.02761, +0.00545]). The two likelihoods are indistinguishable at
+this resolution.
 
 ## 6. Portfolio and attribution (`r05_portfolio.jl`)
 
-_Pending._
+`MatchDay.option_b_system()` on the de-vigged close, 632 fixtures buildable by every arm.
 
-## 7. Hierarchical dispersion — the conditional step
+| model | likelihood | return | ROI | Sharpe | max DD | bets | capture |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `m00_baseline_grw_negbin` | NegBin | +461.4% | 12.05% | 1.353 | **−38.78%** | 1300 | 1.017 |
+| `m00_poisson` | Poisson | **+491.6%** | **12.32%** | 1.412 | −38.85% | 1296 | 1.036 |
+| `m05_wealth_grw_negbin` | Joint NegBin | +384.6% | 11.64% | 1.434 | **−42.49%** | 1235 | 1.041 |
+| `m05_poisson` | Joint Poisson | +385.8% | 11.68% | **1.453** | −42.67% | 1247 | 1.080 |
+| `m10_lineup_grw_negbin` | NegBin | **+370.3%** | **11.02%** | 1.243 | **−45.14%** | 1301 | 0.924 |
+| `m10_poisson` | Poisson | +348.8% | 10.75% | 1.214 | −48.01% | 1299 | 0.957 |
+| `m12_joint_hybrid_synergy_negbin` | Joint NegBin | +297.5% | 10.50% | 1.196 | **−50.23%** | 1244 | 1.007 |
+| `m12_poisson` | Joint Poisson | +351.9% | 11.36% | 1.309 | −52.61% | 1253 | 1.043 |
+
+No consistent direction on bankroll: the NegBin arm is worse for `m00` and `m12`, level for
+`m05`, better for `m10`. At n ≈ 632 fixtures the bootstrap growth intervals of neighbouring
+arms overlap heavily, so this ranking is descriptive.
+
+**Max drawdown is smaller for the NegBin arm in 4 of 4 pairs** (−0.07, −0.18, −2.87, −2.38
+points). Small, but the only portfolio statistic with a consistent sign, and it is the one a
+fatter-tailed goal likelihood should move: more posterior mass on extreme scorelines means
+slightly less confident staking into them.
+
+### The mechanism is visible in the ledger, and it is what costs the money
+
+Ledger overlap is **92–94%**, so the two likelihoods almost always take the same bets — as
+expected when the mean is unchanged. The differences concentrate exactly where §3 said they
+would:
+
+| selection | `n` bets NegBin vs Poisson | Δ ROI (NegBin − Poisson) |
+|---|---|---:|
+| **O/U 1.5 over** | 33/50 · 46/64 · 27/47 · 45/60 — **fewer, 4/4** | −3.70 · −0.62 · −3.93 · −0.61 — **worse 4/4** |
+| **O/U 2.5 under** | 231/224 · 210/197 · 239/228 · 210/197 — **more, 4/4** | +0.53 · −1.84 · −0.16 · −2.52 |
+| 1X2 draw | 300/306 · 244/273 · 315/326 · 260/282 | +0.03 · +1.34 · +1.38 · +0.93 — better 4/4 |
+
+This is the component doing precisely what it was built to do, and being punished for it. The
+extra mass at zero goals **lowers P(Over 1.5)**, so the NegBin declines 30–40% of the Over 1.5
+bets its Poisson twin takes — and those declined bets were profitable. It **raises P(Under
+2.5)** and takes more of those, at slightly worse ROI. It raises P(draw), and the draw book is
+the one place it consistently gains.
+
+The finding is therefore sharper than "no effect": on this league the residual conditional
+overdispersion is real (`r̂ ≈ 29`) and it moves prices in the theoretically correct direction,
+but the direction it moves them is **away from where the edge was**.
+
+## 7. Verdict
+
+**The hypothesis is not supported.** Replacing the two-arm joint likelihood's Poisson goals
+density with a negative binomial does not improve predictive proper scores on Totals or BTTS
+for Scottish League One/Two, and does not improve closing-line portfolio growth.
+
+1. **H1 (Totals) — not supported.** No significant LogLoss or Brier contrast on any totals
+   line. A coherent but non-significant pattern: better on O/U 2.5 and 3.5 (8/8), worse on
+   O/U 1.5 and 4.5 (8/8).
+2. **H2 (BTTS) — not supported.** ΔLogLoss positive (worse) in 4/4, all intervals spanning
+   zero. BTTS ECE improves on three rungs and worsens badly on the fourth; at 356 rows that
+   is noise.
+3. **H0 (1X2) — held.** Mixed signs, |Δ| ≤ 0.00023, which is the control behaving as stated.
+
+**Why, and it is not "the component doesn't work".** G6 shows the dispersion reaches the
+score grid and moves it exactly as theory predicts. The effect is simply small — 1.3pp on
+BTTS, ~0.5pp on O/U 2.5, ~0 on O/U 3.5 — because `MultiScaleGRW` already absorbs most of the
+league's overdispersion into latent team state, leaving `r̂ ≈ 29` (only ~3–5% excess variance)
+as the residual. Experiment 02 measured `r̂ ≈ 26` under a TimeDecay state and found the same
+null on 1X2; this study extends that null to the markets that were supposed to be where the
+negative binomial paid, and adds the reason it does not.
+
+**Recommendation: do not promote `JointGammaNegBinObservation` to the production ladder.**
+`m12_joint_hybrid_synergy` should keep its Poisson goals arm. The component is retained,
+tested and documented for leagues with genuinely higher residual overdispersion, where the
+same machinery applies unchanged.
+
+**Step 5 (hierarchical dispersion) is not triggered.** Its precondition — "if
+`GlobalDispersion` demonstrates significant alpha or improved totals calibration" — is not
+met. `HomeAwayDispersion` is wired and one line away (§8) if a future league warrants it;
+fitting a second dispersion parameter on evidence this flat would be a search, not a study.
+
+## 8. Hierarchical dispersion — the conditional step
 
 The work package's Step 5 makes a hierarchical dispersion extension conditional: run it only
 "if `GlobalDispersion` demonstrates significant alpha or improved totals calibration".
@@ -309,7 +444,7 @@ becomes a search. `AdvancedVolatilityDispersion` remains refused at build time f
 observations — its per-match reconstruction is not AD-safe, which is a pre-existing gap
 recorded in `observation_gap`.
 
-## 8. Reproducing
+## 9. Reproducing
 
 ```bash
 # on mcmc-beast, from /root/BF_grw_joint_negbin

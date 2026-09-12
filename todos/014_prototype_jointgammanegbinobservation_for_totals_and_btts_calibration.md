@@ -4,12 +4,12 @@
 |---|---|
 | ID | 014 |
 | Title | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration |
-| Status | ACTIVE |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | claude |
 | Created | 2026-09-11 |
 | Updated | 2026-09-12 |
-| Related Files / Commits / PRs | `src/models/pregame/builder/{components,builder,engine,equations}.jl`, `current_development/grw_joint_negbin/`, `feat/grw-joint-negbin-observation`, `3ee5de61`, `27e62d76` |
+| Related Files / Commits / PRs | `src/models/pregame/builder/{components,builder,engine,equations}.jl`, `current_development/grw_joint_negbin/`, `feat/grw-joint-negbin-observation`, `3ee5de61`, `27e62d76`, `b9ace463` |
 
 ## Context & Problem Statement
 
@@ -33,10 +33,10 @@ Constraints:
 - [x] **Component Implementation**: Implement and wire `JointGammaNegBinObservation` in `current_development/grw_joint_negbin/` (and builder components) with Arm 1 Gamma proxy xG and Arm 2 `RobustNegativeBinomial(r, \kappa \cdot \mu)` using `GlobalDispersion(log_r ~ Normal(3.1, 0.4))`.
 - [x] **Score Grid Integration**: Ensure score-grid kernels evaluate bivariate distributions using `RobustNegativeBinomial` PMF on 12×12 grids. *(Routing, not a new kernel — `observation_family = :negbin` reaches the existing zero-alloc double-NegBin kernel. Verified directly by gate G6.)*
 - [x] **Smoke Gate (Folds 1–2)**: 2-fold smoke test on `m00_baseline_grw_negbin`, `m05_wealth_grw_negbin`, `m10_lineup_grw_negbin`, `m12_joint_hybrid_synergy_negbin`. Verify gradient tape compilation with ReverseDiff, 0 divergences, R̂ < 1.05, bulk/tail ESS > 400.
-- [ ] **40-Fold Walk-Forward Grid**: Train all 4 models across Folds 1–40 (seasons 24/25 + 25/26, 710 matches) on `mcmc-beast` with `QueuedNUTSConfig`.
-- [ ] **Expanded Totals & BTTS Evaluation**: Compute proper scores across 1X2, Over/Under 1.5, Over/Under 2.5, Over/Under 3.5, and BTTS. Run 10,000-sample paired bootstrap significance vs Task 013 Poisson counterparts.
-- [ ] **Portfolio Backtesting**: Run standard Option B closing-line portfolio simulation and attribution.
-- [ ] **Hierarchical Extension (Conditional)**: If global dispersion shows statistically significant edge on totals, evaluate hierarchical dispersion.
+- [x] **40-Fold Walk-Forward Grid**: Train all 4 models across Folds 1–40 (seasons 24/25 + 25/26, 710 matches) on `mcmc-beast` with `QueuedNUTSConfig`.
+- [x] **Expanded Totals & BTTS Evaluation**: Compute proper scores across 1X2, Over/Under 1.5, Over/Under 2.5, Over/Under 3.5, and BTTS. Run 10,000-sample paired bootstrap significance vs Task 013 Poisson counterparts.
+- [x] **Portfolio Backtesting**: Run standard Option B closing-line portfolio simulation and attribution.
+- [x] **Hierarchical Extension (Conditional)**: If global dispersion shows statistically significant edge on totals, evaluate hierarchical dispersion. *(Precondition NOT met — 1/56 contrasts significant and it favours Poisson. Not run; `HomeAwayDispersion` is wired and one line away should a future league warrant it.)*
 
 ## Ideas & Candidate Solutions
 
@@ -55,7 +55,9 @@ Constraints:
 - [2026-09-12 @claude] Implemented `JointGammaNegBinObservation` in `src` (commit `3ee5de61`). The struct lives beside the other observations rather than in the prototype loader: `NegBinCountModel`'s `O` type parameter has to be widened to admit it, which is a `src` edit, and a prototype-local struct could not be assembled by `build`. The loader holds the ladder and the gates, as Task 013's does.
 - [2026-09-12 @claude] Built the Task 014 prototype: `l01_loader.jl` (ladder, gradient audit, likelihood parity, score-grid gate, dispersion summary), `l02_evaluation.jl` (arms, panel intersection, wide market set, paired bootstrap, Task 012 attribution), and runners `r01`–`r05`.
 - [2026-09-12 @claude] Smoke gate PASS 4/4 at the production sampler `4 × (500 + 1000)`, folds 1–2 (commit `27e62d76`). Full tables in `current_development/grw_joint_negbin/README.md` §3.
-- [2026-09-12 @claude] Launched the 40-fold production grid on `mcmc-beast` (`scottish_lower_grw_joint_negbin`, 16 pinned threads).
+- [2026-09-12 @claude] 40-fold production grid complete, all four persisted. `m12` needed a second, larger budget after failing on tail ESS alone.
+- [2026-09-12 @claude] `r04` proper scores and `r05` Option B portfolio complete. **Result: the hypothesis is not supported** — 1 of 56 matched contrasts significant, favouring Poisson on the thinnest market. Full analysis in `current_development/grw_joint_negbin/README.md` §5–§7.
+- [2026-09-12 @claude] Step 5 (hierarchical dispersion) NOT run: its stated precondition was not met.
 
 ### Deviations from the work package, and why
 
@@ -115,8 +117,74 @@ the Betfair closing line over a few hundred quoted fixtures per market.
 `r̂ ≈ 28.7–31.3` sits just above Experiment 02's `26.0–26.5` on a TimeDecay state — the expected
 direction, since the GRW latent absorbs rate variation that would otherwise remain residual.
 
-### Still pending
+### Production grid — all four persisted
 
-40-fold grid convergence table and run UUIDs; proper scores across 1X2 / O/U 1.5 / 2.5 / 3.5 /
-4.5 / BTTS; the four paired bootstraps against the Task 013 Poisson controls; Option B portfolio
-and attribution.
+| model | max R̂ | ESS bulk / tail | divergences | wall | run UUID |
+|---|---:|---:|---:|---:|---|
+| `m00_baseline_grw_negbin` | 1.0111 | 834 / 670 | 0 / 160k | 59 min | `0c0da991-7d4c-4f01-90e2-2af157f27aaa` |
+| `m05_wealth_grw_negbin` | 1.0102 | 1049 / 807 | 0 / 160k | 57 min | `019d41d4-9e0e-41eb-bbc1-8984263f0f14` |
+| `m10_lineup_grw_negbin` | 1.0105 | 1057 / 882 | 0 / 160k | 63 min | `f7fd8385-fa15-4f6a-ae89-e23447907a80` |
+| `m12_joint_hybrid_synergy_negbin` | 1.0041 | 1911 / 2518 | 1 / 400k | 112 min | `c3d2aede-ddd5-4590-9c75-5937de4b1bbc` |
+
+`m12` failed the first attempt on **tail ESS alone** (236 at fold 8, gate 400) with R̂ 1.0099 and
+zero divergences, and `r02` refused to persist it. Re-run at `4 × (1000 + 2500)`, `persist_stride
+= 5`: tail ESS 236 → 2518 while `r̂` was unchanged (29.54 vs 29.50) — the posterior was never
+wrong, only its tail under-resolved.
+
+Portfolio runs: `1b02fbec…`, `0a3d5394…`, `e6843844…`, `31ee67e5…` (each ledger reloads identically).
+
+### THE ANSWER: the hypothesis is not supported
+
+Reproduction gate passed exactly — `m12_poisson` scores 0.64437 / ECE 0.0086 on Task 013's own
+basis. Panel: 710 fixtures, 4,054 scored rows over six markets.
+
+**1 of 56 matched contrasts is significant**, and it favours the *Poisson* arm on O/U 4.5 Brier
+(n = 197, the thinnest market). At 95% over 56 contrasts, ~2.8 false positives are expected.
+
+ΔLogLoss (NegBin − Poisson; negative favours NegBin) — every interval spans zero:
+
+| scope | `m00` | `m05` | `m10` | `m12` | sign |
+|---|---:|---:|---:|---:|---|
+| 1X2 | +0.00023 | −0.00005 | −0.00015 | +0.00017 | mixed (H0 holds) |
+| O/U 1.5 | +0.00051 | +0.00138 | +0.00084 | +0.00061 | worse 4/4 |
+| O/U 2.5 | −0.00046 | −0.00056 | −0.00008 | −0.00018 | better 4/4 |
+| O/U 3.5 | −0.00058 | −0.00055 | −0.00039 | −0.00016 | better 4/4 |
+| O/U 4.5 | +0.00182 | +0.00098 | +0.00143 | +0.00093 | worse 4/4 |
+| BTTS | +0.00059 | +0.00044 | +0.00052 | +0.00012 | worse 4/4 |
+
+The middle totals lines gain and the outer ones lose, 8/8 each way. The four contrasts share a
+fixture set and overlapping components, so no p-value is claimed for the pattern — it is
+reported because it is mechanically what the G6 grid table predicts.
+
+### Why — and it is not "the component doesn't work"
+
+G6 proves the dispersion reaches the score grid and moves it exactly as theory says. The effect
+is simply small: `MultiScaleGRW` already absorbs most of the league's overdispersion into latent
+team state, leaving `r̂ ≈ 29` — roughly 3–5% excess variance — as the residual.
+
+The Option B ledger makes the cost concrete. Overlap between each pair is 92–94%, and the
+differences sit exactly where predicted: extra mass at zero **lowers P(Over 1.5)**, so the NegBin
+declines 30–40% of the Over 1.5 bets its Poisson twin takes (33/50, 46/64, 27/47, 45/60) and
+those declined bets were **profitable** (ΔROI −3.70, −0.62, −3.93, −0.61). It raises P(Under 2.5)
+and takes more of those at slightly worse ROI, and raises P(draw), which is the one book where it
+consistently gains. Max drawdown is smaller for the NegBin arm in 4/4 pairs — the only portfolio
+statistic with a consistent sign, and the one a fatter-tailed likelihood should move.
+
+So the mechanism is real and directionally correct, and it moves prices **away from where the
+edge was**.
+
+### Recommendation
+
+Do not promote `JointGammaNegBinObservation` to the production ladder; `m12_joint_hybrid_synergy`
+keeps its Poisson goals arm. The component is retained, tested and documented for leagues with
+genuinely higher residual overdispersion, where the machinery applies unchanged.
+
+### Incidental fixes this task forced
+
+* `restrict_latents` refused NegBin containers outright ("Extend this method before using it on a
+  negative-binomial posterior"). Task 014 is the first study to restrict a NegBin posterior;
+  extended in `b9ace463`.
+* `r02`'s report and CSV had fixed filenames, so the `m12` re-run overwrote the record of the
+  three models it did not touch. Now stamped by budget and model selection.
+* The Option B basket is **five** selections (1X2 home/draw/away, Under 2.5, **Over 1.5**), not
+  the "1X2 + O/U 2.5" the work package describes.

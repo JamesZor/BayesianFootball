@@ -22,7 +22,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [011](011_fuse_goal_decomposition_with_proxy_xg_and_player_lineup_dynamics.md) | Fuse Goal Decomposition with Proxy xG and Player Lineup Dynamics | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [012](012_standardise_model_attribution_and_capture_ratio_in_portfolio_engine.md) | Standardise Model Attribution and Capture Ratio in Portfolio Engine | BACKLOG | P2 | unassigned | 2026-09-11 |
 | [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | IN_PROGRESS | P1 | claude | 2026-09-11 |
-| [014](014_prototype_jointgammanegbinobservation_for_totals_and_btts_calibration.md) | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration | ACTIVE | P1 | claude | 2026-09-12 |
+| [014](014_prototype_jointgammanegbinobservation_for_totals_and_btts_calibration.md) | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration | COMPLETED | P1 | claude | 2026-09-12 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

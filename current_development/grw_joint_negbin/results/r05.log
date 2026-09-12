@@ -1,0 +1,29 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 6.5 hours)...
+
+================================================================================================
+  r05 CLOSING-LINE PORTFOLIO — Option B, Task 012 attribution
+================================================================================================
+  book   : BookSpec(DeArb, KellyLogUtility, FractionalKelly, key=ead32da610f483c6)
+  policy : PolicySpec(TieredTrust(table=Dict(("1x2", 0.0, :draw) => 0.7142857142857143, ("1x2", 0.0, :home) => 1.0, ("over_under", 1.5, :over) => 0.7142857142857143, ("over_under", 2.5, :under) => 1.0, ("1x2", 0.0, :away) => 0.7142857142857143), default=0.0), SlateDrawdown(lambda=8.0, mode=sequential, joint_draws=50000, seed=1), FixedCap(cap=0.25))
+  panel  : 710 walk-forward → 635 quoted → 632 buildable by every arm (3 dropped)
+  m00_baseline_grw_negbin            return  +461.37%  ROI +12.05%  Sharpe  1.353  MDD -38.78%  bets 1300  capture 1.017
+  m05_wealth_grw_negbin              return  +384.62%  ROI +11.64%  Sharpe  1.434  MDD -42.49%  bets 1235  capture 1.041
+  m10_lineup_grw_negbin              return  +370.28%  ROI +11.02%  Sharpe  1.243  MDD -45.14%  bets 1301  capture 0.924
+  m12_joint_hybrid_synergy_negbin    return  +297.52%  ROI +10.50%  Sharpe  1.196  MDD -50.23%  bets 1244  capture 1.007
+  m00_poisson                        return  +491.55%  ROI +12.32%  Sharpe  1.412  MDD -38.85%  bets 1296  capture 1.036
+  m05_poisson                        return  +385.78%  ROI +11.68%  Sharpe  1.453  MDD -42.67%  bets 1247  capture 1.080
+  m10_poisson                        return  +348.82%  ROI +10.75%  Sharpe  1.214  MDD -48.01%  bets 1299  capture 0.957
+  m12_poisson                        return  +351.90%  ROI +11.36%  Sharpe  1.309  MDD -52.61%  bets 1253  capture 1.043
+  m00_baseline_grw_negbin vs m00_poisson                         shared 1258 (94%)  sizing ΔPnL -0.0376  shared ROI +12.09% vs +12.34%
+  m05_wealth_grw_negbin vs m05_poisson                           shared 1188 (92%)  sizing ΔPnL +0.0136  shared ROI +11.71% vs +11.73%
+  m10_lineup_grw_negbin vs m10_poisson                           shared 1255 (93%)  sizing ΔPnL +0.0470  shared ROI +10.96% vs +10.73%
+  m12_joint_hybrid_synergy_negbin vs m12_poisson                 shared 1209 (94%)  sizing ΔPnL -0.1270  shared ROI +10.54% vs +11.40%
+  m12_joint_hybrid_synergy_negbin vs m05_wealth_grw_negbin       shared 1132 (84%)  sizing ΔPnL -0.0851  shared ROI +11.06% vs +11.79%
+  m10_lineup_grw_negbin vs m00_baseline_grw_negbin               shared 1194 (85%)  sizing ΔPnL -0.4337  shared ROI +10.61% vs +12.97%
+  persisted m00_baseline_grw_negbin → portfolio 1b02fbec-5ec9-4eef-a86d-f02cc30e75f9 (ledger reloads identically)
+  persisted m05_wealth_grw_negbin → portfolio 0a3d5394-c4a3-4592-a83a-4919f0a05496 (ledger reloads identically)
+  persisted m10_lineup_grw_negbin → portfolio e6843844-9d5a-4086-acb1-1b8be4e64cf2 (ledger reloads identically)
+  persisted m12_joint_hybrid_synergy_negbin → portfolio 31ee67e5-b2a4-41ea-b6b7-bc52d737243e (ledger reloads identically)
+
+R05_DONE report=/root/BF_grw_joint_negbin/current_development/grw_joint_negbin/results/portfolio/r05_portfolio_report.md
+R05_EXIT=0
