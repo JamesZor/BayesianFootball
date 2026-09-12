@@ -4,10 +4,9 @@ Does replacing the two-arm joint likelihood's conditional **Poisson** goals dens
 **negative binomial** improve the pricing of Totals and BTTS on Scottish League One/Two
 (tournaments 56/57), walk-forward over 24/25 + 25/26?
 
-> **Status: grid 3/4 persisted, `m12` re-running at a larger budget.** The component is
-> implemented, the smoke gate passes 4/4, and §4 carries the production convergence table.
-> §5 and §6 land once the ladder is complete. Nothing is written here that a CSV in
-> `results/` does not contain.
+> **Status: ladder complete (4/4 persisted); proper scores and portfolio running.** §5 and
+> §6 land when `r04` and `r05` finish. Nothing is written here that a CSV in `results/`
+> does not contain.
 
 ## 1. The question, and why 1X2 is the wrong place to look for it
 
@@ -223,30 +222,42 @@ so less conditional overdispersion is left for `r` to price.
 | `m00_baseline_grw_negbin` | 40 | 710 | 1.0111 | 834 | 670 | 0 / 160k | 0.61% | 0.732 | 59 min | `0c0da991-7d4c-4f01-90e2-2af157f27aaa` |
 | `m05_wealth_grw_negbin` | 40 | 710 | 1.0102 | 1049 | 807 | 0 / 160k | 0.01% | 0.681 | 57 min | `019d41d4-9e0e-41eb-bbc1-8984263f0f14` |
 | `m10_lineup_grw_negbin` | 40 | 710 | 1.0105 | 1057 | 882 | 0 / 160k | 0.55% | 0.744 | 63 min | `f7fd8385-fa15-4f6a-ae89-e23447907a80` |
+| `m12_joint_hybrid_synergy_negbin` | 40 | 710 | 1.0041 | 1911 | 2518 | 1 / 400k | 0.05% | 0.623 | 112 min | `c3d2aede-ddd5-4590-9c75-5937de4b1bbc` |
 
-Sampler for those three: `QueuedNUTS 4 × (500 warmup + 1000 retained)`, δ = 0.80, depth 10,
-`persist_stride = 2`.
+Sampler for the first three: `QueuedNUTS 4 × (500 warmup + 1000 retained)`, δ = 0.80, depth
+10, `persist_stride = 2`. `m12` needed `4 × (1000 + 2500)` with `persist_stride = 5` — see
+below. All four carry 2,000 persisted draws per fold and all four pass the six-part audit.
 
-### `m12` failed the audit at this budget, and was not persisted
+### `m12` needed a second, larger budget
 
-| model | max R̂ | ESS bulk | **ESS tail** | divergences | BFMI | verdict |
+At `4 × (500 + 1000)` it failed the audit on **tail ESS alone** — 236 at fold 8 against the
+400 gate — and `r02` therefore refused to persist it. Everything else was comfortable: R̂
+1.0099 (inside even Task 007's strict 1.01), no divergences in 160,000 transitions, 0.02%
+depth saturation, BFMI 0.593. One fold could not resolve the tail of some parameter in 4,000
+draws: a **budget** shortfall, not a geometry pathology.
+
+Re-run at `4 × (1000 warmup + 2500 retained)`, `persist_stride = 5` — 10,000 audited draws
+per fold, artefact unchanged at the same 2,000 draws the other three carry:
+
+| | max R̂ | ESS bulk | **ESS tail** | divergences | BFMI | verdict |
 |---|---:|---:|---:|---:|---:|---|
-| `m12_joint_hybrid_synergy_negbin` | 1.0099 | 689 | **236** (fold 8) | 0 / 160k | 0.593 | **FAIL** |
+| `4 × (500 + 1000)` | 1.0099 | 689 | **236** | 0 / 160k | 0.593 | FAIL, not persisted |
+| **`4 × (1000 + 2500)`** | 1.0041 | 1911 | **2518** | 1 / 400k | 0.623 | **PASS** → `c3d2aede-ddd5-4590-9c75-5937de4b1bbc` |
 
-Everything except tail ESS is comfortable — R̂ 1.0099 clears even Task 007's strict 1.01,
-there are no divergences in 160,000 transitions, tree-depth saturation is 0.02% and BFMI is
-0.59. One fold could not resolve the tail of some parameter in 4,000 draws.
+Tail ESS rose 236 → 2518, far more than the 2.5× draw increase alone explains: doubling
+warmup is what fixed the adaptation. **`r̂` is unchanged — 29.54 against 29.50** — which is
+the point worth keeping: the posterior was never wrong, only its tail was under-resolved, and
+the gate caught exactly that.
 
-That is a **budget** shortfall, not a geometry pathology, so the fix is draws rather than a
-different model. `r02` refuses to persist a model that fails its gate, which is what makes
-this recoverable rather than a silently degraded arm in the ladder: `m12` is being re-run at
-`4 × (1000 warmup + 2500 retained)` — 10,000 audited draws per fold, `persist_stride = 5` so
-the artefact stays the same 2,000 draws per fold the other three carry.
+Two things made this recoverable rather than a silently degraded arm in the ladder. `r02`
+refuses to persist a model that fails its gate. And the checkpoint directory is stamped with
+the budget (`checkpoints_4x1000w2500s`) — without that, `fit_model` would have resumed the
+failed run's per-fold checkpoints and handed back the same draws under a new config hash,
+reproducing the failure while looking like a fresh result.
 
-The checkpoint directory is stamped with the budget (`checkpoints_4x1000w2500s`). Without
-that, `fit_model` would have resumed the failed run's per-fold checkpoints and handed back
-the same draws under a new config hash — reproducing the failure while looking like a fresh
-result.
+The report and CSV are likewise stamped per invocation. They did not used to be, and the
+m12 re-run clobbered the three-model record on its way through; the merged four-model table
+above is `results/r02_production_runs_ALL.csv`.
 
 ### Posterior dispersion `r` (reported, not gated)
 

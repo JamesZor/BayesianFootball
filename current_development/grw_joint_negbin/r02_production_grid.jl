@@ -229,7 +229,7 @@ for (name, model) in r02_models
     grid = gjn_grid_gate(persisted)
     @printf("  grid vs double-Poisson at the same λ: |Δ O/U 3.5| %.5f  |Δ BTTS| %.5f  |Δ 1X2| %.5f\n",
             mean(abs.(grid.d_over35)), mean(abs.(grid.d_btts)), mean(abs.(grid.d_home)))
-    CSV.write(joinpath(R02_OUT_DIR, "r02_grid_gate_$(name).csv"), grid)
+    CSV.write(joinpath(R02_OUT_DIR, "r02_grid_gate_$(name)_$(R02_BUDGET_TAG).csv"), grid)
 
     run_id = gjn_save_and_verify(r02_db, persisted)
     println("  persisted and reloaded identically: run ", run_id)
@@ -251,9 +251,15 @@ end
 # 11. Final report
 # ===================================================================
 r02_summary = DataFrame(r02_rows)
-CSV.write(joinpath(R02_OUT_DIR, "r02_production_runs.csv"), r02_summary)
 
-open(joinpath(R02_OUT_DIR, "r02_production_report.md"), "w") do io
+# STAMPED, NOT OVERWRITTEN. A re-run of one model at a different budget used to clobber the
+# report and CSV describing the others — silently destroying the record of every model this
+# invocation did not touch. The stamp makes each invocation its own artefact; the merged
+# four-model table lives in the README, assembled from these.
+const R02_STAMP = R02_BUDGET_TAG * "_" * join(sort(R02_SELECTED), "+")
+CSV.write(joinpath(R02_OUT_DIR, "r02_production_runs_$(R02_STAMP).csv"), r02_summary)
+
+open(joinpath(R02_OUT_DIR, "r02_production_report_$(R02_STAMP).md"), "w") do io
     println(io, "# r02 production grid — Task 014 (JointGammaNegBinObservation)\n")
     println(io, "Generated ", Dates.format(now(), "yyyy-mm-dd HH:MM"), " at `", R02_GIT,
             "` on ", gethostname(), ". Namespace `", R02_CONFIG.experiment, "`.\n")
@@ -284,4 +290,4 @@ end
 
 println("\nR02_VERDICT ", all(r02_summary.gate_pass) ? "PASS" : "FAIL", "  (",
         count(r02_summary.gate_pass), "/", nrow(r02_summary), " models)")
-println("R02_DONE report=", joinpath(R02_OUT_DIR, "r02_production_report.md"))
+println("R02_DONE report=", joinpath(R02_OUT_DIR, "r02_production_report_$(R02_STAMP).md"))
