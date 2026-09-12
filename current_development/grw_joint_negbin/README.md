@@ -4,7 +4,7 @@ Does replacing the two-arm joint likelihood's conditional **Poisson** goals dens
 **negative binomial** improve the pricing of Totals and BTTS on Scottish League One/Two
 (tournaments 56/57), walk-forward over 24/25 + 25/26?
 
-> **Status: complete. The hypothesis is not supported — see §7.** The component works and
+> **Status: complete. The hypothesis is not supported — see §7; §9 adds the raw-vs-calibrated check at the close and at T−25.** The component works and
 > is fully verified; the effect it produces is real, directionally correct, and too small to
 > pay on this league. Nothing here is written that a CSV in `results/` does not contain.
 
@@ -444,7 +444,204 @@ becomes a search. `AdvancedVolatilityDispersion` remains refused at build time f
 observations — its per-match reconstruction is not AD-safe, which is a pre-existing gap
 recorded in `observation_gap`.
 
-## 9. Reproducing
+## 9. Raw vs calibrated, at the close and at T−25 (`r06_calibrated_portfolio.jl`)
+
+§6 is a **raw** closing-line simulation. The trader asked whether the production Layer 2
+seam — `GenerativeRateCalibrator` / `calibrate_fit` — changes the standing, or restores the
+alpha the Over 1.5 leg gave away. All eight arms were therefore staked through the same
+`MatchDay.option_b_system()` contract in two market environments and four calibration states.
+
+| environment | book | panel | variants |
+|---|---|---:|---|
+| **close** | de-vigged Betfair TWA(−20, 0] close — the §6 book | 632 | `raw`, `close_std`, `close_std_t007` |
+| **t25** | tradeable T−25 point-in-time order book (median staleness 8 min, p90 51) | 611 | `raw`, `t25_inv` |
+
+**Reproduction gate passed exactly**: the eight `close/raw` rows reproduce
+`r05_portfolio_summary.csv` to **0.000000 pp** of return with **zero** bet-count mismatches.
+The calibrated rows beside them are therefore a change to §6's experiment and not a different
+one. The two environments have different panels, so bankroll figures are comparable *within*
+an environment and not across them.
+
+### 9.1 A spec ambiguity, resolved by running both
+
+The work package asks for `canonical_calibrator(:scot_lower_close_std)`. **No such function
+exists in this repository**, and the parameters its parenthetical gives —
+`StandardGaussianLaw(w_base = 0.85, sigma = 0.15)` — do not match the only place that name is
+pinned. `current_development/multiscale_grw/l02_portfolio.jl:326` and `todos/007` both define
+`scot_lower_close_std` as `StandardGaussianLaw(w_base = 0.30, sigma = 0.40)`. These are not
+neighbours: `w_base = 0.85` keeps 85% of the model's log-rate at zero disagreement,
+`w_base = 0.30` hands 70% of it to the market.
+
+Both are run — `close_std` is the work package's literal spec, `close_std_t007` the
+repository's. The T−25 calibrator has no such ambiguity: the work package's spec is
+`MatchDay.option_b_calibrator()` verbatim, and that is what is used.
+
+It mattered. Return falls monotonically in pooling strength, so picking one law and not the
+other would have moved every closing-line number in the section.
+
+### 9.2 The closing calibrator barely fires; the T−25 one fires hard
+
+| variant | law | `w̃` (weight kept on the MODEL) | market share | var retained |
+|---|---|---:|---:|---:|
+| `close_std` | `std_w0.85_s0.15` | 0.962–0.973 | 2.7–3.8% | 0.93–0.95 |
+| `close_std_t007` | `std_w0.30_s0.40` | 0.972–0.980 | 2.0–2.8% | 0.95–0.96 |
+| `t25_inv` | `inv_w0.25_s0.35` | **0.282–0.295** | **70.5–71.8%** | **0.080–0.087** |
+
+This is the two laws behaving as designed and it explains everything below. A
+`StandardGaussianLaw` peaks at `w_max = 1` where model and market **agree**, so at the close —
+where these posteriors sit within a whisker of the line — it is nearly the identity, and
+`w_base` is almost irrelevant (hence the two closing variants differing by only ~2pp of
+retained weight despite a 0.55 gap in `w_base`). An `InverseGaussianLaw` does the opposite:
+it trusts the market *most* where the two agree, so at T−25 it hands ~71% of the location to
+the book and destroys ~92% of the posterior log-variance.
+
+### 9.3 At the close, calibration is a pure cost
+
+Return falls for **8 of 8 arms under both laws**, monotonically in pooling strength (e.g.
+`m00_poisson` +491.6% → +418.9% → +328.2%). Ledger overlap with the raw run is 97.8–99.2%, so
+this is not a different bet set — it is the same bets staked smaller, and `sizing_delta_pnl`
+is negative in **16 of 16** cells. That is the expected and slightly circular result: pooling a
+posterior toward the closing line and then measuring its edge *against that same line* can
+only remove edge. Nothing is learned about the close from calibrating to it.
+
+### 9.4 At T−25, calibration is the risk transformation Task 007 described
+
+| | raw | `t25_inv` |
+|---|---:|---:|
+| ROI | 12.2–16.1% | **15.6–18.8%** |
+| Sharpe | 1.19–1.86 | **1.64–2.08** |
+| max DD | −39.5 to −47.4% | **−22.0 to −29.9%** |
+| return | +386 to +754% | +246 to +359% |
+| bets | 1118–1155 | 969–1071 |
+
+Every arm gains ROI (+2.1 to +5.3 pts), gains Sharpe and **cuts its drawdown by 37–47%**,
+while total return falls. Raw-vs-calibrated overlap drops to 73.6–79.4% — unlike at the close
+this genuinely *is* a different bet set, 169–237 raw bets dropped per arm and 73–94 new ones
+taken, and the shared-set ROI rises for all eight (e.g. `m12_poisson` +17.69% → +18.80%). This
+reproduces Task 007's headline on a different model family: **a risk transformation, not a
+return improvement.**
+
+### 9.5 Does calibration close the NegBin–Poisson gap? Partly, and not where it matters
+
+Δ = NegBin − Poisson. Positive favours the negative binomial.
+
+| env / variant | Δ return `m00` | `m05` | `m10` | `m12` | NB ahead |
+|---|---:|---:|---:|---:|:--|
+| close/raw | −30.2 | −1.2 | +21.5 | −54.4 | 1/4 |
+| close/`close_std` | −16.4 | −0.3 | +32.0 | −43.3 | 1/4 |
+| close/`close_std_t007` | **−4.7** | **+6.7** | **+41.5** | **−35.4** | **2/4** |
+| t25/raw | −37.6 | −17.4 | +6.0 | −69.9 | 1/4 |
+| t25/`t25_inv` | −16.5 | +7.7 | −3.1 | **−1.2** | 1/4 |
+
+| env / variant | Δ ROI `m00` | `m05` | `m10` | `m12` | NB ahead |
+|---|---:|---:|---:|---:|:--|
+| close/raw | −0.26 | −0.04 | +0.27 | −0.86 | 1/4 |
+| close/`close_std_t007` | −0.07 | +0.08 | +0.59 | −0.70 | 2/4 |
+| t25/raw | −0.35 | −0.12 | +0.18 | −0.47 | 1/4 |
+| t25/`t25_inv` | −1.15 | −0.69 | −0.79 | −1.08 | **0/4** |
+
+**At the close the gap narrows as pooling strengthens** — the return deficit shrinks in 3 of 4
+pairs and `m05` flips positive — which is what "the divergence is partly a location
+disagreement" looks like. **At T−25 it does not.** Under `t25_inv` the NegBin arm is behind on
+ROI in **4 of 4** and on Sharpe in 4 of 4, and it loses the one property §6 gave it: the
+**max-drawdown advantage, 4/4 raw at the close and preserved 4/4 under both closing
+calibrators, collapses to 1/4** once 71% of the location comes from the market. Take the
+model's location away and the fatter tail stops buying shallower drawdowns, because the
+drawdown protection was coming from the posterior width the pool destroys.
+
+Ledger overlap between the likelihoods stays high throughout — 92–94% at the close, 89.5–91%
+under `t25_inv` — so this remains two models taking nearly the same bets and sizing them
+differently, in every calibration state.
+
+### 9.6 The Over 1.5 drag is not recoverable, and the reason is structural
+
+This is the sharpest result in the section. In **all 20 cells** (5 calibration states × 4
+pairs) the NegBin's Over 1.5 book is a **strict subset** of its Poisson twin's: `n_only_negbin
+= 0`, every time. The NegBin never finds an Over 1.5 bet its control missed — it only declines.
+
+Share of the control's Over 1.5 book that the NegBin declines:
+
+| variant | `m00` | `m05` | `m10` | `m12` | mean |
+|---|---:|---:|---:|---:|---:|
+| close/raw | 34.0% | 28.1% | 42.6% | 25.0% | 32.4% |
+| close/`close_std` | 36.7% | 31.7% | 45.7% | 25.4% | 34.9% |
+| close/`close_std_t007` | 37.5% | 29.0% | 44.7% | 25.9% | 34.3% |
+| t25/raw | 28.2% | 22.4% | 28.6% | 21.8% | 25.3% |
+| t25/`t25_inv` | **46.7%** | **36.6%** | **52.9%** | **38.1%** | **43.6%** |
+
+**Calibration makes the selectivity worse, not better** — mildly at the close, sharply at
+T−25, where it rises from a quarter of the book to nearly half. And the mechanism is visible
+in one number. On the shared Over 1.5 bets, the gap `P(Over 1.5)_Poisson − P(Over 1.5)_NegBin`
+is **0.0074–0.0094 in every one of the 20 cells** — flat across both environments, both laws
+and every pooling strength, even where the absolute level moves from 0.804 to 0.760.
+
+That is the answer to the question. `calibrate_latents` pools the **log rates** toward the
+market and passes `observation_params` — the dispersion draws `r_h`, `r_a` — through
+**untouched**; §2.1 and G6 are what make that the right thing for it to do. So the calibrated
+NegBin is *the market's location with the model's shape*. The Over 1.5 deficit is a **shape**
+effect, and a calibrator that only moves **location** cannot remove it, at any weight. Pooling
+λ downward toward a colder market rate in fact shrinks both models' Over 1.5 books, and the
+NegBin's extra mass at zero goals bites proportionally harder as the line gets nearer.
+
+### 9.7 But at T−25 that selectivity is correct
+
+| Over 1.5 ROI | NegBin | Poisson | Δ | ROI of the bets NegBin declined |
+|---|---:|---:|---:|---:|
+| close/raw | −2.3 to +0.7% | +1.2 to +3.7% | −0.6 to −3.9, **worse 4/4** | +16.0 to +20.8% |
+| close/`close_std_t007` | −6.2 to −0.6% | −0.9 to +2.9% | −0.7 to −5.3, **worse 4/4** | +3.7 to +21.4% |
+| t25/raw | +19.1 to +24.1% | +12.2 to +19.7% | +2.2 to +6.9, **better 4/4** | −20.0 to +8.2% |
+| t25/`t25_inv` | +24.6 to +31.3% | +20.9 to +25.0% | +1.8 to +10.1, **better 4/4** | +4.3 to +18.3% |
+
+The §6 finding — "the NegBin declines Over 1.5 bets that were profitable" — is a **closing-line
+phenomenon**. At the tradeable T−25 book the sign flips: the NegBin beats its control on Over
+1.5 ROI in **8 of 8** cells across both variants, and at `t25/raw` the bets it declined
+returned **−20.0%** (`m00`) and **−12.8%** (`m12`). Where it is priced against a book you could
+actually trade into, the extra mass at zero goals is picking off bad Over 1.5 prices.
+
+It is not enough to carry the portfolio. The gain is worth +1.8 to +10.1 ROI points on a leg
+of 16–45 bets at 1/1.4 trust, against deficits on 1X2 home (−0.4 to −1.4, worse 4/4 under
+`t25_inv`) and Under 2.5 (−0.4 to −2.3, worse 4/4) spread over 150–315 bets each. The basket
+arithmetic does not turn.
+
+### 9.8 What this changes about §7
+
+**Nothing in the verdict.** No calibration state on either book makes the negative binomial
+the better arm: best case is 2 of 4 pairs ahead on return, at the close, under the heavier
+closing law, on a panel where §6 already warned the bootstrap growth intervals overlap.
+`m12_joint_hybrid_synergy` should keep its Poisson goals arm.
+
+Three things are *added* to it:
+
+1. **The Over 1.5 drag is structural, not a location artefact.** It survives every calibrator
+   at every weight, the invariant ~0.008 probability gap says why, and no rate calibrator can
+   address it. Anything that would have to move `r`, not `λ`.
+2. **The drag is closing-line-specific.** At T−25 the same selectivity is an *advantage*
+   (8/8 on Over 1.5 ROI). §6's "away from where the edge was" is true of the close and false
+   of the tradeable book — a caveat §6 could not see, because it only had the one book.
+3. **The NegBin's only consistent portfolio virtue does not survive T−25 calibration.** Its
+   shallower max drawdown is 4/4 raw and 4/4 under both closing calibrators, and 1/4 under
+   `t25_inv`. That property was posterior width, and `t25_inv` retains 8% of it.
+
+### 9.9 Artefacts
+
+`results/r06_calibrated_portfolio_summary.csv` (the 40-row headline) and
+`results/calibrated_portfolio/`:
+
+| file | is |
+|---|---|
+| `r06_calibrated_portfolio_report.md` | every table in this section, generated |
+| `r06_portfolio_summary.csv` | 40 rows: 8 arms × 5 (environment, variant) |
+| `r06_calibration_weights.csv` | `w̃`, its p10/p90, retained variance, market share |
+| `r06_raw_vs_calibrated.csv` / `..._attribution.csv` | overlap and sizing, calibrated vs raw |
+| `r06_negbin_vs_poisson.csv` / `..._attribution.csv` | the §6 contrast inside each state |
+| `r06_over15_declines.csv` | the §9.6 table, per pair per state |
+| `r06_all_declines.csv` | the same over the whole ledger |
+| `r06_family_returns.csv` | per selection family, per arm, per state |
+| `r06_inversion_{close,t25}.csv` | the market inversion, fixture by fixture |
+| `r06_r05_gate.csv` | the reproduction gate |
+| `r06_panels.csv`, `r06_dropped_{close,t25}.csv` | panel construction |
+
+## 10. Reproducing
 
 ```bash
 # on mcmc-beast, from /root/BF_grw_joint_negbin
@@ -452,6 +649,7 @@ julia --project -t 16 current_development/grw_joint_negbin/r01_smoke.jl
 julia --project -t 16 current_development/grw_joint_negbin/r02_production_grid.jl
 julia --project -t 16 current_development/grw_joint_negbin/r04_evaluate.jl
 julia --project -t 16 current_development/grw_joint_negbin/r05_portfolio.jl
+julia --project -t 16 current_development/grw_joint_negbin/r06_calibrated_portfolio.jl
 ```
 
 Artefacts land in `results/`; every table above is generated from a CSV there.

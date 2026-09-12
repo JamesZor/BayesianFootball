@@ -1,0 +1,3 @@
+environment,as_of_minutes,book,n_walk_forward,n_quoted,n_buildable,n_dropped
+close,0.0,"de-vigged Betfair TWA(−20, 0] close",710,635,632,3
+t25,-25.0,tradeable T−25 point-in-time order book,710,611,611,0
