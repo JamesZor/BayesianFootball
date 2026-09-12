@@ -1,0 +1,258 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 4.5 hours)...
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 8, n_accepted = 8, n_refused = 0, n_absent = 0, n_quoted = 8, coverage = 1.0, coverage_quoted = 1.0, refusals = Pair{String, Int64}[])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 8, n_accepted = 8, n_refused = 0, n_absent = 0, n_quoted = 8, coverage = 1.0, coverage_quoted = 1.0, refusals = Pair{String, Int64}[])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 8, n_accepted = 7, n_refused = 1, n_absent = 0, n_quoted = 8, coverage = 0.875, coverage_quoted = 0.875, refusals = ["residual SSE 2.679e-02 exceeds 5.000e-03" => 1])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 8, n_accepted = 7, n_refused = 1, n_absent = 0, n_quoted = 8, coverage = 0.875, coverage_quoted = 0.875, refusals = ["residual SSE 2.679e-02 exceeds 5.000e-03" => 1])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 41 (matched 8 of 8 fixtures via get_next_matches); conditioning on 41.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 9, n_accepted = 8, n_refused = 1, n_absent = 0, n_quoted = 9, coverage = 0.8888888888888888, coverage_quoted = 0.8888888888888888, refusals = ["residual SSE 4.797e-02 exceeds 5.000e-03" => 1])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 9, n_accepted = 8, n_refused = 1, n_absent = 0, n_quoted = 9, coverage = 0.8888888888888888, coverage_quoted = 0.8888888888888888, refusals = ["residual SSE 4.797e-02 exceeds 5.000e-03" => 1])
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+[ Info: MatchDay.select_split: split 43 is the most recent trained fold, but the card being priced is the NEXT round of split 42 (matched 9 of 9 fixtures via get_next_matches); conditioning on 42.
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 10, n_accepted = 10, n_refused = 0, n_absent = 0, n_quoted = 10, coverage = 1.0, coverage_quoted = 1.0, refusals = Pair{String, Int64}[])
+┌ Info: MatchDay calibration coverage
+└   details = (calibrator = "scot_lower_t25_inv", n_fixtures = 10, n_accepted = 10, n_refused = 0, n_absent = 0, n_quoted = 10, coverage = 1.0, coverage_quoted = 1.0, refusals = Pair{String, Int64}[])
+
+================================================================================================
+  r06 T−25 ORDER BOOK BACKTEST — GRW × lineup hybrid, 2026/27 opening slates
+  slates   : 2026-08-01, 2026-08-08, 2026-08-15, 2026-08-22, 2026-09-05
+  instant  : 14:00:00 UTC − 25 minutes   bankroll £500.0
+  git      : 037d651c
+================================================================================================
+  2026-08-01  finished=10  dropped=0  closing quotes= 170  PRICEABLE
+  2026-08-08  finished=10  dropped=0  closing quotes= 170  PRICEABLE
+  2026-08-15  finished= 9  dropped=1  closing quotes= 145  PRICEABLE
+  2026-08-22  finished=10  dropped=0  closing quotes=   0  REFUSED: betfair_live.order_book_1m holds no tick at or before T-25 (2026-08-22T13:35:00) for any fixture on this card; first archived tick is 2026-08-22T14:06:00+00:00. There is no tradeable book to price against, so this slate is REFUSED rather than priced off a post-kick-off ladder.
+  2026-09-05  finished=10  dropped=0  closing quotes= 146  PRICEABLE
+  m05_wealth_grw                   folds=43 converged=true
+  m10_lineup_grw                   folds=43 converged=false
+  m12_joint_hybrid_synergy_grw     folds=43 converged=true
+  m00_baseline_grw                 folds=43 converged=false
+  m05_joint_td_raw                 folds=43 converged=false
+  m05_joint_grw_raw                folds=43 converged=false
+  m12_hybrid_td_raw                folds=43 converged=true
+
+------------------------------------------------------------------------------------------------
+SLATE 2026-08-01  |  T−25 = 2026-08-01T13:35:00 UTC  |  10 finished fixtures
+------------------------------------------------------------------------------------------------
+  m12_hybrid_grw_raw__touch_only           fold 41  legs  12  filled  12  pnl    +20.15  bankroll    520.15  (175.3s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m12_hybrid_grw_raw__ladder_sweep_v1      fold 41  legs  12  filled  12  pnl    +30.90  bankroll    530.90  (78.8s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m12_hybrid_grw_cal_optB__touch_only      fold 41  legs   6  filled   6  pnl    +25.87  bankroll    525.87  (82.5s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m12_hybrid_grw_cal_optB__ladder_sweep_v1 fold 41  legs   6  filled   6  pnl    +29.29  bankroll    529.29  (79.2s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_wealth_grw_raw__touch_only           fold 41  legs  12  filled  12  pnl    +23.04  bankroll    523.04  (22.0s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_wealth_grw_raw__ladder_sweep_v1      fold 41  legs  12  filled  12  pnl    +31.21  bankroll    531.21  (14.2s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m10_lineup_grw_raw__touch_only           fold 41  legs  11  filled  11  pnl     -3.32  bankroll    496.68  (138.7s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m10_lineup_grw_raw__ladder_sweep_v1      fold 41  legs  11  filled  11  pnl     +8.98  bankroll    508.98  (73.5s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m00_baseline_grw_raw__touch_only         fold 41  legs  13  filled  13  pnl     -9.23  bankroll    490.77  (9.1s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m00_baseline_grw_raw__ladder_sweep_v1    fold 41  legs  13  filled  13  pnl     +4.08  bankroll    504.08  (7.9s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_joint_grw_raw__touch_only            fold 41  legs  12  filled  12  pnl    +23.35  bankroll    523.35  (20.9s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_joint_grw_raw__ladder_sweep_v1       fold 41  legs  12  filled  12  pnl    +31.09  bankroll    531.09  (14.2s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m12_hybrid_td_raw__touch_only            fold 41  legs  13  filled  13  pnl    +18.16  bankroll    518.16  (152.5s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m12_hybrid_td_raw__ladder_sweep_v1       fold 41  legs  13  filled  13  pnl    +30.97  bankroll    530.97  (79.9s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_joint_td_raw__touch_only             fold 41  legs  12  filled  12  pnl     +8.55  bankroll    508.55  (22.0s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+  m05_joint_td_raw__ladder_sweep_v1        fold 41  legs  12  filled  12  pnl    +19.65  bankroll    519.65  (14.3s)
+      NOT COVERED  cove-rangers v airdrieonians: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+      NOT COVERED  peterhead v ross-county: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+
+------------------------------------------------------------------------------------------------
+SLATE 2026-08-08  |  T−25 = 2026-08-08T13:35:00 UTC  |  10 finished fixtures
+------------------------------------------------------------------------------------------------
+  m12_hybrid_grw_raw__touch_only           fold 41  legs  17  filled  17  pnl     +7.71  bankroll    527.86  (80.0s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m12_hybrid_grw_raw__ladder_sweep_v1      fold 41  legs  17  filled  17  pnl     +8.05  bankroll    538.95  (80.1s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m12_hybrid_grw_cal_optB__touch_only      fold 41  legs  12  filled  12  pnl    -14.52  bankroll    511.36  (80.1s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m12_hybrid_grw_cal_optB__ladder_sweep_v1 fold 41  legs  12  filled  12  pnl    -26.53  bankroll    502.76  (80.2s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_wealth_grw_raw__touch_only           fold 41  legs  17  filled  17  pnl     -1.11  bankroll    521.94  (14.3s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_wealth_grw_raw__ladder_sweep_v1      fold 41  legs  17  filled  17  pnl    -10.08  bankroll    521.13  (14.2s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m10_lineup_grw_raw__touch_only           fold 41  legs  15  filled  15  pnl    -26.07  bankroll    470.62  (74.2s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m10_lineup_grw_raw__ladder_sweep_v1      fold 41  legs  15  filled  15  pnl    -46.31  bankroll    462.67  (74.5s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m00_baseline_grw_raw__touch_only         fold 41  legs  14  filled  14  pnl    -27.83  bankroll    462.95  (7.9s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m00_baseline_grw_raw__ladder_sweep_v1    fold 41  legs  14  filled  14  pnl    -54.53  bankroll    449.55  (7.9s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_joint_grw_raw__touch_only            fold 41  legs  17  filled  17  pnl     -0.70  bankroll    522.65  (14.2s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_joint_grw_raw__ladder_sweep_v1       fold 41  legs  17  filled  17  pnl     -9.99  bankroll    521.10  (14.3s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m12_hybrid_td_raw__touch_only            fold 41  legs  17  filled  17  pnl    +14.81  bankroll    532.97  (80.0s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m12_hybrid_td_raw__ladder_sweep_v1       fold 41  legs  17  filled  17  pnl    +11.14  bankroll    542.11  (80.1s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_joint_td_raw__touch_only             fold 41  legs  15  filled  15  pnl    +21.86  bankroll    530.41  (14.3s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+  m05_joint_td_raw__ladder_sweep_v1        fold 41  legs  15  filled  15  pnl    +12.56  bankroll    532.21  (14.3s)
+      NOT COVERED  ross-county v montrose: absent from fold 41's team_map (ross-county) -- would be priced at the league mean
+      NOT COVERED  airdrieonians v east-kilbride: absent from fold 41's team_map (airdrieonians) -- would be priced at the league mean
+
+------------------------------------------------------------------------------------------------
+SLATE 2026-08-15  |  T−25 = 2026-08-15T13:35:00 UTC  |  9 finished fixtures
+------------------------------------------------------------------------------------------------
+  m12_hybrid_grw_raw__touch_only           fold 42  legs  15  filled  15  pnl    +16.75  bankroll    544.61  (80.8s)
+  m12_hybrid_grw_raw__ladder_sweep_v1      fold 42  legs  15  filled  15  pnl    +44.15  bankroll    583.10  (81.2s)
+  m12_hybrid_grw_cal_optB__touch_only      fold 42  legs  12  filled  12  pnl     +2.95  bankroll    514.31  (81.4s)
+  m12_hybrid_grw_cal_optB__ladder_sweep_v1 fold 42  legs  12  filled  12  pnl     +1.23  bankroll    503.98  (81.4s)
+  m05_wealth_grw_raw__touch_only           fold 42  legs  17  filled  17  pnl    +42.65  bankroll    564.59  (15.3s)
+  m05_wealth_grw_raw__ladder_sweep_v1      fold 42  legs  17  filled  17  pnl    +66.86  bankroll    587.98  (15.2s)
+  m10_lineup_grw_raw__touch_only           fold 42  legs  15  filled  15  pnl    +17.36  bankroll    487.97  (75.3s)
+  m10_lineup_grw_raw__ladder_sweep_v1      fold 42  legs  15  filled  15  pnl    +40.13  bankroll    502.80  (74.9s)
+  m00_baseline_grw_raw__touch_only         fold 42  legs  17  filled  17  pnl    +27.54  bankroll    490.48  (8.9s)
+  m00_baseline_grw_raw__ladder_sweep_v1    fold 42  legs  17  filled  17  pnl    +50.69  bankroll    500.24  (8.8s)
+  m05_joint_grw_raw__touch_only            fold 42  legs  17  filled  17  pnl    +43.32  bankroll    565.96  (15.3s)
+  m05_joint_grw_raw__ladder_sweep_v1       fold 42  legs  17  filled  17  pnl    +67.65  bankroll    588.75  (15.2s)
+  m12_hybrid_td_raw__touch_only            fold 42  legs  14  filled  14  pnl    +34.55  bankroll    567.52  (81.6s)
+  m12_hybrid_td_raw__ladder_sweep_v1       fold 42  legs  14  filled  14  pnl    +52.39  bankroll    594.50  (81.2s)
+  m05_joint_td_raw__touch_only             fold 42  legs  15  filled  15  pnl    +31.45  bankroll    561.87  (15.3s)
+  m05_joint_td_raw__ladder_sweep_v1        fold 42  legs  15  filled  15  pnl    +53.63  bankroll    585.84  (15.3s)
+
+------------------------------------------------------------------------------------------------
+SLATE 2026-09-05  |  T−25 = 2026-09-05T13:35:00 UTC  |  10 finished fixtures
+------------------------------------------------------------------------------------------------
+  m12_hybrid_grw_raw__touch_only           fold 43  legs  18  filled  18  pnl    +13.09  bankroll    557.71  (81.8s)
+  m12_hybrid_grw_raw__ladder_sweep_v1      fold 43  legs  18  filled  18  pnl    +12.43  bankroll    595.53  (81.9s)
+  m12_hybrid_grw_cal_optB__touch_only      fold 43  legs  11  filled  11  pnl     -7.54  bankroll    506.77  (82.2s)
+  m12_hybrid_grw_cal_optB__ladder_sweep_v1 fold 43  legs  11  filled  11  pnl    -12.86  bankroll    491.12  (81.9s)
+  m05_wealth_grw_raw__touch_only           fold 43  legs  18  filled  18  pnl    +23.85  bankroll    588.43  (16.2s)
+  m05_wealth_grw_raw__ladder_sweep_v1      fold 43  legs  18  filled  18  pnl    +12.35  bankroll    600.33  (16.1s)
+  m10_lineup_grw_raw__touch_only           fold 43  legs  20  filled  20  pnl    +30.61  bankroll    518.58  (76.2s)
+  m10_lineup_grw_raw__ladder_sweep_v1      fold 43  legs  21  filled  21  pnl    +26.22  bankroll    529.02  (75.8s)
+  m00_baseline_grw_raw__touch_only         fold 43  legs  19  filled  19  pnl    +46.37  bankroll    536.85  (9.8s)
+  m00_baseline_grw_raw__ladder_sweep_v1    fold 43  legs  19  filled  19  pnl    +38.19  bankroll    538.44  (9.8s)
+  m05_joint_grw_raw__touch_only            fold 43  legs  18  filled  18  pnl    +24.09  bankroll    590.05  (16.2s)
+  m05_joint_grw_raw__ladder_sweep_v1       fold 43  legs  19  filled  19  pnl    +11.47  bankroll    600.22  (16.2s)
+  m12_hybrid_td_raw__touch_only            fold 43  legs  21  filled  21  pnl    -15.55  bankroll    551.97  (82.3s)
+  m12_hybrid_td_raw__ladder_sweep_v1       fold 43  legs  22  filled  22  pnl    -18.57  bankroll    575.94  (81.7s)
+  m05_joint_td_raw__touch_only             fold 43  legs  21  filled  21  pnl     +7.58  bankroll    569.45  (16.2s)
+  m05_joint_td_raw__ladder_sweep_v1        fold 43  legs  21  filled  21  pnl     +1.92  bankroll    587.76  (16.2s)
+  reproduction m05_joint_td_raw     touch_only       £569.45 (published £569.45)
+  reproduction m05_joint_grw_raw    ladder_sweep_v1  £600.22 (published £600.22)
+  reproduction m12_hybrid_td_raw    touch_only       £551.97 (published £551.97)
+  reproduction m05_joint_td_raw     ladder_sweep_v1  £587.76 (published £587.76)
+  reproduction m05_joint_grw_raw    touch_only       £590.05 (published £590.05)
+  reproduction m12_hybrid_td_raw    ladder_sweep_v1  £575.94 (published £575.94)
+
+=== EXECUTIVE SUMMARY ===
+16×12 DataFrame
+ Row │ arm                      fill_model       final    net_pnl    roi_pct   win_rate_pct  sharpe_ann  max_drawdown_pct  fill_rate_pct  mean_clv     capture_ratio  reproduces_published
+     │ String                   String           Float64  Float64    Float64   Float64       Float64     Float64           Float64        Float64      Float64        String
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ m12_hybrid_grw_raw       touch_only       557.706   57.7061   16.7399        37.0968   16.6839            0.0             69.6762  -0.00302081        1.21654  —
+   2 │ m12_hybrid_grw_raw       ladder_sweep_v1  595.531   95.5309   21.9866        37.0968    9.20438           0.0             85.4446  -0.00373457        1.21654  —
+   3 │ m12_hybrid_grw_cal_optB  touch_only       506.774    6.7738    3.88479       34.1463    0.633201         -3.63199         70.7256  -0.0020621         0.90097  —
+   4 │ m12_hybrid_grw_cal_optB  ladder_sweep_v1  491.121   -8.87861  -4.21364       34.1463   -0.622697         -7.21125         88.1932  -0.00272303        0.90097  —
+   5 │ m05_wealth_grw_raw       touch_only       588.435   88.4346   25.1575        42.1875    7.94836          -0.211826        72.3471  -0.00495408        1.19072  —
+   6 │ m05_wealth_grw_raw       ladder_sweep_v1  600.332  100.332    23.3185        42.1875    4.9522           -1.89773         87.5921  -0.00556612        1.19072  —
+   7 │ m10_lineup_grw_raw       touch_only       518.577   18.5765    5.44137       40.9836    1.16837          -5.87688         73.6966  -0.00323101        1.16065  —
+   8 │ m10_lineup_grw_raw       ladder_sweep_v1  529.023   29.0234    6.98257       40.3226    1.17258          -9.09825         88.5531  -0.00396494        1.19279  —
+   9 │ m00_baseline_grw_raw     touch_only       536.852   36.8524   10.362         42.8571    1.68218          -7.41079         75.8131  -0.00442465        1.23558  —
+  10 │ m00_baseline_grw_raw     ladder_sweep_v1  538.439   38.4393    9.03891       42.8571    1.22462         -10.8173          90.1767  -0.00491958        1.23558  —
+  11 │ m05_joint_grw_raw        touch_only       590.051   90.051    25.5917        42.1875    8.05691          -0.134471        72.2037  -0.00495408        1.1911   true
+  12 │ m05_joint_grw_raw        ladder_sweep_v1  600.218  100.218    23.2253        41.5385    4.88951          -1.88074         87.4911  -0.00571789        1.22472  true
+  13 │ m12_hybrid_td_raw        touch_only       551.967   51.9671   13.6899        36.9231    4.19936          -2.74009         75.4332  -0.0032172         1.04848  true
+  14 │ m12_hybrid_td_raw        ladder_sweep_v1  575.936   75.9365   16.9443        36.3636    4.27434          -3.12311         87.5461  -0.00378105        1.06465  true
+  15 │ m05_joint_td_raw         touch_only       569.447   69.4474   19.3939        34.9206    9.98327           0.0             73.9289  -0.00519725        1.29535  true
+  16 │ m05_joint_td_raw         ladder_sweep_v1  587.757   87.757    20.2438        34.9206    6.56594           0.0             88.6309  -0.00574182        1.29535  true
+
+R06_DONE report=/root/BF_grw_player_hybrid/current_development/grw_player_hybrid/results/t25/r06_t25_report.md

@@ -46,6 +46,8 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
        GlobalDispersion, HomeAwayDispersion,
        DixonColesCorrelation, FrankCopulaCorrelation,
        JointGammaPoissonObservation, JointGammaPoissonDesign,
+       JointGammaNegBinObservation, JointGammaObservation,
+       CBNegBinFamilyObservation,
        AbstractKappaMode, SharedKappa, HierarchicalKappa,
        SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
        CBPoissonFamilyObservation,

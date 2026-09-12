@@ -1,0 +1,113 @@
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 4.3 hours)...
+     > [Started 22:45:37 | Elapsed 00:00:50] Sampling:  42%  ETA: 0:00:01 (71.78 ms/it)[K     > [Started 22:45:37 | Elapsed 00:00:51] Sampling:  58%  ETA: 0:00:01 ( 0.18  s/it)[K     > [Started 22:45:37 | Elapsed 00:00:51] Sampling: 100% Time: 0:00:01 ( 0.10  s/it)[K
+     > [Started 22:47:06 | Elapsed 00:00:56] Sampling:  92%  ETA: 0:00:01 ( 0.75  s/it)[K     > [Started 22:47:06 | Elapsed 00:01:00] Sampling: 100% Time: 0:00:12 ( 1.00  s/it)[K
+     > [Started 22:48:42 | Elapsed 00:00:47] Sampling:  92%  ETA: 0:00:01 ( 0.54  s/it)[K     > [Started 22:48:42 | Elapsed 00:00:47] Sampling: 100% Time: 0:00:06 ( 0.51  s/it)[K
+     > [Started 22:49:50 | Elapsed 00:00:55] Sampling:  17%  ETA: 0:00:05 ( 0.53  s/it)[K     > [Started 22:49:50 | Elapsed 00:00:58] Sampling:  33%  ETA: 0:00:08 ( 0.94  s/it)[K     > [Started 22:49:50 | Elapsed 00:01:02] Sampling:  42%  ETA: 0:00:11 ( 1.64  s/it)[K     > [Started 22:49:50 | Elapsed 00:01:06] Sampling: 100% Time: 0:00:11 ( 1.00  s/it)[K
+
+================================================================================================
+  r03 EXTEND TO 2026/27 — EXTEND (samples new folds)
+  experiment : scottish_lower_grw_player_hybrid
+  seasons    : 24/25 + 25/26 + 26/27
+================================================================================================
++--------+------------------+----------------+------------------+-------------+--------------------------+-------------------+
+| Run ID | Run Name         | Existing Folds | New Folds to Fit | New Matches | New Date Range           | Estimated Compute |
++--------+------------------+----------------+------------------+-------------+--------------------------+-------------------+
+| 143    | m00_baseline_grw | 40             | 3                | 59          | 2026-08-01 to 2026-09-05 | 2m 7s             |
++--------+------------------+----------------+------------------+-------------+--------------------------+-------------------+
+  m00_baseline_grw                 run 158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11 → 3 new fold(s)
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+| Run ID | Run Name       | Existing Folds | New Folds to Fit | New Matches | New Date Range           | Estimated Compute |
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+| 144    | m05_wealth_grw | 40             | 3                | 59          | 2026-08-01 to 2026-09-05 | 3m 5s             |
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+  m05_wealth_grw                   run b0961bc4-c40c-4dbe-9c05-57df7ae0839e → 3 new fold(s)
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+| Run ID | Run Name       | Existing Folds | New Folds to Fit | New Matches | New Date Range           | Estimated Compute |
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+| 145    | m10_lineup_grw | 40             | 3                | 59          | 2026-08-01 to 2026-09-05 | 2m 54s            |
++--------+----------------+----------------+------------------+-------------+--------------------------+-------------------+
+  m10_lineup_grw                   run b13c8fb9-ce34-4210-aa3f-9d2ed493c286 → 3 new fold(s)
++--------+------------------------------+----------------+------------------+-------------+--------------------------+-------------------+
+| Run ID | Run Name                     | Existing Folds | New Folds to Fit | New Matches | New Date Range           | Estimated Compute |
++--------+------------------------------+----------------+------------------+-------------+--------------------------+-------------------+
+| 146    | m12_joint_hybrid_synergy_grw | 40             | 3                | 59          | 2026-08-01 to 2026-09-05 | 3m 36s            |
++--------+------------------------------+----------------+------------------+-------------+--------------------------+-------------------+
+  m12_joint_hybrid_synergy_grw     run 3a9a4c7e-378b-45d0-a2d2-c8b69b46786b → 3 new fold(s)
+
+--- extending m00_baseline_grw
+     > sampling missing folds 41, 42, 43
+     > extended run #143 by 3 fold(s); 59 new latent fixture(s)
+  m00_baseline_grw                 folds 43 | OOS 769 × 2000 draws | new folds: R̂ 1.0127 ESS 320 div 0 | 1.4 min
+R03_MODEL_DONE m00_baseline_grw
+
+--- extending m05_wealth_grw
+     > sampling missing folds 41, 42, 43
+     > extended run #144 by 3 fold(s); 59 new latent fixture(s)
+  m05_wealth_grw                   folds 43 | OOS 769 × 2000 draws | new folds: R̂ 1.0115 ESS 609 div 0 | 1.4 min
+R03_MODEL_DONE m05_wealth_grw
+
+--- extending m10_lineup_grw
+     > sampling missing folds 41, 42, 43
+     > extended run #145 by 3 fold(s); 59 new latent fixture(s)
+  m10_lineup_grw                   folds 43 | OOS 769 × 2000 draws | new folds: R̂ 1.0120 ESS 342 div 0 | 1.2 min
+R03_MODEL_DONE m10_lineup_grw
+
+--- extending m12_joint_hybrid_synergy_grw
+     > sampling missing folds 41, 42, 43
+     > extended run #146 by 3 fold(s); 59 new latent fixture(s)
+  m12_joint_hybrid_synergy_grw     folds 43 | OOS 769 × 2000 draws | new folds: R̂ 1.0147 ESS 535 div 0 | 1.5 min
+R03_MODEL_DONE m12_joint_hybrid_synergy_grw
+
+R03_DONE report=/root/BF_grw_player_hybrid/current_development/grw_player_hybrid/results/r03_extension_report.md

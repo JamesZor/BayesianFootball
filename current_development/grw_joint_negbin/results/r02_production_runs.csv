@@ -1,0 +1,2 @@
+model,folds,oos,draws,max_rhat,worst_rhat_fold,min_ess_bulk,min_ess_tail,n_divergent,n_transitions,divergence_rate,treedepth_rate,min_bfmi,passed,strict_rhat_pass,failures,wall_min,run_id,mean_r,median_r,r_q05,r_q95,gate_pass,reused
+m12_joint_hybrid_synergy_negbin,40,710,2000,1.004055589311352,18,1911.066357970924,2518.209786274627,1,400000,2.5e-6,0.0004575,0.6230429381145676,true,true,,111.82603766918183,c3d2aede-ddd5-4590-9c75-5937de4b1bbc,31.466173474677884,29.53502135517727,17.801889785603404,51.63297962134792,true,false

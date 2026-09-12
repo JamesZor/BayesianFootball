@@ -1,0 +1,3 @@
+environment,n_fixtures,n_accepted,n_refused,n_absent,coverage_pct,coverage_quoted_pct
+close,632,627,5,0,99.20886075949366,99.20886075949366
+t25,611,580,31,0,94.92635024549918,94.92635024549918

@@ -79,7 +79,7 @@ struct NegBinCountModel{
     T<:CB_PG.AbstractDynamicsConfig,
     H<:CB_PG.AbstractHomeAdvantageConfig,
     C<:Tuple,
-    O<:NegativeBinomialObservation,
+    O<:CBNegBinFamilyObservation,
     G<:AbstractRateGuard,
 } <: CB_TI.AbstractNegBinModel
     interception::I
@@ -99,6 +99,9 @@ _assemble(o::PoissonObservation, i, t, h, c, g)          = PoissonCountModel(i, 
 # score grid — which is why widening `O` above is safe rather than a loophole.
 _assemble(o::JointGammaPoissonObservation, i, t, h, c, g) = PoissonCountModel(i, t, h, c, o, g)
 _assemble(o::NegativeBinomialObservation, i, t, h, c, g) = NegBinCountModel(i, t, h, c, o, g)
+# And the mirror image: the two-arm joint whose GOALS arm is the negative binomial prices from that
+# arm, so it belongs to the NegBin prediction family. Its Gamma arm never touches a score grid.
+_assemble(o::JointGammaNegBinObservation, i, t, h, c, g) = NegBinCountModel(i, t, h, c, o, g)
 
 
 # ==============================================================================
@@ -396,11 +399,11 @@ function validate(b::CountModelBuilder)
 
     # RobustNegativeBinomial floors μ at 1e-6. Rather than put a value branch in
     # the compiled tape, require the rate guard to make that floor unreachable.
-    negbin_guard_valid = !(obs isa NegativeBinomialObservation) ||
+    negbin_guard_valid = !(obs isa CBNegBinFamilyObservation) ||
         (guard isa ClampGuard && guard.lo >= log(1e-6))
     push!(out, cb_result("NegBin guard stays above the legacy mean floor",
         negbin_guard_valid,
-        !(obs isa NegativeBinomialObservation) ? "not a NegBin observation" :
+        !(obs isa CBNegBinFamilyObservation) ? "not a NegBin observation" :
         negbin_guard_valid ? "minimum η = $(guard.lo), above log(1e-6)" :
         "NegBin requires ClampGuard(lo >= $(log(1e-6))); NoGuard can cross the legacy μ floor"))
 
@@ -409,22 +412,22 @@ function validate(b::CountModelBuilder)
     # where there is no branch left to catch it. Requiring a finite lower clamp is the same
     # reasoning as the NegBin mean-floor rule above: keep the pathology out of the tape rather than
     # putting a value branch inside it.
-    joint_guard_valid = !(obs isa JointGammaPoissonObservation) ||
+    joint_guard_valid = !(obs isa JointGammaObservation) ||
         (guard isa ClampGuard && isfinite(guard.lo))
     push!(out, cb_result("joint Gamma arm has a finite η floor",
         joint_guard_valid,
-        !(obs isa JointGammaPoissonObservation) ? "not a joint observation" :
+        !(obs isa JointGammaObservation) ? "not a joint observation" :
         joint_guard_valid ? "minimum η = $(guard.lo), so exp(-η) <= $(exp(-guard.lo))" :
-        "JointGammaPoissonObservation requires a ClampGuard with a finite lo; the Gamma arm's " *
+        "$(nameof(typeof(obs))) requires a ClampGuard with a finite lo; the Gamma arm's " *
         "exp(-η) term is unbounded below and NoGuard leaves it uncontrolled"))
 
     # ν indexes a Gamma SHAPE. A shape at or below 0 is not a density; a shape that can reach 0
     # gives a spike at the origin that no amount of warmup recovers from.
-    joint_priors_valid = !(obs isa JointGammaPoissonObservation) ||
+    joint_priors_valid = !(obs isa JointGammaObservation) ||
         (minimum(obs.shape_prior) > 0.0 && obs.feature isa CB_Features.MatchProxyXGFeature)
     push!(out, cb_result("joint observation priors and feed are well posed",
         joint_priors_valid,
-        !(obs isa JointGammaPoissonObservation) ? "not a joint observation" :
+        !(obs isa JointGammaObservation) ? "not a joint observation" :
         joint_priors_valid ?
             "ν > $(minimum(obs.shape_prior)), fed by $(nameof(typeof(obs.feature)))" :
         minimum(obs.shape_prior) > 0.0 ?
@@ -439,6 +442,9 @@ function validate(b::CountModelBuilder)
         (minimum(obs.kappa.σ_prior) >= 0.0 && isfinite(quantile(obs.kappa.σ_prior, 0.99)))
     push!(out, cb_result("hierarchical kappa prior is well posed",
         kappa_mode_valid,
+        obs isa JointGammaNegBinObservation ?
+            "JointGammaNegBinObservation has no kappa mode — one league finishing factor by " *
+            "construction, so that r and κ are not both widening the goals arm" :
         !(obs isa JointGammaPoissonObservation) ? "not a joint observation" :
         !(obs.kappa isa HierarchicalKappa) ? "SharedKappa — one finishing factor for the league" :
         kappa_mode_valid ?
