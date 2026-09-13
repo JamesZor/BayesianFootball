@@ -1229,3 +1229,105 @@ function gss_register!(db, models, splitter, sampler, configs)
         tags = GSS_TAGS)
     return (; model_ids, splitter_id, sampler_id)
 end
+
+# ==============================================================================
+# 12. Pinned rungs and the Task 015 benchmark (r02)
+# ==============================================================================
+
+"The per-fold six-part audit of a fit, one row per fold. `n_transitions` is the draw count the audit read."
+function gss_fold_convergence_frame(name::AbstractString, fit)
+    return DataFrame([(; model = String(name), fold = f.fold, max_rhat = f.max_rhat,
+                         min_ess_bulk = f.min_ess_bulk, min_ess_tail = f.min_ess_tail,
+                         n_divergent = f.n_divergent, n_transitions = f.n_transitions,
+                         treedepth_rate = f.treedepth_rate, min_bfmi = f.min_bfmi)
+                      for f in fit.diagnostics.folds])
+end
+
+"""
+    gss_check_pinned_run(pinned, model, c) -> NamedTuple
+
+Load one pinned rung and prove it is the rung this loader builds, so it may stand in for sampling:
+
+* `string(config.model)` equals the rebuilt model — for the five-strike rungs this also proves the
+  Task 015 artefact deserialises with this loader included, which r04 depends on;
+* 43 folds, a passed audit, `chains × samples ÷ stride` persisted draws per fold;
+* Task 015 rungs: recorded sampler == the production sampler;
+* the baseline: Task 015 r02 §6's three budget checks, because `extend_fit` re-recorded its sampler
+  at the thinned draw count and re-audited every fold from the thinned chains.
+
+Returns a summary row (with the run's recorded Julia version, threads and commit), the per-fold
+audit frame, and the held-out fixture set when the latents reload (`nothing` for a detached smile
+panel, ticket T010). The fit itself is dropped.
+"""
+function gss_check_pinned_run(pinned::GSSPinnedRun, model, c::GMSConfig)
+    fit = load_fit(PostgresStorage(pinned.experiment), pinned.run_id)
+    label = "pinned $(pinned.rung) ($(pinned.source), run $(pinned.run_id))"
+    string(fit.config.model) == string(model) || error(
+        "$label is not the recipe gss_models() builds; it cannot stand in for this rung")
+    length(fit.folds) == c.expected_extended_folds || error(
+        "$label holds $(length(fit.folds)) folds; expected $(c.expected_extended_folds)")
+    fit.diagnostics.passed || error("$label did not pass its convergence audit")
+
+    expected_draws = c.chains * c.samples ÷ c.persist_stride
+    for f in fit.folds
+        size(f.chain, 1) * size(f.chain, 3) == expected_draws || error(
+            "$label fold $(f.fold) persists $(size(f.chain, 1) * size(f.chain, 3)) draws; expected $expected_draws")
+    end
+
+    if pinned.rung == "m05_joint_grw_baseline"
+        thinned = QueuedNUTSConfig(n_samples = c.samples ÷ c.persist_stride,
+                                   n_warmup = c.warmup, n_chains = c.chains,
+                                   accept_rate = c.accept_rate, max_depth = c.max_depth,
+                                   show_progress = false)
+        string(fit.config.sampler) == string(thinned) || error(
+            "$label records sampler $(fit.config.sampler); expected the thinned $(thinned)")
+        GMS_BASELINE_SAMPLED_TRANSITIONS_40 == c.expected_folds * c.chains * c.samples || error(
+            "Task 013 recorded $(GMS_BASELINE_SAMPLED_TRANSITIONS_40) transitions over 40 folds; " *
+            "the production budget implies $(c.expected_folds * c.chains * c.samples)")
+        fold1 = only(filter(f -> f.fold == 1, fit.diagnostics.folds))
+        fold1.n_transitions == expected_draws || error(
+            "$label fold 1 audit counts $(fold1.n_transitions) transitions; expected the thinned re-audit's $expected_draws")
+    else
+        string(fit.config.sampler) == string(gms_production_sampler(c)) || error(
+            "$label records sampler $(fit.config.sampler); expected $(gms_production_sampler(c))")
+        # The per-fold benchmark compares ESS audited on ALL retained draws. Checked here, before
+        # sampling, rather than discovered in r02 §13 after the spine rungs are persisted.
+        all(f -> f.n_transitions == c.chains * c.samples, fit.diagnostics.folds) || error(
+            "$label has a fold audited on other than $(c.chains * c.samples) transitions; " *
+            "its per-fold ESS is not comparable with a full-draw audit")
+    end
+
+    oos = fit.latents === nothing ? nothing : Set(Int.(fit.latents.match_ids))
+    d = fit.diagnostics
+    m = fit.metadata
+    summary = (; rung = pinned.rung, source = pinned.source, run_id = string(pinned.run_id),
+                 folds = length(fit.folds), max_rhat = d.max_rhat,
+                 min_ess_bulk = d.min_ess_bulk, min_ess_tail = d.min_ess_tail,
+                 n_divergent = d.n_divergent, n_transitions = d.n_transitions,
+                 min_bfmi = d.min_bfmi, wall_min = m.elapsed_seconds / 60,
+                 julia_version = string(m.julia_version), n_threads = m.n_threads,
+                 git_commit = m.git_commit,
+                 latents = fit.latents === nothing ? "detached (T010)" : string(nameof(typeof(fit.latents))))
+    return (; summary, folds = gss_fold_convergence_frame(pinned.rung, fit), oos)
+end
+
+"""
+    gss_fold_benchmark(spine, reference) -> DataFrame
+
+Fold-by-fold ESS and R̂ of a spine rung against the five-strike rung at the same weight, both read
+from the audit on every retained draw (4 × 1000). The pinned baseline is NOT a valid reference here:
+its folds were re-audited on thinned chains.
+"""
+function gss_fold_benchmark(spine::AbstractDataFrame, reference::AbstractDataFrame)
+    all(spine.n_transitions .== reference.n_transitions[1]) && all(reference.n_transitions .== reference.n_transitions[1]) || error(
+        "per-fold audits read different draw counts; ESS is not comparable")
+    joined = innerjoin(
+        select(spine, :fold, :max_rhat => :spine_rhat, :min_ess_bulk => :spine_ess_bulk,
+               :min_ess_tail => :spine_ess_tail),
+        select(reference, :fold, :max_rhat => :reference_rhat, :min_ess_bulk => :reference_ess_bulk,
+               :min_ess_tail => :reference_ess_tail),
+        on = :fold)
+    joined.bulk_ratio = joined.spine_ess_bulk ./ joined.reference_ess_bulk
+    joined.tail_ratio = joined.spine_ess_tail ./ joined.reference_ess_tail
+    return sort!(joined, :fold)
+end
