@@ -982,9 +982,16 @@ end
 """
     gss_identity_path_gate(latents; fixtures, max_goals) -> NamedTuple
 
-The φ ≡ 1 case, both ways: through the shortcut the grid must be bit-identical and every draw
-counted as identity; with the shortcut disabled the arithmetic must land within `forced_max_abs_gap`
-of the plain grid (the residual is the grid's own truncation mass, redistributed).
+The φ ≡ 1 case, both ways.
+
+* Through the shortcut the grid must be bit-identical and every draw counted as identity.
+* With the shortcut disabled, the arithmetic moves the grid by exactly the grid's own truncation
+  mass `trunc = 1 − Σ cells` (goals ≥ max_goals on either side), relocated onto the anti-diagonals
+  above Kmax so the draw sums to 1. At φ ≡ 1 the totals ≤ Kmax carry ratio 1 and every higher cell
+  is scaled by `1 + trunc / grid_tail`, so no cell can move by more than `trunc`. That bound is
+  derived, not tuned: `forced_within_truncation` requires `|Δcell| ≤ trunc + 1e-14` on every draw,
+  the constant being floating-point slack only. Measured on the first r01 launch (synthetic rates
+  up to 4.0 per side): a fixed 1e-6 tolerance failed at 2.23e-4 for exactly this reason.
 """
 function gss_identity_path_gate(l::SmileLatents; fixtures = 1:n_matches(l),
                                 max_goals::Int = GMS_PRED.TPL_MAX_GOALS)
@@ -997,6 +1004,8 @@ function gss_identity_path_gate(l::SmileLatents; fixtures = 1:n_matches(l),
     rw = GSSReweightWorkspace(max_goals)
     shortcut_identical = true
     forced_gap = 0.0
+    max_truncation = 0.0
+    worst_excess = -Inf
     for i in fixtures
         GMS_PRED.compute_score_grid!(S0, ws, l, i)
         λ_tot .= view(l.λ_tot, i, :)
@@ -1005,9 +1014,17 @@ function gss_identity_path_gate(l::SmileLatents; fixtures = 1:n_matches(l),
         shortcut_identical &= (n_identity == nd) && (S == S0)
         copyto!(S, S0)
         gss_reweight_grid!(S, λ_tot, ones_φ, rw; identity_shortcut = false)
-        forced_gap = max(forced_gap, maximum(abs.(S .- S0)))
+        for k in 1:nd
+            truncation = 1.0 - sum(view(S0, :, :, k))
+            gap = maximum(abs(S[r, c, k] - S0[r, c, k]) for c in 1:max_goals for r in 1:max_goals)
+            forced_gap = max(forced_gap, gap)
+            max_truncation = max(max_truncation, truncation)
+            worst_excess = max(worst_excess, gap - truncation)
+        end
     end
-    return (; shortcut_bit_identical = shortcut_identical, forced_max_abs_gap = forced_gap)
+    return (; shortcut_bit_identical = shortcut_identical, forced_max_abs_gap = forced_gap,
+              max_truncation_mass = max_truncation, worst_excess_over_truncation = worst_excess,
+              forced_within_truncation = worst_excess <= 1.0e-14)
 end
 
 """

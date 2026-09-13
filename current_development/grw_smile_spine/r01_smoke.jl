@@ -21,7 +21,9 @@
 #   G4a reweighting, pure (BEFORE sampling), on a synthetic spine container:
 #       reweighted totals marginal = smile CDF ≤ 1e-9 per draw and in the mean, each draw sums
 #       to 1, no negative mass, anti-diagonals rescaled uniformly (≤ 1e-12); φ ≡ 1 shortcut
-#       bit-identical and the un-shortcut path ≤ 1e-6; a non-monotone curve REFUSED.
+#       bit-identical; the un-shortcut φ ≡ 1 path moves no cell by more than that draw's grid
+#       truncation mass (+1e-14 float slack) — a derived bound, see `gss_identity_path_gate`;
+#       a non-monotone curve REFUSED.
 #   G0a null anchor: this file's engine copy with both slots empty is BIT-IDENTICAL to the
 #       m05 builder model (Δ == 0.0) at four prior draws.
 #   G0b spine rung log density − base = independent `logpdf` re-derivation, ≤ 1e-14 relative.
@@ -94,7 +96,6 @@ const R01_AUDITED = [R01_BASELINE, R01_FIVE_STRIKE, R01_SAMPLED...]
 const R01_G0_TOL = 1.0e-14
 const R01_G4_TOL = 1.0e-9
 const R01_SPREAD_TOL = 1.0e-12
-const R01_FORCED_IDENTITY_TOL = 1.0e-6
 const R01_PRICING_TOL = 1.0e-12
 
 const R01_GATE_ESS = R01_CONFIG.smoke_chains * R01_CONFIG.smoke_samples >= 2 * R01_CONFIG.min_ess
@@ -197,14 +198,16 @@ r01_g4a_identity = gss_identity_path_gate(r01_synthetic)
 r01_g4a_refusal = gss_refusal_gate()
 show(stdout, MIME"text/plain"(), r01_g4a; allcols = true)
 println()
-@printf("  G4a identity shortcut bit-identical=%s   forced path max |Δ|=%.2e   non-monotone refused=%s\n",
+@printf("  G4a identity shortcut bit-identical=%s   forced path max |Δ|=%.2e (max truncation mass %.2e, worst excess %.2e)   non-monotone refused=%s\n",
         r01_g4a_identity.shortcut_bit_identical, r01_g4a_identity.forced_max_abs_gap,
+        r01_g4a_identity.max_truncation_mass, r01_g4a_identity.worst_excess_over_truncation,
         r01_g4a_refusal.refused)
 
 r01_g4a_failures = gss_reweight_failures(r01_g4a; tol = R01_G4_TOL, spread_tol = R01_SPREAD_TOL)
 r01_g4a_identity.shortcut_bit_identical || push!(r01_g4a_failures, "φ ≡ 1 shortcut changed the grid")
-r01_g4a_identity.forced_max_abs_gap <= R01_FORCED_IDENTITY_TOL || push!(r01_g4a_failures,
-    @sprintf("un-shortcut φ ≡ 1 path moved the grid by %.2e", r01_g4a_identity.forced_max_abs_gap))
+r01_g4a_identity.forced_within_truncation || push!(r01_g4a_failures,
+    @sprintf("un-shortcut φ ≡ 1 path moved a cell by more than the grid's truncation mass (excess %.2e)",
+             r01_g4a_identity.worst_excess_over_truncation))
 r01_g4a_refusal.refused || push!(r01_g4a_failures,
     "a non-monotone smile curve was not refused: " * r01_g4a_refusal.message)
 isempty(r01_g4a_failures) || error("G4a FAILED: " * join(r01_g4a_failures, "; "))
@@ -360,8 +363,9 @@ for name in R01_SAMPLED
     identity = gss_identity_path_gate(fit.latents)
     push!(r01_identity, (; model = name, identity...))
     identity.shortcut_bit_identical || push!(failures, "G4b φ ≡ 1 shortcut changed the grid")
-    identity.forced_max_abs_gap <= R01_FORCED_IDENTITY_TOL || push!(failures,
-        @sprintf("G4b un-shortcut φ ≡ 1 path moved the grid by %.2e", identity.forced_max_abs_gap))
+    identity.forced_within_truncation || push!(failures,
+        @sprintf("G4b un-shortcut φ ≡ 1 path moved a cell by more than the grid's truncation mass (excess %.2e)",
+                 identity.worst_excess_over_truncation))
 
     @printf("  G4b %-34s fixtures=%d  totals gap=%.2e  mass gap=%.2e  Δp_home=%+.5f  Δp_under25=%+.5f\n",
             name, nrow(reweight), maximum(reweight.max_draw_cdf_gap), maximum(reweight.max_mass_gap),
@@ -460,9 +464,10 @@ open(joinpath(R01_OUT_DIR, "r01_smoke_report.md"), "w") do io
                        :max_diag_spread => v -> @sprintf("%.2e", v),
                        :Δp_home => v -> gph_signed(v), :Δp_draw => v -> gph_signed(v),
                        :Δp_away => v -> gph_signed(v), :Δp_under25 => v -> gph_signed(v))))
-    println(io, @sprintf("\nφ ≡ 1 shortcut bit-identical: %s. Un-shortcut path max |Δ|: %.2e. Non-monotone curve refused: %s.\n",
+    println(io, @sprintf("\nφ ≡ 1 shortcut bit-identical: %s. Un-shortcut path max |Δ|: %.2e against a max grid truncation mass of %.2e (worst excess over the per-draw bound %.2e; within bound: %s). Non-monotone curve refused: %s.\n",
                          r01_g4a_identity.shortcut_bit_identical, r01_g4a_identity.forced_max_abs_gap,
-                         r01_g4a_refusal.refused))
+                         r01_g4a_identity.max_truncation_mass, r01_g4a_identity.worst_excess_over_truncation,
+                         r01_g4a_identity.forced_within_truncation, r01_g4a_refusal.refused))
 
     println(io, "## G0 likelihood parity\n")
     print(io, gph_markdown_table(r01_parity_frame;
@@ -528,7 +533,9 @@ open(joinpath(R01_OUT_DIR, "r01_smoke_report.md"), "w") do io
                            :mean_Δp_away => v -> gph_signed(v), :mean_Δp_under25 => v -> gph_signed(v))))
         println(io)
         print(io, gph_markdown_table(r01_identity_frame;
-            formats = Dict(:forced_max_abs_gap => v -> @sprintf("%.2e", v))))
+            formats = Dict(:forced_max_abs_gap => v -> @sprintf("%.2e", v),
+                           :max_truncation_mass => v -> @sprintf("%.2e", v),
+                           :worst_excess_over_truncation => v -> @sprintf("%.2e", v))))
     end
 
     if nrow(r01_staking_frame) > 0
