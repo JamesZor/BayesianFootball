@@ -58,6 +58,7 @@ In addition, the prototype pricer directly addresses Ticket T011 by reweighting 
 - [2026-09-13 @claude] Phase 1 authored, NOT yet executed: `current_development/grw_smile_spine/l01_loader.jl` (includes Task 015's loader unchanged; new `SpineAnchoredCountModel` + `MarketSmileSpinePillar`, site `β_spine`; anti-diagonal reweighting `gss_reweight_grid!` and `gss_build_books_reweighted`) and `r01_smoke.jl` (gates GA, GB, G4a pre-sampling, G0a/b/c, G1, G6, G2, G3, G4b, G4c, G5). Work-package interpretations recorded in the loader header: all 23 anti-diagonals of the 12×12 grid are rescaled (not 12); mass above K = 4 follows the grid's own diagonal proportions; a non-monotone smile draw is refused, not clipped; φ ≡ 1 draws are left bit-identical. G0c added: spine ≡ five-strike model on the line log φ = β(K−2). Smoke budget 4×(500+1000) because Task 015's smoke failed its baseline on tail ESS at 500 draws. Caveat: the line through Task 015's φ medians (β_LS ≈ 0.052) misses K = 0 by ≈ −0.065 in log φ.
 - [2026-09-13 @claude] Committed `0286ebd2`, cloned to mcmc-beast `/root/BF_grw_smile_spine` (Task 015's ScottishLower cache of 2026-09-12, `.env` and pinned `Manifest.toml` copied from `/root/BF_grw_market_smile`; Distributions 0.25.126). First r01 launch stopped at G4a before sampling: with φ ≡ 1 and the identity shortcut disabled the reweighted grid moved by 2.23e-4 against a fixed 1e-6 tolerance. Cause is the grid's own truncation mass (goals ≥ 12 per side, ~0.1–0.2% at the synthetic 4.0 rates), which the Σ = 1 reweighting relocates onto totals ≥ 5; shortcut bit-identity, totals-CDF match, mass and non-monotone refusal all passed. With user approval the check now bounds every cell's move by that draw's truncation mass (+1e-14 float slack), a derived bound; other G4 tolerances unchanged.
 - [2026-09-13 @claude] r01 smoke PASSED 2/2 at `20b5d18` (mcmc-beast, 16 threads, 4 × (500 + 1000), folds 1–2; report `current_development/grw_smile_spine/results/smoke/4x500w1000s/r01_smoke_report.md`). Run IDs in `smoke_grw_smile_spine`: spine @0.20 `59d3adf2-5bc1-40b1-b89e-8b1934e16335`, @0.40 `ecf43154-8788-4dae-bbdc-5619de431a91`. See Verification & Findings.
+- [2026-09-14 @claude] r02 production grid PASSED 2/2 at `d4cceb8` (mcmc-beast, Julia 1.12.4, 16 threads, 43 folds, 769 OOS; report `current_development/grw_smile_spine/results/r02_production_report_4x500w1000s_*.md`). Pinned rungs 1–4 loaded and asserted identical, converged and full-draw audited before sampling; all four were fitted on Julia 1.12.4 / 16 threads. Runs in `scottish_lower_grw_smile_spine`: spine @0.20 `eaf53852-a078-4190-b744-089966a306f6`, @0.40 `582035c0-e145-44f7-9f40-89e25388e79a`. H1 as stated NOT supported (wall ≤ 90 min and min bulk ESS ≥ 600 missed at both weights); H2 supported. See Verification & Findings. First launch attempt did not start: the beast pull refused to overwrite the 10 untracked smoke CSVs, which were byte-identical to the committed copies and were removed. Next: r04, r06, r07, r08 not yet written.
 
 ## Verification & Findings
 
@@ -84,4 +85,34 @@ Smoke evidence only; the 43-fold grid (r02) decides H1–H2.
 
 Environment note: the beast ran Julia 1.12.4 (juliaup default) against a Manifest recording 1.12.1; pins Distributions 0.25.126, Turing 0.41.4, DynamicPPL 0.38.10, ReverseDiff 1.17.0, MCMCChains 7.7.0.
 
-Still to record: r02 production wall time and ESS vs Task 015, proper scores, Option B portfolio metrics, and T−25 calibration results.
+### r02 production grid (43 folds, 4 × (500 + 1000), 769 OOS) — PASS 2/2, `d4cceb8`
+
+All six rungs fitted on mcmc-beast, Julia 1.12.4, 16 threads; wall times are comparable.
+
+| rung | wall | max R̂ (fold) | min ESS bulk / tail | div | BFMI | run |
+|---|---:|---:|---:|---:|---:|---|
+| baseline (Task 013, pinned) | 42 min | 1.0115 | 609 / 616 (thinned re-audit) | 0 | 0.689 | `b0961bc4` |
+| supremacy @0.40 (Task 015, pinned) | 61 min | 1.0105 | 814 / 516 | 0 | 0.683 | `0ee58d18` |
+| five-strike smile @0.20 (Task 015, pinned) | 158 min | 1.0139 (34) | 472 / 498 | 0 | 0.623 | `fcd5e974` |
+| five-strike smile @0.40 (Task 015, pinned) | 185 min | 1.0200 (39) | 431 / 696 | 0 | 0.665 | `30620d3e` |
+| **spine @0.20** | **132 min** | 1.0135 (33) | 482 / 854 | 0 | 0.653 | `eaf53852-a078-4190-b744-089966a306f6` |
+| **spine @0.40** | **176 min** | 1.0139 (43) | 531 / 922 | 0 | 0.652 | `582035c0-e145-44f7-9f40-89e25388e79a` |
+
+**H1 (efficiency) — not supported as stated.** Neither target is met at either weight (≤ 90 min; min bulk ESS ≥ 600). Against the five-strike rung at the same weight: wall −16% (@0.20) and −5% (@0.40); run-level min bulk ESS +2% and +23%; tail ESS +71% and +32%. The pillar weight costs more than the shape dimension (spine @0.20 → @0.40 adds 44 min) and the smile pillar still costs 2–3× the supremacy-only wall time, so the drag is the pillar's coupling to the team state, not the number of φ parameters.
+
+Fold by fold (both audited on all 4,000 draws; the pinned baseline is excluded because its folds were re-audited on thinned chains):
+
+| pair | median per-fold min bulk ESS, spine / five-strike | median ratio | worst fold ratio | folds spine lower | folds < 600, spine / five-strike |
+|---|---:|---:|---:|---:|---:|
+| @0.20 | 857 / 1097 | 0.83 | 0.38 | 32 / 43 | 5 / 4 |
+| @0.40 | 1087 / 678 | 1.66 | 0.67 | 6 / 43 | 3 / 13 |
+
+The @0.20 deficit is driven by the reference, not by poor spine mixing: the five-strike model mixes 1.55× better at @0.20 than at @0.40 (median per fold), the spine 0.78×. On the eight worst @0.20 folds (14, 20, 18, 6, 16, 19, 17, 37) the five-strike rung reaches 953–2,215 and the spine 527–978. The spine's per-fold mixing is the more consistent of the two across weights; it is not uniformly better.
+
+**H2 (β recovery) — supported.** β_spine 0.0524 pooled at both weights ([0.0499, 0.0550] @0.20, [0.0507, 0.0543] @0.40); fold medians 0.0519–0.0530 over 43 folds; per-fold sd ≤ 0.0018; β itself mixes well (per-fold ESS ≥ 3,258 bulk / 1,870 tail, R̂ ≤ 1.005) — the worst-mixing site is elsewhere. Weight-independent; equals the least-squares slope through Task 015's medians (0.0525), just above the hypothesised 0.03–0.05. φ = 0.900 / 0.949 / 1.000 / 1.054 / 1.111 vs five-strike 0.843–0.844 / 0.976 / 1.001 / 1.026 / 1.069: the spine under-bends K = 0 and over-bends K = 4. σ_smile 0.062 / 0.060 (five-strike 0.052 / 0.050); κ 1.094 / 1.092 (five-strike 1.116 / 1.115); σ_sup 0.236 / 0.219 (five-strike 0.237 / 0.220).
+
+**Pricer and T011 on the persisted 769-fixture containers (both rungs):** reweighted totals = smile CDF ≤ 4.4e-16, Σ = 1 ≤ 6.7e-16; φ ≡ 1 shortcut bit-identical, un-shortcut path ≤ 1.04e-5 within the truncation-mass bound (≤ 5.94e-5). Reweighting shifts mean 1X2 by draw +0.67 pp, home −0.34 pp, away −0.33 pp — relevant to H4, since Task 015's portfolio gain came from 1X2 away bets.
+
+Provenance: Task 015's three runs recorded `git_commit = unknown` (rsynced checkout); the baseline `037d651c-dirty`.
+
+Still to record: proper scores (r04), Option B portfolio metrics (r06), T−25 calibration (r07), trust sweep (r08).
