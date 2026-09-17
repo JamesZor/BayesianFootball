@@ -115,4 +115,37 @@ The @0.20 deficit is driven by the reference, not by poor spine mixing: the five
 
 Provenance: Task 015's three runs recorded `git_commit = unknown` (rsynced checkout); the baseline `037d651c-dirty`.
 
-Still to record: proper scores (r04), Option B portfolio metrics (r06), T−25 calibration (r07), trust sweep (r08).
+### r04 proper scores (710-fixture panel, Betfair TWA(−20, 0] close) — `1d9da5e`
+
+Reproduction gate passed EXACTLY: pinned baseline LogLoss 0.64315 / ECE 0.0123 on 2,899 rows, equal to Task 013's published figures. 14 of 96 contrasts resolved. Report `results/evaluation/r04_evaluation_report.md`.
+
+**H3 (predictive parity) — NOT supported as stated, and not refuted either: the pooled test is underpowered.** Spine − five-strike at the same weight, pooled over 1X2 + O/U 2.5 + BTTS: Δ LogLoss −0.00012 (@0.20) and −0.00014 (@0.40), intervals ±0.001 containing 0. But on the same panel the control contrast spine − baseline (Δ −0.00211 / −0.00237) is ALSO unresolved, so the pooled basis cannot resolve a difference we know to be real. "Indistinguishable" here is ignorance, not parity. This is what the runner's paired-control readout was built to expose.
+
+**The ends ARE resolved, and they move in OPPOSITE directions — the pooled zero is a cancellation, not an absence.**
+
+| contrast (spine − five-strike, same weight) | Δ LogLoss | 95% interval | verdict |
+|---|---:|---|---|
+| O/U 0.5 | −0.0046 / −0.0048 | excludes 0 | spine better |
+| O/U 2.5 | −0.0008 | includes 0 | unresolved |
+| O/U 4.5 | +0.0057 / +0.0055 | excludes 0 | spine worse |
+
+**The strike ladder (UNDER selection) corrects a prediction I made before seeing it.** I expected the spine to lose at K = 0 because its line cannot bend down to φ₀ = 0.843. The direction is the opposite, because both smile arms over-price deep Unders and the five-strike over-prices them MORE:
+
+| line | n | market | baseline | spine | five-strike | realised |
+|---|---:|---:|---:|---:|---:|---:|
+| Under 0.5 | 149 | 0.0679 | 0.0718 | 0.0893 | 0.0994 | **0.0336** |
+| Under 1.5 | 215 | 0.2305 | 0.2423 | 0.2715 | 0.2478 | 0.2279 |
+| Under 2.5 | 379 | 0.4702 | 0.4784 | 0.4917 | 0.4784 | 0.4987 |
+| Under 3.5 | 264 | 0.6859 | 0.6841 | 0.6733 | 0.6777 | 0.6932 |
+| Under 4.5 | 104 | 0.8578 | 0.8397 | 0.8078 | 0.8168 | **0.9038** |
+
+* **The spine's K = 0 win is less damage, not an improvement.** At Under 0.5 the BASELINE (0.15797) beats the market (0.15574) least badly of the models, and both smile arms are far worse (spine 0.17215, five-strike 0.17912). The smile pillar hurts this line; one parameter hurts it less. Same at Under 1.5, where the baseline is best (0.52070) and the spine worst (0.53207).
+* **The smile pillar earns its keep at K = 2–3 only**: at Under 2.5 both smile arms beat the baseline and the market; at Under 3.5 likewise.
+* **Consistent with `eda/README.md`'s Jensen tail inflation** — deep Unders systematically over-priced — rather than with a defect in the spine: the anchor is a single global φ per strike against per-fixture market intensities, and E[e^{−Λ}] ≥ e^{−E[Λ]} bites hardest at K = 0. Mechanism not proven here; the measured over-pricing is.
+* **Every model beats the market's Under 4.5 LogLoss by ~0.30** (0.344–0.352 vs 0.647) while the market's mean price there (0.8578) looks sane against a 0.9038 realised rate — a handful of thin/mispriced deep quotes dominating that column. Treat the K = 4 market column as unreliable; the model-vs-model contrast on the same rows is unaffected.
+
+**Testable prediction for r08/H5, recorded before the sweep ran**: at Under 1.5 the spine sees a +4.1 pp edge (0.2715 vs market 0.2305) where the realised rate is 0.2279, so `+U1.5` should LOSE and lose more than the five-strike (+1.7 pp) or baseline (+1.2 pp); at Under 4.5 the spine prices below the market so it should decline the bet rather than profit.
+
+Caveat: the three Task 015 arms show `file copy none` — their latent file copies live in the Task 015 checkout, so for those arms the panel rebuilt from persisted chains was verified against the chains but not against a second on-disk copy. Both spine arms verified both ways.
+
+Still to record: Option B portfolio metrics (r06), T−25 calibration (r07), trust sweep (r08).
