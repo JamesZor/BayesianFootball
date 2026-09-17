@@ -1,0 +1,9 @@
+model,route,n_totals_bets,max_abs_vs_smile,min_abs_vs_grid
+m05_joint_grw_smile_supremacy_w020,reweighted,200,1.942890293094024e-15,6.20688043184714e-5
+m05_joint_grw_smile_supremacy_w020,grid,252,1.4432899320127035e-15,6.20688043184714e-5
+m05_joint_grw_smile_supremacy_w040,reweighted,199,1.7763568394002505e-15,0.00012926842063659683
+m05_joint_grw_smile_supremacy_w040,grid,253,1.7763568394002505e-15,0.00012926842063659683
+m05_joint_grw_smile_spine_w020,reweighted,239,1.5543122344752192e-15,0.0
+m05_joint_grw_smile_spine_w020,grid,282,1.5543122344752192e-15,0.0
+m05_joint_grw_smile_spine_w040,reweighted,237,1.5543122344752192e-15,0.0
+m05_joint_grw_smile_spine_w040,grid,282,1.5543122344752192e-15,0.0

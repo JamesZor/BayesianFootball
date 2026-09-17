@@ -32,6 +32,7 @@ only that ticket. Update `Status` here when it lands.
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Portfolio prices a smile container's totals through φ (`p_model`) but sizes every stake off the plain (λ_h, λ_a) grid, so φ never reaches a bet | medium | `src/Portfolio/pricing.jl` | open | 2026-09-13 |
 | [T010](T010-postgres-storage-refuses-smile-latents.md) | `PostgresStorage` refuses `SmileLatents` on save and rebuilds every panel as `CountLatents` on load, dropping φ | medium | `src/training/inference/db_storage.jl` | open | 2026-09-12 |
 | [T008](T008-multilevel-fill-price-accounting.md) | Multi-level fills use touch leverage/settlement odds; lay slippage and VWAP semantics disagree with cashflows | high | `src/MatchDay/ledger/` | open | 2026-09-07 |
+| [T012](T012-zero-trust-market-reprices-the-portfolio.md) | Declaring a market in the `BookSpec` widens the payoff matrix and the Baker-McHale `k`, so a market at trust 0 still moves every stake (±1 to ±22 pp of terminal return, 6/6 arms × environments) | medium | `src/Portfolio/pricing.jl`, `src/Portfolio/implementations/shrinkage.jl` | open | 2026-09-17 |
 
 ## Closed
 

@@ -24,7 +24,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | IN_PROGRESS | P1 | claude | 2026-09-11 |
 | [014](014_prototype_jointgammanegbinobservation_for_totals_and_btts_calibration.md) | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration | COMPLETED | P1 | claude | 2026-09-12 |
 | [015](015_prototype_multiscalegrw_with_market_smile_and_supremacy_anchoring.md) | Prototype MultiScaleGRW with Market Smile and Supremacy Anchoring | COMPLETED | P1 | claude | 2026-09-13 |
-| [016](016_prototype_1_parameter_smile_spine_with_multiscalegrw.md) | Prototype 1-Parameter Smile Spine with MultiScaleGRW | IN_PROGRESS | P1 | claude | 2026-09-13 |
+| [016](016_prototype_1_parameter_smile_spine_with_multiscalegrw.md) | Prototype 1-Parameter Smile Spine with MultiScaleGRW | COMPLETED | P1 | claude | 2026-09-17 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

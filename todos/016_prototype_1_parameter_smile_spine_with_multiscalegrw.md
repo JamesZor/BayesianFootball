@@ -4,11 +4,11 @@
 |---|---|
 | ID | 016 |
 | Title | Prototype 1-Parameter Smile Spine with MultiScaleGRW |
-| Status | IN_PROGRESS |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | claude |
 | Created | 2026-09-13 |
-| Updated | 2026-09-13 |
+| Updated | 2026-09-17 |
 | Related Files / Commits / PRs | [current_development/grw_smile_spine/](../current_development/grw_smile_spine/); [docs/tickets/T010-postgres-storage-refuses-smile-latents.md](../docs/tickets/T010-postgres-storage-refuses-smile-latents.md); [docs/tickets/T011-portfolio-sizes-smile-latents-off-the-grid.md](../docs/tickets/T011-portfolio-sizes-smile-latents-off-the-grid.md); [current_development/grw_market_smile/](../current_development/grw_market_smile/) |
 
 ## Context & Problem Statement
@@ -27,7 +27,7 @@ In addition, the prototype pricer directly addresses Ticket T011 by reweighting 
 
 ## Acceptance Criteria
 
-- [ ] Implement prototype in `current_development/grw_smile_spine/`:
+- [x] Implement prototype in `current_development/grw_smile_spine/`:
   - `l01_loader.jl`: 1-parameter `MarketSmileSpinePillar` ($\beta$ scalar parameter), log-density, and anti-diagonal grid reweighting.
   - `r01_smoke.jl`: 2-fold smoke gate verifying ReverseDiff compiled tape against ForwardDiff ($\le 10^{-6}$), exact gradients, parameter recovery, and anti-diagonal grid reweighting accuracy.
   - `r02_production_grid.jl`: 43-fold walk-forward grid for `m05_joint_grw_smile_spine_w020` and `m05_joint_grw_smile_spine_w040` on `mcmc-beast` (-t 16).
@@ -37,15 +37,15 @@ In addition, the prototype pricer directly addresses Ticket T011 by reweighting 
   - `r07_t25_portfolio.jl`: T−25 tradeable portfolio with and without Option B L2 calibrator (`scot_lower_t25_inv`).
   - `r08_trust_sweep.jl`: Market expansion test evaluating `Under 1.5` and `Under 4.5`.
   - `README.md`: Comprehensive documentation.
-- [ ] Model Ablation Ladder (Scottish Lower, 43 folds):
+- [x] Model Ablation Ladder (Scottish Lower, 43 folds):
   1. `m05_joint_grw_baseline`: Pure GRW control (Task 013 `b0961bc4`)
   2. `m05_joint_grw_supremacy_w040`: Supremacy anchor only (Task 015 `0ee58d18`)
   3. `m05_joint_grw_smile_supremacy_w020`: Full 5-parameter smile @ 0.20 (Task 015 `fcd5e974`)
   4. `m05_joint_grw_smile_supremacy_w040`: Full 5-parameter smile @ 0.40 (Task 015 `30620d3e`)
   5. `m05_joint_grw_smile_spine_w020`: 1-param spine @ 0.20 (new sampling)
   6. `m05_joint_grw_smile_spine_w040`: 1-param spine @ 0.40 (new sampling)
-- [ ] 6-part convergence audit passed on all 43 folds ($\hat{R} \le 1.05$, 0 divergences, ESS $\ge 400$).
-- [ ] Store fits in `PostgresStorage("scottish_lower_grw_smile_spine")`.
+- [x] 6-part convergence audit passed on all 43 folds ($\hat{R} \le 1.05$, 0 divergences, ESS $\ge 400$).
+- [x] Store fits in `PostgresStorage("scottish_lower_grw_smile_spine")`.
 
 ## Ideas & Candidate Solutions
 
@@ -148,4 +148,24 @@ Reproduction gate passed EXACTLY: pinned baseline LogLoss 0.64315 / ECE 0.0123 o
 
 Caveat: the three Task 015 arms show `file copy none` — their latent file copies live in the Task 015 checkout, so for those arms the panel rebuilt from persisted chains was verified against the chains but not against a second on-disk copy. Both spine arms verified both ways.
 
-Still to record: Option B portfolio metrics (r06), T−25 calibration (r07), trust sweep (r08).
+### r06 / r07 / r08 portfolio (Option B; close 632-fixture and T−25 611-fixture panels) — `c992ada`
+
+Full tables and mechanism in [`current_development/grw_smile_spine/README.md`](../current_development/grw_smile_spine/README.md) §6–§8. Every reproduction gate passed exactly: r06 P1 baseline +385.78% / ROI 11.68% / 1,247 bets; r07 T1 close/raw vs r06 worst |Δ| 0.00e+00 over 6 arms; r07 T2 baseline raw +531.78% / 1,124 and calibrated +245.85% / 969; r08 S1 all three arms.
+
+**Ticket T011 measured and fixed in the prototype.** Under the old route the reported price is exact (≤ 1.9e-15) while the distribution the Kelly solve read differs from the smile by **4.71–7.06e-02** — 4.7–7.1 pp of P(total ≤ K) against T011's ≤ 1e-9 criterion. Correcting it changes 11–16% of each ledger (142–215 exclusive bets per arm). Task 015's "φ changes the reported price and nothing else" is false once stakes are solved correctly. The `:grid` rows reproduce Task 015's published +588.4% / +545.0% at ROI 15.71 / 15.82, which establishes the difference is the correction and not a builder bug. The defect is LARGER for the spine (7.0e-2 vs 4.7e-2) because φ₄ = 1.111 is further from 1 than the five-strike's 1.069.
+
+**H4 — half met.** Away-bet ROI target (+19%) MET: 19.44% (@0.20) / 20.88% (@0.40) vs baseline 7.77%. Flat-ROI target (15.8%) NOT met: 14.30% / 14.54%, with Sharpe 0.18 lower and worse drawdown than the five-strike arms (15.69% / 15.72%, Sharpe 1.611 / 1.640). Mechanism: the five-strike prunes totals harder (199 bets at 12.67% ROI, 12.4% of stake) where the spine keeps 237 at 7.19% and 22.0% of stake — the portfolio consequence of a curve that cannot bend. The spine still beats both no-smile controls; the linear restriction is what costs money.
+
+**H5 — no, twice over.** (a) Calibration dominates every pillar choice: L2 halves drawdown (−42% → −17/−22%) and lifts ROI to 17–22%. (b) **Dropping φ after calibration beats keeping it for every smile arm** (five-strike @0.40: ROI 22.10% vs 19.01%, return +223.7% vs +155.8%; p = 0.048, the nearest thing to a resolved contrast in r07) — the pillar's value is in how it shaped the RATES during fitting, not in the φ curve used at pricing time. (c) Under 1.5 and Under 4.5 are accretive for the BASELINE and destroyed by the smile: at the close `+U1.5` gives baseline 105 bets at +37.66% ROI, five-strike 128 at −2.73%, spine 208 at −6.31% (net −91.6 pp) — the bet-count ordering is exactly the phantom-edge ordering r04 predicted and the ROI ordering is its reverse; `+U4.5` sees the smile arms take 0–2 bets where the baseline takes 28 at +18.79%. Only 21/66 addition rows improve terminal return, so `eda/README.md`'s pruning is broadly vindicated — but its capacity-cannibalisation mechanism is NOT what bites here (core ΔROI −0.16 to +0.35 pp); the damage is the added bets' own ROI.
+
+**Spine vs five-strike does not resolve.** The sign flips by environment (spine loses at the close, wins at T−25 raw, loses again calibrated-with-φ-dropped) and every paired slate-growth interval spans zero (p 0.18–0.79). At ~600 fixtures the two arms are not separable; no ranking is claimed.
+
+Persisted portfolios: spine @0.20 `3bd3a461-c505-4ceb-822c-ce1623e0aaf7`, @0.40 `785b5d7f-f596-491b-8442-9d71b5a350e6`, both reloading identical ledgers.
+
+### Defect raised, not fixed inline
+
+[T012](../docs/tickets/T012-zero-trust-market-reprices-the-portfolio.md) — declaring a market in the `BookSpec` widens the payoff matrix and hence `BakerMcHale`'s per-fixture `k`, so a market at **trust 0** still moves every stake: r08's S0 gate failed 6/6 (3 arms × 2 environments) by −22.3 to +10.2 pp of terminal return with unstable sign. Task 015 saw this for one arm and worked around it; this is the generalised measurement. r08 neutralises it by measuring every addition against P0 on the same extended book.
+
+### Recommendation
+
+Do not graduate the spine as a replacement for the five-strike smile. Graduate the **anti-diagonal reweighting** on its own merits (T011 option 2, implemented and measured here) — it fixes a 4.7–7.1 pp incoherence for any smile container including Task 015's. The obvious next experiment is "fit with the smile pillar, price without φ", which §8's calibration result points at directly.
