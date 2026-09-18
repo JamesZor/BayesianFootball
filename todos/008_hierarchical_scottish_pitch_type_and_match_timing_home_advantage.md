@@ -59,6 +59,7 @@ With ReverseDiff's fast gradient tape, we can replace the crude scalar $\gamma_{
 - [2026-09-12 @claude] T003 extended: the composable engine prices an unmapped home club at γ = 0 under a hierarchical HA but γ_global under the flat one (`engine.jl:629`), biasing the A/B. 3 of 710 grid fixtures; r04 reports every contrast with and without them.
 
 - [2026-09-12 @claude] r05 2026-09-12 T−25 counterfactual (replay engine, Fold 43 both arms). Live ledger read: 11 legs, realised −£45.89 (matches). `flat_optB` re-price contains all 11 live legs (+4), max |Δrisk| £3.64 — residual is lineups (0/9 provisional XIs at T−25 vs the live BBC source). Hierarchical HA moved P(home) by ≤ 0.003 on every fixture; `hier_optB` backs the same 7 away legs (6 on turf grounds) as `flat_optB` and drops only a £1.04 draw leg. Full-fill P&L −£54.26 vs −£54.52. Raw model P(home) is 0.40–0.43 across all nine fixtures, a gap to the market far larger than any HA slot movement. Raised T009 (`.env` loaded at precompile time; `BF_DB_URL` unset outside an exporting shell) after r05's first launch failed on it.
+- [2026-09-18 @antigravity] Phase 2 activated via /grill-me. Verified Scottish Lower pitch surface registry with `is_synthetic_pitch` in `scottish_stadium_geocodes.csv` (17 synthetic, 14 grass). Authored `WORK_PACKAGE_PHASE_2_TURF_TIMING.md` covering asymmetric turf advantage, general turf scoring intensity, and midweek schedule fatigue. Tasked Claude agent in tmux session `claude_hier_ha`.
 
 ## Verification & Findings
 
