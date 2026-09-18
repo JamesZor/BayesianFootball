@@ -44,9 +44,9 @@ This task refactors the score grid architecture into an `AbstractScoreGrid` type
 
 ## Verification & Findings
 
-- `test/test_score_grids.jl`: 53/53 assertions. Reweighted draws sum to one within $10^{-14}$; learned-strike CDF gaps are $\le 10^{-9}$; identity tensors and Portfolio ledgers are bit-identical; forced identity reweighting is bounded by truncation mass; non-monotone curves are refused; score-grid, Evaluation and Portfolio fixture hot paths allocate zero bytes.
+- `test/test_score_grids.jl`: 69/69 assertions. Poisson and NegBin reweighted draws sum to one within $10^{-14}$; learned-strike CDF gaps are $\le 10^{-9}$; varying fixture/draw curves index correctly; typed and legacy MatchDay tensors/prices agree; identity tensors and Portfolio ledgers are bit-identical; forced identity reweighting is bounded by truncation mass; non-monotone curves hard-refuse typed and legacy builds; score-grid, Evaluation and Portfolio fixture hot paths allocate zero bytes.
 - `test/latents_tests.jl`: 467/467.
 - `test/evaluation_tests.jl`: 424/424.
 - `test/unified_portfolio_tests.jl`: 707/707.
-- `julia --project -t 8 test/runtests.jl`: 4,015 passed, one database-dependent test skipped. The unthreaded `Pkg.test()` run passed all task-related suites but hit the unrelated flaky player-lineup 100 µs timing gate at 122 µs; its isolated rerun passed, including the timing gate (5/5).
-- CountLatents keeps the same raw kernel and passes the existing bit-identical Portfolio regressions. Smile `p_model`, Kelly `p_grid`, and Baker-McHale draw grids now all derive from `BookWorkspace.S` after anti-diagonal reweighting.
+- `julia --project -t 8 test/runtests.jl`: 4,031 passed, one database-dependent test skipped. The unthreaded `Pkg.test()` run passed all task-related suites but hit the unrelated flaky player-lineup 100 µs timing gate at 122 µs; its isolated rerun passed, including the timing gate (5/5).
+- CountLatents keeps the same raw kernel and passes the existing bit-identical Portfolio regressions. Smile `p_model`, Kelly `p_grid`, and Baker-McHale draw grids now all derive from `BookWorkspace.S` after anti-diagonal reweighting. The legacy `SmileScoreMatrix` path used by MatchDay applies the same kernel and reads every derivative from that tensor.

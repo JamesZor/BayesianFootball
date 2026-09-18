@@ -83,22 +83,27 @@ score tensor. For every posterior draw, totals 0 through `Kmax` are rescaled to 
 `Portfolio.BookWorkspace` holds either a `StandardScoreGrid` or `SmileScoreGrid` and calls one
 `compute_score_grid!` path; `_finish_book` and Baker-McHale therefore consume the same reweighted
 `w.S` from which the ledger's `p_model` was read. The old `_fill_extra!` smile side route was
-removed.
+removed. The legacy `SmileScoreMatrix` DataFrame route used by MatchDay now applies the same
+kernel and delegates every derivative to its reweighted tensor, so live/replay staking cannot
+fall back to the old geometry.
 
 The exact `φ ≡ 1` shortcut leaves the baseline truncated tensor bit-identical, preserving
 `CountLatents`/grid-twin ledger identity. The forced no-shortcut test separately proves that its
-only change is bounded by omitted truncation mass.
+only change is bounded by omitted truncation mass. A non-monotone posterior draw raises the named
+`NonMonotoneSmileError`; both typed and legacy Portfolio paths rethrow it as a whole-build refusal
+instead of converting a global-shape failure into an empty ledger.
 
 ## Verification
 
-* `test/test_score_grids.jl`: 53/53 assertions — hierarchy/dispatch, total mass, CDF agreement,
-  identity and forced paths, non-monotone refusal, zero allocations, Portfolio tensor/ledger
-  coherence and identity-ledger parity.
+* `test/test_score_grids.jl`: 69/69 assertions — hierarchy/dispatch, Poisson and NegBin total
+  mass/CDF agreement, varying fixture/draw curves, typed-vs-legacy MatchDay parity, identity and
+  forced paths, typed/legacy hard refusal, zero allocations, Portfolio tensor/ledger coherence
+  and identity-ledger parity.
 * `test/latents_tests.jl`: 467/467.
 * `test/evaluation_tests.jl`: 424/424.
 * `test/unified_portfolio_tests.jl`: 707/707, including unchanged CountLatents allocation and
   ledger regressions.
-* `julia --project -t 8 test/runtests.jl`: 4,015 passed, one database-dependent test skipped.
+* `julia --project -t 8 test/runtests.jl`: 4,031 passed, one database-dependent test skipped.
   The unthreaded `Pkg.test()` run passed all task-related suites but hit the unrelated flaky
   player-lineup 100 µs timing gate at 122 µs; its isolated rerun passed 5/5.
 
