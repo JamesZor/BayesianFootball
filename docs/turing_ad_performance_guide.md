@@ -12,6 +12,12 @@
 >
 > **Revised 2026-08-28.** Rule 4 was **backwards** and every engine followed it. If you have
 > read this guide before, read §5 again. See [T002](tickets/T002-scalar-taped-likelihood.md).
+>
+> **Summary in `AGENTS.md`.** `AGENTS.md` carries a five-bullet digest of §3, §4 and §9; this
+> guide is the authority. Measured reference points: the Scottish joint/hybrid arms compile to
+> **0.025–0.028 ms** per gradient, and tape length grows with **model structure**, not fixture
+> count (checked in §10.3). The older "~0.64 ms" target once quoted in `AGENTS.md` is superseded
+> by the §10.1 bar of < 0.1 ms for ~700 rows / ~50 params.
 
 ---
 

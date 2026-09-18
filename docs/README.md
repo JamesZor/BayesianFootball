@@ -20,6 +20,16 @@ longer-lived material.
   engine, password-safe connection, incremental extension. **§2 draws the line between it and
   `betdb`, the operational database on `archpc:5433`** — read that section first if you are
   unsure which database a task needs.
+- [`matchday_console_guide.md`](guides/matchday_console_guide.md) — the live (8085) and replay
+  (8086) consoles: schema isolation, the point-in-time source swaps, the Gödel-terminal
+  workspace, the dynamic slate re-solver, what the consoles refuse to pretend, the API surface.
+- [`extension_recipes.md`](guides/extension_recipes.md) — adding a league, model component,
+  feature extractor, backtesting metric, calibration law/dispersion map or MatchDay source.
+- [`testing_and_verification_guide.md`](guides/testing_and_verification_guide.md) — the five
+  test tiers, the known T007 parallel-runner failure, and the four-tier replay suite.
+- [`model_generations_guide.md`](guides/model_generations_guide.md) — Scottish Lower
+  Generations 1–4, the two-arm joint observation and player-lineup hybrid formulations, and
+  the Experiment 06 results table.
 - [`feature_validation_methodology.md`](guides/feature_validation_methodology.md) — the test
   battery a candidate feature has to pass before it earns a place in a model.
 - [`hurdle_columns_guide.md`](guides/hurdle_columns_guide.md) — column reference for the
@@ -30,6 +40,9 @@ longer-lived material.
 - [`ai_agent_infrastructure_and_execution_context.md`](architecture/ai_agent_infrastructure_and_execution_context.md)
   — the two-host topology, the **two databases**, thread pinning, rsync and cache safety, the
   model equations, the `05 → 10` pipeline stages, and the standard agent prompting block.
+- [`unified_v2_architecture.md`](architecture/unified_v2_architecture.md) — per-layer
+  narrative of the Unified V2 stack (L0 data contract, L1 components and engines, L5 seams,
+  generative rate calibration, meta model); `AGENTS.md` §2 keeps the summary.
 - [`composable_model_builder_specification.md`](architecture/composable_model_builder_specification.md)
   — the `CountModelBuilder` contract.
 - [`feature_engineering_protocol.md`](architecture/feature_engineering_protocol.md) — the

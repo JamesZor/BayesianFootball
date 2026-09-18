@@ -109,7 +109,7 @@ const R03_MODELS = R03_SMOKE ? ["m12_joint_hybrid_synergy"] :
     ["m12_joint_hybrid_synergy", "m05_joint_production_wealth"]
 
 """
-T−25 is the START of MatchDay's execution band (T−25 to T−12, AGENTS.md §7.2) and
+T−25 is the START of MatchDay's execution band (T−25 to T−12, docs/guides/matchday_console_guide.md §2) and
 therefore the earliest instant a slate is committed — the most conservative honest
 cutoff, not an arbitrary one.
 """

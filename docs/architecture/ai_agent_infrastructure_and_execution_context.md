@@ -85,6 +85,11 @@ git-ignored `.env`; `PostgresStorage` resolves its URL from the environment or l
   BLAS.set_num_threads(1)
   ```
 
+* **On `archpc`** (8 physical cores / 16 SMT) launch with `-t 8`; the same pinning and BLAS
+  rules apply.
+* **One grid at a time.** Do not launch a production grid on `mcmc-beast` while another is
+  sampling.
+
 ### Background Daemon Management (Ollama / Local LLMs)
 * CPU-heavy local inference daemons (such as `ollama` / `llama-server`) must remain **disabled** on `mcmc-beast` to prevent background CPU stealing during sampling:
   ```bash
