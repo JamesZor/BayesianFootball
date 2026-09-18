@@ -170,11 +170,12 @@ export
 
     # the ledger
     PaperAccount, PaperOrder, LedgerDelta, OrderState, BatchState,
-    TouchOnly, LadderSweep, Optimistic, simulate_fill,
+    TouchOnly, LadderSweep, LadderSweepV2, Optimistic, simulate_fill,
     decide_order, apply_transition, reserve_plan,
     migrate_paper_schema!, drop_paper_schema!, paper_connection,
     insert_slate!, insert_orders!, execute_slate_batch!, record_fills!,
-    settle_slate!, clv_for_order, account_row, slate_row, order_rows,
+    settle_order, settle_order_legacy_v1, settle_slate!, clv_for_order,
+    account_row, slate_row, order_rows,
 
     # the console
     slate_snapshot, ConsoleState, serve_console, stop_console!

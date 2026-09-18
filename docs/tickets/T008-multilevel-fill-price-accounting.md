@@ -1,6 +1,6 @@
 # T008 — Multi-level fills retain touch liability and settlement prices
 
-- **Status:** open
+- **Status:** done
 - **Severity:** high for multi-level replay/CLV; no evidence here of real venue orders
 - **Raised:** 2026-09-07, during the market-microstructure prototype
 - **Scope:** `src/MatchDay/ledger/fills.jl`, `settle.jl`, associated tests
@@ -96,6 +96,39 @@ rewritten; model versions and reconstruction provenance must remain identifiable
 - Existing TouchOnly baseline, ledger idempotency, reservation/release and replay
   isolation tests pass; no paper_runbook writes from tests.
 - Legacy rows remain reconstructible under the old version and differences are reported.
+
+## Resolution (2026-09-18)
+
+- Added `LadderSweepV2` with a persisted `:ladder_sweep_v2` stamp, side-aware per-level
+  slippage, and price-specific lay liability budgeting. The legacy `LadderSweep` generation
+  path and `:ladder_sweep_v1` stamp are unchanged.
+- Changed `fill_vwap` to the payoff-equivalent arithmetic mean and retained the former
+  probability-space statistic explicitly as `fill_harmonic_mean`.
+- Changed `settle_order` to use exact child-fill prices and stakes. `settle_slate!` now groups
+  positions by `(match_id, market_group, market_line)`, charges commission on positive net
+  market winnings, and allocates it pro rata across winning order audit rows.
+- Added `settle_order_legacy_v1` as an audit-only reconstruction of the old touch-odds
+  settlement convention. Together with `fill_harmonic_mean` and the unchanged v1 fill stamp,
+  this makes historical differences explicit rather than silently changing their meaning.
+- Added deterministic back, lay, partial-liability, slippage, loss, CLV and commission-netting
+  tests in `test/test_matchday_fills_settle.jl`, plus a PostgreSQL integration assertion that
+  verifies persisted market-level commission and account reconciliation.
+
+The deterministic back example resolves a wording inconsistency in the task brief by following
+its explicit cashflow formula: £10 at 3.00 plus £10 at 2.98 returns **£59.80 gross**, for £39.80
+profit, £0.796 commission and £39.004 net PnL at 2%.
+
+## Verification (2026-09-18)
+
+- `test/test_matchday_fills_settle.jl`: **39/39 passed**.
+- `test/matchday_tests.jl`: **153/153 passed**.
+- `test/test_matchday_live_pipeline.jl`: **249/249 passed**, including persisted market-net
+  commission and reconciliation.
+- `test/test_matchday_replay.jl`: T008-relevant execution/settlement testsets R17-R20 passed;
+  the standalone suite had 11 pre-existing environment/data-dependent failures in R22/R23/R31
+  because the configured `m12` fit could not be loaded (`m12.status == :failed`, no latents).
+- Full required command `julia +1.12.6 --startup-file=no --project -t 8 test/runtests.jl`:
+  **4,138/4,138 passed** in 6m19s after all T008 assertions were included.
 
 ## Scope guard
 

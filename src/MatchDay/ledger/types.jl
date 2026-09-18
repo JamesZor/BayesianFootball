@@ -169,8 +169,9 @@ end
 
 One execution against one order. Append-only: a partial fill is two `Fill`s, never an edit.
 
-`risk_filled = size / leverage` is the liability actually taken, and it is the quantity the
-account releases against -- not `size`, which for a lay is the backer stake and is larger.
+`risk_filled` is the liability actually taken, and it is the quantity the account releases
+against -- not `size`, which for a lay is the backer stake. For a lay fill at decimal price `p`,
+that liability is `size * (p - 1)`; it therefore varies across ladder levels.
 """
 Base.@kwdef struct Fill
     order_id::UUID

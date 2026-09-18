@@ -2,12 +2,13 @@
 #
 # What the book would have done with an order, without placing one.
 #
-# Paper trading is only worth anything if this is pessimistic in the right places, so the three
+# Paper trading is only worth anything if this is pessimistic in the right places, so the fill
 # models are explicit and recorded per fill rather than being a hidden constant. The default is
 # the pessimistic one, and the optimistic one is named `Optimistic` so nobody can select it
 # without reading the word.
 
-export AbstractFillModel, TouchOnly, LadderSweep, Optimistic, simulate_fill, fill_model_name
+export AbstractFillModel, TouchOnly, LadderSweep, LadderSweepV2, Optimistic,
+       simulate_fill, fill_model_name, fill_vwap, fill_harmonic_mean
 
 """
     AbstractFillModel
@@ -35,8 +36,9 @@ struct TouchOnly <: AbstractFillModel end
 """
     LadderSweep(; max_slippage = 0.02)
 
-Sweep down the archived ladder, stopping at the first level that would take the volume-weighted
-price more than `max_slippage` from the touch.
+Legacy v1 sweep retained to reconstruct historical `:ladder_sweep_v1` rows. Its slippage test is
+back-oriented and its child liability is frozen at touch leverage; use `LadderSweepV2` for new
+execution simulations.
 
 `betfair_live.order_book_1m` archives at most **three** levels (verified over 635,765 rows), so
 this is a lower bound on live capacity -- conservative in the safe direction. `max_slippage`
@@ -45,6 +47,20 @@ sweep giving up more than 2% has spent most of what it was chasing.
 """
 Base.@kwdef struct LadderSweep <: AbstractFillModel
     max_slippage::Float64 = 0.02
+end
+
+"""
+    LadderSweepV2(; max_slippage = 0.01)
+
+Sweep the archived ladder with side-aware per-level slippage and a price-specific liability
+budget. Unlike legacy `LadderSweep`, a lay level is sized from its own `(price - 1)` liability,
+so child fills can never consume more than the parent order's reserved risk.
+
+The new type and persisted `:ladder_sweep_v2` stamp deliberately leave historical
+`:ladder_sweep_v1` rows reconstructible under their original accounting rules.
+"""
+Base.@kwdef struct LadderSweepV2 <: AbstractFillModel
+    max_slippage::Float64 = 0.01
 end
 
 """
@@ -58,9 +74,10 @@ that is the only legitimate use.
 """
 struct Optimistic <: AbstractFillModel end
 
-fill_model_name(::TouchOnly)    = :touch_only
-fill_model_name(::LadderSweep)  = :ladder_sweep_v1
-fill_model_name(::Optimistic)   = :optimistic
+fill_model_name(::TouchOnly)      = :touch_only
+fill_model_name(::LadderSweep)    = :ladder_sweep_v1
+fill_model_name(::LadderSweepV2)  = :ladder_sweep_v2
+fill_model_name(::Optimistic)     = :optimistic
 
 """
     simulate_fill(model, levels, side, venue_stake, leverage, at) -> Vector{Fill}
@@ -80,10 +97,11 @@ function simulate_fill(model::AbstractFillModel, levels::BookLevels, side::Symbo
                     side === :lay  ? (levels.lay,  levels.lay_size)  :
                     error("side must be :back or :lay, got $side")
     isempty(prices) && return Fill[]
-    return _fill(model, prices, sizes, Float64(venue_stake), Float64(leverage), at, order_id)
+    return _fill(model, prices, sizes, Float64(venue_stake), Float64(leverage), at, order_id,
+                 side)
 end
 
-function _fill(::TouchOnly, prices, sizes, venue_stake, leverage, at, order_id)
+function _fill(::TouchOnly, prices, sizes, venue_stake, leverage, at, order_id, _side)
     size_here = isempty(sizes) ? 0.0 : Float64(sizes[1])
     taken = min(venue_stake, size_here)
     taken > 1e-9 || return Fill[]
@@ -92,7 +110,7 @@ function _fill(::TouchOnly, prices, sizes, venue_stake, leverage, at, order_id)
                  model = :touch_only, levels_used = 1)]
 end
 
-function _fill(m::LadderSweep, prices, sizes, venue_stake, leverage, at, order_id)
+function _fill(m::LadderSweep, prices, sizes, venue_stake, leverage, at, order_id, _side)
     touch = Float64(prices[1])
     out   = Fill[]
     remaining = venue_stake
@@ -101,7 +119,7 @@ function _fill(m::LadderSweep, prices, sizes, venue_stake, leverage, at, order_i
         remaining > 1e-9 || break
         p = Float64(prices[i])
         p > 1.0 || continue
-        (touch - p) / touch > m.max_slippage && break     # this level costs more than we will pay
+        (touch - p) / touch > m.max_slippage && break     # legacy v1 behaviour; do not change
         taken = min(remaining, Float64(sizes[i]))
         taken > 1e-9 || continue
         push!(out, Fill(order_id = order_id, filled_at = at, price = p, size = taken,
@@ -112,7 +130,37 @@ function _fill(m::LadderSweep, prices, sizes, venue_stake, leverage, at, order_i
     return out
 end
 
-_fill(::Optimistic, prices, _sizes, venue_stake, leverage, at, order_id) =
+function _fill(m::LadderSweepV2, prices, sizes, venue_stake, leverage, at, order_id, side)
+    touch = Float64(prices[1])
+    parent_risk = side === :back ? venue_stake : venue_stake / leverage
+    out = Fill[]
+    remaining_stake = venue_stake
+    remaining_risk = parent_risk
+    n = min(length(prices), length(sizes))
+
+    for i in 1:n
+        (remaining_stake > 1e-9 && remaining_risk > 1e-9) || break
+        p = Float64(prices[i])
+        p > 1.0 || continue
+        adverse_slippage = side === :back ? (touch - p) / touch : (p - touch) / touch
+        adverse_slippage > m.max_slippage && break
+
+        available = Float64(sizes[i])
+        unit_risk = side === :back ? 1.0 : p - 1.0
+        max_stake_for_risk = remaining_risk / unit_risk
+        taken = min(remaining_stake, available, max_stake_for_risk)
+        taken > 1e-9 || continue
+        risk_here = taken * unit_risk
+        push!(out, Fill(order_id = order_id, filled_at = at, price = p, size = taken,
+                        risk_filled = risk_here, model = :ladder_sweep_v2,
+                        levels_used = i))
+        remaining_stake -= taken
+        remaining_risk = max(0.0, remaining_risk - risk_here)
+    end
+    return out
+end
+
+_fill(::Optimistic, prices, _sizes, venue_stake, leverage, at, order_id, _side) =
     [Fill(order_id = order_id, filled_at = at, price = Float64(prices[1]),
           size = venue_stake, risk_filled = venue_stake / leverage,
           model = :optimistic, levels_used = 1)]
@@ -132,12 +180,23 @@ filled_risk(fills::AbstractVector{Fill}) = isempty(fills) ? 0.0 : sum(f -> f.ris
 """
     fill_vwap(fills) -> Float64
 
-Volume-weighted price, averaged in **probability space** (`Σ size / Σ (size/price)`).
-
-The arithmetic mean of two decimal prices is not the price at which the combined stake breaks
-even, so averaging them directly overstates a book that filled deep.
+Payoff-equivalent volume-weighted decimal odds for fills denominated in backer stake:
+`Σ(size * price) / Σsize`.
 """
 function fill_vwap(fills::AbstractVector{Fill})
+    isempty(fills) && return NaN
+    s = sum(f -> f.size, fills)
+    s > 0 || return NaN
+    return sum(f -> f.size * f.price, fills) / s
+end
+
+"""
+    fill_harmonic_mean(fills) -> Float64
+
+Stake-weighted harmonic mean of fill prices. This probability-space diagnostic is kept
+separate from `fill_vwap`, which must preserve the fills' exact payoff cashflow.
+"""
+function fill_harmonic_mean(fills::AbstractVector{Fill})
     isempty(fills) && return NaN
     s = sum(f -> f.size, fills)
     s > 0 || return NaN
