@@ -382,3 +382,78 @@ end
     @test all(isfinite, extracted[101].λ_a)
     @test extracted[101].λ_h != extracted[101].λ_a
 end
+
+@testset "MultiScaleGRW dynamics builder integration" begin
+    @test BuilderAPI._cb_dynamics_supported(BuilderPG.MultiScaleGRW()) === true
+
+    n_teams = 2
+    n_history = 1 + 1
+    n_target = 1
+    n_rounds = n_history + n_target
+    n_draws = 3
+
+    columns = ["inter.μ", "ha.γ_global"]
+    for side in ("α", "β")
+        append!(columns, [
+            "dyn.$side.σ₀", "dyn.$side.σₛ", "dyn.$side.σₖ",
+            "dyn.$side.z_init[1]", "dyn.$side.z_init[2]",
+            "dyn.$side.z_season[1, 1]", "dyn.$side.z_season[2, 1]",
+            "dyn.$side.z_target[1, 1]", "dyn.$side.z_target[2, 1]",
+        ])
+    end
+    values = zeros(Float64, n_draws, length(columns), 1)
+    for (j, name) in enumerate(columns)
+        value = name == "inter.μ" ? 0.2 :
+                name == "ha.γ_global" ? 0.15 :
+                occursin(".σ", name) ? 0.2 :
+                occursin("[1", name) ? 0.5 : -0.5
+        values[:, j, 1] .= value
+    end
+    chain = Chains(values, Symbol.(columns))
+
+    dynamics = BuilderAPI._cb_extract_dynamics(
+        chain, BuilderPG.MultiScaleGRW(), "dyn", n_teams)
+    @test keys(dynamics) == (:α, :β)
+    @test size(dynamics.α) == (n_teams, n_rounds, n_draws)
+    @test size(dynamics.β) == (n_teams, n_rounds, n_draws)
+
+    # OOS extraction must carry the final fitted state forward. Changing only the
+    # first state is invisible; changing only the final state changes the rates.
+    draw_a = (α = zeros(n_teams, n_rounds, n_draws),
+              β = zeros(n_teams, n_rounds, n_draws))
+    draw_first = (α = copy(draw_a.α), β = copy(draw_a.β))
+    draw_first.α[1, 1, :] .= 2.0
+    draw_first.β[2, 1, :] .= 1.0
+    draw_final = (α = copy(draw_a.α), β = copy(draw_a.β))
+    draw_final.α[1, end, :] .= 2.0
+    draw_final.β[2, end, :] .= 1.0
+
+    oos(draw) = BuilderAPI._cb_oos_dynamics(
+        BuilderPG.MultiScaleGRW(), draw, Dict(), 901, 1, 2, n_draws)
+    rates(draw) = let effects = oos(draw)
+        (λ_h = exp.(effects.att_h .+ effects.def_a),
+         λ_a = exp.(effects.att_a .+ effects.def_h))
+    end
+    @test rates(draw_first) == rates(draw_a)
+    @test rates(draw_final) != rates(draw_a)
+
+    model = CountModelBuilder(:grw_extraction_regression) |>
+        add(BuilderPG.GlobalInterception()) |>
+        add(BuilderPG.MultiScaleGRW()) |>
+        add(BuilderPG.GlobalHomeAdvantage()) |>
+        add(BuilderPG.PoissonObservation()) |>
+        build
+    feature_set = builder_feature_set(3)
+    feature_set[:n_history_steps] = n_history
+    feature_set[:n_target_steps] = n_target
+    feature_set[:n_rounds] = n_rounds
+    fixtures = DataFrame(
+        match_id = [901], home_team = ["home"], away_team = ["away"],
+        match_date = [Date(2024, 2, 1)], season_idx = [1],
+    )
+    extracted = BuilderPG.extract_parameters(model, fixtures, feature_set, chain)
+    @test all(isfinite, extracted[901].λ_h)
+    @test all(isfinite, extracted[901].λ_a)
+    @test all(x -> x > 0.0, extracted[901].λ_h)
+    @test all(x -> x > 0.0, extracted[901].λ_a)
+end
