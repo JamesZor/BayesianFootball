@@ -104,6 +104,16 @@ check_registry() {
     ' "$TODOS/README.md") || fail 'README.md registry differs from task metadata; update its rows (expected shown as -)'
 }
 
+# The Antigravity rule injector silently truncates a rule file past ~24 KiB.
+AGENTS_MAX_BYTES=22000
+check_agents_size() {
+    local size
+    [[ -f $ROOT/AGENTS.md ]] || fail "missing $ROOT/AGENTS.md"
+    size=$(wc -c < "$ROOT/AGENTS.md")
+    (( size < AGENTS_MAX_BYTES )) ||
+        fail "AGENTS.md is $size bytes (limit: < $AGENTS_MAX_BYTES); it will be truncated by the rule injector. Move detail into docs/guides/."
+}
+
 list_tasks() {
     local i status priority reset='' color='' pcolor=''
     [[ ! -t 1 || ${NO_COLOR+x} ]] || reset=$'\033[0m'
@@ -187,8 +197,9 @@ new_task() {
 command=${1:-list}
 case "$command" in
     list) (( $# <= 1 )) || { usage >&2; exit 1; }; load_tasks; list_tasks ;;
-    check) (( $# == 1 )) || { usage >&2; exit 1; }; load_tasks; check_registry
-        printf 'OK: %d task(s); metadata, template and registry agree.\n' "${#FILES[@]}" ;;
+    check) (( $# == 1 )) || { usage >&2; exit 1; }; load_tasks; check_registry; check_agents_size
+        printf 'OK: %d task(s); metadata, template and registry agree; AGENTS.md %d bytes (< %d).\n' \
+            "${#FILES[@]}" "$(wc -c < "$ROOT/AGENTS.md")" "$AGENTS_MAX_BYTES" ;;
     new) (( $# == 2 )) || { usage >&2; exit 1; }; new_task "$2" ;;
     view)
         (( $# == 2 )) || { usage >&2; exit 1; }

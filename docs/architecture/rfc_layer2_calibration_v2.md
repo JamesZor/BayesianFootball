@@ -431,7 +431,7 @@ scored observation either.
 * **The T−25 returns are still an upper bound**, now for fill-model reasons rather than
   price-instant ones: bets are struck at the archived *traded* price in whatever size the
   allocator asked for, while the live system rests at the touch and the archive carries at
-  most three levels (AGENTS.md §7.4).
+  most three levels (docs/guides/matchday_console_guide.md §4).
 * **The +192.2% figure is a mechanism demonstration, not a performance claim.** The
   `λ = 8` / Kelly 0.60 risk setting was chosen against the same slates the return is read
   off (README §8.12). What this module ships is the calibrated *container*; the risk

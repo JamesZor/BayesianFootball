@@ -20,7 +20,7 @@
 #
 # It is NOT a live-trading claim even now. Two things still stand between this and
 # a Saturday: the fill model (a struck price is assumed available in the size the
-# allocator asked for; AGENTS.md §7.4 records `LadderSweep` as an optimistic fill
+# allocator asked for; docs/guides/matchday_console_guide.md §4 records `LadderSweep` as an optimistic fill
 # model and the live system rests at the touch), and the fact that this reads a
 # traded-price archive rather than the resting ladder the console sees. Both are
 # named in §9 rather than left for the reader to discover.
@@ -483,7 +483,7 @@ println("="^110)
 println("""
   1. FILL MODEL. Every bet is struck at the archived traded price in whatever size
      the allocator asked for. The live system rests at the touch and the archive
-     carries at most three levels (AGENTS.md §7.4), so a large stake on an
+     carries at most three levels (docs/guides/matchday_console_guide.md §4), so a large stake on an
      illiquid Scottish League Two selection would not fill at one price. These
      returns remain an upper bound, a smaller one than r02's.
   2. TRADED PRICE, NOT THE RESTING LADDER. `betfair.odds_history` archives traded

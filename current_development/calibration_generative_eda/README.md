@@ -604,7 +604,7 @@ Runners: [`r03_t25_book_and_calibration.jl`](r03_t25_book_and_calibration.jl),
 [`l02_point_in_time_book.jl`](l02_point_in_time_book.jl). Run on `mcmc-beast`,
 16 threads, 2026-09-04, commit `6fbc1e1a`.
 
-**T−25 is the start of MatchDay's execution band** (T−25 to T−12, AGENTS.md §7.2)
+**T−25 is the start of MatchDay's execution band** (T−25 to T−12, docs/guides/matchday_console_guide.md §2)
 and therefore the earliest instant a slate is committed — the most conservative
 honest cutoff.
 
@@ -824,7 +824,7 @@ in calibration's favour on return at any arm.
 
 * **Fill model.** Bets are struck at the archived traded price in whatever size
   the allocator asked for. The live system rests at the touch and the archive
-  carries at most three levels (AGENTS.md §7.4). These returns are still an upper
+  carries at most three levels (docs/guides/matchday_console_guide.md §4). These returns are still an upper
   bound — a smaller one than r01/r02's, and now for this reason rather than the
   price instant.
 * **Traded price, not the resting ladder.** `betfair.odds_history` archives what
