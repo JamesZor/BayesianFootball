@@ -34,7 +34,10 @@ end
     strikes = collect(0.5:1.0:4.5)
     nd = size(λh, 2)
     nK = length(strikes)
-    φ = fill(1.15, 1, nK, nd)
+    φ = Array{Float64,3}(undef, 1, nK, nd)
+    for k in 1:nd
+        φ[1, :, k] .= 1.05 + 0.05 * k
+    end
     smile = SmileLatents(ids, λh, λa, nothing, λtot, φ, strikes)
 
     ws = GridWorkspace(12)
@@ -85,6 +88,32 @@ end
         evaluation_probs, evaluation_workspace, smile, 1)) == 0
     @test vec(evaluation_probs.draws[:, 1, 2]) == holder_book[2]
 
+    # The distinct NegBin smile kernel must obey the same joint-distribution contract.
+    r_h = fill(4.0, size(λh))
+    r_a = fill(5.0, size(λa))
+    negbin_smile = SmileLatents(ids, λh, λa, (; r_h, r_a), λtot, φ, strikes)
+    negbin_grid = compute_score_grid(negbin_smile, 1)
+    @test negbin_grid isa SmileScoreGrid
+    for k in 1:nd
+        @test abs(sum(negbin_grid.grid[:, :, k]) - 1.0) < 1e-14
+        @test abs(scoregrid_cdf(negbin_grid.grid, 2, k) -
+                  cdf(Poisson(λtot[1, k] * φ[1, 3, k]), 2)) <= 1e-9
+    end
+
+    # The legacy DataFrame/SmileScoreMatrix path used by MatchDay must produce the
+    # same reweighted tensor and derivative prices as the typed path.
+    legacy_model = BayesianFootball.Models.PreGame.DynamicSmileDoublePoissonGoalsLeagueTimeDecayModel()
+    legacy_params = (λ_h = vec(λh), λ_a = vec(λa), λ_tot = vec(λtot),
+                     φ = Matrix(transpose(φ[1, :, :])))
+    legacy_grid = BayesianFootball.Predictions.compute_score_matrix(legacy_model, legacy_params)
+    @test BayesianFootball.Predictions.score_matrix_data(legacy_grid) == holder.grid
+    for market in (Market1X2(), MarketOverUnder(2.5), MarketBTTS())
+        legacy_prices = BayesianFootball.Predictions.compute_market_probs(legacy_grid, market)
+        typed_prices = price_market(holder, market)
+        @test keys(legacy_prices) == keys(typed_prices)
+        @test all(legacy_prices[key] ≈ typed_prices[key] for key in keys(typed_prices))
+    end
+
     # φ ≡ 1 is an explicit shortcut: not merely equivalent, but bit-identical to the
     # original truncated count grid. The forced path differs by no more than the mass
     # that truncation had omitted and restores total mass to one.
@@ -121,7 +150,7 @@ end
     bad_φ = ones(nK, nd)
     bad_φ[1, :] .= 0.10
     bad_φ[2, :] .= 10.0
-    @test_throws ErrorException reweight_grid_antidiagonals!(bad, vec(λtot), bad_φ, ws)
+    @test_throws NonMonotoneSmileError reweight_grid_antidiagonals!(bad, vec(λtot), bad_φ, ws)
 end
 
 @testset "Portfolio consumes the reweighted smile tensor" begin
@@ -130,7 +159,10 @@ end
     λa = [0.80 0.95 1.05 0.90; 1.20 1.30 1.10 1.25]
     λtot = λh .+ λa
     strikes = collect(0.5:1.0:4.5)
-    φ = fill(1.12, length(ids), length(strikes), size(λh, 2))
+    φ = Array{Float64,3}(undef, length(ids), length(strikes), size(λh, 2))
+    for i in axes(φ, 1), k in axes(φ, 3)
+        φ[i, :, k] .= 1.04 + 0.03 * i + 0.01 * k
+    end
     smile = SmileLatents(ids, λh, λa, nothing, λtot, φ, strikes)
 
     spec = SCOREGRID_PORTFOLIO.BookSpec(
@@ -179,4 +211,18 @@ end
     count = CountLatents(ids, λh, λa)
     @test SCOREGRID_PORTFOLIO.build_books(spec, identity, odds, fixtures) ==
           SCOREGRID_PORTFOLIO.build_books(spec, count, odds, fixtures)
+
+    # One invalid global-shape draw is a hard, named refusal on both typed backtests
+    # and the legacy DataFrame path used by MatchDay — never a plausible empty ledger.
+    bad_φ = copy(φ)
+    bad_φ[:, 1, 1] .= 0.10
+    bad_φ[:, 2, 1] .= 10.0
+    bad_smile = SmileLatents(ids, λh, λa, nothing, λtot, bad_φ, strikes)
+    @test_throws NonMonotoneSmileError SCOREGRID_PORTFOLIO.build_books(
+        spec, bad_smile, odds, fixtures)
+
+    legacy_model = BayesianFootball.Models.PreGame.DynamicSmileDoublePoissonGoalsLeagueTimeDecayModel()
+    legacy_expr = (; config = (; model = legacy_model))
+    @test_throws NonMonotoneSmileError SCOREGRID_PORTFOLIO.build_books(
+        spec, to_legacy_dataframe(bad_smile), legacy_expr, odds, fixtures)
 end
