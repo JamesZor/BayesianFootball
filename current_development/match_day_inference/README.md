@@ -38,6 +38,8 @@ left to convention.
 - [`test_replay_workspace.jl`](test_replay_workspace.jl) — verification for the workspace layer:
   the tick algebra, the tall ladder, the policy configurator, the λ inversion, and (with
   `R08_FULL=1`) every HTTP route against a live console on 8086.
+- [`NOTE_DEFAULT_CONFIGURATION_UPDATE.md`](NOTE_DEFAULT_CONFIGURATION_UPDATE.md) — operational
+  decision record upgrading the default `SlateDrawdown` tail-risk parameter ($\lambda = 8.0 \to 28.0$).
 - [`RESEARCH_MATCHDAY_ARCHITECTURE.md`](RESEARCH_MATCHDAY_ARCHITECTURE.md) — live execution
   design, dataflow, controls, and validation rationale.
 - [`AI_AGENT_HANDOVER.md`](AI_AGENT_HANDOVER.md) — system state and operational context for

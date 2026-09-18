@@ -24,13 +24,17 @@ option_b_calibrator() = Calibration.GenerativeRateCalibrator(
 )
 
 """
-    option_b_scottish_lower_policy() -> Portfolio.PolicySpec
+    option_b_scottish_lower_policy(; lambda::Real = 28.0) -> Portfolio.PolicySpec
 
 The Option B basket and trust vector: Home and Under 2.5 at full trust; Draw, Away and
-Over 1.5 at `1/1.4`; every other canonical selection gated. The slate-wide risk and cap are
-`SlateDrawdown(8.0)` and `FixedCap(0.25)`.
+Over 1.5 at `1/1.4`; every other canonical selection gated.
+
+The slate-wide risk defaults to `SlateDrawdown(28.0)` (the Task 020 operational knee
+enforcing realised max drawdown strictly under the 20% ceiling on raw/close boards, with
+Sharpe climbing to 1.74–1.86). For T−25 L2-calibrated pipelines, `lambda = 20.0` or `28.0` is
+recommended. The hard simultaneous-exposure cap remains `FixedCap(0.25)`.
 """
-option_b_scottish_lower_policy() = Portfolio.PolicySpec(
+option_b_scottish_lower_policy(; lambda::Real = 28.0) = Portfolio.PolicySpec(
     trust = Portfolio.TieredTrust(Dict(
         ("1x2", 0.0, :home)         => 1.0,
         ("over_under", 2.5, :under) => 1.0,
@@ -38,7 +42,7 @@ option_b_scottish_lower_policy() = Portfolio.PolicySpec(
         ("1x2", 0.0, :away)         => 1.0 / 1.4,
         ("over_under", 1.5, :over)  => 1.0 / 1.4,
     ); default = 0.0),
-    risk = Portfolio.SlateDrawdown(8.0),
+    risk = Portfolio.SlateDrawdown(Float64(lambda)),
     cap = Portfolio.FixedCap(0.25),
     grouping = Portfolio.DailySlate(),
 )
@@ -64,8 +68,10 @@ option_b_book_spec() = Portfolio.BookSpec(
 )
 
 "The complete Scottish Lower Option B pricing and staking system."
-option_b_system() = Portfolio.PortfolioSystem(option_b_book_spec(),
-                                               option_b_scottish_lower_policy())
+option_b_system(; lambda::Real = 28.0) = Portfolio.PortfolioSystem(
+    option_b_book_spec(),
+    option_b_scottish_lower_policy(; lambda = lambda),
+)
 
 function _matchday_as_of_minutes(cards::Vector{<:FixtureCard}, as_of::DateTime)
     isempty(cards) && error("matchday calibration: no fixture card was supplied.")

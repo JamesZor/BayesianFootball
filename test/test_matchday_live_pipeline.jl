@@ -314,13 +314,19 @@ end
         MD.option_b_calibrator(), latents, odds, [card], DateTime(2026, 9, 5, 14, 36))
 
     system = MD.option_b_system()
-    @test system.policy.risk.lambda == 8.0
+    @test system.policy.risk.lambda == 28.0
     @test system.policy.cap.cap == 0.25
     @test system.book.shrink.k == 0.30
     @test system.policy.trust.table[("1x2", 0.0, :home)] == 1.0
     @test system.policy.trust.table[("over_under", 2.5, :under)] == 1.0
     @test system.policy.trust.table[("over_under", 1.5, :over)] ≈ 1.0 / 1.4
     @test system.policy.trust.default == 0.0
+
+    # Runtime keyword argument override
+    custom_system = MD.option_b_system(lambda = 20.0)
+    @test custom_system.policy.risk.lambda == 20.0
+    legacy_system = MD.option_b_system(lambda = 8.0)
+    @test legacy_system.policy.risk.lambda == 8.0
 end
 
 @testset "L9 MaxSpread catches the book MinMatched waves through" begin
