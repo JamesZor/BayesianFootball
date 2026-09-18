@@ -328,7 +328,7 @@ return its lookup id.
 Joins `save_book_spec` / `save_policy_spec` on the same registry path, so a calibrator is
 named, hashed, tagged, deduplicated by `(experiment_name, name)` and searchable exactly as
 every other canonical recipe is. An untracked REPL object is not the source of truth
-(AGENTS.md §13.2), and that applies to the calibrator as much as to the model.
+(experiment DB guide §0, rule 2), and that applies to the calibrator as much as to the model.
 """
 save_calibrator(db::PostgresStorage, name::String, calibrator; kwargs...) =
     _save_component(db, name, calibrator, "calibrator"; kwargs...)

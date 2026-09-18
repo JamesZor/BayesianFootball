@@ -65,7 +65,7 @@ Referee names and official IDs are fully tracked in the BBC dataset in PostgreSQ
      (using `SpecialFunctions.logabsbinomial(a, c)[1]` or precomputed $\log \binom{a}{c}$ since attempts $a$ and conversions $c$ are observed data).
    - This ensures the compiled ReverseDiff tape has 0 allocations and is $O(1)$ in model evaluation.
 3. **Refuse Unseen Teams**:
-   - When encountering an unseen team in a test fold, refuse the fixture rather than pricing at league mean, strictly adhering to `AGENTS.md` §7.4.
+   - When encountering an unseen team in a test fold, refuse the fixture rather than pricing at league mean, strictly adhering to `docs/guides/matchday_console_guide.md` §4.
 4. **Per-Draw Score Tensor Averaging**:
    - When computing market probabilities (1X2, O/U 2.5, BTTS), calculate the 12×12 score grid for each posterior draw's $\Lambda^{(s)}$, then average probabilities across draws:
      $$P(\text{score}) = \frac{1}{S} \sum_{s=1}^S P(\text{score} \mid \Lambda^{(s)})$$

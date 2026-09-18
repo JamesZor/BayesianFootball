@@ -13,7 +13,7 @@
 # bound — stated at the top of both runners and in README §3, and never resolved.
 # This file resolves it.
 #
-# `MatchDay`'s execution band is T−25 to T−12 (AGENTS.md §7.2), so T−25 is the
+# `MatchDay`'s execution band is T−25 to T−12 (docs/guides/matchday_console_guide.md §2), so T−25 is the
 # EARLIEST instant at which a slate is committed and therefore the most
 # conservative honest choice. Everything here is built from ticks stamped at or
 # before that instant.
@@ -38,7 +38,7 @@
 # over prices up to four hours old, which is not the price on the screen at T−25
 # either.
 #
-# So this file does what the replay console does instead (AGENTS.md §7.1): it
+# So this file does what the replay console does instead (docs/guides/matchday_console_guide.md §1): it
 # takes the LAST TICK AT OR BEFORE the cutoff, per selection, and carries its
 # STALENESS as a column. That is the price that was actually showing. A tick from
 # after the cutoff is unreachable rather than merely unqueried, and a book whose

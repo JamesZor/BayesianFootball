@@ -19,6 +19,54 @@
 
 ---
 
+## 0. Agent protocol — the seven rules
+
+> Formerly `AGENTS.md` §13; `AGENTS.md` keeps a pointer here. Section 2 below says which
+> database this is and how it differs from `betdb`.
+
+1. **Keep credentials out of source and output.** Never commit, paste into
+   prompts, or print a raw database password or credential-bearing URL.
+   Construct `PostgresStorage(experiment_name)` and let it resolve
+   `ENV["BF_EXPERIMENTS_DB_URL"]` or libpq's `~/.pgpass`. Its masked `show` is
+   safe; printing `storage.conn_str` is not. The same rule applies to
+   `BF_DB_URL`.
+2. **Register canonical recipes before execution.** Save models with
+   `save_model`, splitters with `save_splitter`, samplers with `save_sampler`,
+   the assembled `FitConfig` with `save_config`; `BookSpec` and `PolicySpec`
+   with `save_book_spec` / `save_policy_spec`. Use stable names, descriptions
+   and tags in `config_registry` — an untracked REPL object is not the source
+   of truth.
+3. **Preflight expensive sampling.** Before launching MCMC, query
+   `configs.config_hash` for the approved inference-recipe hash. If a completed
+   run exists, load it instead of consuming compute. `save_fit` deduplicates by
+   hash, but that save-time guard cannot recover time already spent sampling.
+   Do not confuse the registry component hash with the run-deduplication hash —
+   see §9, Avoiding redundant MCMC.
+4. **Persist immutable run addresses.** `run_id = save_fit(fit, db)` returns the
+   model-run UUID. Pass it to
+   `save_portfolio_db(result, run_id, db; book_spec, policy_spec)` and retain
+   the returned portfolio UUID in reports.
+5. **Reconstruct typed objects through the API.** `load_fit(db, run_integer_id)`,
+   `load_fit(db, fit_name)` or `load_fit(db, run_uuid)` recovers an exact `Fit`
+   including relationally reconstructed `CountLatents`.
+   `load_portfolio_db(portfolio_run_uuid, db)` recovers the exact
+   `PortfolioResult` from `portfolio_artifacts`. Portfolio loading requires its
+   UUID — obtain it from `portfolio_runs` when starting from the sequential
+   `id`.
+6. **Extend rather than refit when a season rolls forward.**
+   `preview_extension(db, run_uuid, ds)` reports only the fold positions absent
+   from `fold_results`; `extend_fit` samples those and updates diagnostics,
+   latents, the artefact and telemetry in one transaction; `extend_portfolio`
+   prices only the fixtures absent from the bet ledger and continues from the
+   closing bankroll.
+7. **A live slate reads this database, it does not write it.**
+   `MD.canonical_fit(PostgresStorage(experiment), run_name)` loads a completed,
+   converged run; everything the operator then does is written to
+   `betdb.<paper_schema>`. If you find yourself writing paper-trading rows into
+   `mcmc_experiments`, re-read §2.3 below.
+
+---
+
 ## 1. Executive summary
 
 A local `.jld2` result is useful as a machine-local artefact, but it is not a system of

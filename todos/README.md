@@ -16,7 +16,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [005](005_rerun_scottish_lower_experiment_01_poisson_grid_with_reversediff_and_verify_post.md) | Rerun Scottish Lower Experiment 01 Poisson grid with ReverseDiff and verify posterior parity | COMPLETED | P1 | pi | 2026-09-10 |
 | [006](006_rerun_scottish_lower_historical_paradigms_with_reversediff_and_unified_benchmark.md) | Rerun Scottish Lower historical paradigms with ReverseDiff and unified benchmark | COMPLETED | P1 | pi | 2026-09-10 |
 | [007](007_prototype_gaussian_random_walk_state_space_dynamics_with_reversediff.md) | Prototype Gaussian Random Walk State Space Dynamics with ReverseDiff | COMPLETED | P2 | pi | 2026-09-11 |
-| [008](008_hierarchical_scottish_pitch_type_and_match_timing_home_advantage.md) | Hierarchical Scottish Pitch Type and Match Timing Home Advantage | BACKLOG | P2 | unassigned | 2026-09-10 |
+| [008](008_hierarchical_scottish_pitch_type_and_match_timing_home_advantage.md) | Hierarchical Scottish Pitch Type and Match Timing Home Advantage | COMPLETED | P2 | claude | 2026-09-18 |
 | [009](009_hierarchical_multi_tournament_pooling_across_scottish_segments.md) | Hierarchical Multi Tournament Pooling Across Scottish Segments | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [010](010_design_and_prototype_autonomous_agent_bayesian_model_search_loop.md) | Design and Prototype Autonomous Agent Bayesian Model Search Loop | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [011](011_fuse_goal_decomposition_with_proxy_xg_and_player_lineup_dynamics.md) | Fuse Goal Decomposition with Proxy xG and Player Lineup Dynamics | BACKLOG | P2 | unassigned | 2026-09-10 |
@@ -26,6 +26,8 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [015](015_prototype_multiscalegrw_with_market_smile_and_supremacy_anchoring.md) | Prototype MultiScaleGRW with Market Smile and Supremacy Anchoring | COMPLETED | P1 | claude | 2026-09-13 |
 | [016](016_prototype_1_parameter_smile_spine_with_multiscalegrw.md) | Prototype 1-Parameter Smile Spine with MultiScaleGRW | COMPLETED | P1 | claude | 2026-09-17 |
 | [017](017_graduate_smilescoregrid_anti_diagonal_reweighting_and_close_t011.md) | Graduate SmileScoreGrid Anti-Diagonal Reweighting and Close T011 | COMPLETED | P1 | pi | 2026-09-18 |
+| [018](018_abstract_and_automate_portfolio_market_trust_pruning_sweeps.md) | Abstract and automate portfolio market trust pruning sweeps | IN_PROGRESS | P1 | pi | 2026-09-18 |
+| [019](019_slim_agents_md_master_index_and_modularize_operational_guides.md) | Slim AGENTS.md master index and modularize operational guides | COMPLETED | P1 | claude | 2026-09-18 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

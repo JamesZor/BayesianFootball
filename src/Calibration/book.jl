@@ -9,7 +9,7 @@
 # ------------------------------------------------------------------------------
 #
 # A calibrator is only worth deploying if it can be run against a price a bettor could
-# actually have taken. `MatchDay`'s execution band is T-25 to T-12 (AGENTS.md §7.2), so
+# actually have taken. `MatchDay`'s execution band is T-25 to T-12 (docs/guides/matchday_console_guide.md §2), so
 # T-25 is the EARLIEST instant at which a slate is committed and therefore the most
 # conservative honest choice. Everything here is built from ticks stamped at or before
 # that instant.
@@ -32,7 +32,7 @@
 # window to recover coverage makes the estimate an average over prices up to four hours
 # old, which is not the price on the screen at T-25 either.
 #
-# So this builder does what the replay console does (AGENTS.md §7.1): the LAST TICK AT OR
+# So this builder does what the replay console does (docs/guides/matchday_console_guide.md §1): the LAST TICK AT OR
 # BEFORE the cutoff, per selection, carrying its STALENESS as a column. A tick from after
 # the cutoff is unreachable rather than merely unqueried, and a book whose freshest tick
 # is two hours old is refused by a gate rather than averaged into something that looks
