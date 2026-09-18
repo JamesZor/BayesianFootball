@@ -1,0 +1,11 @@
+check,model,fold,sites,max_abs_base_delta,worst_abs,worst_rel,pass
+G0a,null_anchor,1,,0.0,0.0,0.0,true
+G0b,m05_joint_grw_smile_spine_w020,1,"σ_sup,σ_smile,β_spine",17836.075042081444,7.275957614183426e-12,6.477271114120545e-16,true
+G0b,m05_joint_grw_smile_spine_w040,1,"σ_sup,σ_smile,β_spine",35675.60401102466,1.4551915228366852e-11,5.452952138155315e-16,true
+G0c,m05_joint_grw_smile_spine_w020,1,vs m05_joint_grw_smile_supremacy_w020,NaN,0.0,0.0,true
+G0c,m05_joint_grw_smile_spine_w040,1,vs m05_joint_grw_smile_supremacy_w040,NaN,0.0,0.0,true
+G0a,null_anchor,2,,0.0,0.0,0.0,true
+G0b,m05_joint_grw_smile_spine_w020,2,"σ_sup,σ_smile,β_spine",8945.267735219812,1.2732925824820995e-11,9.787708766498357e-16,true
+G0b,m05_joint_grw_smile_spine_w040,2,"σ_sup,σ_smile,β_spine",17894.74690545635,2.546585164964199e-11,1.1597223244748955e-15,true
+G0c,m05_joint_grw_smile_spine_w020,2,vs m05_joint_grw_smile_supremacy_w020,NaN,9.094947017729282e-13,1.9812476333662117e-16,true
+G0c,m05_joint_grw_smile_spine_w040,2,vs m05_joint_grw_smile_supremacy_w040,NaN,0.0,0.0,true

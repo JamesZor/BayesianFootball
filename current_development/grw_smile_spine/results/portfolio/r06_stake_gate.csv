@@ -1,0 +1,9 @@
+model,route,n_books,max_abs_gap,worst_fixture,worst_K,per_strike_gap,pass
+m05_joint_grw_smile_supremacy_w020,reweighted,632,3.219646771412954e-15,12476643,4,1.1e-16/1.2e-15/2.2e-15/3.1e-15/3.2e-15,true
+m05_joint_grw_smile_supremacy_w020,grid,632,0.04784379250011406,14035729,4,4.1e-02/1.9e-02/7.3e-03/2.3e-02/4.8e-02,false
+m05_joint_grw_smile_supremacy_w040,reweighted,632,3.552713678800501e-15,12476775,4,1.2e-16/9.4e-16/1.8e-15/2.9e-15/3.6e-15,true
+m05_joint_grw_smile_supremacy_w040,grid,632,0.04708488665672339,14035729,4,4.1e-02/1.9e-02/7.3e-03/2.2e-02/4.7e-02,false
+m05_joint_grw_smile_spine_w020,reweighted,632,3.4416913763379853e-15,14035697,3,1.1e-16/1.4e-15/1.8e-15/3.4e-15/3.3e-15,true
+m05_joint_grw_smile_spine_w020,grid,632,0.07055201216356777,14035729,4,2.5e-02/2.8e-02/2.6e-06/3.9e-02/7.1e-02,false
+m05_joint_grw_smile_spine_w040,reweighted,632,2.9976021664879227e-15,12476611,3,9.7e-17/1.4e-15/1.8e-15/3.0e-15/3.0e-15,true
+m05_joint_grw_smile_spine_w040,grid,632,0.07033465950644002,14035729,4,2.5e-02/2.8e-02/2.7e-06/3.9e-02/7.0e-02,false

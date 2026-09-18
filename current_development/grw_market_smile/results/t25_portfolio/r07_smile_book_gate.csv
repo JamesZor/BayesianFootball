@@ -1,0 +1,10 @@
+environment,variant,model,n_totals_bets,max_abs_vs_smile,min_abs_vs_grid
+close,raw,m05_joint_grw_smile_supremacy_w020,252,1.4432899320127035e-15,6.20688043184714e-5
+close,raw,m05_joint_grw_smile_supremacy_w040,253,1.7763568394002505e-15,0.00012926842063659683
+close,raw,m05_joint_grw_smile_supremacy_w070,253,1.7763568394002505e-15,1.95564819406302e-5
+t25,raw,m05_joint_grw_smile_supremacy_w020,209,1.8318679906315083e-15,6.651312578653812e-5
+t25,t25_inv_pooltot,m05_joint_grw_smile_supremacy_w020,165,1.7763568394002505e-15,0.00012718345052059599
+t25,raw,m05_joint_grw_smile_supremacy_w040,204,1.7763568394002505e-15,0.00012445373984254493
+t25,t25_inv_pooltot,m05_joint_grw_smile_supremacy_w040,165,1.5543122344752192e-15,7.473142197300664e-5
+t25,raw,m05_joint_grw_smile_supremacy_w070,209,1.5543122344752192e-15,1.95564819406302e-5
+t25,t25_inv_pooltot,m05_joint_grw_smile_supremacy_w070,173,1.609823385706477e-15,4.8865344162374313e-5

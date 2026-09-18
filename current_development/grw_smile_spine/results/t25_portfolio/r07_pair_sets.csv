@@ -1,0 +1,73 @@
+environment,question,pair,bet_set,owner,n_bets,win_rate_pct,roi_pct,edge_mean_pp,capture_ratio
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],shared,a,839,30.98927294398093,18.570701276072406,4.790626791702778,1.0200328606825226
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],shared,b,839,30.98927294398093,15.03861080642627,4.741639483527179,1.0760144668635225
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],exclusive,a,276,38.768115942028984,0.42474326986771005,1.4917920356619458,0.9608124684933517
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],exclusive,b,285,48.421052631578945,10.455357493027298,2.404413399766035,2.3052639020726655
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,a,747,31.72690763052209,24.117596570769447,2.303661540839964,1.0349423229928427
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,b,747,31.72690763052209,17.19136777096212,2.614400803828259,1.0586878009676266
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,a,228,34.64912280701755,-3.3239772993365118,0.7035742181022374,1.1741844970863258
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,b,222,51.80180180180181,18.23546139954677,1.507544403476453,1.826087105887844
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,a,796,32.914572864321606,23.41835663659629,2.343072596205431,1.000661528300752
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,b,796,32.914572864321606,17.267729497298305,2.5528149865124994,1.0575814561980852
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,a,184,40.76086956521739,-7.417122417194411,0.992006840913394,0.9780654852494703
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,b,173,52.02312138728323,18.15698638291327,1.4774076807371836,1.8808669770994564
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[t25_inv],shared,a,734,31.471389645776565,20.563923469675075,5.26996359768223,0.9906250299258829
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[t25_inv],shared,b,734,31.471389645776565,18.34169664891203,2.731013410240126,1.0939958254501385
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[t25_inv],exclusive,a,381,35.69553805774278,-2.8375211125647244,1.4774729642587132,1.0629503292292541
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[t25_inv],exclusive,b,235,51.48936170212765,13.665600399570186,1.2045464464477869,2.0985817876598514
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_smile_supremacy_w020[raw],shared,a,959,30.761209593326384,16.269362469563568,4.4862623835405495,1.0485580185435985
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_smile_supremacy_w020[raw],shared,b,959,30.761209593326384,16.180925121351557,4.426005189231158,0.9997579516044516
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_smile_supremacy_w020[raw],exclusive,a,156,46.15384615384615,15.185770046025883,0.8252875273457633,0.7683293248599259
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_smile_supremacy_w020[raw],exclusive,b,160,33.125,-4.655016492063797,0.42167253987664643,2.7173535975658867
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot],shared,a,736,29.347826086956523,21.61715328661943,2.366094786904318,1.1409392677489387
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot],shared,b,736,29.347826086956523,19.76387179890592,2.294085254609165,1.0332411807411135
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot],exclusive,a,239,41.84100418410041,9.940738322334607,0.584955353862695,1.058943822971853
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot],exclusive,b,217,34.56221198156682,10.15797754010448,1.082623408569741,0.6535185701094411
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_spine_w020[t25_inv_grid],shared,a,852,32.98122065727699,21.61709294933811,2.210709516968928,0.995763006107149
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_spine_w020[t25_inv_grid],shared,b,852,32.98122065727699,21.66911088310112,2.3292067944591475,1.0136213441078181
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_spine_w020[t25_inv_grid],exclusive,a,123,28.455284552845526,-7.246464418889233,-0.018491184737913717,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w020[t25_inv_pooltot] − m05_joint_grw_smile_spine_w020[t25_inv_grid],exclusive,b,128,43.75,-2.9921494943203752,0.4932098158468264,0.9687271470411506
+close,close reference (r06),m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],shared,a,946,31.07822410147992,14.13576673232863,4.705707182936316,1.0384894947209697
+close,close reference (r06),m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],shared,b,946,31.07822410147992,13.083622657672464,4.687026207586803,1.0913362106493147
+close,close reference (r06),m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],exclusive,a,279,41.21863799283154,15.44344819492995,1.300042063293758,1.635292947061831
+close,close reference (r06),m05_joint_grw_smile_spine_w020[raw] − m05_joint_grw_baseline[raw],exclusive,b,301,48.17275747508305,5.091840599972019,2.358873080731902,1.7510950175105928
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],shared,a,824,31.06796116504854,18.975486058745297,4.518177042194434,1.0319713622341098
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],shared,b,824,31.06796116504854,14.97458098938396,4.806383173916672,1.0616344045336976
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,280,38.21428571428571,0.09557764419566794,1.51545766719014,1.085545176400426
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,300,47.333333333333336,10.808430860152809,2.343445367684285,2.4419483478118207
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,a,732,31.284153005464482,24.97990320496502,2.1421056980074944,1.0808332673882803
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,b,732,31.284153005464482,16.43234355439458,2.591300017269329,1.0783763917729239
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,a,234,36.324786324786324,-3.6948997422855907,0.7156655552283034,1.0075588670355562
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,b,237,51.89873417721519,21.10220978234924,1.6489478708452874,1.4925848300785716
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,a,776,33.76288659793815,24.093489073989033,2.21185222529827,0.989150550766261
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,b,776,33.76288659793815,17.622338983436745,2.567204527369283,1.0267315233357126
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,a,190,42.10526315789473,-4.749373638929364,0.9598602874650716,0.9564209007882055
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_spine_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,b,193,46.63212435233161,16.07869833654776,1.5309924600669351,1.8167681086714638
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[t25_inv],shared,a,727,31.77441540577717,21.13262944081798,4.928677291435971,1.0043414127738655
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[t25_inv],shared,b,727,31.77441540577717,18.20302987293926,2.7352654209137017,1.0708798525120222
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[t25_inv],exclusive,a,377,35.0132625994695,-3.560967484751926,1.4964393599668515,1.1043639206727027
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[t25_inv],exclusive,b,242,50.0,14.273559852664887,1.2359268472199199,2.1441296683861357
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_smile_supremacy_w040[raw],shared,a,949,30.24236037934668,16.430036450099877,4.21910403091482,1.0992989501653425
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_smile_supremacy_w040[raw],shared,b,949,30.24236037934668,15.555029909355572,4.131886208767526,1.0407286630383679
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_smile_supremacy_w040[raw],exclusive,a,155,49.03225806451613,13.55429628909036,0.9250084144728358,0.7487466962665305
+t25,"H4 spine − five-strike, raw",m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_smile_supremacy_w040[raw],exclusive,b,163,35.58282208588957,4.934472292800387,0.5448692348045603,1.7956266483246714
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot],shared,a,729,30.178326474622768,22.788182466401565,2.1919401523594266,1.1498414314870684
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot],shared,b,729,30.178326474622768,20.552603631313403,2.1120331073776364,1.042351755143021
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot],exclusive,a,237,39.66244725738397,5.114678573731728,0.5804335012442486,0.808686588859562
+t25,"H4 spine − five-strike, pooltot",m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot],exclusive,b,217,34.56221198156682,7.686694085397577,1.0323170000489357,0.7351416606165143
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_spine_w040[t25_inv_grid],shared,a,841,33.41260404280618,23.059337670806773,2.0480495926854827,1.0067578553028345
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_spine_w040[t25_inv_grid],shared,b,841,33.41260404280618,21.581468091261563,2.1763643675484703,1.0134041095659703
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_spine_w040[t25_inv_grid],exclusive,a,125,26.400000000000002,-21.71400560411046,0.10461922733134461,0.03349112699050259
+t25,within arm: pooltot − grid,m05_joint_grw_smile_spine_w040[t25_inv_pooltot] − m05_joint_grw_smile_spine_w040[t25_inv_grid],exclusive,b,125,48.8,11.706100838743328,0.5475867867324603,0.985219731777661
+close,close reference (r06),m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],shared,a,936,31.303418803418804,14.490556010743582,4.3831489865833895,1.0520751600158593
+close,close reference (r06),m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],shared,b,936,31.303418803418804,13.524978193267264,4.667185293820342,1.08328354292117
+close,close reference (r06),m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,296,39.52702702702703,14.85970973343762,1.3254881824874432,1.573136238140148
+close,close reference (r06),m05_joint_grw_smile_spine_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,311,46.94533762057878,3.58704820449608,2.493447442641729,1.6339868265373783
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,a,955,36.64921465968586,17.1218103256479,4.343155546306552,1.0853119089605174
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,b,955,36.64921465968586,16.204183502011478,4.772802542768721,1.048180532707311
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,134,38.059701492537314,0.32354084285770407,1.0858058673241835,1.2370016646729056
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,169,28.402366863905325,-19.514842467245785,0.6240645992218647,1.812433517278762
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],shared,a,859,37.60186263096624,18.96556161027294,2.336910545397302,1.0471274570970863
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],shared,b,859,37.60186263096624,17.98800262251266,2.5594109476440434,1.0003850102519352
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],exclusive,a,104,39.42307692307692,-5.0711218551156945,0.7894671575223426,0.7786979628667319
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],exclusive,b,110,26.36363636363636,2.8699013741402233,0.8099841273204453,2.15522589361877

@@ -1,0 +1,3 @@
+model,n_books_flat,n_books_grid,n_identical,max_flat_stake_gap,n_books,n_plain_books,n_skipped,max_totals_gap,n_stake_changed
+m05_joint_grw_smile_spine_w020,39,39,39,0.0,39,39,0,3.885780586188048e-15,38
+m05_joint_grw_smile_spine_w040,39,39,39,0.0,39,39,0,2.9976021664879227e-15,37
