@@ -51,6 +51,9 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
     println("Running MatchDay live pipeline (slate, ledger, console) tests...")
     include("test_matchday_live_pipeline.jl")
 
+    println("Running T008 multi-level fill and settlement accounting tests...")
+    include("test_matchday_fills_settle.jl")
+
     println("Running Caching and OOS Predictions tests...")
     include("caching_tests.jl")
 

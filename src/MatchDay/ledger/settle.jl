@@ -12,7 +12,8 @@
 # leg-weighted CLV separates them. Judge the EXECUTION layer on CLV and the MODEL on log score,
 # and never mix the two.
 
-export settle_order, settle_slate!, clv_for_order, grade_selection, mark_to_market
+export settle_order, settle_order_legacy_v1, settle_slate!, clv_for_order,
+       grade_selection, mark_to_market
 
 """
     grade_selection(group, line, selection, home_goals, away_goals) -> Symbol
@@ -46,12 +47,12 @@ end
 """
     settle_order(order, fills, home_goals, away_goals, commission_rate) -> NamedTuple
 
-The money, in RISK units.
+The money, in RISK units, reconstructed from the exact child-fill cashflows.
 
-A winning position returns `risk * (effective_odds - 1)` gross, which is correct for both
-instruments by construction -- the morphism denominated a lay's effective odds as `d/(d-1)`
-precisely so that this arithmetic never has to branch on `side`. Commission is charged on the
-win only, matching an exchange's net-winnings basis.
+For a winning back, gross return is `Σ(size * price)`. For a winning lay, the backer stakes
+`Σsize` are won and the price-specific filled liability is returned. Commission is charged on
+this order's win when this function is used alone; `settle_slate!` first computes zero-commission
+cashflows and then nets commission across all positions in the same exchange market.
 
 `risk_settled` is the FILLED risk, not the ordered risk. A partially matched leg settles the part
 that filled; the remainder was released back to `balance` at execution and settling it here would
@@ -67,13 +68,63 @@ function settle_order(o::PaperOrder, fills::AbstractVector{Fill},
                 commission = 0.0, net_pnl = 0.0)
     end
     if outcome === :win
-        win   = risk_settled * (o.effective_odds - 1.0)
-        comm  = commission_rate * win
-        return (; outcome = :win, risk_settled,
-                gross_return = risk_settled + win, commission = comm, net_pnl = win - comm)
+        if o.side === :back
+            gross_return = sum(f -> f.size * f.price, fills)
+            win = gross_return - risk_settled
+        elseif o.side === :lay
+            win = sum(f -> f.size, fills)
+            gross_return = risk_settled + win
+        else
+            error("settle_order: side must be :back or :lay, got $(o.side)")
+        end
+        comm = Float64(commission_rate) * win
+        return (; outcome = :win, risk_settled, gross_return,
+                commission = comm, net_pnl = win - comm)
     end
     return (; outcome = :lose, risk_settled, gross_return = 0.0, commission = 0.0,
             net_pnl = -risk_settled)
+end
+
+"""
+    settle_order_legacy_v1(order, fills, home_goals, away_goals, commission_rate)
+
+Reconstruct the original touch-odds settlement convention for persisted `:ladder_sweep_v1`
+rows. This is an audit compatibility path only; new settlement must use `settle_order`, whose
+cashflows come from each child fill's actual price.
+"""
+function settle_order_legacy_v1(o::PaperOrder, fills::AbstractVector{Fill},
+                                home_goals::Integer, away_goals::Integer,
+                                commission_rate::Real)
+    all(f -> f.model === :ladder_sweep_v1, fills) || error(
+        "settle_order_legacy_v1 requires only :ladder_sweep_v1 fills")
+    risk_settled = filled_risk(fills)
+    outcome = grade_selection(o.market_group, o.market_line, o.selection,
+                              home_goals, away_goals)
+    if risk_settled <= 1e-9 || outcome === :void
+        return (; outcome = :void, risk_settled, gross_return = risk_settled,
+                commission = 0.0, net_pnl = 0.0)
+    elseif outcome === :win
+        win = risk_settled * (o.effective_odds - 1.0)
+        commission = Float64(commission_rate) * win
+        return (; outcome = :win, risk_settled, gross_return = risk_settled + win,
+                commission, net_pnl = win - commission)
+    end
+    return (; outcome = :lose, risk_settled, gross_return = 0.0, commission = 0.0,
+            net_pnl = -risk_settled)
+end
+
+"Apply exchange commission to a vector of zero-commission settlements from one market."
+function _net_market_commission(settlements::AbstractVector, commission_rate::Real)
+    isempty(settlements) && return NamedTuple[]
+    net_market_win = sum(s -> s.net_pnl, settlements)
+    market_commission = max(0.0, net_market_win) * Float64(commission_rate)
+    gross_wins = sum(s -> max(0.0, s.net_pnl), settlements)
+
+    return [begin
+                commission = s.net_pnl > 0.0 && gross_wins > 0.0 ?
+                             market_commission * s.net_pnl / gross_wins : 0.0
+                merge(s, (; commission, net_pnl = s.net_pnl - commission))
+            end for s in settlements]
 end
 
 """
@@ -85,9 +136,11 @@ Grade every filled leg of a slate and book the PnL.
 rather than voided -- an unavailable result is not a void, and treating it as one would release
 liability on a bet that is still running.
 
-The account movement per leg is a single `SETTLE`: `reserved` down by the filled risk, `balance`
-up by the gross return less commission. After the last one, `reserved` attributable to the batch
-is zero, which is the invariant `reconcile_account` checks.
+Commission is assessed on net winnings per `(match_id, market_group, market_line)`, matching the
+exchange market contract, then allocated pro rata across that market's winning orders for the
+per-order audit rows. The account movement per leg is a single `SETTLE`: `reserved` down by the
+filled risk, `balance` up by the gross return less allocated commission. After the last one,
+`reserved` attributable to the batch is zero, which is the invariant `reconcile_account` checks.
 """
 function settle_slate!(conn, slate_id::UUID, results::Dict{Int,Tuple{Int,Int}};
                        schema::AbstractString = PAPER_SCHEMA, at::DateTime = now(),
@@ -97,7 +150,9 @@ function settle_slate!(conn, slate_id::UUID, results::Dict{Int,Tuple{Int,Int}};
     account = account_row(conn, first(orders).account_id; schema = schema)
     fills_df = fill_rows(conn, slate_id; schema = schema)
 
-    n_settled = 0; total_pnl = 0.0
+    # Build every exact cashflow first. Commission cannot be correct while orders are handled
+    # one at a time because losses in the same exchange market offset wins.
+    prepared = NamedTuple[]
     for o in orders
         haskey(results, o.match_id) || continue
         (o.state == MATCHED || o.state == PARTIALLY_MATCHED) || continue
@@ -108,8 +163,26 @@ function settle_slate!(conn, slate_id::UUID, results::Dict{Int,Tuple{Int,Int}};
                           risk_filled = Float64(r.risk_filled),
                           model = Symbol(r.fill_model), levels_used = Int(r.level_depth))
                      for r in eachrow(sub)]
-        s = settle_order(o, fills, h, a, account.commission_rate)
+        settlement = settle_order(o, fills, h, a, 0.0)
+        push!(prepared, (; order = o, home_goals = h, away_goals = a, settlement))
+    end
 
+    market_groups = Dict{Tuple{Int,String,Float64},Vector{Int}}()
+    for (i, p) in enumerate(prepared)
+        o = p.order
+        push!(get!(market_groups, (o.match_id, o.market_group, o.market_line), Int[]), i)
+    end
+    for indices in values(market_groups)
+        netted = _net_market_commission(
+            [prepared[i].settlement for i in indices], account.commission_rate)
+        for (i, settlement) in zip(indices, netted)
+            prepared[i] = merge(prepared[i], (; settlement))
+        end
+    end
+
+    n_settled = 0; total_pnl = 0.0
+    for p in prepared
+        o, h, a, s = p.order, p.home_goals, p.away_goals, p.settlement
         LibPQ.execute(conn, """
             INSERT INTO $schema.paper_settlements
                 (order_id, settled_at, result_source, home_goals, away_goals, outcome,

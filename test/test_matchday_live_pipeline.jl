@@ -831,6 +831,39 @@ end
     @test all(o -> o.state === MD.SETTLED, MD.slate_orders(conn, sid; schema = S))
 end
 
+@testset "L32b settlement nets commission within one exchange market" begin
+    sid = uuid4(); _mk_slate(sid; as_of = DateTime(2026, 9, 5, 14, 39, 30), total = 40.0)
+    orders = [_order(slate = sid, acct = acct_id, match_id = 203, risk = 20.0,
+                     venue_stake = 20.0, odds = 3.0, selection = :home,
+                     venue_selection = :home, oid = uuid4()),
+              _order(slate = sid, acct = acct_id, match_id = 203, risk = 20.0,
+                     venue_stake = 20.0, odds = 3.0, selection = :away,
+                     venue_selection = :away, oid = uuid4())]
+    MD.insert_orders!(conn, orders; schema = S)
+    MD.execute_slate_batch!(conn, acct_id, sid; schema = S)
+    books = Dict((203, _key("1X2", 0.0, :home)) =>
+                     _levels([3.0], [20.0], [3.1], [20.0]),
+                 (203, _key("1X2", 0.0, :away)) =>
+                     _levels([3.0], [20.0], [3.1], [20.0]))
+    MD.submit_slate!(conn, sid, books, MD.TouchOnly(); schema = S)
+
+    before = MD.account_row(conn, acct_id; schema = S)
+    settled = MD.settle_slate!(conn, sid, Dict(203 => (2, 1)); schema = S)
+    # Home wins £40 and away loses £20. Commission is 2% of the £20 MARKET net, not
+    # 2% of the winning position's £40 in isolation.
+    @test settled.total_pnl ≈ 40.0 - 20.0 - 0.4
+    rows = DataFrame(LibPQ.execute(conn, """
+        SELECT s.commission, s.net_pnl
+        FROM $S.paper_settlements s
+        JOIN $S.paper_orders o USING (order_id)
+        WHERE o.slate_id = \$1;""", (string(sid),)))
+    @test sum(Float64.(rows.commission)) ≈ 0.4
+    @test sum(Float64.(rows.net_pnl)) ≈ 19.6
+    after = MD.account_row(conn, acct_id; schema = S)
+    @test isapprox(MD.equity(after), MD.equity(before) + 19.6; atol = 0.01)
+    @test MD.reconcile_account(conn, acct_id; schema = S).ok
+end
+
 @testset "L33 kill_slate! releases unfilled liability and leaves fills alone" begin
     sid = uuid4(); _mk_slate(sid; as_of = DateTime(2026, 9, 5, 14, 40), total = 60.0)
     MD.insert_orders!(conn, _legs(sid, 3; risk = 20.0); schema = S)

@@ -31,7 +31,6 @@ only that ticket. Update `Status` here when it lands.
 | [T007](T007-parallel-feature-test-hidden-dependency.md) | `features_tests.jl` depends on a probe defined only by an earlier sequential include, so the parallel suite fails | low | `test/` | open | 2026-08-29 |
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Portfolio prices a smile container's totals through φ (`p_model`) but sizes every stake off the plain (λ_h, λ_a) grid, so φ never reaches a bet | medium | `src/Portfolio/pricing.jl` | open | 2026-09-13 |
 | [T010](T010-postgres-storage-refuses-smile-latents.md) | `PostgresStorage` refuses `SmileLatents` on save and rebuilds every panel as `CountLatents` on load, dropping φ | medium | `src/training/inference/db_storage.jl` | open | 2026-09-12 |
-| [T008](T008-multilevel-fill-price-accounting.md) | Multi-level fills use touch leverage/settlement odds; lay slippage and VWAP semantics disagree with cashflows | high | `src/MatchDay/ledger/` | open | 2026-09-07 |
 | [T012](T012-zero-trust-market-reprices-the-portfolio.md) | Declaring a market in the `BookSpec` widens the payoff matrix and the Baker-McHale `k`, so a market at trust 0 still moves every stake (±1 to ±22 pp of terminal return, 6/6 arms × environments) | medium | `src/Portfolio/pricing.jl`, `src/Portfolio/implementations/shrinkage.jl` | open | 2026-09-17 |
 
 ## Closed
@@ -41,3 +40,4 @@ only that ticket. Update `Status` here when it lands.
 | [T001](T001-pooled-tournament-clock.md) | Pooled tournament groups use a shared calendar clock with strict kickoff safety | 2026-08-25 |
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Smile CDFs reweight score-grid anti-diagonals, so pricing, Kelly and shrinkage consume one joint tensor | 2026-09-18 |
 | [T013](T013-multiscalegrw-missing-builder-dynamics-dispatch.md) | MultiScaleGRW builder dynamics extractors graduated to src/ and covered by regression tests | 2026-09-18 |
+| [T008](T008-multilevel-fill-price-accounting.md) | V2 sweeps budget exact child liability; settlement uses fill cashflows and market-net commission | 2026-09-18 |
