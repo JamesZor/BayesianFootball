@@ -344,13 +344,11 @@ function _reweight_draw_antidiagonals!(S::Array{Float64,3}, k::Int, λ_tot::Floa
         φK = _smile_value(φ, i, s, k)
         smile_cdf = cdf(Poisson(λ_tot * φK), K)
         target_mass = smile_cdf - previous_cdf
-        target_mass >= 0.0 || error(
-            "anti-diagonal reweighting: the smile curve is not a CDF on draw $k — " *
-            "P(total ≤ $K) = $smile_cdf < P(total ≤ $(K - 1)) = $previous_cdf " *
-            "at λ_tot = $λ_tot and φ[$s] = $φK. The container is refused rather than clipped.")
+        target_mass >= 0.0 || throw(
+            NonMonotoneSmileError(k, K, smile_cdf, previous_cdf, λ_tot, φK))
         mass[s] > 0.0 || error(
-            "anti-diagonal reweighting: the grid holds zero mass on total $K at draw $k " *
-            "and cannot be rescaled to $target_mass.")
+            "anti-diagonal reweighting: the grid holds zero mass on total $K at draw $k; " *
+            "the smile requires mass $target_mass there, so this anti-diagonal cannot be rescaled.")
         ratio[s] = target_mass / mass[s]
         previous_cdf = smile_cdf
     end

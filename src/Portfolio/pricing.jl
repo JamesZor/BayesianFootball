@@ -431,6 +431,10 @@ function build_books_reported(spec::BookSpec, l::Models.AbstractPosteriorLatents
             end
             book = _finish_book(spec, w, m_id, fx, sels)
         catch e
+            # A non-monotone smile means the posterior does not define a totals distribution.
+            # Refuse the build as a whole rather than returning a plausible empty ledger after
+            # recording the same global-shape failure once per fixture.
+            e isa Predictions.NonMonotoneSmileError && rethrow()
             push!(errored, m_id => sprint(showerror, e))
             continue
         end

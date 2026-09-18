@@ -112,7 +112,8 @@ export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception
        GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
        TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, build
 export GRWDynamicsDesign
-using .Predictions: AbstractScoreGrid, StandardScoreGrid, SmileScoreGrid, GridWorkspace,
+using .Predictions: AbstractScoreGrid, NonMonotoneSmileError, StandardScoreGrid,
+                    SmileScoreGrid, GridWorkspace,
                     alloc_score_grid, alloc_smile_buffers, alloc_market_book,
                     compute_score_grid!, compute_score_grid, fill_smile_buffers!,
                     reweight_grid_antidiagonals!, price_market!,
@@ -158,7 +159,8 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
 export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,
        cb_covariate_names, cb_varinfo_sites, cb_chain_columns, cb_parameter_count
-export AbstractScoreGrid, StandardScoreGrid, SmileScoreGrid, GridWorkspace,
+export AbstractScoreGrid, NonMonotoneSmileError, StandardScoreGrid, SmileScoreGrid,
+       GridWorkspace,
        alloc_score_grid, alloc_smile_buffers, alloc_market_book, compute_score_grid!,
        compute_score_grid, fill_smile_buffers!, reweight_grid_antidiagonals!,
        price_market!, price_market, market_keys

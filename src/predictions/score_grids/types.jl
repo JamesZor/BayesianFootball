@@ -32,6 +32,24 @@ alloc_score_grid(l::AbstractPosteriorLatents, max_goals::Integer = TPL_MAX_GOALS
     return nothing
 end
 
+"A smile's per-strike CDF values do not define a valid totals distribution."
+struct NonMonotoneSmileError <: Exception
+    draw::Int
+    strike::Int
+    smile_cdf::Float64
+    previous_cdf::Float64
+    λ_tot::Float64
+    φ::Float64
+end
+
+function Base.showerror(io::IO, e::NonMonotoneSmileError)
+    print(io, "anti-diagonal reweighting: the smile curve is not a CDF on draw ", e.draw,
+          " — P(total ≤ ", e.strike, ") = ", e.smile_cdf,
+          " < P(total ≤ ", e.strike - 1, ") = ", e.previous_cdf,
+          " at λ_tot = ", e.λ_tot, " and φ[", e.strike + 1, "] = ", e.φ,
+          ". The container is refused rather than clipped.")
+end
+
 "Common interface for score tensors consumed by market pricing."
 abstract type AbstractScoreGrid end
 

@@ -51,6 +51,7 @@ export
     PPD,
     ScoreMatrix,
     AbstractScoreGrid,
+    NonMonotoneSmileError,
     StandardScoreGrid,
     SmileScoreGrid,
     GridWorkspace,
