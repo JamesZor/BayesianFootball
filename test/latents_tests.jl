@@ -75,7 +75,7 @@ struct TypedLatentsMockModel <: BayesianFootball.AbstractFootballModel end
     ou = MarketOverUnder(2.5)
     smile_book = alloc_market_book(ou, n_draws(smile))
     price_market!(smile_book, smile_grid, ou)
-    @test smile_book[1] .+ smile_book[2] == ones(n_draws(smile))
+    @test smile_book[1] .+ smile_book[2] ≈ ones(n_draws(smile))
 
     legacy = to_legacy_dataframe(negbin)
     restored = latents_from_legacy_dataframe(NegBinCountFamily(), legacy)

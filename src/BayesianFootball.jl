@@ -112,9 +112,11 @@ export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception
        GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
        TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, build
 export GRWDynamicsDesign
-using .Predictions: GridWorkspace, SmileScoreGrid, alloc_score_grid,
-                    alloc_smile_buffers, alloc_market_book, compute_score_grid!,
-                    compute_score_grid, fill_smile_buffers!, price_market!,
+using .Predictions: AbstractScoreGrid, NonMonotoneSmileError, StandardScoreGrid,
+                    SmileScoreGrid, GridWorkspace,
+                    alloc_score_grid, alloc_smile_buffers, alloc_market_book,
+                    compute_score_grid!, compute_score_grid, fill_smile_buffers!,
+                    reweight_grid_antidiagonals!, price_market!,
                     price_market, market_keys
 export AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLatents
 export n_matches, n_draws, n_strikes, latent_match_ids, latent_matrices,
@@ -157,9 +159,11 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
 export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,
        cb_covariate_names, cb_varinfo_sites, cb_chain_columns, cb_parameter_count
-export GridWorkspace, SmileScoreGrid, alloc_score_grid, alloc_smile_buffers,
-       alloc_market_book, compute_score_grid!, compute_score_grid,
-       fill_smile_buffers!, price_market!, price_market, market_keys
+export AbstractScoreGrid, NonMonotoneSmileError, StandardScoreGrid, SmileScoreGrid,
+       GridWorkspace,
+       alloc_score_grid, alloc_smile_buffers, alloc_market_book, compute_score_grid!,
+       compute_score_grid, fill_smile_buffers!, reweight_grid_antidiagonals!,
+       price_market!, price_market, market_keys
 
 using .Samplers: AbstractSamplerConfig, AbstractNUTSConfig, NUTSConfig, QueuedNUTSConfig,
                  MAPConfig, MLEConfig

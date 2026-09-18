@@ -22,6 +22,7 @@ const TEST_FILES = [
     "caching_tests.jl",
     "recombination_tests.jl",
     "latents_tests.jl",
+    "test_score_grids.jl",
     "inference_tests.jl",
     "test_db_storage.jl",
     "evaluation_tests.jl",

@@ -36,3 +36,4 @@ only that ticket. Update `Status` here when it lands.
 | ID | Title | Resolution | Closed |
 |---|---|---|---|
 | [T001](T001-pooled-tournament-clock.md) | Pooled tournament groups use a shared calendar clock with strict kickoff safety | 2026-08-25 |
+| [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Smile CDFs reweight score-grid anti-diagonals, so pricing, Kelly and shrinkage consume one joint tensor | 2026-09-18 |

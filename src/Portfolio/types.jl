@@ -384,22 +384,19 @@ Reused across every fixture of a fold:
 | field | is | bytes |
 |---|---|---|
 | `S` | the shared `(max_goals^2 x n_draws)` score grid | `144 * n_draws * 8` |
-| `ws` | the `GridWorkspace` -- two marginal PMF buffers | `2 * max_goals * 8` |
-| `grid` | what `price_market!` reads: `S`, or a `SmileScoreGrid` VIEWING `S` | 0 |
+| `ws` | the `GridWorkspace` -- marginal PMFs plus anti-diagonal scratch | `O(max_goals)` |
+| `grid` | a `StandardScoreGrid` or `SmileScoreGrid` VIEWING `S` | 0 |
 | `slots_*` | one destination vector per market outcome | `n_out * n_draws * 8` |
 | `mean_buf` | destination for `mean(S, dims = 3)` | `144 * 8` |
 
-`grid` is parametric so the smile route is a compile-time fact rather than a branch: a
-`SmileLatents` builds a `SmileScoreGrid` ONCE, holding `S`, `lambda_tot` and `phi` by reference,
-and every subsequent `fill_smile_buffers!` writes THROUGH it. The Over/Under pricer then reaches
-the smile method with no per-fixture allocation and no `isa` test.
+`grid` is parametric so the latent family is a compile-time fact rather than a branch.
+`SmileLatents` builds one `SmileScoreGrid`; its fill kernel both reweights `S` and refreshes the
+source-curve buffers. Every market and every allocation step then reads the same tensor.
 """
-struct BookWorkspace{G}
+struct BookWorkspace{G<:Predictions.AbstractScoreGrid}
     ws::Predictions.GridWorkspace
     S::Array{Float64, 3}
     grid::G
-    λ_tot::Vector{Float64}
-    φ::Matrix{Float64}
     slots_1x2::Vector{MarketSlot{Market1X2, 3}}
     slots_btts::Vector{MarketSlot{MarketBTTS, 2}}
     slots_ou::Vector{MarketSlot{MarketOverUnder, 2}}
@@ -410,10 +407,13 @@ struct BookWorkspace{G}
     n_draws::Int
 end
 
+_grid_buffer_bytes(::Predictions.StandardScoreGrid) = 0
+_grid_buffer_bytes(g::Predictions.SmileScoreGrid) = sizeof(g.λ_tot) + sizeof(g.φ)
+
 "Total bytes the workspace holds. The number that used to be paid per fixture."
 function workspace_bytes(w::BookWorkspace)
-    b = sizeof(w.S) + sizeof(w.mean_buf) + 2 * w.max_goals * sizeof(Float64)
-    b += sizeof(w.λ_tot) + sizeof(w.φ)
+    b = sizeof(w.S) + sizeof(w.mean_buf) + _grid_buffer_bytes(w.grid)
+    b += sizeof(w.ws.p_h) + sizeof(w.ws.p_a) + sizeof(w.ws.grid_mass) + sizeof(w.ws.ratio)
     for s in w.slots_1x2;  b += sum(sizeof, s.book); end
     for s in w.slots_btts; b += sum(sizeof, s.book); end
     for s in w.slots_ou;   b += sum(sizeof, s.book); end

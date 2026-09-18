@@ -87,7 +87,8 @@ function build_book(spec::BookSpec, latents_row, expr, odds_df::DataFrame,
     score_matrix = try
         Predictions.compute_score_matrix(model,
                                          Predictions.extract_params(model, latents_row))
-    catch
+    catch e
+        e isa Predictions.NonMonotoneSmileError && rethrow()
         return nothing
     end
 
