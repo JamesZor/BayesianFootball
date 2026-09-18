@@ -28,6 +28,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [017](017_graduate_smilescoregrid_anti_diagonal_reweighting_and_close_t011.md) | Graduate SmileScoreGrid Anti-Diagonal Reweighting and Close T011 | COMPLETED | P1 | pi | 2026-09-18 |
 | [018](018_abstract_and_automate_portfolio_market_trust_pruning_sweeps.md) | Abstract and automate portfolio market trust pruning sweeps | COMPLETED | P1 | pi | 2026-09-18 |
 | [019](019_slim_agents_md_master_index_and_modularize_operational_guides.md) | Slim AGENTS.md master index and modularize operational guides | COMPLETED | P1 | claude | 2026-09-18 |
+| [020](020_sweep_slatedrawdown_lambda_risk_budgets_on_grw_models.md) | Sweep SlateDrawdown lambda risk budgets on GRW models | IN_PROGRESS | P1 | pi | 2026-09-18 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
