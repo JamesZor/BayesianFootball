@@ -4,7 +4,7 @@
 |---|---|
 | ID | 008 |
 | Title | Hierarchical Scottish Pitch Type and Match Timing Home Advantage |
-| Status | IN_PROGRESS |
+| Status | COMPLETED |
 | Priority | P2 |
 | Assignee | claude |
 | Created | 2026-09-10 |
