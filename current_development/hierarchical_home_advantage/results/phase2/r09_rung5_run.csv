@@ -1,0 +1,2 @@
+model,folds,oos,draws,max_rhat,worst_rhat_fold,min_ess_bulk,min_ess_tail,n_divergent,n_transitions,divergence_rate,treedepth_rate,min_bfmi,passed,strict_rhat_pass,failures,wall_min,run_id,max_site_rhat,n_unmapped_home
+m12_joint_hybrid_contextual,43,769,2000,1.0073885963980531,42,966.3699267486932,558.268400784064,0,172000,0.0,0.0,0.7162859659097695,true,true,,13.202076868216198,991e4991-624f-4166-a551-3233cd17ecb4,1.0064565039366729,5

@@ -1,0 +1,2 @@
+model,folds,oos,draws,max_rhat,worst_rhat_fold,min_ess_bulk,min_ess_tail,n_divergent,n_transitions,divergence_rate,treedepth_rate,min_bfmi,passed,strict_rhat_pass,failures,wall_min,run_id,max_site_rhat,n_unmapped_home,gate_pass,reused
+m05_joint_td_turf_dual,40,710,2000,1.008152751591596,25,926.3831525216331,809.4716279835676,1,160000,6.25e-6,0.0,0.6242597261955191,true,true,,8.08329626719157,a50e1171-fb42-47bb-8269-3a86a91447a0,1.006062724141752,3,true,false

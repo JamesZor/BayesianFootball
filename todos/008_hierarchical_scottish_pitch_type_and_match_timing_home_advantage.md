@@ -8,7 +8,7 @@
 | Priority | P2 |
 | Assignee | claude |
 | Created | 2026-09-10 |
-| Updated | 2026-09-12 |
+| Updated | 2026-09-18 |
 | Related Files / Commits / PRs | [src/models/pregame/components/home_advantage.jl](../src/models/pregame/components/home_advantage.jl); [src/models/pregame/components/interfaces.jl](../src/models/pregame/components/interfaces.jl); [src/features/extractors/](../src/features/extractors/); [experiments/scottish_lower/](../experiments/scottish_lower/) |
 
 ## Context & Problem Statement
@@ -21,16 +21,16 @@ With ReverseDiff's fast gradient tape, we can replace the crude scalar $\gamma_{
 
 ## Acceptance Criteria
 
-- [ ] Add stadium pitch surface metadata (`is_synthetic_pitch` boolean) and match scheduling metadata (day of week, evening kickoff flag, rest days) to Scottish Lower match feature extraction.
-- [ ] Implement `HierarchicalContextualHomeAdvantage` in `src/models/pregame/components/home_advantage.jl`:
+- [x] Add stadium pitch surface metadata (`is_synthetic_pitch` boolean) and match scheduling metadata (day of week, evening kickoff flag, rest days) to Scottish Lower match feature extraction.
+- [x] Implement `HierarchicalContextualHomeAdvantage` in `src/models/pregame/components/home_advantage.jl`: *(built as a prototype in `current_development/hierarchical_home_advantage/l04_contextual_loader.jl` — `HierarchicalTeamHomeAdvantage` + `ContextualCovariate` terms — not in `src`, since it did not earn promotion)*
   $$\gamma_{ij} = \gamma_{\text{base}} + \beta_{\text{turf\_asym}} \cdot (\text{turf}_i \land \neg \text{turf}_j) + \beta_{\text{midweek}} \cdot \text{is\_midweek} + u_i$$
   with ground random effects $u_i \sim \mathcal{N}(0, \sigma_{\text{stadium}}^2)$.
-- [ ] Ensure non-centered parameterization for $u_i$ to prevent NUTS geometry bottlenecks.
-- [ ] Implement zero-allocation feature tensor extraction compatible with compiled ReverseDiff tapes.
-- [ ] Smoke test on 2-fold CV to verify tape compilation and posterior parameter recovery.
-- [ ] Execute full 40-fold walk-forward grid on `mcmc-beast` (-t 16).
-- [ ] Audit posterior credible intervals: verify whether $\beta_{\text{turf\_asym}}$ Credible Interval excludes zero.
-- [ ] Benchmark out-of-sample proper scores (LogLoss, Brier, RPS) against the baseline `GlobalHomeAdvantage`.
+- [x] Ensure non-centered parameterization for $u_i$ to prevent NUTS geometry bottlenecks.
+- [ ] Implement zero-allocation feature tensor extraction compatible with compiled ReverseDiff tapes. *(Not met literally: the design vectors are precomputed and tape-safe, but every model on this ReverseDiff stack allocates ~130 KB per gradient; contextual terms add +512–544 B, the same 16 B/club as Phase 1.)*
+- [x] Smoke test on 2-fold CV to verify tape compilation and posterior parameter recovery.
+- [x] Execute full 40-fold walk-forward grid on `mcmc-beast` (-t 16).
+- [x] Audit posterior credible intervals: verify whether $\beta_{\text{turf\_asym}}$ Credible Interval excludes zero.
+- [x] Benchmark out-of-sample proper scores (LogLoss, Brier, RPS) against the baseline `GlobalHomeAdvantage`.
 
 ## Ideas & Candidate Solutions
 
@@ -61,6 +61,10 @@ With ReverseDiff's fast gradient tape, we can replace the crude scalar $\gamma_{
 - [2026-09-12 @claude] r05 2026-09-12 T−25 counterfactual (replay engine, Fold 43 both arms). Live ledger read: 11 legs, realised −£45.89 (matches). `flat_optB` re-price contains all 11 live legs (+4), max |Δrisk| £3.64 — residual is lineups (0/9 provisional XIs at T−25 vs the live BBC source). Hierarchical HA moved P(home) by ≤ 0.003 on every fixture; `hier_optB` backs the same 7 away legs (6 on turf grounds) as `flat_optB` and drops only a £1.04 draw leg. Full-fill P&L −£54.26 vs −£54.52. Raw model P(home) is 0.40–0.43 across all nine fixtures, a gap to the market far larger than any HA slot movement. Raised T009 (`.env` loaded at precompile time; `BF_DB_URL` unset outside an exporting shell) after r05's first launch failed on it.
 - [2026-09-18 @antigravity] Phase 2 activated via /grill-me. Verified Scottish Lower pitch surface registry with `is_synthetic_pitch` in `scottish_stadium_geocodes.csv` (17 synthetic, 14 grass). Authored `WORK_PACKAGE_PHASE_2_TURF_TIMING.md` covering asymmetric turf advantage, general turf scoring intensity, and midweek schedule fatigue. Tasked Claude agent in tmux session `claude_hier_ha`.
 
+- [2026-09-18 @claude] Phase 2 executed on `mcmc-beast` (smoke too — beast idle; standing no-archpc-MCMC rule). `l04_contextual_loader.jl`: γ_base + u_i via `HierarchicalTeamHomeAdvantage` (work-package priors) plus scalar `ContextualCovariate{K}` terms through the builder's covariate contract, with a new `HomeOnlyRole`; no engine change. Registry spot-checked against public sources; one dated override (Dumbarton turf from 2026/27); Falkirk turf throughout (2023 install replaced an older artificial surface); notes-field commas quoted in the CSV. Rest days are league-only (betdb has no cup fixtures).
+- [2026-09-18 @claude] r06 smoke folds 1–2, 4 × (500+1000): PASS 3/3 (RD==FD ≤ 7.1e-16, 0 div, R̂ ≤ 1.0047, ESS ≥ 1059). r07 40-fold grid in `scottish_lower_contextual_ha`: turf_asym `d20ff61d…` PASS; turf_dual attempt 1 FAILED tail ESS 327 (fold 29, non-HA site), not persisted, resampled → `a50e1171…` PASS; contextual `37feea2c…` PASS. r09 rung 5 `m12_joint_hybrid_contextual` (full contextual set, 43 folds) `991e4991…` PASS.
+- [2026-09-18 @claude] r08 (710 fixtures, B = 10,000; controls reproduced r04): no ΔLogLoss gain on any rung, scope or surface/timing cut (1 of 105 cells nominally significant, on a rung without the term it cuts on). H1 fails (P(β_asym>0) 0.80–0.88 at fold 40 vs prior 0.84), H2 fails (β_pace ≈ 0; raw 2.71 vs 2.67 goals turf/grass), H3 fails (P(β_mid>0) 0.62 < prior 0.84), H4 fails. r09 slate: P(home) moves ≤ 0.011; same 7 away legs (6 on turf); −£52.61 vs −£54.52 full fill. H5 fails. Recommendation: close without promotion. Write-up: `current_development/hierarchical_home_advantage/README.md` §Phase 2.
+
 ## Verification & Findings
 
 Phase 1 (existing `HierarchicalTeamHomeAdvantage`) — complete. Full write-up:
@@ -84,3 +88,8 @@ Posterior and score findings:
 * **β_turf / β_timing**: not estimated — Phase 2 scope.
 
 Recommendation: do not promote a `_hier_ha` model on predictive grounds; if the TD calibration gain matters, run an Option B portfolio simulation against `m12_hybrid_td_raw` first. Tickets touched: T003 (extended), T009 (raised).
+
+Phase 2 (contextual turf / timing HA) — complete, see README §Phase 2. No rung improves
+LogLoss (m05 contextual +0.00001 [−0.00094, +0.00096]; m12 contextual +0.00004
+[−0.00094, +0.00103]); turf asymmetry, turf pace and midweek coefficients are prior-dominated;
+the 2026-09-12 away legs are unchanged. Do not promote.

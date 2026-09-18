@@ -1,0 +1,4 @@
+model,folds,oos,draws,max_rhat,worst_rhat_fold,min_ess_bulk,min_ess_tail,n_divergent,n_transitions,divergence_rate,treedepth_rate,min_bfmi,passed,strict_rhat_pass,failures,wall_min,run_id,max_site_rhat,n_unmapped_home,gate_pass,reused
+m05_joint_td_turf_asym,40,710,2000,1.0121494233863537,13,1031.0728436253128,765.9489656117516,0,160000,0.0,0.0,0.6186477822599376,true,false,,6.710005219777425,d20ff61d-652c-44fe-b6c4-48777e38bcd7,1.0085898301194396,3,true,false
+m05_joint_td_turf_dual,40,710,4000,1.0075120214382034,40,895.1428699845773,326.9937020301879,0,160000,0.0,0.0,0.6382806625411013,false,true,min tail ESS 327.0 at fold 29 (gate > 400),7.560954733689626,,1.0062246381853166,3,false,false
+m05_joint_td_contextual,40,710,2000,1.0102261118449454,15,1073.756980466493,643.4814571165178,1,160000,6.25e-6,0.0,0.6669102920893101,true,false,,8.932575317223867,37feea2c-69be-4626-b486-103523de984d,1.0102261118449454,3,true,false

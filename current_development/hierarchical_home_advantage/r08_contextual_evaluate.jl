@@ -90,6 +90,23 @@ end
 push!(r08_arms, GPHArm(R08_CONTROL, CTX_CONTROL.experiment, CTX_CONTROL.run_id, "TimeDecay(180)", "control"))
 push!(r08_arms, R08_RE_ONLY)
 
+# Rung 5 (r09, 43 folds) against its own flat twin, `m12_hybrid_td_raw`, restricted to the panel.
+const R08_M12_CONTROL = HHA_CONTROLS["m12_joint_hybrid_synergy_hier_ha"]
+const R08_M12_NAME = "m12_joint_hybrid_contextual"
+let run_id = gph_run_by_name(r08_db, R08_M12_NAME)
+    if run_id === nothing
+        println("  rung 5 not persisted yet — m12 arms skipped")
+    else
+        push!(r08_arms, GPHArm(R08_M12_NAME, R08_CONFIG.experiment, run_id, "TimeDecay(180)", "candidate"))
+        push!(r08_arms, GPHArm(R08_M12_CONTROL.label, R08_M12_CONTROL.experiment,
+                               R08_M12_CONTROL.run_id, "TimeDecay(180)", "control"))
+    end
+end
+"Each arm's flat twin: the m05 control for every m05 arm, `m12_hybrid_td_raw` for rung 5."
+r08_control_of(label) = label == R08_M12_NAME ? R08_M12_CONTROL.label : R08_CONTROL
+const R08_LEFTS = vcat(CTX_MODEL_NAMES, [R08_RE_ONLY.label],
+                       any(a -> a.label == R08_M12_NAME, r08_arms) ? [R08_M12_NAME] : String[])
+
 r08_raw = Dict{String,Any}()
 r08_fits = Dict{String,Any}()
 for arm in r08_arms
@@ -169,16 +186,17 @@ r08_cuts = [
 r08_boot_rows = NamedTuple[]
 for scope in R08_SCOPES
     fam = scope == "all" ? nothing : scope
-    for left in vcat(CTX_MODEL_NAMES, [R08_RE_ONLY.label])
+    for left in R08_LEFTS
+        right = r08_control_of(left)
         for (cut, pred) in r08_cuts
             sub_l = r08_obs[left][pred(r08_obs[left]), :]
-            sub_r = r08_obs[R08_CONTROL][pred(r08_obs[R08_CONTROL]), :]
+            sub_r = r08_obs[right][pred(r08_obs[right]), :]
             nrow(sub_l) == 0 && continue
             b = gph_paired_bootstrap(sub_l, sub_r; B = R08_B, seed = R08_SEED, family = fam)
-            push!(r08_boot_rows, (; left, right = R08_CONTROL, scope, cut, b...))
+            push!(r08_boot_rows, (; left, right, scope, cut, b...))
         end
     end
-    for label in vcat(CTX_MODEL_NAMES, [R08_CONTROL])
+    for label in unique(vcat(R08_LEFTS, [R08_CONTROL], [r08_control_of(l) for l in R08_LEFTS]))
         b = gph_paired_bootstrap(r08_obs[label], :market; B = R08_B, seed = R08_SEED, family = fam)
         push!(r08_boot_rows, (; left = label, right = "betfair_close", scope, cut = "all fixtures", b...))
     end
@@ -186,10 +204,10 @@ end
 r08_boot = DataFrame(r08_boot_rows)
 r08_boot.significant = (r08_boot.hi .< 0) .| (r08_boot.lo .> 0)
 
-println("\n=== PAIRED ΔLogLoss (arm − ", R08_CONTROL, ") ===")
+println("\n=== PAIRED ΔLogLoss (arm − its flat twin) ===")
 show(stdout, MIME"text/plain"(),
-     select(filter(r -> r.right == R08_CONTROL && r.scope in ("all", "1X2", "OU2.5"), r08_boot),
-            :left, :scope, :cut, :n_fixtures, :delta, :lo, :hi, :p_negative, :significant);
+     select(filter(r -> r.right != "betfair_close" && r.scope in ("all", "1X2", "OU2.5"), r08_boot),
+            :left, :right, :scope, :cut, :n_fixtures, :delta, :lo, :hi, :p_negative, :significant);
      allrows = true, allcols = true)
 println()
 
@@ -198,7 +216,7 @@ println()
 # 6. Coefficients (H1, H2, H3) and a descriptive turf-goals check
 # ===================================================================
 r08_coef_frames = DataFrame[]
-for name in CTX_MODEL_NAMES
+for name in filter(n -> haskey(r08_raw, n), vcat(CTX_MODEL_NAMES, [R08_M12_NAME]))
     fit = r08_raw[name]
     for fold in R08_COEF_FOLDS
         fold <= length(fit.folds) || continue

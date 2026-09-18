@@ -394,3 +394,215 @@ cd /root/BF_hier_ha_slate   # any cache through 2026-09-05; the card itself is r
 julia --project -t 16 current_development/hierarchical_home_advantage/r03_extend_2627.jl
 julia --project -t 16 current_development/hierarchical_home_advantage/r05_slate_repricing.jl
 ```
+
+---
+
+# Task 008 Phase 2 — Contextual home advantage: pitch surface and match timing
+
+Work package: [`WORK_PACKAGE_PHASE_2_TURF_TIMING.md`](../../WORK_PACKAGE_PHASE_2_TURF_TIMING.md).
+Run 2026-09-18 on `mcmc-beast` (smoke too — the beast was idle, and the standing rule is
+that no MCMC runs on archpc). Results under `results/phase2/`.
+
+## The model
+
+```
+η_h = base + γ_base + u_i + β_asym·turf_i(1−turf_j) + β_gen·turf_i + β_mid·midweek
+           + β_rest·(rest_i − rest_j) + β_pace·turf_i + att_h + def_a + wealth
+η_a = base + β_pace·turf_i + att_a + def_h − wealth
+u_i = σ_stadium·ũ_i,  ũ_i ~ N(0,1),  σ_stadium ~ N⁺(0, 0.05),  γ_base ~ N(0.15, 0.05)
+β_asym ~ N(0.05, 0.05)  β_gen ~ N(0, 0.05)  β_pace ~ N(0, 0.05)  β_mid ~ N(0.05, 0.05)  β_rest ~ N(0.02, 0.02)
+```
+
+No engine change. `γ_base + u_i` is `HierarchicalTeamHomeAdvantage` with the work package's
+priors; every per-fixture term is a scalar `ContextualCovariate{K}` through the builder's
+covariate contract (`l04_contextual_loader.jl`). The HA terms use a new `HomeOnlyRole`
+(`η_h += q`, away side is the engine's structural `nothing`); `turf_pace` uses the existing
+`LevelRole`. Two engine accumulator methods (`_predictor_acc(::Nothing, y)`) are added from
+the loader so a home-only term may sit anywhere in the covariate tuple.
+
+## Data decisions
+
+* **Surface registry.** `is_synthetic_pitch` in `src/features/data/scottish_stadium_geocodes.csv`,
+  spot-checked 2026-09-18 against public sources (Queen of the South, Falkirk, Forfar, East
+  Fife, Stirling Albion, Peterhead, Dumbarton, Stranraer, Bonnyrigg). One dated override:
+  **Dumbarton is turf from 2026/27** (The Rock relaid; registry says grass). Falkirk's summer
+  2023 install replaced an older artificial surface, so Falkirk is turf throughout. The
+  registry keys the home club; every groundshare in the 2022/23+ panel is turf-to-turf.
+  Two notes fields held unquoted commas (Elgin, Inverness) — quoted; parsing was unaffected
+  because `is_synthetic_pitch` precedes them.
+* **The older list in `src/features/extractors/time_extractors.jl` (`PLASTIC_TEAMS`) disagrees**
+  with the registry: it lists Bonnyrigg (grass) and omits East Fife (turf since 2017). Not
+  touched here; it is only read by `PlasticPitchFeature`.
+* **Midweek** = Tuesday–Thursday, or Friday with kickoff ≥ 16:00 UTC. Every flagged kickoff in
+  the store is 18:00–20:00 UTC (`r06_midweek_cells.csv`); no Saturday or daytime Friday is flagged.
+* **Rest days are league-only.** betdb holds tournaments 56/57 and no cup fixtures, so a
+  midweek cup tie is invisible. Each side is capped at 14 days; days since the last kickoff on
+  an earlier calendar day. 125 of 710 held-out fixtures have a non-zero difference.
+* **OOS design** (`r07_oos_design.csv`): 710 fixtures, 462 at turf grounds, 171 with a grass
+  visitor at a turf ground, 53 midweek.
+
+## Ladder and gates
+
+| rung | model | terms | control |
+|---|---|---|---|
+| 1 | `m05_joint_td_raw` | flat γ ~ N(0.2, 0.2) | persisted, Exp 06 (`ed541a7c`) |
+| 2 | `m05_joint_td_turf_asym` | u_i + asym | 1 |
+| 3 | `m05_joint_td_turf_dual` | u_i + asym + gen + pace | 1 |
+| 4 | `m05_joint_td_contextual` | u_i + asym + gen + pace + midweek + rest | 1 |
+| 5 | `m12_joint_hybrid_contextual` | rung 4's terms on the Gen 4 TD hybrid, 43 folds | `m12_hybrid_td_raw` (`132df5c2`) |
+
+No rung won, so rung 5 carries the full contextual set — the most turf- and timing-aware
+specification — for the slate mechanism test (r09), not a promoted winner.
+
+Each rung differs from its control in the HA slot and its contextual terms **and** the HA
+priors (work package's N(0.15, 0.05) vs the control's N(0.2, 0.2)), and in sampler budget
+(4 × 500+1000, δ 0.80 vs 4 × 800+800, δ 0.65).
+
+**G1 (r06, folds 1–2).** Every tape compiles; ReverseDiff == ForwardDiff to ≤ 7.1e-16; compiled
+tape exact under perturbation. +25–31 parameters, +33 / +60 / +86 tape instructions, gradient
+0.069–0.078 ms vs 0.064 ms flat; +512–544 B allocation per gradient (the 16 B/club Phase 1
+already measured).
+
+**G2 (r06, 4 × 500+1000).** PASS 3/3: 0 divergences, R̂ ≤ 1.0047, ESS ≥ 1059. Smoke runs in
+`smoke_contextual_ha`: `6c52b6fc`, `31503bc7`, `617dd6ab`.
+
+**G3 (r07 / r09, `scottish_lower_contextual_ha`).**
+
+| model | folds | OOS | R̂ | ESS bulk / tail | div | run |
+|---|---|---|---|---|---|---|
+| `m05_joint_td_turf_asym` | 40 | 710 | 1.0121 | 1031 / 766 | 0 | `d20ff61d-652c-44fe-b6c4-48777e38bcd7` |
+| `m05_joint_td_turf_dual` | 40 | 710 | 1.0082 | 926 / 809 | 1 | `a50e1171-fb42-47bb-8269-3a86a91447a0` |
+| `m05_joint_td_contextual` | 40 | 710 | 1.0102 | 1074 / 643 | 1 | `37feea2c-69be-4626-b486-103523de984d` |
+| `m12_joint_hybrid_contextual` | 43 | 769 | 1.0074 | 966 / 558 | 0 | `991e4991-624f-4166-a551-3233cd17ecb4` |
+
+`turf_dual`'s **first** attempt failed the gate — tail ESS 327 at fold 29 on a non-HA site (all
+`ha.*` and contextual sites ≥ 1052), 0 divergences, R̂ 1.0075 — and was not persisted
+(`r07_production_runs_attempt1.csv`; checkpoints kept on the beast as
+`checkpoints_attempt1_tailess327`). The sampler is unseeded; all 40 folds were resampled at the
+same budget and passed. ~7.5 min per m05 rung, ~10 min for rung 5.
+
+## Proper scores (r08) — H4 fails
+
+710 fixtures / 2,899 scored rows, de-vigged Betfair TWA(−20, 0] close, B = 10,000 fixture-
+clustered paired resamples. Controls reproduced Phase 1's r04 exactly (m05 0.64299 / ECE 0.0149;
+m12 0.64337 / 0.0100).
+
+| model | LogLoss | Brier | RPS | ECE |
+|---|---|---|---|---|
+| `m05_joint_production_wealth_hier_ha` (Phase 1, RE only) | 0.64272 | 0.22574 | 0.22416 | 0.0114 |
+| `m05_joint_td_turf_asym` | 0.64290 | 0.22583 | 0.22403 | 0.0118 |
+| `m05_joint_td_raw` (control) | 0.64299 | 0.22586 | 0.22415 | 0.0149 |
+| `m05_joint_td_contextual` | 0.64299 | 0.22587 | 0.22410 | 0.0114 |
+| `m05_joint_td_turf_dual` | 0.64300 | 0.22587 | 0.22421 | 0.0120 |
+| `m12_hybrid_td_raw` (control) | 0.64337 | 0.22605 | 0.22447 | 0.0100 |
+| `m12_joint_hybrid_contextual` | 0.64341 | 0.22607 | 0.22446 | 0.0111 |
+| Betfair close | 0.64182 | 0.22529 | | 0.0139 |
+
+ΔLogLoss vs flat twin, scope = all (95% interval):
+
+| model | all | turf home (399) | grass home (228) | grass visitor at turf (149) | midweek (43) |
+|---|---|---|---|---|---|
+| turf_asym | −0.00009 [−0.00082, +0.00065] | −0.00019 [−0.00115, +0.00079] | +0.00007 | −0.00015 [−0.00246, +0.00221] | −0.00146 [−0.00445, +0.00142] |
+| turf_dual | +0.00001 [−0.00082, +0.00083] | −0.00007 | +0.00015 | −0.00010 | −0.00270 [−0.00649, +0.00098] |
+| contextual | +0.00001 [−0.00094, +0.00096] | +0.00028 | −0.00047 | +0.00041 | −0.00193 [−0.00718, +0.00310] |
+| m12 contextual | +0.00004 [−0.00094, +0.00103] | +0.00034 | −0.00045 | +0.00063 | −0.00212 [−0.00745, +0.00301] |
+
+Every interval, on every scope (all / 1X2 / OU2.5 / BTTS) and cut, contains zero — with one
+exception out of 105: `turf_dual`, 1X2, midweek (41 fixtures), −0.0041 [−0.0081, −0.00002].
+`turf_dual` has **no midweek term**, so this is multiple-comparison noise, not an effect.
+Calibration: every m05 rung lowers ECE (0.0149 → 0.0114–0.0120), as Phase 1's RE-only model
+already did; rung 5 raises m12's (0.0100 → 0.0111) and BTTS ECE (0.0087 → 0.0219).
+
+## Coefficients (end of 25/26, fold 40) — H1, H2, H3 fail
+
+| term | contextual (m05) mean [5%, 95%] | P(>0) | prior P(>0) | contraction |
+|---|---|---|---|---|
+| β_turf_asym | +0.046 [−0.020, +0.115] | 0.864 | 0.841 | 0.18 |
+| β_turf_gen | −0.034 [−0.095, +0.028] | 0.186 | 0.500 | 0.23 |
+| β_turf_pace | −0.011 [−0.072, +0.050] | 0.374 | 0.500 | 0.27 |
+| β_midweek | +0.013 [−0.056, +0.080] | 0.623 | 0.841 | 0.15 |
+| β_rest | +0.006 [−0.009, +0.021] | 0.739 | 0.841 | 0.54 |
+| γ_base | 0.136 [0.080, 0.191] | | | 0.32 |
+| σ_stadium | median 0.027 [0.002, 0.072]; P(σ < 0.02) 0.386 vs prior 0.311 | | | |
+
+`contraction = 1 − sd_post / sd_prior`; 0 means the data said nothing.
+
+* **H1 (turf asymmetry) fails.** P(β_asym > 0) is 0.80 (rung 2), 0.86 (rungs 3–4), 0.88 (rung 5)
+  at fold 40 against a prior that already gives 0.84; the posterior sd shrinks by under 20%.
+  It reaches 0.90 once in eight rung × fold reads: rung 5 at fold 20 (0.9075; m05 rungs
+  0.8965–0.8995 there). The data neither confirms nor
+  refutes a grass-visitor penalty; the prior is doing the work.
+* **H2 (turf pace) fails.** β_pace is centred on zero; raw panel goals agree — 2.71 per game at
+  turf grounds vs 2.67 at grass (non-midweek), `r08_panel_goals.csv`. The EDA impression of more
+  goals on turf does not replicate on 24/25–25/26.
+* **H3 (midweek) fails.** P(β_midweek > 0) = 0.62, *below* its prior's 0.84 — the data pull it
+  toward zero. Raw: midweek at turf grounds, home sides lost on average (goal diff −0.46, n = 28).
+* **β_turf_gen leans negative** (P(>0) 0.19): if anything, home sides at turf grounds do
+  slightly worse than the rest of the model expects — the opposite of the Phase 2 premise.
+* **σ_stadium** stays at its prior under TimeDecay, as in Phase 1.
+
+## 2026-09-12 counterfactual (r09) — H5 fails
+
+Replay engine, T−25 (13:35 UTC), Fold 43 both arms. `flat_optB` reproduces all 11 live legs
+(+4 extra), max |Δrisk| £3.64 — Phase 1's figure, same cause (lineup source).
+8 of 9 home grounds were turf, but only three visitors came from grass (East Kilbride v
+Peterhead, Edinburgh City v Stirling Albion, Annan v Elgin). Dumbarton, now turf, played away.
+
+| fixture | turf h/a | score | P(home) flat raw | ctx raw | Δ | Δ after Option B |
+|---|---|---|---|---|---|---|
+| queen-of-the-south v east-fife | 1/1 | 1-1 | 0.420 | 0.414 | −0.006 | −0.001 |
+| east-kilbride v peterhead | 1/0 | 3-1 | 0.422 | 0.433 | +0.011 | +0.010 |
+| montrose v cove-rangers | 1/1 | 2-1 | 0.418 | 0.418 | +0.000 | −0.000 |
+| airdrieonians v alloa-athletic | 1/1 | 1-0 | 0.403 | 0.397 | −0.005 | −0.001 |
+| edinburgh-city-fc v stirling-albion | 1/0 | 7-3 | 0.411 | 0.417 | +0.006 | +0.004 |
+| clyde-fc v kelty-hearts-fc | 1/1 | 4-1 | 0.426 | 0.421 | −0.005 | −0.005 |
+| the-spartans-fc v forfar-athletic | 1/1 | 5-1 | 0.430 | 0.424 | −0.006 | −0.007 |
+| annan-athletic v elgin-city | 1/0 | 2-0 | 0.429 | 0.440 | +0.011 | +0.003 |
+| stranraer v dumbarton | 0/1 | 3-1 | 0.432 | 0.429 | −0.003 | −0.001 |
+
+| arm | legs | risk | full-fill P&L | away legs | on turf | away risk |
+|---|---|---|---|---|---|---|
+| flat_raw | 19 | £124.28 | −£84.27 | 7 | 6 | £54.77 |
+| flat_optB (live arm) | 15 | £73.78 | −£54.52 | 7 | 6 | £28.17 |
+| ctx_raw | 18 | £122.94 | −£79.20 | 7 | 6 | £54.49 |
+| ctx_optB | 14 | £72.08 | −£52.61 | 7 | 6 | £27.10 |
+
+Live realised: 11 legs, −£45.89. The contextual arm keeps **every** away leg; it drops only the
+£1.04 East Kilbride draw leg (Option B) — the same outcome Phase 1's hierarchical arm had. The
+asymmetry term lifts P(home) by ≤ 0.011 where it applies; β_turf_gen < 0 lowers it on the six
+turf-vs-turf fixtures. The 0.40–0.43 raw home pricing is a gap to the market far larger than
+any HA slot this task can build.
+
+## Phase 2 conclusions
+
+1. **No contextual home-advantage specification improves proper scores** on 710 walk-forward
+   fixtures — overall, on turf grounds, for grass visitors at turf, or midweek, for m05 or m12.
+2. **The data cannot identify the turf and timing coefficients.** Posteriors contract by
+   15–30% and sit on (turf asymmetry) or below (midweek, general turf) their priors. H1's 0.90
+   bar is unreachable from this panel without a prior that asserts it.
+3. **The Saturday-slate story does not generalise.** Turf grounds show no excess home edge and
+   no excess goals over two seasons; the 2026-09-12 away losses are not explained by surface.
+4. **The ECE gain on m05 is the stadium random effect, not context** — Phase 1's RE-only arm
+   already had it (0.0114).
+
+**Recommendation:** close Task 008 without promoting a contextual HA. If home pricing on
+opening weekends is still a concern, the lead is the model's flat 0.40–0.43 P(home) against
+the market, not a home-advantage slot. The `ContextualCovariate` / `HomeOnlyRole` machinery is
+reusable for any per-fixture home-side covariate (e.g. a cup-aware congestion feature once cup
+fixtures reach betdb).
+
+## Phase 2 reproduction
+
+```bash
+# mcmc-beast
+cd /root/BF_hier_ha
+julia --project -t 16 current_development/hierarchical_home_advantage/r06_contextual_smoke.jl
+julia --project -t 16 current_development/hierarchical_home_advantage/r07_contextual_production.jl
+cd /root/BF_hier_ha_slate   # 2026-09-12 DataStore cache; BF_DB_URL exported (T009)
+julia --project -t 16 current_development/hierarchical_home_advantage/r09_slate_repricing.jl
+cd /root/BF_hier_ha
+julia --project -t 16 current_development/hierarchical_home_advantage/r08_contextual_evaluate.jl
+```
+
+Any process that `load_fit`s a Phase 2 run must `include("l04_contextual_loader.jl")` first — the
+artefacts carry `ContextualCovariate` and `HomeOnlyRole`, which are defined there.
