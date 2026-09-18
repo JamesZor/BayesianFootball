@@ -210,6 +210,7 @@ function pruning_book_spec(base::Portfolio.BookSpec, catalog::MarketCatalog,
         allocator = base.allocator,
         shrink = base.shrink,
         exec = base.exec,
+        trust = Portfolio.book_trust(base),
     )
 end
 

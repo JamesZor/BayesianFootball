@@ -270,7 +270,7 @@ using .Portfolio: OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildRepor
                   DailyState, PortfolioSummary, BootstrapCI, PortfolioResult,
                   PortfolioReport,
                   Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory,
-                  ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem,
+                  ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem, book_trust,
                   DeArb, Normalise, RawPrice,
                   PerBetCommission, TurnoverCommission,
                   IndependentKelly, BakerMcHale, NoShrinkage,
@@ -300,7 +300,7 @@ using .Portfolio: OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildRepor
 export OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildReport
 export DailyState, PortfolioSummary, BootstrapCI, PortfolioResult, PortfolioReport
 export Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory
-export ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem
+export ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem, book_trust
 export DeArb, Normalise, RawPrice
 export PerBetCommission, TurnoverCommission
 export IndependentKelly, BakerMcHale, NoShrinkage

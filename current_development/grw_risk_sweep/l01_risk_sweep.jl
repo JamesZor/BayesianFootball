@@ -75,6 +75,7 @@ function excised_option_b_system()
         allocator = base.book.allocator,
         shrink = base.book.shrink,
         exec = base.book.exec,
+        trust = Portfolio.book_trust(base.book),
     )
     return Portfolio.PortfolioSystem(book, base.policy)
 end

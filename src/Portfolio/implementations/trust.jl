@@ -26,6 +26,7 @@ struct FlatTrust <: AbstractTrustModel
     end
 end
 trust_for(t::FlatTrust, ::Selection, ::SlateContext) = t.w
+book_trust_for(t::FlatTrust, ::Selection) = t.w
 
 """
     SelectionTrust(table; default = 0.25, strict = true)
@@ -44,11 +45,12 @@ end
 SelectionTrust(t::Dict{Tuple{String,Float64,Symbol},Float64}; default = 0.25, strict = true) =
     SelectionTrust(t, default, strict)
 
-function trust_for(t::SelectionTrust, s::Selection, ::SlateContext)
+function book_trust_for(t::SelectionTrust, s::Selection)
     k = (s.group, s.line, s.selection)
     t.strict && return t.table[k]        # KeyError on a miss, by design
     return get(t.table, k, t.default)
 end
+trust_for(t::SelectionTrust, s::Selection, ::SlateContext) = book_trust_for(t, s)
 
 const TrustSelectionKey = Tuple{String,Float64,Symbol}
 
@@ -110,8 +112,9 @@ function TieredTrust(table::AbstractDict; default::Real = 0.0)
     return TieredTrust(normalised, Float64(default))
 end
 
-trust_for(t::TieredTrust, s::Selection, ::SlateContext) =
+book_trust_for(t::TieredTrust, s::Selection) =
     get(t.table, _tiered_key(s.group, s.line, s.selection), t.default)
+trust_for(t::TieredTrust, s::Selection, ::SlateContext) = book_trust_for(t, s)
 
 """
     CanonicalScottishLowerTrust() -> TieredTrust
@@ -142,3 +145,8 @@ struct ScheduledTrust{M<:AbstractTrustModel} <: AbstractTrustModel
 end
 trust_for(t::ScheduledTrust, s::Selection, ctx::SlateContext) =
     trust_for(t.per_slate[ctx.idx], s, ctx)
+
+book_trust_for(::ScheduledTrust, ::Selection) = error(
+    "ScheduledTrust cannot configure BookSpec market excision: a MatchBook is cached " *
+    "independently of slate index, so collapsing a schedule would leak future trust into " *
+    "earlier books. Leave `BookSpec(trust = nothing)` and apply the schedule in PolicySpec.")

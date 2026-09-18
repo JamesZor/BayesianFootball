@@ -208,22 +208,56 @@ Base.@kwdef struct ExecutionConfig{C<:AbstractCommissionModel}
     require_complete_markets::Bool = true
 end
 
+# BookSpec is persisted in PostgreSQL artefact blobs. Its four type parameters and five fields
+# are therefore a binary compatibility boundary. Opt-in trust is carried by a price-policy wrapper
+# rather than adding a field: old `BookSpec{P,A,S,E}` blobs remain deserialisable, while the
+# wrapper keeps the configuration inside the spec and its derived market set inside the cache key.
+struct _TrustFilteredPrice{P<:AbstractPricePolicy,T<:AbstractTrustModel} <: AbstractPricePolicy
+    policy::P
+    trust::T
+end
+_book_price(p::AbstractPricePolicy) = p
+_book_price(p::_TrustFilteredPrice) = p.policy
+
 """
-    BookSpec
+    BookSpec(; markets, price = DeArb(), allocator = KellyLogUtility(),
+             shrink = BakerMcHale(), exec = ExecutionConfig(), trust = nothing)
 
 Everything that changes a `MatchBook`. **This is the cache key** -- hash it. Changing any field
 here invalidates built books; changing a `PolicySpec` does not.
+
+`trust = nothing` preserves the historical geometry: every quoted market in `markets` enters the
+payoff matrix, including markets that a downstream `PolicySpec` weights at zero. Supplying a
+context-free trust model enables **market-level zero-trust excision** while the book is built: a
+market is omitted only when every declared selection has exactly zero trust. If any direction has
+positive trust, the complete market -- including its zero-trust complements -- remains in the
+Kelly and shrinkage geometry. Use a compatible trust model in `PolicySpec` to stake the book.
+
+The trust keyword is stored in an internal wrapper so the persisted four-parameter `BookSpec`
+layout remains backward compatible. [`book_trust`](@ref) reads it without exposing that detail.
 """
-Base.@kwdef struct BookSpec{P<:AbstractPricePolicy,
-                            A<:AbstractAllocator,
-                            S<:AbstractShrinkage,
-                            E<:ExecutionConfig}
+struct BookSpec{P<:AbstractPricePolicy,
+                A<:AbstractAllocator,
+                S<:AbstractShrinkage,
+                E<:ExecutionConfig}
     markets::Data.MarketConfig
-    price::P     = DeArb()
-    allocator::A = KellyLogUtility()
-    shrink::S    = BakerMcHale()
-    exec::E      = ExecutionConfig()
+    price::P
+    allocator::A
+    shrink::S
+    exec::E
 end
+
+function BookSpec(; markets, price = DeArb(), allocator = KellyLogUtility(),
+                  shrink = BakerMcHale(), exec = ExecutionConfig(),
+                  trust::Union{Nothing,AbstractTrustModel} = nothing)
+    effective_price = trust === nothing ? _book_price(price) :
+                      _TrustFilteredPrice(_book_price(price), trust)
+    return BookSpec(markets, effective_price, allocator, shrink, exec)
+end
+
+"The context-free trust used for market excision, or `nothing` for legacy geometry."
+book_trust(::BookSpec) = nothing
+book_trust(spec::BookSpec{<:_TrustFilteredPrice}) = spec.price.trust
 
 """
     PolicySpec
@@ -250,6 +284,10 @@ end
 struct PortfolioSystem{B<:BookSpec, P<:PolicySpec}
     book::B
     policy::P
+    function PortfolioSystem(book::B, policy::P) where {B<:BookSpec,P<:PolicySpec}
+        _validate_book_policy(book, policy)
+        return new{B,P}(book, policy)
+    end
 end
 PortfolioSystem(b::BookSpec) = PortfolioSystem(b, PolicySpec())
 
@@ -335,7 +373,7 @@ end
 # `src/predictions/score_grids/`.
 #
 # WHY THE SLOTS ARE THREE CONCRETELY-TYPED VECTORS AND NOT ONE `Vector{Any}`.
-# `spec.markets.markets` is a `Vector{AbstractMarket}`, so a loop over it dispatches dynamically
+# the effective market set is a `Vector{AbstractMarket}`, so a loop over it dispatches dynamically
 # on every iteration. A dynamic call whose return value is a `Union` of tuple types boxes, and a
 # zero-allocation claim that depends on escape analysis eliding that box is not a claim worth
 # making. Three homogeneous vectors give three statically-dispatched loops and `@allocated == 0`

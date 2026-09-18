@@ -2,6 +2,10 @@
 
 export DeArb, Normalise, RawPrice
 
+# Internal BookSpec compatibility wrapper: market filtering and quote settlement remain separate.
+settlement_odds(p::_TrustFilteredPrice, d::Real, overround::Real) =
+    settlement_odds(p.policy, d, overround)
+
 """
     DeArb()
 

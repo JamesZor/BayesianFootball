@@ -60,8 +60,8 @@ WHOLE FOLD reuses.
 
 Markets are sorted into four buckets -- 1X2, BTTS, Over/Under, and everything else -- so the three
 fast buckets each price under a statically-dispatched loop. `order` records where each of
-`spec.markets.markets` went, so `extract_selections` can walk the caller's market sequence
-unchanged.
+the effective (non-excised) markets went, so `extract_selections` can walk their original caller
+sequence unchanged.
 
 The fourth bucket is markets with no `price_market!` kernel: the Asian-handicap ladder, correct
 score, double chance, draw-no-bet. They are priced through `Predictions.compute_market_probs`
@@ -82,7 +82,7 @@ function BookWorkspace(spec::BookSpec, l::Models.AbstractPosteriorLatents;
     sf  = FallbackSlot[]
     ord = Tuple{Symbol, Int}[]
 
-    for m in spec.markets.markets
+    for m in _effective_markets(spec)
         g, ln = market_group(m), market_line(m)
         if m isa Market1X2
             push!(s1, MarketSlot(m, g, ln, Predictions.market_keys(m),
@@ -201,7 +201,7 @@ function extract_selections(w::BookWorkspace, oi::OddsIndex, match_id::Integer, 
             _collect_fallback!(out, w.slots_fb[idx], oi, rng, spec, fb)
         end
     end
-    return out
+    return _excise_zero_trust_markets(book_trust(spec), out)
 end
 
 """
@@ -434,7 +434,7 @@ function build_books_reported(spec::BookSpec, l::Models.AbstractPosteriorLatents
             # A non-monotone smile means the posterior does not define a totals distribution.
             # Refuse the build as a whole rather than returning a plausible empty ledger after
             # recording the same global-shape failure once per fixture.
-            e isa Predictions.NonMonotoneSmileError && rethrow()
+            (e isa Predictions.NonMonotoneSmileError || e isa KeyError) && rethrow()
             push!(errored, m_id => sprint(showerror, e))
             continue
         end
