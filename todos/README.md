@@ -26,6 +26,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [015](015_prototype_multiscalegrw_with_market_smile_and_supremacy_anchoring.md) | Prototype MultiScaleGRW with Market Smile and Supremacy Anchoring | COMPLETED | P1 | claude | 2026-09-13 |
 | [016](016_prototype_1_parameter_smile_spine_with_multiscalegrw.md) | Prototype 1-Parameter Smile Spine with MultiScaleGRW | COMPLETED | P1 | claude | 2026-09-17 |
 | [017](017_graduate_smilescoregrid_anti_diagonal_reweighting_and_close_t011.md) | Graduate SmileScoreGrid Anti-Diagonal Reweighting and Close T011 | COMPLETED | P1 | pi | 2026-09-18 |
+| [018](018_abstract_and_automate_portfolio_market_trust_pruning_sweeps.md) | Abstract and automate portfolio market trust pruning sweeps | IN_PROGRESS | P1 | pi | 2026-09-18 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
