@@ -1,0 +1,9 @@
+gate,environment,model,pass,detail
+S0 extended book inert at trust 0,close,m05_joint_grw_baseline,false,"ext return 368.8441 vs canon 385.7776 (Δ -16.9335 pp), bets 1246 vs 1247"
+S0 extended book inert at trust 0,close,m05_joint_grw_smile_supremacy_w040,false,"ext return 524.7466 vs canon 545.0098 (Δ -20.2632 pp), bets 1238 vs 1237"
+"S2 smile routing, all strikes",close,m05_joint_grw_smile_supremacy_w040,true,"732 totals bets, max |p − smile| 2.7e-15"
+S0 extended book inert at trust 0,t25,m05_joint_grw_baseline,false,"ext return 509.5218 vs canon 531.7811 (Δ -22.2593 pp), bets 1123 vs 1124"
+S0 extended book inert at trust 0,t25,m05_joint_grw_smile_supremacy_w040,false,"ext return 472.8663 vs canon 479.4433 (Δ -6.5771 pp), bets 1085 vs 1087"
+"S2 smile routing, all strikes",t25,m05_joint_grw_smile_supremacy_w040,true,"539 totals bets, max |p − smile| 2.4e-15"
+S1 close/P0 vs r06,close,m05_joint_grw_baseline,true,"return 385.7776 vs 385.7776, bets 1247 vs 1247"
+S1 close/P0 vs r06,close,m05_joint_grw_smile_supremacy_w040,true,"return 545.0098 vs 545.0098, bets 1237 vs 1237"

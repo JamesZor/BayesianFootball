@@ -1,0 +1,85 @@
+environment,question,pair,bet_set,owner,n_bets,win_rate_pct,roi_pct,edge_mean_pp,capture_ratio
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],shared,a,862,32.25058004640371,19.478919370497614,4.580259353772961,0.9722836518036514
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],shared,b,862,32.25058004640371,15.069871451476615,4.755994250926878,1.0586955612103202
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],exclusive,a,249,40.562248995983936,-3.740296408629667,1.1559663748337725,0.7928513346393539
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],exclusive,b,262,45.80152671755725,9.739911762259618,2.1520087836399124,2.6755885791139944
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,a,786,33.33333333333333,24.390152309666178,2.268132230918726,0.9466674604676748
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,b,786,33.33333333333333,18.969075926417634,2.525167171661547,1.0615541357970588
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,a,169,39.053254437869825,-6.649031642478409,0.7258282075671523,0.7924440825962231
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,b,183,49.18032786885246,8.824467804097472,1.6549227382814533,1.4631772494215551
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,a,786,33.33333333333333,24.390152309666178,2.296860421363736,0.9774723749128742
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,b,786,33.33333333333333,18.969075926417634,2.525167171661547,1.0615541357970588
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,a,169,39.053254437869825,-6.649031642478409,0.8069334499199086,1.0299284717074102
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w020[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,b,183,49.18032786885246,8.824467804097472,1.6549227382814533,1.4631772494215551
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[t25_inv],shared,a,764,32.98429319371728,21.264249447980344,5.0579554339354775,0.9252224519329404
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[t25_inv],shared,b,764,32.98429319371728,19.63635510092559,2.651712515672839,1.0709463854128318
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[t25_inv],exclusive,a,347,36.59942363112392,-6.3060139539349285,1.0713003998824118,1.0601252035121083
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[t25_inv],exclusive,b,205,48.78048780487805,7.026385659411942,1.2767019319874775,1.833466074501654
+close,close reference (r06),m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],shared,a,978,32.0040899795501,15.936687837013471,4.441518812019057,1.0171626494833514
+close,close reference (r06),m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],shared,b,978,32.0040899795501,13.105617555348012,4.561401685298852,1.0913731186018218
+close,close reference (r06),m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],exclusive,a,262,41.221374045801525,13.798848927401986,1.2042995213232135,1.394542305651271
+close,close reference (r06),m05_joint_grw_smile_supremacy_w020[raw] − m05_joint_grw_baseline[raw],exclusive,b,269,46.84014869888476,4.444721857386497,2.5386495964875113,1.4953737300206074
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,a,837,32.13859020310633,19.567535696433072,4.343561272902151,0.9856564636587327
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,b,837,32.13859020310633,14.951844541628803,4.8321001633917176,1.0515048819346866
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,250,41.199999999999996,-3.219108775691262,1.2514826337570573,0.944191352205443
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,287,44.94773519163763,10.608867666719284,2.156883306110648,2.5879350514736004
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,a,770,33.63636363636363,25.053015382226462,2.1287819336857403,0.9463241815274457
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,b,770,33.63636363636363,18.932113438871404,2.526126104835474,1.0158477432426245
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,a,177,42.3728813559322,-6.782287031188558,0.7395660950338201,0.7242581552876336
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,b,199,46.733668341708544,9.95065064700087,1.7211816950159138,1.6905565334156931
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,a,770,33.63636363636363,25.053015382226462,2.15451957936935,0.9758141570196159
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,b,770,33.63636363636363,18.932113438871404,2.526126104835474,1.0158477432426245
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,a,177,42.3728813559322,-6.782287031188558,0.8171109555246697,0.9282190671336598
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w040[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,b,199,46.733668341708544,9.95065064700087,1.7211816950159138,1.6905565334156931
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[t25_inv],shared,a,754,32.758620689655174,21.645400637721888,4.727208399139666,0.9592248843318598
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[t25_inv],shared,b,754,32.758620689655174,19.422338788192683,2.660052590344271,1.075402371319018
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[t25_inv],exclusive,a,333,37.53753753753754,-7.544799232880915,1.1535024351563226,1.0246992587848371
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[t25_inv],exclusive,b,215,48.837209302325576,8.460499181069588,1.3114074647065177,1.7442293055157823
+close,close reference (r06),m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,a,960,31.770833333333332,16.34984671336176,4.187360207466789,1.0508665114050961
+close,close reference (r06),m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,b,960,31.770833333333332,11.645896072308105,4.629179028522411,1.0722879158278336
+close,close reference (r06),m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,277,41.51624548736462,11.875781868580635,1.2434843058134917,1.2410200036083354
+close,close reference (r06),m05_joint_grw_smile_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,287,46.68989547038328,11.822704752610077,2.438800426118131,1.7353789048723423
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],shared,a,831,32.009626955475326,18.877071653918755,4.011049060445511,1.0008884625821222
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],shared,b,831,32.009626955475326,14.79237548553767,4.837370792055956,1.0604739409902904
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],exclusive,a,263,40.68441064638783,-3.0353549291558872,1.3730844462692908,1.0509427718652846
+t25,Q1 raw lead at T−25,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],exclusive,b,293,45.051194539249146,11.398892016000811,2.1967174655772164,2.3883068581873865
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,a,753,34.13014608233731,23.58711892985794,2.0059428653680103,0.9419384826165709
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],shared,b,753,34.13014608233731,16.856025082142637,2.5536255257021256,0.9943890907361829
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,a,187,43.85026737967914,-6.79157789577587,0.7747223160511854,0.6387966940793124
+t25,"Q2 beyond L2, smile kept",m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_baseline[t25_inv],exclusive,b,216,43.98148148148148,19.871747747677563,1.6886677647119528,1.7645864250833576
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w070[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,a,753,34.13014608233731,23.58711892985794,2.033229287201511,0.9716350503177998
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w070[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],shared,b,753,34.13014608233731,16.856025082142637,2.5536255257021256,0.9943890907361829
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w070[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,a,187,43.85026737967914,-6.79157789577587,0.8699631779663436,0.8484623392393152
+t25,"Q3 beyond L2, smile dropped",m05_joint_grw_smile_supremacy_w070[t25_inv_grid] − m05_joint_grw_baseline[t25_inv],exclusive,b,216,43.98148148148148,19.871747747677563,1.6886677647119528,1.7645864250833576
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[t25_inv],shared,a,747,32.53012048192771,20.68805598122663,4.375120962833433,0.9826425463293522
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[t25_inv],shared,b,747,32.53012048192771,18.859657540912806,2.6672208094696663,1.0835119290076811
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[t25_inv],exclusive,a,347,37.46397694524496,-6.297205626175283,1.2279182114192129,1.0889199873344892
+t25,Q4 pillar instead of L2,m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[t25_inv],exclusive,b,222,49.0990990990991,10.983313780425332,1.329812222331717,1.6666607652277716
+close,close reference (r06),m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],shared,a,938,32.51599147121535,16.236135127172215,3.9390612335463406,1.0323140514160758
+close,close reference (r06),m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],shared,b,938,32.51599147121535,13.554662720363961,4.673220114790853,1.0594313159984095
+close,close reference (r06),m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],exclusive,a,293,43.003412969283275,10.741183672015088,1.2918122717509377,1.1232424846726907
+close,close reference (r06),m05_joint_grw_smile_supremacy_w070[raw] − m05_joint_grw_baseline[raw],exclusive,b,309,43.36569579288026,3.339122121485016,2.4610586472608365,1.6173036777163863
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,a,955,36.64921465968586,17.1218103256479,4.343155546306552,1.0853119089605174
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,b,955,36.64921465968586,16.204183502011478,4.772802542768721,1.048180532707311
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,134,38.059701492537314,0.32354084285770407,1.0858058673241835,1.2370016646729056
+t25,Q1 raw lead at T−25,m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,169,28.402366863905325,-19.514842467245785,0.6240645992218647,1.812433517278762
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],shared,a,859,37.60186263096624,18.96556161027294,2.336910545397302,1.0471274570970863
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],shared,b,859,37.60186263096624,17.98800262251266,2.5594109476440434,1.0003850102519352
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],exclusive,a,104,39.42307692307692,-5.0711218551156945,0.7894671575223426,0.7786979628667319
+t25,Q2 beyond L2,m05_joint_grw_supremacy_w040[t25_inv] − m05_joint_grw_baseline[t25_inv],exclusive,b,110,26.36363636363636,2.8699013741402233,0.8099841273204453,2.15522589361877
+close,close reference (r06),m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,a,1074,35.567970204841714,13.099898528331721,4.220010622966456,1.0926851791520362
+close,close reference (r06),m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],shared,b,1074,35.567970204841714,13.542174384104268,4.709696412207019,1.0638401821424375
+close,close reference (r06),m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,a,170,42.35294117647059,7.221762281421776,0.8187814198669868,1.5066275680906314
+close,close reference (r06),m05_joint_grw_supremacy_w040[raw] − m05_joint_grw_baseline[raw],exclusive,b,173,32.947976878612714,-25.76520937006117,0.49557019056114676,1.1340028528315576
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_grid],shared,a,955,34.345549738219894,21.778749929959023,1.9952009430167204,0.9089660838291487
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_grid],shared,b,955,34.345549738219894,21.778749929959023,2.033197952071582,0.9550274624112822
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_grid],exclusive,a,0,NaN,NaN,NaN,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w020[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w020[t25_inv_grid],exclusive,b,0,NaN,NaN,NaN,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_grid],shared,a,947,35.26927138331573,22.100087971501154,1.8691291317412946,0.8872541475605473
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_grid],shared,b,947,35.26927138331573,22.100087971501154,1.9045498577003863,0.9325269421744571
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_grid],exclusive,a,0,NaN,NaN,NaN,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w040[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w040[t25_inv_grid],exclusive,b,0,NaN,NaN,NaN,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w070[t25_inv_grid],shared,a,940,36.06382978723404,20.36624487606052,1.7610085645996632,0.8669302965418161
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w070[t25_inv_grid],shared,b,940,36.06382978723404,20.36624487606052,1.801813582491961,0.9172792782146759
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w070[t25_inv_grid],exclusive,a,0,NaN,NaN,NaN,NaN
+t25,within arm: pooltot − grid,m05_joint_grw_smile_supremacy_w070[t25_inv_pooltot] − m05_joint_grw_smile_supremacy_w070[t25_inv_grid],exclusive,b,0,NaN,NaN,NaN,NaN

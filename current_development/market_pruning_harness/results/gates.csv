@@ -1,0 +1,7 @@
+gate,model,pass,detail
+S1 published Option B reproduction,m05_joint_production_wealth,,"no published exact-contract reference; recorded panel 632, bets 1277, return 504.881203"
+S2 score-grid coherence,m05_joint_production_wealth,true,"628 books, 0 checks, max gap 0.000e+00 (tol 1.0e-09)"
+S1 published Option B reproduction,m12_joint_hybrid_synergy,,"no published exact-contract reference; recorded panel 632, bets 1302, return 606.536962"
+S2 score-grid coherence,m12_joint_hybrid_synergy,true,"628 books, 0 checks, max gap 0.000e+00 (tol 1.0e-09)"
+S1 published Option B reproduction,m05_joint_grw_smile_spine_w040,true,"panel 632/632, bets 1232/1232, return 469.353510/469.353510"
+S2 score-grid coherence,m05_joint_grw_smile_spine_w040,true,"628 books, 3140 checks, max gap 2.998e-15 (tol 1.0e-09)"

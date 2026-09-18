@@ -1,0 +1,4 @@
+model,experiment,run_id,n_folds,converged_folds,latent_type,n_latents
+m05_joint_production_wealth,scottish_lower_joint_2426,5eff755c-3591-48d1-a2cc-5fc2744ddf88,40,40,CountLatents,710
+m12_joint_hybrid_synergy,scottish_lower_joint_player_2426,132df5c2-c742-4e95-8693-3aeb2b2cbaef,43,43,CountLatents,759
+m05_joint_grw_smile_spine_w040,scottish_lower_grw_smile_spine,582035c0-e145-44f7-9f40-89e25388e79a,43,43,SmileLatents,769

@@ -29,3 +29,10 @@ current_development/*/out/
 
 # Task 014 prototype: large per-fold sampler checkpoints
 current_development/grw_joint_negbin/results/*/checkpoints/
+
+# Task 015 prototype: budget-stamped per-fold checkpoints and logs
+current_development/grw_market_smile/results/*/checkpoints_*/
+
+# Task 016 prototype: budget-stamped per-fold checkpoints
+current_development/grw_smile_spine/results/*/checkpoints_*/
+logs/

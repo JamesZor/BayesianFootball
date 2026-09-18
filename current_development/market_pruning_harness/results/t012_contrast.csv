@@ -1,0 +1,4 @@
+model,gate,pass,shift_detected,ledgers_identical,excised_markets,retained_markets,excised_n_books,retained_n_books,excised_n_bets,retained_n_bets,excised_return_pct,retained_return_pct,delta_return_pp,excised_roi_pct,retained_roi_pct
+m05_joint_production_wealth,S0 T012 quantified,true,true,false,ou15;ou25;x1x2,btts;ou05;ou15;ou25;ou35;ou45;x1x2,628,628,1281,1277,532.303970993003,479.2790188784388,-53.024952114564144,13.844481293648002,13.429005831547505
+m12_joint_hybrid_synergy,S0 T012 quantified,true,true,false,ou15;ou25;x1x2,btts;ou05;ou15;ou25;ou35;ou45;x1x2,628,628,1310,1304,588.4651310939773,573.9712111659434,-14.49391992803396,13.955004922194439,13.91827465265205
+m05_joint_grw_smile_spine_w040,S0 T012 quantified,true,true,false,ou15;ou25;x1x2,btts;ou05;ou15;ou25;ou35;ou45;x1x2,628,628,1188,1247,576.1331019902052,449.8734040066711,-126.25969798353412,16.407057164586277,14.242207093891468
