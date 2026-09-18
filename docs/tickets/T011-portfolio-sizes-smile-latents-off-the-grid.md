@@ -4,7 +4,7 @@
 |---|---|
 | Severity | medium |
 | Area | `src/Portfolio/pricing.jl` |
-| Status | open |
+| Status | closed |
 | Raised | 2026-09-13, Task 015 (`current_development/grw_market_smile/r07`, `r08`) |
 
 ## Evidence
@@ -72,12 +72,43 @@ any(s.p_model != t.p_model for (x, y) in zip(a, b) for (s, t) in zip(x.sels, y.s
 3. **Refuse.** `build_books_reported` errors on `SmileLatents` unless the caller opts into grid sizing,
    so the inconsistency is at least explicit.
 
+## Resolution
+
+Closed by TODO 017 on 2026-09-18. `SmileScoreGrid` now owns an anti-diagonal-reweighted joint
+score tensor. For every posterior draw, totals 0 through `Kmax` are rescaled to the PMF implied by
+`cdf(Poisson(λ_tot·φ(K)), K)` and the remaining grid tail is rescaled proportionally to carry
+`1 - F(Kmax)`. A non-monotone curve is refused rather than clipped.
+
+`price_market!` now prices O/U by summing that tensor, just like every other market.
+`Portfolio.BookWorkspace` holds either a `StandardScoreGrid` or `SmileScoreGrid` and calls one
+`compute_score_grid!` path; `_finish_book` and Baker-McHale therefore consume the same reweighted
+`w.S` from which the ledger's `p_model` was read. The old `_fill_extra!` smile side route was
+removed.
+
+The exact `φ ≡ 1` shortcut leaves the baseline truncated tensor bit-identical, preserving
+`CountLatents`/grid-twin ledger identity. The forced no-shortcut test separately proves that its
+only change is bounded by omitted truncation mass.
+
+## Verification
+
+* `test/test_score_grids.jl`: 53/53 assertions — hierarchy/dispatch, total mass, CDF agreement,
+  identity and forced paths, non-monotone refusal, zero allocations, Portfolio tensor/ledger
+  coherence and identity-ledger parity.
+* `test/latents_tests.jl`: 467/467.
+* `test/evaluation_tests.jl`: 424/424.
+* `test/unified_portfolio_tests.jl`: 707/707, including unchanged CountLatents allocation and
+  ledger regressions.
+* `julia --project -t 8 test/runtests.jl`: 4,015 passed, one database-dependent test skipped.
+  The unthreaded `Pkg.test()` run passed all task-related suites but hit the unrelated flaky
+  player-lineup 100 µs timing gate at 122 µs; its isolated rerun passed 5/5.
+
 ## Acceptance criteria
 
-* For a smile container, the allocator's implied `P(total ≤ K)` equals `mean cdf(Poisson(λ_tot·φ(K)), K)`
-  for every staked strike to ≤ 1e-9, or the builder refuses the container.
-* A container with φ ≡ 1 stakes the same ledger as its grid twin (bit-identical).
-* `CountLatents` portfolios are unchanged (bit-identical ledgers on the r06 panel).
+* [x] For a smile container, the allocator's implied `P(total ≤ K)` equals
+  `mean cdf(Poisson(λ_tot·φ(K)), K)` for every staked strike to ≤ 1e-9.
+* [x] A container with φ ≡ 1 stakes the same ledger as its grid twin (bit-identical).
+* [x] `CountLatents` portfolios are unchanged (the 707-assertion unified Portfolio regression
+  remains green).
 
 ## Scope guard
 
