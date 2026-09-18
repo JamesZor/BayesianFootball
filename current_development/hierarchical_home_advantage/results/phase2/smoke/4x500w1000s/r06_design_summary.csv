@@ -1,0 +1,7 @@
+fold,n_train,turf_home,turf_asym,midweek,rest_nonzero,rest_abs_mean,model
+1,720,468,148,62,154,0.9375,m05_joint_td_turf_asym
+2,740,480,153,62,154,0.9121621621621622,m05_joint_td_turf_asym
+1,720,468,148,62,154,0.9375,m05_joint_td_turf_dual
+2,740,480,153,62,154,0.9121621621621622,m05_joint_td_turf_dual
+1,720,468,148,62,154,0.9375,m05_joint_td_contextual
+2,740,480,153,62,154,0.9121621621621622,m05_joint_td_contextual
