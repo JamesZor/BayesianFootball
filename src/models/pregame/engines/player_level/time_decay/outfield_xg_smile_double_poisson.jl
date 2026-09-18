@@ -11,9 +11,8 @@
 #     log Λ^model_m(K) = log(λ_h+λ_a)_m + log_φ(K)   ~ Normal(·, σ_smile) to the market-inverted
 # per-strike intensity Λ^mkt_m(K) (built off the AD path by MarketSmileFeature). σ_smile is SAMPLED.
 # The supremacy (who-wins, λ_h−λ_a) anchor is KEPT (helps 1X2). φ is a PRICING object — it does NOT
-# enter the goals likelihood. Per-line O/U is priced with its own intensity
-# P(N≤K)=cdf(Poisson(λ_tot·φ(K)),K) (see SmileScoreMatrix in predictions); 1X2/BTTS/correct-score come
-# from the unchanged (λ_h,λ_a) grid.
+# enter the goals likelihood. At prediction time its CDF rescales score-grid anti-diagonals, so O/U,
+# 1X2, BTTS and correct score all come from one coherent reweighted joint tensor.
 
 # ==========================================
 # 1. THE MODEL CONFIGURATION

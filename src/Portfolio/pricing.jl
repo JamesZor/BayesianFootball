@@ -109,30 +109,23 @@ function BookWorkspace(spec::BookSpec, l::Models.AbstractPosteriorLatents;
         "move them onto the fast path.",
         markets = String[string(s.market) for s in sf])
 
-    # The smile route. `SmileScoreGrid` is built ONCE and holds `S`, `λ_tot` and `φ` by reference,
-    # so `fill_smile_buffers!` writes through it and the Over/Under pricer reaches the smile
-    # method with no per-fixture object.
-    if l isa Models.SmileLatents
-        buf  = Predictions.alloc_smile_buffers(l)
-        grid = Predictions.SmileScoreGrid(S, buf.λ_tot, buf.φ, copy(l.strikes))
-        return BookWorkspace{Predictions.SmileScoreGrid}(
-            ws, S, grid, buf.λ_tot, buf.φ, s1, sb, so, sf, ord,
-            Array{Float64,3}(undef, mg, mg, 1), mg, nd)
-    end
-    return BookWorkspace{Array{Float64,3}}(
-        ws, S, S, Float64[], Matrix{Float64}(undef, 0, 0), s1, sb, so, sf, ord,
+    grid = _book_score_grid(l, S)
+    return BookWorkspace{typeof(grid)}(
+        ws, S, grid, s1, sb, so, sf, ord,
         Array{Float64,3}(undef, mg, mg, 1), mg, nd)
+end
+
+_book_score_grid(::Models.AbstractPosteriorLatents, S::Array{Float64,3}) =
+    Predictions.StandardScoreGrid(S)
+
+function _book_score_grid(l::Models.SmileLatents, S::Array{Float64,3})
+    buf = Predictions.alloc_smile_buffers(l)
+    return Predictions.SmileScoreGrid(S, buf.λ_tot, buf.φ, copy(l.strikes))
 end
 
 # ===================================================================
 # 2. Pricing one fixture -- the zero-allocation kernel
 # ===================================================================
-
-"Copy fixture `i`'s smile curve through the workspace's `SmileScoreGrid`. No-op otherwise."
-@inline _fill_extra!(::BookWorkspace{Array{Float64,3}}, ::Models.AbstractPosteriorLatents,
-                     ::Int) = nothing
-@inline _fill_extra!(w::BookWorkspace{Predictions.SmileScoreGrid}, l::Models.SmileLatents,
-                     i::Int) = Predictions.fill_smile_buffers!(w.λ_tot, w.φ, l, i)
 
 "Price one bucket. Concretely typed in `M` and `N`, so the dispatch is static."
 @inline function _price_slots!(slots::Vector{MarketSlot{M, N}}, grid) where {M, N}
@@ -152,8 +145,7 @@ This is the whole of what used to be `compute_score_matrix` +
 `Dict(string(m) => compute_market_probs(...))`, at `n_draws * 1.4 MB` less per fixture.
 """
 function price_fixture!(w::BookWorkspace, l::Models.AbstractPosteriorLatents, i::Int)
-    Predictions.compute_score_grid!(w.S, w.ws, l, i)
-    _fill_extra!(w, l, i)
+    Predictions.compute_score_grid!(w.grid, w.ws, l, i)
     _price_slots!(w.slots_1x2,  w.grid)
     _price_slots!(w.slots_btts, w.grid)
     _price_slots!(w.slots_ou,   w.grid)

@@ -228,15 +228,13 @@ end
 """
     compute_score_grid!(S, ws, l::SmileLatents, i) -> S
 
-The GRID half only, for fixture row `i`. 0 bytes.
+Fill fixture row `i`'s baseline count grid, then reweight its anti-diagonals in place so
+that the resulting joint tensor has the learned smile totals marginal. 0 bytes.
 
-Mirrors `_smile_poisson_grid` (smile_poisson.jl:38-56) for the Poisson case and
-`_smile_negbin_grid` (current_development/smile_negbin/l02_smile_negbin_predict.jl:70-84)
-for the NegBin case. Note NEITHER floors nor renormalises — unlike the recombination
-kernel — so the two must not be merged.
-
-The pricing curve is filled separately by `fill_smile_buffers!`, because the two have
-different shapes and a caller pricing only 1X2 should not pay for φ.
+The baseline kernels mirror `_smile_poisson_grid` and `_smile_negbin_grid`. Within each
+total-goals anti-diagonal the reweighting preserves their conditional scoreline split.
+When every `φ` is exactly one, the reweighting is skipped and the baseline tensor remains
+bit-identical, including its tiny truncation deficit.
 """
 function compute_score_grid!(S::Array{Float64,3}, ws::GridWorkspace,
                              l::SmileLatents{Float64, Nothing}, i::Int)
@@ -247,6 +245,7 @@ function compute_score_grid!(S::Array{Float64,3}, ws::GridWorkspace,
         _tpl_poisson_pmf!(ws.p_a, l.λ_away[i, k], n)
         _tpl_outer!(S, ws.p_h, ws.p_a, n, k)
     end
+    _reweight_grid_antidiagonals!(S, l, i, ws)
     return S
 end
 
@@ -261,6 +260,7 @@ function compute_score_grid!(S::Array{Float64,3}, ws::GridWorkspace,
         _tpl_robust_negbin_pmf!(ws.p_a, r_a[i, k], l.λ_away[i, k], n)
         _tpl_outer!(S, ws.p_h, ws.p_a, n, k)
     end
+    _reweight_grid_antidiagonals!(S, l, i, ws)
     return S
 end
 
@@ -308,6 +308,140 @@ function fill_smile_buffers!(λ_tot::Vector{Float64}, φ::Matrix{Float64},
         end
     end
     return nothing
+end
+
+# --- Anti-diagonal smile reweighting ------------------------------------------
+
+@inline _smile_nstrikes(φ::AbstractMatrix{Float64}) = size(φ, 1)
+@inline _smile_nstrikes(φ::Array{Float64,3}) = size(φ, 2)
+@inline _smile_value(φ::AbstractMatrix{Float64}, ::Int, s::Int, k::Int) = φ[s, k]
+@inline _smile_value(φ::Array{Float64,3}, i::Int, s::Int, k::Int) = φ[i, s, k]
+
+@inline function _smile_is_identity(φ, i::Int, k::Int)
+    @inbounds for s in 1:_smile_nstrikes(φ)
+        _smile_value(φ, i, s, k) == 1.0 || return false
+    end
+    return true
+end
+
+function _reweight_draw_antidiagonals!(S::Array{Float64,3}, k::Int, λ_tot::Float64,
+                                       φ, i::Int, ws::GridWorkspace)
+    n = ws.max_goals
+    mass = ws.grid_mass
+    ratio = ws.ratio
+    n_strikes = _smile_nstrikes(φ)
+
+    fill!(mass, 0.0)
+    @inbounds for c in 1:n
+        for r in 1:n
+            mass[r + c - 1] += S[r, c, k]
+        end
+    end
+
+    previous_cdf = 0.0
+    @inbounds for s in 1:n_strikes
+        K = s - 1
+        φK = _smile_value(φ, i, s, k)
+        smile_cdf = cdf(Poisson(λ_tot * φK), K)
+        target_mass = smile_cdf - previous_cdf
+        target_mass >= 0.0 || error(
+            "anti-diagonal reweighting: the smile curve is not a CDF on draw $k — " *
+            "P(total ≤ $K) = $smile_cdf < P(total ≤ $(K - 1)) = $previous_cdf " *
+            "at λ_tot = $λ_tot and φ[$s] = $φK. The container is refused rather than clipped.")
+        mass[s] > 0.0 || error(
+            "anti-diagonal reweighting: the grid holds zero mass on total $K at draw $k " *
+            "and cannot be rescaled to $target_mass.")
+        ratio[s] = target_mass / mass[s]
+        previous_cdf = smile_cdf
+    end
+
+    grid_tail = 0.0
+    @inbounds for g in (n_strikes + 1):length(mass)
+        grid_tail += mass[g]
+    end
+    target_tail = 1.0 - previous_cdf
+    if grid_tail > 0.0
+        tail_ratio = target_tail / grid_tail
+        @inbounds for g in (n_strikes + 1):length(ratio)
+            ratio[g] = tail_ratio
+        end
+    elseif target_tail > 0.0
+        error("anti-diagonal reweighting: the grid holds no mass above total " *
+              "$(n_strikes - 1) at draw $k but the smile puts $target_tail there.")
+    else
+        @inbounds for g in (n_strikes + 1):length(ratio)
+            ratio[g] = 0.0
+        end
+    end
+
+    @inbounds for c in 1:n
+        for r in 1:n
+            S[r, c, k] *= ratio[r + c - 1]
+        end
+    end
+    return nothing
+end
+
+function _check_reweight_inputs(S::Array{Float64,3}, ws::GridWorkspace,
+                                n_strikes::Int, n_curve_draws::Int)
+    n, n2, nd = size(S)
+    n == n2 == ws.max_goals || error(
+        "anti-diagonal reweighting: grid is $(size(S)); workspace is for " *
+        "$(ws.max_goals) × $(ws.max_goals).")
+    n_curve_draws == nd || error(
+        "anti-diagonal reweighting: smile curve has $n_curve_draws draws; grid has $nd.")
+    1 <= n_strikes < length(ws.grid_mass) || error(
+        "anti-diagonal reweighting: $n_strikes strikes leave no grid tail in a $n × $n grid.")
+    return nothing
+end
+
+"""
+    reweight_grid_antidiagonals!(S, λ_tot, φ, ws; identity_shortcut = true) -> S
+
+Rescale each score-tensor draw so `P(total ≤ K)` equals
+`cdf(Poisson(λ_tot * φ(K)), K)` at every learned strike. Mass above the last strike is
+rescaled proportionally, making every non-identity draw sum to one. A non-monotone set
+of per-strike CDF values is refused. The steady-state successful path allocates nothing.
+"""
+function reweight_grid_antidiagonals!(S::Array{Float64,3},
+                                      λ_tot::AbstractVector{Float64},
+                                      φ::AbstractMatrix{Float64},
+                                      ws::GridWorkspace;
+                                      identity_shortcut::Bool = true)
+    _check_reweight_inputs(S, ws, size(φ, 1), size(φ, 2))
+    length(λ_tot) == size(S, 3) || error(
+        "anti-diagonal reweighting: λ_tot has $(length(λ_tot)) draws; grid has $(size(S, 3)).")
+    @inbounds for k in 1:size(S, 3)
+        identity_shortcut && _smile_is_identity(φ, 0, k) && continue
+        _reweight_draw_antidiagonals!(S, k, λ_tot[k], φ, 0, ws)
+    end
+    return S
+end
+
+function _reweight_grid_antidiagonals!(S::Array{Float64,3}, l::SmileLatents,
+                                       i::Int, ws::GridWorkspace;
+                                       identity_shortcut::Bool = true)
+    _check_reweight_inputs(S, ws, n_strikes(l), n_draws(l))
+    @inbounds for k in 1:n_draws(l)
+        identity_shortcut && _smile_is_identity(l.φ, i, k) && continue
+        _reweight_draw_antidiagonals!(S, k, l.λ_tot[i, k], l.φ, i, ws)
+    end
+    return S
+end
+
+"Fill a standard score-grid holder through the existing latent-family kernel."
+function compute_score_grid!(g::StandardScoreGrid, ws::GridWorkspace,
+                             l::AbstractPosteriorLatents, i::Int)
+    compute_score_grid!(g.grid, ws, l, i)
+    return g
+end
+
+"Fill and anti-diagonal-reweight a smile holder, retaining its source curve buffers."
+function compute_score_grid!(g::SmileScoreGrid, ws::GridWorkspace,
+                             l::SmileLatents, i::Int)
+    compute_score_grid!(g.grid, ws, l, i)
+    fill_smile_buffers!(g.λ_tot, g.φ, l, i)
+    return g
 end
 
 
@@ -458,33 +592,14 @@ function price_market!(book::NTuple{2, Vector{Float64}}, S::Array{Float64,3}, m:
     return book
 end
 
-# --- Smile-aware routing ------------------------------------------------------
+# --- Score-grid holder routing ------------------------------------------------
 #
-# Mirrors src/predictions/score_computation/smile_poisson.jl:66-88.
-#
-# O/U goes through the smile: `P(N ≤ K) = cdf(Poisson(λ_tot·φ(K)), K)`. Everything
-# else reads the grid. A line outside the learned strike ladder falls back to the
-# grid, exactly as the legacy container does — extrapolating φ past the strikes it was
-# fitted on would be inventing a price.
+# Every market, including O/U, reads the joint tensor. For `SmileScoreGrid` that tensor
+# has already been anti-diagonal-reweighted, so pricing, evaluation and allocation all
+# consume one distribution rather than a grid plus an analytical sidecar.
 
-function price_market!(book::NTuple{N, Vector{Float64}}, g::SmileScoreGrid, m) where {N}
+function price_market!(book::NTuple{N, Vector{Float64}}, g::AbstractScoreGrid, m) where {N}
     return price_market!(book, g.grid, m)
-end
-
-function price_market!(book::NTuple{2, Vector{Float64}}, g::SmileScoreGrid, m::MarketOverUnder)
-    K  = Int(floor(m.line))
-    nK = length(g.strikes)
-    if K < 0 || K + 1 > nK
-        return price_market!(book, g.grid, m)
-    end
-    over, under = book
-    s = K + 1
-    @inbounds for k in eachindex(g.λ_tot)
-        u = cdf(Poisson(g.λ_tot[k] * g.φ[s, k]), K)
-        under[k] = u
-        over[k]  = 1.0 - u
-    end
-    return book
 end
 
 """
@@ -494,7 +609,7 @@ Allocating form, keyed exactly as `Predictions.compute_market_probs` keys its re
 so a caller can swap one for the other without touching the join.
 """
 function price_market(S, m)
-    nd   = S isa SmileScoreGrid ? length(S.λ_tot) : size(S, 3)
+    nd   = S isa AbstractScoreGrid ? size(S.grid, 3) : size(S, 3)
     book = alloc_market_book(m, nd)
     price_market!(book, S, m)
     return Dict{Symbol, Vector{Float64}}(k => v for (k, v) in zip(market_keys(m), book))
