@@ -111,6 +111,33 @@ season-boundary folds. Rare, but concentrated exactly where a model is already w
 This scales with how much team turnover a segment has, and with how short the fitted
 history is. It will be worse on the first fold of a season than the twentieth.
 
+### Addendum 2026-09-12 — the composable builder, and why it now matters for a comparison
+
+The composable engine carries its own copy of the pattern, and it is the path every
+Gen 3/Gen 4 production model (`m05_joint_*`, `m12_*`, the GRW hybrids) extracts through:
+
+```julia
+# src/models/pregame/builder/engine.jl:619-629
+global_ha = model.home_advantage isa CB_PG.GlobalHomeAdvantage
+γ_h = global_ha ? ha_mat[:, 1] : (h_idx > 0 ? ha_mat[:, h_idx] : zeros(n_samples))
+```
+
+This site already special-cases `GlobalHomeAdvantage` correctly (column 1 is γ_global), so
+for the flat models it is **not** affected. For `HierarchicalTeamHomeAdvantage` it still
+substitutes zero rather than `γ_base`.
+
+That turns a small mispricing into a **biased A/B comparison**: Task 008 Phase 1
+(`current_development/hierarchical_home_advantage/`) scores hierarchical-HA candidates
+against their flat-HA twins on the same 710 fixtures, and every unmapped-home fixture is
+priced at γ_global by the control but at 0 by the candidate — a ~15% home-rate handicap
+that belongs to the extraction, not to the model. Smoke run (folds 1–2, pooled 56/57,
+24/25) found **2** such fixtures on fold 1 (`inverness-caledonian-thistle` v dumbarton,
+`arbroath` v montrose); the full 40-fold grid over 24/25 + 25/26 has **3** of 710
+(`r02_unmapped_home_*.csv` in the Phase 1 results). Phase 1 reports scores with and without them rather than patching `src`.
+
+Fix at this site: `γ_h = h_idx > 0 ? ha_mat[:, h_idx] : population_home_advantage(chain, model.home_advantage, n_samples)`,
+with the accessor proposed below.
+
 ## Proposed fix
 
 Add a population accessor alongside the existing extractors, dispatching on the

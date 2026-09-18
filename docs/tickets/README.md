@@ -30,6 +30,7 @@ only that ticket. Update `Status` here when it lands.
 | [T006](T006-scottish-lower-arm-include-guards.md) | Arm 02/03/04 loaders re-include a shared loader (guard tests a name that never existed) and call `subset` unqualified | low | `current_development/scottish_lower/` | open | 2026-08-28 |
 | [T007](T007-parallel-feature-test-hidden-dependency.md) | `features_tests.jl` depends on a probe defined only by an earlier sequential include, so the parallel suite fails | low | `test/` | open | 2026-08-29 |
 | [T008](T008-multilevel-fill-price-accounting.md) | Multi-level fills use touch leverage/settlement odds; lay slippage and VWAP semantics disagree with cashflows | high | `src/MatchDay/ledger/` | open | 2026-09-07 |
+| [T009](T009-dotenv-loaded-at-precompile-time.md) | `.env` is loaded in the module body (precompile time), so `BF_DB_URL` is unset at runtime unless the shell exports it | medium | `src/BayesianFootball.jl` | open | 2026-09-12 |
 
 ## Closed
 

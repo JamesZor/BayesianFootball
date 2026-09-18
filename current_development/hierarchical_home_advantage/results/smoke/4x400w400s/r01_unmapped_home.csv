@@ -1,0 +1,7 @@
+fold,match_id,home_team,away_team,away_mapped,model
+1,12477132,inverness-caledonian-thistle,dumbarton,true,m05_joint_production_wealth_hier_ha
+1,12476799,arbroath,montrose,true,m05_joint_production_wealth_hier_ha
+1,12477132,inverness-caledonian-thistle,dumbarton,true,m12_joint_hybrid_synergy_hier_ha
+1,12476799,arbroath,montrose,true,m12_joint_hybrid_synergy_hier_ha
+1,12477132,inverness-caledonian-thistle,dumbarton,true,m12_joint_hybrid_synergy_grw_hier_ha
+1,12476799,arbroath,montrose,true,m12_joint_hybrid_synergy_grw_hier_ha

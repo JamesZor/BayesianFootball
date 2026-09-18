@@ -1,0 +1,7 @@
+model,fold,n_target,n_teams,n_parameters,tape_instructions,gradient_ms,allocated_bytes,compiled_fresh_error,compiled_forward_error,worst_perturbed_error,log_density,flat_n_parameters,flat_tape_instructions,flat_gradient_ms,flat_allocated_bytes,delta_allocated_bytes
+m05_joint_production_wealth_hier_ha,1,0,23,77,227,0.065181,129072,0.0,6.673183228967844e-16,0.0,-1690.2998091227594,53,207,0.063808,128560,512
+m05_joint_production_wealth_hier_ha,2,1,25,83,227,0.066393,133344,0.0,2.9855492081116313e-16,0.0,-1913.308696187724,57,207,0.065301,132800,544
+m12_joint_hybrid_synergy_hier_ha,1,0,23,79,252,0.073737,175728,0.0,4.598316283614403e-16,0.0,-2185.234158722665,55,232,0.071463,175216,512
+m12_joint_hybrid_synergy_hier_ha,2,1,25,85,252,0.073446,181536,0.0,4.940634468843119e-16,0.0,-1991.4625887145194,59,232,0.072585,180992,544
+m12_joint_hybrid_synergy_grw_hier_ha,1,0,23,127,836,0.092922,175920,0.0,2.650372807828503e-16,0.0,-5042.655436159676,103,816,0.093062,175408,512
+m12_joint_hybrid_synergy_grw_hier_ha,2,1,25,189,1410,0.112298,181728,0.0,4.2931371304643704e-16,0.0,-3537.690683131266,163,1390,0.115595,181184,544
