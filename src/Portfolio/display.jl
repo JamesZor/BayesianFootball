@@ -91,11 +91,13 @@ function Base.show(io::IO, ::MIME"text/plain", s::BookSpec)
     printstyled(io, "  → determines a MatchBook. THIS IS THE CACHE KEY.\n", color = :yellow)
     _pf_leaf(io, "markets", "$(length(s.markets.markets)): " *
              join(unique(string.(Data.market_group.(s.markets.markets))), ", "))
-    _pf_leaf(io, "price", component_name(s.price))
+    _pf_leaf(io, "price", component_name(_book_price(s.price)))
     _pf_leaf(io, "allocator", component_name(s.allocator))
     _pf_leaf(io, "shrink", component_name(s.shrink))
     _pf_leaf(io, "commission", component_name(s.exec.commission))
     _pf_leaf(io, "budget", _pf_fmt(s.exec.budget))
+    _pf_leaf(io, "market trust", book_trust(s) === nothing ? "retain zero-trust" :
+             component_name(book_trust(s)))
     _pf_leaf(io, "cache key", string(book_cache_key(s), base = 16), last = true,
              value_color = :yellow)
     printstyled(io, "  change any of these and 600+ books must be rebuilt (~26s).\n",
@@ -103,8 +105,9 @@ function Base.show(io::IO, ::MIME"text/plain", s::BookSpec)
 end
 
 Base.show(io::IO, s::BookSpec) =
-    print(io, "BookSpec(", nameof(typeof(s.price)), ", ", nameof(typeof(s.allocator)), ", ",
-          nameof(typeof(s.shrink)), ", key=", string(book_cache_key(s), base = 16), ")")
+    print(io, "BookSpec(", nameof(typeof(_book_price(s.price))), ", ",
+          nameof(typeof(s.allocator)), ", ", nameof(typeof(s.shrink)),
+          ", key=", string(book_cache_key(s), base = 16), ")")
 
 function Base.show(io::IO, ::MIME"text/plain", p::PolicySpec)
     printstyled(io, "PolicySpec", color = :cyan, bold = true)
@@ -131,10 +134,12 @@ function Base.show(io::IO, ::MIME"text/plain", s::PortfolioSystem)
     printstyled(io, "expensive · cached · key $(string(book_cache_key(s.book), base = 16))\n",
                 color = :light_black)
     _pf_leaf(io, "markets", length(s.book.markets.markets))
-    _pf_leaf(io, "price", component_name(s.book.price))
+    _pf_leaf(io, "price", component_name(_book_price(s.book.price)))
     _pf_leaf(io, "allocator", component_name(s.book.allocator))
     _pf_leaf(io, "shrink", component_name(s.book.shrink))
-    _pf_leaf(io, "commission", component_name(s.book.exec.commission), last = true)
+    _pf_leaf(io, "commission", component_name(s.book.exec.commission))
+    _pf_leaf(io, "market trust", book_trust(s.book) === nothing ? "retain zero-trust" :
+             component_name(book_trust(s.book)), last = true)
 
     printstyled(io, "─"^68, "\n", color = :yellow)
     printstyled(io, " ↑ above = CACHE KEY (rebuild)   ↓ below = FREE TO SWEEP\n",

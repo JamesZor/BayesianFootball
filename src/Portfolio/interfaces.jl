@@ -5,7 +5,7 @@
 # src/backtesting/metrics/interfaces.jl.
 
 export settlement_odds, net_return, allocate, shrink_factor,
-       trust_for, trust_vector, risk_factor, apply_cap, keep, group
+       trust_for, book_trust_for, trust_vector, risk_factor, apply_cap, keep, group
 
 # ---------------------------------------------------------------- pricing
 
@@ -69,6 +69,20 @@ edge by exactly `w`, so this is applied as a stake multiplier.
 """
 trust_for(t::AbstractTrustModel, ::Selection, ::SlateContext) =
     error("trust_for not implemented for $(typeof(t))")
+
+"""
+    book_trust_for(model::AbstractTrustModel, sel::Selection) -> Float64
+
+Context-free trust used only by `BookSpec(trust = model)` to decide whether a whole market is
+absent from the payoff matrix. This method may depend only on the selection identity (`group`,
+`line`, `selection`), because pricing has not happened when the effective market set and cache key
+are resolved. Context-dependent models such as `ScheduledTrust` are rejected at book time and
+remain valid as downstream `PolicySpec` multipliers.
+"""
+book_trust_for(t::AbstractTrustModel, ::Selection) = error(
+    "book-time zero-trust excision is not implemented for $(typeof(t)); " *
+    "define `Portfolio.book_trust_for(::$(typeof(t)), ::Selection)` or construct " *
+    "`BookSpec(trust = nothing)` to retain the historical geometry")
 
 """
     trust_vector(model, book::MatchBook, ctx) -> Vector{Float64}

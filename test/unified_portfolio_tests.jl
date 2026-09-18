@@ -24,7 +24,7 @@
 using Test
 using BayesianFootball
 using BayesianFootball: Data, Models, Predictions, Experiments, Training, Evaluation
-using DataFrames, Dates, Statistics, Random, Distributions, MCMCChains
+using DataFrames, Dates, Statistics, Random, Serialization, Distributions, MCMCChains
 
 const UPF = BayesianFootball.Portfolio
 
@@ -78,6 +78,17 @@ function upf_odds(ids; seed = 21, vig = 1.05)
         end
     end
     return DataFrame(rows)
+end
+
+"Add one complete totals market without perturbing the existing quote rows or their order."
+function upf_add_total_odds(odds, ids, line; probs = (0.20, 0.80), vig = 1.05)
+    out = copy(odds)
+    suffix = replace(string(Float64(line)), "." => "")
+    for m in ids, (side, p) in zip(("over", "under"), probs)
+        push!(out, (match_id = Int(m), market_name = "OverUnder", market_line = Float64(line),
+                    selection = Symbol(side, "_", suffix), odds_close = 1.0 / (vig * p)))
+    end
+    return out
 end
 
 "Three fixtures per settlement window, so a slate is a slate and not a single match."
@@ -372,6 +383,161 @@ end
     one = UPF.build_book(UPF_SPEC, w, UPF_L, 1, oi, UPF_FX)
     @test one !== nothing
     @test one == books[findfirst(b -> b.m_id == UPF_IDS[1], books)]
+end
+
+@testset "zero-trust markets are inert when BookSpec opts into excision" begin
+    # One trusted direction is enough to retain a COMPLETE market. The zero-trust complements
+    # remain in the allocator geometry; excision is deliberately market-level, not selection-level.
+    trust = UPF.TieredTrust(Dict(
+        ("1x2", 0.0, :home)             => 0.25,
+        ("over_under", 2.5, :under)     => 0.25,
+        ("btts", 0.0, :btts_yes)        => 0.25,
+    ); default = 0.0)
+    policy = UPF.PolicySpec(trust = trust)
+    odds = upf_add_total_odds(UPF_ODDS, UPF_IDS, 4.5)
+    shrink = UPF.BakerMcHale(n_draws = 16)
+
+    base = upf_spec(shrink = shrink, trust = trust)
+    @test book_trust(base) === trust
+    @test book_trust(UPF_SPEC) === nothing
+    # BookSpec's persisted four-parameter/five-field layout is unchanged by the opt-in keyword.
+    @test length(typeof(UPF_SPEC).parameters) == 4
+    @test fieldcount(typeof(UPF_SPEC)) == 5
+    for spec in (UPF_SPEC, base)
+        io = IOBuffer()
+        serialize(io, spec)
+        seekstart(io)
+        loaded = deserialize(io)
+        @test book_cache_key(loaded) == book_cache_key(spec)
+        @test (book_trust(loaded) === nothing && book_trust(spec) === nothing) ||
+              UPF.component_hash(book_trust(loaded)) == UPF.component_hash(book_trust(spec))
+    end
+
+    extended = UPF.BookSpec(
+        markets = Data.MarketConfig(Data.AbstractMarket[
+            Data.Market1X2(), Data.MarketOverUnder(2.5), Data.MarketBTTS(),
+            Data.MarketOverUnder(4.5)]),
+        shrink = shrink,
+        trust = trust,
+    )
+
+    base_books = build_books(base, UPF_L, odds, UPF_FX)
+    extended_books = build_books(extended, UPF_L, odds, UPF_FX)
+    @test length(base_books) == length(extended_books) == length(UPF_IDS)
+
+    # The zero-trust O/U 4.5 group never reaches R, either Kelly solve, or Baker-McHale. Every
+    # retained selection and every floating-point result is consequently identical.
+    @test base_books == extended_books
+    for (a, b) in zip(base_books, extended_books)
+        @test isequal(a.sels, b.sels)
+        @test isequal(a.R, b.R)
+        @test isequal(a.a_kelly, b.a_kelly)
+        @test isequal(a.k_shrink, b.k_shrink)
+    end
+
+    base_result = simulate_portfolio(policy, base_books; bootstrap = false)
+    extended_result = simulate_portfolio(policy, extended_books; bootstrap = false)
+    @test isequal(base_result.trajectory.bets, extended_result.trajectory.bets)
+    @test isequal(as_namedtuple(base_result.summary), as_namedtuple(extended_result.summary))
+
+    # The same invariant holds on the distinct SmileScoreGrid path, not only CountLatents. An
+    # identity smile removes model differences and isolates the market-geometry property.
+    strikes = collect(0.5:1.0:4.5)
+    smile = SmileLatents(UPF_L.match_ids, UPF_L.λ_home, UPF_L.λ_away, nothing,
+                         UPF_L.λ_home .+ UPF_L.λ_away,
+                         ones(n_matches(UPF_L), length(strikes), n_draws(UPF_L)), strikes)
+    smile_base = build_books(base, smile, odds, UPF_FX)
+    smile_extended = build_books(extended, smile, odds, UPF_FX)
+    @test smile_base == smile_extended
+    smile_base_result = simulate_portfolio(policy, smile_base; bootstrap = false)
+    smile_extended_result = simulate_portfolio(policy, smile_extended; bootstrap = false)
+    @test isequal(smile_base_result.trajectory.bets,
+                  smile_extended_result.trajectory.bets)
+    @test isequal(as_namedtuple(smile_base_result.summary),
+                  as_namedtuple(smile_extended_result.summary))
+
+    # No BookSpec trust means the historical behaviour, exactly: the zero-trust policy is a
+    # downstream multiplier and the extra market still widens the book geometry.
+    retained = UPF.BookSpec(
+        markets = extended.markets,
+        shrink = shrink,
+    )
+    retained_books = build_books(retained, UPF_L, odds, UPF_FX)
+    @test all(length(b.sels) == length(base_books[1].sels) + 2 for b in retained_books)
+    @test all(size(b.R, 2) == size(base_books[1].R, 2) + 2 for b in retained_books)
+
+    # If either O/U 4.5 direction has positive trust, both complementary columns are retained.
+    directional = UPF.TieredTrust(Dict(
+        ("1x2", 0.0, :home)             => 0.25,
+        ("over_under", 2.5, :under)     => 0.25,
+        ("btts", 0.0, :btts_yes)        => 0.25,
+        ("over_under", 4.5, :over)      => 0.10,
+    ); default = 0.0)
+    directional_spec = UPF.BookSpec(
+        markets = extended.markets,
+        shrink = UPF.NoShrinkage(),
+        trust = directional,
+    )
+    directional_book = first(build_books(directional_spec, UPF_L, odds, UPF_FX))
+    total_45 = filter(s -> s.group == "OverUnder" && s.line == 4.5, directional_book.sels)
+    @test length(total_45) == 2
+    @test Set(s.selection for s in total_45) == Set([:over_45, :under_45])
+
+    # A policy cannot activate a market that its cached book omitted. Different positive weights
+    # on retained markets remain valid cheap policy sweeps.
+    @test UPF.PortfolioSystem(extended, policy) isa UPF.PortfolioSystem
+    @test_throws ErrorException UPF.PortfolioSystem(
+        extended, UPF.PolicySpec(trust = directional))
+
+    # Cache keys describe effective payoff geometry, not trust magnitudes. The extended/excised
+    # spec therefore shares the base key, while legacy retain mode remains distinct.
+    @test book_cache_key(upf_spec()) == book_cache_key(UPF_SPEC)
+    @test book_cache_key(base) == book_cache_key(extended)
+    @test book_cache_key(retained) != book_cache_key(extended)
+    heavier = UPF.TieredTrust(Dict(key => 0.75 for key in keys(trust.table)); default = 0.0)
+    @test book_cache_key(base) == book_cache_key(upf_spec(shrink = shrink, trust = heavier))
+
+    # Prove dictionary insertion/growth history cannot perturb the key. A large size hint creates
+    # a genuinely different slot layout; constructing TieredTrust positionally preserves it.
+    grown = Dict{Tuple{String,Float64,Symbol},Float64}()
+    sizehint!(grown, 512)
+    for (key, value) in trust.table
+        grown[key] = value
+    end
+    @test collect(keys(grown)) != collect(keys(trust.table))
+    same_entries_different_layout = UPF.TieredTrust(grown, trust.default)
+    @test UPF.component_hash(trust) == UPF.component_hash(same_entries_different_layout)
+    same_trust_spec = upf_spec(shrink = shrink, trust = same_entries_different_layout)
+    @test book_cache_key(base) == book_cache_key(same_trust_spec)
+
+    # Cloning must carry book trust explicitly; `trust = nothing` always means legacy geometry,
+    # even when the source price field contains the internal persistence wrapper.
+    clone = UPF.BookSpec(markets = base.markets, price = base.price,
+                         allocator = base.allocator, shrink = base.shrink, exec = base.exec,
+                         trust = book_trust(base))
+    @test book_trust(clone) === trust
+    @test book_cache_key(clone) == book_cache_key(base)
+    @test book_trust(UPF.BookSpec(markets = base.markets, price = base.price)) === nothing
+
+    # Configuration failures stay loud: an all-zero book, a causal schedule, and a strict table
+    # missing declared outcomes are never converted into hundreds of quietly dropped fixtures.
+    all_zero = upf_spec(trust = UPF.FlatTrust(0.0))
+    @test_throws ArgumentError book_cache_key(all_zero)
+    @test_throws ArgumentError build_books(all_zero, UPF_L, odds, UPF_FX)
+
+    scheduled = upf_spec(trust = UPF.ScheduledTrust([trust]))
+    @test_throws ErrorException book_cache_key(scheduled)
+    @test_throws ErrorException build_books(scheduled, UPF_L, odds, UPF_FX)
+
+    strict_table = Dict{Tuple{String,Float64,Symbol},Float64}(
+        ("1X2", 0.0, :home) => 0.25)
+    strict_spec = UPF.BookSpec(
+        markets = Data.MarketConfig(Data.AbstractMarket[Data.Market1X2()]),
+        shrink = UPF.NoShrinkage(),
+        trust = UPF.SelectionTrust(strict_table; strict = true),
+    )
+    @test_throws KeyError book_cache_key(strict_spec)
+    @test_throws KeyError build_books_reported(strict_spec, UPF_L, odds, UPF_FX)
 end
 
 # ===================================================================

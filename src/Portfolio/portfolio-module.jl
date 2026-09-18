@@ -20,10 +20,12 @@ shrinkage, and Busseti, Ryu & Boyd (2016) for the drawdown constraint.
 
 # The two configs, and why they are separate
 
-`BookSpec` (pricing, allocator, shrinkage, execution) determines the `MatchBook` and is the
-**cache key**. `PolicySpec` (trust, risk, cap, filter, grouping) is a set of pure
-post-multipliers on an already-built book. Sweeping a `PolicySpec` must never rebuild books --
-that split is what makes walk-forward evaluation affordable.
+`BookSpec` (markets, pricing, allocator, shrinkage, execution, and optional book-time trust
+excision) determines the `MatchBook` and is the **cache key**. `PolicySpec` (trust, risk, cap,
+filter, grouping) is a set of pure post-multipliers on an already-built book. Sweeping a
+`PolicySpec` must never rebuild books -- that split is what makes walk-forward evaluation
+affordable. The default `book_trust(spec) === nothing` retains the historical geometry; opt-in
+market excision belongs in `BookSpec` precisely because it changes the cached payoff matrix.
 
 # Extending
 
@@ -144,7 +146,7 @@ export
     Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory,
 
     # config
-    ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem,
+    ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem, book_trust,
 
     # the zero-allocation path: alignment, workspace, build report
     OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildReport,

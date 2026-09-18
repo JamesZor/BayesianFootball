@@ -342,6 +342,7 @@ read it, not inside a metrics struct.
 function run_portfolio_simulation(spec::BookSpec, policy::PolicySpec, source, odds, fixtures;
                                   require_result::Bool = true, require_converged::Bool = false,
                                   quiet::Bool = false, kw...)
+    _validate_book_policy(spec, policy)
     books, br = if source isa Training.Fit
         build_books_reported(spec, source, odds, fixtures; require_result = require_result,
                              require_converged = require_converged, quiet = quiet)

@@ -219,6 +219,7 @@ function extend_portfolio(db::Training.PostgresStorage, key, fit::Training.Fit,
                           book_spec = nothing, policy_spec = nothing)
     row = _portfolio_extension_row(db, key)
     book, policy = _portfolio_extension_specs(db, row, book_spec, policy_spec)
+    _validate_book_policy(book, policy)
     existing = load_portfolio_db(row.portfolio_run_id, db)
     fit.latents isa Models.AbstractPosteriorLatents || error(
         "extend_portfolio: Fit '$(Training.fit_name(fit))' has no posterior latents.")

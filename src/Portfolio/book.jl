@@ -5,12 +5,87 @@
 # Everything here is a pure function of the data and the BookSpec. Nothing in a PolicySpec can
 # reach it, which is what makes `hash(BookSpec)` a sound cache key.
 
-export extract_selections, build_book, build_books, book_cache_key, fixture_table,
+export extract_selections, build_book, build_books, book_cache_key, book_trust, fixture_table,
        is_settled
 
 "Trust key for a selection: `1X2_home`, `O/U 2.5_over_25`, `BTTS_btts_yes`."
 selection_family(group::AbstractString, line::Real, sel::Symbol) =
     group == "OverUnder" ? "O/U $(line)_$(sel)" : "$(group)_$(sel)"
+
+_book_market_key(s::Selection) = (s.group, s.line)
+
+function _checked_book_trust(trust::AbstractTrustModel, s::Selection)
+    weight = book_trust_for(trust, s)
+    (isfinite(weight) && 0.0 <= weight <= 1.0) || error(
+        "book-time trust for $(s.family) must be finite and in [0,1], got $weight")
+    return weight
+end
+
+"A selection-identity-only probe used before prices and model probabilities exist."
+function _market_probe(m::AbstractMarket, selection::Symbol)
+    group = market_group(m)
+    line = Float64(market_line(m))
+    return Selection(selection_family(group, line, selection), group, line, selection,
+                     2.0, 2.0, 0.5, 0.5)
+end
+
+function _market_has_positive_trust(trust::AbstractTrustModel, m::AbstractMarket)
+    active = false
+    # Do not short-circuit: strict SelectionTrust must validate every declared outcome even when
+    # the first one is already positive, otherwise missing-key diagnostics depend on key order.
+    for selection in values(outcomes(m))
+        active |= _checked_book_trust(trust, _market_probe(m, selection)) > 0.0
+    end
+    return active
+end
+
+"The declared markets that may enter payoff geometry under this BookSpec."
+function _effective_markets(spec::BookSpec)
+    trust = book_trust(spec)
+    trust === nothing && return spec.markets.markets
+    active = AbstractMarket[m for m in spec.markets.markets
+                            if _market_has_positive_trust(trust, m)]
+    isempty(active) && throw(ArgumentError(
+        "BookSpec trust excises every declared market; retain at least one market with " *
+        "positive trust or use `trust = nothing` for legacy geometry"))
+    return active
+end
+
+_excise_zero_trust_markets(::Nothing, sels::Vector{Selection}) = sels
+
+"""
+Drop whole markets whose admitted selections all have exactly zero book-time trust.
+
+This is deliberately market-level, not selection-level: if one direction has positive trust, all
+of that market's columns remain in the payoff matrix. `(group, line)` identifies one market in the
+same way quote extraction does. Selection order is preserved exactly for every retained market.
+"""
+function _excise_zero_trust_markets(trust::AbstractTrustModel, sels::Vector{Selection})
+    active = Set{Tuple{String,Float64}}()
+    for s in sels
+        _checked_book_trust(trust, s) > 0.0 && push!(active, _book_market_key(s))
+    end
+    return Selection[s for s in sels if _book_market_key(s) in active]
+end
+
+_policy_market_active(trust::AbstractTrustModel, market::AbstractMarket) =
+    _market_has_positive_trust(trust, market)
+_policy_market_active(trust::ScheduledTrust, market::AbstractMarket) =
+    any(model -> _policy_market_active(model, market), trust.per_slate)
+
+"Refuse a policy that tries to activate a market the cached book excised."
+function _validate_book_policy(spec::BookSpec, policy::PolicySpec)
+    trust = book_trust(spec)
+    trust === nothing && return nothing
+    _effective_markets(spec)  # validates coverage, ranges, non-emptiness and causal trust
+    for market in spec.markets.markets
+        !_market_has_positive_trust(trust, market) &&
+            _policy_market_active(policy.trust, market) && error(
+                "PolicySpec trust activates $(market), but BookSpec trust excised that market. " *
+                "Use compatible zero-trust patterns or rebuild with `BookSpec(trust = nothing)`.")
+    end
+    return nothing
+end
 
 """
     extract_selections(odds_df, match_id, spec, model_probs) -> Vector{Selection}
@@ -59,7 +134,7 @@ function extract_selections(odds_df::DataFrame, match_id::Integer, spec::BookSpe
                                  (1.0 / o) / overround))
         end
     end
-    return out
+    return _excise_zero_trust_markets(book_trust(spec), out)
 end
 
 "Date, and final score when the fixture has been played."
@@ -93,7 +168,7 @@ function build_book(spec::BookSpec, latents_row, expr, odds_df::DataFrame,
     end
 
     model_probs = Dict(string(m) => Predictions.compute_market_probs(score_matrix, m)
-                       for m in spec.markets.markets)
+                       for m in _effective_markets(spec))
 
     sels = extract_selections(odds_df, m_id, spec, model_probs)
     isempty(sels) && return nothing
@@ -185,15 +260,34 @@ cache that never hits, silently turning every policy sweep back into a full rebu
 """
 function component_hash(x, h::UInt = UInt(0))
     h = hash(string(nameof(typeof(x))), h)
-    for f in fieldnames(typeof(x))
-        v = getfield(x, f)
-        h = if v isa Union{Number,Symbol,AbstractString,Bool}
-                hash(v, h)
-            elseif v isa AbstractArray && eltype(v) <: Union{Number,Symbol,AbstractString}
-                hash(collect(v), h)     # hash(::AbstractArray) is content-based
-            else
-                component_hash(v, h)
-            end
+    if x isa Union{Number,Symbol,AbstractString,Bool}
+        return hash(x, h)
+    elseif x isa AbstractDict
+        # Dict iteration order is insertion-dependent. A trust table with the same semantic
+        # entries must therefore hash the same regardless of how its caller assembled it.
+        for key in sort!(collect(keys(x)); by = repr)
+            h = component_hash(key, h)
+            h = component_hash(x[key], h)
+        end
+    elseif x isa AbstractArray
+        for v in x
+            h = component_hash(v, h)
+        end
+    elseif x isa Tuple
+        for v in x
+            h = component_hash(v, h)
+        end
+    else
+        for f in fieldnames(typeof(x))
+            v = getfield(x, f)
+            h = if v isa Union{Number,Symbol,AbstractString,Bool}
+                    hash(v, h)
+                elseif v isa AbstractArray && eltype(v) <: Union{Number,Symbol,AbstractString}
+                    hash(collect(v), h)     # hash(::AbstractArray) is content-based
+                else
+                    component_hash(v, h)
+                end
+        end
     end
     return h
 end
@@ -208,9 +302,14 @@ Equal specs give equal keys -- asserted in `test/portfolio_tests.jl` for a spec 
 `BakerMcHale`, which is the case that breaks under a naive `hash`.
 """
 function book_cache_key(spec::BookSpec)
-    h = component_hash(spec.price)
+    # Hash the underlying settlement policy, not the compatibility wrapper carrying book trust.
+    # Default specs therefore retain their historical key exactly.
+    h = component_hash(_book_price(spec.price))
     h = component_hash(spec.allocator, h)
     h = component_hash(spec.shrink, h)
     h = component_hash(spec.exec, h)
-    return hash(string.(spec.markets.markets), h)
+    # Trust magnitudes do not change a MatchBook; only the resulting market zero-pattern does.
+    # Hashing effective markets keeps trust-weight sweeps cache-free and makes an excised extended
+    # spec share the base spec's cache whenever their actual payoff geometry is identical.
+    return hash(string.(_effective_markets(spec)), h)
 end

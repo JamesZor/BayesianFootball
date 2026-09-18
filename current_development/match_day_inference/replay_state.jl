@@ -4350,7 +4350,7 @@ function set_policy!(st::ReplayState;
         book = shrink_moved ?
             PF.BookSpec(markets = st.system.book.markets, price = st.system.book.price,
                         allocator = st.system.book.allocator, shrink = new_shrink,
-                        exec = st.system.book.exec) :
+                        exec = st.system.book.exec, trust = PF.book_trust(st.system.book)) :
             st.system.book
 
         st.system = PF.PortfolioSystem(book, policy)

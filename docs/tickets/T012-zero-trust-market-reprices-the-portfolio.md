@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | Severity | medium |
-| Area | `src/Portfolio/pricing.jl`, `src/Portfolio/implementations/shrinkage.jl` |
-| Status | open |
+| Area | `src/Portfolio/types.jl`, `src/Portfolio/book.jl`, `src/Portfolio/pricing.jl` |
+| Status | done |
 | Raised | 2026-09-17, while building Task 016 (`current_development/grw_smile_spine/r08`) |
 
 ## Evidence
@@ -112,9 +112,11 @@ error class. They are not mutually exclusive.
 
 ## Acceptance criteria
 
-* With a market present at trust 0, `simulate_portfolio` returns a bet ledger `isequal` to the
-  one from a book that omits that market, for a `CountLatents` and a `SmileLatents` arm, in both
-  the close and T−25 environments (the six rows above).
+* With a **wholly zero-trust market** present (every direction has trust 0),
+  `simulate_portfolio` returns a bet ledger `isequal` to the one from a book that omits that
+  market, for a `CountLatents` and a `SmileLatents` arm, in both the close and T−25 environments
+  (the six rows above). This is market-level excision: a market with any trusted direction remains
+  whole, including its zero-trust complements.
 * `BakerMcHale`'s `k` is unchanged for a fixture whose stakeable selection set is unchanged.
 * Existing Option B portfolios reproduce bit-identically (`r06`'s P1 row: +385.78% / ROI 11.68% /
   1,247 bets on the 632-fixture close panel).
@@ -123,5 +125,74 @@ error class. They are not mutually exclusive.
 ## Scope guard
 
 Do not change `TieredTrust`, the allocator, or the Option B contract's market set. Do not
-re-tune `BakerMcHale.n_draws` or its grid. This is about whether an unstaked selection may
+re-tune `BakerMcHale.n_draws` or its grid. This is about whether a wholly unstaked market may
 influence a staked one, nothing else.
+
+## Resolution
+
+Resolved on 2026-09-18 with an opt-in, cache-safe book-time excision seam:
+
+- `BookSpec(...; trust = nothing)` preserves the historical behaviour exactly: every declared and
+  quoted market reaches the payoff matrix, and existing Option B construction is unchanged.
+  Supplying `trust = model` removes a market before `_finish_book` only when every declared
+  direction has book-time trust exactly zero.
+- Excision is deliberately **market-level**. If one direction has positive trust, every
+  complementary column remains in `R`, including zero-trust directions. Selection-level pruning
+  is not claimed because `BookSpec` admits complete markets.
+- The context-free `book_trust_for` interface is implemented for `FlatTrust`, `SelectionTrust` and
+  `TieredTrust`. It may inspect only selection identity. `ScheduledTrust` is rejected at book time:
+  collapsing future schedule entries into an earlier cached book would be a look-ahead leak. It
+  remains valid as a downstream `PolicySpec` multiplier with legacy book geometry.
+- Both the legacy DataFrame extractor and the typed zero-allocation extractor consume the same
+  effective market set. Excised selections therefore cannot enter score-market pricing,
+  `payoff_matrix`, the posterior-mean Kelly solve, or Baker-McHale's posterior-draw re-solves.
+- `book_cache_key` hashes the **effective market set**, not trust magnitudes. Trust-weight sweeps
+  with the same zero pattern reuse cached books, and an extended spec whose extra market is
+  excised has the same key as the equivalent base spec. The `trust = nothing` path reproduces the
+  historical Option B key exactly.
+- The trust keyword is stored in an internal price-policy wrapper rather than a new struct field.
+  `BookSpec` retains its historical four type parameters and five fields, so pre-T012
+  `portfolio_artifacts.book_spec_blob` values remain deserialisable. `book_trust(spec)` exposes
+  the configuration without leaking that compatibility detail.
+- `PortfolioSystem` and `run_portfolio_simulation` refuse a policy that activates a market its
+  cached book excised. Positive weights may still be swept freely within the retained market set.
+  All-zero book trust, causal schedules at book time, and missing keys in strict `SelectionTrust`
+  are loud configuration errors rather than silently dropped fixtures.
+
+No allocator, Baker-McHale grid, `TieredTrust` lookup semantics, or Option B market set changed.
+
+## Verification
+
+Synthetic regression coverage in `test/unified_portfolio_tests.jl` now verifies:
+
+- a base book and a book extended with wholly zero-trust O/U 4.5 produce identical selections,
+  payoff matrices `R`, posterior-mean Kelly allocations and Baker-McHale `k*` values;
+- their bet ledgers and every `PortfolioSummary` field are `isequal`;
+- the same exact invariance holds for both `CountLatents` and the distinct `SmileLatents` score-grid
+  path;
+- omitting the `BookSpec` trust keyword retains O/U 4.5 and widens `R` by two columns, pinning
+  backward compatibility;
+- positive trust in only one O/U 4.5 direction retains both market complements;
+- cache keys depend on effective markets, not positive weight magnitudes or dictionary growth
+  history, while retain mode remains distinct;
+- `BookSpec` keeps its persisted four-parameter/five-field layout and repository clone helpers
+  explicitly carry `book_trust(spec)`; and
+- all-zero trust, `ScheduledTrust`, strict-table omissions and incompatible book/policy zero
+  patterns fail loudly.
+
+Commands run on 2026-09-18:
+
+```text
+julia +1.12.6 --startup-file=no --project -t 8 -e 'include("test/portfolio_tests.jl")'
+  92 / 92 passed
+
+julia +1.12.6 --startup-file=no --project -t 8 -e 'include("test/unified_portfolio_tests.jl")'
+  792 / 792 passed
+
+julia +1.12.6 --startup-file=no --project -t 8 test/runtests.jl
+  4,167 passed, 1 expected broken, 0 failed (exit 0; 6m25s)
+```
+
+The full run reported the existing environment-dependent PostgreSQL ledger testsets as skipped
+because `BF_DB_URL` was unreachable; the runner completed successfully and every executed test
+passed.

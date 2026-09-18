@@ -183,8 +183,9 @@ function gms_extended_book(base)
     markets = Data.MarketConfig(reduce(vcat, (
         Data.AbstractMarket[Data.Market1X2(), Data.MarketBTTS()],
         [Data.MarketOverUnder(i + 0.5) for i in 0:4])))
-    return GMS_PORTFOLIO.BookSpec(markets = markets, price = base.price, allocator = base.allocator,
-                                  shrink = base.shrink, exec = base.exec)
+    return GMS_PORTFOLIO.BookSpec(
+        markets = markets, price = base.price, allocator = base.allocator,
+        shrink = base.shrink, exec = base.exec, trust = GMS_PORTFOLIO.book_trust(base))
 end
 
 """
