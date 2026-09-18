@@ -13,8 +13,8 @@
 # Market pillars (both σ SAMPLED — the release valve; never fix σ):
 #   C1 SUPREMACY: model_sup = log λ_h − log λ_a ~ Normal(m_sup, σ_sup)   (no κ at team level)
 #   C2 SMILE:     log Λ^model(K) = log(λ_h+λ_a) + log_φ(K) ~ Normal(log Λ^mkt(K), σ_smile)
-# φ is a PRICING object only — it never enters the goals likelihood. Per-line O/U is priced by
-# SmileScoreMatrix via cdf(Poisson(λ_tot·φ(K)), K); 1X2/BTTS/CS come from the (λ_h,λ_a) grid.
+# φ is a PRICING object only — it never enters the goals likelihood. At prediction time its CDF
+# rescales score-grid anti-diagonals, so O/U, 1X2, BTTS and correct score all read one joint tensor.
 # Market inversion stays Poisson-referenced (see market_extractors.jl — that gap IS the edge).
 #
 # ⚠ DEFAULTS: supremacy_weight / smile_weight / days_half_life below are the Ireland keeper

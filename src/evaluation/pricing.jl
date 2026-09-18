@@ -88,19 +88,22 @@ function price_match_markets!(probs::MarketProbabilities,
                               wsp::EvaluationWorkspace,
                               l::AbstractPosteriorLatents,
                               i::Int)
-    compute_score_grid!(wsp.grid, wsp.ws, l, i)
-    target = _price_target(wsp, l, i)
+    target = _fill_price_target!(wsp, l, i)
     _price_books!(probs, wsp, target, i, wsp.markets, wsp.books, 1)
     return probs
 end
 
-# The ordinary families price straight off the grid; the smile family prices off a
-# `SmileScoreGrid` whose per-fixture buffers have to be refilled first.
-@inline _price_target(wsp::EvaluationWorkspace{M,B,Nothing}, l, i) where {M,B} = wsp.grid
+# The holder type selects both fill and pricing at compile time. A SmileScoreGrid fill
+# performs anti-diagonal reweighting before any market reads the shared tensor.
+@inline function _fill_price_target!(wsp::EvaluationWorkspace{M,B,Nothing},
+                                     l::AbstractPosteriorLatents, i::Int) where {M,B}
+    compute_score_grid!(wsp.grid, wsp.ws, l, i)
+    return wsp.grid
+end
 
-@inline function _price_target(wsp::EvaluationWorkspace{M,B,SmileScoreGrid},
-                               l::SmileLatents, i::Int) where {M,B}
-    fill_smile_buffers!(wsp.smile.λ_tot, wsp.smile.φ, l, i)
+@inline function _fill_price_target!(wsp::EvaluationWorkspace{M,B,SmileScoreGrid},
+                                     l::SmileLatents, i::Int) where {M,B}
+    compute_score_grid!(wsp.smile, wsp.ws, l, i)
     return wsp.smile
 end
 

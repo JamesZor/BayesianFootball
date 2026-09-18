@@ -448,7 +448,7 @@ merely equal to rounding.
 
 
 # ==============================================================================
-# 5. SMILE LATENTS — the grid-plus-pricing-curve family
+# 5. SMILE LATENTS — the anti-diagonal-reweighted score-grid family
 # ==============================================================================
 
 """
@@ -458,16 +458,13 @@ merely equal to rounding.
 Posterior latents for the market-smile engines
 (`DynamicSmileDoublePoisson…`, `DynamicSmileDoubleNegBin…`).
 
-A smile model prices TWO WAYS AT ONCE and the container has to carry both:
+A smile model carries both the baseline `(λ_home, λ_away)` geometry and the per-strike
+intensity `Λ(K) = λ_tot · φ(K)`. `Predictions.compute_score_grid!` rescales the baseline
+grid's anti-diagonals so `P(N ≤ K) = cdf(Poisson(Λ(K)), K)` at every learned strike.
+O/U, 1X2, BTTS, correct-score and portfolio sizing then all read one coherent joint tensor.
 
-  * 1X2 / BTTS / correct-score come from the ordinary `(λ_home, λ_away)` grid;
-  * per-line Over/Under comes from its OWN per-strike intensity
-    `Λ(K) = λ_tot · φ(K)`, priced as `P(N ≤ K) = cdf(Poisson(Λ(K)), K)`.
-
-Collapsing this into a `CountLatents` would silently price O/U off the grid and
-"de-smile" the model — the exact failure `src/predictions/score_computation/smile_poisson.jl`
-warns about in its header. Making it a separate TYPE makes that collapse impossible
-rather than merely discouraged.
+Collapsing this into a `CountLatents` would discard `φ` and "de-smile" the model. Making
+it a separate TYPE makes that collapse impossible rather than merely discouraged.
 
 | field                | shape                             | meaning                          |
 |----------------------|-----------------------------------|----------------------------------|
@@ -541,7 +538,7 @@ end
 
 n_draws(l::SmileLatents) = size(l.λ_home, 2)
 
-"Number of O/U strikes the learned smile covers. Lines beyond it fall back to the grid."
+"Number of O/U strikes constrained by the learned smile; higher totals retain baseline proportions."
 n_strikes(l::SmileLatents) = length(l.strikes)
 
 latent_matrices(l::SmileLatents{T, Nothing}) where {T} =

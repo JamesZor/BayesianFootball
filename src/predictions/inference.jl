@@ -132,23 +132,15 @@ function model_inference(latents::AbstractPosteriorLatents,
     worker_slots = Base.Threads.maxthreadid()
     workspaces = [GridWorkspace() for _ in 1:worker_slots]
     grids = [alloc_score_grid(latents) for _ in 1:worker_slots]
-    smile_buffers = latents isa SmileLatents ?
-        [alloc_smile_buffers(latents) for _ in 1:worker_slots] : nothing
+    holders = [_inference_grid_holder(latents, S) for S in grids]
 
     results_vec = Vector{Dict{String, Dict{Symbol, Vector{Float64}}}}(undef, nm)
     @threads :static for i in 1:nm
         worker = threadid()
         ws = workspaces[worker]
         S = grids[worker]
-        compute_score_grid!(S, ws, latents, i)
-
-        target = if latents isa SmileLatents
-            buffers = smile_buffers[worker]
-            fill_smile_buffers!(buffers.λ_tot, buffers.φ, latents, i)
-            SmileScoreGrid(S, buffers.λ_tot, buffers.φ, latents.strikes)
-        else
-            S
-        end
+        target = holders[worker]
+        compute_score_grid!(target, ws, latents, i)
 
         fixture_results = Dict{String, Dict{Symbol, Vector{Float64}}}()
         for market in markets
@@ -193,6 +185,13 @@ function model_inference(latents::AbstractPosteriorLatents,
     ), model, market_config)
     _PPD_CACHE[k] = ppd
     return ppd
+end
+
+_inference_grid_holder(::AbstractPosteriorLatents, S::Array{Float64,3}) = StandardScoreGrid(S)
+
+function _inference_grid_holder(l::SmileLatents, S::Array{Float64,3})
+    buffers = alloc_smile_buffers(l)
+    return SmileScoreGrid(S, buffers.λ_tot, buffers.φ, copy(l.strikes))
 end
 
 function model_inference(latents::AbstractPosteriorLatents;

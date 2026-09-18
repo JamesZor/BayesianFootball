@@ -34,9 +34,9 @@ Component-driven, assembled from mathematical building blocks:
 Notable exports: `DynamicGoalsModel`, `DynamicXGModel`,
 `DynamicCopulaGoalsTimeDecayModel`,
 `DynamicSmileDoublePoissonXGOutfieldPlayerTimeDecayModel` — the local-intensity
-per-strike totals "smile" pillar, which prices O/U via its own intensity
-`λ_tot·φ(K)` while 1X2/BTTS/CS use the goals grid
-(`src/predictions/score_computation/smile_poisson.jl`).
+per-strike totals "smile" pillar. Its `λ_tot·φ(K)` CDF reweights the goals grid's
+anti-diagonals, so O/U, 1X2, BTTS, correct score and portfolio sizing all consume one
+coherent joint score tensor (`src/predictions/score_grids/kernels.jl`).
 
 Every model must implement `Features.required_features(model)` returning a
 `Vector{Symbol}` declaring the data features it needs.

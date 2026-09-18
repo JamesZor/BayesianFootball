@@ -50,6 +50,9 @@ export
     # Types
     PPD,
     ScoreMatrix,
+    AbstractScoreGrid,
+    NonMonotoneSmileError,
+    StandardScoreGrid,
     SmileScoreGrid,
     GridWorkspace,
 
@@ -62,6 +65,7 @@ export
     compute_score_grid!,
     compute_score_grid,
     fill_smile_buffers!,
+    reweight_grid_antidiagonals!,
     price_market!,
     price_market,
     market_keys
