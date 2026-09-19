@@ -73,6 +73,78 @@ using InlineStrings
         @test ismissing(BayesianFootball.Data.grade_selection("1X2", 0.0, :home, missing, 1))
     end
 
+    @testset "Betfair summaries retain closing-only fixtures (T005)" begin
+        D = BayesianFootball.Data
+        selections = [:home, :draw, :away]
+
+        betfair_ticks = DataFrame(
+            match_id = Int[],
+            market_name = String[],
+            market_line = Float64[],
+            selection = Symbol[],
+            traded_price = Float64[],
+            minutes_to_kickoff = Float64[],
+        )
+        # Mirror the ticket's Scottish Lower OOS inventory: 360 requested fixtures,
+        # 324 with ticks, 322 with a valid close, but only 30 with an opening observation.
+        for match_id in 1:322
+            if match_id <= 30
+                for (selection, price) in zip(selections, (2.50, 3.20, 3.00))
+                    push!(betfair_ticks,
+                          (match_id, "1X2", 0.0, selection, price, -1400.0))
+                end
+            end
+            for (selection, price) in zip(selections, (2.40, 3.40, 3.10))
+                push!(betfair_ticks, (match_id, "1X2", 0.0, selection, price, -10.0))
+            end
+        end
+        for match_id in 323:324, (selection, price) in zip(selections, (2.50, 3.20, 3.00))
+            push!(betfair_ticks, (match_id, "1X2", 0.0, selection, price, -2000.0))
+        end
+
+        matches = DataFrame(
+            match_id = collect(1:360),
+            home_score = fill(2, 360),
+            away_score = fill(1, 360),
+            match_date = [Date("2024-08-01") + Day(i - 1) for i in 1:360],
+        )
+        empty = DataFrame()
+        ds = D.DataStore(D.ScottishLower(), matches, empty, empty, empty, empty,
+                         betfair_ticks)
+
+        summary = D.summarize_betfair_market(ds)
+        @test Set(summary.match_id) == Set(1:322)
+        @test length(unique(summary.match_id)) / nrow(matches) == 322 / 360
+        @test length(unique(summary.match_id)) / nrow(matches) >= 0.85
+
+        closing_only = summary[summary.match_id .== 31, :]
+        @test nrow(closing_only) == 3
+        for column in (:odds_open, :overround_open, :prob_implied_open,
+                       :prob_fair_open, :fair_odds_open, :vig_open)
+            @test all(ismissing, closing_only[!, column])
+        end
+        @test all(!ismissing, closing_only.odds_close)
+        @test all(!ismissing, closing_only.prob_fair_close)
+
+        no_open = D.summarize_betfair_market(ds; open_window=(-5000.0, -4000.0))
+        @test Set(no_open.match_id) == Set(1:322)
+        @test all(ismissing, no_open.odds_open)
+
+        strict = D.summarize_betfair_market(ds; require_open=true)
+        @test Set(strict.match_id) == Set(1:30)
+        @test all(!ismissing, strict.odds_open)
+
+        sparse_ticks = filter(:match_id => in(1:2), betfair_ticks)
+        for (selection, price) in zip(selections, (2.50, 3.20, 3.00))
+            push!(sparse_ticks, (3, "1X2", 0.0, selection, price, -2000.0))
+        end
+        sparse_ds = D.DataStore(D.ScottishLower(), first(matches, 3), empty, empty,
+                                empty, empty, sparse_ticks)
+        @test_logs (:warn, r"Betfair closing-summary coverage is below 85%") begin
+            D.summarize_betfair_market(sparse_ds)
+        end
+    end
+
     @testset "Preprocessing: Match Week Logic" begin
         df = DataFrame(
             tournament_id = [1, 1, 1, 1],

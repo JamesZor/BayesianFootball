@@ -48,6 +48,16 @@ function summarize_odds(
     # 1. Filter for the time window
     df_window = filter(row -> window[1] <= row.minutes_to_kickoff <= window[2], df_long)
 
+    # Preserve the summary schema when a requested window has no ticks. DataFrames cannot
+    # infer the result columns of the group transforms below from zero groups.
+    if isempty(df_window)
+        summary = df_long[1:0, [:match_id, :market_name, :market_line, :selection]]
+        summary.odds = Union{Missing, Float64}[]
+        summary.is_sane = Bool[]
+        summary.overround = Float64[]
+        return summary
+    end
+
     # 2. Group by match and selection to estimate the price
     summary = combine(groupby(df_window, [:match_id, :market_name, :market_line, :selection])) do sdf
         if nrow(sdf) < min_ticks
@@ -171,15 +181,29 @@ function append_match_results(odds_df::DataFrame, matches_df::DataFrame)
 end
 
 """
-    summarize_betfair_market(ds::DataStore; kwargs...) -> DataFrame
-Takes the entire DataStore and produces a closed, summarized DataFrame of Betfair odds
-matching the ds.odds schema, fully graded with match results.
+    summarize_betfair_market(ds::DataStore;
+        open_window=(-1440.0, -21.0),
+        close_window=(-20.0, 0.0),
+        estimator=TWAEstimator(),
+        require_open=false,
+    ) -> DataFrame
+
+Summarize Betfair prices and return closing selections graded with match results. Closing
+prices are retained even when no price is available in `open_window`; in that case the
+open-price, open-probability, and open-vig fields are `missing`. Set `require_open=true` to
+retain only selections with both prices.
+
+With the default wide `open_window`, `TWAEstimator` makes `odds_open` a time-weighted
+average pre-close price, not an instantaneous opening tick. Coverage is measured against
+matches having any Betfair tick, and a warning is emitted when fewer than 85% have a valid
+closing summary in `close_window`.
 """
 function summarize_betfair_market(
-    ds::DataStore; 
-    open_window=(-1440.0, -1380.0), 
-    close_window=(-20.0, 0.0),      
-    estimator=TWAEstimator()
+    ds::DataStore;
+    open_window=(-1440.0, -21.0),
+    close_window=(-20.0, 0.0),
+    estimator=TWAEstimator(),
+    require_open::Bool=false
 )
     df_long = ds.betfair_odds
     
@@ -194,14 +218,23 @@ function summarize_betfair_market(
     df_close = summarize_odds(df_long, estimator, window=close_window)
     rename!(df_close, :odds => :odds_close, :overround => :overround_close)
 
-    # 2. Join them
-    final_df = innerjoin(
-        df_open[:, [:match_id, :market_name, :market_line, :selection, :odds_open, :overround_open]],
+    # 2. Keep every valid closing selection; opening data is optional.
+    final_df = leftjoin(
         df_close[:, [:match_id, :market_name, :market_line, :selection, :odds_close, :overround_close]],
+        df_open[:, [:match_id, :market_name, :market_line, :selection, :odds_open, :overround_open]],
         on = [:match_id, :market_name, :market_line, :selection]
     )
 
-    # 3. Calculate implied probabilities
+    available_matches = length(unique(df_long.match_id))
+    captured_matches = length(unique(final_df.match_id))
+    coverage = available_matches == 0 ? 1.0 : captured_matches / available_matches
+    if coverage < 0.85
+        @warn "Betfair closing-summary coverage is below 85%" captured_matches available_matches coverage close_window
+    end
+
+    require_open && filter!(:odds_open => !ismissing, final_df)
+
+    # 3. Calculate implied probabilities. Broadcasting propagates missing opening values.
     final_df.prob_implied_open  = 1.0 ./ final_df.odds_open
     final_df.prob_implied_close = 1.0 ./ final_df.odds_close
 
