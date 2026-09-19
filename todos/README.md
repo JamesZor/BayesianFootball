@@ -23,6 +23,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [012](012_standardise_model_attribution_and_capture_ratio_in_portfolio_engine.md) | Standardise Model Attribution and Capture Ratio in Portfolio Engine | BACKLOG | P2 | unassigned | 2026-09-11 |
 | [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | ACTIVE | P1 | claude | 2026-09-11 |
 | [014](014_prototype_jointgammanegbinobservation_for_totals_and_btts_calibration.md) | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration | ACTIVE | P1 | claude | 2026-09-11 |
+| [015](015_resolve_bayesian_shrinkage_compression_and_favorite_underpricing_in_scottish_low.md) | Resolve Bayesian shrinkage compression and favorite underpricing in Scottish Lower | IN_PROGRESS | P1 | pi | 2026-09-20 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
