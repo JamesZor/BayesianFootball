@@ -20,7 +20,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [009](009_hierarchical_multi_tournament_pooling_across_scottish_segments.md) | Hierarchical Multi Tournament Pooling Across Scottish Segments | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [010](010_design_and_prototype_autonomous_agent_bayesian_model_search_loop.md) | Design and Prototype Autonomous Agent Bayesian Model Search Loop | BACKLOG | P2 | unassigned | 2026-09-10 |
 | [011](011_fuse_goal_decomposition_with_proxy_xg_and_player_lineup_dynamics.md) | Fuse Goal Decomposition with Proxy xG and Player Lineup Dynamics | BACKLOG | P2 | unassigned | 2026-09-10 |
-| [012](012_standardise_model_attribution_and_capture_ratio_in_portfolio_engine.md) | Standardise Model Attribution and Capture Ratio in Portfolio Engine | BACKLOG | P2 | unassigned | 2026-09-11 |
+| [012](012_standardise_model_attribution_and_capture_ratio_in_portfolio_engine.md) | Standardise Model Attribution and Capture Ratio in Portfolio Engine | COMPLETED | P2 | pi | 2026-09-18 |
 | [013](013_fuse_multiscalegrw_with_player_lineup_dynamics.md) | Fuse MultiScaleGRW with Player Lineup Dynamics | IN_PROGRESS | P1 | claude | 2026-09-11 |
 | [014](014_prototype_jointgammanegbinobservation_for_totals_and_btts_calibration.md) | Prototype JointGammaNegBinObservation for Totals and BTTS Calibration | COMPLETED | P1 | claude | 2026-09-12 |
 | [015](015_prototype_multiscalegrw_with_market_smile_and_supremacy_anchoring.md) | Prototype MultiScaleGRW with Market Smile and Supremacy Anchoring | COMPLETED | P1 | claude | 2026-09-13 |

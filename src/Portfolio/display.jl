@@ -289,3 +289,65 @@ end
 Base.show(io::IO, t::Trajectory) = print(io,
     "Trajectory($(length(t.slate_pl)) slates, final $(round(isempty(t.bankroll) ? 1.0 : t.bankroll[end], digits=3))x, ",
     "$(nrow(t.bets)) bets)")
+
+# ==============================================================================
+# 4. Attribution
+# ==============================================================================
+
+_attr_fmt(x::Real; digits::Int = 3) =
+    isnan(x) ? "--" : isfinite(x) ? string(round(x; digits = digits)) : "inf"
+_attr_label(name::AbstractString, width::Int) =
+    length(name) <= width ? String(name) : first(String(name), width - 1) * "…"
+
+function Base.show(io::IO, s::EdgeSummary)
+    print(io, "EdgeSummary(", s.n_bets, " bets, ROI ", _attr_fmt(s.roi; digits = 2),
+          "%, capture ", _attr_fmt(s.capture_ratio), ")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", s::EdgeSummary)
+    printstyled(io, "EdgeSummary\n", color = :cyan, bold = true)
+    _pf_leaf(io, "bets", "$(s.n_bets) ($(s.n_wins) wins)")
+    _pf_leaf(io, "win rate", isnan(s.win_rate) ? "--" : _pct(s.win_rate))
+    _pf_leaf(io, "capital win", isnan(s.cap_weighted_win_rate) ? "--" :
+             _pct(s.cap_weighted_win_rate))
+    _pf_leaf(io, "stake / pnl", "$(_attr_fmt(s.stake_sum)) / $(_attr_fmt(s.pnl_sum))")
+    _pf_leaf(io, "ROI", isnan(s.roi) ? "--" : "$(_attr_fmt(s.roi; digits = 2))%";
+             value_color = !isnan(s.roi) && s.roi >= 0 ? :green : :red)
+    _pf_leaf(io, "mean edge", "$(_attr_fmt(s.edge_mean)) pp")
+    _pf_leaf(io, "win edge", "$(_attr_fmt(s.edge_win)) pp")
+    _pf_leaf(io, "loss edge", "$(_attr_fmt(s.edge_loss)) pp")
+    _pf_leaf(io, "capture ratio", _attr_fmt(s.capture_ratio); last = true,
+             value_color = !isnan(s.capture_ratio) && s.capture_ratio >= 1 ? :green : :cyan)
+end
+
+function Base.show(io::IO, c::ModelComparisonAttribution)
+    print(io, "ModelComparisonAttribution(\"", c.name_a, "\" vs \"", c.name_b,
+          "\", ", nrow(c.shared_a), " shared, ", nrow(c.exclusive_a), "/",
+          nrow(c.exclusive_b), " exclusive)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", c::ModelComparisonAttribution)
+    printstyled(io, "ModelComparisonAttribution", color = :cyan, bold = true)
+    println(io, "  --  ", c.name_a, " vs ", c.name_b)
+    println(io, "="^78)
+    @printf(io, "  %-16s %8s %11s %11s %11s %11s\n",
+            "model", "bets", "win %", "cap win %", "ROI %", "capture")
+    println(io, "  " * "-"^76)
+    for (name, summary) in ((c.name_a, c.summary_a), (c.name_b, c.summary_b))
+        @printf(io, "  %-16s %8d %11s %11s %11s %11s\n", _attr_label(name, 16),
+                summary.n_bets,
+                isnan(summary.win_rate) ? "--" : @sprintf("%.2f", 100 * summary.win_rate),
+                isnan(summary.cap_weighted_win_rate) ? "--" :
+                    @sprintf("%.2f", 100 * summary.cap_weighted_win_rate),
+                isnan(summary.roi) ? "--" : @sprintf("%+.2f", summary.roi),
+                isnan(summary.capture_ratio) ? "--" : @sprintf("%.3f", summary.capture_ratio))
+    end
+    println(io)
+    @printf(io, "  shared bets       : %d\n", nrow(c.shared_a))
+    @printf(io, "  exclusive %-16s: %d\n", _attr_label(c.name_a, 16), nrow(c.exclusive_a))
+    @printf(io, "  exclusive %-16s: %d\n", _attr_label(c.name_b, 16), nrow(c.exclusive_b))
+    @printf(io, "  shared ROI        : %s %s%%  |  %s %s%%\n",
+            c.name_a, _attr_fmt(c.shared_roi_a; digits = 2),
+            c.name_b, _attr_fmt(c.shared_roi_b; digits = 2))
+    @printf(io, "  sizing ΔPnL (A-B) : %+.6f\n", c.sizing_delta_pnl)
+end

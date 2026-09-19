@@ -4,12 +4,12 @@
 |---|---|
 | ID | 012 |
 | Title | Standardise Model Attribution and Capture Ratio in Portfolio Engine |
-| Status | BACKLOG |
+| Status | COMPLETED |
 | Priority | P2 |
-| Assignee | unassigned |
+| Assignee | pi |
 | Created | 2026-09-11 |
-| Updated | 2026-09-11 |
-| Related Files / Commits / PRs | `src/Portfolio/`, `src/Portfolio/metrics.jl`, `src/Portfolio/types.jl`, `current_development/multiscale_grw/l04_attribution_markets.jl`, `current_development/multiscale_grw/r04_attribution_and_markets.jl`, `todos/007_prototype_gaussian_random_walk_state_space_dynamics_with_reversediff.md` |
+| Updated | 2026-09-18 |
+| Related Files / Commits / PRs | `src/Portfolio/attribution.jl`, `src/Portfolio/types.jl`, `src/Portfolio/display.jl`, `src/Portfolio/reporting.jl`, `test/test_portfolio_attribution.jl`, `todos/007_prototype_gaussian_random_walk_state_space_dynamics_with_reversediff.md` |
 
 ## Context & Problem Statement
 
@@ -41,10 +41,10 @@ Currently, these analyses exist only in prototype research scripts (`current_dev
 
 ## Acceptance Criteria
 
-- [ ] **First-Class Attribution Types in `src/Portfolio/types.jl`**:
+- [x] **First-Class Attribution Types in `src/Portfolio/types.jl`**:
   - Define `EdgeSummary` holding: `n_bets`, `n_wins`, `win_rate`, `cap_weighted_win_rate`, `stake_sum`, `pnl_sum`, `roi`, `edge_mean`, `edge_win`, `edge_loss`, `capture_ratio`, `stake_mean`, `odds_mean`, `p_model_mean`, `p_market_mean`.
   - Define `ModelComparisonAttribution` holding: `shared_a`, `shared_b`, `exclusive_a`, `exclusive_b`, `sizing_delta_pnl`, `shared_roi_a`, `shared_roi_b`, `summary_a`, `summary_b`.
-- [ ] **Single-Portfolio Confidence & Capture Ratio APIs**:
+- [x] **Single-Portfolio Confidence & Capture Ratio APIs**:
   - Implement `edge_summary(bets::AbstractDataFrame) -> EdgeSummary`.
   - Implement `capture_ratio(bets::AbstractDataFrame) -> Float64`.
   - Dispatch methods for portfolio types:
@@ -53,17 +53,17 @@ Currently, these analyses exist only in prototype research scripts (`current_dev
     - `edge_summary(t::Trajectory) -> EdgeSummary`
     - `edge_summary(r::PortfolioResult) -> EdgeSummary`
   - Safeguard numerical edge cases: return `NaN` when $e_{\text{loss}} \le 0$, when bets are empty, or when no wins/losses exist.
-- [ ] **Pairwise Model Bet Partitioning & Sizing Attribution**:
+- [x] **Pairwise Model Bet Partitioning & Sizing Attribution**:
   - Implement `partition_bets(a::AbstractDataFrame, b::AbstractDataFrame) -> (both_a, both_b, only_a, only_b)` asserting duplicate-free keys and exact row alignment on shared bets.
   - Implement `shared_bet_sizing_attribution(both_a::AbstractDataFrame, both_b::AbstractDataFrame)` computing $\Delta s_i = s_{A, i} - s_{B, i}$ and sizing PnL contribution $\sum \Delta s_i \times \text{settle}_i$.
   - Implement high-level dispatch:
     - `compare_portfolios(res_a::PortfolioResult, res_b::PortfolioResult; name_a="Model A", name_b="Model B") -> ModelComparisonAttribution`
-- [ ] **Breakdown Extensions**:
+- [x] **Breakdown Extensions**:
   - Support breakdown by odds buckets (e.g. `< 2.0`, `2.0 - 3.5`, `≥ 3.5`) to test longshot bias.
   - Support breakdown by market family (`1X2`, `OverUnder`, `BTTS`).
-- [ ] **Display & Reporting Integration**:
+- [x] **Display & Reporting Integration**:
   - Add `Base.show` and clean tabular summary formatting for `ModelComparisonAttribution` in `src/Portfolio/display.jl` and `reporting.jl`.
-- [ ] **Unit Tests & Regression Safety**:
+- [x] **Unit Tests & Regression Safety**:
   - Add test suite `test/test_portfolio_attribution.jl` verifying:
     - Capture ratio calculations across synthetic edge distributions (positive, zero, undefined).
     - Partitioning correctness, duplicate bet key detection, and empty set handling.
@@ -87,10 +87,18 @@ Currently, these analyses exist only in prototype research scripts (`current_dev
 ## Work Log & Progress
 
 - [2026-09-11 @antigravity] Task created following user request and completion of Task 007 / $r04$ attribution analysis. Scoped mathematical definitions of Capture Ratio ($e_{\text{win}} / e_{\text{loss}}$), shared-bet sizing decomposition ($\Delta s_i \times \text{settle}_i$), and first-class `Portfolio` API integration.
+- [2026-09-18 @pi] Claimed in worktree `BayesianFootball-task012-attribution` on branch `feat/task012-portfolio-attribution`; implementing the dedicated production attribution module, typed summaries, breakdowns, displays, exports, and regression tests.
+- [2026-09-18 @pi] Completed Candidate A: added typed summaries and pairwise decomposition, canonical odds/family breakdowns, legacy-safe reporting, top-level exports, and the dedicated regression suite without changing `PortfolioSummary` or persistence layouts.
 
 ## Verification & Findings
 
-Not run yet. Mathematical validity established in prototype $r04$ report (`current_development/multiscale_grw/results/r04_attribution_and_market_report.md`):
-- MultiScaleGRW Capture Ratio: 1.07 to 1.16 vs TimeDecay 0.90 to 0.97.
-- Shared-Bet Sizing Advantage: +5.52 pp ROI on identical 1,030 bets (+19.50% vs +13.98%).
-- Capital-weighted win rate: +1.2 to +1.8 pp above unweighted win rate for GRW.
+- `test/test_portfolio_attribution.jl`: **96 / 96 passed**.
+- `test/unified_portfolio_tests.jl`: **792 / 792 passed**.
+- `test/portfolio_tests.jl`: **92 / 92 passed**.
+- `test/test_extension.jl`: **4 / 4 passed** (independent reviewer run).
+- Full sequential suite (`julia +1.12.6 --startup-file=no --project -t 8 test/runtests.jl`): **4,249 passed, 1 pre-existing broken, exit 0**. Database-backed MatchDay ledger tests skipped because local `betdb` was unreachable; pure MatchDay layers passed.
+- Parallel runner: **18 / 19 suites passed**; the sole failure was the documented T007 `SplitClockProbe` hidden dependency in `features_tests.jl`, while the sequential full suite passed.
+- Independent principal review: **APPROVED** after legacy-schema, union-merge, push, bucket-alignment, and display regressions were added.
+- `./scripts/todo.sh check`: passed at completion.
+
+Semantic note: production defines a loss as `payoff < 0`, excluding pushes from both conditional edge means. The prototypes used `.!won` and therefore counted pushes as losses. Production also returns `NaN` when mean losing-bet edge is non-positive rather than emitting a negative Capture Ratio. Push-bearing or negative-edge prototype figures must therefore be recomputed before direct comparison; the published $r04$ ranges remain historical prototype results.

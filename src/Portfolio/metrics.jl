@@ -80,23 +80,3 @@ function report(t::Trajectory, metrics::Vector = [])
     ci = bootstrap_roi(t.bets)
     return merge(base, extra, (roi_ci_lo = ci.lo, roi_ci_hi = ci.hi))
 end
-
-"""
-    attribution(t::Trajectory) -> DataFrame
-
-Stake, P/L, ROI and hit rate per selection family. The first thing to look at when a headline
-number moves: on the reference book 83% of the profit came from 1X2, a family on which the model
-has no measurable log-loss advantage over the market.
-"""
-function attribution(t::Trajectory)
-    isempty(t.bets) && return DataFrame()
-    g = combine(groupby(t.bets, :family),
-                nrow => :n,
-                :stake => sum => :stake,
-                :pnl => sum => :pnl,
-                :odds => median => :med_odds,
-                :payoff => (x -> mean(x .> 0)) => :hit)
-    g.roi = 100 .* g.pnl ./ g.stake
-    return sort!(g, :pnl, rev = true)
-end
-export attribution

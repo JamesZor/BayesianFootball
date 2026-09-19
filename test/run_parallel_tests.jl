@@ -27,6 +27,7 @@ const TEST_FILES = [
     "test_db_storage.jl",
     "evaluation_tests.jl",
     "unified_portfolio_tests.jl",
+    "test_portfolio_attribution.jl",
 ]
 
 println("================================================================================")

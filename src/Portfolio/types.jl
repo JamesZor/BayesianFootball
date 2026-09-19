@@ -550,7 +550,59 @@ function Base.show(io::IO, ::MIME"text/plain", r::BuildReport)
 end
 
 # ===================================================================
-# 7. Simulation results
+# 7. Attribution results
+# ===================================================================
+
+"""
+    EdgeSummary
+
+Bet-level confidence and realised-return summary. `edge_mean`, `edge_win`, and `edge_loss`
+are probability-percentage points (`100 * (p_model - p_market)`); `roi` is also in percent.
+`capture_ratio` is dimensionless and is `NaN` unless the ledger contains both wins and losses
+and mean losing-bet edge is strictly positive.
+"""
+Base.@kwdef struct EdgeSummary
+    n_bets::Int
+    n_wins::Int
+    win_rate::Float64
+    cap_weighted_win_rate::Float64
+    stake_sum::Float64
+    pnl_sum::Float64
+    roi::Float64
+    edge_mean::Float64
+    edge_win::Float64
+    edge_loss::Float64
+    capture_ratio::Float64
+    stake_mean::Float64
+    odds_mean::Float64
+    p_model_mean::Float64
+    p_market_mean::Float64
+end
+
+"""
+    ModelComparisonAttribution
+
+Three-way bet partition and controlled shared-bet sizing contrast for two portfolio results.
+`shared_a` and `shared_b` are row-aligned on `(match_id, family, selection)`; the exclusive
+frames contain each model's selectivity-only bets. `sizing_delta_pnl` is
+`sum((stake_a - stake_b) * payoff)` over the shared rows.
+"""
+Base.@kwdef struct ModelComparisonAttribution
+    name_a::String
+    name_b::String
+    shared_a::DataFrame
+    shared_b::DataFrame
+    exclusive_a::DataFrame
+    exclusive_b::DataFrame
+    sizing_delta_pnl::Float64
+    shared_roi_a::Float64
+    shared_roi_b::Float64
+    summary_a::EdgeSummary
+    summary_b::EdgeSummary
+end
+
+# ===================================================================
+# 8. Simulation results
 # ===================================================================
 #
 # `Trajectory` stores a simulation as six parallel vectors plus a bet frame. Everything a path
