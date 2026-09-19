@@ -86,6 +86,9 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
     println("Running unified portfolio framework tests...")
     include("unified_portfolio_tests.jl")
 
+    println("Running portfolio attribution tests...")
+    include("test_portfolio_attribution.jl")
+
     # Layer-2 generative rate calibration. T1-T9 are pure; T10 needs `mcmc_experiments`
     # and skips WITH A MESSAGE when it is out of reach. It loads the validated prototype
     # from `current_development/calibration_generative_eda/` as its reference

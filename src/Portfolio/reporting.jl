@@ -8,11 +8,12 @@
 # the profit came from 1X2, a family on which the model has no measurable log-loss advantage over
 # the market at all.
 #
-# Nothing here computes a statistic. Everything is read off `PortfolioSummary`,
-# `BootstrapCI` and `attribution`, so a table and a number can never disagree.
+# Headline path statistics are read off `PortfolioSummary` and `BootstrapCI`; confidence
+# statistics are computed once through `edge_summary`, the same public API used by pairwise
+# attribution. A table and a programmatic result therefore cannot drift.
 
 export PortfolioReport, portfolio_report, display_portfolio, daily_returns_table,
-       portfolio_markdown
+       portfolio_markdown, attribution_markdown
 
 # ===================================================================
 # 1. The terminal view
@@ -28,6 +29,7 @@ run.
 """
 function display_portfolio(r::PortfolioResult; io::IO = stdout, max_slates::Int = 12)
     s = r.summary
+    e = _reporting_edge_summary(r)
     println(io)
     println(io, "  PORTFOLIO  --  ", s.n_slates, " slates, ", s.n_fixtures, " fixtures, ",
             s.n_bets, " bets over ", s.span_days, " days")
@@ -55,6 +57,10 @@ function display_portfolio(r::PortfolioResult; io::IO = stdout, max_slates::Int 
             isfinite(s.sortino) ? @sprintf("%.4f", s.sortino) : "inf")
     @printf(io, "  %-22s %12.4f   %-22s %10.2f%%\n",
             "mean exposure", s.mean_exposure, "win rate", 100 * s.win_rate)
+    @printf(io, "  %-22s %12s   %-22s %10s\n",
+            "capture ratio", isnan(e.capture_ratio) ? "--" : @sprintf("%.3f", e.capture_ratio),
+            "capital win rate", isnan(e.cap_weighted_win_rate) ? "--" :
+                @sprintf("%.2f%%", 100 * e.cap_weighted_win_rate))
     @printf(io, "  %-22s %12.4f   %-22s %10d\n",
             "mean k_risk", s.mean_k_risk, "slates capped", s.n_capped)
     if r.bootstrap_ci !== nothing
@@ -192,6 +198,7 @@ failure mode this whole graduation line exists to remove.
 """
 function portfolio_markdown(r::PortfolioReport; max_slates::Int = 20)
     s   = r.result.summary
+    e   = _reporting_edge_summary(r.result)
     io  = IOBuffer()
     println(io, "# ", r.name)
     println(io)
@@ -225,6 +232,9 @@ function portfolio_markdown(r::PortfolioReport; max_slates::Int = 20)
             "Sharpe (annualised)"=> _md_num(s.sharpe_ann),
             "Sortino"            => _md_num(s.sortino),
             "win rate %"         => _md_num(100 * s.win_rate; digits = 2),
+            "capital win rate %" => _md_num(100 * e.cap_weighted_win_rate; digits = 2),
+            "capture ratio"      => _md_num(e.capture_ratio; digits = 3),
+            "mean edge (pp)"     => _md_num(e.edge_mean; digits = 3),
             "mean exposure"      => _md_num(s.mean_exposure),
             "max exposure"       => _md_num(s.max_exposure),
             "mean k_risk"        => _md_num(s.mean_k_risk),
@@ -277,3 +287,34 @@ function portfolio_markdown(r::PortfolioReport; max_slates::Int = 20)
 end
 
 portfolio_markdown(r::PortfolioResult; kw...) = portfolio_markdown(portfolio_report(r); kw...)
+
+"""
+    attribution_markdown(comparison::ModelComparisonAttribution) -> String
+
+Render the pairwise selection/sizing attribution as a compact Markdown report.
+"""
+function attribution_markdown(c::ModelComparisonAttribution)
+    io = IOBuffer()
+    println(io, "# Portfolio attribution: ", c.name_a, " vs ", c.name_b)
+    println(io)
+    println(io, "| model | bets | wins | win rate % | capital win rate % | ROI % | capture ratio |")
+    println(io, "|---|---:|---:|---:|---:|---:|---:|")
+    for (name, summary) in ((c.name_a, c.summary_a), (c.name_b, c.summary_b))
+        println(io, "| ", name, " | ", summary.n_bets, " | ", summary.n_wins, " | ",
+                _md_num(100 * summary.win_rate; digits = 2), " | ",
+                _md_num(100 * summary.cap_weighted_win_rate; digits = 2), " | ",
+                _md_num(summary.roi; digits = 2), " | ",
+                _md_num(summary.capture_ratio; digits = 3), " |")
+    end
+    println(io)
+    println(io, "| decomposition | ", c.name_a, " | ", c.name_b, " |")
+    println(io, "|---|---:|---:|")
+    println(io, "| shared bets | ", nrow(c.shared_a), " | ", nrow(c.shared_b), " |")
+    println(io, "| exclusive bets | ", nrow(c.exclusive_a), " | ", nrow(c.exclusive_b), " |")
+    println(io, "| shared ROI % | ", _md_num(c.shared_roi_a; digits = 2), " | ",
+            _md_num(c.shared_roi_b; digits = 2), " |")
+    println(io)
+    println(io, "Shared-bet sizing ΔPnL (", c.name_a, " − ", c.name_b, "): **",
+            _md_num(c.sizing_delta_pnl; digits = 6), "**")
+    return String(take!(io))
+end

@@ -115,6 +115,7 @@ include("calibrate.jl")
 include("alignment.jl")
 include("pricing.jl")
 include("simulation.jl")
+include("attribution.jl")
 include("reporting.jl")
 include("db_storage.jl")
 include("extension.jl")
@@ -153,9 +154,13 @@ export
     build_odds_index, build_books, price_portfolio_books!, price_book!,
     simulate_portfolio, run_portfolio_simulation,
 
-    # simulation results
+    # simulation and attribution results
     DailyState, PortfolioSummary, BootstrapCI, PortfolioResult, PortfolioReport,
+    EdgeSummary, ModelComparisonAttribution,
     portfolio_summary, portfolio_report,
+    attribution, edge_summary, capture_ratio, partition_bets, shared_bet_sizing_attribution,
+    compare_portfolios, edge_breakdown, odds_breakdown, family_breakdown,
+    attribution_markdown,
 
     # PostgreSQL persistence
     save_portfolio_db, load_portfolio_db, portfolio_spec_hash, extend_portfolio

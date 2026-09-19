@@ -268,7 +268,7 @@ export as_typed_latents, as_fit, convergence_verdict, ConvergenceRefusal
 # one type per name, never a second struct with the same shape. See `src/Portfolio/compat.jl`.
 using .Portfolio: OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildReport,
                   DailyState, PortfolioSummary, BootstrapCI, PortfolioResult,
-                  PortfolioReport,
+                  PortfolioReport, EdgeSummary, ModelComparisonAttribution,
                   Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory,
                   ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem, book_trust,
                   DeArb, Normalise, RawPrice,
@@ -289,8 +289,12 @@ using .Portfolio: OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildRepor
                   simulate, simulate_portfolio, portfolio_summary, bootstrap_portfolio,
                   run_portfolio_simulation, states_frame, stake_sheet, stake_slate,
                   slate_summary, path_metrics, bootstrap_roi, attribution,
+                  edge_summary, capture_ratio, partition_bets,
+                  shared_bet_sizing_attribution, compare_portfolios,
+                  edge_breakdown, odds_breakdown, family_breakdown,
                   portfolio_report, display_portfolio, daily_returns_table,
-                  portfolio_markdown, as_namedtuple, log_growth, book_cache_key,
+                  portfolio_markdown, attribution_markdown,
+                  as_namedtuple, log_growth, book_cache_key,
                   save_portfolio_db, load_portfolio_db, portfolio_spec_hash,
                   extend_portfolio,
                   book_match_id, book_date, book_selections, book_grid, book_payoff,
@@ -298,7 +302,8 @@ using .Portfolio: OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildRepor
                   sel_name, sel_odds_close, sel_odds_settle, sel_prob_model,
                   sel_prob_market, sel_edge
 export OddsIndex, MarketSlot, FallbackSlot, BookWorkspace, BuildReport
-export DailyState, PortfolioSummary, BootstrapCI, PortfolioResult, PortfolioReport
+export DailyState, PortfolioSummary, BootstrapCI, PortfolioResult, PortfolioReport,
+       EdgeSummary, ModelComparisonAttribution
 export Selection, MatchBook, Slate, SlateContext, SlateAllocation, Trajectory
 export ExecutionConfig, BookSpec, PolicySpec, PortfolioSystem, book_trust
 export DeArb, Normalise, RawPrice
@@ -318,9 +323,11 @@ export build_book, build_books, build_books_reported, build_slates
 export extract_selections, selection_family, is_settled, unsettled_books
 export simulate, simulate_portfolio, portfolio_summary, bootstrap_portfolio,
        run_portfolio_simulation, states_frame, stake_sheet, stake_slate, slate_summary,
-       path_metrics, bootstrap_roi, attribution
+       path_metrics, bootstrap_roi, attribution,
+       edge_summary, capture_ratio, partition_bets, shared_bet_sizing_attribution,
+       compare_portfolios, edge_breakdown, odds_breakdown, family_breakdown
 export portfolio_report, display_portfolio, daily_returns_table, portfolio_markdown,
-       as_namedtuple, log_growth, book_cache_key
+       attribution_markdown, as_namedtuple, log_growth, book_cache_key
 export save_portfolio_db, load_portfolio_db, portfolio_spec_hash, extend_portfolio
 export book_match_id, book_date, book_selections, book_grid, book_payoff, book_settle,
        book_alloc, book_shrink, book_kkt, book_converged
