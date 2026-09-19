@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | open |
+| **Status** | done |
 | **Severity** | medium — a call-site workaround exists (widen `open_window`); the DEFAULT silently removes 90% of fixtures |
 | **Area** | `src/Data/betfair_util.jl:178` |
 | **Raised** | 2026-08-26, by model 01 gate 6b in `current_development/scottish_lower/` |
@@ -131,15 +131,42 @@ length(unique(helper.match_id))       # 188
 
 ## Acceptance criteria
 
-- [ ] The default `open_window` returns ≥ 85% of OOS fixtures on Scottish 56+57. A window
-      of `(-1440, -21)` achieves 319/360; the current default achieves 30.
-- [ ] Whatever `odds_open` means under the chosen default is documented in the docstring —
+- [x] The default summarizer returns ≥ 85% of OOS fixtures on Scottish 56+57. It now
+      retains 322/360 valid closes; 319/360 also have data in `open_window=(-1440, -21)`.
+- [x] Whatever `odds_open` means under the chosen default is documented in the docstring —
       a TWA over a wide window is an average, not an opening price.
-- [ ] Rows are never dropped for missing OPEN data; `odds_open` is `missing` instead.
-- [ ] Existing callers that use `odds_open` still work, or are updated with the change.
-- [ ] Coverage is reported (or a warning raised) when a window matches fewer than some share
+- [x] Rows are never dropped for missing OPEN data; `odds_open` is `missing` instead.
+- [x] Existing callers that use `odds_open` still work, or are updated with the change.
+- [x] Coverage is reported (or a warning raised) when a window matches fewer than some share
       of requested fixtures, so silent near-empty output cannot recur.
-- [ ] All 403 package tests pass.
+- [x] The full package test suite passes.
+
+## Resolution
+
+`summarize_betfair_market` now treats the valid closing summary as canonical and left-joins
+optional opening observations onto it. Its default opening window is `(-1440.0, -21.0)`,
+and the docstring explicitly defines a `TWAEstimator` value over that wide window as a
+pre-close time-weighted average rather than an instantaneous opening tick. Missing opening
+values propagate through the opening probability, fair-odds, and vig columns. Callers that
+need the old strict behavior can pass `require_open=true`.
+
+The helper warns when valid closing summaries cover fewer than 85% of matches having any
+Betfair tick. Empty requested windows now return a correctly typed empty summary instead of
+failing inside a zero-group `combine`.
+
+Regression coverage in `test/data_tests.jl` mirrors the 360-fixture Scottish Lower OOS
+inventory (322 valid closes, 30 available opens), checks all missing-derived fields, verifies
+the strict option, and exercises the low-coverage warning.
+
+## Verification
+
+- `julia +1.12.6 --startup-file=no --project -t 2 -e 'using Test, BayesianFootball, DataFrames, Dates, InlineStrings; include("test/data_tests.jl")'`
+  — **52/52 passed**.
+- Scottish Lower cached snapshot, season 24/25: default **322/360 (89.4%)** fixtures;
+  `require_open=true` **319/360 (88.6%)** fixtures. The raw feed covers 324 fixtures.
+- `julia +1.12.6 --startup-file=no --project -t 8 test/runtests.jl` — **4,280 passed,
+  1 pre-existing broken, 0 failed** (exit 0). PostgreSQL paper-ledger testsets reported their
+  existing environment-driven skip because `BF_DB_URL` was unreachable.
 
 ## Scope guard
 

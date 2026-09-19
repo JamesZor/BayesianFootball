@@ -26,7 +26,6 @@ only that ticket. Update `Status` here when it lands.
 | [T002](T002-scalar-taped-likelihood.md) | Engine likelihoods taped scalar-by-scalar (~20x AD work); `view` defeats vectorisation and NegBin crashes on the fast path | medium | `src/models/pregame/engines/`, `src/MyDistributions/` | open | 2026-08-26 |
 | [T003](T003-home-advantage-population-fallback.md) | Unmapped teams silently lose home advantage at extraction (λ_h 0.849x); 28 call sites | medium | `src/models/pregame/engines/`, `src/models/pregame/components/home_advantage.jl` | open | 2026-08-26 |
 | [T004](T004-1x2-grading-disagrees-with-score.md) | `is_winner` contradicts the recorded score on 3 fixtures (2-2 draws with no 1X2 winner); no QA invariant catches it | low | `ds.odds` grading | open | 2026-08-26 |
-| [T005](T005-betfair-summariser-drops-90pc.md) | `summarize_betfair_market` inner-joins an open window and silently returns 30 of 360 fixtures; breaks CLV | high | `src/Data/betfair_util.jl` | open | 2026-08-26 |
 | [T006](T006-scottish-lower-arm-include-guards.md) | Arm 02/03/04 loaders re-include a shared loader (guard tests a name that never existed) and call `subset` unqualified | low | `current_development/scottish_lower/` | open | 2026-08-28 |
 | [T007](T007-parallel-feature-test-hidden-dependency.md) | `features_tests.jl` depends on a probe defined only by an earlier sequential include, so the parallel suite fails | low | `test/` | open | 2026-08-29 |
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Portfolio prices a smile container's totals through φ (`p_model`) but sizes every stake off the plain (λ_h, λ_a) grid, so φ never reaches a bet | medium | `src/Portfolio/pricing.jl` | open | 2026-09-13 |
@@ -36,6 +35,7 @@ only that ticket. Update `Status` here when it lands.
 
 | ID | Resolution | Closed |
 |---|---|---|
+| [T005](T005-betfair-summariser-drops-90pc.md) | Closing selections are retained with nullable opening fields; the wider default window and coverage warning prevent silent fixture loss | 2026-09-19 |
 | [T012](T012-zero-trust-market-reprices-the-portfolio.md) | Opt-in BookSpec trust excises wholly zero-trust markets before payoff, Kelly and shrinkage geometry while preserving legacy defaults | 2026-09-18 |
 | [T001](T001-pooled-tournament-clock.md) | Pooled tournament groups use a shared calendar clock with strict kickoff safety | 2026-08-25 |
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Smile CDFs reweight score-grid anti-diagonals, so pricing, Kelly and shrinkage consume one joint tensor | 2026-09-18 |
