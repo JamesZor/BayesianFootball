@@ -1,46 +1,104 @@
-# Momentum MultiScale GRW Dynamics (Scottish Lower Phase 1)
+# Momentum MultiScale GRW — Scottish Lower Phase 1
 
-> **Experiment**: `experiments/scottish_lower/10_momentum_multiscale_grw/`  
-> **TODO**: [022](../../todos/022_prototype_momentum_multiscale_grw_dynamics.md)  
-> **Target**: Scottish Lower League Football (Tournaments 56 & 57, 40 folds, 710 fixtures, seasons 24/25 + 25/26)  
-> **Status**: IN_PROGRESS  
+**TODO [022](../../../todos/022_prototype_momentum_multiscale_grw_dynamics.md)** ·
+namespace `scottish_lower_momentum_grw` · **IN PROGRESS**
 
-## 1. Executive Summary
+## Scientific question
 
-This experiment investigates whether introducing **2nd-order / momentum dynamics** into team state-space random walks breaks through the Bayesian shrinkage compression ceiling on Scottish Lower football.
+Does damped team velocity improve favourite-tail forecasts and proper scores
+relative to pure-Poisson TimeDecay(180) and first-order MultiScaleGRW? The matched
+cohort is 40 pooled-56/57 match-biweek folds, seasons 24/25–25/26, 710 fixtures.
+No player, wealth, proxy-xG or smile terms are included.
 
-Standard 1st-order `MultiScaleGRW` suffers from memoryless shrinkage: every step resets prior expectation to zero, causing net team supremacy slopes of ~0.39 vs Betfair close, and underpricing heavy favourites at 55% (vs market 76%).
+See [DESIGN.md](DESIGN.md) for equations, priors, boundary conditions, stationarity
+analysis and AD implementation. Velocity is stable for phi < 1; the level retains
+a unit root. First-order GRW has zero expected increments, not a level that resets
+to zero. Momentum is a hypothesis, **not a guarantee of decompression**.
 
-Momentum GRW models team ability $\alpha_t$ with an autoregressive velocity term $v_t$:
-$$\begin{aligned}
-\alpha_t &= \alpha_{t-1} + v_{t-1} + \sigma_\alpha \epsilon_{\alpha, t} \\
-v_t &= \phi v_{t-1} + \sigma_v \epsilon_{v, t}
-\end{aligned}$$
-allowing dominant teams on consistent form to build positive momentum and separate directionally into heavy-favourite territory without adding unguided isotropic noise.
+User-approved forecasting: zero velocity at the target-season boundary;
+conditional-mean next-biweek states, without future innovation noise, matching
+the first-order control's convention. The terminal unobserved velocity innovation
+is integrated out; K≤1 folds have no velocity parameters.
 
-## 2. Benchmark Arms
+## Stage 0 — measured verification (2026-09-21)
 
-| Arm | Dynamics | Observation | Purpose |
-|---|---|---|---|
-| `m01_poisson_time_decay` | `TimeDecayDynamics(180.0)` | `PoissonObservation()` | Control 1 (Traditional time decay) |
-| `m02_poisson_grw_1st_order` | `MultiScaleGRW()` | `PoissonObservation()` | Control 2 (1st-order random walk) |
-| `m03_poisson_momentum_grw` | `MomentumMultiScaleGRW()` | `PoissonObservation()` | Candidate (2nd-order momentum walk) |
+Executed on `mcmc-beast`, `/root/BF_momentum_grw`, 16 pinned threads, BLAS=1.
+`test_momentum.jl`: **200/200 assertions passed**. Tests cover independent scalar
+recurrences, sigma_v=0 nesting, phi endpoints, no-target/single-target shapes,
+centering, multi-chain draw ordering, Turing-returned states, OOS reconstruction
+and compiled/ForwardDiff gradient parity. Isolated momentum replay: **0 B**.
 
-## 3. Headline Results
+Full **linked-space** gradient replay, warmed minimum of 100 calls:
 
-*(To be populated by Pi / GPT-6 Astra upon completion of Stage 3)*
+| Arm | Fold | Parameters | Tape instructions | Gradient ms | Allocated B |
+|---|---:|---:|---:|---:|---:|
+| TimeDecay | 1 | 50 | 196 | 0.0370 | 0 |
+| TimeDecay | 20 | 54 | 196 | 0.0506 | 0 |
+| TimeDecay | 40 | 50 | 196 | 0.0509 | 0 |
+| First-order GRW | 1 | 98 | 610 | 0.0532 | 0 |
+| First-order GRW | 20 | 1058 | 8284 | 0.3220 | 0 |
+| First-order GRW | 40 | 974 | 7644 | 0.3007 | 0 |
+| Momentum GRW | 1 | 98 | 610 | 0.0531 | 0 |
+| Momentum GRW | 20 | 1962 | 15580 | 0.5662 | 0 |
+| Momentum GRW | 40 | 1806 | 14364 | 0.5247 | 0 |
 
-| Arm | Supremacy Slope vs Close | $R^2$ vs Close | Win Prob on Market Favourites $\ge 0.70$ | 1X2 LogLoss | O/U 2.5 LogLoss | Total Return | Max DD | Sharpe |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| `m01_poisson_time_decay` | — | — | — | — | — | — | — | — |
-| `m02_poisson_grw_1st_order` | — | — | — | — | — | — | — | — |
-| `m03_poisson_momentum_grw` | — | — | — | — | — | — | — | — |
+Original and optimized engines have identical sampled-site layouts and prior
+initializations. Density discrepancies ≤ **4.7e-10**; gradient relative errors ≤
+**3.6e-15**, comparing compiled, fresh ReverseDiff, ForwardDiff, and the original
+engine, at linked-space displacements 0, 0.003, ±0.8 and ±3. No allocation
+threshold was waived. Compilation/setup allocations are not replay allocations.
 
-## 4. Verification & Reproduction
+The source controls allocate 35–52 KB per replay. The prototype removes scalar
+broadcast scratch, `fill` scratch, and scalarizing keyword centering without
+changing priors, sample sites, weights or clamp limits. All modifications remain
+local; [T002](../../../docs/tickets/T002-scalar-taped-likelihood.md) records the
+shared-engine findings. The custom scalar-lift instruction is version-sensitive.
+
+Prepare-only smoke preflight passed: exact 40/710 cohort, ordered filtration on
+folds 1/20/40, all nine AD gates, canonical recipe registration and run-hash
+lookup. No matching completed smoke runs existed at that preflight.
+
+## Stage 1 — smoke protocol
+
+Three arms, each 4 chains × (400 warmup + 400 retained), target acceptance 0.90,
+max tree depth 10. Native queue, at most 16 concurrent chain tasks. Gates:
+
+- zero divergences, max R-hat ≤1.05, bulk/tail ESS ≥200;
+- six-part audit also requires BFMI ≥0.30 and tree-depth saturation ≤5%;
+- exact OOS coverage, finite positive rate draws and coherent market partitions;
+- fit/chain/latent database round-trip; portfolio persistence and identical
+  re-priced bet ledger after loading the fit;
+- report phi/sigma_v posterior summaries against their priors (identification is
+  measured, not presumed; no velocity posterior exists on fold 1).
+
+**User-approved score-grid clarification:** production scores truncate each side
+to 0–11 goals without renormalization. Check all 1X2/OU2.5/BTTS partitions against
+`cdf(Poisson(lambda_h),11)*cdf(Poisson(lambda_a),11)` within **1e-12** on every draw;
+report omitted tail mass separately. This is not a claim that truncated mass is 1.
+
+Only a passing, source-matched smoke certificate permits production. Failed fits
+may be persisted for diagnostics, but cannot enter portfolio promotion.
+
+## Results
+
+**No sampling, predictive-performance or portfolio results are claimed yet.**
+Stage 2 (40-fold production), Stage 3 (scoring/decompression/portfolio comparison)
+and completion sign-off remain gated on Stage 1.
+
+## Reproduction
 
 ```bash
-# On mcmc-beast (/root/BF_momentum_grw)
-julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r10_momentum_smoke.jl
-julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r20_momentum_production_grid.jl
-julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r30_momentum_evaluation.jl
+cd /root/BF_momentum_grw
+# Load environment without printing credentials.
+set -a; . ./.env; set +a
+J=/root/.juliaup/bin/julia
+D=experiments/scottish_lower/10_momentum_multiscale_grw
+$J --project -t 16 --startup-file=no "$D/test_momentum.jl"
+$J --project -t 16 --startup-file=no "$D/r00_momentum_preflight.jl"
+MMG_PREPARE_ONLY=true $J --project -t 16 --startup-file=no "$D/r10_momentum_smoke.jl"
+$J --project -t 16 --startup-file=no "$D/r10_momentum_smoke.jl"
 ```
+
+Artifacts are under `results/smoke/<source SHA256>/`; recipes/checkpoint directories
+include source identity. The `MomentumGRW` module must be included before loading
+prototype fits from PostgreSQL. DataStore caches and binary fits are not committed.

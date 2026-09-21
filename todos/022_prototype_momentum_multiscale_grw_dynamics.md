@@ -54,6 +54,8 @@ Phase 1 scope: Prototype pure Poisson `MomentumMultiScaleGRW` on Scottish Lower 
 
 ## Work Log & Progress
 
+- [2026-09-21 @pi] Began solo execution in the provisioned momentum worktree. Read the specification, AD/model, runner, database and remote execution guides; verified beast connectivity and loader construction. User approved conditional-mean OOS forecasts (last level plus inferred velocity), zero boundary velocity, and matched first-order forecast convention. Design: unchanged macro/level priors; polynomial AR velocity convolution on micro match-biweeks; omit terminal prior-only innovation. Stationary velocity does not imply a stationary level or guaranteed decompression.
+
 - [2026-09-21 @antigravity] Created branch `feat/scottish-lower-momentum-grw`, provisioned worktree and remote compute directory on `mcmc-beast`, scaffolded experiment suite in `experiments/scottish_lower/10_momentum_multiscale_grw/`, claimed for @pi in session `agent_pi_momentum_grw`.
 
 ## Verification & Findings

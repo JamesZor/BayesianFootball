@@ -33,6 +33,8 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 <!-- TASKS:END -->
 
+TODO 022: @pi resumed solo implementation on 2026-09-21 in the momentum worktree; smoke and production remain gated.
+
 ## Commands and Task Files
 
 Use `NNN_lowercase_slug.md` task names. The CLI is implemented:
