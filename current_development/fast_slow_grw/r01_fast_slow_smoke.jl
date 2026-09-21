@@ -1,5 +1,5 @@
 # ==============================================================================
-# r01 — Smoke gate: fast & slow Poisson MultiScaleGRW arms, folds 1 / 20 / 40
+# r01 — Smoke gate: fast & slow Poisson MultiScaleGRW arms + draw mixtures, folds 1 / 20 / 40
 # ==============================================================================
 #
 # WHAT THIS IS AND IS NOT
@@ -21,7 +21,7 @@
 #       reproduces folds, latents and every chain value exactly
 #   G6  the loose arms' supremacy slope vs the inverted Betfair close exceeds the
 #       tight arm's on the same fixtures (directional; 3 folds)
-#   G7  rate-pooled latents (tight ⊕ each loose arm, w = 0.4) price 1X2, O/U 2.5
+#   G7  draw-concatenated mixtures (tight ⊕ each loose arm, ρ = 0.5) price 1X2, O/U 2.5
 #       and BTTS with every probability in [0, 1] and every book summing, draw by
 #       draw, to the 0–11 goal grid's retained Poisson mass within 1e-10
 #
@@ -59,7 +59,7 @@ const R01_CONFIG = let env(k, d) = parse(Int, get(ENV, k, string(d)))
               smoke_chains = env("R01_CHAINS", base.smoke_chains))
 end
 const R01_GPH = fsg_gph_config(R01_CONFIG)
-const R01_W = 0.4
+const R01_RHO = 0.5
 const R01_SUFFIX = "_smoke_" * Dates.format(now(), "yyyymmddHHMMSS")
 const R01_OUT_DIR = joinpath(R01_CONFIG.save_root, "smoke",
     "$(R01_CONFIG.smoke_chains)x$(R01_CONFIG.smoke_warmup)w$(R01_CONFIG.smoke_samples)s")
@@ -146,7 +146,7 @@ end
 
 # %%
 # ===================================================================
-# 7. Training — three folds per arm
+# 7. Training — three folds per arm, four arms
 # ===================================================================
 r01_fits = Dict{String,Any}()
 for (name, _) in r01_models
@@ -224,35 +224,36 @@ r01_summary.g6_pass = [r.model == FSG_TIGHT ? true : r.sup_slope > tight_slope
 
 # %%
 # ===================================================================
-# 9. Rate pooling (G7) and a small weight ladder
+# 9. Draw-concatenation mixtures (G7) and the ρ ladder
 # ===================================================================
-r01_blend_rows = NamedTuple[]
+r01_mix_rows = NamedTuple[]
 r01_g7 = Dict{String,String}()
 tight_model = last(first(r01_models))
-for loose in (FSG_LOOSE_VAR, FSG_LOOSE_T)
+for loose in FSG_LOOSE_NAMES
     r01_g7[loose] = ""
-    for w in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-        blended = blend_latents(r01_fits[FSG_TIGHT].latents, r01_fits[loose].latents, w)
-        if w == R01_W
+    for ρ in R01_CONFIG.rhos
+        mixed = mixture_latents(r01_fits[FSG_TIGHT].latents, r01_fits[loose].latents, ρ)
+        if ρ == R01_RHO
             try
                 for (label, lat) in (("tight", r01_fits[FSG_TIGHT].latents),
-                                     (loose, r01_fits[loose].latents), ("blend", blended))
+                                     (loose, r01_fits[loose].latents), ("mixture", mixed))
                     g = fsg_grid_audit(lat, tight_model)
-                    @printf("  G7 %-28s w=%.1f %-6s rows=%d  p∈[%.2e, %.4f]  book dev %.1e  truncation %.1e\n",
-                            label, w, "", g.n_rows,
-                            g.min_prob, g.max_prob, g.worst_book_dev, g.worst_truncation)
+                    @printf("  G7 %-36s ρ=%.2f  draws=%d  rows=%d  p∈[%.2e, %.4f]  book dev %.1e  truncation %.1e\n",
+                            label, ρ, n_draws(lat), g.n_rows, g.min_prob, g.max_prob,
+                            g.worst_book_dev, g.worst_truncation)
                 end
             catch err
                 r01_g7[loose] = sprint(showerror, err)
             end
         end
-        s = fsg_supremacy_report(blended, tight_model, r01_market)
-        push!(r01_blend_rows, (; loose, w, sup_slope = s.slope, sup_sd = s.sup_sd,
+        s = fsg_supremacy_report(mixed, tight_model, r01_market)
+        push!(r01_mix_rows, (; loose, rho = ρ, draws = n_draws(mixed),
+                                 sup_slope = s.slope, sup_sd = s.sup_sd,
                                  max_win_prob = s.max_win_prob,
                                  fav70_model = s.fav70_model, fav70_market = s.fav70_market))
     end
 end
-r01_blends = DataFrame(r01_blend_rows)
+r01_mixes = DataFrame(r01_mix_rows)
 r01_summary.g7_failures = [get(r01_g7, r.model, "") for r in eachrow(r01_summary)]
 r01_summary.gate_pass = isempty.(r01_summary.failures) .& r01_summary.g6_pass .&
                         isempty.(r01_summary.g7_failures)
@@ -266,12 +267,12 @@ show(stdout, MIME"text/plain"(), select(r01_summary, :model, :max_rhat, :min_ess
      :n_divergent, :wall_min, :sigma0_att, :sigma0_def, :sup_slope, :sup_sd, :max_win_prob,
      :n_fav70, :fav70_model, :fav70_market, :gate_pass); allcols = true)
 println("\n")
-show(stdout, MIME"text/plain"(), r01_blends; allcols = true, allrows = true)
+show(stdout, MIME"text/plain"(), r01_mixes; allcols = true, allrows = true)
 println()
 
 CSV.write(joinpath(R01_OUT_DIR, "r01_smoke_gates.csv"), r01_summary)
 CSV.write(joinpath(R01_OUT_DIR, "r01_gradient_audit.csv"), DataFrame(r01_gradients))
-CSV.write(joinpath(R01_OUT_DIR, "r01_blend_ladder.csv"), r01_blends)
+CSV.write(joinpath(R01_OUT_DIR, "r01_mixture_ladder.csv"), r01_mixes)
 
 open(joinpath(R01_OUT_DIR, "r01_smoke_report.md"), "w") do io
     println(io, "# r01 smoke gate — TODO 021 fast & slow GRW\n")
@@ -285,8 +286,8 @@ open(joinpath(R01_OUT_DIR, "r01_smoke_report.md"), "w") do io
     print(io, gph_markdown_table(select(r01_summary, :model, :max_rhat, :min_ess_bulk,
         :n_divergent, :sigma0_att, :sigma0_def, :sup_slope, :sup_sd, :max_win_prob,
         :n_fav70, :fav70_model, :fav70_market, :gate_pass, :run_id)))
-    println(io, "\n## Rate-pooling ladder (tight ⊕ loose)\n")
-    print(io, gph_markdown_table(r01_blends))
+    println(io, "\n## Draw-concatenation ladder (tight ⊕ loose, ρ = loose share)\n")
+    print(io, gph_markdown_table(r01_mixes))
     failed = filter(:gate_pass => !, r01_summary)
     if nrow(failed) > 0
         println(io, "\n### Failures\n")

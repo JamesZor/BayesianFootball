@@ -1,20 +1,32 @@
 # ==============================================================================
-# TODO 021 loader — Fast & Slow GRW models and geometric rate pooling
+# TODO 021 loader — Fast & Slow GRW models and posterior draw mixtures
 # ==============================================================================
 #
 # Definitions only. `r01_fast_slow_smoke.jl`, `r02_…` and `r03_…` execute.
 #
-# THE THREE ARMS. One observation, one splitter, one sampler; only the walk's
+# THE FOUR ARMS. One observation, one splitter, one sampler; only the walk's
 # priors move:
 #
-#   m01_poisson_grw_tight        MultiScaleGRW() defaults            (the handrail)
-#   m02_poisson_grw_loose_var    every σ prior scale × 2.5           (loose A)
-#   m03_poisson_grw_loose_tdist  z₀, zₛ ~ TDist(4), σ priors default (loose B)
+#   m01_poisson_grw_tight               MultiScaleGRW() defaults             (the handrail)
+#   m02_poisson_grw_loose_var           every σ prior scale × 2.5            (loose A)
+#   m03_poisson_grw_loose_tdist         z₀, zₛ ~ TDist(4), σ priors default  (loose B)
+#   m04_poisson_grw_loose_fixed_spread  σ₀ pinned at 0.48 (att and def)      (loose C)
+#
+# WHY m04. The Stage 1 smoke showed the data pins σ₀: a 2.5× wider prior moved the
+# posterior attack σ₀ only 0.194 → 0.211. The market-implied spread is ~2.43× the
+# tight arm's (0.194 × 2.43 ≈ 0.47, 0.202 × 2.43 ≈ 0.49), so m04 anchors σ₀ at 0.48
+# with a truncated Normal(0.48, 0.01) — NUTS cannot sample a fixed site, and a 2%
+# prior sd leaves the data no room to pull it back.
+#
+# COMBINATION = DRAW CONCATENATION. The tight and loose posteriors are combined by
+# concatenating posterior draws in ratio ρ (`mixture_latents`), NOT by averaging
+# rates element-wise. Every retained draw is one coherent (λ_h, λ_a) score grid, so
+# 1X2 / totals / BTTS stay partitions of one grid per draw; at the fixture level
+# the mixture prices (1 − ρ) P_tight + ρ P_loose, up to subsampling noise.
 #
 # `m01` is, component for component, Task 013's `m00_baseline_grw` (run
-# `158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11`, 40 folds / 710 OOS). It is re-sampled
-# here under its own name so that all three arms share one sampler budget and one
-# draw count, which the draw-paired rate pool below requires.
+# `158d2a80-7ea3-4d6c-b3ab-be62bcf1bc11`, 40 folds / 710 OOS), re-sampled here
+# under its own name and this package's sampler budget.
 #
 # REUSE. The fold/feature construction, gradient audit, convergence thresholds,
 # save/load round-trip and markdown helpers are Task 013's (`gph_*`), included
@@ -59,6 +71,8 @@ Base.@kwdef struct FSGConfig
     max_concurrent_tasks::Int = 16
 
     gradient_replays::Int = 200
+    # 3,200 retained draws per fold; the artefact keeps every 2nd (see GPHConfig).
+    persist_stride::Int = 2
 
     max_rhat::Float64 = 1.05
     min_ess::Float64 = 200.0
@@ -66,7 +80,8 @@ Base.@kwdef struct FSGConfig
     min_bfmi::Float64 = 0.30
     max_treedepth_rate::Float64 = 0.05
 
-    weights::Vector{Float64} = collect(0.0:0.1:1.0)
+    # Mixture ratios: share of draws taken from the loose arm.
+    rhos::Vector{Float64} = [0.0, 0.25, 0.50, 0.75, 1.0]
 end
 
 "The `GPHConfig` view of an `FSGConfig`, for the reused `gph_*` helpers."
@@ -85,6 +100,7 @@ fsg_gph_config(c::FSGConfig) = GPHConfig(
     max_depth = c.max_depth,
     max_concurrent_tasks = c.max_concurrent_tasks,
     gradient_replays = c.gradient_replays,
+    persist_stride = c.persist_stride,
     max_rhat = c.max_rhat,
     min_ess = c.min_ess,
     max_divergence_rate = c.max_divergence_rate,
@@ -95,12 +111,15 @@ fsg_gph_config(c::FSGConfig) = GPHConfig(
 const FSG_TIGHT = "m01_poisson_grw_tight"
 const FSG_LOOSE_VAR = "m02_poisson_grw_loose_var"
 const FSG_LOOSE_T = "m03_poisson_grw_loose_tdist"
-const FSG_MODEL_NAMES = [FSG_TIGHT, FSG_LOOSE_VAR, FSG_LOOSE_T]
+const FSG_LOOSE_FIXED = "m04_poisson_grw_loose_fixed_spread"
+const FSG_MODEL_NAMES = [FSG_TIGHT, FSG_LOOSE_VAR, FSG_LOOSE_T, FSG_LOOSE_FIXED]
+const FSG_LOOSE_NAMES = [FSG_LOOSE_VAR, FSG_LOOSE_T, FSG_LOOSE_FIXED]
 
 const FSG_DESCRIPTIONS = Dict(
     FSG_TIGHT => "Poisson MultiScaleGRW at graduated default priors (the handrail).",
     FSG_LOOSE_VAR => "Poisson MultiScaleGRW with every σ prior scale widened 2.5x (loose A).",
     FSG_LOOSE_T => "Poisson MultiScaleGRW with TDist(4) level and season innovations (loose B).",
+    FSG_LOOSE_FIXED => "Poisson MultiScaleGRW with level scale σ₀ pinned at 0.48, the market-implied 2.43x spread (loose C).",
 )
 
 const FSG_TAGS = ["scottish-lower", "24/25", "25/26", "multiscale-grw",
@@ -120,6 +139,13 @@ fsg_loose_var_dynamics() = MultiScaleGRW(
 
 fsg_loose_t_dynamics() = MultiScaleGRW(z₀ = TDist(4.0), zₛ = TDist(4.0))
 
+"The anchored spread: σ₀ at 0.48 ± 0.01 for attack and defence; steps at defaults."
+const FSG_FIXED_SIGMA0 = 0.48
+fsg_loose_fixed_dynamics() = MultiScaleGRW(
+    α_σ₀ = truncated(Normal(FSG_FIXED_SIGMA0, 0.01), 0.0, Inf),
+    β_σ₀ = truncated(Normal(FSG_FIXED_SIGMA0, 0.01), 0.0, Inf),
+)
+
 function fsg_poisson_grw(name::Symbol, dynamics)
     return CountModelBuilder(name) |>
         add(GlobalInterception()) |>
@@ -129,11 +155,12 @@ function fsg_poisson_grw(name::Symbol, dynamics)
         build
 end
 
-"All three arms, tight first."
+"All four arms, tight first."
 fsg_models() = Tuple{String,Any}[
     (FSG_TIGHT, fsg_poisson_grw(Symbol(FSG_TIGHT), fsg_tight_dynamics())),
     (FSG_LOOSE_VAR, fsg_poisson_grw(Symbol(FSG_LOOSE_VAR), fsg_loose_var_dynamics())),
     (FSG_LOOSE_T, fsg_poisson_grw(Symbol(FSG_LOOSE_T), fsg_loose_t_dynamics())),
+    (FSG_LOOSE_FIXED, fsg_poisson_grw(Symbol(FSG_LOOSE_FIXED), fsg_loose_fixed_dynamics())),
 ]
 
 function fsg_fit_configs(c::FSGConfig, models, splitter, sampler;
@@ -173,48 +200,46 @@ function fsg_fold_inputs(ds, splitter, model; folds::Union{Nothing,Vector{Int}} 
 end
 
 # ==============================================================================
-# 4. Geometric rate pooling (λ-space) and linear probability pooling
+# 4. Posterior draw mixtures
 # ==============================================================================
 
-"""
-    geometric_rate_pool(λ_tight, λ_loose, w)
-
-    log λ_blend = (1 − w) log λ_tight + w log λ_loose
-
-Draw-paired: draw d of the blend combines draw d of each arm. The arms are
-independent posteriors, so the pairing is an independence coupling — a valid Monte
-Carlo estimate of the blend under that coupling, not a joint posterior.
-"""
-function geometric_rate_pool(λ_tight::AbstractArray{<:Real}, λ_loose::AbstractArray{<:Real}, w::Real)
-    0.0 <= w <= 1.0 || error("mixing weight w must be in [0, 1]; got $w")
-    size(λ_tight) == size(λ_loose) || error(
-        "shape mismatch: $(size(λ_tight)) vs $(size(λ_loose))")
-    return exp.((1.0 - w) .* log.(λ_tight) .+ w .* log.(λ_loose))
+"`k` evenly spaced draw indices out of `n`, so every chain contributes."
+function fsg_draw_indices(n::Int, k::Int)
+    0 <= k <= n || error("cannot take $k of $n draws")
+    k == 0 && return Int[]
+    return unique!(round.(Int, range(1, n; length = k)))
 end
 
 """
-    blend_latents(tight, loose, w) -> CountLatents
+    mixture_latents(tight, loose, ρ; n_total = n_draws(tight)) -> CountLatents
 
-Rate-pool two Poisson `CountLatents` over their common fixtures. Refuses containers
-with differing draw counts rather than silently truncating one.
+Concatenate posterior draws: `N₂ = round(ρ · n_total)` draws from `loose` and
+`N₁ = n_total − N₂` from `tight`, over the fixtures both containers hold:
+
+    λ_combined = hcat(λ_tight[:, idx₁], λ_loose[:, idx₂])
+
+The indices are evenly spaced over each container rather than `1:N`, because draws
+are stored chain-major and `1:N` would take whole chains. The draw count is held at
+`n_total` for every ρ so ladders compare like with like. ρ = 0 and ρ = 1 return the
+pure arms (on the common fixtures).
 """
-function blend_latents(tight::CountLatents, loose::CountLatents, w::Real)
-    n_draws(tight) == n_draws(loose) || error(
-        "draw counts differ: tight $(n_draws(tight)) vs loose $(n_draws(loose))")
+function mixture_latents(tight::CountLatents, loose::CountLatents, ρ::Real;
+                         n_total::Int = n_draws(tight))
+    0.0 <= ρ <= 1.0 || error("mixture ratio ρ must be in [0, 1]; got $ρ")
+    n2 = round(Int, ρ * n_total)
+    n1 = n_total - n2
+    n1 <= n_draws(tight) || error("need $n1 tight draws, container has $(n_draws(tight))")
+    n2 <= n_draws(loose) || error("need $n2 loose draws, container has $(n_draws(loose))")
     common = sort!(collect(intersect(Set(tight.match_ids), Set(loose.match_ids))))
     it = Dict(m => i for (i, m) in enumerate(tight.match_ids))
     il = Dict(m => i for (i, m) in enumerate(loose.match_ids))
     rt = [it[m] for m in common]
     rl = [il[m] for m in common]
+    d1 = fsg_draw_indices(n_draws(tight), n1)
+    d2 = fsg_draw_indices(n_draws(loose), n2)
     return CountLatents(common,
-        geometric_rate_pool(tight.λ_home[rt, :], loose.λ_home[rl, :], w),
-        geometric_rate_pool(tight.λ_away[rt, :], loose.λ_away[rl, :], w))
-end
-
-"Auxiliary baseline: P_blend = (1 − w) P_tight + w P_loose."
-function linear_prob_pool(p_tight::AbstractArray{<:Real}, p_loose::AbstractArray{<:Real}, w::Real)
-    0.0 <= w <= 1.0 || error("mixing weight w must be in [0, 1]; got $w")
-    return (1.0 - w) .* p_tight .+ w .* p_loose
+        hcat(tight.λ_home[rt, d1], loose.λ_home[rl, d2]),
+        hcat(tight.λ_away[rt, d1], loose.λ_away[rl, d2]))
 end
 
 # ==============================================================================
@@ -387,4 +412,27 @@ function fsg_sigma0(fit)
         out[key] = isempty(vals) ? NaN : mean(vals)
     end
     return out
+end
+
+# ==============================================================================
+# 8. Config truth for the production grid
+# ==============================================================================
+
+"Register every arm, its fit recipe, the splitter and the sampler in `config_registry`."
+function fsg_register!(db, models, splitter, sampler, configs, c::FSGConfig)
+    model_ids = Dict{String,Int}()
+    for (name, model) in models
+        model_ids[name] = save_model(db, name, model;
+                                     description = FSG_DESCRIPTIONS[name], tags = FSG_TAGS)
+        save_config(db, name * "_fit", configs[name];
+                    description = FSG_DESCRIPTIONS[name] * " TODO 021 recipe.", tags = FSG_TAGS)
+    end
+    splitter_id = save_splitter(db, "scottish_lower_fast_slow_grw_40fold", splitter;
+        description = "Pooled 56/57, two history seasons, match-biweek walk-forward over 24/25 and 25/26.",
+        tags = FSG_TAGS)
+    sampler_id = save_sampler(db, "queued_nuts_$(c.chains)x$(c.samples)_w$(c.warmup)", sampler;
+        description = "ReverseDiff queued NUTS: $(c.chains) chains, $(c.warmup) warmup, " *
+                      "$(c.samples) retained, target acceptance $(c.accept_rate).",
+        tags = FSG_TAGS)
+    return (; model_ids, splitter_id, sampler_id)
 end
