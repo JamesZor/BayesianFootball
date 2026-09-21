@@ -22,8 +22,12 @@ odds = M.gph_betfair_closing_odds(ds)
 splitter = M.gph_splitter(C.target_seasons)
 rows = NamedTuple[]
 posteriors = NamedTuple[]
+original_fits = Dict(name=>M.load_fit(db,id) for (name,id) in ORIGINALS)
+panel,refusals = M.tradeable_panel(original_fits,odds,ds)
+CSV.write(joinpath(OUT,"portfolio_refusals.csv"),refusals)
+CSV.write(joinpath(OUT,"portfolio_panel.csv"),DataFrame(match_id=panel))
 for (name,model) in M.models()
-    original = M.load_fit(db,ORIGINALS[name])
+    original = original_fits[name]
     occursin(ORIGINAL_SOURCE,original.config.description) || error("Wrong original source")
     config = M.fit_recipe(C,name,model,splitter,R;smoke=true)
     string(config.model)==string(original.config.model) || error("Model changed; cannot reuse chains")
@@ -42,7 +46,7 @@ for (name,model) in M.models()
     for (a,b) in zip(original.folds,restored.folds)
         parent(a.chain.value)==parent(b.chain.value) || error("Re-audit changed posterior draws")
     end
-    portfolio_id,_ = M.portfolio_roundtrip(db,run_id,restored,ds,odds)
+    portfolio_id,_ = M.portfolio_roundtrip(db,run_id,restored,ds,odds;panel)
     row = M.gph_convergence_row(name,restored,R;run_id)
     push!(rows,(;row...,grid...,gate_pass=true,portfolio_id=string(portfolio_id),
         source=SOURCE,original_run_id=string(ORIGINALS[name])))

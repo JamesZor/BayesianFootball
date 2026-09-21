@@ -100,19 +100,53 @@ function convergence_pass(fit, n_folds)
         d.max_rhat<=1.05 && d.min_ess_bulk>=200 && d.min_ess_tail>=200
 end
 
-function portfolio_roundtrip(db,run_id,fit,ds,odds)
+"Common tradeable panel; only missing quotes/selections may be excluded."
+function tradeable_panel(fits,odds,ds)
+    book,_ = portfolio_specs()
+    reference = sort(copy(first(values(fits)).latents.match_ids))
+    refusals = NamedTuple[]
+    omitted = Set{Int}()
+    for (name,fit) in fits
+        sort(fit.latents.match_ids)==reference || error("portfolio latent panels differ")
+        _,report = GPH_PORTFOLIO.build_books_reported(book,fit,odds,ds;
+            require_converged=false,quiet=true)
+        isempty(report.errored) || error("portfolio build errors: $(report.errored)")
+        isempty(report.skipped_no_fixture) && isempty(report.skipped_unplayed) ||
+            error("portfolio has missing fixture identities or unplayed matches")
+        for (ids,reason) in ((report.skipped_no_quotes,"no closing quotes"),
+                             (report.skipped_no_selections,"no usable selection"))
+            for id in ids
+                push!(omitted,id)
+                push!(refusals,(;model=name,match_id=id,reason))
+            end
+        end
+    end
+    panel = sort(collect(setdiff(Set(reference),omitted)))
+    isempty(panel) && error("no common tradeable fixtures")
+    return panel,DataFrame(refusals)
+end
+
+function portfolio_roundtrip(db,run_id,fit,ds,odds; panel=nothing)
     book,policy = portfolio_specs()
+    if panel===nothing
+        panel,refusals = tradeable_panel(Dict(fit.config.name=>fit),odds,ds)
+        out = joinpath(MomentumGRWConfig().save_root,"book_coverage",source_fingerprint())
+        mkpath(out)
+        CSV.write(joinpath(out,fit.config.name*"_refusals.csv"),refusals)
+        CSV.write(joinpath(out,fit.config.name*"_panel.csv"),DataFrame(match_id=panel))
+    end
+    priced_fit = gph_restrict(fit,panel)
     save_book_spec(db,"main_1x2_ou25",book)
     save_policy_spec(db,"flat025_drawdown20_cap025",policy)
-    result,books,report = run_portfolio_simulation(book,policy,fit,odds,ds;
+    result,books,report = run_portfolio_simulation(book,policy,priced_fit,odds,ds;
         require_converged=true,quiet=true,bootstrap=false)
     GPH_PORTFOLIO.n_skipped(report)==0 || error("portfolio skipped fixtures: $(GPH_PORTFOLIO.n_skipped(report))")
-    length(books)==n_matches(fit.latents) || error("portfolio fixture count differs")
+    length(books)==length(panel) || error("portfolio fixture count differs")
     portfolio_id = save_portfolio_db(result,run_id,db;book_spec=book,policy_spec=policy)
     restored = load_portfolio_db(portfolio_id,db)
     isequal(restored.trajectory.bets,result.trajectory.bets) || error("persisted bet ledger differs")
     reloaded = load_fit(db,run_id)
-    rebuilt,_,_ = run_portfolio_simulation(book,policy,reloaded,odds,ds;
+    rebuilt,_,_ = run_portfolio_simulation(book,policy,gph_restrict(reloaded,panel),odds,ds;
         require_converged=true,quiet=true,bootstrap=false)
     isequal(rebuilt.trajectory.bets,result.trajectory.bets) || error("reloaded fit reprices a different ledger")
     return portfolio_id,result

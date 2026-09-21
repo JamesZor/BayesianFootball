@@ -40,6 +40,9 @@ for (name,fit) in fits
 end
 rates = E.market_reference(odds,panel)
 CSV.write(joinpath(OUT,"market_inversions.csv"),rates)
+tradeable,refusals = M.tradeable_panel(fits,odds,ds)
+CSV.write(joinpath(OUT,"portfolio_panel.csv"),DataFrame(match_id=tradeable))
+CSV.write(joinpath(OUT,"portfolio_refusals.csv"),refusals)
 
 # ===================================================================
 # 3. Proper scoring, decompression, identification and portfolio ledger
@@ -63,14 +66,14 @@ for (name,_) in M.models()
     # BookSpec(1X2,OU2.5,BakerMcHale); FlatTrust(.25), Drawdown(20), Cap(.25).
     # The same persisted-fit/portfolio round-trip gate as the smoke run.
     run_id = M.UUID(manifest.runs[name])
-    portfolio_id,result = M.portfolio_roundtrip(db,run_id,fit,ds,odds)
+    portfolio_id,result = M.portfolio_roundtrip(db,run_id,fit,ds,odds;panel=tradeable)
     s = result.summary
     allocation = E.capital_allocation(result)
     push!(headlines,(;model=name,run_id=string(run_id),portfolio_id=string(portfolio_id),
         decompression...,crps_home=crps.home.mean,crps_away=crps.away.mean,
         crps_all=crps.all.mean,total_return_pct=s.total_return_pct,
         sharpe_ann=s.sharpe_ann,max_drawdown_pct=s.mdd,flat_roi_pct=s.roi,
-        n_bets=s.n_bets,allocation...))
+        n_portfolio_fixtures=length(tradeable),n_bets=s.n_bets,allocation...))
     CSV.write(joinpath(OUT,name*"_bets.csv"),result.trajectory.bets)
     CSV.write(joinpath(OUT,"headlines.csv"),DataFrame(headlines))
 end

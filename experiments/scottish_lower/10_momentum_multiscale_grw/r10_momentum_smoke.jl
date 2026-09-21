@@ -39,6 +39,7 @@ odds = M.gph_betfair_closing_odds(ds)
 rows = NamedTuple[]
 gradients = NamedTuple[]
 posteriors = NamedTuple[]
+fits = Dict{String,Any}()
 
 for (name,model) in models
     # ===============================================================
@@ -79,10 +80,7 @@ for (name,model) in models
     # ===============================================================
     run_id = existing === nothing ? M.gph_save_and_verify(db,fit) : existing
     portfolio_id = ""
-    if passed
-        pid,_ = M.portfolio_roundtrip(db,run_id,fit,ds,odds)
-        portfolio_id = string(pid)
-    end
+    fits[name] = fit
     row = M.gph_convergence_row(name,fit,R;run_id)
     push!(rows,(;row...,grid...,gate_pass=passed,portfolio_id,source=SOURCE))
     CSV.write(joinpath(OUT,"smoke_gates.csv"),DataFrame(rows))
@@ -95,6 +93,16 @@ end
 # ===================================================================
 if !PREPARE_ONLY
     verdict = length(rows)==3 && all(r.gate_pass for r in rows)
+    if verdict
+        panel,refusals = M.tradeable_panel(fits,odds,ds)
+        CSV.write(joinpath(OUT,"portfolio_refusals.csv"),refusals)
+        CSV.write(joinpath(OUT,"portfolio_panel.csv"),DataFrame(match_id=panel))
+        for (i,row) in enumerate(rows)
+            pid,_ = M.portfolio_roundtrip(db,M.UUID(row.run_id),fits[row.model],ds,odds;panel)
+            rows[i] = merge(row,(;portfolio_id=string(pid)))
+        end
+        CSV.write(joinpath(OUT,"smoke_gates.csv"),DataFrame(rows))
+    end
     certificate = (;source=SOURCE,passed=verdict,generated=now(),
         runs=Dict(r.model=>r.run_id for r in rows),report=joinpath(OUT,"smoke_gates.csv"))
     M.Serialization.serialize(joinpath(C.save_root,"smoke_gate.jls"),certificate)
