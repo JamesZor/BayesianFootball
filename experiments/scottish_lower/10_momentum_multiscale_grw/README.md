@@ -137,7 +137,16 @@ with latents reconstructed from those exact draws. The same stride applies to al
 arms. Full-draw diagnostics are retained. This avoids the current hex-encoded
 single-artifact limit; the momentum smoke artifact alone is 49 MB. Stored recipe
 descriptions explicitly record the persistence stride. Stage 3 compares the
-matched persisted panels. No full-cohort performance result is claimed yet.
+matched persisted panels. Storage preflight passed on all three smoke fits:
+reconstructed thinned rates equal the exact original draw columns; full-draw
+diagnostics are preserved.
+
+**Stage 2 launched** at commit `a6cca1bc` in beast tmux session
+`momentum_production`. Log: `results/stage2_production.log`; exit status is written
+to `results/stage2_production.exit` on termination. Production output is under
+`results/production/6869de6297b580cdc7aaf3052ba31c81c1facc0bc826d495e770bfbbb4a73c6f/`.
+Do not launch a duplicate queue. Completion, convergence and database round-trips
+are still pending. No full-cohort performance result is claimed yet.
 
 ## Reproduction
 

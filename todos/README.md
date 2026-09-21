@@ -33,7 +33,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 <!-- TASKS:END -->
 
-TODO 022: Stage 1 PASS on 2026-09-21, including exact-chain re-audit and portfolio round-trips. @pi is preparing the authorized 40-fold production launch.
+TODO 022: Stage 1 PASS on 2026-09-21. @pi launched the authorized 40-fold Stage 2 grid on beast (`momentum_production`, commit `a6cca1bc`); results pending.
 
 ## Commands and Task Files
 
