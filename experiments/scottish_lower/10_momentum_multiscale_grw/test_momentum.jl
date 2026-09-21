@@ -102,6 +102,15 @@ end
     end
 end
 
+@testset "Zero-divergence strict-threshold adapter" begin
+    c = M.MomentumGRWConfig()
+    thresholds = M.gph_thresholds(M.runtime_config(c;smoke=true))
+    fold(div) = M.GPH_INF.FoldConvergence(1,true,2,400,4,1.01,:x,
+        500.0,:x,500.0,:x,div,1600,div/1600,10,0,0.0,0.8)
+    @test M.GPH_INF.summarise_convergence([fold(0)];thresholds).passed
+    @test !M.GPH_INF.summarise_convergence([fold(1)];thresholds).passed
+end
+
 function replay_allocations(tape, gradient, x)
     for _ in 1:30
         M.ReverseDiff.gradient!(gradient, tape, x)

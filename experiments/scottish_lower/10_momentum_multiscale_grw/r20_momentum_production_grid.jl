@@ -1,30 +1,96 @@
-# ==============================================================================
-# experiments/scottish_lower/10_momentum_multiscale_grw/r20_momentum_production_grid.jl
-# ==============================================================================
-#
-# Stage 2: 40-Fold Walk-Forward Production Grid on mcmc-beast
-# Samples all 40 folds (710 fixtures, 4 chains × 800 warmup + 800 samples)
-# for m01 (Time Decay), m02 (1st-Order GRW), and m03 (Momentum GRW).
-#
-# Persists fits to PostgreSQL mcmc_experiments in namespace:
-#   scottish_lower_momentum_grw
-#
-# USAGE:
-#   julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r20_momentum_production_grid.jl
-# ==============================================================================
+# Stage 2: matched 40-fold / 710-fixture Poisson benchmark, mcmc-beast only.
+# Fixed 4 x (800 warmup + 800 retained), acceptance=0.90, max_depth=10.
+# This script refuses a missing, failed or source-stale Stage 1 certificate.
+# Definitions must be loaded before reading prototype checkpoint/fit artifacts.
+# Registry and configs.config_hash are checked BEFORE expensive sampling.
+# All retained draws are audited and kept locally. No implicit thinning.
+# USAGE: julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r20_momentum_production_grid.jl
+# MMG_PREPARE_ONLY=true validates all fold inputs and recipes without sampling.
 
-using ThreadPinning
-using LinearAlgebra
+# ===================================================================
+# 1. Packages and runtime
+# ===================================================================
+using ThreadPinning, LinearAlgebra, CSV, DataFrames, Dates
 pinthreads(:cores)
-LinearAlgebra.BLAS.set_num_threads(1)
+BLAS.set_num_threads(1)
+include(joinpath(@__DIR__,"l10_momentum_grw_loader.jl"))
+const M = MomentumGRW
 
-using BayesianFootball
-using CSV
-using DataFrames
-using Dates
-using Printf
+# ===================================================================
+# 2. Visible configuration and smoke-promotion gate
+# ===================================================================
+const C = M.MomentumGRWConfig()
+const R = M.runtime_config(C;smoke=false)
+const PREPARE_ONLY = parse(Bool,get(ENV,"MMG_PREPARE_ONLY","false"))
+const SOURCE = M.source_fingerprint()
+const OUT = joinpath(C.save_root,"production",SOURCE)
+const CERTIFICATE = joinpath(C.save_root,"smoke_gate.jls")
+isfile(CERTIFICATE) || error("Stage 1 has not produced a smoke certificate")
+certificate = M.Serialization.deserialize(CERTIFICATE)
+certificate.passed || error("Stage 1 failed; production is forbidden")
+certificate.source==SOURCE || error("Source changed since smoke; rerun Stage 1")
+mkpath(OUT)
+smoke_db = M.PostgresStorage(C.smoke_experiment)
+for (name,_) in M.models()
+    haskey(certificate.runs,name) || error("Smoke certificate lacks $name")
+    smoke = M.load_fit(smoke_db,M.UUID(certificate.runs[name]))
+    M.convergence_pass(smoke,3) || error("Stored smoke fit $name fails convergence")
+end
+println("PRODUCTION source=",SOURCE," tasks per arm=40 folds x 4 chains; concurrency=16")
 
-include(joinpath(@__DIR__, "l10_momentum_grw_loader.jl"))
+# ===================================================================
+# 3. Cohort, models and database namespace
+# ===================================================================
+ds = M.gph_load_data()
+splitter = M.gph_splitter(C.target_seasons)
+models = M.models()
+db = M.gph_database(C.experiment)
+rows = NamedTuple[]
 
-println("=== [Stage 2] Momentum MultiScale GRW 40-Fold Production Grid ===")
-# Pi (GPT-6 Astra): Implement full 40-fold walk-forward sampling and persistence.
+for (name,model) in models
+    # ===============================================================
+    # 4. All-fold feature/filtration preflight and config truth
+    # ===============================================================
+    inputs,filtration = M.selected_inputs(ds,splitter,model,C;smoke=false)
+    CSV.write(joinpath(OUT,name*"_filtration.csv"),filtration)
+    config = M.fit_recipe(C,name,model,splitter,R;smoke=false)
+    M.register_recipe!(db,name,config)
+    existing = M.gph_completed_run(db,config)
+    recipe_hash = M.gph_run_hash(db,config)
+    println("RECIPE ",name," hash=",recipe_hash," existing=",existing)
+    PREPARE_ONLY && continue
+
+    # ===============================================================
+    # 5. Native queued sampling with recipe-addressed fold checkpoints
+    # ===============================================================
+    checkpoint = joinpath(OUT,"checkpoints",recipe_hash)
+    fit = existing===nothing ? M.gph_sample(config,inputs,R;checkpoint_dir=checkpoint) : M.load_fit(db,existing)
+    M.gph_assert_coverage(name,fit;folds=C.expected_folds,oos=C.expected_oos)
+
+    # ===============================================================
+    # 6. Full-draw convergence audit, latents, score mass and persistence
+    # ===============================================================
+    # Keep a full local Fit before attempting a potentially large DB transaction.
+    existing===nothing && M.save_fit(fit,M.FileStorage(joinpath(OUT,"full_fits")))
+    M.gph_latent_audit(fit)
+    grid = M.score_grid_audit(fit)
+    run_id = existing===nothing ? M.gph_save_and_verify(db,fit) : existing
+    row = M.gph_convergence_row(name,fit,R;run_id)
+    passed = M.convergence_pass(fit,C.expected_folds)
+    push!(rows,(;row...,grid...,gate_pass=passed,source=SOURCE,recipe_hash))
+    CSV.write(joinpath(OUT,"production_runs.csv"),DataFrame(rows))
+    println("PRODUCTION ARM ",last(rows))
+    passed || error("$name production convergence failed; evaluation promotion blocked")
+end
+
+# ===================================================================
+# 7. Immutable run UUID manifest; Stage 3 never fits or regenerates latents
+# ===================================================================
+if !PREPARE_ONLY
+    length(rows)==3 || error("production arm coverage incomplete")
+    manifest = (;source=SOURCE,generated=now(),runs=Dict(r.model=>r.run_id for r in rows))
+    M.Serialization.serialize(joinpath(C.save_root,"production_manifest.jls"),manifest)
+    println("PRODUCTION PASS: ",manifest.runs)
+else
+    println("PRODUCTION PREPARE_ONLY PASS — no sampling")
+end

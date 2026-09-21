@@ -33,7 +33,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 <!-- TASKS:END -->
 
-TODO 022: @pi resumed solo implementation on 2026-09-21 in the momentum worktree; smoke and production remain gated.
+TODO 022: Stage 1 sampling completed 2026-09-21; @pi is correcting its strict-zero audit adapter without resampling. Stage 2 awaits remaining round-trip gates.
 
 ## Commands and Task Files
 

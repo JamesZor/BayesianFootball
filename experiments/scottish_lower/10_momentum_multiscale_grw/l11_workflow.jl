@@ -13,7 +13,9 @@ function runtime_config(c; smoke)
     return GPHConfig(experiment=c.experiment, smoke_experiment=c.smoke_experiment,
         save_root=c.save_root, samples=800, warmup=800, chains=4,
         smoke_samples=400, smoke_warmup=400, smoke_chains=4,
-        accept_rate=0.90, min_ess=200.0, max_divergence_rate=0.0,
+        # Shared audit uses strict '<': the smallest positive Float64 accepts
+        # zero and no positive representable rate. Exact count is also gated.
+        accept_rate=0.90, min_ess=200.0, max_divergence_rate=nextfloat(0.0),
         max_concurrent_tasks=16, persist_stride=1)
 end
 
@@ -93,7 +95,8 @@ end
 
 function convergence_pass(fit, n_folds)
     d = fit.diagnostics
-    return length(fit.folds)==n_folds && d.passed && d.n_divergent==0 &&
+    return length(fit.folds)==n_folds && d.passed && isempty(d.abstained) &&
+        d.n_applicable==n_folds && d.n_divergent==0 &&
         d.max_rhat<=1.05 && d.min_ess_bulk>=200 && d.min_ess_tail>=200
 end
 
