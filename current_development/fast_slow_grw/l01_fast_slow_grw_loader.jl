@@ -230,7 +230,7 @@ Posterior-mean probability per (match, market, selection), plus the per-draw
 book-sum error: every market's selections must partition the grid on every draw.
 """
 function fsg_fixture_probs(latents, model)
-    ppd = model_inference(latents, model; market_config = FSG_MARKETS)
+    ppd = BayesianFootball.Predictions.model_inference(latents, model; market_config = FSG_MARKETS)
     df = ppd.df
     out = DataFrame(match_id = Int.(df.match_id),
                     market_name = String.(df.market_name),
