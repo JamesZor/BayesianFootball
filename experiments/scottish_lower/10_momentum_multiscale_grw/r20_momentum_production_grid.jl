@@ -3,7 +3,8 @@
 # This script refuses a missing, failed or source-stale Stage 1 certificate.
 # Definitions must be loaded before reading prototype checkpoint/fit artifacts.
 # Registry and configs.config_hash are checked BEFORE expensive sampling.
-# All retained draws are audited and kept locally. No implicit thinning.
+# User-approved persistence: all retained draws audited and saved locally;
+# every fourth draw persisted to PostgreSQL, with latents reconstructed from it.
 # USAGE: julia --project -t 16 experiments/scottish_lower/10_momentum_multiscale_grw/r20_momentum_production_grid.jl
 # MMG_PREPARE_ONLY=true validates all fold inputs and recipes without sampling.
 
@@ -22,6 +23,7 @@ const M = MomentumGRW
 const C = M.MomentumGRWConfig()
 const R = M.runtime_config(C;smoke=false)
 const PREPARE_ONLY = parse(Bool,get(ENV,"MMG_PREPARE_ONLY","false"))
+const PERSIST_STRIDE = 4
 const SOURCE = M.source_fingerprint()
 const OUT = joinpath(C.save_root,"production",SOURCE)
 const CERTIFICATE = joinpath(C.save_root,"smoke_gate.jls")
@@ -53,7 +55,11 @@ for (name,model) in models
     # ===============================================================
     inputs,filtration = M.selected_inputs(ds,splitter,model,C;smoke=false)
     CSV.write(joinpath(OUT,name*"_filtration.csv"),filtration)
-    config = M.fit_recipe(C,name,model,splitter,R;smoke=false)
+    base = M.fit_recipe(C,name,model,splitter,R;smoke=false)
+    config = M.FitConfig(name=base.name,model=base.model,splitter=base.splitter,
+        sampler=base.sampler,execution=base.execution,tags=base.tags,
+        description=base.description*"; persistence_stride=4; diagnostics=all retained draws",
+        save_dir=base.save_dir)
     M.register_recipe!(db,name,config)
     existing = M.gph_completed_run(db,config)
     recipe_hash = M.gph_run_hash(db,config)
@@ -71,13 +77,17 @@ for (name,model) in models
     # 6. Full-draw convergence audit, latents, score mass and persistence
     # ===============================================================
     # Keep a full local Fit before attempting a potentially large DB transaction.
-    existing===nothing && M.save_fit(fit,M.FileStorage(joinpath(OUT,"full_fits")))
+    full_path = existing===nothing ? M.save_fit(fit,M.FileStorage(joinpath(OUT,"full_fits"))) : "loaded existing DB run"
     M.gph_latent_audit(fit)
-    grid = M.score_grid_audit(fit)
-    run_id = existing===nothing ? M.gph_save_and_verify(db,fit) : existing
-    row = M.gph_convergence_row(name,fit,R;run_id)
-    passed = M.convergence_pass(fit,C.expected_folds)
-    push!(rows,(;row...,grid...,gate_pass=passed,source=SOURCE,recipe_hash))
+    full_grid = M.score_grid_audit(fit)
+    stored = existing===nothing ? M.gph_thin_for_persistence(fit,inputs,PERSIST_STRIDE) : fit
+    M.gph_latent_audit(stored)
+    grid = M.score_grid_audit(stored)
+    run_id = existing===nothing ? M.gph_save_and_verify(db,stored) : existing
+    row = M.gph_convergence_row(name,stored,R;run_id)
+    passed = M.convergence_pass(stored,C.expected_folds)
+    push!(rows,(;row...,grid...,full_grid_worst_tail=existing===nothing ? full_grid.worst_tail : missing,
+        full_path,persistence_stride=PERSIST_STRIDE,gate_pass=passed,source=SOURCE,recipe_hash))
     CSV.write(joinpath(OUT,"production_runs.csv"),DataFrame(rows))
     println("PRODUCTION ARM ",last(rows))
     passed || error("$name production convergence failed; evaluation promotion blocked")
