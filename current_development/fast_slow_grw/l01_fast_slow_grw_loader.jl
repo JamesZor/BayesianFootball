@@ -224,41 +224,54 @@ end
 const FSG_MARKETS = Data.MarketConfig([Data.Market1X2(), Data.MarketOverUnder(2.5), Data.MarketBTTS()])
 
 """
-    fsg_fixture_probs(latents, model) -> DataFrame
+    fsg_fixture_probs(latents, model) -> (probs, books)
 
-Posterior-mean probability per (match, market, selection), plus the per-draw
-book-sum error: every market's selections must partition the grid on every draw.
+Posterior-mean probability per (match, market, selection), and one row per
+(match, market) carrying the per-draw book sum.
 """
 function fsg_fixture_probs(latents, model)
     ppd = BayesianFootball.Predictions.model_inference(latents, model; market_config = FSG_MARKETS)
     df = ppd.df
-    out = DataFrame(match_id = Int.(df.match_id),
-                    market_name = String.(df.market_name),
-                    market_line = Float64.(df.market_line),
-                    selection = Symbol.(df.selection),
-                    prob = mean.(df.distribution),
-                    prob_min = minimum.(df.distribution),
-                    prob_max = maximum.(df.distribution))
-    sums = combine(groupby(df, [:match_id, :market_name, :market_line]),
-                   :distribution => (d -> maximum(abs.(reduce(+, d) .- 1.0))) => :book_err)
-    return out, sums
+    probs = DataFrame(match_id = Int.(df.match_id),
+                      market_name = String.(df.market_name),
+                      market_line = Float64.(df.market_line),
+                      selection = Symbol.(df.selection),
+                      prob = mean.(df.distribution),
+                      prob_min = minimum.(df.distribution),
+                      prob_max = maximum.(df.distribution))
+    books = combine(groupby(df, [:match_id, :market_name, :market_line]),
+                    :distribution => (d -> Ref(reduce(+, d))) => :book_sum)
+    return probs, books
 end
 
 """
     fsg_grid_audit(latents, model; tol) -> NamedTuple
 
-G7: every selection probability in [0, 1] on every draw and every market book
-summing to 1 within `tol` on every draw (grid truncation at 12×12 leaves < 1e-6
-for Scottish Lower rates).
+G7. Every selection probability must lie in [0, 1] on every draw, and every market
+book must sum, draw by draw, to the grid's retained mass
+`cdf(Poisson(λ_h), G−1) · cdf(Poisson(λ_a), G−1)` within `tol`, where `G` is the
+kernel's grid size (12: 0–11 goals). The kernel does not renormalise, so a book
+legitimately misses 1 by the truncated tail (~1e-4 on a high-rate draw); what it
+may not do is miss by anything else.
 """
-function fsg_grid_audit(latents, model; tol::Float64 = 1.0e-6)
-    probs, sums = fsg_fixture_probs(latents, model)
+function fsg_grid_audit(latents::CountLatents, model; tol::Float64 = 1.0e-10)
+    G = BayesianFootball.Predictions.TPL_MAX_GOALS
+    probs, books = fsg_fixture_probs(latents, model)
     lo = minimum(probs.prob_min)
     hi = maximum(probs.prob_max)
-    worst = maximum(sums.book_err)
     (lo >= 0.0 && hi <= 1.0) || error("probability outside [0, 1]: min $lo, max $hi")
-    worst <= tol || error("a market book misses 1 by $worst > $tol")
-    return (; n_rows = nrow(probs), min_prob = lo, max_prob = hi, worst_book_err = worst)
+    row = Dict(m => i for (i, m) in enumerate(latents.match_ids))
+    worst_dev = 0.0
+    worst_trunc = 0.0
+    for r in eachrow(books)
+        i = row[r.match_id]
+        kept = cdf.(Poisson.(latents.λ_home[i, :]), G - 1) .* cdf.(Poisson.(latents.λ_away[i, :]), G - 1)
+        worst_dev = max(worst_dev, maximum(abs.(r.book_sum .- kept)))
+        worst_trunc = max(worst_trunc, maximum(1.0 .- kept))
+    end
+    worst_dev <= tol || error("a market book deviates from the grid's retained mass by $worst_dev > $tol")
+    return (; n_rows = nrow(probs), min_prob = lo, max_prob = hi,
+              worst_book_dev = worst_dev, worst_truncation = worst_trunc)
 end
 
 # ==============================================================================

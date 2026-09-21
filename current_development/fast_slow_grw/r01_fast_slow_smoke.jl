@@ -22,7 +22,8 @@
 #   G6  the loose arms' supremacy slope vs the inverted Betfair close exceeds the
 #       tight arm's on the same fixtures (directional; 3 folds)
 #   G7  rate-pooled latents (tight ⊕ each loose arm, w = 0.4) price 1X2, O/U 2.5
-#       and BTTS with every probability in [0, 1] and every book summing to 1
+#       and BTTS with every probability in [0, 1] and every book summing, draw by
+#       draw, to the 0–11 goal grid's retained Poisson mass within 1e-10
 #
 # USAGE (mcmc-beast, from /root/BF_fast_slow_grw)
 #
@@ -234,9 +235,13 @@ for loose in (FSG_LOOSE_VAR, FSG_LOOSE_T)
         blended = blend_latents(r01_fits[FSG_TIGHT].latents, r01_fits[loose].latents, w)
         if w == R01_W
             try
-                g = fsg_grid_audit(blended, tight_model)
-                @printf("  G7 %s w=%.1f  rows=%d  p∈[%.2e, %.4f]  worst book err %.1e\n",
-                        loose, w, g.n_rows, g.min_prob, g.max_prob, g.worst_book_err)
+                for (label, lat) in (("tight", r01_fits[FSG_TIGHT].latents),
+                                     (loose, r01_fits[loose].latents), ("blend", blended))
+                    g = fsg_grid_audit(lat, tight_model)
+                    @printf("  G7 %-28s w=%.1f %-6s rows=%d  p∈[%.2e, %.4f]  book dev %.1e  truncation %.1e\n",
+                            label, w, "", g.n_rows,
+                            g.min_prob, g.max_prob, g.worst_book_dev, g.worst_truncation)
+                end
             catch err
                 r01_g7[loose] = sprint(showerror, err)
             end
