@@ -32,12 +32,10 @@ println("SMOKE source=", SOURCE, " folds=", CONFIG.smoke_folds,
 ds = D.gph_load_data()
 splitter = D.gph_splitter(CONFIG.target_seasons)
 models = D.models()
-reference_candidate = D.candidate_model(optimized = false)
 db = D.gph_database(CONFIG.smoke_experiment)
 odds = D.gph_betfair_closing_odds(ds)
 rows = NamedTuple[]
 gradients = NamedTuple[]
-parity = NamedTuple[]
 posterior = NamedTuple[]
 fits = Dict{String,Any}()
 
@@ -48,16 +46,14 @@ for (name, model) in models
     inputs, filtration = D.selected_inputs(ds, splitter, model, CONFIG; smoke = true)
     CSV.write(joinpath(OUTPUT, name * "_filtration.csv"), filtration)
     for (fold, feature_sets) in zip(CONFIG.smoke_folds, inputs.feature_sets)
-        feature_set = first(feature_sets)
         audit = D.gph_gradient_audit(model, feature_sets; replays = 100, seed = 24)
         push!(gradients, (; model = name, fold, audit...))
         if name == "m03_negbin_pxg_covariate"
-            candidate_audit = D.allocation_audit(model, reference_candidate, feature_set; seed = 24)
-            push!(parity, (; model = name, fold, candidate_audit...))
+            audit.allocated_bytes == 0 || error(
+                "candidate compiled replay allocates $(audit.allocated_bytes) bytes")
         end
     end
     CSV.write(joinpath(OUTPUT, "gradients.csv"), DataFrame(gradients))
-    CSV.write(joinpath(OUTPUT, "candidate_parity.csv"), DataFrame(parity))
 
     # ===============================================================
     # 5. Register recipe, deduplicate, then native fold x chain queue
