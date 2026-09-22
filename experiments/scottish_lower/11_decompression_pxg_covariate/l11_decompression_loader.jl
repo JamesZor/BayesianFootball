@@ -251,7 +251,15 @@ function replay_performance(tape, gradient, θ)
     for _ in 1:30
         ReverseDiff.gradient!(gradient, tape, θ)
     end
-    allocated_bytes = @allocated ReverseDiff.gradient!(gradient, tape, θ)
+    # Julia task/runtime bookkeeping can land on one otherwise allocation-free
+    # replay (observed once as 800 B after other tapes compiled in the process).
+    # The warmed minimum asks the intended question: does the tape itself require
+    # heap allocation? A genuinely allocating instruction is non-zero every time.
+    allocated_bytes = typemax(Int)
+    for _ in 1:10
+        bytes = @allocated ReverseDiff.gradient!(gradient, tape, θ)
+        allocated_bytes = min(allocated_bytes, bytes)
+    end
     best = minimum(@elapsed(ReverseDiff.gradient!(gradient, tape, θ)) for _ in 1:100)
     return (; allocated_bytes, gradient_ms = 1000 * best)
 end
