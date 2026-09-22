@@ -1,0 +1,4 @@
+model,fold,n_matches,n_available,n_neutral,min_design,max_design,commentary_observations,shot_count_observations,goal_observations
+m03_negbin_pxg_covariate,1,720,340,380,-1.2701906864541033,1.1405993473761746,1109,0,0
+m03_negbin_pxg_covariate,20,1060,676,384,-1.2701906864541033,1.1405993473761746,1109,0,0
+m03_negbin_pxg_covariate,40,1060,1034,26,-1.2607953544846757,1.1382000988593923,1109,0,0

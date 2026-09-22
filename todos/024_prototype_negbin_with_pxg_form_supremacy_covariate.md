@@ -4,12 +4,12 @@
 |---|---|
 | ID | 024 |
 | Title | Prototype Negative Binomial with Linear Proxy-xG Form Covariate |
-| Status | IN_PROGRESS |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-09-22 |
 | Updated | 2026-09-22 |
-| Related Files / Commits / PRs | `current_development/market_inverse_dynamics/PHASE2_FEATURE_ATTRIBUTION.md`, `experiments/scottish_lower/09_bayesian_shrinkage_decompression/`, `src/models/pregame/components/covariates/` |
+| Related Files / Commits / PRs | `current_development/market_inverse_dynamics/PHASE2_FEATURE_ATTRIBUTION.md`, `experiments/scottish_lower/11_decompression_pxg_covariate/`, `f866b2bc-d87b-42d0-8c36-8c8d623d1178` |
 
 ## Context & Problem Statement
 
@@ -31,27 +31,27 @@ Primary scope: Scottish Lower (tournaments 56/57, seasons 24/25 + 25/26, 40-fold
 
 ## Acceptance Criteria
 
-- [ ] **Stage 0 (Mathematical Formulation & Covariate Design)**:
+- [x] **Stage 0 (Mathematical Formulation & Covariate Design)**:
   - Implement `ProxyXGFormCovariate` in `current_development/scottish_decompression/` (or `experiments/scottish_lower/11_decompression_pxg_covariate/`).
   - Compute rolling proxy-xG form using `Features._pxg_rolling_lookup` over an asymmetric window (e.g. 10–16 matches) with zero future leakage.
   - Formulate antisymmetric supremacy scaling in `CountModelBuilder` and verify ReverseDiff tape compilation and warmed execution allocate 0 B.
-- [ ] **Stage 1 (Smoke Gate, Folds 1/20/40)**:
+- [x] **Stage 1 (Smoke Gate, Folds 1/20/40)**:
   - 4 chains $\times$ 400 warmup + 400 draws on folds 1, 20, 40.
   - Zero NUTS divergences; $\hat{R} \le 1.05$; bulk/tail ESS $\ge 200$.
   - Verify $w_{\text{pxg}}$ posterior concentrates away from zero in the range $[0.40, 0.80]$.
   - Latent extraction, score-grid construction, and `save_fit`/`load_fit` round-trips pass.
-- [ ] **Stage 2 (40-Fold Walk-Forward Grid on Beast)**:
+- [x] **Stage 2 (40-Fold Walk-Forward Grid on Beast)**:
   - Execute full walk-forward grid (40 folds, 710 fixtures) on `mcmc-beast`.
   - Control arms:
     - `m01_poisson_time_decay`: Baseline Poisson with time decay
     - `m02_joint_gamma_poisson`: Canonical Gen 3/4 two-arm joint observation (the compressed benchmark)
     - `m03_negbin_pxg_covariate`: Candidate Negative Binomial + linear proxy-xG form covariate
   - Persist runs to PostgreSQL `mcmc_experiments` (namespace `scottish_lower_decompression`).
-- [ ] **Stage 3 (Evaluation, Scaling & Portfolio Benchmark)**:
+- [x] **Stage 3 (Evaluation, Scaling & Portfolio Benchmark)**:
   - Regress market supremacy on model supremacy ($y = \beta x$); verify $\beta$ decompresses from $1.41\text{--}1.66$ down towards $1.00 \pm 0.15$.
   - Evaluate proper scores (1X2, O/U 2.5, BTTS LogLoss, CRPS, RPS, ECE) vs Betfair closing odds.
   - Full portfolio simulation on the common tradeable panel with `BookSpec(1X2, OU2.5, BakerMcHale)` and `PolicySpec(FlatTrust(0.25), SlateDrawdown(20.0), FixedCap(0.25))`.
-- [ ] **Stage 4 (Findings Report & Sign-off)**:
+- [x] **Stage 4 (Findings Report & Sign-off)**:
   - Deliver findings in `experiments/scottish_lower/11_decompression_pxg_covariate/README.md`.
   - Validate `./scripts/todo.sh check` and `git diff --check`.
 
@@ -64,7 +64,15 @@ Primary scope: Scottish Lower (tournaments 56/57, seasons 24/25 + 25/26, 40-fold
 ## Work Log & Progress
 
 - [2026-09-22 @antigravity] Created specification from market-inverse Phase 2 empirical findings. Allocated to `@pi` using model `openai-codex/gpt-5.6-sol` in dedicated worktree `.worktrees/BayesianFootball-negbin-pxg-covariate`.
+- [2026-09-22 @pi] Implemented the exact half-side antisymmetric coefficient, commentary-only 16-match-half-life feature, allocation-free linked-space NegBin engine, deterministic filtration tests, three staged runners, persistence, evaluation and read-only CSV audit.
+- [2026-09-22 @pi] Completed smoke and production on `mcmc-beast`: 40 folds / 710 OOS fixtures per arm, 0/128,000 divergences per arm, every R̂/ESS/BFMI/depth gate passed, and all fits round-tripped through `scottish_lower_decompression`.
+- [2026-09-22 @pi] Completed the common-panel benchmark and report. The candidate decompressed the reverse slope from 1.7240 to 1.3023 but missed the 0.85–1.15 target and materially underperformed both controls in the portfolio, so it is retained as a research prototype rather than promoted.
 
 ## Verification & Findings
 
-*(To be filled upon completion of experimental stages)*
+- Candidate compiled-tape replay: 0 B on folds 1/20/40; max linked density difference 3.64e-12 and max gradient relative error 2.87e-12 against the composable reference across warmup-scale perturbations.
+- Smoke candidate: max R̂ 1.0142, min bulk/tail ESS 754/618, zero divergences; fold posterior means for `w_pxg` 0.780/0.552/0.658 with positive 5th percentiles.
+- Production candidate run: `f866b2bc-d87b-42d0-8c36-8c8d623d1178`; 40 folds, 710 fixtures, 3,200 draws/fixture, max R̂ 1.01005, min bulk/tail ESS 1,189/1,258, zero divergences.
+- Decompression: market-on-model slope 1.3023 (`m02` 1.7240; `m01` 2.5288), R² 0.6228, favourite probability 56.48% versus market 76.25%.
+- Predictive/portfolio result: candidate all-selection LogLoss 0.644755 versus joint 0.643730; return +83.32%, Sharpe 1.057 versus joint +127.97%, 1.270. The candidate does not qualify for production.
+- Full protocol, caveats, UUIDs and evidence: `experiments/scottish_lower/11_decompression_pxg_covariate/README.md` and its `verification/` directory.

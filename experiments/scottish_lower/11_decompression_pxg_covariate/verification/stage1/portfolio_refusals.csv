@@ -1,0 +1,19 @@
+model,match_id,reason
+m01_poisson_time_decay,12477130,no closing quotes
+m01_poisson_time_decay,12476630,no closing quotes
+m01_poisson_time_decay,12476458,no closing quotes
+m01_poisson_time_decay,12476570,no closing quotes
+m01_poisson_time_decay,14032714,no closing quotes
+m01_poisson_time_decay,12473327,no usable selection
+m02_joint_gamma_poisson,12477130,no closing quotes
+m02_joint_gamma_poisson,12476630,no closing quotes
+m02_joint_gamma_poisson,12476458,no closing quotes
+m02_joint_gamma_poisson,12476570,no closing quotes
+m02_joint_gamma_poisson,14032714,no closing quotes
+m02_joint_gamma_poisson,12473327,no usable selection
+m03_negbin_pxg_covariate,12477130,no closing quotes
+m03_negbin_pxg_covariate,12476630,no closing quotes
+m03_negbin_pxg_covariate,12476458,no closing quotes
+m03_negbin_pxg_covariate,12476570,no closing quotes
+m03_negbin_pxg_covariate,14032714,no closing quotes
+m03_negbin_pxg_covariate,12473327,no usable selection
