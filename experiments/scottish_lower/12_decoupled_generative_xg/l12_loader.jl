@@ -146,14 +146,17 @@ end
 
 Turing.@model function array_hierarchical_parameters(
     observation::B.HierarchicalKappaJoint,
+    center::Matrix{Float64},
     n_teams::Int,
 )
     ν ~ observation.shape_prior
     log_κ ~ observation.log_kappa_prior
     σ_κ ~ observation.kappa.σ_prior
     κ_team_raw ~ Turing.filldist(Normal(), n_teams)
-    centred = κ_team_raw .- array_scalar(mean(κ_team_raw))
-    log_κ_team = array_scalar(log_κ) .+ array_scalar(σ_κ) .* centred
+    # Matrix centring is algebraically identical to raw .- mean(raw), while
+    # keeping the replay on ReverseDiff's preallocated array path.
+    δ_κ = center * (κ_team_raw .* array_scalar(σ_κ))
+    log_κ_team = array_scalar(log_κ) .+ δ_κ
     return (;
         ν = array_scalar(ν),
         log_κ = array_scalar(log_κ),
@@ -213,7 +216,7 @@ Turing.@model function array_hierarchical_funnel_engine(config, z, center)
     ha ~ DynamicPPL.to_submodel(array_home_advantage(config.home_advantage))
     dyn ~ DynamicPPL.to_submodel(array_time_decay(config.dynamics, center, z.n_teams))
     obs ~ DynamicPPL.to_submodel(
-        array_hierarchical_parameters(config.observation, z.n_teams))
+        array_hierarchical_parameters(config.observation, center, z.n_teams))
 
     η_h = B.apply_guard(config.guard,
         inter .+ ha .+ dyn.α[z.home_ids] .+ dyn.β[z.away_ids])
