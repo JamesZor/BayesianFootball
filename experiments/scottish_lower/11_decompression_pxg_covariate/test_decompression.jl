@@ -57,5 +57,5 @@ end
     @test candidate.observation isa D.NegativeBinomialObservation
     @test only(candidate.covariates) isa D.ProxyXGFormCovariate
     @test candidate.guard isa D.ArrayClampGuard
-    @test D.GPH_PG.observation_family(candidate.observation) == :negbin
+    @test D.B.observation_family(candidate.observation) == :negbin
 end
