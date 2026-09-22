@@ -5,6 +5,7 @@ include(joinpath(@__DIR__, "../../../current_development/grw_player_hybrid/l01_l
 include(joinpath(@__DIR__, "../../../current_development/grw_player_hybrid/l02_evaluation.jl"))
 import CSV
 import Serialization
+import SpecialFunctions
 import Turing
 
 const B = GPH_PG.Builder
