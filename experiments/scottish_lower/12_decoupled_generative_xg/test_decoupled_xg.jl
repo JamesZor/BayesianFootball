@@ -122,3 +122,74 @@ end
     D.funnel_score_grid!(warmed, 1.3, 0.9, 1.1, 0.95)
     @test @allocated(D.funnel_score_grid!(warmed, 1.3, 0.9, 1.1, 0.95)) == 0
 end
+
+@testset "Multi-chain draw ordering is consistent with the extractors" begin
+    # Stage A now runs several chains, and the conditional pass indexes the flattened
+    # Stage A draws by position. `cut_chance_log_rates` gets its draws from the
+    # framework extractors (`vec(Array(chain[name]))`) while the spliced chain is
+    # built by `_cut_flatten`. If those two disagree about how (draw, chain) maps to a
+    # row, every pairing lambda = kappa_s * mu_s silently refers to two DIFFERENT
+    # Stage A draws -- which would not show up as an error anywhere, just as a subtly
+    # wrong posterior. Pin the convention.
+    n_draws, n_chains = 7, 3
+    names = [:a, :b]
+    vals = Array{Float64}(undef, n_draws, length(names), n_chains)
+    for d in 1:n_draws, (j, _) in enumerate(names), c in 1:n_chains
+        vals[d, j, c] = 100c + 10d + j          # uniquely identifies the cell
+    end
+    ch = D.MCMCChains.Chains(vals, names, Dict(:parameters => names))
+
+    flat = D._cut_flatten(ch, names)
+    @test size(flat) == (n_draws * n_chains, length(names))
+    for (j, nm) in enumerate(names)
+        @test flat[:, j] == vec(Array(ch[nm]))
+    end
+    # And explicitly: row r corresponds to draw d of chain c with r = d + (c-1)*n_draws.
+    for c in 1:n_chains, d in 1:n_draws
+        @test flat[d + (c - 1) * n_draws, 1] == 100c + 10d + 1
+    end
+end
+
+@testset "Spliced cut chain preserves chains, pairing and sections" begin
+    # `cut_assemble_chain` packs a chain-major flat matrix into an MCMCChains cube.
+    # A bare `reshape` there would interleave the chain axis into the parameter axis
+    # and scramble every column while still producing an object of the right SHAPE --
+    # so assert the contents, per (draw, chain) cell, not just the dimensions.
+    n_draws, n_chains_a = 8, 3
+    a_names = [:dyn_σ_a, :inter_μ]
+    i_names = [:numerical_error]
+    vals = Array{Float64}(undef, n_draws, 3, n_chains_a)
+    for d in 1:n_draws, c in 1:n_chains_a
+        vals[d, 1, c] = 1000c + d          # a1
+        vals[d, 2, c] = 2000c + d          # a2
+        vals[d, 3, c] = 0.0                # no divergences
+    end
+    chance = D.MCMCChains.Chains(vals, vcat(a_names, i_names),
+        Dict(:parameters => a_names, :internals => i_names))
+
+    per_chain = 4
+    local_idx = [1, 3, 5, 7]
+    picks = vec([l + (c - 1) * n_draws for l in local_idx, c in 1:n_chains_a])
+    # Stage B value encodes the pick it was drawn against, so pairing is checkable.
+    flat_b = reshape(Float64[1e6 + p for p in picks], :, 1)
+
+    ch = D.cut_assemble_chain(chance, flat_b, [:log_κ], picks;
+        per_chain, n_chains = n_chains_a,
+        stage_b = (; method = :inner_nuts, max_rhat = 1.0, p99_rhat = 1.0,
+                     frac_rhat_gt = 0.0, min_ess = 500.0, divergences = 0,
+                     runs = length(picks)))
+
+    @test size(ch, 1) == per_chain
+    @test size(ch, 3) == n_chains_a          # the chain axis SURVIVED the splice
+    @test :log_κ in D.MCMCChains.names(ch, :parameters)
+    @test :numerical_error in D.MCMCChains.names(ch, :internals)
+
+    # Every cell: Stage A values and their paired Stage B draw agree on the same pick.
+    cube = ch.value
+    for c in 1:n_chains_a, i in 1:per_chain
+        pick = local_idx[i] + (c - 1) * n_draws
+        @test cube[i, :dyn_σ_a, c] == 1000c + local_idx[i]
+        @test cube[i, :inter_μ, c] == 2000c + local_idx[i]
+        @test cube[i, :log_κ, c] == 1e6 + pick
+    end
+end

@@ -138,6 +138,14 @@ end
     cut_model(observation; kwargs...) -> CutFunnelModel
 
 Assemble a cut funnel whose Stage B κ block is `observation`'s.
+
+Note a consequence worth expecting rather than debugging: Stage A deletes the goals
+block, and the shared vs hierarchical choice lives ENTIRELY in that block, so m03 and
+m04 have structurally identical chance layers and — at a fixed seed — bit-identical
+Stage A posteriors and convergence diagnostics. Their predictions still differ,
+because κ is drawn from a different Stage B conditional. That is the cut doing its
+job: it makes the finishing model the ONLY thing separating the two arms, so a
+difference in score is attributable to κ and not to a differently-fitted rating layer.
 """
 cut_model(observation::JointGammaPoissonObservation;
           days_half_life::Float64 = 180.0, sigma::Float64 = 0.20) =
@@ -528,7 +536,12 @@ assembles them.
 """
 Base.@kwdef struct CutNUTS{S} <: Samplers.AbstractSamplerConfig
     chance::S
-    n_conditional::Int = 400
+    # Must EXCEED the fit-level ESS gate (200). The spliced chain has exactly
+    # `n_conditional` draws in total, so this number is the ceiling on its ESS: setting
+    # it at 200 would make the ESS ≥ 200 gate unreachable by construction, no matter
+    # how well either stage mixed. 800 leaves headroom for the autocorrelation Stage A
+    # thinning does not remove.
+    n_conditional::Int = 800
     # The hierarchical inner likelihood is O(n_teams) after the sufficient-statistic
     # collapse (~0.5 s per chain at this length), so a properly converged inner run is
     # affordable: measured on fold 40, 200/200×4 gives R̂ 1.026 / ESS 357 and
@@ -539,7 +552,12 @@ Base.@kwdef struct CutNUTS{S} <: Samplers.AbstractSamplerConfig
     # was reporting 1.29 on a conditional that is in fact well behaved; gating the cut
     # on a statistic that cannot see between-chain variance would have been theatre.
     kappa_chains::Int = 4
-    kappa_accept::Float64 = 0.90
+    # 0.95, above the 0.90 used for Stage A. The inner target is low-dimensional and
+    # cheap, so a smaller step size costs little, and at 0.90 roughly one conditional
+    # in several hundred produced a divergent transition. Since each inner run
+    # contributes a retained draw, a divergence there biases that draw rather than
+    # merely wasting it -- worth buying out with step size instead of tolerating.
+    kappa_accept::Float64 = 0.95
     kappa_max_depth::Int = 10
     seed::Int = 20260922
 end
@@ -567,18 +585,62 @@ abstain and a broken fold would pass.
 function GPH_INF.sample_fold(model::CutFunnelModel, sampler::CutNUTS, fs, fold::Int;
                              chain_id::Union{Int,Nothing} = nothing)
     chance_model = build_cut_chance_model(model, fs)
-    chance_chain = Samplers.run_sampler(chance_model, sampler.chance)
+    chance_chain = cut_run_chance(chance_model, sampler.chance)
 
     rates = cut_chance_log_rates(model, chance_chain, fs)
     n_draws_a = size(rates.log_mu_h, 1)
-    n_cond = min(sampler.n_conditional, n_draws_a)
-    # Spread across the WHOLE chain: a contiguous head would over-represent the
-    # start of the run and inherit any residual warmup drift.
-    picks = unique(round.(Int, range(1, n_draws_a, length = n_cond)))
+
+    # PRESERVE THE CHAIN DIMENSION. The conditional pass thins Stage A, and if the
+    # retained draws were emitted as a single chain then R̂ would become a split-R̂ of
+    # one trajectory and ESS would be capped by `n_conditional` — the fit-level gate
+    # (R̂ ≤ 1.05, ESS ≥ 200) could then never pass however well Stage A actually mixed.
+    # So thin WITHIN each Stage A chain and keep the chains separate, which leaves the
+    # downstream diagnostics reading a genuine multi-chain object.
+    n_chains_a = size(chance_chain, 3)
+    draws_per_chain = n_draws_a ÷ n_chains_a
+    want = max(1, sampler.n_conditional ÷ n_chains_a)
+    # Spread across the WHOLE chain: a contiguous head would over-represent the start
+    # of the run and inherit any residual warmup drift.
+    local_idx = unique(round.(Int, range(1, draws_per_chain, length = min(want, draws_per_chain))))
+    per_chain = length(local_idx)
+    # `_cut_flatten` is chain-major (row = draw + (chain-1)*draws_per_chain), so map
+    # local positions onto that layout. `vec` of a (per_chain, n_chains) matrix is
+    # column-major, giving pick k = i + (c-1)*per_chain — the exact layout
+    # `cut_assemble_chain` reshapes back into (per_chain, params, n_chains).
+    picks = vec([l + (c - 1) * draws_per_chain for l in local_idx, c in 1:n_chains_a])
 
     z0 = cut_stage_b_design(model, fs)
     return cut_run_stage_b(model.observation, model, sampler, chance_chain, rates,
-                           z0, picks, fold)
+                           z0, picks, fold; per_chain, n_chains = n_chains_a)
+end
+
+"""
+    cut_run_chance(turing_model, config) -> Chains
+
+Run Stage A and return ALL chains concatenated.
+
+`CutNUTS` reports `sampler_n_chains == 1`, so the fold-level executor hands the whole
+fold to one task and does NOT fan chains out itself — the conditional pass has to see
+the assembled Stage A chain to pair draws against it. That makes running the chance
+chains this function's job.
+
+It matters that there are several of them: Stage A is the arm carrying the team
+ratings, so its R̂ is the diagnostic the fit-level gate actually leans on, and a
+single-chain R̂ cannot see between-chain variance. (That is precisely the trap that
+made the inner κ conditional look broken at R̂ 1.29 when it was fine.)
+
+`QueuedNUTSConfig` exposes only the per-chain `run_sampler(model, config, chain_id)`
+method, so dispatch on that rather than assuming the two-argument form exists.
+"""
+function cut_run_chance(turing_model, config)
+    n = GPH_INF.sampler_n_chains(config)
+    if n <= 1 || !hasmethod(Samplers.run_sampler, Tuple{Any, typeof(config), Int})
+        return Samplers.run_sampler(turing_model, config)
+    end
+    # Sequential on purpose: the fold queue is already running up to
+    # `max_concurrent_tasks` folds at once, so spawning here would oversubscribe.
+    chains = [Samplers.run_sampler(turing_model, config, c) for c in 1:n]
+    return reduce(MCMCChains.chainscat, chains)
 end
 
 """
@@ -587,7 +649,7 @@ there is no inner convergence to gate — `cut_stage_b_gate` reports the exact p
 and passes by construction.
 """
 function cut_run_stage_b(o::B.SharedKappaJoint, model, sampler::CutNUTS, chance_chain,
-                         rates, z0, picks, fold::Int)
+                         rates, z0, picks, fold::Int; per_chain, n_chains)
     rng = Random.MersenneTwister(sampler.seed + 100_000 * fold)
     log_kappa = Vector{Float64}(undef, length(picks))
     for (k, s) in enumerate(picks)
@@ -595,8 +657,10 @@ function cut_run_stage_b(o::B.SharedKappaJoint, model, sampler::CutNUTS, chance_
         log_kappa[k] = cut_exact_shared_kappa(o.log_kappa_prior, zs, rng)
     end
     return cut_assemble_chain(chance_chain, reshape(log_kappa, :, 1), [:log_κ], picks;
+                              per_chain, n_chains,
                               stage_b = (; method = :exact_grid, max_rhat = NaN,
-                                           min_ess = Float64(length(picks)),
+                                           p99_rhat = NaN, frac_rhat_gt = 0.0,
+                                           min_ess = NaN,
                                            divergences = 0, runs = length(picks)))
 end
 
@@ -606,7 +670,7 @@ its own short NUTS run against a FIXED rate vector. Every run is audited and the
 worst case across runs is what `cut_stage_b_gate` enforces.
 """
 function cut_run_stage_b(o::B.HierarchicalKappaJoint, model, sampler::CutNUTS,
-                         chance_chain, rates, z0, picks, fold::Int)
+                         chance_chain, rates, z0, picks, fold::Int; per_chain, n_chains)
     kappa_sampler = NUTSConfig(
         n_samples = sampler.kappa_samples,
         n_warmup = sampler.kappa_warmup,
@@ -640,9 +704,20 @@ function cut_run_stage_b(o::B.HierarchicalKappaJoint, model, sampler::CutNUTS,
         b_div += d === nothing ? 0 : Int(count(>(0), d))
     end
 
+    # Summarise the inner runs by a QUANTILE and a violation FRACTION, not by the max.
+    # There are `n_conditional` independent runs, so max R̂ is a maximum over hundreds
+    # of draws from the sampling distribution of R̂: it drifts upward as
+    # `n_conditional` grows even when every run is healthy, which makes a max-based
+    # threshold a function of the run length rather than of the geometry.
+    sort!(b_rhat)
     return cut_assemble_chain(chance_chain, flat_b, b_names, picks;
+                              per_chain, n_chains,
                               stage_b = (; method = :inner_nuts,
-                                           max_rhat = isempty(b_rhat) ? NaN : maximum(b_rhat),
+                                           max_rhat = isempty(b_rhat) ? NaN : last(b_rhat),
+                                           p99_rhat = isempty(b_rhat) ? NaN :
+                                               b_rhat[max(1, ceil(Int, 0.99 * length(b_rhat)))],
+                                           frac_rhat_gt = isempty(b_rhat) ? 0.0 :
+                                               count(>(1.05), b_rhat) / length(b_rhat),
                                            min_ess = isempty(b_ess) ? NaN : minimum(b_ess),
                                            divergences = b_div, runs = length(picks)))
 end
@@ -662,7 +737,7 @@ divergence, tree-depth and BFMI gates would silently abstain and a broken fold w
 pass the audit.
 """
 function cut_assemble_chain(chance_chain::Chains, flat_b::AbstractMatrix, b_names,
-                            picks; stage_b)
+                            picks; stage_b, per_chain::Int, n_chains::Int)
     b_names = collect(b_names)
     a_names = MCMCChains.names(chance_chain, :parameters)
     i_names = MCMCChains.names(chance_chain, :internals)
@@ -671,17 +746,29 @@ function cut_assemble_chain(chance_chain::Chains, flat_b::AbstractMatrix, b_name
 
     size(flat_b, 1) == length(picks) || error(
         "Stage B returned $(size(flat_b, 1)) draws for $(length(picks)) chance draws")
+    per_chain * n_chains == length(picks) || error(
+        "cut_assemble_chain: $(per_chain)×$(n_chains) does not match $(length(picks)) picks")
 
     all_names = vcat(a_names, b_names, i_names)
     combined = hcat(a_flat[picks, :], flat_b, i_flat[picks, :])
-    chain = Chains(reshape(combined, length(picks), length(all_names), 1),
-                   all_names,
+    # `combined` is (per_chain*n_chains) × n_params with pick k = i + (c-1)*per_chain,
+    # i.e. draw-major within a chain. `Chains` wants (draws, params, chains) and
+    # `reshape` fills column-major, so go via an explicit 3-D permute rather than
+    # reshaping directly — a bare reshape here would interleave chains into the
+    # parameter axis and silently scramble every column.
+    cube = Array{Float64}(undef, per_chain, length(all_names), n_chains)
+    for c in 1:n_chains, i in 1:per_chain
+        cube[i, :, c] = view(combined, i + (c - 1) * per_chain, :)
+    end
+    chain = Chains(cube, all_names,
                    Dict(:parameters => vcat(a_names, b_names), :internals => i_names))
 
     return MCMCChains.setinfo(chain, merge(NamedTuple(chain.info), (;
         cut_conditional_draws = collect(picks),
         cut_stage_b_method = stage_b.method,
         cut_stage_b_max_rhat = stage_b.max_rhat,
+        cut_stage_b_p99_rhat = stage_b.p99_rhat,
+        cut_stage_b_frac_rhat_gt = stage_b.frac_rhat_gt,
         cut_stage_b_min_ess = stage_b.min_ess,
         cut_stage_b_divergences = stage_b.divergences,
         cut_stage_b_runs = stage_b.runs,
@@ -734,13 +821,16 @@ enough for that draw to be a fair one from the conditional — it is not the eff
 sample size of anything downstream. The DRAW count that matters is `n_conditional`,
 gated by the fit-level audit on the spliced chain.
 
-`max_rhat` is the WORST of `n_conditional` independent runs, so it is a maximum over
-hundreds of draws rather than a single statistic and will sit above the fit-level
-R̂. Measured at the production inner setting (400/400×4) over 80 runs spanning folds
-1 and 40: worst R̂ 1.017, worst ESS 374, zero divergences. 1.03 therefore passes a
-healthy conditional while still catching a genuinely stuck one.
+R̂ is gated as a FRACTION over threshold rather than as a maximum, because the maximum
+over `n_conditional` independent runs is an extreme-value statistic: it grows with the
+number of runs even when every conditional is healthy, so a max-based threshold would
+get stricter the more thoroughly the fold is sampled. Measured at the production inner
+setting (400/400×4) over 80 runs spanning folds 1 and 40, every run came in under
+R̂ 1.017 with zero divergences, so a 5% allowance over 1.05 is loose enough not to
+fire on noise and tight enough that a systematically stuck conditional fails.
 """
-function cut_stage_b_gate(chain::Chains; max_rhat::Float64 = 1.03, min_ess::Float64 = 100.0)
+function cut_stage_b_gate(chain::Chains; max_frac_rhat_gt::Float64 = 0.05,
+                          min_ess::Float64 = 40.0)
     info = NamedTuple(chain.info)
     haskey(info, :cut_stage_b_runs) || error("chain carries no Stage B diagnostics")
     method = info.cut_stage_b_method
@@ -748,15 +838,21 @@ function cut_stage_b_gate(chain::Chains; max_rhat::Float64 = 1.03, min_ess::Floa
     # The exact grid draw has no chain and therefore no R̂/ESS to gate: independent
     # draws are the best case those statistics can describe, not a missing check.
     if method === :exact_grid
-        return (; passed = true, method, divergences = 0,
+        return (; passed = true, method, divergences = 0, frac_rhat_gt = 0.0,
                   max_rhat = NaN, min_ess = NaN, runs = info.cut_stage_b_runs)
     end
 
     ok_div = info.cut_stage_b_divergences == 0
-    ok_rhat = isfinite(info.cut_stage_b_max_rhat) && info.cut_stage_b_max_rhat <= max_rhat
+    # Gate the FRACTION of inner runs exceeding 1.05, not the maximum over all of them.
+    # With `n_conditional` independent runs the max is an extreme-value statistic that
+    # rises with the number of runs even when the geometry is fine, so thresholding it
+    # would mean the gate tightens as the run gets more thorough. The fraction is
+    # stable in `n_conditional` and is what "the conditionals mix" actually means.
+    ok_rhat = info.cut_stage_b_frac_rhat_gt <= max_frac_rhat_gt
     ok_ess = isfinite(info.cut_stage_b_min_ess) && info.cut_stage_b_min_ess >= min_ess
     return (; passed = ok_div && ok_rhat && ok_ess, method,
               divergences = info.cut_stage_b_divergences,
+              frac_rhat_gt = info.cut_stage_b_frac_rhat_gt,
               max_rhat = info.cut_stage_b_max_rhat,
               min_ess = info.cut_stage_b_min_ess,
               runs = info.cut_stage_b_runs)

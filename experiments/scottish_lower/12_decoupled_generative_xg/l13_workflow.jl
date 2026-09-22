@@ -72,15 +72,32 @@ folds_label(config, smoke) = smoke ? join(config.smoke_folds, ",") : "1:$(config
 
 function fit_recipe(config::FunnelConfig, name, model, splitter, runtime; smoke::Bool)
     sampler = smoke ? gph_smoke_sampler(runtime) : gph_production_sampler(runtime)
+    # A cut arm is sampled in two stages, so its sampler wraps the chance-layer NUTS
+    # config rather than being one. Stage B is cheap (exact for m03, O(n_teams) inner
+    # NUTS for m04), so the conditional pass is sized independently of Stage A.
+    if model isa CutFunnelModel
+        # `n_conditional` is the TOTAL draw count of the spliced chain, so it has to
+        # clear the fit-level ESS gate (min_ess = $(runtime.min_ess)) with headroom;
+        # it is not a "number of extra runs" knob.
+        sampler = CutNUTS(
+            chance = sampler,
+            n_conditional = smoke ? 800 : 1_200,
+            kappa_samples = 400,
+            kappa_warmup = 400,
+            kappa_chains = 4,
+            kappa_accept = 0.95,
+        )
+    end
     suffix = smoke ? "_smoke_f01_20_40" : ""
     descriptions = Dict(
         "m01_poisson_time_decay" => "TimeDecay(180) pure-Poisson control",
         "m02_joint_gamma_poisson" =>
             "Canonical shared-latent Gamma proxy-xG plus Poisson-goals control",
         "m03_funnel_shared_kappa" =>
-            "Shared-kappa xG-to-goals funnel; mathematically identical to m02 by specification",
+            "CUT posterior: ratings from proxy-xG alone, then shared kappa given goals; " *
+            "goals cannot update the ratings (verified zero gradient)",
         "m04_funnel_hierarchical_kappa" =>
-            "xG-to-goals funnel with zero-centred partially pooled team finishing factors",
+            "CUT posterior as m03 with zero-centred partially pooled team finishing factors",
     )
     return FitConfig(
         name = name * suffix,
@@ -97,8 +114,21 @@ end
 
 function register_recipe!(db, name, config)
     tags = config.tags
-    save_model(db, name, config.model;
-        description = "TODO025 decoupled generative xG arm $name", tags)
+    # `save_model` insists on `ComposableCountModel`. A cut arm is a PAIR of models
+    # (a chance layer plus a conditional), so it is deliberately not one, and it is
+    # registered through the generic config API instead of widening the shared truth
+    # classifier in src/ for one experiment. It still lands in `config_registry` with
+    # its own hash and full JSON provenance; only `config_type` differs
+    # ("cutfunnelmodel" rather than "model").
+    if config.model isa CutFunnelModel
+        save_config(db, name, config.model;
+            description = "TODO025 decoupled generative xG CUT arm $name " *
+                          "(Stage A: ratings|proxy-xG; Stage B: kappa|goals,ratings)",
+            tags)
+    else
+        save_model(db, name, config.model;
+            description = "TODO025 decoupled generative xG arm $name", tags)
+    end
     save_splitter(db, "split_2426", config.splitter; tags)
     save_sampler(db, "sampler_" * config.name, config.sampler; tags)
     save_config(db, "fit_" * config.name, config; tags)
@@ -158,16 +188,35 @@ function convergence_pass(fit, n_folds)
         diagnostics.min_ess_bulk >= 200 && diagnostics.min_ess_tail >= 200
 end
 
+# The builder prefixes observation sites with `obs.`; the cut path samples κ in its own
+# Stage B model, where there is no submodel to prefix it, so the same quantity is a
+# bare `log_κ`. Resolve by looking, rather than assuming one layout — guessing wrong
+# is an ArgumentError deep inside AxisArrays after the sampling has already been paid
+# for.
+# `ν` is additionally a case where the SITE and the quantity differ: the engines sample
+# `ν_raw` and apply `array_scalar` to it inside the model, so there is no `ν` column on
+# either chain shape. That transform is the identity for the shape parameter, so the raw
+# site is the right column to read.
+function _kappa_site(chain, leaf::String)
+    present = MCMCChains.names(chain)
+    for candidate in (Symbol("obs." * leaf), Symbol(leaf),
+                      Symbol("obs." * leaf * "_raw"), Symbol(leaf * "_raw"))
+        candidate in present && return candidate
+    end
+    error("no site for '$leaf' on this chain (tried obs.$leaf, $leaf and _raw variants)")
+end
+
 function kappa_posterior(fit, fold_ids)
     rows = NamedTuple[]
     model = fit.config.model
-    model.observation isa JointGammaPoissonObservation || return rows
+    observation = model isa CutFunnelModel ? model.observation : model.observation
+    observation isa JointGammaPoissonObservation || return rows
     for (fold_fit, fold_id) in zip(fit.folds, fold_ids)
         chain = fold_fit.chain
-        kappa = exp.(vec(Array(chain[Symbol("obs.log_κ")])))
-        nu = vec(Array(chain[Symbol("obs.ν")]))
-        if model.observation.kappa isa HierarchicalKappa
-            sigma = vec(Array(chain[Symbol("obs.σ_κ")]))
+        kappa = exp.(vec(Array(chain[_kappa_site(chain, "log_κ")])))
+        nu = vec(Array(chain[_kappa_site(chain, "ν")]))
+        if observation.kappa isa HierarchicalKappa
+            sigma = vec(Array(chain[_kappa_site(chain, "σ_κ")]))
             push!(rows, (;
                 fold = fold_id,
                 mode = "hierarchical",
@@ -201,12 +250,19 @@ end
 function hierarchical_zero_sum_audit(fit)
     model = fit.config.model
     model.observation isa B.HierarchicalKappaJoint || return 0.0
+    # The cut's hierarchical κ is zero-centred inside Stage B exactly as the joint arm
+    # centres it, so the same invariant must hold on the spliced chain.
     worst = 0.0
     for fold in fit.folds
         chain = fold.chain
-        sigma = vec(Array(chain[Symbol("obs.σ_κ")]))
-        n_teams = count(name -> startswith(String(name), "obs.κ_team_raw["), names(chain))
-        raw = hcat([vec(Array(chain[Symbol("obs.κ_team_raw[$team]")]))
+        sigma = vec(Array(chain[_kappa_site(chain, "σ_κ")]))
+        # Same prefix question as `kappa_posterior`: `obs.` under the builder, bare in
+        # the cut's Stage B model.
+        stem = startswith(String(_kappa_site(chain, "σ_κ")), "obs.") ? "obs.κ_team_raw[" :
+               "κ_team_raw["
+        n_teams = count(name -> startswith(String(name), stem), names(chain))
+        n_teams > 0 || error("hierarchical audit found no κ_team_raw sites on the chain")
+        raw = hcat([vec(Array(chain[Symbol("$stem$team]")]))
                     for team in 1:n_teams]...)
         delta = sigma .* (raw .- mean(raw; dims = 2))
         worst = max(worst, maximum(abs.(vec(sum(delta; dims = 2)))))

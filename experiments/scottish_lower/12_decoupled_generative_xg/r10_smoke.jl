@@ -46,7 +46,19 @@ for (name, model) in models
     inputs, filtration = D.selected_inputs(ds, splitter, model, CONFIG; smoke = true)
     CSV.write(joinpath(OUTPUT, name * "_filtration.csv"), filtration)
     for (fold, feature_sets) in zip(CONFIG.smoke_folds, inputs.feature_sets)
-        audit = D.engine_audit(model, references[name], first(feature_sets); seed = 25)
+        fs = first(feature_sets)
+        if model isa D.CutFunnelModel
+            # A cut arm's sampled density is its chance layer, and the gate that
+            # matters is that goals cannot move it AT ALL.
+            chance = D.build_cut_chance_model(model, fs)
+            audit = D.density_audit(chance, chance; seed = 25)
+            nofb = D.cut_no_feedback_audit(model, fs; seed = 25)
+            (nofb.worst_density == 0.0 && nofb.worst_gradient == 0.0) || error(
+                "$name fold $fold: goals reach the chance layer " *
+                "(density $(nofb.worst_density), gradient $(nofb.worst_gradient)) - not a cut")
+        else
+            audit = D.engine_audit(model, references[name], fs; seed = 25)
+        end
         audit.allocated_bytes == 0 || error(
             "$name fold $fold replay allocates $(audit.allocated_bytes) bytes")
         push!(gradients, (; model = name, fold, audit...))
@@ -75,6 +87,22 @@ for (name, model) in models
     D.gph_latent_audit(fit)
     grid = D.score_grid_audit(fit)
     convergence = D.convergence_pass(fit, 3)
+    # The fit-level audit sees the SPLICED chain, which cannot tell whether each
+    # inner conditional run mixed. Gate Stage B separately, per fold.
+    stage_b = if model isa D.CutFunnelModel
+        gates = [D.cut_stage_b_gate(f.chain) for f in fit.folds]
+        for (fold, g) in zip(CONFIG.smoke_folds, gates)
+            println("  STAGE B fold $fold ", g)
+            g.passed || error("$name fold $fold Stage B conditional did not mix: $g")
+        end
+        (; stage_b_pass = all(g.passed for g in gates),
+           stage_b_max_rhat = maximum(g.max_rhat for g in gates),
+           stage_b_frac_rhat_gt = maximum(g.frac_rhat_gt for g in gates),
+           stage_b_divergences = sum(g.divergences for g in gates))
+    else
+        (; stage_b_pass = true, stage_b_max_rhat = NaN,
+           stage_b_frac_rhat_gt = 0.0, stage_b_divergences = 0)
+    end
     zero_sum_error = D.hierarchical_zero_sum_audit(fit)
     arm_posterior = D.kappa_posterior(fit, CONFIG.smoke_folds)
     append!(posterior, [(; model = name, row...) for row in arm_posterior])
@@ -85,8 +113,8 @@ for (name, model) in models
     run_id = existing === nothing ? D.gph_save_and_verify(db, fit) : existing
     fits[name] = fit
     convergence_row = D.gph_convergence_row(name, fit, RUNTIME; run_id)
-    gate_pass = convergence
-    push!(rows, (; convergence_row..., grid..., zero_sum_error, gate_pass,
+    gate_pass = convergence && stage_b.stage_b_pass
+    push!(rows, (; convergence_row..., grid..., zero_sum_error, stage_b..., gate_pass,
                   portfolio_id = "", source = SOURCE, recipe_hash))
     CSV.write(joinpath(OUTPUT, "smoke_gates.csv"), DataFrame(rows))
     isempty(posterior) || CSV.write(joinpath(OUTPUT, "kappa_posterior.csv"), DataFrame(posterior))
