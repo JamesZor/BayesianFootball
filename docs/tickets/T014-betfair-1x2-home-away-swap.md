@@ -42,8 +42,10 @@ the L0 QA stage.
 
 ## Reproduction
 
-`/root/BF_market_inverse/swapcheck_scratch.jl` on mcmc-beast (scratch, not
-committed): build both 1X2 books wide, then
+Build both 1X2 books wide — Betfair from
+`MarketInverseDynamics.closing_book(ds)` (`prob_fair_close`), sofascore from
+`ds.odds.prob_fair_close` — join on `match_id` for 24/25 + 25/26, tournaments
+56/57, then
 `d_direct = |bf_home − so_home| + |bf_away − so_away|`,
 `d_swapped = |bf_home − so_away| + |bf_away − so_home|`, flag
 `d_swapped < d_direct && d_direct > 0.15`.
