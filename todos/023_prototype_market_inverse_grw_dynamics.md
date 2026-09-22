@@ -9,7 +9,7 @@
 | Assignee | claude |
 | Created | 2026-09-22 |
 | Updated | 2026-09-22 |
-| Related Files / Commits / PRs | `current_development/market_inverse_dynamics/` (README = findings), `docs/tickets/T014-betfair-1x2-home-away-swap.md`, f51522dd |
+| Related Files / Commits / PRs | `current_development/market_inverse_dynamics/` (README = Phase 1, PHASE2_FEATURE_ATTRIBUTION.md = Phase 2), tickets T014, T015, f51522dd |
 
 ## Context & Problem Statement
 
@@ -64,6 +64,8 @@ Primary focus is Scottish Lower (tournaments 56/57, seasons 24/25 + 25/26, 710 f
 - [2026-09-22 @claude] Smoke fits flagged the regime arm finding a turbulent state ~10× the calm scale with short bursts; added control arm `a1b_grw1_break` (GRW1 + one-off season-boundary jump) so SV/regime gains can be separated from the summer repricing.
 - [2026-09-22 @claude] Production run (`results/production_run.log`, ~75 min on the beast, all arms concurrently; 4 × (2,000 + 3,000) draws, thin 1/4/20 for Gaussian/momentum/SV+regime; RBPF 20,000 particles). Findings + Phase 2 roadmap in `current_development/market_inverse_dynamics/README.md`. Cross-book check found one Betfair home/away swap (match 14035501) → ticket T014, not fixed inline.
 
+- [2026-09-22 @claude] Phase 2 (`CLAUDE_PHASE2_PROMPT.md`): conviction-gap attribution against squad wealth, lineup RAPM, proxy xG, rest/travel and goal history. Loader extended with antisymmetric fixture features as static Kalman states + per-fixture Student-t scale mixture (`FeatureGRW`, partially-collapsed Gibbs; new gate G5 = batch Gaussian to 7e-15), Phase 2 feature builders (pxG form / goal form via `Features._pxg_rolling_lookup`, rest, ppg) and exact Shapley attribution. Runner `r02_market_feature_attribution.jl`; goal baseline = TODO 021 m01 OOS latents (run 2b42d3bf); lineup/wealth/travel pinned from feature-compression EDA `c3bdb53a` (`inputs/`). Found T015 (totals-only books invert to the initial guess) → corrected Phase 1 README/T014 claim about edinburgh-city v bonnyrigg.
+
 ## Verification & Findings
 
 Measured 2026-09-22, `r01_market_inverse_runner.jl`, 623 accepted fixtures / 1,246 log-rate observations:
@@ -72,3 +74,11 @@ Measured 2026-09-22, `r01_market_inverse_runner.jl`, 623 accepted fixtures / 1,2
 - **Convergence**: 22/24 parameters pass R̂ ≤ 1.05 and bulk+tail ESS ≥ 200 (max R̂ 1.020). **Fails:** a3 SV `gamma_h`, `sigma_h` bulk ESS 152 (R̂ 1.011). Threshold not relaxed; a longer SV run or the observation-driven variant (README §7.2) would close it.
 - **Honest one-step (θ from 24/25, scored on 25/26, n = 612)**: RMSE static 0.178 → GRW1 0.130; momentum 0.130, season-break 0.131, SV 0.132, regime 0.130. Mean log pd: GRW1 0.620, SV 0.646, regime 0.668.
 - **Verdict**: no-momentum GRW1 at ~0.027–0.029/week describes the market's ratings; SV/regime density gains come from spike-and-revert absorption of single-fixture outliers (e.g. Kelty v Hamilton 2025-09-20) — next step is a Student-t observation model (README §7.1).
+
+**Phase 2** (`PHASE2_FEATURE_ATTRIBUTION.md`, `results/phase2/`, 2026-09-22):
+
+- **Gates**: 13/13 engine gates pass (incl. G5 feature + Student-t path, 7e-15). State-space arms: 59/59 parameters pass R̂ ≤ 1.05, bulk/tail ESS ≥ 200 (min ESS 1,316, max R̂ 1.004); a full re-run reproduced every state-space table bit-for-bit.
+- **Shapley R² of market supremacy** (623 fixtures; well-identified 532 in brackets): goal history 30.6% (32.5%), proxy-xG form 28.6% (32.1%), wealth 4.1% (4.7%), lineup RAPM 3.4% (4.0%), rest & schedule 0.2% (0.2%), unexplained 33.2% (26.4%). Honest 24/25→25/26 R² 0.637.
+- **Favourite conviction** (64 fixtures, p_fav ≥ 0.60, 0.946 log-rate): goal history 27.5%, proxy xG 27.0%, home advantage 11.6%, lineup 3.4%, wealth 2.3%, rest −0.2%, unexplained 28.3%. **Gap vs m01**: proxy xG 30.7%, goal history 8.9%, lineup 2.8%, wealth 1.6%, unexplained 51.4%.
+- **Scaling**: slope of market on m01 = 1.07 (calibrated, less informed); m05 1.66 and m12 1.41 (compressed).
+- **State-space**: Student-t σ_obs 0.093 → 0.055 (ν 2.9), features → 0.053; latent rating spread −37% (α 0.167 → 0.106, β 0.181 → 0.115), almost all from goal/pxG form; wealth and lineup absorb nothing. pxG-form coefficient +0.79 log-rate supremacy per goal of pxG-form edge (alone), +0.48 with all features.

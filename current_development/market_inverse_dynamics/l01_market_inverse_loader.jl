@@ -73,6 +73,7 @@ module MarketInverseDynamics
 using DataFrames
 using Dates, LinearAlgebra, Statistics, Random, Printf
 import Distributions
+import SpecialFunctions
 import MCMCChains
 import BayesianFootball
 const MID_DATA = BayesianFootball.Data
@@ -85,7 +86,11 @@ export MarketPanel, build_market_panel, closing_book,
        fit_arm, ArmFit, onestep_predictions, mid_gates,
        draws_chains, convergence_table, team_paths, prediction_metrics,
        rbpf_predictions, innovation_diagnostics, anomaly_catalog, restrict_panel,
-       median_theta, fitted_logrates, active_weeks, n_obs, n_teams, schedule
+       median_theta, fitted_logrates, active_weeks, n_obs, n_teams, schedule,
+       FeatureGRW, with_features, n_features, n_fixtures, rating_spread,
+       supremacy_decomposition, phase2_form_features, phase2_schedule_features,
+       latent_supremacy, ols_fit, ols_hc1, shapley, shapley_r2, shapley_conviction,
+       bootstrap_ci
 
 # ==============================================================================
 # 1. Data: the inverted close as a weekly observation panel
@@ -142,9 +147,15 @@ struct MarketPanel
     obs_match::Vector{Int}
     obs_season::Vector{String}
     week_ptr::Vector{Int}
+    obs_X::Matrix{Float64}      # n_obs × K fixture features, oriented to the attacking side (Phase 2)
+    feature_names::Vector{String}
 end
 
 n_teams(p::MarketPanel) = length(p.teams)
+n_features(p::MarketPanel) = size(p.obs_X, 2)
+"Fixture index of observation j (the two sides of a fixture are consecutive rows)."
+fixture_of(j::Int) = (j + 1) >> 1
+n_fixtures(p::MarketPanel) = n_obs(p) ÷ 2
 n_obs(p::MarketPanel) = length(p.obs_y)
 
 """
@@ -205,7 +216,7 @@ function build_market_panel(ds; seasons = ["24/25", "25/26"], tournaments = [56,
                                :home_team, :away_team, :lambda_mkt_h, :lambda_mkt_a, :sse),
                         refusals, teams, n_weeks,
                         [d0 + Day(step_days * (t - 1)) for t in 1:n_weeks],
-                        ow, oh, oa, od, oy, om, os, ptr)
+                        ow, oh, oa, od, oy, om, os, ptr, zeros(n, 0), String[])
     return panel, book, frame
 end
 
@@ -225,7 +236,30 @@ function restrict_panel(p::MarketPanel, keep::AbstractVector{Bool})
     cumsum!(ptr, ptr)
     return MarketPanel(p.matches, p.refusals, p.teams, p.n_weeks, p.week_start, ow,
                        p.obs_home[idx], p.obs_att[idx], p.obs_def[idx], p.obs_y[idx],
-                       p.obs_match[idx], p.obs_season[idx], ptr)
+                       p.obs_match[idx], p.obs_season[idx], ptr, p.obs_X[idx, :], p.feature_names)
+end
+
+"""
+    with_features(panel, Xfix, names) -> MarketPanel
+
+Attach FIXTURE features `Xfix` (n_fixtures × K, home-minus-away differentials, in
+the panel's fixture order) as an antisymmetric observation design: the home-rate
+row gets +x, the away-rate row −x. A coefficient w then moves the market's log-rate
+SUPREMACY by 2w per unit of x and leaves the total untouched — the repo's
+`SupremacyRole`.
+"""
+function with_features(p::MarketPanel, Xfix::AbstractMatrix, names::Vector{String})
+    size(Xfix, 1) == n_fixtures(p) || error("with_features: $(size(Xfix, 1)) feature rows for " *
+                                            "$(n_fixtures(p)) fixtures")
+    length(names) == size(Xfix, 2) || error("with_features: names/columns mismatch")
+    all(isfinite, Xfix) || error("with_features: non-finite feature values — impute in the builder")
+    X = zeros(n_obs(p), size(Xfix, 2))
+    for j in 1:n_obs(p)
+        X[j, :] .= (p.obs_home[j] == 1.0 ? 1.0 : -1.0) .* Xfix[fixture_of(j), :]
+    end
+    return MarketPanel(p.matches, p.refusals, p.teams, p.n_weeks, p.week_start, p.obs_week,
+                       p.obs_home, p.obs_att, p.obs_def, p.obs_y, p.obs_match, p.obs_season,
+                       p.week_ptr, X, names)
 end
 
 # ==============================================================================
@@ -367,8 +401,10 @@ const REGIME_PI0 = (0.8, 0.2)                      # initial regime distribution
 const MU_PRIOR = (log(1.35), 0.5)       # μ ~ N(log 1.35, 0.5²)
 const HOME_PRIOR = (0.15, 0.25)         # γ_home ~ N(0.15, 0.25²)
 const X0_SD = 0.5                       # x̃_{i,1} ~ N(0, 0.25) — DESIGN's 0.25 read as a variance
+const W_PRIOR_SD = 0.5                  # feature coefficient w_k ~ N(0, 0.5²), per 1 sd of the feature
 
-state_dim(::AbstractArm, N) = 2 + 2N
+n_features(::AbstractArm) = 0
+state_dim(arm::AbstractArm, N) = 2 + 2N + n_features(arm)
 state_dim(::MomentumGRW, N) = 2 + 4N
 has_velocity(::AbstractArm) = false
 has_velocity(::MomentumGRW) = true
@@ -383,13 +419,32 @@ function initial_state(arm::AbstractArm, N)
     for i in 3:(2 + 2N)
         P[i, i] = X0_SD^2
     end
+    for i in (n - n_features(arm) + 1):n          # feature coefficients: static states
+        P[i, i] = W_PRIOR_SD^2
+    end
     # velocities start at exactly 0 (DESIGN §3 Arm 2 boundary condition)
     return m, P
 end
 
 """
-Observation row: h·s = μ + home·γ + (C x̃α)[att] + (C x̃β)[def]. Written into `h`.
+    obs_row!(h, p, j, K)
+
+Row of observation j: the base row plus, when the arm carries K features, the
+panel's oriented feature values in the last K state slots.
 """
+function obs_row!(h::Vector{Float64}, p::MarketPanel, j::Int, K::Int)
+    obs_row!(h, n_teams(p), p.obs_home[j], p.obs_att[j], p.obs_def[j])
+    if K > 0
+        K == n_features(p) || error("arm expects $K features, panel carries $(n_features(p))")
+        n = length(h)
+        @inbounds for k in 1:K
+            h[n-K+k] = p.obs_X[j, k]
+        end
+    end
+    return h
+end
+
+"Base observation row: h·s = μ + home·γ + (C x̃α)[att] + (C x̃β)[def]. Written into `h`."
 function obs_row!(h::Vector{Float64}, N::Int, home::Float64, att::Int, def::Int)
     fill!(h, 0.0)
     h[1] = 1.0
@@ -520,8 +575,12 @@ Exact Kalman filter over the weekly grid with sequential scalar updates.
 * `store` — keep the filtered mean/covariance of every week (for FFBS / RTS).
 """
 function run_filter(arm::AbstractArm, p::MarketPanel, sch::InnovationSchedule;
-                    σ_obs::Float64, store::Bool = false, predict::Bool = false)
+                    σ_obs::Float64, store::Bool = false, predict::Bool = false,
+                    ω::AbstractVector{Float64} = Float64[])
     N = n_teams(p)
+    K = n_features(arm)
+    weighted = !isempty(ω)
+    weighted && length(ω) != n_fixtures(p) && error("ω has $(length(ω)) entries for $(n_fixtures(p)) fixtures")
     T = p.n_weeks
     vel = has_velocity(arm)
     m, P = initial_state(arm, N)
@@ -540,16 +599,16 @@ function run_filter(arm::AbstractArm, p::MarketPanel, sch::InnovationSchedule;
         r = p.week_ptr[t]:(p.week_ptr[t+1]-1)
         if predict
             for j in r
-                obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+                obs_row!(h, p, j, K)
                 mul!(k, P, h)
                 pm[j] = dot(h, m)
-                pv[j] = dot(h, k) + R
+                pv[j] = dot(h, k) + (weighted ? R / ω[fixture_of(j)] : R)
             end
         end
         for j in r
-            obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+            obs_row!(h, p, j, K)
             mul!(k, P, h)
-            S = dot(h, k) + R
+            S = dot(h, k) + (weighted ? R / ω[fixture_of(j)] : R)
             if !(S > 0.0 && isfinite(S))
                 # only reachable at absurd θ (a slice bracket far in the tails): the
                 # covariance has lost positive-definiteness, so the point has no density
@@ -1272,14 +1331,14 @@ function rbpf_predictions(arm::Union{StochVolGRW, RegimeGRW}, p::MarketPanel, θ
                 end
             end
             for (a, j) in enumerate(r)
-                obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+                obs_row!(h, p, j, 0)
                 mul!(k, Pq, h)
                 mu[q, a] = dot(h, m)
                 va[q, a] = dot(h, k) + R
             end
             l = 0.0
             for j in r
-                obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+                obs_row!(h, p, j, 0)
                 mul!(k, Pq, h)
                 S = dot(h, k) + R
                 v = p.obs_y[j] - dot(h, m)
@@ -1440,19 +1499,418 @@ function anomaly_catalog(p::MarketPanel, pred, smooth_fit::AbstractVector, σ_ob
 end
 
 "Smoothed fitted log-rate per observation from a state path matrix X (n × T)."
-function fitted_logrates(p::MarketPanel, X::AbstractMatrix)
-    N = n_teams(p)
+function fitted_logrates(p::MarketPanel, X::AbstractMatrix; K::Int = 0)
     h = zeros(size(X, 1))
     out = zeros(n_obs(p))
     for j in eachindex(out)
-        obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+        obs_row!(h, p, j, K)
         out[j] = dot(h, @view X[:, p.obs_week[j]])
     end
     return out
 end
 
 "Posterior-mean fitted log-rates over the retained paths (in-sample fit)."
-fitted_logrates(p::MarketPanel, f::ArmFit) = mean(fitted_logrates(p, X) for X in f.paths)
+fitted_logrates(p::MarketPanel, f::ArmFit) =
+    mean(fitted_logrates(p, X; K = n_features(f.arm)) for X in f.paths)
+
+# ==============================================================================
+# 9. Phase 2 — the feature-augmented, Student-t observation model
+# ==============================================================================
+#
+#   y_home = μ + γ_home + α[h,t] + β[a,t] + wᵀx_m + ε,   y_away = … − wᵀx_m + ε
+#   ε ~ Student-t(ν, σ_obs), written as the scale mixture
+#   ε | ω_m ~ N(0, σ_obs²/ω_m),  ω_m ~ Gamma(ν/2, rate ν/2),  one ω per FIXTURE
+#
+# x_m are home-minus-away differentials, so w moves the market's supremacy by 2w
+# per unit and never the total. The coefficients w are STATIC Kalman states with a
+# N(0, W_PRIOR_SD²) prior, so the collapsed likelihood integrates them out exactly
+# and FFBS draws them jointly with the rating paths. One ω per fixture because an
+# outlying price moves both sides of a fixture at once (Phase 1 §6: Kelty v
+# Hamilton was an outlier on BOTH rates).
+#
+# Gibbs, in the valid partially-collapsed order:
+#   θ = (σ_obs, σ_att, σ_def, ν) | ω, y     collapsed slice (paths, w integrated out)
+#   paths, w | θ, ω, y                       FFBS
+#   ω_m | paths, w, θ                        conjugate Gamma((ν+2)/2, (ν + (r_h² + r_a²)/σ²)/2)
+
+"""
+    FeatureGRW(K, student, label)
+
+GRW1 rating walk + K static feature coefficients, Gaussian (`student = false`) or
+Student-t (`student = true`) observation noise.
+θ = (log σ_obs, log σ_att, log σ_def [, log ν]).
+"""
+struct FeatureGRW <: AbstractArm
+    K::Int
+    student::Bool
+    label::String
+end
+
+n_features(a::FeatureGRW) = a.K
+arm_name(a::FeatureGRW) = a.label
+param_names(a::FeatureGRW) = a.student ? ["sigma_obs", "sigma_att", "sigma_def", "nu"] :
+                                          ["sigma_obs", "sigma_att", "sigma_def"]
+constrain(a::FeatureGRW, θ) = a.student ?
+    (σ_obs = exp(θ[1]), σ_att = exp(θ[2]), σ_def = exp(θ[3]), ν = exp(θ[4])) :
+    (σ_obs = exp(θ[1]), σ_att = exp(θ[2]), σ_def = exp(θ[3]))
+init_centre(a::FeatureGRW) = a.student ? [log(0.05), log(0.03), log(0.03), log(10.0)] :
+                                         [log(0.05), log(0.03), log(0.03)]
+"ν ~ Gamma(2, rate 0.1) (Juárez & Steel 2010): mean 20, weight on ν < 5 when the data ask."
+function log_prior(a::FeatureGRW, θ)
+    lp = log_prior(GRW1(), θ[1:3])
+    if a.student
+        ν = exp(θ[4])
+        lp += log(ν) - 0.1ν + θ[4]
+    end
+    return lp
+end
+function schedule(a::FeatureGRW, θ, N, T)
+    c = constrain(a, θ)
+    D = Matrix{Float64}(undef, 2N, T)
+    D[1:N, :] .= c.σ_att^2
+    D[N+1:2N, :] .= c.σ_def^2
+    return InnovationSchedule(D, 0.0, 0.0)
+end
+
+"Σ_m log Gamma(ω_m; ν/2, rate ν/2)."
+function log_mixing_density(ω::AbstractVector{Float64}, ν::Float64)
+    a = ν / 2
+    return length(ω) * (a * log(a) - SpecialFunctions.loggamma(a)) +
+           sum((a - 1) .* log.(ω) .- a .* ω)
+end
+
+function feature_logpost(a::FeatureGRW, p::MarketPanel, θ, ω)
+    maximum(abs, θ) > THETA_BOUND && return -Inf
+    sch = schedule(a, θ, n_teams(p), p.n_weeks)
+    ll = run_filter(a, p, sch; σ_obs = exp(θ[1]), ω = a.student ? ω : Float64[]).loglik
+    lp = ll + log_prior(a, θ)
+    a.student && (lp += log_mixing_density(ω, exp(θ[4])))
+    return lp
+end
+
+"Posterior draw of every fixture's ω given a state path X."
+function update_omega!(ω, a::FeatureGRW, p::MarketPanel, θ, X, rng)
+    c = constrain(a, θ)
+    h = zeros(size(X, 1))
+    ss = zeros(n_fixtures(p))
+    for j in 1:n_obs(p)
+        obs_row!(h, p, j, a.K)
+        r = p.obs_y[j] - dot(h, @view X[:, p.obs_week[j]])
+        ss[fixture_of(j)] += r^2
+    end
+    for m in eachindex(ω)
+        shape = (c.ν + 2) / 2
+        rate = (c.ν + ss[m] / c.σ_obs^2) / 2
+        ω[m] = rand(rng, Distributions.Gamma(shape, 1 / rate))
+    end
+    return ω
+end
+
+fit_arm(a::FeatureGRW, p::MarketPanel; ess_steps::Int = 0, kwargs...) = fit_feature_arm(a, p; kwargs...)
+
+"""
+    fit_feature_arm(arm, panel; n_chains, n_warmup, n_samples, n_paths, seed, thin) -> ArmFit
+
+Draws hold θ (constrained) followed by the K feature coefficients `w_<name>`.
+`aux_mean` is the 1 × n_fixtures posterior mean of ω (1.0 everywhere when Gaussian).
+"""
+function fit_feature_arm(a::FeatureGRW, p::MarketPanel; n_chains::Int = 4, n_warmup::Int = 1000,
+                         n_samples::Int = 1000, n_paths::Int = 50, seed::Int = 20260922,
+                         thin::Int = 1)
+    a.K == n_features(p) || error("$(a.label): arm has K = $(a.K), panel carries $(n_features(p)) features")
+    t0 = time()
+    names = vcat(param_names(a), ["w_" * n for n in p.feature_names])
+    Kθ = length(param_names(a))
+    draws = zeros(n_samples, length(names), n_chains)
+    udraws = zeros(n_samples, Kθ, n_chains)
+    per_chain = cld(n_paths, n_chains)
+    tasks = map(1:n_chains) do c
+        Threads.@spawn run_feature_chain(a, p, c, seed, n_warmup, n_samples, per_chain, thin)
+    end
+    outs = [fetch(t) for t in tasks]
+    for (c, o) in enumerate(outs)
+        udraws[:, :, c] .= o.U
+        for s in 1:n_samples
+            draws[s, 1:Kθ, c] .= collect(values(constrain(a, o.U[s, :])))
+        end
+        draws[:, (Kθ+1):end, c] .= o.W
+    end
+    ωbar = reduce(+, [o.ω for o in outs]) ./ n_chains
+    return ArmFit(a, names, draws, udraws, reduce(vcat, [o.paths for o in outs]),
+                  reduce(vcat, [o.path_theta for o in outs]), reshape(ωbar, 1, :), time() - t0)
+end
+
+function run_feature_chain(a::FeatureGRW, p::MarketPanel, c::Int, seed::Int, n_warmup::Int,
+                           n_samples::Int, n_keep_paths::Int, thin::Int)
+    rng = Xoshiro(seed + 1000c)
+    N = n_teams(p)
+    T = p.n_weeks
+    θ = init_theta(a, rng)
+    ω = ones(n_fixtures(p))
+    widths = fill(1.0, length(θ))
+    U = zeros(n_samples, length(θ))
+    W = zeros(n_samples, a.K)
+    hist = zeros(n_warmup, length(θ))
+    keep_at = path_schedule(n_samples, n_keep_paths)
+    paths = Matrix{Float64}[]
+    path_theta = Vector{Float64}[]
+    ωacc = zeros(n_fixtures(p))
+    for it in 1:(n_warmup+n_samples*thin)
+        logf = x -> feature_logpost(a, p, x, ω)
+        θ, _ = slice_sweep(logf, θ, logf(θ), widths, rng)
+        if it <= n_warmup
+            hist[it, :] .= θ
+            if it >= 50 && it % 25 == 0
+                sd = vec(std(hist[max(1, it - 199):it, :]; dims = 1))
+                widths .= clamp.(3.0 .* sd, 0.02, 3.0)
+            end
+        end
+        sch = schedule(a, θ, N, T)
+        filt = run_filter(a, p, sch; σ_obs = exp(θ[1]), store = true,
+                          ω = a.student ? ω : Float64[])
+        X = ffbs(a, p, sch, filt, rng)
+        a.student && update_omega!(ω, a, p, θ, X, rng)
+        s = it > n_warmup && (it - n_warmup) % thin == 0 ? (it - n_warmup) ÷ thin : 0
+        if s >= 1
+            U[s, :] .= θ
+            n = size(X, 1)
+            W[s, :] .= X[(n-a.K+1):n, T]        # static: identical in every column
+            ωacc .+= ω
+            if s in keep_at
+                push!(paths, X)
+                push!(path_theta, copy(θ))
+            end
+        end
+    end
+    return (; U, W, paths, path_theta, ω = ωacc ./ n_samples)
+end
+
+"""
+    rating_spread(fit, panel) -> NamedTuple
+
+Cross-sectional sd of the centred market ratings α and β across the teams ACTIVE
+in each week (a team's in-season span), averaged over weeks with ≥ 4 active
+teams; posterior mean and 90% band over the retained paths. This is the Phase 1
+"0.14–0.19" quantity; a feature that explains team differences shrinks it.
+"""
+function rating_spread(f::ArmFit, p::MarketPanel)
+    N = n_teams(p)
+    act = active_weeks(p)
+    weeks = [t for t in 2:p.n_weeks if count(act[:, t]) >= 4]
+    sa = Float64[]
+    sb = Float64[]
+    for X in f.paths
+        va = 0.0
+        vb = 0.0
+        for t in weeks
+            xa = X[3:(2+N), t]
+            xb = X[(3+N):(2+2N), t]
+            a = xa .- mean(xa)
+            b = xb .- mean(xb)
+            va += std(a[act[:, t]])
+            vb += std(b[act[:, t]])
+        end
+        push!(sa, va / length(weeks))
+        push!(sb, vb / length(weeks))
+    end
+    return (att = mean(sa), att_lo = quantile(sa, 0.05), att_hi = quantile(sa, 0.95),
+            def = mean(sb), def_lo = quantile(sb, 0.05), def_hi = quantile(sb, 0.95))
+end
+
+"""
+    supremacy_decomposition(fit, panel) -> DataFrame
+
+Per fixture, the posterior-mean split of the fitted market supremacy
+(ŷ_home − ŷ_away) into the team-rating part and each feature's 2·w_k·x_k part.
+"""
+function supremacy_decomposition(f::ArmFit, p::MarketPanel)
+    K = n_features(f.arm)
+    N = n_teams(p)
+    M = n_fixtures(p)
+    team = zeros(M)
+    feat = zeros(M, K)
+    for X in f.paths
+        n = size(X, 1)
+        w = X[(n-K+1):n, end]
+        for m in 1:M
+            j = 2m - 1                                   # home-rate row
+            t = p.obs_week[j]
+            h = p.obs_att[j]
+            a = p.obs_def[j]
+            xa = X[3:(2+N), t]
+            xb = X[(3+N):(2+2N), t]
+            team[m] += (xa[h] - xa[a]) + (xb[a] - xb[h])  # centring cancels in the difference
+            for k in 1:K
+                feat[m, k] += 2 * w[k] * p.obs_X[j, k]
+            end
+        end
+    end
+    D = length(f.paths)
+    out = DataFrame(match_id = [p.obs_match[2m-1] for m in 1:M], sup_team = team ./ D)
+    for k in 1:K
+        out[!, Symbol("sup_", p.feature_names[k])] = feat[:, k] ./ D
+    end
+    return out
+end
+
+# ==============================================================================
+# 10. Phase 2 — fixture features, all known before the Betfair close
+# ==============================================================================
+
+"""
+    phase2_form_features(ds; half_life_matches = 16.0) -> DataFrame
+
+Two pre-match FORM supremacies built by the SAME rolling machinery
+(`Features._pxg_rolling_lookup`: strictly earlier calendar days, same-day cards
+emitted before any of them updates the state, exponential half-life in matches,
+3 pseudo-matches of league prior):
+
+* `pxg_form_sup`  — from commentary proxy xG (`pxg_match_observations`, fallback
+  `:none`: live text only, never goals);
+* `goal_form_sup` — from actual goals, with identical windows.
+
+So `pxg_form_sup − goal_form_sup` is chance creation that has not (yet) turned into
+goals. NOTE the shot-xG cell table is fitted on every commentary shot in the store
+(`fit_ids = nothing`); it carries no team identity, so this is a calibration-scale,
+not a team-level, look-ahead.
+"""
+function phase2_form_features(ds; half_life_matches::Float64 = 16.0)
+    F = BayesianFootball.Features
+    cfg = F.PxGFeature(fallback = :none, half_life_matches = half_life_matches)
+    pobs = F.pxg_match_observations(ds, cfg)
+    plk = F._pxg_rolling_lookup(pobs, ds.matches, cfg)
+    gobs = Dict{Int, NamedTuple{(:h, :a, :source), Tuple{Float64, Float64, Symbol}}}()
+    for r in eachrow(ds.matches)
+        (ismissing(r.home_score) || ismissing(r.away_score)) && continue
+        gobs[Int(r.match_id)] = (h = Float64(r.home_score), a = Float64(r.away_score), source = :goals)
+    end
+    glk = F._pxg_rolling_lookup(gobs, ds.matches, cfg)
+    ids = sort!(collect(keys(plk)))
+    return DataFrame(match_id = ids,
+                     pxg_form_sup = [plk[i].supremacy for i in ids],
+                     pxg_form_ok = [plk[i].available for i in ids],
+                     goal_form_sup = [haskey(glk, i) ? glk[i].supremacy : 0.0 for i in ids])
+end
+
+"""
+    phase2_schedule_features(ds; rest_cap = 21, prior_games = 3.0) -> DataFrame
+
+* `delta_rest` — home minus away days since each side's previous LEAGUE fixture,
+  capped at `rest_cap` (betdb holds no cup fixtures, so a midweek cup tie is
+  invisible; the season opener reads as `rest_cap`).
+* `delta_ppg`  — home minus away points per game in the current season from
+  fixtures on strictly earlier days, shrunk by `prior_games` games at the league
+  mean (1.37 ppg), so the first weeks do not read 3.0 vs 0.0.
+"""
+function phase2_schedule_features(ds; rest_cap::Int = 21, prior_games::Float64 = 3.0)
+    m = sort(filter(r -> !ismissing(r.season), ds.matches), [:match_date, :match_id])
+    last_played = Dict{String, Date}()
+    pts = Dict{Tuple{String, String}, Float64}()
+    gp = Dict{Tuple{String, String}, Int}()
+    out = DataFrame(match_id = Int[], delta_rest = Float64[], delta_ppg = Float64[])
+    days = unique(Date.(m.match_date))
+    for d in days
+        card = m[Date.(m.match_date) .== d, :]
+        for r in eachrow(card)                           # emit the whole card first
+            s = String(r.season)
+            rest(t) = haskey(last_played, t) ? min(Dates.value(d - last_played[t]), rest_cap) : rest_cap
+            ppg(t) = (get(pts, (s, t), 0.0) + 1.37 * prior_games) / (get(gp, (s, t), 0) + prior_games)
+            push!(out, (Int(r.match_id), float(rest(String(r.home_team)) - rest(String(r.away_team))),
+                        ppg(String(r.home_team)) - ppg(String(r.away_team))))
+        end
+        for r in eachrow(card)                           # then update the state
+            s = String(r.season); h = String(r.home_team); a = String(r.away_team)
+            last_played[h] = d; last_played[a] = d
+            (ismissing(r.home_score) || ismissing(r.away_score)) && continue
+            ph = r.home_score > r.away_score ? 3.0 : r.home_score == r.away_score ? 1.0 : 0.0
+            pa = r.home_score < r.away_score ? 3.0 : r.home_score == r.away_score ? 1.0 : 0.0
+            pts[(s, h)] = get(pts, (s, h), 0.0) + ph; gp[(s, h)] = get(gp, (s, h), 0) + 1
+            pts[(s, a)] = get(pts, (s, a), 0.0) + pa; gp[(s, a)] = get(gp, (s, a), 0) + 1
+        end
+    end
+    return out
+end
+
+"Posterior-mean log-rate supremacy E[log λ_h − log λ_a] of a CountLatents container."
+latent_supremacy(lat) = DataFrame(match_id = Int.(lat.match_ids),
+                                  delta_goal = vec(mean(log.(lat.λ_home) .- log.(lat.λ_away); dims = 2)))
+
+# ==============================================================================
+# 11. Phase 2 — exact attribution: Shapley decompositions over feature groups
+# ==============================================================================
+
+"OLS with intercept; returns (coef, fitted, r2)."
+function ols_fit(y::AbstractVector, X::AbstractMatrix)
+    Z = hcat(ones(length(y)), X)
+    b = Z \ y
+    ŷ = Z * b
+    r2 = 1 - sum((y .- ŷ) .^ 2) / sum((y .- mean(y)) .^ 2)
+    return (; coef = b, fitted = ŷ, r2)
+end
+
+"HC1 (heteroscedasticity-robust) standard errors for `ols_fit(y, X)`."
+function ols_hc1(y::AbstractVector, X::AbstractMatrix)
+    Z = hcat(ones(length(y)), X)
+    b = Z \ y
+    e = y .- Z * b
+    n, k = size(Z)
+    B = inv(Z' * Z)
+    V = B * (Z' * (Z .* e .^ 2)) * B .* (n / (n - k))
+    return b, sqrt.(diag(V))
+end
+
+"""
+    shapley(value, G) -> Vector{Float64}
+
+Exact Shapley values of G players under the set function `value(mask::BitVector)`,
+by full enumeration of the 2^G coalitions. They sum to value(all) − value(none).
+"""
+function shapley(value, G::Int)
+    vals = Dict{Int, Float64}()
+    for code in 0:(2^G-1)
+        vals[code] = value(BitVector(((code >> (g - 1)) & 1) == 1 for g in 1:G))
+    end
+    φ = zeros(G)
+    for g in 1:G, code in 0:(2^G-1)
+        (code >> (g - 1)) & 1 == 1 && continue
+        s = count_ones(code)
+        wgt = factorial(s) * factorial(G - s - 1) / factorial(G)
+        φ[g] += wgt * (vals[code | (1 << (g - 1))] - vals[code])
+    end
+    return φ
+end
+
+cols_of(groups, mask) = reduce(vcat, [groups[g] for g in eachindex(groups) if mask[g]]; init = Int[])
+
+"Shapley split of the OLS R² of y on the column groups of X (LMG / Lindeman–Merenda–Gold)."
+function shapley_r2(y, X, groups)
+    v(mask) = (c = cols_of(groups, mask); isempty(c) ? 0.0 : ols_fit(y, X[:, c]).r2)
+    return shapley(v, length(groups))
+end
+
+"""
+Shapley split of the mean ORIENTED fitted value over the rows in `sel`:
+v(S) = mean_{sel} s·ŷ_S, with ŷ_S the full-sample OLS fit on groups S. The
+empty coalition is the intercept (the league-average supremacy — home advantage).
+"""
+function shapley_conviction(y, X, groups, sel::AbstractVector{Bool}, s::AbstractVector)
+    v(mask) = begin
+        c = cols_of(groups, mask)
+        ŷ = isempty(c) ? fill(mean(y), length(y)) : ols_fit(y, X[:, c]).fitted
+        mean(s[sel] .* ŷ[sel])
+    end
+    φ = shapley(v, length(groups))
+    base = v(falses(length(groups)))
+    total = mean(s[sel] .* y[sel])
+    return (; φ, base, total, residual = total - base - sum(φ))
+end
+
+"Fixture-bootstrap 90% intervals for any statistic `stat(rows)` returning a vector."
+function bootstrap_ci(stat, n::Int; reps::Int = 500, seed::Int = 11)
+    rng = Xoshiro(seed)
+    B = reduce(hcat, [stat(rand(rng, 1:n, n)) for _ in 1:reps])
+    return [quantile(B[i, :], 0.05) for i in axes(B, 1)], [quantile(B[i, :], 0.95) for i in axes(B, 1)]
+end
 
 # ==============================================================================
 # 8. Gates — exactness of the engine on a toy problem
@@ -1507,6 +1965,19 @@ function mid_gates(; seed::Int = 1)
                      value = maximum(abs.(vec(smoothed_mean(arm, p, sch, filt)) .- bm.post_mean)),
                      tol = 1e-8))
     end
+    # G5 (Phase 2): two static feature coefficients + per-fixture Student-t weights ω.
+    let pf = with_features(p, randn(rng, n_fixtures(p), 2), ["f1", "f2"]),
+        arm = FeatureGRW(2, true, "toy_feature_t"), θ = [log(0.07), log(0.05), log(0.03), log(5.0)]
+        ω = rand(rng, Distributions.Gamma(2.5, 0.4), n_fixtures(pf))
+        sch = schedule(arm, θ, n_teams(pf), pf.n_weeks)
+        filt = run_filter(arm, pf, sch; σ_obs = exp(θ[1]), store = true, ω = ω)
+        bm = batch_posterior(arm, pf, sch, exp(θ[1]); ω = ω)
+        push!(rows, (gate = "G5 loglik feature + Student-t ω", value = abs(filt.loglik - bm.loglik),
+                     tol = 1e-9))
+        push!(rows, (gate = "G5 smoothed mean feature + Student-t ω",
+                     value = maximum(abs.(vec(smoothed_mean(arm, pf, sch, filt)) .- bm.post_mean)),
+                     tol = 1e-8))
+    end
     # G3: degenerate SV (σ_h → 0 so h ≡ h̄) and regime with Δ → 0 reproduce GRW1
     θ1 = [log(0.07), log(0.05), log(0.03)]
     k1 = kalman_loglik(GRW1(), p, θ1)
@@ -1542,7 +2013,8 @@ function toy_panel(rng)
     cumsum!(ptr, ptr)
     mt = DataFrame(match_id = 1:length(fixtures))
     return MarketPanel(mt, DataFrame(), teams, T, [Date(2024, 1, 1) + Week(t - 1) for t in 1:T],
-                       ow, oh, oa, od, oy, om, fill("toy", length(ow)), ptr)
+                       ow, oh, oa, od, oy, om, fill("toy", length(ow)), ptr,
+                       zeros(length(ow), 0), String[])
 end
 
 """
@@ -1550,7 +2022,8 @@ Batch joint Gaussian of the stacked states s_{1:T} (prior from the transition
 recursion written out directly) and the observations; returns log p(y) and the
 posterior mean/cov of vec(s_{1:T}).
 """
-function batch_posterior(arm::AbstractArm, p::MarketPanel, sch::InnovationSchedule, σ_obs)
+function batch_posterior(arm::AbstractArm, p::MarketPanel, sch::InnovationSchedule, σ_obs;
+                         ω::AbstractVector{Float64} = Float64[])
     N = n_teams(p)
     T = p.n_weeks
     m1, P1 = initial_state(arm, N)
@@ -1573,10 +2046,11 @@ function batch_posterior(arm::AbstractArm, p::MarketPanel, sch::InnovationSchedu
     H = zeros(n_obs(p), n * T)
     h = zeros(n)
     for j in 1:n_obs(p)
-        obs_row!(h, N, p.obs_home[j], p.obs_att[j], p.obs_def[j])
+        obs_row!(h, p, j, n_features(arm))
         H[j, blk(p.obs_week[j])] .= h
     end
-    S = Symmetric(H * Σ * H' + σ_obs^2 * I)
+    Rdiag = [isempty(ω) ? σ_obs^2 : σ_obs^2 / ω[fixture_of(j)] for j in 1:n_obs(p)]
+    S = Symmetric(H * Σ * H' + Diagonal(Rdiag))
     r = p.obs_y .- H * M
     C = cholesky(S)
     ll = -0.5 * (length(r) * log(2π) + logdet(C) + dot(r, C \ r))

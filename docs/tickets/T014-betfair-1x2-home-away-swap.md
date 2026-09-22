@@ -27,10 +27,12 @@ The inverted close for 14035501 is λ_mkt = (1.72, 0.93); every model trained or
 evaluated against the Betfair close since TODO 021 sees Montrose as the
 favourite in a fixture the rest of the market priced the other way.
 
-Two large market "shocks" that looked like swaps in the TODO 023 anomaly
-catalogue — kelty-hearts v hamilton (2025-09-20) and edinburgh-city v
-bonnyrigg-rose (2024-08-17) — are **not** this defect: sofascore agrees with
-Betfair on both.
+kelty-hearts v hamilton (2025-09-20), a large "shock" in the TODO 023 anomaly
+catalogue, is **not** this defect: sofascore agrees with Betfair. (Correction,
+2026-09-22: edinburgh-city v bonnyrigg-rose 2024-08-17 was earlier listed here as
+"sofascore agrees" — wrong; that fixture has NO Betfair 1X2 book, so it never
+entered this comparison. Its apparent shock is the totals-only inversion artefact
+in [T015](T015-inversion-accepts-books-without-1x2.md).)
 
 ## Root cause
 

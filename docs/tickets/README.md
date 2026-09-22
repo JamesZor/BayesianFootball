@@ -29,6 +29,7 @@ only that ticket. Update `Status` here when it lands.
 | [T006](T006-scottish-lower-arm-include-guards.md) | Arm 02/03/04 loaders re-include a shared loader (guard tests a name that never existed) and call `subset` unqualified | low | `current_development/scottish_lower/` | open | 2026-08-28 |
 | [T007](T007-parallel-feature-test-hidden-dependency.md) | `features_tests.jl` depends on a probe defined only by an earlier sequential include, so the parallel suite fails | low | `test/` | open | 2026-08-29 |
 | [T011](T011-portfolio-sizes-smile-latents-off-the-grid.md) | Portfolio prices a smile container's totals through φ (`p_model`) but sizes every stake off the plain (λ_h, λ_a) grid, so φ never reaches a bet | medium | `src/Portfolio/pricing.jl` | open | 2026-09-13 |
+| [T015](T015-inversion-accepts-books-without-1x2.md) | `invert_market_rates` accepts totals-only books (27 of 623 Scottish Lower fixtures); their home/away split is the optimiser's initial guess (+0.4 supremacy), not the market | medium | `src/Calibration/rate_pool.jl` | open | 2026-09-22 |
 | [T014](T014-betfair-1x2-home-away-swap.md) | Betfair 1X2 book has home/away swapped on ≥ 1 Scottish Lower fixture (14035501); no QA invariant compares it with the sofascore book | low | `ds.betfair_odds` mapping | open | 2026-09-22 |
 | [T010](T010-postgres-storage-refuses-smile-latents.md) | `PostgresStorage` refuses `SmileLatents` on save and rebuilds every panel as `CountLatents` on load, dropping φ | medium | `src/training/inference/db_storage.jl` | open | 2026-09-12 |
 

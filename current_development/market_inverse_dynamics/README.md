@@ -17,6 +17,18 @@ Inspecting *where* they spend that extra volatility shows it is mostly
 That is a heavy-tailed *observation* effect, not a latent volatility regime.
 Phase 2 should test that directly (§7) before any MS-GARCH work.
 
+> **Phase 2 (2026-09-22):** what the market's supremacy is *made of* is in
+> [`PHASE2_FEATURE_ATTRIBUTION.md`](PHASE2_FEATURE_ATTRIBUTION.md)
+> ([`r02_market_feature_attribution.jl`](r02_market_feature_attribution.jl)).
+> Its main results:
+>
+> * goal form and proxy-xG form explain about 30% each of market supremacy;
+>   wealth explains 4%, the RAPM lineup 3%, and rest nothing;
+> * with the features in, the latent team spread falls by 37%;
+> * a Student-t observation model gives σ_obs 0.055 with ν ≈ 2.9;
+> * two inversion defects were found (T015 totals-only books, thin books), and
+>   they correct one Phase 1 anomaly (§6).
+
 All numbers below are measured by
 [`r01_market_inverse_runner.jl`](r01_market_inverse_runner.jl) on mcmc-beast
 (`/root/BF_market_inverse`, `-t 16`, 2026-09-22). Raw outputs are in
@@ -232,8 +244,12 @@ not in tournaments 56/57, so four League One/Two clubs were substituted.
   verified.
 * **Other turbulent clusters.** These fall at the panel start (Bonnyrigg Rose
   and Edinburgh City, weeks 2–4, again tied to one outlying fixture: Edinburgh
-  City v Bonnyrigg Rose, 2024-08-17, idiosyncratic z = +3.3 / −3.7, which
-  sofascore also prices this way)
+  City v Bonnyrigg Rose, 2024-08-17, idiosyncratic z = +3.3 / −3.7). **Phase 2
+  correction:** that fixture has no Betfair 1X2 book; its "market" supremacy is
+  the inversion's initial guess ([T015](../../docs/tickets/T015-inversion-accepts-books-without-1x2.md)),
+  so this cluster is an artefact, not a market move. The same holds for
+  Dumbarton v Inverness CT (2024-10-26) and Elgin City v Clyde (2024-12-17) in the
+  anomaly catalogue.
   and in the **last four weeks of 25/26**: Edinburgh City attack, and Queen of
   the South attack and defence (April 2026). That end-of-season cluster is the
   one plausibly genuine regime: dead rubbers, relegation stakes and rotated
@@ -323,3 +339,7 @@ In priority order:
 | `results/production/*.csv` | every table above |
 | `results/production/figures/*.png` | trajectories, volatility calendar, in-sample fit |
 | `results/production/fits.jls` | serialized draws (on the beast only; git-ignored) |
+| `r02_market_feature_attribution.jl` | Phase 2 runner: conviction gap, Shapley attribution, feature + Student-t state-space arms |
+| `PHASE2_FEATURE_ATTRIBUTION.md` | Phase 2 findings |
+| `inputs/fce_fixture_panel_c3bdb53a.csv` | pinned lineup / wealth / travel design from the feature-compression EDA |
+| `results/phase2/*.csv`, `results/phase2_run.log` | every Phase 2 table |

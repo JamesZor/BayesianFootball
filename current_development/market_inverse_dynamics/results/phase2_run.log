@@ -1,0 +1,226 @@
+threads = 16, output → /root/BF_market_inverse/current_development/market_inverse_dynamics/results/phase2
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 10.2 hours)...
+9×3 DataFrame
+ Row │ feature              missing  exact_zero
+     │ String               Int64    Int64
+─────┼──────────────────────────────────────────
+   1 │ delta_goal                 0           0
+   2 │ goal_form_sup              0           5
+   3 │ delta_ppg                  0          54
+   4 │ delta_prod_wealth          0           0
+   5 │ delta_wealth_logsum        0           0
+   6 │ delta_lineup               0           0
+   7 │ pxg_form_sup               0           5
+   8 │ delta_rest                 0         510
+   9 │ log_dist_z                 0           0
+book quality: 27 fixtures without 1X2, 532 of 623 well identified (1X2 + ≥ 5 selections)
+engine gates: 13 / 13 pass
+3×5 DataFrame
+ Row │ model                            slope_on_market  r2        sd_model  sd_market
+     │ String                           Float64          Float64   Float64   Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────
+   1 │ m01 pure-Poisson GRW (Δ_goal)           0.389275  0.417034  0.255196   0.423354
+   2 │ m05 joint + wealth (time decay)         0.357512  0.595298  0.196167   0.423354
+   3 │ m12 joint + wealth + lineup             0.327996  0.462546  0.204171   0.423354
+5×5 DataFrame
+ Row │ band       n      mkt_conviction  goal_conviction  gap
+     │ String     Int64  Float64         Float64          Float64
+─────┼──────────────────────────────────────────────────────────────
+   1 │ 0.00–0.45    268        0.133513         0.075737  0.0577756
+   2 │ 0.45–0.55    216        0.414405         0.200832  0.213573
+   3 │ 0.55–0.65     80        0.678187         0.319936  0.358251
+   4 │ 0.65–0.75     24        1.00747          0.410191  0.597277
+   5 │ 0.75–1.00      8        1.43648          0.610747  0.825736
+18×6 DataFrame
+ Row │ target     feature              group            coef_per_sd  se         t
+     │ String     String               String           Float64      Float64    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────
+   1 │ delta_mkt  delta_goal           goal history      0.0102807   0.0285095   0.360605
+   2 │ delta_mkt  goal_form_sup        goal history      0.100695    0.034549    2.91454
+   3 │ delta_mkt  delta_ppg            goal history      0.0848132   0.0165637   5.12042
+   4 │ delta_mkt  delta_prod_wealth    wealth            0.0572933   0.0223481   2.56368
+   5 │ delta_mkt  delta_wealth_logsum  wealth           -0.02904     0.0200117  -1.45116
+   6 │ delta_mkt  delta_lineup         lineup (RAPM)    -0.0447417   0.0118887  -3.76337
+   7 │ delta_mkt  pxg_form_sup         proxy xG          0.207534    0.0167431  12.3952
+   8 │ delta_mkt  delta_rest           rest & schedule   0.00174828  0.0081792   0.213747
+   9 │ delta_mkt  log_dist_z           rest & schedule   0.0187857   0.0115572   1.62545
+  10 │ gap        delta_goal           goal history     -0.244916    0.0285095  -8.59068
+  11 │ gap        goal_form_sup        goal history      0.100695    0.034549    2.91454
+  12 │ gap        delta_ppg            goal history      0.0848132   0.0165637   5.12042
+  13 │ gap        delta_prod_wealth    wealth            0.0572933   0.0223481   2.56368
+  14 │ gap        delta_wealth_logsum  wealth           -0.02904     0.0200117  -1.45116
+  15 │ gap        delta_lineup         lineup (RAPM)    -0.0447417   0.0118887  -3.76337
+  16 │ gap        pxg_form_sup         proxy xG          0.207534    0.0167431  12.3952
+  17 │ gap        delta_rest           rest & schedule   0.00174828  0.0081792   0.213747
+  18 │ gap        log_dist_z           rest & schedule   0.0187857   0.0115572   1.62545
+12×5 DataFrame
+ Row │ target     group            share       lo           hi
+     │ String     String           Float64     Float64      Float64
+─────┼─────────────────────────────────────────────────────────────────
+   1 │ delta_mkt  goal history     0.305552    0.277264     0.335252
+   2 │ delta_mkt  wealth           0.0405455   0.0260696    0.0632048
+   3 │ delta_mkt  lineup (RAPM)    0.0336826   0.0253818    0.0442603
+   4 │ delta_mkt  proxy xG         0.28639     0.252279     0.316266
+   5 │ delta_mkt  rest & schedule  0.00223644  0.000776913  0.00899369
+   6 │ delta_mkt  unexplained      0.331593    0.280014     0.379607
+   7 │ gap        goal history     0.197512    0.161605     0.243741
+   8 │ gap        wealth           0.0139172   0.00442946   0.0356024
+   9 │ gap        lineup (RAPM)    0.0161357   0.0116035    0.0230962
+  10 │ gap        proxy xG         0.202593    0.154727     0.247135
+  11 │ gap        rest & schedule  0.00283612  0.000740879  0.0128347
+  12 │ gap        unexplained      0.567006    0.491154     0.621788
+favourites (p_fav ≥ 0.6): 64 fixtures
+16×6 DataFrame
+ Row │ target     component                          log_rate     share_of_total  lo           hi
+     │ String     String                             Float64      Float64         Float64      Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ delta_mkt  intercept (home adv. / league me…   0.109946        0.116208     0.0684245   0.155595
+   2 │ delta_mkt  goal history                        0.259824        0.274622     0.222309    0.296871
+   3 │ delta_mkt  wealth                              0.0219978       0.0232507    0.00900578  0.0429896
+   4 │ delta_mkt  lineup (RAPM)                       0.0321798       0.0340126    0.0230754   0.0428985
+   5 │ delta_mkt  proxy xG                            0.255649        0.270209     0.213609    0.292615
+   6 │ delta_mkt  rest & schedule                    -0.00149228     -0.00157727  -0.00408606  0.00299646
+   7 │ delta_mkt  unexplained residual                0.268012        0.283276     0.220472    0.31316
+   8 │ delta_mkt  TOTAL                               0.946115        1.0          0.899877    1.00164
+   9 │ gap        intercept (home adv. / league me…   0.025042        0.0480284    0.00991607  0.0439929
+  10 │ gap        goal history                        0.0465277       0.089236     0.0178464   0.0758512
+  11 │ gap        wealth                              0.0085127       0.0163266    0.0020363   0.0235765
+  12 │ gap        lineup (RAPM)                       0.0148306       0.0284438    0.00965624  0.0212344
+  13 │ gap        proxy xG                            0.159847        0.306572     0.12966     0.189361
+  14 │ gap        rest & schedule                    -0.00137093     -0.00262932  -0.00402141  0.00260508
+  15 │ gap        unexplained residual                0.268012        0.514023     0.220472    0.31316
+  16 │ gap        TOTAL                               0.5214          1.0          0.467644    0.578381
+well-identified subset: 532 fixtures, 63 favourites
+28×5 DataFrame
+ Row │ target                  group                 share         lo            hi
+     │ String                  String                Float64       Float64       Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────
+   1 │ delta_mkt               goal history           0.325349       0.299429      0.355691
+   2 │ delta_mkt               wealth                 0.0470261      0.0293559     0.0690447
+   3 │ delta_mkt               lineup (RAPM)          0.039913       0.0297366     0.0527452
+   4 │ delta_mkt               proxy xG               0.321002       0.29504       0.346838
+   5 │ delta_mkt               rest & schedule        0.00247521     0.00109313    0.00911206
+   6 │ delta_mkt               unexplained            0.264235       0.229144      0.293643
+   7 │ delta_mkt | favourites  intercept              0.10169      NaN           NaN
+   8 │ delta_mkt | favourites  goal history           0.285877     NaN           NaN
+   9 │ delta_mkt | favourites  wealth                 0.0247935    NaN           NaN
+  10 │ delta_mkt | favourites  lineup (RAPM)          0.0394977    NaN           NaN
+  11 │ delta_mkt | favourites  proxy xG               0.298114     NaN           NaN
+  12 │ delta_mkt | favourites  rest & schedule       -0.000689231  NaN           NaN
+  13 │ delta_mkt | favourites  unexplained residual   0.250717     NaN           NaN
+  14 │ delta_mkt | favourites  TOTAL                  1.0          NaN           NaN
+  15 │ gap                     goal history           0.214132       0.176346      0.260767
+  16 │ gap                     wealth                 0.0232677      0.00918475    0.0475944
+  17 │ gap                     lineup (RAPM)          0.0220043      0.0166913     0.0314139
+  18 │ gap                     proxy xG               0.249438       0.208166      0.289388
+  19 │ gap                     rest & schedule        0.00351656     0.00127279    0.0124957
+  20 │ gap                     unexplained            0.487641       0.431094      0.528204
+  21 │ gap | favourites        intercept              0.0259044    NaN           NaN
+  22 │ gap | favourites        goal history           0.126747     NaN           NaN
+  23 │ gap | favourites        wealth                 0.0206026    NaN           NaN
+  24 │ gap | favourites        lineup (RAPM)          0.0357865    NaN           NaN
+  25 │ gap | favourites        proxy xG               0.339735     NaN           NaN
+  26 │ gap | favourites        rest & schedule       -0.00115769   NaN           NaN
+  27 │ gap | favourites        unexplained residual   0.452382     NaN           NaN
+  28 │ gap | favourites        TOTAL                  1.0          NaN           NaN
+14×3 DataFrame
+ Row │ target     predictors            oos_r2
+     │ String     String                Float64
+─────┼──────────────────────────────────────────────
+   1 │ delta_mkt  goal history           0.55009
+   2 │ delta_mkt  wealth                 0.0919659
+   3 │ delta_mkt  lineup (RAPM)          0.0317819
+   4 │ delta_mkt  proxy xG               0.544176
+   5 │ delta_mkt  rest & schedule        0.00030664
+   6 │ delta_mkt  all five               0.637354
+   7 │ delta_mkt  all but goal history   0.537053
+   8 │ gap        goal history           0.14562
+   9 │ gap        wealth                -0.0488037
+  10 │ gap        lineup (RAPM)          0.0271084
+  11 │ gap        proxy xG               0.223193
+  12 │ gap        rest & schedule       -0.0021268
+  13 │ gap        all five               0.311336
+  14 │ gap        all but goal history   0.163387
+fitted s0_grw1_gauss    in   896.0 s
+fitted s1_grw1_t        in  1054.0 s
+fitted s2_t_goal        in  1072.9 s
+fitted s3_t_wealth      in  1019.9 s
+fitted s4_t_lineup      in  1100.0 s
+fitted s5_t_pxg         in  1324.6 s
+fitted s6_t_rest        in  1100.9 s
+fitted s7_t_nongoal     in   896.0 s
+fitted s8_t_all         in  1377.8 s
+state-space convergence: 59 / 59 parameters pass
+0×11 DataFrame
+ Row │ arm     parameters  mean     std      ess_bulk  ess_tail  rhat     5.0%     50.0%    95.0%    gate_pass
+     │ String  Symbol      Float64  Float64  Float64   Float64   Float64  Float64  Float64  Float64  Bool
+─────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────
+9×14 DataFrame
+ Row │ arm            K      student  sigma_obs  sigma_att  sigma_def  nu         spread_att  spread_att_lo  spread_att_hi  spread_def  spread_def_lo  spread_def_hi  n_downweighted
+     │ String         Int64  Bool     Float64    Float64    Float64    Float64    Float64     Float64        Float64        Float64     Float64        Float64        Int64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ s0_grw1_gauss      0    false  0.0928824  0.0268255  0.0289302  Inf          0.166821      0.149284        0.19228     0.181017      0.162312        0.205889               0
+   2 │ s1_grw1_t          0     true  0.0548174  0.028189   0.0296767    2.89974    0.167335      0.151044        0.18775     0.182603      0.164166        0.2028                56
+   3 │ s2_t_goal          3     true  0.0536207  0.021782   0.0240534    2.78423    0.11292       0.0979268       0.129221    0.130525      0.114302        0.147927              73
+   4 │ s3_t_wealth        2     true  0.0552956  0.0277538  0.0291223    2.93895    0.167876      0.147853        0.199177    0.183674      0.160691        0.21226               53
+   5 │ s4_t_lineup        1     true  0.0547367  0.028132   0.0295061    2.87753    0.171122      0.152202        0.189379    0.18543       0.164566        0.207939              59
+   6 │ s5_t_pxg           1     true  0.0539802  0.0236328  0.0255107    2.80911    0.125595      0.111453        0.14474     0.128207      0.108068        0.148983              68
+   7 │ s6_t_rest          2     true  0.0541768  0.0281961  0.0293712    2.884      0.168132      0.151291        0.189631    0.182971      0.165845        0.206806              61
+   8 │ s7_t_nongoal       6     true  0.0536008  0.0224171  0.0240687    2.78747    0.127377      0.109267        0.151032    0.129409      0.108045        0.154369              67
+   9 │ s8_t_all           9     true  0.0530164  0.0191981  0.0214865    2.7532     0.105532      0.0899644       0.127208    0.114742      0.0972356       0.135519              75
+24×9 DataFrame
+ Row │ arm           feature              group            w_median     w_q025        w_q975        supremacy_per_sd  supremacy_per_unit  excludes_zero_95
+     │ String        String               String           Float64      Float64       Float64       Float64           Float64             Bool
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ s2_t_goal     delta_goal           goal history      0.00592691  -0.0248529     0.0369014          0.0118538           0.0464498              false
+   2 │ s2_t_goal     goal_form_sup        goal history      0.105075     0.0741913     0.134799           0.21015             0.415052                true
+   3 │ s2_t_goal     delta_ppg            goal history      0.0160258   -0.000617613   0.0324324          0.0320516           0.0705559              false
+   4 │ s3_t_wealth   delta_prod_wealth    wealth            0.0278498    0.0118255     0.0440768          0.0556996           0.170402                true
+   5 │ s3_t_wealth   delta_wealth_logsum  wealth           -0.0163644   -0.0329448     5.66045e-5        -0.0327287          -0.131447               false
+   6 │ s4_t_lineup   delta_lineup         lineup (RAPM)     0.0182608   -0.00415855    0.040582           0.0365216           0.0971357              false
+   7 │ s5_t_pxg      pxg_form_sup         proxy xG          0.149833     0.125395      0.174461           0.299666            0.791589                true
+   8 │ s6_t_rest     delta_rest           rest & schedule  -0.00327311  -0.00798033    0.00145418        -0.00654622         -0.00218045             false
+   9 │ s6_t_rest     log_dist_z           rest & schedule   0.00998467   0.0051718     0.0151833          0.0199693           0.0250667               true
+  10 │ s7_t_nongoal  delta_prod_wealth    wealth            0.0376171    0.0226994     0.052174           0.0752342           0.230165                true
+  11 │ s7_t_nongoal  delta_wealth_logsum  wealth           -0.0277772   -0.0434695    -0.012026          -0.0555545          -0.223122                true
+  12 │ s7_t_nongoal  delta_lineup         lineup (RAPM)     0.0120995   -0.00856814    0.03228            0.024199            0.0643616              false
+  13 │ s7_t_nongoal  pxg_form_sup         proxy xG          0.156795     0.132793      0.180364           0.313589            0.828368                true
+  14 │ s7_t_nongoal  delta_rest           rest & schedule  -0.00367662  -0.00802244    0.000651413       -0.00735324         -0.00244926             false
+  15 │ s7_t_nongoal  log_dist_z           rest & schedule   0.0111732    0.00657418    0.0158959          0.0223463           0.0280504               true
+  16 │ s8_t_all      delta_goal           goal history     -0.00363414  -0.0334634     0.0261815         -0.00726827         -0.0284811              false
+  17 │ s8_t_all      goal_form_sup        goal history      0.0793926    0.0498409     0.109673           0.158785            0.313605                true
+  18 │ s8_t_all      delta_ppg            goal history      0.0187487    0.00332326    0.0341257          0.0374974           0.0825439               true
+  19 │ s8_t_all      delta_prod_wealth    wealth            0.0389982    0.0249257     0.0529002          0.0779964           0.238616                true
+  20 │ s8_t_all      delta_wealth_logsum  wealth           -0.0286048   -0.0433886    -0.0134301         -0.0572095          -0.229769                true
+  21 │ s8_t_all      delta_lineup         lineup (RAPM)     0.0135615   -0.00613315    0.0326429          0.0271231           0.0721386              false
+  22 │ s8_t_all      pxg_form_sup         proxy xG          0.0899178    0.064394      0.115578           0.179836            0.475049                true
+  23 │ s8_t_all      delta_rest           rest & schedule  -0.00382714  -0.00804893    0.000453977       -0.00765428         -0.00254953             false
+  24 │ s8_t_all      log_dist_z           rest & schedule   0.0113637    0.0068005     0.0160042          0.0227274           0.0285287               true
+10×3 DataFrame
+ Row │ component                mean_oriented_fav  mean_oriented_all
+     │ String                   Float64            Float64
+─────┼───────────────────────────────────────────────────────────────
+   1 │ sup_team                        0.206211          0.0606198
+   2 │ sup_delta_goal                 -0.00472269       -0.00194757
+   3 │ sup_goal_form_sup               0.231752          0.0830368
+   4 │ sup_delta_ppg                   0.0430023         0.0150765
+   5 │ sup_delta_prod_wealth           0.0382213         0.0222324
+   6 │ sup_delta_wealth_logsum        -0.0225957        -0.015328
+   7 │ sup_delta_lineup                0.0191227         0.00586253
+   8 │ sup_pxg_form_sup                0.273756          0.0922427
+   9 │ sup_delta_rest                  0.00056499        0.000298495
+  10 │ sup_log_dist_z                  0.00385103        0.0047381
+Student-t down-weights 75 fixtures (ω < 0.5)
+
+=== ATTRIBUTION (Shapley R², market supremacy) ===
+6×5 DataFrame
+ Row │ target     group            share       lo           hi
+     │ String     String           Float64     Float64      Float64
+─────┼─────────────────────────────────────────────────────────────────
+   1 │ delta_mkt  goal history     0.305552    0.277264     0.335252
+   2 │ delta_mkt  wealth           0.0405455   0.0260696    0.0632048
+   3 │ delta_mkt  lineup (RAPM)    0.0336826   0.0253818    0.0442603
+   4 │ delta_mkt  proxy xG         0.28639     0.252279     0.316266
+   5 │ delta_mkt  rest & schedule  0.00223644  0.000776913  0.00899369
+   6 │ delta_mkt  unexplained      0.331593    0.280014     0.379607
+MID2_DONE
