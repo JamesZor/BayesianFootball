@@ -33,7 +33,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | COMPLETED | P1 | pi | 2026-09-22 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | COMPLETED | P1 | claude | 2026-09-22 |
 | [024](024_prototype_negbin_with_pxg_form_supremacy_covariate.md) | Prototype Negative Binomial with Linear Proxy-xG Form Covariate | COMPLETED | P1 | pi | 2026-09-22 |
-| [025](025_prototype_decoupled_generative_xg_primary_model.md) | Prototype Decoupled Generative xG-Primary Model with Subordinate Goals | BACKLOG | P2 | unassigned | 2026-09-22 |
+| [025](025_prototype_decoupled_generative_xg_primary_model.md) | Prototype Decoupled Generative xG-Primary Model with Subordinate Goals | IN_PROGRESS | P1 | pi | 2026-09-22 |
 | [026](026_prototype_two_tier_fast_slow_latent_state_space_model.md) | Prototype Two-Tier Fast-Slow Latent State-Space Dynamics | BACKLOG | P2 | unassigned | 2026-09-22 |
 <!-- TASKS:END -->
 
