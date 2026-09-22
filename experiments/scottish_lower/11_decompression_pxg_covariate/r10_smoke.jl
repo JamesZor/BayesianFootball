@@ -49,7 +49,7 @@ for (name, model) in models
     CSV.write(joinpath(OUTPUT, name * "_filtration.csv"), filtration)
     for (fold, feature_sets) in zip(CONFIG.smoke_folds, inputs.feature_sets)
         feature_set = first(feature_sets)
-        audit = D.gph_gradient_audit(model, feature_set; replays = 100, seed = 24)
+        audit = D.gph_gradient_audit(model, feature_sets; replays = 100, seed = 24)
         push!(gradients, (; model = name, fold, audit...))
         if name == "m03_negbin_pxg_covariate"
             candidate_audit = D.allocation_audit(model, reference_candidate, feature_set; seed = 24)
