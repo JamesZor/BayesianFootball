@@ -5,6 +5,7 @@ function source_fingerprint()
     local_files = [
         "l12_loader.jl",
         "l13_workflow.jl",
+        "l15_cut.jl",
         "l14_evaluation.jl",
         "r00_preflight.jl",
         "r10_smoke.jl",

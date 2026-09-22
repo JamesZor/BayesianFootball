@@ -56,13 +56,8 @@ function standard_model(name::Symbol, observation)
         build
 end
 
-# The work package labels m02 a "parallel sensor" and m03 a "generative
-# funnel", but their stated probability laws are identical. Both have
-#
-#   pxg | μ,ν ~ Gamma(ν, μ/ν),    goals | μ,κ ~ Poisson(κ μ),
-#
-# and in an ordinary joint posterior both likelihoods update μ. The separate arm
-# remains in the benchmark so that this identity is tested rather than hidden.
+# m02 is ordinary joint Bayes; m03/m04 use the modular posterior in l15_cut.jl.
+# A single joint density (even with a detached gradient) is NOT a cut posterior.
 function reference_models()
     return [
         ("m01_poisson_time_decay",
@@ -70,9 +65,9 @@ function reference_models()
         ("m02_joint_gamma_poisson",
          standard_model(:m02_joint_gamma_poisson, shared_observation())),
         ("m03_funnel_shared_kappa",
-         standard_model(:m03_funnel_shared_kappa, shared_observation())),
+         cut_model(shared_observation())),
         ("m04_funnel_hierarchical_kappa",
-         standard_model(:m04_funnel_hierarchical_kappa, hierarchical_observation())),
+         cut_model(hierarchical_observation())),
     ]
 end
 
@@ -300,6 +295,9 @@ function optimized_model(reference)
     )
 end
 
+# NOTE: `optimized_model(::CutFunnelModel)` is defined in l15_cut.jl, where the type
+# exists. A cut arm is already built around an optimized chance layer.
+
 models(; optimized::Bool = true) = [
     (name, optimized ? optimized_model(model) : model)
     for (name, model) in reference_models()
@@ -360,8 +358,11 @@ end
 
 "Compare the optimized engine with the production builder at one linked θ layout."
 function engine_audit(model, reference, fs; seed::Int = 25)
-    candidate = GPH_PG.build_turing_model(model, fs)
-    baseline = GPH_PG.build_turing_model(reference, fs)
+    return density_audit(GPH_PG.build_turing_model(model, fs),
+                         GPH_PG.build_turing_model(reference, fs); seed)
+end
+
+function density_audit(candidate, baseline; seed::Int = 25)
     Random.seed!(seed)
     candidate_vi = DynamicPPL.VarInfo(candidate)
     Random.seed!(seed)
@@ -447,6 +448,7 @@ function shared_identity_audit(m02, m03, fs; seed::Int = 25)
     return (; n_parameters = length(θ), worst_density, worst_gradient)
 end
 
+include(joinpath(@__DIR__, "l15_cut.jl"))
 include(joinpath(@__DIR__, "l13_workflow.jl"))
 
 end # module
