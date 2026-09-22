@@ -202,11 +202,24 @@ Turing.@model function array_shared_funnel_engine(config, z, center)
 
     od = z.observation_data
     ν = obs.ν
-    log_norm = ν .* log.(ν) .- SpecialFunctions.loggamma.(ν)
-    g_h = (ν .- 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* exp.(.-η_h) .-
-          ν .* η_h .+ log_norm
-    g_a = (ν .- 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* exp.(.-η_a) .-
-          ν .* η_a .+ log_norm
+    # Keep the Gamma density in narrow vector kernels. A single nine-argument
+    # fused broadcast makes ReverseDiff allocate an O(rows) derivative cache on
+    # every replay; these algebraically identical stages stay preallocated.
+    ν_minus_one = ν .- 1.0
+    log_norm = ν .* log.(ν)
+    log_norm = log_norm .- SpecialFunctions.loggamma.(ν)
+    shape_h = ν_minus_one .* od.log_pxg_h
+    shape_a = ν_minus_one .* od.log_pxg_a
+    scaled_x_h = (ν .* od.pxg_h) .* exp.(.-η_h)
+    scaled_x_a = (ν .* od.pxg_a) .* exp.(.-η_a)
+    scaled_eta_h = ν .* η_h
+    scaled_eta_a = ν .* η_a
+    g_h = shape_h .- scaled_x_h
+    g_h = g_h .- scaled_eta_h
+    g_h = g_h .+ log_norm
+    g_a = shape_a .- scaled_x_a
+    g_a = g_a .- scaled_eta_a
+    g_a = g_a .+ log_norm
     proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
     Turing.@addlogprob! goals_ll + proxy_ll
 end
@@ -231,11 +244,21 @@ Turing.@model function array_hierarchical_funnel_engine(config, z, center)
     goals_ll = sum(ll_h .* z.match_weights) + sum(ll_a .* z.match_weights)
 
     ν = obs.ν
-    log_norm = ν .* log.(ν) .- SpecialFunctions.loggamma.(ν)
-    g_h = (ν .- 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* exp.(.-η_h) .-
-          ν .* η_h .+ log_norm
-    g_a = (ν .- 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* exp.(.-η_a) .-
-          ν .* η_a .+ log_norm
+    ν_minus_one = ν .- 1.0
+    log_norm = ν .* log.(ν)
+    log_norm = log_norm .- SpecialFunctions.loggamma.(ν)
+    shape_h = ν_minus_one .* od.log_pxg_h
+    shape_a = ν_minus_one .* od.log_pxg_a
+    scaled_x_h = (ν .* od.pxg_h) .* exp.(.-η_h)
+    scaled_x_a = (ν .* od.pxg_a) .* exp.(.-η_a)
+    scaled_eta_h = ν .* η_h
+    scaled_eta_a = ν .* η_a
+    g_h = shape_h .- scaled_x_h
+    g_h = g_h .- scaled_eta_h
+    g_h = g_h .+ log_norm
+    g_a = shape_a .- scaled_x_a
+    g_a = g_a .- scaled_eta_a
+    g_a = g_a .+ log_norm
     proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
     Turing.@addlogprob! goals_ll + proxy_ll
 end
