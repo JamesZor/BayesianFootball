@@ -81,6 +81,45 @@ function decompression(fit, odds, ds, rates)
     return summary, joined, favourites
 end
 
+"""
+    fold_of_match(ds, splitter, model) -> Dict{Int,Int}
+
+Map each held-out `match_id` to the fold that priced it.
+
+Needed because the proxy-xG coverage of the CHANCE layer is not constant across the
+walk-forward: BBC live-text commentary starts in 23/24, so folds 1-20 train on roughly
+50-66% proxy-covered matches while folds 21-40 are at 100%. The cut arms take their
+team ratings from the proxy arm ALONE, so a thin fold starves them of signal in a way
+it does not starve the goals-trained controls. Reporting one pooled number over all 40
+folds would therefore confound "the cut is worse" with "the cut had less data", which
+is why folds 21-40 are pre-registered as the clean headline and the early folds are
+reported separately rather than dropped.
+"""
+function fold_of_match(ds, splitter, model)
+    inputs = D.gph_fold_inputs(ds, splitter, model)
+    mapping = Dict{Int,Int}()
+    for (fold, frame) in enumerate(inputs.oos)
+        for id in frame.match_id
+            mapping[Int(id)] = fold
+        end
+    end
+    return mapping
+end
+
+"""
+    with_fold(df, fold_of) -> DataFrame
+
+Attach a `fold` column (and a `fold_block` label) to an observation frame.
+"""
+function with_fold(df::DF.AbstractDataFrame, fold_of::Dict{Int,Int})
+    out = DF.copy(df)
+    out.fold = [get(fold_of, Int(m), 0) for m in out.match_id]
+    any(==(0), out.fold) && error("an observation row has no owning fold")
+    out.fold_block = [f <= 20 ? "folds_01_20_thin_proxy" : "folds_21_40_full_proxy"
+                      for f in out.fold]
+    return out
+end
+
 function capital_allocation(result)
     bets = result.trajectory.bets
     total = sum(bets.stake)

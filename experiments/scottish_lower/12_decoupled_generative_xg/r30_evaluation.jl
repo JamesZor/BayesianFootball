@@ -27,6 +27,7 @@ const OUTPUT = joinpath(CONFIG.save_root, "evaluation", SOURCE)
 mkpath(OUTPUT)
 db = D.PostgresStorage(CONFIG.experiment)
 ds = D.gph_load_data()
+splitter_for_folds = D.gph_splitter(CONFIG.target_seasons)
 odds = D.gph_betfair_closing_odds(ds)
 families = D.gph_family_selections(odds)
 fits = Dict(name => D.load_fit(db, D.UUID(manifest.runs[name])) for (name, _) in D.models())
@@ -37,6 +38,11 @@ for (name, fit) in fits
     D.convergence_pass(fit, 40) || error("$name is not converged")
     sort(fit.latents.match_ids) == panel || error("$name has a different OOS panel")
 end
+# Fold ownership of every priced fixture, for the coverage-stratified reporting below.
+fold_of = E.fold_of_match(ds, splitter_for_folds, last(first(D.models())))
+CSV.write(joinpath(OUTPUT, "fold_of_match.csv"),
+          DataFrame(match_id = collect(keys(fold_of)), fold = collect(values(fold_of))))
+
 rates = E.market_reference(odds, panel)
 CSV.write(joinpath(OUTPUT, "market_inversions.csv"), rates)
 tradeable, refusals = D.tradeable_panel(fits, odds, ds)
@@ -54,7 +60,7 @@ for (name, _) in D.models()
     fit = fits[name]
     context = D.gph_context(fit, odds, ds)
     append!(scores, D.gph_scores(name, context, families))
-    observations[name] = D.gph_observation_frame(name, context, odds)
+    observations[name] = E.with_fold(D.gph_observation_frame(name, context, odds), fold_of)
     CSV.write(joinpath(OUTPUT, name * "_observations.csv"), observations[name])
     crps = D.GPH_EVAL.compute_metric(D.GPH_EVAL.CRPS(), context)
     decompression, supremacy, favourites = E.decompression(fit, odds, ds, rates)
@@ -111,17 +117,61 @@ for (name, _) in D.models(), family in (nothing, "1X2", "OU2.5", "BTTS")
 end
 CSV.write(joinpath(OUTPUT, "paired_logloss.csv"), DataFrame(comparisons))
 
-# m02 and m03 are independent Monte Carlo fits of one proven-identical density.
-# Their observed difference is the experiment's measured sampler/extraction null.
-null_rows = NamedTuple[]
-for family in (nothing, "1X2", "OU2.5", "BTTS")
-    result = D.gph_paired_bootstrap(
-        observations["m03_funnel_shared_kappa"],
-        observations["m02_joint_gamma_poisson"];
-        B = 4000, seed = 25, family)
-    push!(null_rows, (; scope = something(family, "all"), result...))
+# ===================================================================
+# 5. THE PRE-REGISTERED HEADLINE: folds 21-40 (full proxy coverage)
+# ===================================================================
+# m02 vs m03 is no longer a Monte Carlo null. The two densities USED to be identical
+# -- that was the defect -- and are now a joint posterior versus a cut one, so this
+# contrast is the experiment's actual treatment effect: what it costs, in price, to
+# forbid goals from updating the team ratings.
+#
+# It is reported on three fold blocks because the chance layer's proxy coverage is not
+# constant across the walk-forward (see `E.fold_of_match`). Folds 21-40 are the
+# pre-registered clean comparison; folds 1-20 are shown because hiding a
+# disadvantageous block would be the whole point of pre-registering, not a footnote.
+blocks = (
+    ("folds_21_40_full_proxy", f -> f > 20),     # headline
+    ("folds_01_20_thin_proxy", f -> f <= 20),    # coverage-confounded
+    ("all_folds", f -> true),
+)
+cut_rows = NamedTuple[]
+for (block, keep) in blocks, family in (nothing, "1X2", "OU2.5", "BTTS")
+    sub(name) = observations[name][keep.(observations[name].fold), :]
+    for (label, a, b) in (
+            ("m03_vs_m02", "m03_funnel_shared_kappa", "m02_joint_gamma_poisson"),
+            ("m04_vs_m02", "m04_funnel_hierarchical_kappa", "m02_joint_gamma_poisson"),
+            ("m04_vs_m03", "m04_funnel_hierarchical_kappa", "m03_funnel_shared_kappa"),
+            ("m03_vs_m01", "m03_funnel_shared_kappa", "m01_poisson_time_decay"))
+        result = D.gph_paired_bootstrap(sub(a), sub(b); B = 4000, seed = 25, family)
+        push!(cut_rows, (; block, contrast = label,
+                           scope = something(family, "all"), result...))
+    end
+    # And every arm against the closing line, per block.
+    for name in first.(D.models())
+        result = D.gph_paired_bootstrap(sub(name), :market; B = 4000, seed = 25, family)
+        push!(cut_rows, (; block, contrast = "$(name)_vs_market",
+                           scope = something(family, "all"), result...))
+    end
 end
-CSV.write(joinpath(OUTPUT, "m02_m03_monte_carlo_null.csv"), DataFrame(null_rows))
+CSV.write(joinpath(OUTPUT, "cut_effect_by_fold_block.csv"), DataFrame(cut_rows))
+
+# Per-arm LogLoss by block, the table the README quotes.
+block_scores = NamedTuple[]
+for (block, keep) in blocks, name in first.(D.models())
+    df = observations[name]
+    df = df[keep.(df.fold), :]
+    push!(block_scores, (; block, model = name,
+                           n_obs = nrow(df),
+                           n_fixtures = length(unique(df.match_id)),
+                           logloss_model = mean(df.ll_model),
+                           logloss_market = mean(df.ll_market)))
+end
+CSV.write(joinpath(OUTPUT, "logloss_by_fold_block.csv"), DataFrame(block_scores))
+println("\n=== LogLoss by fold block (proxy coverage stratified) ===")
+println(D.gph_markdown_table(DataFrame(block_scores)))
+println("\n=== Cut effect, headline block folds 21-40, all markets ===")
+println(D.gph_markdown_table(DataFrame(
+    [r for r in cut_rows if r.block == "folds_21_40_full_proxy" && r.scope == "all"])))
 
 println("EVALUATION COMPLETE: ", OUTPUT)
 println(D.gph_markdown_table(DataFrame(headlines)))

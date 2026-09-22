@@ -78,13 +78,28 @@ for (name, model) in models
     D.gph_latent_audit(fit)
     grid = D.score_grid_audit(fit)
     zero_sum_error = D.hierarchical_zero_sum_audit(fit)
+    # Stage B is gated per fold: the fit-level audit only ever sees the spliced chain,
+    # so an inner conditional that failed to mix would otherwise pass unnoticed.
+    stage_b = if model isa D.CutFunnelModel
+        gates = [D.cut_stage_b_gate(f.chain) for f in fit.folds]
+        bad = findall(g -> !g.passed, gates)
+        isempty(bad) || error("$name Stage B failed on folds $bad: $(gates[first(bad)])")
+        (; stage_b_pass = true,
+           stage_b_worst_rhat = maximum(g.max_rhat for g in gates),
+           stage_b_worst_frac = maximum(g.frac_rhat_gt for g in gates),
+           stage_b_min_ess = minimum(g.min_ess for g in gates),
+           stage_b_divergences = sum(g.divergences for g in gates))
+    else
+        (; stage_b_pass = true, stage_b_worst_rhat = NaN, stage_b_worst_frac = 0.0,
+           stage_b_min_ess = NaN, stage_b_divergences = 0)
+    end
     run_id = existing === nothing ? D.gph_save_and_verify(db, fit) : existing
     convergence_row = D.gph_convergence_row(name, fit, RUNTIME; run_id)
-    passed = D.convergence_pass(fit, CONFIG.expected_folds)
+    passed = D.convergence_pass(fit, CONFIG.expected_folds) && stage_b.stage_b_pass
     arm_posterior = D.kappa_posterior(fit, collect(1:CONFIG.expected_folds))
     append!(posterior, [(; model = name, row...) for row in arm_posterior])
     isempty(posterior) || CSV.write(joinpath(OUTPUT, "kappa_posterior.csv"), DataFrame(posterior))
-    push!(rows, (; convergence_row..., grid..., zero_sum_error, full_path,
+    push!(rows, (; convergence_row..., grid..., zero_sum_error, stage_b..., full_path,
                   gate_pass = passed, source = SOURCE, recipe_hash))
     CSV.write(joinpath(OUTPUT, "production_runs.csv"), DataFrame(rows))
     println("PRODUCTION ARM ", last(rows))
