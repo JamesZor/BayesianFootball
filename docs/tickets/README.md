@@ -23,7 +23,7 @@ only that ticket. Update `Status` here when it lands.
 
 | ID | Title | Severity | Area | Status | Raised |
 |---|---|---|---|---|---|
-| [T002](T002-scalar-taped-likelihood.md) | Engine likelihoods taped scalar-by-scalar (~20x AD work); `view` defeats vectorisation and NegBin crashes on the fast path | medium | `src/models/pregame/engines/`, `src/MyDistributions/` | open | 2026-08-26 |
+| [T002](T002-scalar-taped-likelihood.md) | Engine scalar taping; `view`/keyword centering defeat vectorisation, scalar broadcasts allocate (TODO 022 evidence), NegBin fast-path crash | medium | `src/models/pregame/engines/`, `src/MyDistributions/` | open | 2026-08-26 |
 | [T003](T003-home-advantage-population-fallback.md) | Unmapped teams silently lose home advantage at extraction (λ_h 0.849x); 28 call sites | medium | `src/models/pregame/engines/`, `src/models/pregame/components/home_advantage.jl` | open | 2026-08-26 |
 | [T004](T004-1x2-grading-disagrees-with-score.md) | `is_winner` contradicts the recorded score on 3 fixtures (2-2 draws with no 1X2 winner); no QA invariant catches it | low | `ds.odds` grading | open | 2026-08-26 |
 | [T006](T006-scottish-lower-arm-include-guards.md) | Arm 02/03/04 loaders re-include a shared loader (guard tests a name that never existed) and call `subset` unqualified | low | `current_development/scottish_lower/` | open | 2026-08-28 |
