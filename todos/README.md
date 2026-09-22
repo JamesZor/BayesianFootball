@@ -30,8 +30,11 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [019](019_slim_agents_md_master_index_and_modularize_operational_guides.md) | Slim AGENTS.md master index and modularize operational guides | COMPLETED | P1 | claude | 2026-09-18 |
 | [020](020_sweep_slatedrawdown_lambda_risk_budgets_on_grw_models.md) | Sweep SlateDrawdown lambda risk budgets on GRW models | COMPLETED | P1 | pi | 2026-09-18 |
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
-| [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
-| [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
+| [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | COMPLETED | P1 | pi | 2026-09-22 |
+| [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | COMPLETED | P1 | claude | 2026-09-22 |
+| [024](024_prototype_negbin_with_pxg_form_supremacy_covariate.md) | Prototype Negative Binomial with Linear Proxy-xG Form Covariate | IN_PROGRESS | P1 | pi | 2026-09-22 |
+| [025](025_prototype_decoupled_generative_xg_primary_model.md) | Prototype Decoupled Generative xG-Primary Model with Subordinate Goals | BACKLOG | P2 | unassigned | 2026-09-22 |
+| [026](026_prototype_two_tier_fast_slow_latent_state_space_model.md) | Prototype Two-Tier Fast-Slow Latent State-Space Dynamics | BACKLOG | P2 | unassigned | 2026-09-22 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
