@@ -37,7 +37,7 @@ end
     sigma = 0.08
     delta = sigma .* (raw .- mean(raw))
     @test sum(delta) ≈ 0.0 atol = 1.0e-15
-    @test exp.(0.1 .+ delta) .> 0.0 |> all
+    @test all(exp.(0.1 .+ delta) .> 0.0)
 end
 
 @testset "Exact finite Poisson score tensor" begin
