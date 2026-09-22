@@ -30,10 +30,10 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [019](019_slim_agents_md_master_index_and_modularize_operational_guides.md) | Slim AGENTS.md master index and modularize operational guides | COMPLETED | P1 | claude | 2026-09-18 |
 | [020](020_sweep_slatedrawdown_lambda_risk_budgets_on_grw_models.md) | Sweep SlateDrawdown lambda risk budgets on GRW models | COMPLETED | P1 | pi | 2026-09-18 |
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
-| [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
+| [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | COMPLETED | P1 | pi | 2026-09-22 |
 <!-- TASKS:END -->
 
-TODO 022: Stage 1 PASS on 2026-09-21. @pi launched the authorized 40-fold Stage 2 grid on beast (`momentum_production`, commit `a6cca1bc`); results pending.
+TODO 022 completed 2026-09-22: all three 40-fold grids and evaluation passed. Momentum modestly decompresses forecasts but does not justify replacing first-order GRW; measured findings and UUIDs are in the experiment README.
 
 ## Commands and Task Files
 
