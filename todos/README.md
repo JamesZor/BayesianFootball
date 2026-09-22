@@ -31,7 +31,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [020](020_sweep_slatedrawdown_lambda_risk_budgets_on_grw_models.md) | Sweep SlateDrawdown lambda risk budgets on GRW models | COMPLETED | P1 | pi | 2026-09-18 |
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
-| [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | ACTIVE | P1 | claude | 2026-09-22 |
+| [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

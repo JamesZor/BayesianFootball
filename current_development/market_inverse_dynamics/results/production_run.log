@@ -1,0 +1,124 @@
+threads = 16, output → /root/BF_market_inverse/current_development/market_inverse_dynamics/results/production
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.6 hours)...
+fixtures: 710 in panel, 623 accepted, 87 refused
+   refused   77  too few quoted selections (0 < 3)
+   refused   10  too few quoted selections (2 < 3)
+teams = 22, weeks = 91, observations = 1246
+11×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  10 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  11 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+fitted a0_static        in    40.3 s
+fitted a1_grw1          in   156.8 s
+fitted a1b_grw1_break   in   154.7 s
+fitted a2_momentum      in  2192.2 s
+fitted a3_stochvol      in  3298.5 s
+fitted a4_regime        in  2753.8 s
+24×11 DataFrame
+ Row │ arm             parameters   mean        std         ess_bulk   ess_tail   rhat      5.0%         50.0%       95.0%       gate_pass
+     │ String          Symbol       Float64     Float64     Float64    Float64    Float64   Float64      Float64     Float64     Bool
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ a0_static       sigma_obs     0.154578   0.00317046  12217.5     8988.89   1.00025    0.149441     0.154521    0.159947        true
+   2 │ a1_grw1         sigma_obs     0.0928145  0.00280646   7887.39    8301.68   1.00096    0.0882615    0.0928328   0.0974654       true
+   3 │ a1_grw1         sigma_att     0.0269751  0.00249449   9323.79    8712.09   1.00055    0.0230405    0.0268848   0.031215        true
+   4 │ a1_grw1         sigma_def     0.0290795  0.00268111   8927.33    8904.0    1.0002     0.0248642    0.0290036   0.0336297       true
+   5 │ a1b_grw1_break  sigma_obs     0.0928276  0.00282245   7996.71    7691.97   1.00039    0.08831      0.092788    0.09758         true
+   6 │ a1b_grw1_break  sigma_att     0.0269639  0.00246548   9142.45    8503.13   1.00055    0.0230087    0.0269385   0.0310583       true
+   7 │ a1b_grw1_break  sigma_def     0.0290697  0.00269379   8675.03    8365.97   1.0005     0.0247718    0.0289857   0.0335937       true
+   8 │ a1b_grw1_break  sigma_break   0.025381   0.0195595    7920.97    6310.65   0.999923   0.00194946   0.0213406   0.0634754       true
+   9 │ a2_momentum     sigma_obs     0.0939933  0.0029282    8695.37   10910.2    0.99995    0.0892032    0.0939989   0.098836        true
+  10 │ a2_momentum     sigma_att     0.0160987  0.00861467   1800.13    7093.47   1.00132    0.00176476   0.0167695   0.0283733       true
+  11 │ a2_momentum     sigma_def     0.0191247  0.00852032   1762.31    6409.51   1.00136    0.00319866   0.0203594   0.030839        true
+  12 │ a2_momentum     phi           0.338172   0.164109     4193.73    7640.43   1.0003     0.0881553    0.326925    0.626572        true
+  13 │ a2_momentum     sigma_v       0.0127059  0.00659249   1492.08    4961.75   1.00166    0.00139643   0.0134478   0.0226716       true
+  14 │ a3_stochvol     sigma_obs     0.0788439  0.0034472    1523.95    4984.02   1.0018     0.0731764    0.0788675   0.0844929       true
+  15 │ a3_stochvol     hbar_att     -4.1941     0.241771      429.602   1684.15   1.00964   -4.60176     -4.18822    -3.81338         true
+  16 │ a3_stochvol     hbar_def     -3.8203     0.220313      350.904    913.206  1.00985   -4.19794     -3.80992    -3.47675         true
+  17 │ a3_stochvol     gamma_h       0.9069     0.0632032     152.573    424.154  1.01105    0.776916     0.924789    0.975735       false
+  18 │ a3_stochvol     sigma_h       0.405129   0.154264      152.4      429.98   1.01161    0.197238     0.381395    0.695855       false
+  19 │ a4_regime       sigma_obs     0.077638   0.00300985   1478.06    5219.31   1.00131    0.0726999    0.0776013   0.0826138       true
+  20 │ a4_regime       sigma1_att    0.0238105  0.00243932    697.425   2986.29   1.00688    0.020038     0.0237058   0.0280112       true
+  21 │ a4_regime       sigma1_def    0.0308395  0.00285819   1086.47    4206.19   1.00441    0.0262159    0.03079     0.0355691       true
+  22 │ a4_regime       delta        12.1485     2.37783       963.757   3337.03   1.00606    8.66166     11.9325     16.4541          true
+  23 │ a4_regime       p11           0.996148   0.00163339    488.647   1618.74   1.01156    0.993158     0.996413    0.998333        true
+  24 │ a4_regime       p22           0.812825   0.0814647     202.045    514.942  1.01954    0.662032     0.824232    0.923051        true
+convergence gates: 22 / 24 parameters pass (R̂ ≤ 1.05, bulk & tail ESS ≥ 200)
+regime: calm lasts 278.8 weeks [146.2, 599.9], turbulence 5.69 weeks [2.96, 13.00], stationary P(turbulent) = 0.020
+2×6 DataFrame
+ Row │ component  acf1         acf1_sq     excess_kurtosis  acf1_q05    acf1_q95
+     │ String     Float64      Float64     Float64          Float64     Float64
+─────┼────────────────────────────────────────────────────────────────────────────
+   1 │ att        0.00146907   -0.0101208       -0.0969786  -0.0454796  0.0405305
+   2 │ def        0.000885915  -0.0125036       -0.0991636  -0.0408733  0.0401415
+36×11 DataFrame
+ Row │ arm             protocol          subset             n      rmse      mae        mean_logpd  cover90   insample_rmse  min_ess    median_ess
+     │ String          String            String             Int64  Float64   Float64    Float64     Float64   Float64        Float64    Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ a0_static       10a full-panel θ  all (warm)          1194  0.162716  0.127429     0.386066  0.894472      0.149138   NaN            NaN
+   2 │ a0_static       10a full-panel θ  in-season           1146  0.162001  0.126859     0.389462  0.89267       0.150262   NaN            NaN
+   3 │ a0_static       10a full-panel θ  season-open           48  0.178949  0.141056     0.30498   0.9375        0.119171   NaN            NaN
+   4 │ a1_grw1         10a full-panel θ  all (warm)          1194  0.126987  0.0959547    0.64549   0.919598      0.0760725  NaN            NaN
+   5 │ a1_grw1         10a full-panel θ  in-season           1146  0.126335  0.0953564    0.653714  0.918848      0.0765114  NaN            NaN
+   6 │ a1_grw1         10a full-panel θ  season-open           48  0.141674  0.11024      0.449142  0.9375        0.0647159  NaN            NaN
+   7 │ a1b_grw1_break  10a full-panel θ  all (warm)          1194  0.126993  0.0959636    0.645302  0.919598      0.0759888  NaN            NaN
+   8 │ a1b_grw1_break  10a full-panel θ  in-season           1146  0.12634   0.0953648    0.653671  0.918848      0.0764078  NaN            NaN
+   9 │ a1b_grw1_break  10a full-panel θ  season-open           48  0.141683  0.11026      0.445501  0.9375        0.0651903  NaN            NaN
+  10 │ a2_momentum     10a full-panel θ  all (warm)          1194  0.127043  0.0959678    0.645378  0.917923      0.0780866  NaN            NaN
+  11 │ a2_momentum     10a full-panel θ  in-season           1146  0.126373  0.0953546    0.653418  0.917103      0.0785523  NaN            NaN
+  12 │ a2_momentum     10a full-panel θ  season-open           48  0.142117  0.110607     0.453434  0.9375        0.0659988  NaN            NaN
+  13 │ a3_stochvol     10a full-panel θ  all (warm)          1194  0.12953   0.0970032    0.660279  0.920436      0.0606968   12.8665      6016.67
+  14 │ a3_stochvol     10a full-panel θ  in-season           1146  0.126897  0.0955759    0.672723  0.918848      0.0609884   12.8665      6016.67
+  15 │ a3_stochvol     10a full-panel θ  season-open           48  0.181386  0.13108      0.363175  0.958333      0.0532629   12.8665      6016.67
+  16 │ a4_regime       10a full-panel θ  all (warm)          1194  0.128943  0.0961452    0.676538  0.929648      0.0606441    4.09203    11592.6
+  17 │ a4_regime       10a full-panel θ  in-season           1146  0.127561  0.0952324    0.68837   0.928447      0.0608905    4.09203    11592.6
+  18 │ a4_regime       10a full-panel θ  season-open           48  0.158385  0.117938     0.394058  0.958333      0.0544306    4.09203    11592.6
+  19 │ a0_static       10b θ from 24/25  25/26 all            612  0.177517  0.13883      0.243093  0.800654    NaN          NaN            NaN
+  20 │ a0_static       10b θ from 24/25  25/26 in-season      564  0.17744   0.138668     0.238642  0.796099    NaN          NaN            NaN
+  21 │ a0_static       10b θ from 24/25  25/26 season-open     48  0.178418  0.140733     0.295394  0.854167    NaN          NaN            NaN
+  22 │ a1_grw1         10b θ from 24/25  25/26 all            612  0.129778  0.0953775    0.619722  0.916667    NaN          NaN            NaN
+  23 │ a1_grw1         10b θ from 24/25  25/26 in-season      564  0.128518  0.0939031    0.633476  0.914894    NaN          NaN            NaN
+  24 │ a1_grw1         10b θ from 24/25  25/26 season-open     48  0.143753  0.112702     0.458104  0.9375      NaN          NaN            NaN
+  25 │ a1b_grw1_break  10b θ from 24/25  25/26 all            612  0.130554  0.096247     0.593914  0.919935    NaN          NaN            NaN
+  26 │ a1b_grw1_break  10b θ from 24/25  25/26 in-season      564  0.129162  0.094695     0.627547  0.914894    NaN          NaN            NaN
+  27 │ a1b_grw1_break  10b θ from 24/25  25/26 season-open     48  0.145915  0.114483     0.19872   0.979167    NaN          NaN            NaN
+  28 │ a2_momentum     10b θ from 24/25  25/26 all            612  0.130264  0.0957968    0.616425  0.915033    NaN          NaN            NaN
+  29 │ a2_momentum     10b θ from 24/25  25/26 in-season      564  0.128963  0.0942802    0.629448  0.913121    NaN          NaN            NaN
+  30 │ a2_momentum     10b θ from 24/25  25/26 season-open     48  0.144678  0.113617     0.463412  0.9375      NaN          NaN            NaN
+  31 │ a3_stochvol     10b θ from 24/25  25/26 all            612  0.131973  0.0953735    0.645888  0.928105    NaN            2.97637    10467.4
+  32 │ a3_stochvol     10b θ from 24/25  25/26 in-season      564  0.128693  0.0931713    0.664889  0.927305    NaN            2.97637    10467.4
+  33 │ a3_stochvol     10b θ from 24/25  25/26 season-open     48  0.165716  0.12125      0.422628  0.9375      NaN            2.97637    10467.4
+  34 │ a4_regime       10b θ from 24/25  25/26 all            612  0.129792  0.0942734    0.667946  0.931373    NaN           26.4553     11490.7
+  35 │ a4_regime       10b θ from 24/25  25/26 in-season      564  0.128485  0.0925916    0.689694  0.929078    NaN           26.4553     11490.7
+  36 │ a4_regime       10b θ from 24/25  25/26 season-open     48  0.144273  0.114034     0.412414  0.958333    NaN           26.4553     11490.7
+anomalies: 27 observations (24 one-step surprises, 12 idiosyncratic)
+regime: 22 in-season team-weeks with P(turbulent) ≥ 0.5
+
+=== HEADLINE ===
+12×7 DataFrame
+ Row │ arm             protocol          rmse      mae        mean_logpd  cover90   loglik_total
+     │ String          String            Float64   Float64    Float64     Float64   Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────
+   1 │ a0_static       10a full-panel θ  0.162716  0.127429     0.386066  0.894472       442.938
+   2 │ a1_grw1         10a full-panel θ  0.126987  0.0959547    0.64549   0.919598       744.911
+   3 │ a1b_grw1_break  10a full-panel θ  0.126993  0.0959636    0.645302  0.919598       744.675
+   4 │ a2_momentum     10a full-panel θ  0.127043  0.0959678    0.645378  0.917923       744.754
+   5 │ a3_stochvol     10a full-panel θ  0.12953   0.0970032    0.660279  0.920436       767.333
+   6 │ a4_regime       10a full-panel θ  0.128943  0.0961452    0.676538  0.929648       789.69
+   7 │ a0_static       10b θ from 24/25  0.177517  0.13883      0.243093  0.800654       421.152
+   8 │ a1_grw1         10b θ from 24/25  0.129778  0.0953775    0.619722  0.916667       742.262
+   9 │ a1b_grw1_break  10b θ from 24/25  0.130554  0.096247     0.593914  0.919935       726.992
+  10 │ a2_momentum     10b θ from 24/25  0.130264  0.0957968    0.616425  0.915033       739.949
+  11 │ a3_stochvol     10b θ from 24/25  0.131973  0.0953735    0.645888  0.928105       760.273
+  12 │ a4_regime       10b θ from 24/25  0.129792  0.0942734    0.667946  0.931373       776.551
+MID_DONE
