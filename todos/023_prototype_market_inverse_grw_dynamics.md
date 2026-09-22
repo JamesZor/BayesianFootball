@@ -59,6 +59,9 @@ Primary focus is Scottish Lower (tournaments 56/57, seasons 24/25 + 25/26, 710 f
 ## Work Log & Progress
 
 - [2026-09-22 @antigravity] Structured task specification via interactive `/grill-me` alignment. Provisioned dedicated worktree `.worktrees/BayesianFootball-market-inverse` on branch `feat/market-inverse-grw-dynamics`. Claimed for `@claude` in tmux session `agent_claude_market_inverse`.
+- [2026-09-22 @claude] Picked up. kaimon down → compute on mcmc-beast in a dedicated checkout `/root/BF_market_inverse` (tmux `market_inverse`, `-t 16`, Manifest copied from `BF_fast_slow_grw` to keep Distributions 0.25.126). Stage 0: panel = 710 fixtures → 623 accepted inversions (87 refused, `refusals.csv`), 22 teams, 91 weekly steps, 1,246 log-rate observations; target = Betfair (−20, 0] TWA close, same book as TODO 021.
+- [2026-09-22 @claude] Stage 1 design choice: no NUTS. The observation model is linear-Gaussian given the per-team innovation variances, so the loader uses an exact Kalman filter (collapsed likelihood, μ/γ_home/paths integrated out) + FFBS. Arms 1/2 (+ static control): coordinate slice sampling on the collapsed posterior of θ. Arms 3/4: partially-collapsed Gibbs (θ | aux collapsed → FFBS paths → elliptical-slice SV / FFBS regimes → conjugate P). One-step-ahead: exact Kalman / Rao-Blackwellised particle filter. Engine gates (toy panel vs the batch joint Gaussian): Kalman loglik to 1.6e-13, RTS mean to 5e-15, heteroscedastic schedule to 1e-14, RBPF degenerate limit = Kalman to 4e-15, FFBS moments within MC error.
+- [2026-09-22 @claude] Smoke fits flagged the regime arm finding a turbulent state ~10× the calm scale with short bursts; added control arm `a1b_grw1_break` (GRW1 + one-off season-boundary jump) so SV/regime gains can be separated from the summer repricing.
 
 ## Verification & Findings
 
