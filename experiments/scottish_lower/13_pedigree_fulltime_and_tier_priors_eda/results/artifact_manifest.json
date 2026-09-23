@@ -1,0 +1,217 @@
+{
+  "data/operational_status_evidence.csv": {
+    "sha256": "e77ab986c24bdf214ab4eb162a6ed6ad6434db1e93491aab80df47935b7a5b68",
+    "bytes": 4059,
+    "rows": 21
+  },
+  "data/r01_bbc_shot_totals.csv": {
+    "sha256": "1b4fc5151677da107b85036a2fab69a666e09f15ba344ccd3052b7f3ec94cbee",
+    "bytes": 115046,
+    "rows": 3997
+  },
+  "data/r01_betfair_1x2_last_coherent_preko.csv": {
+    "sha256": "2e146d29ee375631f9c7e9726a57d3722e5fe54f8411bc03b39b94b0f59b30df",
+    "bytes": 439489,
+    "rows": 2979
+  },
+  "data/r01_club_tier_membership.csv": {
+    "sha256": "bdb1c8aa2da475b0c713c8cb13ba4949d14f3f963e2d0d171501f8f622489b87",
+    "bytes": 14231,
+    "rows": 294
+  },
+  "data/r01_cross_tier_cup_candidates.csv": {
+    "sha256": "4f4065bb4a6fc915846762fe42f0a7566edee010e6ada784834ebac9a2e8497b",
+    "bytes": 194,
+    "rows": 0
+  },
+  "data/r01_lineup_value_proxy.csv": {
+    "sha256": "3431e627a95678a7841bcd577d11d15daa355fd8d231e06afe88cad6afc36005",
+    "bytes": 309617,
+    "rows": 8106
+  },
+  "data/r01_schema_inventory.csv": {
+    "sha256": "261b38876444a7466156ba7f00fab91f4f85437ab2022469196ae8f58f4fed07",
+    "bytes": 1739,
+    "rows": 10
+  },
+  "data/r01_tier_league_fixtures.csv": {
+    "sha256": "d780b712b80e216906bc25ddc48521609b9cb9a0d8f11fe9642f8f1edf7655cd",
+    "bytes": 363548,
+    "rows": 4068
+  },
+  "data/r01_tournament_inventory.csv": {
+    "sha256": "3253643537d761b6f745a5389bd87fa2f26cd9b233ce148c45fd599a559794d5",
+    "bytes": 267,
+    "rows": 4
+  },
+  "data/r06_bbc_proxy_xg_joined_fulltime_fixture.csv": {
+    "sha256": "ba97aebc775ad539e581a938214e9f229eabded127df5dc52a3286ae264ae648",
+    "bytes": 416389,
+    "rows": 4068
+  },
+  "data/r06_bbc_proxy_xg_match.csv": {
+    "sha256": "ba97aebc775ad539e581a938214e9f229eabded127df5dc52a3286ae264ae648",
+    "bytes": 416389,
+    "rows": 4068
+  },
+  "data/r06_bbc_proxy_xg_match_julia_kernel.csv": {
+    "sha256": "ab01184baa738ddcadd710dd5225d83dc3feb5e3b35666c77fdf5682a09005d1",
+    "bytes": 140596,
+    "rows": 4068
+  },
+  "data/r06_bbc_proxy_xg_shot_descriptors.csv": {
+    "sha256": "47eb70d9be26e51a384958cbd204b3239a29a5d4b9916ad999ec9e14a8eaebd2",
+    "bytes": 2571622,
+    "rows": 46424
+  },
+  "data/slate_2026-09-19.csv": {
+    "sha256": "6b8d59c68d9ed18f71c64738e7f3f4ed449377deb8c1b8cb000cce77413d6bfa",
+    "bytes": 13359,
+    "rows": 27
+  },
+  "data/spfl_club_operational_status.csv": {
+    "sha256": "524cd7396ff73bb2e3fd7d7df3cbc8df65083b3c323e191417a9b43cc940fc1a",
+    "bytes": 28209,
+    "rows": 252
+  },
+  "data/spfl_membership_web_2627.csv": {
+    "sha256": "ef36f269e6fcc03e1cd21c0f5e2fd7951a65147e23d53decbf3759a89b3ae260",
+    "bytes": 3803,
+    "rows": 42
+  },
+  "data/status_publication_metadata.csv": {
+    "sha256": "e0859f2c2e679928e20b46ed9eb3ba58342e5e89a353d16ec2511cd48b02dc3e",
+    "bytes": 340,
+    "rows": 3
+  },
+  "data/status_sources.csv": {
+    "sha256": "eef1c865c155e0f243703e1e282c3e6f6144d4cff3b91da14669b4e690a72fe7",
+    "bytes": 7510,
+    "rows": 20
+  },
+  "results/r02_bbc_shot_coverage.csv": {
+    "sha256": "d1d36f9fe98c79ed73153143b2c81eb524b5beca0680130b8203799b6419806a",
+    "bytes": 495,
+    "rows": 4
+  },
+  "results/r02_betfair_1x2_coverage_and_supremacy.csv": {
+    "sha256": "4d338e9fcaffcb41c0fe77eeeb83a27952ccecd449a0347a7133203c92042c1b",
+    "bytes": 373,
+    "rows": 4
+  },
+  "results/r02_league_one_ft_pt_aligned_metrics.csv": {
+    "sha256": "317659d5678dbc4eab7c12dc266988c65e2adaca89d142b7d21d7d1747bdb772",
+    "bytes": 886,
+    "rows": 6
+  },
+  "results/r02_league_one_ft_pt_status_descriptives.csv": {
+    "sha256": "026b432f215d0b65b9b5c259508be104c2b9d784be19d6136d7f42a74316b480",
+    "bytes": 642,
+    "rows": 6
+  },
+  "results/r02_lineup_value_proxy_coverage.csv": {
+    "sha256": "20650bb5e4e4936f4519f3af4eea107458f69cfc4d7fe9ba85ec064286976a71",
+    "bytes": 664,
+    "rows": 4
+  },
+  "results/r02_tier_goal_descriptives.csv": {
+    "sha256": "4ca95fefa92d8c2356ef6254cd1a33ddd4882a9e81e4348689b4753503d376f5",
+    "bytes": 801,
+    "rows": 4
+  },
+  "results/r02_tier_season_goal_descriptives.csv": {
+    "sha256": "7be7b5c060c428477d31456189d52e68fba9926b031732dde84bfb427f0d99c1",
+    "bytes": 1121,
+    "rows": 28
+  },
+  "results/r02_transition_home_fixture_candidates.csv": {
+    "sha256": "3cee737c04bf7ca0734eb0697a67840a6367c85cfb371b24d42559ac6e37fd54",
+    "bytes": 252818,
+    "rows": 1740
+  },
+  "results/r06_bbc_proxy_xg_conversion_coefficients.csv": {
+    "sha256": "035ecc67d8c2a7849e59dbed86088e2fbf7d573c4390aeda129ffc721c253a64",
+    "bytes": 8606,
+    "rows": 125
+  },
+  "results/r06_bbc_proxy_xg_coverage_by_tier.csv": {
+    "sha256": "84a83d22b2b7af34563b32ea828cbc3f65193b83f5f69c4cae21270a76161dc2",
+    "bytes": 724,
+    "rows": 4
+  },
+  "results/r06_bbc_proxy_xg_coverage_by_tier_season.csv": {
+    "sha256": "4412f270be579253cbf5f344e7c945920e492bff9357c2b364a367c527ecaa0f",
+    "bytes": 2267,
+    "rows": 28
+  },
+  "results/r06_bbc_proxy_xg_fixture_reconciliation.csv": {
+    "sha256": "e7ea5386f86cc4508e7d8d5d92ae71b6c404cb811a5a449d102fc5f9311449f1",
+    "bytes": 459406,
+    "rows": 4076
+  },
+  "results/r06_bbc_proxy_xg_kernel_parity.csv": {
+    "sha256": "c62607add4cca0d4d903cdb949dd1a6ddb7f4c60362661f2bf40db66b12918be",
+    "bytes": 224,
+    "rows": 1
+  },
+  "results/r06_bbc_proxy_xg_parser_parity.csv": {
+    "sha256": "8efda0a6b3bd5fa10db3750b25f74cf598bfa3c5332cb71aa11339663ac06401",
+    "bytes": 27,
+    "rows": 1
+  },
+  "results/r08_saved_m12_provenance.csv": {
+    "sha256": "8dd2c530d9d14415c49cfcf326ce8583e04453e90f8abd901e4ccf79bf759054",
+    "bytes": 689,
+    "rows": 1
+  },
+  "results/r08_transition_all_fixture_panel.csv": {
+    "sha256": "28b42ea4d124a43481e0ac85b8e1e2e215c0f54d60a25d0e2aef4e00659d85c5",
+    "bytes": 215401,
+    "rows": 1015
+  },
+  "results/r08_transition_window_descriptives.csv": {
+    "sha256": "39da35a615605487c63be65512f2571e7f22813979b3c48a47ef64a99baaa9ac",
+    "bytes": 882,
+    "rows": 6
+  },
+  "results/r09_existing_portfolio_transition_team_bets.csv": {
+    "sha256": "340fe5f70716fa50b1b5dff1cf813271f1652378ce394600ae23b34626e8a192",
+    "bytes": 19327,
+    "rows": 110
+  },
+  "results/r09_m12_existing_portfolio_opponent_bets.csv": {
+    "sha256": "cac30deb43003bc84bcca503d7e64cb8d09e702c1fda13ae229ffa5301d9bfcb",
+    "bytes": 15041,
+    "rows": 65
+  },
+  "results/r09_m12_opponent_underdog_pricing.csv": {
+    "sha256": "47aa66e07e6a4ed836491e2e7d09d0a4665355d6e8c486c65f8cb38e0153267a",
+    "bytes": 20581,
+    "rows": 91
+  },
+  "results/r09_m12_opponent_underdog_summary.csv": {
+    "sha256": "07214c97cf66d0d2ffe1d838b4202030af831bf508fcd1d75229b96a69502466",
+    "bytes": 1354,
+    "rows": 6
+  },
+  "results/r09_m12_transition_draw_pricing.csv": {
+    "sha256": "8ea6376ee3a41ebbabf8a809dea5459c399c93208554871e1428df4ea1f59e4c",
+    "bytes": 74325,
+    "rows": 220
+  },
+  "results/r09_m12_transition_market_summary.csv": {
+    "sha256": "252bd8470b78e2639ce912d81abba9d59088b833dbc8709a26a0c64d5c0ac621",
+    "bytes": 580,
+    "rows": 6
+  },
+  "results/r09_simplified_quarter_kelly_transition.csv": {
+    "sha256": "8dcb60999d93d0db0399efc202799fe5524cacb48bb4fcdee1e13a1ba3cd9346",
+    "bytes": 36896,
+    "rows": 186
+  },
+  "results/slate_2026-09-19.csv": {
+    "sha256": "90bab1de4f3349edea9afac7328aa08da5b8109d4da7abd00c04cb3ed4cf7e48",
+    "bytes": 32283,
+    "rows": 27
+  }
+}

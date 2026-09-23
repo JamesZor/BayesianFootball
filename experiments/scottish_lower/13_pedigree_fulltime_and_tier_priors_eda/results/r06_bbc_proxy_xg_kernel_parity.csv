@@ -1,0 +1,2 @@
+fixture_rows,fixture_ids_equal,missingness_equal,availability_equal_rows,max_abs_home_difference,max_abs_away_difference,serialization_tolerance,pass
+4068,true,true,4068,4.997055269573281e-7,4.995831796028583e-7,5.0e-7,true

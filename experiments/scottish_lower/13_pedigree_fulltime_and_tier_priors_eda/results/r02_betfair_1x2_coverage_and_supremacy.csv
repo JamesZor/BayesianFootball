@@ -1,0 +1,5 @@
+tier_id,tier_name,coherent_preko_1x2_matches,fixture_coverage,mean_log_fair_p_home_over_away,median_minutes_to_kickoff,p10_minutes_to_kickoff,p90_minutes_to_kickoff
+54,Premiership,956,0.865,0.408,-5.16,-55.71,-0.56
+55,Championship,479,0.475,0.333,-5.95,-176.74,-0.91
+56,League One,840,0.861,0.283,-11.83,-214.67,-1.28
+57,League Two,699,0.714,0.292,-9.25,-242.12,-0.91

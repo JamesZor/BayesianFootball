@@ -1,0 +1,7 @@
+panel,match_category,matches,market_supremacy_difference_coverage,mean_fair_probability_difference,mean_log_fair_probability_ratio,bbc_shot_difference_coverage,mean_bbc_shot_difference,bbc_proxy_xg_difference_coverage,mean_bbc_proxy_xg_difference,nonpit_lineup_value_difference_coverage,mean_nonpit_value_difference_eur
+strict_verified,PT_vs_PT,4,1.000,0.178,0.496,1.000,3.000,0.000,,1.000,379250.000
+strict_verified,FT_vs_FT,8,0.750,0.005,0.034,1.000,1.500,1.000,0.294,1.000,107125.000
+strict_verified,FT_vs_PT,8,1.000,-0.008,-0.019,1.000,0.875,1.000,0.019,1.000,324375.000
+continuity_inferred_sensitivity,PT_vs_PT,4,1.000,0.178,0.496,1.000,3.000,0.000,,1.000,379250.000
+continuity_inferred_sensitivity,FT_vs_FT,8,0.750,0.005,0.034,1.000,1.500,1.000,0.294,1.000,107125.000
+continuity_inferred_sensitivity,FT_vs_PT,11,1.000,-0.004,-0.010,1.000,2.182,1.000,0.104,1.000,233090.909

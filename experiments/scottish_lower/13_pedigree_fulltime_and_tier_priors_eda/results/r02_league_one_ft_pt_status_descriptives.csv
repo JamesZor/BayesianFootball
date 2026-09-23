@@ -1,0 +1,7 @@
+panel,match_category,matches,mean_oriented_goal_difference,oriented_win_rate,win_rate_wilson_95pct_low,win_rate_wilson_95pct_high,excluded_unmatched_slug_or_panel,excluded_not_accepted_evidence,excluded_hybrid_or_unknown
+strict_verified,FT_vs_PT,8,-0.750,0.250,0.071,0.591,43,905,8
+strict_verified,FT_vs_FT,8,1.000,0.625,0.306,0.863,43,905,8
+strict_verified,PT_vs_PT,4,0.250,0.250,0.046,0.699,43,905,8
+continuity_inferred_sensitivity,FT_vs_PT,11,-0.364,0.364,0.152,0.646,43,890,20
+continuity_inferred_sensitivity,FT_vs_FT,8,1.000,0.625,0.306,0.863,43,890,20
+continuity_inferred_sensitivity,PT_vs_PT,4,0.250,0.250,0.046,0.699,43,890,20

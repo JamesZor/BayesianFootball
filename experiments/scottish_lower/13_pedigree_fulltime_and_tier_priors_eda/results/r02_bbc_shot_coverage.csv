@@ -1,0 +1,5 @@
+tier_id,tier_name,matches_with_basic_bbc_shot_totals,fixture_coverage,mean_home_minus_away_shots,measurement_note
+54,Premiership,1082,0.979,2.066,shotsTotal is not xG; BBC schema contains no provider xG field
+55,Championship,992,0.984,1.260,shotsTotal is not xG; BBC schema contains no provider xG field
+56,League One,956,0.980,1.037,shotsTotal is not xG; BBC schema contains no provider xG field
+57,League Two,959,0.980,0.888,shotsTotal is not xG; BBC schema contains no provider xG field

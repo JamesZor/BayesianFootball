@@ -1,0 +1,5 @@
+tier_id,tier_name,matches,home_goals_per_match,away_goals_per_match,mean_goal_difference_home_minus_away,cluster_bootstrap_95pct_low,cluster_bootstrap_95pct_high,goals_per_match,total_goals_cluster_bootstrap_95pct_low,total_goals_cluster_bootstrap_95pct_high,home_win_rate,home_win_wilson_95pct_low,home_win_wilson_95pct_high,draw_rate,draw_wilson_95pct_low,draw_wilson_95pct_high
+54,Premiership,1105,1.536,1.177,0.358,-0.017,0.801,2.713,2.562,2.866,0.453,0.424,0.483,0.244,0.220,0.271
+55,Championship,1008,1.379,1.172,0.207,0.014,0.411,2.551,2.438,2.681,0.398,0.368,0.428,0.298,0.270,0.327
+56,League One,976,1.500,1.315,0.185,-0.052,0.432,2.815,2.664,2.963,0.418,0.387,0.449,0.257,0.231,0.286
+57,League Two,979,1.463,1.237,0.226,0.108,0.367,2.700,2.570,2.855,0.430,0.399,0.461,0.252,0.226,0.280
