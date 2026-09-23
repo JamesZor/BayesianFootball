@@ -828,9 +828,25 @@ get stricter the more thoroughly the fold is sampled. Measured at the production
 setting (400/400×4) over 80 runs spanning folds 1 and 40, every run came in under
 R̂ 1.017 with zero divergences, so a 5% allowance over 1.05 is loose enough not to
 fire on noise and tight enough that a systematically stuck conditional fails.
+
+Divergences are gated the SAME way, and for the same reason. The count summed over
+`n_conditional` runs is an extreme-value statistic: at a fixed per-transition
+divergence probability it grows linearly with the number of runs, so a `sum == 0`
+threshold gets harder to satisfy the more thoroughly the fold is sampled — exactly
+the defect that made the max-R̂ gate wrong. The production grid measured 3 divergences
+over 48,000 inner runs (76.8M transitions, rate 3.9e-8), concentrated as 2 runs in
+fold 23 and 1 in fold 39 while every other statistic was clean (worst inner R̂ 1.029,
+no fold with any run over 1.05).
+
+What is gated instead is the fraction of RUNS carrying a divergence, because each run
+contributes exactly ONE retained draw: `divergences / runs` is an upper bound on the
+fraction of retained draws that could have been affected at all. `0.005` bounds that
+contamination at half a percent of the conditional draws; the worst production fold
+sat at 0.00167. A conditional with genuinely bad geometry does not produce one
+divergence in a thousand runs, it produces them in most runs, and fails this easily.
 """
 function cut_stage_b_gate(chain::Chains; max_frac_rhat_gt::Float64 = 0.05,
-                          min_ess::Float64 = 40.0)
+                          min_ess::Float64 = 40.0, max_div_frac::Float64 = 0.005)
     info = NamedTuple(chain.info)
     haskey(info, :cut_stage_b_runs) || error("chain carries no Stage B diagnostics")
     method = info.cut_stage_b_method
@@ -838,11 +854,14 @@ function cut_stage_b_gate(chain::Chains; max_frac_rhat_gt::Float64 = 0.05,
     # The exact grid draw has no chain and therefore no R̂/ESS to gate: independent
     # draws are the best case those statistics can describe, not a missing check.
     if method === :exact_grid
-        return (; passed = true, method, divergences = 0, frac_rhat_gt = 0.0,
+        return (; passed = true, method, divergences = 0, div_frac = 0.0,
+                  frac_rhat_gt = 0.0,
                   max_rhat = NaN, min_ess = NaN, runs = info.cut_stage_b_runs)
     end
 
-    ok_div = info.cut_stage_b_divergences == 0
+    div_frac = info.cut_stage_b_runs == 0 ? 0.0 :
+        info.cut_stage_b_divergences / info.cut_stage_b_runs
+    ok_div = div_frac <= max_div_frac
     # Gate the FRACTION of inner runs exceeding 1.05, not the maximum over all of them.
     # With `n_conditional` independent runs the max is an extreme-value statistic that
     # rises with the number of runs even when the geometry is fine, so thresholding it
@@ -851,7 +870,7 @@ function cut_stage_b_gate(chain::Chains; max_frac_rhat_gt::Float64 = 0.05,
     ok_rhat = info.cut_stage_b_frac_rhat_gt <= max_frac_rhat_gt
     ok_ess = isfinite(info.cut_stage_b_min_ess) && info.cut_stage_b_min_ess >= min_ess
     return (; passed = ok_div && ok_rhat && ok_ess, method,
-              divergences = info.cut_stage_b_divergences,
+              divergences = info.cut_stage_b_divergences, div_frac,
               frac_rhat_gt = info.cut_stage_b_frac_rhat_gt,
               max_rhat = info.cut_stage_b_max_rhat,
               min_ess = info.cut_stage_b_min_ess,

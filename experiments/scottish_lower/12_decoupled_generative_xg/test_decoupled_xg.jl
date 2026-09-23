@@ -150,6 +150,31 @@ end
     end
 end
 
+@testset "Stage B gates divergence RATE, not the summed count" begin
+    # A sum over `runs` independent inner runs is an extreme-value statistic: at a
+    # fixed per-run divergence probability it grows linearly with the number of runs,
+    # so `sum == 0` would make the gate STRICTER the more thoroughly a fold is
+    # sampled. That is the same defect already fixed for max-R̂. Pin the rate.
+    mk(div, runs) = D.MCMCChains.setinfo(
+        D.MCMCChains.Chains(zeros(2, 1, 1), [:log_κ]),
+        (; cut_stage_b_method = :inner_nuts, cut_stage_b_max_rhat = 1.01,
+           cut_stage_b_p99_rhat = 1.01, cut_stage_b_frac_rhat_gt = 0.0,
+           cut_stage_b_min_ess = 300.0, cut_stage_b_divergences = div,
+           cut_stage_b_runs = runs))
+
+    # The production reality: 2 divergent runs in 1200 passes; the same COUNT in a
+    # fold that only ran 100 conditionals does not.
+    @test D.cut_stage_b_gate(mk(2, 1200)).passed
+    @test !D.cut_stage_b_gate(mk(2, 100)).passed
+    # Scaling the run count at a fixed rate must not flip a passing fold.
+    @test D.cut_stage_b_gate(mk(4, 2400)).passed
+    @test D.cut_stage_b_gate(mk(2, 1200)).div_frac ≈ 2 / 1200
+    # Genuinely bad geometry diverges in most runs, not one in a thousand.
+    @test !D.cut_stage_b_gate(mk(600, 1200)).passed
+    # Zero divergences must still pass, and the exact arm has no R̂ to gate at all.
+    @test D.cut_stage_b_gate(mk(0, 1200)).passed
+end
+
 @testset "Spliced cut chain preserves chains, pairing and sections" begin
     # `cut_assemble_chain` packs a chain-major flat matrix into an MCMCChains cube.
     # A bare `reshape` there would interleave the chain axis into the parameter axis

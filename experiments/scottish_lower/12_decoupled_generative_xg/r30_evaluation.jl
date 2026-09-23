@@ -23,6 +23,14 @@ const MANIFEST = joinpath(CONFIG.save_root, "production_manifest.jls")
 isfile(MANIFEST) || error("No accepted production manifest; run Stage 2 first")
 manifest = D.Serialization.deserialize(MANIFEST)
 manifest.source == SOURCE || error("Production manifest is source-stale")
+# An arm may have been ACCEPTED under this source but SAMPLED under an earlier one
+# (see r21_resume_m04.jl). That is legitimate only when the difference is confined to
+# gate/reporting code off the sampling path, so it is printed here rather than hidden.
+if get(manifest, :sampled_source, SOURCE) != SOURCE
+    println("PROVENANCE: arms ", get(manifest, :resumed, String[]),
+            " sampled under ", get(manifest, :sampled_source, "?"),
+            "\n            accepted under ", SOURCE)
+end
 const OUTPUT = joinpath(CONFIG.save_root, "evaluation", SOURCE)
 mkpath(OUTPUT)
 db = D.PostgresStorage(CONFIG.experiment)

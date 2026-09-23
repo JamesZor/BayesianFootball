@@ -88,10 +88,13 @@ for (name, model) in models
            stage_b_worst_rhat = maximum(g.max_rhat for g in gates),
            stage_b_worst_frac = maximum(g.frac_rhat_gt for g in gates),
            stage_b_min_ess = minimum(g.min_ess for g in gates),
-           stage_b_divergences = sum(g.divergences for g in gates))
+           stage_b_divergences = sum(g.divergences for g in gates),
+           stage_b_worst_div_frac = maximum(g.div_frac for g in gates),
+           stage_b_runs = sum(g.runs for g in gates))
     else
         (; stage_b_pass = true, stage_b_worst_rhat = NaN, stage_b_worst_frac = 0.0,
-           stage_b_min_ess = NaN, stage_b_divergences = 0)
+           stage_b_min_ess = NaN, stage_b_divergences = 0,
+           stage_b_worst_div_frac = 0.0, stage_b_runs = 0)
     end
     run_id = existing === nothing ? D.gph_save_and_verify(db, fit) : existing
     convergence_row = D.gph_convergence_row(name, fit, RUNTIME; run_id)

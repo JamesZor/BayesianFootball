@@ -98,10 +98,13 @@ for (name, model) in models
         (; stage_b_pass = all(g.passed for g in gates),
            stage_b_max_rhat = maximum(g.max_rhat for g in gates),
            stage_b_frac_rhat_gt = maximum(g.frac_rhat_gt for g in gates),
-           stage_b_divergences = sum(g.divergences for g in gates))
+           stage_b_divergences = sum(g.divergences for g in gates),
+           stage_b_worst_div_frac = maximum(g.div_frac for g in gates),
+           stage_b_runs = sum(g.runs for g in gates))
     else
         (; stage_b_pass = true, stage_b_max_rhat = NaN,
-           stage_b_frac_rhat_gt = 0.0, stage_b_divergences = 0)
+           stage_b_frac_rhat_gt = 0.0, stage_b_divergences = 0,
+           stage_b_worst_div_frac = 0.0, stage_b_runs = 0)
     end
     zero_sum_error = D.hierarchical_zero_sum_audit(fit)
     arm_posterior = D.kappa_posterior(fit, CONFIG.smoke_folds)
