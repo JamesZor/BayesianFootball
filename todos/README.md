@@ -35,6 +35,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [024](024_prototype_negbin_with_pxg_form_supremacy_covariate.md) | Prototype Negative Binomial with Linear Proxy-xG Form Covariate | COMPLETED | P1 | pi | 2026-09-22 |
 | [025](025_prototype_decoupled_generative_xg_primary_model.md) | Prototype Decoupled Generative xG-Primary Model with Subordinate Goals | COMPLETED | P1 | pi | 2026-09-23 |
 | [026](026_prototype_two_tier_fast_slow_latent_state_space_model.md) | Prototype Two-Tier Fast-Slow Latent State-Space Dynamics | BACKLOG | P2 | unassigned | 2026-09-22 |
+| [027](027_eda_scottish_club_pedigree_full_time_status_and_tier_priors.md) | EDA: Scottish club pedigree, full-time status, and tier priors | IN_PROGRESS | P1 | pi | 2026-09-23 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
