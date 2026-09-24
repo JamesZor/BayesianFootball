@@ -69,7 +69,7 @@ for arm in R01_ARMS
     CSV.write(joinpath(R01_OUT, "widening_$(arm)_folds1-2.csv"), wid)
     show(wid; allrows = true); println()
     # --- G1: gradient audit on fold 2 ----------------------------------------
-    ga = gph_gradient_audit(fc.model, inputs.feature_sets[2][1]; replays = 50)
+    ga = gph_gradient_audit(fc.model, inputs.feature_sets[2]; replays = 50)
     println("  G1 gradient: ", ga)
     # --- G2: sampling ---------------------------------------------------------
     fit = gph_sample(fc, inputs, R01_CFG.gph)
