@@ -135,9 +135,9 @@ by season; target rows by the 56/57 calendar biweek, with the SAME anchor and fo
 function pcx_align_time!(fs, boundary, meta, ds, s::PyramidGRWCV)
     hist_ids = Set(Int.(boundary.history_match_ids)); tgt_ids = Set(Int.(boundary.target_match_ids))
     all_ids = union(hist_ids, tgt_ids)
-    mdf = subset(ds.matches, :match_id => ByRow(id -> Int(id) in all_ids))
-    hdf = subset(mdf, :match_id => ByRow(id -> Int(id) in hist_ids))
-    tdf = subset(mdf, :match_id => ByRow(id -> Int(id) in tgt_ids))
+    mdf = DataFrames.subset(ds.matches, :match_id => ByRow(id -> Int(id) in all_ids))
+    hdf = DataFrames.subset(mdf, :match_id => ByRow(id -> Int(id) in hist_ids))
+    tdf = DataFrames.subset(mdf, :match_id => ByRow(id -> Int(id) in tgt_ids))
     ordered = Int.(vcat(hdf.match_id, tdf.match_id))
     ordered == Int.(fs.data[:ordered_match_ids]) ||
         error("pcx_align_time!: row order differs from the feature builder's (fold $(boundary.fold_id))")
