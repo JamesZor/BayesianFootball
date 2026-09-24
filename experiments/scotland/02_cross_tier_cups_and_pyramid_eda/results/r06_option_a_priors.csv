@@ -1,0 +1,15 @@
+parameter,family,mean,sd,note
+"d_j (net θ step, each of T1→T2, T2→T3, T3→T4)","TruncatedNormal(μ, σ; 0, ∞)",0.47316268488197416,0.16246744186021145,recommended; linearity not rejected post-2020 once Celtic/Rangers are club effects
+d_j (net θ step) — weak alternative,HalfNormal(s),0.4731626848819741,0.3574794427670962,s = 0.593 matches the mean; puts 26% mass below 0.2
+"attack part of each step, Δα",TruncatedNormal,0.22588856064724105,0.07756219534301786,share 0.48 of τ
+"concession part of each step, Δβ (sign: lower tier concedes more)",TruncatedNormal,0.2472741242347331,0.08490524651719358,share 0.52 of τ
+"Old Firm over rest of T1 (club effect, not a tier)",Normal,1.1496089837307315,0.08452104031365187,do NOT fold into τ_1; give Celtic/Rangers ordinary team effects
+T4 → non-league step (only if T5 nodes enter),TruncatedNormal,0.43767054092824,0.18854173912518832,Highland/Lowland/EoS/WoS pooled; heterogeneous
+club σ_θ within T1,"Normal(0, σ) around tier mean",0.0,0.2690378332687036,"σ_α 0.176, σ_β 0.144"
+club σ_θ within T2,"Normal(0, σ) around tier mean",0.0,0.32590356958272865,"σ_α 0.174, σ_β 0.187"
+club σ_θ within T3,"Normal(0, σ) around tier mean",0.0,0.41010513757845224,"σ_α 0.203, σ_β 0.247"
+club σ_θ within T4,"Normal(0, σ) around tier mean",0.0,0.23029693090361245,"σ_α 0.171, σ_β 0.133"
+"δ_league T1 (A1, zero-sum)","point / Normal(δ, 0.05)",-0.0446093076409491,0.05,tier goal level is flat across the SPFL (|δ| ≤ 0.1)
+"δ_league T2 (A1, zero-sum)","point / Normal(δ, 0.05)",-0.04408239411511078,0.05,tier goal level is flat across the SPFL (|δ| ≤ 0.1)
+"δ_league T3 (A1, zero-sum)","point / Normal(δ, 0.05)",0.06870205919766582,0.05,tier goal level is flat across the SPFL (|δ| ≤ 0.1)
+"δ_league T4 (A1, zero-sum)","point / Normal(δ, 0.05)",0.01998964255839404,0.05,tier goal level is flat across the SPFL (|δ| ≤ 0.1)

@@ -1,0 +1,140 @@
+{
+    "units": "log goal-rate on the L1 scale: log λ_h = int + γ + α_h + β_a; θ = α − β",
+    "option_A1_league_offsets": {
+        "delta_league_zero_sum": {
+            "T3": 0.06870205919766582,
+            "T1": -0.0446093076409491,
+            "T2": -0.04408239411511078,
+            "T4": 0.01998964255839404
+        },
+        "sd": 0.05
+    },
+    "option_B1_cold_start": {
+        "relegated_into_T2": {
+            "n_structural": 21,
+            "theta_mu": 0.40257005317160516,
+            "alpha0": {
+                "sigma": 0.21290867865642218,
+                "mu": 0.19626176558302535
+            },
+            "beta0": {
+                "sigma": 0.23380048982173027,
+                "mu": -0.2063082875885798
+            }
+        },
+        "promoted_into_T2": {
+            "n_structural": 28,
+            "theta_mu": -0.11463165820700916,
+            "alpha0": {
+                "sigma": 0.23650001555708572,
+                "mu": -0.045740688282890525
+            },
+            "beta0": {
+                "sigma": 0.29047823722927146,
+                "mu": 0.06889096992411864
+            }
+        },
+        "promoted_into_T3": {
+            "n_structural": 28,
+            "theta_mu": -0.002713130884086682,
+            "alpha0": {
+                "sigma": 0.21033605705836445,
+                "mu": 0.004008345187126352
+            },
+            "beta0": {
+                "sigma": 0.3081318782536132,
+                "mu": 0.0067214760712130325
+            }
+        },
+        "relegated_into_T3": {
+            "n_structural": 26,
+            "theta_mu": 0.2774486035481753,
+            "alpha0": {
+                "sigma": 0.19682214220163122,
+                "mu": 0.11560000482499072
+            },
+            "beta0": {
+                "sigma": 0.25957436950102974,
+                "mu": -0.1618485987231846
+            }
+        },
+        "promoted_into_T1": {
+            "n_structural": 22,
+            "theta_mu": -0.252707145362999,
+            "alpha0": {
+                "sigma": 0.1974527146565618,
+                "mu": -0.10299316100103861
+            },
+            "beta0": {
+                "sigma": 0.20107176662420426,
+                "mu": 0.14971398436196037
+            }
+        },
+        "relegated_into_T4": {
+            "n_structural": 30,
+            "theta_mu": 0.06676016894160405,
+            "alpha0": {
+                "sigma": 0.20122426744383407,
+                "mu": 0.028559461270691314
+            },
+            "beta0": {
+                "sigma": 0.243140414901149,
+                "mu": -0.038200707670912736
+            }
+        }
+    },
+    "source": "TODO 029, experiments/scotland/02_cross_tier_cups_and_pyramid_eda",
+    "option_B1_verdict_on_0p90": {
+        "relegated_into_T3_alpha_mu": 0.11560000482499072,
+        "z_0p90_as_alpha": 9.32180222095932,
+        "z_0p90_as_theta": 7.398394984450705,
+        "relegated_into_T3_theta_mu": 0.2774486035481753
+    },
+    "option_A2_tier_steps": {
+        "share_attack": 0.47740146859549326,
+        "d_j_recommended": {
+            "sigma": 0.16246744186021145,
+            "family": "TruncatedNormal",
+            "lower": 0,
+            "mu": 0.47316268488197416
+        },
+        "club_sd_within_tier": {
+            "T3": {
+                "theta": 0.41010513757845224,
+                "alpha": 0.20302583549751482,
+                "beta": 0.24743760816158447
+            },
+            "T1": {
+                "theta": 0.2690378332687036,
+                "alpha": 0.17578732322109344,
+                "beta": 0.14438194868180654
+            },
+            "T2": {
+                "theta": 0.32590356958272865,
+                "alpha": 0.17385444623070417,
+                "beta": 0.18667776965911786
+            },
+            "T4": {
+                "theta": 0.23029693090361245,
+                "alpha": 0.1705526149478598,
+                "beta": 0.13298927598358917
+            }
+        },
+        "sampling_se_of_pooled_step": 0.040533111341298486,
+        "linearity_test_primary_of_split": {
+            "df": 2,
+            "wald_chi2": 0.16229666871947623,
+            "p": 0.9220569085788833
+        },
+        "old_firm_club_effect_over_T1": {
+            "se": 0.08452104031365187,
+            "mu": 1.1496089837307315
+        },
+        "d_j_weak_alternative": {
+            "family": "HalfNormal",
+            "s": 0.5930214822127373
+        },
+        "between_era_sd": 0.15733002431066703,
+        "parameterisation": "τ_4 = 0, τ_r = Σ_{j≥r} d_j; apply share_attack·τ to α and −(1−share_attack)·τ to β"
+    }
+}
