@@ -37,6 +37,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [026](026_prototype_two_tier_fast_slow_latent_state_space_model.md) | Prototype Two-Tier Fast-Slow Latent State-Space Dynamics | BACKLOG | P2 | unassigned | 2026-09-22 |
 | [027](027_eda_scottish_club_pedigree_full_time_status_and_tier_priors.md) | EDA: Scottish club pedigree, full-time status, and tier priors | BLOCKED | P1 | pi | 2026-09-23 |
 | [028](028_cross_tier_scottish_pyramid_and_informative_priors_time_decay_models.md) | Cross-Tier Scottish Pyramid and Informative Priors Time-Decay Models | IN_PROGRESS | P1 | pi | 2026-09-24 |
+| [029](029_cross_tier_scottish_cup_and_pyramid_hierarchy_eda.md) | Cross-tier Scottish Cup and pyramid hierarchy EDA | IN_PROGRESS | P1 | claude | 2026-09-24 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
