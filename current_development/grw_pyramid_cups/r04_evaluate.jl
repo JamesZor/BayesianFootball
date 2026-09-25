@@ -12,9 +12,8 @@
 #   julia --project -t 16 current_development/grw_pyramid_cups/r04_evaluate.jl
 # ==============================================================================
 
-using ThreadPinning
+# No thread pinning: this is scoring, not sampling, and may run beside a pinned grid.
 using LinearAlgebra
-pinthreads(:cores)
 LinearAlgebra.BLAS.set_num_threads(1)
 
 using BayesianFootball, CSV, DataFrames, Dates, Printf, Statistics, UUIDs, Optim, SpecialFunctions
