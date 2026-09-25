@@ -217,6 +217,49 @@ end
             @test loaded.latents.λ_home == fit.latents.λ_home
             @test Array(loaded[1].chain) == Array(fit[1].chain)
 
+            @testset "Binary bytea parameters carry an over-1GB-hex artifact" begin
+                inference = BayesianFootball.Training.Inference
+                conn = inference._db_connect(storage)
+                try
+                    inference._db_exec(conn, """
+                        CREATE TEMP TABLE binary_blob_probe (tag text, blob bytea);
+                    """)
+                    # Exact round trip of bytes a hex parameter cannot represent at all.
+                    edges = UInt8[0x00, 0x27, 0x5c, 0xff, 0x0a, 0x0d]
+                    inference._db_exec_binary(conn,
+                        "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
+                        ("edges",), edges)
+                    rows = inference._db_rows(conn,
+                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",))
+                    @test Vector{UInt8}(rows.blob[1]) == edges
+
+                    # 600MB is under the 1GB protocol cap in binary and over it in hex,
+                    # which is exactly the regime that produced "invalid message length".
+                    big = rand(Xoshiro(4242), UInt8, 600 * 1024 * 1024)
+                    @test 2 * length(big) > 1024^3   # the hex form would be rejected
+                    inference._db_exec_binary(conn,
+                        "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
+                        ("big",), big)
+                    sizes = inference._db_rows(conn, """
+                        SELECT octet_length(blob) AS n FROM binary_blob_probe WHERE tag = \$1;
+                    """, ("big",))
+                    @test sizes.n[1] == length(big)
+
+                    # Reading it back matters just as much: a hex-rendered RESULT doubles the
+                    # value and the server refuses to allocate for it past 1GB.
+                    @test inference._db_query_blob(conn,
+                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",)) == edges
+                    round_tripped = inference._db_query_blob(conn,
+                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("big",))
+                    @test length(round_tripped) == length(big)
+                    @test round_tripped == big
+                    @test inference._db_query_blob(conn,
+                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("absent",)) === nothing
+                finally
+                    close(conn)
+                end
+            end
+
             @testset "Canonical Poisson 2426 registry and five-run round trip" begin
                 grid_models = pg21_models()
                 grid_splitter = pg21_splitter()
