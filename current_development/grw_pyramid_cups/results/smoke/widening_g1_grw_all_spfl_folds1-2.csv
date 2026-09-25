@@ -1,0 +1,3 @@
+fold,season,n_train,n_lower,n_upper,n_cup,n_oos,n_target_steps,n_teams
+1,24/25,1477,720,757,0,20,1,43
+2,24/25,1518,740,778,0,19,1,43
