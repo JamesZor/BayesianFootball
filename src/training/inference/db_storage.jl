@@ -47,6 +47,102 @@ end
 "PostgreSQL text representation for a `bytea` query parameter."
 _db_bytea(bytes::AbstractVector{UInt8}) = "\\x" * bytes2hex(bytes)
 
+# `_db_bytea` doubles a payload, because libpq binds every parameter as text and LibPQ.jl
+# exposes no binary-parameter API (its `binary_format` selects the RESULT format). PostgreSQL
+# refuses any protocol message of 1GB or more, so a large artifact is rejected server-side with
+# "invalid message length" once its hex form crosses that line. A 40-fold posterior artifact is
+# ~534MB after zstd, i.e. ~1069MB hexed, and compression cannot buy the headroom back: MCMC
+# draws are near-maximum-entropy and zstd only removes about 5% of them. Bind such a blob in
+# binary format instead, which sends the compressed bytes exactly once.
+const _DB_PARAM_TEXT = Cint(0)
+const _DB_PARAM_BINARY = Cint(1)
+
+"""
+    _db_exec_binary(conn, sql, text_params, blob)
+
+Execute `sql` binding `text_params` as text and `blob` as the final, binary `bytea`
+parameter. The column type and the read path are unchanged; only the wire encoding differs.
+"""
+function _db_exec_binary(conn::LibPQ.Connection, sql::AbstractString, text_params,
+                         blob::AbstractVector{UInt8})
+    n = length(text_params) + 1
+    buffers = Vector{Vector{UInt8}}(undef, n)
+    for (i, parameter) in enumerate(text_params)
+        parameter === missing && error("_db_exec_binary cannot bind a missing text parameter")
+        # libpq reads text parameters as NUL-terminated C strings; binary ones use the length.
+        buffers[i] = push!(Vector{UInt8}(codeunits(string(parameter))), 0x00)
+    end
+    buffers[n] = convert(Vector{UInt8}, blob)   # no copy for the usual Vector{UInt8}
+    lengths = Cint[Cint(length(buffers[i])) for i in 1:n]
+    formats = Cint[i == n ? _DB_PARAM_BINARY : _DB_PARAM_TEXT for i in 1:n]
+    result = lock(conn) do
+        GC.@preserve buffers begin
+            values = Ptr{UInt8}[pointer(buffer) for buffer in buffers]
+            LibPQ.libpq_c.PQexecParams(conn.conn, sql, Cint(n), C_NULL, values, lengths,
+                                       formats, _DB_PARAM_TEXT)
+        end
+    end
+    result == C_NULL && error(
+        "PostgreSQL returned no result for a binary-parameter statement: $(LibPQ.error_message(conn))")
+    try
+        status = LibPQ.libpq_c.PQresultStatus(result)
+        status in (LibPQ.libpq_c.PGRES_COMMAND_OK, LibPQ.libpq_c.PGRES_TUPLES_OK) || error(
+            "PostgreSQL rejected a binary-parameter statement: " *
+            strip(unsafe_string(LibPQ.libpq_c.PQresultErrorMessage(result))))
+    finally
+        LibPQ.libpq_c.PQclear(result)
+    end
+    return nothing
+end
+
+"""
+    _db_query_blob(conn, sql, text_params) -> Union{Nothing, Vector{UInt8}}
+
+Fetch a single `bytea` value in BINARY result format, returning `nothing` when no row matches.
+
+The write side is only half the problem: libpq renders a `bytea` RESULT as hex text unless the
+binary result format is requested, so reading a large artifact makes the server materialise
+twice its size and fail with `invalid memory alloc request size`, which surfaces in Julia as
+`InternalError`. LibPQ.jl's `binary_format` keyword would set this, but its Julia-side column
+conversion is built around the text protocol, so the value is taken straight from libpq here.
+"""
+function _db_query_blob(conn::LibPQ.Connection, sql::AbstractString, text_params)
+    n = length(text_params)
+    buffers = Vector{Vector{UInt8}}(undef, n)
+    for (i, parameter) in enumerate(text_params)
+        parameter === missing && error("_db_query_blob cannot bind a missing text parameter")
+        buffers[i] = push!(Vector{UInt8}(codeunits(string(parameter))), 0x00)
+    end
+    result = lock(conn) do
+        GC.@preserve buffers begin
+            values = Ptr{UInt8}[pointer(buffer) for buffer in buffers]
+            lengths = Cint[Cint(length(buffer)) for buffer in buffers]
+            formats = fill(_DB_PARAM_TEXT, n)
+            LibPQ.libpq_c.PQexecParams(conn.conn, sql, Cint(n), C_NULL, values, lengths,
+                                       formats, _DB_PARAM_BINARY)
+        end
+    end
+    result == C_NULL && error(
+        "PostgreSQL returned no result for a binary blob query: $(LibPQ.error_message(conn))")
+    try
+        status = LibPQ.libpq_c.PQresultStatus(result)
+        status == LibPQ.libpq_c.PGRES_TUPLES_OK || error(
+            "PostgreSQL rejected a binary blob query: " *
+            strip(unsafe_string(LibPQ.libpq_c.PQresultErrorMessage(result))))
+        LibPQ.libpq_c.PQntuples(result) == 0 && return nothing
+        LibPQ.libpq_c.PQgetisnull(result, 0, 0) == 1 && return nothing
+        len = Int(LibPQ.libpq_c.PQgetlength(result, 0, 0))
+        blob = Vector{UInt8}(undef, len)
+        if len > 0
+            source = Ptr{UInt8}(LibPQ.libpq_c.PQgetvalue(result, 0, 0))
+            GC.@preserve blob unsafe_copyto!(pointer(blob), source, len)
+        end
+        return blob
+    finally
+        LibPQ.libpq_c.PQclear(result)
+    end
+end
+
 "Apply the idempotent experiment schema to `storage`."
 function ensure_schema!(storage::PostgresStorage)
     schema_path = joinpath(@__DIR__, "db", "schema.sql")
@@ -695,9 +791,11 @@ function save_fit(fit::Fit, storage::PostgresStorage)
             end
 
             artifact = _db_artifact_blob(fit)
-            _db_exec(conn,
+            # Bound in binary: a multi-fold posterior artifact exceeds the 1GB protocol
+            # message limit once hex-encoded. See `_db_exec_binary`.
+            _db_exec_binary(conn,
                 "INSERT INTO fit_artifacts (run_id, fit_blob) VALUES (\$1::uuid, \$2::bytea);",
-                (string(run_id), _db_bytea(artifact)))
+                (string(run_id),), artifact)
             _db_exec(conn, "COMMIT;")
         catch
             try
@@ -750,10 +848,12 @@ end
 function load_fit(run_id::UUID, storage::PostgresStorage)
     conn = _db_connect(storage)
     try
-        rows = _db_rows(conn,
+        # Read in binary: a hex-rendered result doubles the artifact and the server refuses to
+        # allocate for it once past 1GB. See `_db_query_blob`.
+        blob = _db_query_blob(conn,
             "SELECT fit_blob FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
-        nrow(rows) == 1 || error("load_fit: no PostgreSQL fit artefact for run $run_id.")
-        fit = _db_artifact_value(rows.fit_blob[1])
+        blob === nothing && error("load_fit: no PostgreSQL fit artefact for run $run_id.")
+        fit = _db_artifact_value(blob)
         fit isa Fit || error("load_fit: PostgreSQL artefact for $run_id holds $(typeof(fit)).")
         latents = _db_load_count_latents(conn, run_id)
         latents === nothing && return fit
