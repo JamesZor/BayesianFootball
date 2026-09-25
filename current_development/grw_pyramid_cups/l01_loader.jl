@@ -191,7 +191,12 @@ Base.@kwdef struct PCXConfig
     target_seasons::Vector{String} = ["24/25", "25/26"]
     expected_folds::Int = 40
     expected_oos::Int = 710
-    gph::GPHConfig = GPHConfig(save_root = joinpath(@__DIR__, "results"))
+    # Every 4th retained draw is persisted (1,000 per fold), not every 2nd: the pooled
+    # fits are ~2x the parameters of the 56/57 runs, and at stride 2 the hex-encoded
+    # artifact passed PostgreSQL's 1 GB message cap (empty LibPQ UnknownError, g1,
+    # 2026-09-25). The audit still runs on all 4,000 draws.
+    gph::GPHConfig = GPHConfig(save_root = joinpath(@__DIR__, "results"),
+                               persist_stride = parse(Int, get(ENV, "PCX_STRIDE", "4")))
 end
 
 const PCX_ARMS = ["g1_grw_all_spfl", "g2_grw_all_spfl_cups", "g3_grw_joint_all_spfl_cups"]

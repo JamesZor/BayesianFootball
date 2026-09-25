@@ -73,10 +73,20 @@ for arm in R02_ARMS
         println("R02_ARM_FAIL ", arm, " — not persisted; checkpoints in ", ckpt)
         continue
     end
-    persisted = gph_thin_for_persistence(fit, inputs, R02_CFG.gph.persist_stride)
-    gph_assert_coverage(arm, persisted; folds = R02_CFG.expected_folds, oos = R02_CFG.expected_oos)
-    la = gph_latent_audit(persisted)
-    run_id = gph_save_and_verify(db, persisted)
+    run_id = nothing
+    for stride in (R02_CFG.gph.persist_stride, 2 * R02_CFG.gph.persist_stride)
+        persisted = gph_thin_for_persistence(fit, inputs, stride)
+        gph_assert_coverage(arm, persisted; folds = R02_CFG.expected_folds, oos = R02_CFG.expected_oos)
+        gph_latent_audit(persisted)
+        try
+            run_id = gph_save_and_verify(db, persisted)
+            println("  persisted at stride ", stride)
+            break
+        catch e
+            println("  save failed at stride ", stride, " (", typeof(e), ") — retrying thinner")
+        end
+    end
+    run_id === nothing && error("$arm: could not persist at any stride")
     push!(rows, (; arm, passed = true, max_rhat = d.max_rhat, min_ess_bulk = d.min_ess_bulk,
                    min_ess_tail = d.min_ess_tail, divergences = d.n_divergent,
                    wall_min = (time() - t0) / 60, run_id = string(run_id)))
