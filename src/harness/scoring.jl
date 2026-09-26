@@ -297,9 +297,15 @@ function _score_row(ref, subset, market, metric, value, lo, hi, n_obs, n_fixture
 end
 
 function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::Int,
-                    control_observations = nothing)
+                    control_observations = nothing, expected_panel = nothing)
     panel = _season_panel(ds, fit, target_seasons)
     isempty(panel) && error("$(ref.label): no target fixtures in $(target_seasons)")
+    if expected_panel !== nothing && Set(panel) != Set(expected_panel)
+        missing_ids = setdiff(Set(expected_panel), Set(panel))
+        extra_ids = setdiff(Set(panel), Set(expected_panel))
+        error("$(ref.label) covers $(length(panel)) target fixtures, not the control's " *
+              "$(length(expected_panel)); missing=$(length(missing_ids)), extra=$(length(extra_ids))")
+    end
     restricted = _restrict(fit, panel)
     odds = _betfair_closing_odds(ds)
     families = _family_selections(odds)
@@ -379,7 +385,7 @@ function score_fits(fits::AbstractVector{<:Pair}; ds, tiers,
     for ref in refs
         ref.run_id == ctl.run_id && continue
         push!(frames, _score_one(ref, lookup[ref.run_id], ds, tiers;
-            target_seasons, bootstrap_B,
+            target_seasons, bootstrap_B, expected_panel = control_bundle.panel,
             control_observations = control_bundle.observations).scores)
     end
     return vcat(frames...)
@@ -405,6 +411,7 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
         try
             fit = Training.load_fit(Training.PostgresStorage(ref.experiment), ref.run_id)
             bundle = _score_one(ref, fit, ds, tiers; target_seasons, bootstrap_B,
+                                expected_panel = control_bundle.panel,
                                 control_observations = control_bundle.observations)
             push!(frames, bundle.scores)
         catch error

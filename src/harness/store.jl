@@ -204,7 +204,7 @@ function read_experiments(db::Training.PostgresStorage)
         return Training.Inference._db_rows(conn, """
             SELECT id, date, todo, question, dimension, status, decision, run_ids, readme
             FROM harness_experiments
-            ORDER BY id;
+            ORDER BY CASE WHEN id ~ '^[0-9]+\$' THEN length(id) ELSE 99 END, id;
         """)
     finally
         close(conn)
