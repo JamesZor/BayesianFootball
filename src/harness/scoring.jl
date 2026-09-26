@@ -295,17 +295,21 @@ _metric_pairs(score) = (("logloss", score.logloss),
     ("market_mce", score.market_mce), ("rps", score.rps),
     ("market_rps", score.market_rps))
 
-function _score_row(ref, subset, market, metric, value, lo, hi, n_obs, n_fixtures)
+function _score_row(ref, subset, market, metric, value, lo, hi, n_obs, n_fixtures;
+                    control_run_id = nothing)
     return (; run_id = ref.run_id, model = ref.label, stage = "grid",
         scorecard_version = SCORECARD_VERSION, subset = String(subset),
         market = String(market), metric = String(metric), value = Float64(value),
         lo = Float64(lo), hi = Float64(hi), n_obs = Int(n_obs),
-        n_fixtures = Int(n_fixtures), reference = SCORE_REFERENCE)
+        n_fixtures = Int(n_fixtures), reference = SCORE_REFERENCE,
+        control_run_id = control_run_id === nothing || ismissing(control_run_id) ?
+                         missing : UUID(string(control_run_id)))
 end
 
 function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::Int,
                     control_observations = nothing, expected_panel = nothing,
-                    expected_count::Union{Nothing,Int} = nothing)
+                    expected_count::Union{Nothing,Int} = nothing,
+                    control_ref = nothing)
     panel = _season_panel(ds, fit, target_seasons)
     isempty(panel) && error("$(ref.label): no target fixtures in $(target_seasons)")
     expected_count === nothing || length(panel) == expected_count || error(
@@ -351,9 +355,10 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
                 family = market == "all" ? nothing : market
                 boot = _paired_bootstrap(subset_obs, control_subset;
                                          B = bootstrap_B, family)
+                c_id = control_ref !== nothing ? control_ref.run_id : nothing
                 push!(rows, _score_row(ref, subset, market,
                     "delta_logloss_vs_control", boot.delta, boot.lo, boot.hi,
-                    boot.n_obs, boot.n_fixtures))
+                    boot.n_obs, boot.n_fixtures; control_run_id = c_id))
             end
         end
         slopes = _slopes(model_sup, market_sup, ids)
@@ -395,13 +400,15 @@ function score_fits(fits::AbstractVector{<:Pair}; ds, tiers,
     haskey(lookup, ctl.run_id) || error("control fit $(ctl.run_id) was not supplied")
     control_bundle = _score_one(ctl, lookup[ctl.run_id], ds, tiers;
                                 target_seasons, bootstrap_B,
-                                control_observations = :self)
+                                control_observations = :self,
+                                control_ref = ctl)
     frames = DataFrame[control_bundle.scores]
     for ref in refs
         ref.run_id == ctl.run_id && continue
         push!(frames, _score_one(ref, lookup[ref.run_id], ds, tiers;
             target_seasons, bootstrap_B, expected_panel = control_bundle.panel,
-            control_observations = control_bundle.observations).scores)
+            control_observations = control_bundle.observations,
+            control_ref = ctl).scores)
     end
     return vcat(frames...)
 end
@@ -416,7 +423,8 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
     control_bundle = try
         fit = Training.load_fit(Training.PostgresStorage(ctl.experiment), ctl.run_id)
         _score_one(ctl, fit, ds, tiers; target_seasons, bootstrap_B,
-                   expected_count = expected_fixtures, control_observations = :self)
+                   expected_count = expected_fixtures, control_observations = :self,
+                   control_ref = ctl)
     catch error
         failures === nothing && rethrow()
         push!(failures, (; label = ctl.label, experiment = ctl.experiment,
@@ -426,7 +434,10 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
         GC.gc()
     end
 
-    frames = control_bundle === nothing ? DataFrame[] : DataFrame[control_bundle.scores]
+    frames = DataFrame[]
+    if control_bundle !== nothing && any(r -> r.run_id == ctl.run_id, refs)
+        push!(frames, control_bundle.scores)
+    end
     common_panel = control_bundle === nothing ? nothing : control_bundle.panel
     control_observations = control_bundle === nothing ? nothing : control_bundle.observations
     for ref in refs
@@ -437,7 +448,8 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
             bundle = _score_one(ref, fit, ds, tiers; target_seasons, bootstrap_B,
                                 expected_panel = common_panel,
                                 expected_count = expected_fixtures,
-                                control_observations)
+                                control_observations = control_observations,
+                                control_ref = ctl)
             common_panel === nothing && (common_panel = bundle.panel)
             push!(frames, bundle.scores)
         catch error
@@ -454,15 +466,26 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
     return vcat(frames...)
 end
 
-function _headline(scores, run_id, subset, market, metric, field = :value)
-    rows = filter(r -> string(r.run_id) == string(run_id) && r.subset == subset &&
-                       r.market == market && r.metric == metric, scores)
+function _headline(scores, run_id, subset, market, metric, field = :value;
+                   control_run_id = nothing)
+    rows = filter(scores) do r
+        string(r.run_id) != string(run_id) && return false
+        r.subset != subset && return false
+        r.market != market && return false
+        r.metric != metric && return false
+        if metric == "delta_logloss_vs_control" && control_run_id !== nothing
+            (:control_run_id in propertynames(r)) || return false
+            (ismissing(r.control_run_id) || r.control_run_id === nothing) && return false
+            string(r.control_run_id) != string(control_run_id) && return false
+        end
+        return true
+    end
     nrow(rows) == 0 && return NaN
     return Float64(rows[1, field])
 end
 
 """Collapse the long score table into the committed Phase-1 headline leaderboard."""
-function leaderboard(scores::AbstractDataFrame)
+function leaderboard(scores::AbstractDataFrame; control_run_id = nothing)
     rows = NamedTuple[]
     for group in groupby(scores, [:run_id, :model])
         run_id = first(group.run_id)
@@ -472,9 +495,9 @@ function leaderboard(scores::AbstractDataFrame)
             target_logloss_1x2 = _headline(scores, run_id, "target", "1X2", "logloss"),
             target_ece_all = _headline(scores, run_id, "target", "all", "ece"),
             compression_slope = _headline(scores, run_id, "target", "1X2", "compression_slope"),
-            delta_vs_control = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control"),
-            delta_lo = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :lo),
-            delta_hi = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :hi))
+            delta_vs_control = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control"; control_run_id),
+            delta_lo = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :lo; control_run_id),
+            delta_hi = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :hi; control_run_id))
         extra_names = Symbol[]
         extra_values = Float64[]
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)

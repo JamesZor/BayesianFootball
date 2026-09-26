@@ -23,8 +23,18 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
                 n_obs INTEGER,
                 n_fixtures INTEGER,
                 reference TEXT NOT NULL,
-                PRIMARY KEY (run_id, scorecard_version, subset, market, metric)
+                control_run_id UUID
             );
+        """)
+        Training.Inference._db_exec(conn, """
+            ALTER TABLE harness_scores ADD COLUMN IF NOT EXISTS control_run_id UUID;
+        """)
+        Training.Inference._db_exec(conn, """
+            ALTER TABLE harness_scores DROP CONSTRAINT IF EXISTS harness_scores_pkey;
+        """)
+        Training.Inference._db_exec(conn, """
+            CREATE UNIQUE INDEX IF NOT EXISTS harness_scores_unique_idx
+            ON harness_scores (run_id, scorecard_version, subset, market, metric, COALESCE(control_run_id, '00000000-0000-0000-0000-000000000000'::uuid));
         """)
         Training.Inference._db_exec(conn, """
             CREATE INDEX IF NOT EXISTS harness_scores_lookup_idx
@@ -108,37 +118,50 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
     if scores !== df
         scores.scorecard_version = fill(SCORECARD_VERSION, nrow(scores))
     end
+    if !(:control_run_id in propertynames(scores))
+        scores.control_run_id = fill(missing, nrow(scores))
+    end
     _harness_require_columns(scores, _HARNESS_SCORE_COLUMNS, "harness score frame")
     isempty(scores) && return df
 
     versions = [_harness_score_version(value) for value in scores.scorecard_version]
     all(in(("v1", "v1.1")), versions) || error(
         "write_scores!: supported scorecards are v1 and v1.1.")
-    run_versions = unique([(string(scores.run_id[i]), versions[i]) for i in eachindex(versions)])
+    control_ids = [_harness_nullable(scores.control_run_id[i]) for i in eachindex(scores.control_run_id)]
+    run_control_versions = unique([
+        (string(scores.run_id[i]),
+         versions[i],
+         control_ids[i] === missing ? missing : string(control_ids[i]))
+        for i in eachindex(versions)
+    ])
     conn = Training.Inference._db_connect(db)
     try
         Training.Inference._db_exec(conn, "BEGIN;")
         try
-            for (run_id, scorecard_version) in run_versions
+            for (run_id, scorecard_version, control_run_id) in run_control_versions
                 Training.Inference._db_exec(conn, """
                     DELETE FROM harness_scores
-                    WHERE run_id = \$1::uuid AND scorecard_version = \$2;
-                """, (run_id, scorecard_version))
+                    WHERE run_id = \$1::uuid
+                      AND scorecard_version = \$2
+                      AND (\$3::uuid IS NULL AND control_run_id IS NULL OR control_run_id = \$3::uuid);
+                """, (run_id, scorecard_version, control_run_id))
             end
             for i in axes(scores, 1)
+                c_id = control_ids[i] === missing ? missing : string(control_ids[i])
                 Training.Inference._db_exec(conn, """
                     INSERT INTO harness_scores (
                         run_id, model, stage, scorecard_version, subset, market, metric,
-                        value, lo, hi, n_obs, n_fixtures, reference
+                        value, lo, hi, n_obs, n_fixtures, reference, control_run_id
                     ) VALUES (
                         \$1::uuid, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10,
-                        \$11, \$12, \$13
+                        \$11, \$12, \$13, \$14::uuid
                     );
                 """, (string(scores.run_id[i]), String(scores.model[i]), String(scores.stage[i]), versions[i],
                       String(scores.subset[i]), String(scores.market[i]), String(scores.metric[i]),
                       Float64(scores.value[i]), _harness_nullable(scores.lo[i]),
                       _harness_nullable(scores.hi[i]), _harness_nullable(scores.n_obs[i]),
-                      _harness_nullable(scores.n_fixtures[i]), String(scores.reference[i])))
+                      _harness_nullable(scores.n_fixtures[i]), String(scores.reference[i]),
+                      c_id))
             end
             Training.Inference._db_exec(conn, "COMMIT;")
         catch
@@ -163,24 +186,27 @@ never interpolated into SQL.
 """
 function read_scores(db::Training.PostgresStorage; run_id = nothing,
                      scorecard_version = SCORECARD_VERSION,
-                     subset = nothing, market = nothing, metric = nothing)
+                     subset = nothing, market = nothing, metric = nothing,
+                     control_run_id = nothing)
     conn = Training.Inference._db_connect(db)
     try
         return Training.Inference._db_rows(conn, """
             SELECT run_id, model, stage, scorecard_version, subset, market, metric, value,
-                   lo, hi, n_obs, n_fixtures, reference
+                   lo, hi, n_obs, n_fixtures, reference, control_run_id
             FROM harness_scores
             WHERE (\$1::uuid IS NULL OR run_id = \$1::uuid)
               AND (\$2::text IS NULL OR scorecard_version = \$2)
               AND (\$3::text IS NULL OR subset = \$3)
               AND (\$4::text IS NULL OR market = \$4)
               AND (\$5::text IS NULL OR metric = \$5)
+              AND (\$6::uuid IS NULL OR control_run_id = \$6::uuid)
             ORDER BY run_id, scorecard_version, subset, market, metric;
         """, (run_id === nothing ? missing : string(run_id),
                scorecard_version === nothing ? missing : string(scorecard_version),
                subset === nothing ? missing : string(subset),
                market === nothing ? missing : string(market),
-               metric === nothing ? missing : string(metric)))
+               metric === nothing ? missing : string(metric),
+               control_run_id === nothing ? missing : string(control_run_id)))
     finally
         close(conn)
     end
