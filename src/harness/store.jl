@@ -64,7 +64,8 @@ function _harness_require_columns(df::AbstractDataFrame, columns::Tuple, name::A
 end
 
 _harness_nullable(value) = ismissing(value) || value === nothing ? missing : value
-_harness_score_version(value) = ismissing(value) || value === nothing ? "v1" : String(value)
+_harness_score_version(value) =
+    ismissing(value) || value === nothing ? SCORECARD_VERSION : String(value)
 
 """
     write_scores!(db, df)
@@ -77,10 +78,10 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
         df
     else
         copy(df)
-        # `write_scores!` must not mutate its caller merely to apply the v1 default.
+        # `write_scores!` must not mutate its caller merely to apply the current default.
     end
     if scores !== df
-        scores.scorecard_version = fill("v1", nrow(scores))
+        scores.scorecard_version = fill(SCORECARD_VERSION, nrow(scores))
     end
     _harness_require_columns(scores, _HARNESS_SCORE_COLUMNS, "harness score frame")
     isempty(scores) && return df
@@ -135,7 +136,8 @@ end
 Read harness scorecard rows, with every filter optional.  Filter values are bound parameters,
 never interpolated into SQL.
 """
-function read_scores(db::Training.PostgresStorage; run_id = nothing, scorecard_version = "v1",
+function read_scores(db::Training.PostgresStorage; run_id = nothing,
+                     scorecard_version = SCORECARD_VERSION,
                      subset = nothing, market = nothing, metric = nothing)
     conn = Training.Inference._db_connect(db)
     try

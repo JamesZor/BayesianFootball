@@ -44,6 +44,9 @@ function scoped_fixture_rows()
     add(102, 1520, "2024", "2024-08-10", 17, "l1a", "club-b") # B side
     add(103, 1520, "2024", "2024-08-10", 18, "l1a", "guest")  # guest
     add(104, 73, "2024", "2024-08-10", 19, "l1a", "nonleague")
+    # A scoreability exclusion from the canonical CSV remains excluded even when the
+    # DataFrame also carries a native neutral_venue column.
+    add(9724815, 1520, "2024", "2024-08-10", 20, "l1a", "upa")
     return DataFrame(rows)
 end
 
@@ -53,6 +56,8 @@ end
     @test_throws ArgumentError ScopedData.DataScope(
         name = "bad", clock_tournaments = [54])
     @test_throws ArgumentError ScopedData.DataScope(name = "bad", cups = :all)
+    @test_throws ArgumentError ScopedData.DataScope(
+        name = "bad", monitor_tournaments = [56])
     @test_throws ArgumentError ScopedData.DataScope(name = "bad", history_seasons = -1)
 
     ds = scoped_store(scoped_fixture_rows())
@@ -122,6 +127,29 @@ end
         @test feature_set.data[:n_rounds] ==
               feature_set.data[:n_history_steps] + feature_set.data[:n_target_steps]
     end
+end
+
+@testset "Monitor-only tournaments are never fitted" begin
+    raw = scoped_store(scoped_fixture_rows())
+    scope = ScopedData.DataScope(
+        name = "monitor_only", train_tournaments = [56, 57],
+        target_tournaments = [56, 57], monitor_tournaments = [54, 55],
+        clock_tournaments = [56, 57], target_seasons = ["24/25"],
+        history_seasons = 1)
+    ds = ScopedData.apply_scope(raw, scope)
+    splitter = ScopedData.ScopedWalkForwardCV(scope)
+    boundaries = ScopedData.create_id_boundaries(ds, splitter)
+    tournament_by_id = Dict(Int(row.match_id) => Int(row.tournament_id)
+                            for row in eachrow(ds.matches))
+    seen_monitors = Set{Int}()
+    for pair in boundaries
+        fitted = vcat(pair[1].history_match_ids, pair[1].target_match_ids)
+        @test all(tournament_by_id[id] in (56, 57) for id in fitted)
+        heldout = ScopedData.get_next_matches(ds, pair, splitter)
+        union!(seen_monitors, Int.(heldout.match_id[in.(heldout.tournament_id,
+                                                       Ref([54, 55]))]))
+    end
+    @test seen_monitors == Set(vcat(collect(31:33), collect(41:43)))
 end
 
 @testset "Lower scope is the canonical grouped walk" begin

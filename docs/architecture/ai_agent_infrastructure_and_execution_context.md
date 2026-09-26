@@ -113,7 +113,7 @@ git-ignored `.env`; `PostgresStorage` resolves its URL from the environment or l
 ### 1. Rsync Syncing Protocol
 When syncing files between the local laptop and `mcmc-beast`, **NEVER overwrite data directories or stale caches**:
 ```bash
-rsync -avz --exclude '.cache/' --exclude 'data/' /home/james/bet_project/BayesianFootball/ root@mcmc-beast:/root/BayesianFootball/
+rsync -avz --exclude '/.cache/' --exclude '/data/' /home/james/bet_project/BayesianFootball/ root@mcmc-beast:/root/BayesianFootball/
 ```
 
 ### 2. DataStore Cache Synchronization (`.cache/*.jls`)
@@ -303,7 +303,8 @@ You are working on BayesianFootball.jl across a 3-node topology:
 Rules for Execution:
 - Use the Unified V2 Pipeline: CountModelBuilder, fit_model, evaluate_predictions, run_portfolio_simulation.
 - Run tests via fast parallel runner: julia --project -t 8 test/run_parallel_tests.jl (~40s).
-- Sync code to mcmc-beast using: rsync -avz --exclude '.cache/' --exclude 'data/' ...
+- Sync code to mcmc-beast using root-anchored excludes so tracked nested inputs survive:
+  rsync -avz --exclude '/.cache/' --exclude '/data/' ...
 - Do not run colliding jobs on mcmc-beast when an agent or MCMC chain is running.
 - Ensure all features operate in log-intensity space (eta = log lambda) with Float64/Int AD-safe vectors.
 - Monitor long runs via /root/<script>.log or btop in tmux window mbtop:0.

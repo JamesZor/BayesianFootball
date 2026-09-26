@@ -1,6 +1,6 @@
 # Cohort definitions for the versioned experiment scorecard.
 
-const HARNESS_LEAGUE_TIERS = Set((54, 55, 56, 57))
+const HARNESS_LEAGUE_TIERS = Set(Data.SCOTTISH_SPFL_TOURNAMENTS)
 const HARNESS_DIRECTIONS =
     (:relegated_into_L1, :promoted_into_L1, :entered_spfl, :l1_l2, :any)
 

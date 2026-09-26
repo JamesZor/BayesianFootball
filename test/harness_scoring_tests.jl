@@ -165,6 +165,12 @@ end
               for name in keys(subsets))
 end
 
+@testset "Harness scorecard version defaults" begin
+    @test H.SCORECARD_VERSION == "v1.1"
+    @test H._harness_score_version(nothing) == H.SCORECARD_VERSION
+    @test H._harness_score_version(missing) == H.SCORECARD_VERSION
+end
+
 @testset "Harness per-subset score row counts" begin
     frame = DataFrame(match_id = repeat([1, 2], inner = 7),
         selection = repeat([:home, :draw, :away, :over_25, :under_25,

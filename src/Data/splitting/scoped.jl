@@ -30,6 +30,8 @@ Base.@kwdef struct DataScope
             "DataScope target_tournaments must be a subset of train_tournaments"))
         issubset(Set(clock), Set(target)) || throw(ArgumentError(
             "DataScope clock_tournaments must be a subset of target_tournaments"))
+        isempty(intersect(Set(target), Set(monitor))) || throw(ArgumentError(
+            "DataScope monitor_tournaments must be disjoint from target_tournaments"))
         cups in DATA_SCOPE_CUP_POLICIES || throw(ArgumentError(
             "DataScope cups must be :none or :senior_spfl_ties; got :$cups"))
         isempty(target_seasons) && throw(ArgumentError("DataScope target_seasons must not be empty"))
@@ -57,12 +59,12 @@ _scope_grouped(scope::DataScope) = GroupedCVConfig(
 )
 
 "Map club-season membership from SPFL league rows only."
-function club_season_tiers(ds_leagues)
+function club_season_tiers(matches::AbstractDataFrame)
     required = (:home_team, :away_team, :season, :tournament_id)
-    all(column -> hasproperty(ds_leagues.matches, column), required) || error(
+    all(column -> hasproperty(matches, column), required) || error(
         "club_season_tiers: matches require columns $(collect(required))")
     tiers = Dict{Tuple{String,String},Int}()
-    for row in eachrow(ds_leagues.matches)
+    for row in eachrow(matches)
         tier = Int(row.tournament_id)
         tier in SCOTTISH_SPFL_TOURNAMENTS || continue
         season = String(row.season)
@@ -77,6 +79,8 @@ function club_season_tiers(ds_leagues)
     return tiers
 end
 
+club_season_tiers(ds_leagues) = club_season_tiers(ds_leagues.matches)
+
 _football_season(date::Date) = let year_start = month(date) >= 7 ? year(date) : year(date) - 1
     lpad(string(year_start % 100), 2, '0') * "/" *
         lpad(string((year_start + 1) % 100), 2, '0')
@@ -90,7 +94,9 @@ end
 
 function _neutral_tie_ids()
     path = joinpath(@__DIR__, "..", "data", "scottish_neutral_venue_ties.csv")
-    isfile(path) || return Set{Int}()
+    isfile(path) || error(
+        "Required scoped-cup exclusion file is missing: $path. Restore the git-tracked " *
+        "Data input before using cups=:senior_spfl_ties.")
     rows = CSV.read(path, DataFrame)
     :match_id in propertynames(rows) || error("neutral-venue CSV requires match_id")
     return Set(Int.(rows.match_id))
@@ -120,15 +126,13 @@ function apply_scope(ds::DataStore, scope::DataScope)
                     Set(scope.monitor_tournaments))
     keep = in.(Int.(matches.tournament_id), Ref(allowed)) .& .!is_cup
     if scope.cups === :senior_spfl_ties
-        tiers = club_season_tiers(DataStore(ds.segment, matches, DataFrame(), DataFrame(),
-                                            DataFrame(), DataFrame(), DataFrame(),
-                                            DataFrame(), DataFrame()))
-        neutral_ids = if :neutral_venue in propertynames(matches)
+        tiers = club_season_tiers(matches)
+        column_neutral_ids = :neutral_venue in propertynames(matches) ?
             Set(Int(matches.match_id[i]) for i in eachindex(matches.match_id)
-                if coalesce(matches.neutral_venue[i], false))
-        else
-            _neutral_tie_ids()
-        end
+                if coalesce(matches.neutral_venue[i], false)) : Set{Int}()
+        # The CSV also contains four audited scoreability exclusions, so it remains
+        # authoritative even if a native neutral-venue column is added later.
+        neutral_ids = union(_neutral_tie_ids(), column_neutral_ids)
         for index in findall(is_cup)
             season = seasons[index]
             home = (String(matches.home_team[index]), season)
@@ -161,6 +165,9 @@ function _scope_step_map(matches::AbstractDataFrame, scope::DataScope, season)
     result = Dict{Int,Int}()
     for row in eachrow(matches[coalesce.(matches.season .== season, false), :])
         elapsed = div(Dates.value(_week_ending_sunday(Date(row.match_date)) - anchor), 7)
+        # Widened July rows may precede the first clock fixture. Collapse them into step 1,
+        # exactly as pcx_align_time! did; the cross-check below is intentionally limited to
+        # clock-tournament rows, whose canonical effective clock has no off-anchor rows.
         result[Int(row.match_id)] = max(1, cld(1 + elapsed, width))
     end
     for (match_id, step) in clock_map
@@ -198,6 +205,7 @@ function create_id_boundaries(ds::DataStore, splitter::ScopedWalkForwardCV)
     output = Vector{Tuple{SplitBoundary,GroupedSplitMetaData}}()
     matches = ds.matches
     match_ids = Int.(matches.match_id)
+    season_by_id = Dict(Int(row.match_id) => String(row.season) for row in eachrow(matches))
     kickoffs = Dict(Int(row.match_id) => _match_kickoff(row) for row in eachrow(matches))
     cup_training = scope.cups === :senior_spfl_ties ?
                    Set(SCOTTISH_CUP_TOURNAMENTS) : Set{Int}()
@@ -205,7 +213,11 @@ function create_id_boundaries(ds::DataStore, splitter::ScopedWalkForwardCV)
 
     for (boundary, meta) in canonical
         heldout = get_next_matches(ds, meta, splitter)
-        isempty(heldout) && continue
+        if isempty(heldout)
+            # Preserve positional alignment with the canonical grouped splitter.
+            push!(output, (boundary, meta))
+            continue
+        end
         cutoff = minimum(_match_kickoff(row) for row in eachrow(heldout))
         canonical_history = Set(Int.(boundary.history_match_ids))
         canonical_target = Set(Int.(boundary.target_match_ids))
@@ -217,10 +229,8 @@ function create_id_boundaries(ds::DataStore, splitter::ScopedWalkForwardCV)
             if Int(matches.tournament_id[i]) in training_tournaments &&
                Date(kickoffs[Int(matches.match_id[i])]) < Date(cutoff) &&
                !(Int(matches.match_id[i]) in canonical_ids)]
-        added_history = Int[id for id in eligible
-            if String(matches.season[findfirst(==(id), match_ids)]) in history_seasons]
-        added_target = Int[id for id in eligible
-            if String(matches.season[findfirst(==(id), match_ids)]) == meta.target_season]
+        added_history = Int[id for id in eligible if season_by_id[id] in history_seasons]
+        added_target = Int[id for id in eligible if season_by_id[id] == meta.target_season]
 
         widened = SplitBoundary(boundary.fold_id, boundary.target_step,
             vcat(Int.(boundary.history_match_ids), added_history),

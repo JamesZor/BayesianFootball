@@ -273,7 +273,8 @@ UUIDs — the seven-rule protocol is
 **Compute.** Never run heavy Turing models on the laptop. `-t 16` on
 `mcmc-beast`, `-t 8` on `archpc`; always `pinthreads(:cores)` and
 `BLAS.set_num_threads(1)` before sampling; one production grid at a time on the
-beast. `rsync` with `--exclude '.cache/' --exclude 'data/'`; regenerate
+beast. `rsync` with `--exclude '/.cache/' --exclude '/data/'` (root-anchored, so tracked
+`src/**/data/` inputs still sync); regenerate
 `.cache/datastore_<Segment>.jls` when a new SQL column lands.
 
 ---
