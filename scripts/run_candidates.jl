@@ -5,6 +5,7 @@ using DataFrames
 using Dates
 using LinearAlgebra
 using Printf
+using ThreadPinning
 using UUIDs
 
 function parse_args(args)
@@ -57,8 +58,6 @@ function main()
         Threads.nthreads() >= 8 || error(
             "run_candidates.jl: stage $stage requires at least 8 threads; got $(Threads.nthreads())")
         try
-            # ThreadPinning and LinearAlgebra pinning
-            using ThreadPinning
             pinthreads(:cores)
         catch
         end
