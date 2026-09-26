@@ -19,6 +19,9 @@ Implementation commits:
 - `dca65a1d` — deterministic Phase-2 acceptance verifier.
 - `c2ed4780` — metric-specific cohort sample sizes in leaderboard views.
 - `c73bad99` — enforce `cups = :none` even when a splitter receives an unscoped pooled store.
+- `a2ad2675` — post-review hardening: fail-closed cup input, union native/CSV
+  exclusions, positional fold preservation, v1.1 store defaults, monitor-only regression test,
+  and root-anchored rsync excludes.
 
 ## Acceptance evidence
 
@@ -210,8 +213,8 @@ Markdown view carries its own `n_fixtures`, including the new entered-SPFL cohor
 Standalone:
 
 ```text
-scoped_splitter_tests.jl: 43/43 pass
-harness_scoring_tests.jl: 26/26 pass
+scoped_splitter_tests.jl: 48/48 pass
+harness_scoring_tests.jl: 29/29 pass
 ```
 
 Parallel runner:
@@ -241,6 +244,10 @@ raw event JSON has no neutral-ground key at the top level or under tournament/ve
 TODO 029's BBC-venue/round derivation remains the independent source. Consequently no
 `neutral_venue` fetcher column was invented. The checked-in CSV is the only hand-maintained
 Data input and records its provenance and four non-venue scoreability anomalies row by row.
+Its absence is a hard error, and its exclusions are unioned with any future native
+`neutral_venue` column so those four scoreability rows cannot silently return. Repository
+rsync guidance now uses root-anchored `/.cache/` and `/data/` excludes, preserving tracked
+nested inputs such as `src/Data/data/`.
 
 ## Open questions for Phase 3
 

@@ -78,6 +78,7 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-26 @pi] Implemented Phase 2 data scope: `ScottishPyramid`, validated `DataScope`, copy-only cup policy, scoped canonical folds, monitor holdouts, and the Features clock. Synthetic scope/scorer suites pass standalone; the parallel runner is 20/21 with only known T007.
 - [2026-09-26 @pi] Deterministic local checks reproduce the lower 40-fold/710-ID grid exactly, reproduce every g2 widening count on all 40 folds, and match the prototype feature IDs, time indices, step counts, team counts, and team maps on all 40 folds. No sampling was run.
 - [2026-09-26 @pi] Repeated the deterministic verifier on `mcmc-beast` at `dca65a1d` with the same exact results. Re-scored W0 at v1.1: 19/19 runs, 12,426 rows; retained all 10,640 v1 rows; regenerated the committed leaderboard with metric-specific cohort `n`.
+- [2026-09-26 @pi] Addressed independent Phase 2 review findings at `a2ad2675`: cup exclusions now fail closed and union with native venue flags, empty scoped holdouts preserve fold positions, store defaults use v1.1 centrally, rsync excludes preserve nested tracked data, and a monitor-only tournament regression test proves monitors are never fitted.
 
 ## Verification & Findings
 
