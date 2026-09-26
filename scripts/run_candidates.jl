@@ -70,8 +70,8 @@ function main()
     isdefined(CandidatesModule, :EXPERIMENT) || error("Candidate file must define EXPERIMENT::String")
     isdefined(CandidatesModule, :CANDIDATES) || error("Candidate file must define CANDIDATES::Vector{Candidate}")
 
-    experiment = String(CandidatesModule.EXPERIMENT)
-    all_candidates = CandidatesModule.CANDIDATES
+    experiment = String(Base.invokelatest(getproperty, CandidatesModule, :EXPERIMENT))
+    all_candidates = Base.invokelatest(getproperty, CandidatesModule, :CANDIDATES)
     candidates = parsed.only_names === nothing ?
         all_candidates :
         filter(c -> c.name in parsed.only_names, all_candidates)
@@ -87,9 +87,12 @@ function main()
 
     run_ids = UUID[]
 
+    get_mod_var(sym, default = nothing) = isdefined(CandidatesModule, sym) ?
+        Base.invokelatest(getproperty, CandidatesModule, sym) : default
+
     if stage === :screen
         println("Running screen stage for $(length(candidates)) candidates...")
-        control_name = isdefined(CandidatesModule, :CONTROL) ? CandidatesModule.CONTROL : nothing
+        control_name = get_mod_var(:CONTROL)
         res = Harness.screen(candidates; ds = ds, experiment = experiment, control = control_name, db = db)
         scores = res.scores
 
@@ -125,7 +128,7 @@ function main()
         end
     elseif stage === :grid
         println("Running grid stage for $(length(candidates)) candidates...")
-        control = isdefined(CandidatesModule, :CONTROL) ? CandidatesModule.CONTROL : nothing
+        control = get_mod_var(:CONTROL)
         for c in candidates
             res = Harness.grid(c; ds = ds, experiment = experiment, db = db, control = control)
             push!(run_ids, res.run_id)
@@ -156,16 +159,16 @@ function main()
 
     # Upsert experiment row in harness_experiments
     readme_path = isdefined(CandidatesModule, :README) ?
-        String(CandidatesModule.README) :
+        String(Base.invokelatest(getproperty, CandidatesModule, :README)) :
         joinpath(dirname(candidates_path), "README.md")
     exp_row = (;
         id = experiment,
         date = today(),
-        todo = isdefined(CandidatesModule, :TODO) ? CandidatesModule.TODO : 30,
-        question = isdefined(CandidatesModule, :QUESTION) ? String(CandidatesModule.QUESTION) : "Experiment $experiment",
-        dimension = isdefined(CandidatesModule, :DIMENSION) ? String(CandidatesModule.DIMENSION) : "matrix",
+        todo = get_mod_var(:TODO, 30),
+        question = String(get_mod_var(:QUESTION, "Experiment $experiment")),
+        dimension = String(get_mod_var(:DIMENSION, "matrix")),
         status = "completed",
-        decision = isdefined(CandidatesModule, :DECISION) ? String(CandidatesModule.DECISION) : "in_progress",
+        decision = String(get_mod_var(:DECISION, "in_progress")),
         run_ids = join([string(id) for id in run_ids], ","),
         readme = relpath(readme_path, pwd())
     )
