@@ -10,7 +10,7 @@ const DIMENSION = "dynamics_scope_observation"
 const STATUS = "active"
 const DECISION = "pending"
 const README = joinpath(@__DIR__, "README.md")
-const CONTROL = "td_lower_joint"
+const CONTROL = "97c7a3d9-a05a-4029-90cb-e34279b8c791"  # td_lower_joint = s12_m02 (scottish_lower_decoupled_xg); UUID so grid() scores against the reused run
 
 function make_joint_observation()
     return JointGammaPoissonObservation(
