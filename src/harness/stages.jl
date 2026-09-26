@@ -6,6 +6,8 @@
 #   - grid   : requires passing smoke, resumes completed runs, per-fold checkpoints, full draws
 #              with stride fallback, score_runs against control, convergence flagged review.
 
+const SCREEN_NAMESPACE_UUID = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
 "Run in-memory MAP inference on all folds for a cohort of candidates and score them."
 function screen(candidates::AbstractVector{<:Candidate};
                 ds::Data.DataStore,
@@ -40,7 +42,8 @@ function screen(candidates::AbstractVector{<:Candidate};
                 oos_fixtures = inputs.oos,
                 quiet = true)
             _run_hard_check!(check_records, base, "latents", () -> _latent_audit(fit; require_variance = false))
-            ref = RunRef(c.name, experiment, uuid4(), c.role)
+            screen_run_id = uuid5(SCREEN_NAMESPACE_UUID, "$(experiment):$(recipe_hash(c)):screen")
+            ref = RunRef(c.name, experiment, screen_run_id, c.role)
             push!(fits, ref => fit)
         catch err
             detail = sprint(showerror, err)
@@ -59,8 +62,18 @@ function screen(candidates::AbstractVector{<:Candidate};
     isempty(fits) && error("All candidates failed in screen stage:\n" *
                            join(["- $name: $err" for (name, err) in errors], "\n"))
 
+    effective_control = if control isa RunRef
+        control
+    elseif control !== nothing && any(first(p).label == control || string(first(p).run_id) == control for p in fits)
+        control
+    elseif any(first(p).role === :control for p in fits)
+        nothing
+    else
+        first(fits)[1]
+    end
+
     tiers = club_season_tiers(ds)
-    scores = score_fits(fits; ds = ds, tiers = tiers, control = control,
+    scores = score_fits(fits; ds = ds, tiers = tiers, control = effective_control,
                         target_seasons = target_seasons, bootstrap_B = bootstrap_B)
     scores.stage .= "screen"
 

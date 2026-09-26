@@ -231,4 +231,76 @@ using UUIDs
         @test Harness.has_passing_smoke(valid_store, candidate) == true
     end
 
+    @testset "6. Deterministic screen run_id across repeated screen calls" begin
+        matches = DataFrame(
+            match_id = [1, 2, 3, 4],
+            tournament_id = [56, 56, 56, 56],
+            season = ["23/24", "23/24", "24/25", "24/25"],
+            match_date = [Date(2024, 1, 1), Date(2024, 2, 1), Date(2024, 8, 1), Date(2024, 8, 15)],
+            match_hour = [15, 15, 15, 15],
+            match_week = [1, 2, 1, 2],
+            match_biweek = [1, 2, 1, 2],
+            match_month = [1, 2, 8, 8],
+            home_team = ["A", "B", "A", "B"],
+            away_team = ["B", "A", "B", "A"],
+            home_score = [1, 0, 2, 1],
+            away_score = [0, 1, 1, 1],
+            neutral_venue = [false, false, false, false]
+        )
+        empty_df = DataFrame()
+        odds_df = DataFrame(
+            match_id = [3, 3, 3, 4, 4, 4],
+            market_name = ["1X2", "1X2", "1X2", "1X2", "1X2", "1X2"],
+            market_line = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            selection = [:home, :draw, :away, :home, :draw, :away],
+            is_winner = [true, false, false, false, false, true]
+        )
+        betfair_odds = DataFrame(
+            match_id = [3, 3, 3, 4, 4, 4],
+            market_name = ["1X2", "1X2", "1X2", "1X2", "1X2", "1X2"],
+            market_line = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            selection = [:home, :draw, :away, :home, :draw, :away],
+            odds = [2.0, 3.2, 3.8, 2.1, 3.1, 3.6],
+            traded_price = [2.0, 3.2, 3.8, 2.1, 3.1, 3.6],
+            minutes_to_kickoff = [-10.0, -10.0, -10.0, -10.0, -10.0, -10.0],
+            tournament_id = [56, 56, 56, 56, 56, 56]
+        )
+        ds = Data.DataStore(Data.ScottishLower(), matches, empty_df, odds_df,
+                            empty_df, empty_df, betfair_odds, empty_df, empty_df)
+
+        model = CountModelBuilder(:synth_screen) |>
+            add(GlobalInterception()) |>
+            add(TimeDecayDynamics(days_half_life = 180.0)) |>
+            add(GlobalHomeAdvantage()) |>
+            add(PoissonObservation()) |>
+            build
+
+        scope = Data.DataScope(
+            name = "screen_scope",
+            train_tournaments = [56],
+            target_tournaments = [56],
+            clock_tournaments = [56],
+            target_seasons = ["24/25"],
+            history_seasons = 1
+        )
+
+        candidate = Harness.Candidate(
+            name = "synth_screen",
+            model = model,
+            scope = scope,
+            role = :control
+        )
+
+        res1 = Harness.screen([candidate]; ds = ds, experiment = "test_screen_exp", db = nothing, bootstrap_B = 100)
+        res2 = Harness.screen([candidate]; ds = ds, experiment = "test_screen_exp", db = nothing, bootstrap_B = 100)
+
+        run_id1 = unique(res1.scores.run_id)
+        run_id2 = unique(res2.scores.run_id)
+
+        @test length(run_id1) == 1
+        @test length(run_id2) == 1
+        # Re-screening the same candidate in the same experiment MUST yield the exact same run_id
+        @test run_id1[1] == run_id2[1]
+    end
+
 end
