@@ -5,6 +5,7 @@
 # ---------------------------------------------------------
 struct ScottishLower <: DataTournemantSegment end
 struct ScottishUpper <: DataTournemantSegment end
+struct ScottishAll   <: DataTournemantSegment end
 struct Ireland       <: DataTournemantSegment end
 struct IrelandFirstDivision <: DataTournemantSegment end
 struct IrelandAll    <: DataTournemantSegment end
@@ -25,6 +26,8 @@ tournament_ids(::ScottishLower) = [56, 57]
 # goal-level gap between the tiers is carried by the engines' zero-sum δ_league offset.
 # NOTE: 54 only holds rounds 1-33 — the 5 post-split Premiership rounds are absent from the DB.
 tournament_ids(::ScottishUpper) = [54, 55]
+# Whole SPFL pyramid; a club keeps its canonical team identity across tiers.
+tournament_ids(::ScottishAll)   = [54, 55, 56, 57]
 tournament_ids(::Ireland)       = [79]
 tournament_ids(::IrelandFirstDivision) = [718]
 # 79 = Premier Division, 718 = First Division. Pooled on the same argument as ScottishUpper:

@@ -7,6 +7,14 @@ using Dates
 using InlineStrings
 
 @testset "Data Module" begin
+
+    @testset "ScottishAll segment routing" begin
+        D = BayesianFootball.Data
+
+        @test D.tournament_ids(D.ScottishAll()) == [54, 55, 56, 57]
+        @test D.tournament_ids(D.ScottishLower()) == [56, 57]
+        @test D.tournament_ids(D.ScottishUpper()) == [54, 55]
+    end
     
     @testset "Fractional to Decimal Parsing" begin
         # Valid cases

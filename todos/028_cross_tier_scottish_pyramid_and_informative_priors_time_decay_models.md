@@ -4,7 +4,7 @@
 |---|---|
 | ID | 028 |
 | Title | Cross-Tier Scottish Pyramid and Informative Priors Time-Decay Models |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-09-24 |
@@ -24,7 +24,7 @@ This task designs, trains, and benchmarks candidate solutions across the Scottis
 
 ## Acceptance Criteria
 
-- [ ] Dedicated experiment directory established at `experiments/scotland/01_time_decay_cross_tier_and_priors/`.
+- [x] Dedicated experiment directory established at `experiments/scotland/01_time_decay_cross_tier_and_priors/`.
 - [ ] Staged likelihood progression implemented in `l01_cross_tier_loader.jl`:
   1. Pure team-level time decay with Poisson goals likelihood.
   2. Pure team-level time decay with two-arm Joint Gamma-Poisson likelihood (`JointGammaPoissonObservation`).
@@ -59,6 +59,17 @@ This task designs, trains, and benchmarks candidate solutions across the Scottis
 
 - [2026-09-24 @antigravity] Conducted /grill-me session with human user. Agreed on scope: All-SPFL (Option A: A1 and A2) vs Informative Priors (Option B: B1 and B2) vs Baseline Control. Staged likelihoods: Poisson goals first, then Joint Gamma-Poisson. Excluded GRW for now. Created dedicated worktree `/home/james/bet_project/.worktrees/BayesianFootball-scotland-cross-tier` on branch `feat/scotland-cross-tier-models`. Allocated TODO 028.
 
+- [2026-09-24 @pi] Claimed Stage 1 implementation: added `ScottishAll`; developing five Poisson candidates and strict seven-gate smoke runner. User approved isolated rsync execution (no commit/push), A2 first-observed training-window tier anchors, B1 no promoted offset, and B2 last-five prior-season higher-tier market-implied goal difference. Production and later likelihood stages remain gated.
+
+- [2026-09-24 @pi] Completed remote five-candidate Stage 1 smoke; all candidates sampled 2×100 and round-tripped CountLatents through PostgreSQL. Corrected reporter/getter/audit-namespace/A2-extraction bugs and reran the corrected suite. All candidates still fail genuine tape allocation and convergence gates; B1/B2 also fail grid tail mass. Portfolio gates abstain, and production prepare-only correctly refuses absent promotion manifests. BLOCKED on these gates; no production MCMC or Stage 2/3 launched. Results and UUIDs: `experiments/scotland/01_time_decay_cross_tier_and_priors/results/STAGE1_SMOKE_FINDINGS.md`.
+
+- [2026-09-24 @pi] User approved a separate longer one-fold pilot at 4×1,000 draws, 500 adaptation and acceptance **0.65** (overriding the work-package's 0.85 proposal). Completed all five on mcmc-beast: all pass R-hat/ESS; m00/B1/B2 pass all convergence checks, A1/A2 retain 22/1 divergences. All pilot Fits pass PostgreSQL parity; sampler/filtration/persistence assertions 55/55. Tape/grid blockers remain and no production/portfolio was launched. Recorded five new UUIDs in `results/LONGER_PILOT_FINDINGS.md`; prepared production recipe corrected to 0.65.
+
 ## Verification & Findings
 
-Not run yet. Record R-hat, ESS, LogLoss, 1X2 and O/U 2.5 proper scores, calibration slope, 26/27 Ross County slate pricing, transition subgroup metrics, and portfolio Sharpe.
+- [2026-09-24] Local `test/data_tests.jl`: **55/55 passed**, including ScottishAll routing (Julia 1.12.1, `--project -t 8`). Standalone routing check: 4/4 passed.
+- [2026-09-24] Remote fresh ScottishAll SQL load passed: 4,324 unique matches in four tournaments, no duplicate IDs, no checked-domain orphan IDs; per-tier odds/lineup/BBC coverage recorded in `results/data_preflight.md`.
+- [2026-09-24] Corrected remote smoke `20260924_235900`: all five pass G2/G4/G6; all fail G1/G3; m00/A1/A2 pass G5, B1/B2 fail its grid-mass floor; G7 blocked and not run. Replay allocations 64,152–135,832 bytes; max R-hat 1.0537–1.0993; tail ESS 24.6–73.1. All five have zero divergences. Exact audit JSON and five persisted diagnostic Fit UUIDs are in the findings report.
+- [2026-09-24] Focused loader tests: **15/15 passed**, including two-chain A2 extraction regression. Production sampler API: **7/7 passed**; prepare-only promotion guard refuses the failed smoke, with no grid sampling.
+- [2026-09-24] Longer pilot `20260925_001951` (remote timestamp): max R-hat **1.00375–1.00839**, min bulk ESS **1,271–1,513**, min tail ESS **1,465–1,878**. m00/B1/B2 converge; A1/A2 fail zero-divergence gating (22/4,000 and 1/4,000). All five yield 20×4,000 CountLatents draws and exact DB parity. This does not retrospectively pass the 2×100 smoke.
+- Full-grid scores, live slate audit, portfolio results, zero-allocation tapes and complete seven-gate success remain **unfulfilled**. Remaining blockers: A1/A2 divergences, tape allocation/latency, and finite-grid tail coverage. Thresholds were not relaxed.

@@ -1,0 +1,678 @@
+[
+    {
+        "candidate": "m00_control",
+        "run_id": "bbd9b8c1-7fa8-409a-95dc-51581d0f4fb8",
+        "config_hash": "138a85740e0b8b2b3562e64b544b667e22a68fbddadcbae6ddc06333086f1d47",
+        "samples": 100,
+        "chains": 2,
+        "max_rhat": 1.0536641196358225,
+        "min_ess_bulk": 126.88081643846807,
+        "min_ess_tail": 73.14626022171834,
+        "min_bfmi": 0.6398781411732475,
+        "divergences": 0,
+        "treedepth_rate": 0,
+        "converged": false,
+        "failures": [
+            "max R-hat 1.0537 at fold 1 (gate < 1.050)",
+            "min tail ESS 73.1 at fold 1 (gate > 100)"
+        ],
+        "abstained": [
+        ],
+        "n_fitted": 720,
+        "heldout_ids": [
+            12477128,
+            12477134,
+            12477131,
+            12477135,
+            12477132,
+            12476800,
+            12476794,
+            12476797,
+            12476799,
+            12476798,
+            12477129,
+            12477126,
+            12477130,
+            12477123,
+            12477133,
+            12476632,
+            12476633,
+            12476630,
+            12476635,
+            12476636
+        ],
+        "prior_metrics": {
+            "n_teams": 25,
+            "cold_count": 0,
+            "relegated_count": 0,
+            "prior_lower_only_count": 0,
+            "structural_fallback_count": 0,
+            "market_fallback_count": 0,
+            "market_candidate_match_ids": [
+            ],
+            "prior_audit": {
+            },
+            "tier_anchor_counts": [
+            ],
+            "cross_anchor_fixture_count": 0
+        },
+        "gates": [
+            {
+                "name": "Gate 1 — compiled ReverseDiff tape",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 2 — NUTS 2×100",
+                "status": "passed",
+                "metrics": {
+                    "n_samples": 100,
+                    "n_chains": 2
+                }
+            },
+            {
+                "name": "Gate 3 — six-part convergence audit",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 4 — CountLatents extraction",
+                "status": "passed",
+                "metrics": {
+                    "n_matches": 20,
+                    "n_draws": 200
+                }
+            },
+            {
+                "name": "Gate 5 — score grid and market pricing",
+                "status": "passed",
+                "metrics": {
+                    "n_fixtures": 20,
+                    "n_draws": 200,
+                    "min_mass": 0.9996942579181072
+                }
+            },
+            {
+                "name": "Gate 6 — save/load Fit parity",
+                "status": "passed",
+                "metrics": {
+                    "run_id": "bbd9b8c1-7fa8-409a-95dc-51581d0f4fb8",
+                    "config_hash": "138a85740e0b8b2b3562e64b544b667e22a68fbddadcbae6ddc06333086f1d47"
+                }
+            },
+            {
+                "name": "Gate 7 — portfolio persistence parity",
+                "status": "abstained",
+                "metrics": {
+                }
+            }
+        ]
+    },
+    {
+        "candidate": "m01_all_spfl_league_offsets",
+        "run_id": "624bbbc6-d900-486b-9f47-fb69c0336b87",
+        "config_hash": "f60a64f37fd9d877440f3e2880b407992522912fa65687e9a9a0661e111996ac",
+        "samples": 100,
+        "chains": 2,
+        "max_rhat": 1.0641515304998124,
+        "min_ess_bulk": 33.582555817266694,
+        "min_ess_tail": 57.678904651633346,
+        "min_bfmi": 0.7763450372005252,
+        "divergences": 0,
+        "treedepth_rate": 0,
+        "converged": false,
+        "failures": [
+            "max R-hat 1.0642 at fold 1 (gate < 1.050)",
+            "min bulk ESS 33.6 at fold 1 (gate > 100)",
+            "min tail ESS 57.7 at fold 1 (gate > 100)"
+        ],
+        "abstained": [
+        ],
+        "n_fitted": 1476,
+        "heldout_ids": [
+            12477128,
+            12477134,
+            12477131,
+            12477135,
+            12477132,
+            12476800,
+            12476794,
+            12476797,
+            12476799,
+            12476798,
+            12477129,
+            12477126,
+            12477130,
+            12477123,
+            12477133,
+            12476632,
+            12476633,
+            12476630,
+            12476635,
+            12476636
+        ],
+        "prior_metrics": {
+            "n_teams": 43,
+            "cold_count": 0,
+            "relegated_count": 0,
+            "prior_lower_only_count": 0,
+            "structural_fallback_count": 0,
+            "market_fallback_count": 0,
+            "market_candidate_match_ids": [
+            ],
+            "prior_audit": {
+            },
+            "tier_anchor_counts": [
+            ],
+            "cross_anchor_fixture_count": 0
+        },
+        "gates": [
+            {
+                "name": "Gate 1 — compiled ReverseDiff tape",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 2 — NUTS 2×100",
+                "status": "passed",
+                "metrics": {
+                    "n_samples": 100,
+                    "n_chains": 2
+                }
+            },
+            {
+                "name": "Gate 3 — six-part convergence audit",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 4 — CountLatents extraction",
+                "status": "passed",
+                "metrics": {
+                    "n_matches": 20,
+                    "n_draws": 200
+                }
+            },
+            {
+                "name": "Gate 5 — score grid and market pricing",
+                "status": "passed",
+                "metrics": {
+                    "n_fixtures": 20,
+                    "n_draws": 200,
+                    "min_mass": 0.9995698555524997
+                }
+            },
+            {
+                "name": "Gate 6 — save/load Fit parity",
+                "status": "passed",
+                "metrics": {
+                    "run_id": "624bbbc6-d900-486b-9f47-fb69c0336b87",
+                    "config_hash": "f60a64f37fd9d877440f3e2880b407992522912fa65687e9a9a0661e111996ac"
+                }
+            },
+            {
+                "name": "Gate 7 — portfolio persistence parity",
+                "status": "abstained",
+                "metrics": {
+                }
+            }
+        ]
+    },
+    {
+        "candidate": "m02_all_spfl_hierarchical_tiers",
+        "run_id": "58546775-5771-4bd1-8948-a0b1da2f352c",
+        "config_hash": "4564b0d59a52655233b58a686528326a3404ea77216f5088ad7faf658717999c",
+        "samples": 100,
+        "chains": 2,
+        "max_rhat": 1.0992784512933593,
+        "min_ess_bulk": 91.11737354442437,
+        "min_ess_tail": 46.08193588889313,
+        "min_bfmi": 0.9716666202978336,
+        "divergences": 0,
+        "treedepth_rate": 0,
+        "converged": false,
+        "failures": [
+            "max R-hat 1.0993 at fold 1 (gate < 1.050)",
+            "min bulk ESS 91.1 at fold 1 (gate > 100)",
+            "min tail ESS 46.1 at fold 1 (gate > 100)"
+        ],
+        "abstained": [
+        ],
+        "n_fitted": 1476,
+        "heldout_ids": [
+            12477128,
+            12477134,
+            12477131,
+            12477135,
+            12477132,
+            12476800,
+            12476794,
+            12476797,
+            12476799,
+            12476798,
+            12477129,
+            12477126,
+            12477130,
+            12477123,
+            12477133,
+            12476632,
+            12476633,
+            12476630,
+            12476635,
+            12476636
+        ],
+        "prior_metrics": {
+            "n_teams": 43,
+            "cold_count": 0,
+            "relegated_count": 0,
+            "prior_lower_only_count": 0,
+            "structural_fallback_count": 0,
+            "market_fallback_count": 0,
+            "market_candidate_match_ids": [
+            ],
+            "prior_audit": {
+            },
+            "tier_anchor_counts": [
+                12,
+                10,
+                10,
+                11
+            ],
+            "cross_anchor_fixture_count": 301
+        },
+        "gates": [
+            {
+                "name": "Gate 1 — compiled ReverseDiff tape",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 2 — NUTS 2×100",
+                "status": "passed",
+                "metrics": {
+                    "n_samples": 100,
+                    "n_chains": 2
+                }
+            },
+            {
+                "name": "Gate 3 — six-part convergence audit",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 4 — CountLatents extraction",
+                "status": "passed",
+                "metrics": {
+                    "n_matches": 20,
+                    "n_draws": 200
+                }
+            },
+            {
+                "name": "Gate 5 — score grid and market pricing",
+                "status": "passed",
+                "metrics": {
+                    "n_fixtures": 20,
+                    "n_draws": 200,
+                    "min_mass": 0.9999134434710096
+                }
+            },
+            {
+                "name": "Gate 6 — save/load Fit parity",
+                "status": "passed",
+                "metrics": {
+                    "run_id": "58546775-5771-4bd1-8948-a0b1da2f352c",
+                    "config_hash": "4564b0d59a52655233b58a686528326a3404ea77216f5088ad7faf658717999c"
+                }
+            },
+            {
+                "name": "Gate 7 — portfolio persistence parity",
+                "status": "abstained",
+                "metrics": {
+                }
+            }
+        ]
+    },
+    {
+        "candidate": "m03_prior_structural_offset",
+        "run_id": "d32da218-d9ec-451a-b9fe-04234d93b0d6",
+        "config_hash": "e57da9e231a9634561fcf0a048e5f15eaca7bc2162687cfe65bb902684ccc0c8",
+        "samples": 100,
+        "chains": 2,
+        "max_rhat": 1.0559665817055368,
+        "min_ess_bulk": 35.649128227304274,
+        "min_ess_tail": 24.607224385658675,
+        "min_bfmi": 0.6397350117362314,
+        "divergences": 0,
+        "treedepth_rate": 0,
+        "converged": false,
+        "failures": [
+            "max R-hat 1.0560 at fold 1 (gate < 1.050)",
+            "min bulk ESS 35.6 at fold 1 (gate > 100)",
+            "min tail ESS 24.6 at fold 1 (gate > 100)"
+        ],
+        "abstained": [
+        ],
+        "n_fitted": 720,
+        "heldout_ids": [
+            12477128,
+            12477134,
+            12477131,
+            12477135,
+            12477132,
+            12476800,
+            12476794,
+            12476797,
+            12476799,
+            12476798,
+            12477129,
+            12477126,
+            12477130,
+            12477123,
+            12477133,
+            12476632,
+            12476633,
+            12476630,
+            12476635,
+            12476636
+        ],
+        "prior_metrics": {
+            "n_teams": 25,
+            "cold_count": 2,
+            "relegated_count": 2,
+            "prior_lower_only_count": 0,
+            "structural_fallback_count": 0,
+            "market_fallback_count": 0,
+            "market_candidate_match_ids": [
+            ],
+            "prior_audit": {
+                "arbroath": {
+                    "status": "relegated",
+                    "prior_season": "23/24",
+                    "evidence_match_ids": [
+                        11395859,
+                        11395851,
+                        11395804,
+                        11395845,
+                        11395842,
+                        11395835,
+                        11395826,
+                        11395825,
+                        11395809,
+                        11395800,
+                        11395795,
+                        11813347,
+                        11395785,
+                        11817833,
+                        11395773,
+                        11395770,
+                        11395764,
+                        11395761,
+                        11395753,
+                        11395750,
+                        11900121,
+                        11395746,
+                        11395737,
+                        11395731,
+                        11395723,
+                        11395719,
+                        11395712,
+                        11395710,
+                        11395702,
+                        11395696,
+                        12073607,
+                        11395690,
+                        11395686,
+                        11395682,
+                        11395675,
+                        11395668
+                    ],
+                    "reason": "upper_tier_prior_season"
+                },
+                "inverness-caledonian-thistle": {
+                    "status": "relegated",
+                    "prior_season": "23/24",
+                    "evidence_match_ids": [
+                        11395857,
+                        11395853,
+                        11395849,
+                        11395839,
+                        11395831,
+                        11395828,
+                        11395825,
+                        11395817,
+                        11395808,
+                        11395798,
+                        11395793,
+                        11691827,
+                        11395786,
+                        11395778,
+                        11779159,
+                        11395773,
+                        11395769,
+                        11395765,
+                        11395757,
+                        11395755,
+                        11395749,
+                        11395742,
+                        11395738,
+                        11395734,
+                        11395731,
+                        11395724,
+                        11395715,
+                        11395708,
+                        11395705,
+                        11395699,
+                        11395693,
+                        11395690,
+                        11395684,
+                        11395679,
+                        11395674,
+                        11395670
+                    ],
+                    "reason": "upper_tier_prior_season"
+                }
+            },
+            "tier_anchor_counts": [
+            ],
+            "cross_anchor_fixture_count": 0
+        },
+        "gates": [
+            {
+                "name": "Gate 1 — compiled ReverseDiff tape",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 2 — NUTS 2×100",
+                "status": "passed",
+                "metrics": {
+                    "n_samples": 100,
+                    "n_chains": 2
+                }
+            },
+            {
+                "name": "Gate 3 — six-part convergence audit",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 4 — CountLatents extraction",
+                "status": "passed",
+                "metrics": {
+                    "n_matches": 20,
+                    "n_draws": 200
+                }
+            },
+            {
+                "name": "Gate 5 — score grid and market pricing",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 6 — save/load Fit parity",
+                "status": "passed",
+                "metrics": {
+                    "run_id": "d32da218-d9ec-451a-b9fe-04234d93b0d6",
+                    "config_hash": "e57da9e231a9634561fcf0a048e5f15eaca7bc2162687cfe65bb902684ccc0c8"
+                }
+            },
+            {
+                "name": "Gate 7 — portfolio persistence parity",
+                "status": "abstained",
+                "metrics": {
+                }
+            }
+        ]
+    },
+    {
+        "candidate": "m04_prior_market_derived",
+        "run_id": "7fc0643b-14c5-424c-9ed1-32411ab3e076",
+        "config_hash": "cd3d72f83296c0fd4630c00d858ec2829fe1f534e96ad0af909a696a04dfdbc4",
+        "samples": 100,
+        "chains": 2,
+        "max_rhat": 1.0649389421738664,
+        "min_ess_bulk": 85.50483549437257,
+        "min_ess_tail": 64.14678635953278,
+        "min_bfmi": 0.7463080385718889,
+        "divergences": 0,
+        "treedepth_rate": 0,
+        "converged": false,
+        "failures": [
+            "max R-hat 1.0649 at fold 1 (gate < 1.050)",
+            "min bulk ESS 85.5 at fold 1 (gate > 100)",
+            "min tail ESS 64.1 at fold 1 (gate > 100)"
+        ],
+        "abstained": [
+        ],
+        "n_fitted": 720,
+        "heldout_ids": [
+            12477128,
+            12477134,
+            12477131,
+            12477135,
+            12477132,
+            12476800,
+            12476794,
+            12476797,
+            12476799,
+            12476798,
+            12477129,
+            12477126,
+            12477130,
+            12477123,
+            12477133,
+            12476632,
+            12476633,
+            12476630,
+            12476635,
+            12476636
+        ],
+        "prior_metrics": {
+            "n_teams": 25,
+            "cold_count": 2,
+            "relegated_count": 0,
+            "prior_lower_only_count": 0,
+            "structural_fallback_count": 0,
+            "market_fallback_count": 1,
+            "market_candidate_match_ids": [
+                11395668,
+                11395670,
+                11395674,
+                11395675,
+                11395679,
+                11395682,
+                11395684,
+                11395686,
+                11395690
+            ],
+            "prior_audit": {
+                "arbroath": {
+                    "status": "fallback",
+                    "prior_season": "23/24",
+                    "evidence_match_ids": [
+                        11395668,
+                        11395675,
+                        11395682,
+                        11395686,
+                        11395690
+                    ],
+                    "reason": "missing_or_refused_complete_1x2_inversion"
+                },
+                "inverness-caledonian-thistle": {
+                    "status": "market",
+                    "prior_season": "23/24",
+                    "evidence_match_ids": [
+                        11395670,
+                        11395674,
+                        11395679,
+                        11395684,
+                        11395690
+                    ],
+                    "reason": "accepted_complete_1x2_inversions"
+                }
+            },
+            "tier_anchor_counts": [
+            ],
+            "cross_anchor_fixture_count": 0
+        },
+        "gates": [
+            {
+                "name": "Gate 1 — compiled ReverseDiff tape",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 2 — NUTS 2×100",
+                "status": "passed",
+                "metrics": {
+                    "n_samples": 100,
+                    "n_chains": 2
+                }
+            },
+            {
+                "name": "Gate 3 — six-part convergence audit",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 4 — CountLatents extraction",
+                "status": "passed",
+                "metrics": {
+                    "n_matches": 20,
+                    "n_draws": 200
+                }
+            },
+            {
+                "name": "Gate 5 — score grid and market pricing",
+                "status": "failed",
+                "metrics": {
+                }
+            },
+            {
+                "name": "Gate 6 — save/load Fit parity",
+                "status": "passed",
+                "metrics": {
+                    "run_id": "7fc0643b-14c5-424c-9ed1-32411ab3e076",
+                    "config_hash": "cd3d72f83296c0fd4630c00d858ec2829fe1f534e96ad0af909a696a04dfdbc4"
+                }
+            },
+            {
+                "name": "Gate 7 — portfolio persistence parity",
+                "status": "abstained",
+                "metrics": {
+                }
+            }
+        ]
+    }
+]
