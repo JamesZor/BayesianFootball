@@ -107,7 +107,7 @@ function main()
             sub_sl = subset(scores,
                 :model => ByRow(==(c.name)),
                 :subset => ByRow(==("target")),
-                :market => ByRow(==("all")),
+                :market => ByRow(==("1X2")),
                 :metric => ByRow(==("compression_slope")))
             sl_str = nrow(sub_sl) > 0 ? @sprintf("%.4f", sub_sl.value[1]) : "n/a"
 
@@ -144,7 +144,7 @@ function main()
             sub_sl = subset(scores,
                 :model => ByRow(==(c.name)),
                 :subset => ByRow(==("target")),
-                :market => ByRow(==("all")),
+                :market => ByRow(==("1X2")),
                 :metric => ByRow(==("compression_slope")))
             sl_str = nrow(sub_sl) > 0 ? @sprintf("%.4f", sub_sl.value[1]) : "n/a"
 
