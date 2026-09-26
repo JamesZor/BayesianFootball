@@ -36,3 +36,4 @@ current_development/grw_market_smile/results/*/checkpoints_*/
 # Task 016 prototype: budget-stamped per-fold checkpoints
 current_development/grw_smile_spine/results/*/checkpoints_*/
 logs/
+*.log

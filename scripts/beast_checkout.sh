@@ -31,6 +31,7 @@ if [ -f "/root/BayesianFootball/.env" ]; then
 fi
 
 mkdir -p "$TARGET_DIR/.cache"
+mkdir -p "/root/BF_runs/logs/$SHA"
 if compgen -G "/root/BayesianFootball/.cache/datastore_Scottish*.jls" > /dev/null; then
     cp -n /root/BayesianFootball/.cache/datastore_Scottish*.jls "$TARGET_DIR/.cache/" 2>/dev/null || true
 elif compgen -G "/root/BayesianFootball-scotland-cross-tier/.cache/datastore_Scottish*.jls" > /dev/null; then
@@ -60,6 +61,7 @@ if [ -f "/root/BayesianFootball/.env" ]; then
 fi
 
 mkdir -p "$TARGET_DIR/.cache"
+mkdir -p "/root/BF_runs/logs/$SHA"
 if compgen -G "/root/BayesianFootball/.cache/datastore_Scottish*.jls" > /dev/null; then
     cp -n /root/BayesianFootball/.cache/datastore_Scottish*.jls "$TARGET_DIR/.cache/" 2>/dev/null || true
 elif compgen -G "/root/BayesianFootball-scotland-cross-tier/.cache/datastore_Scottish*.jls" > /dev/null; then
