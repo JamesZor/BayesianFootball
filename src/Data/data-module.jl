@@ -1,6 +1,7 @@
 # src/data/data-module.jl
 module Data
 
+using CSV
 using DataFrames
 using Dates
 using LibPQ
@@ -34,6 +35,7 @@ include("preprocessing.jl")
 include("splitting/types.jl")
 include("splitting/clock.jl")
 include("splitting/methods.jl")
+include("splitting/scoped.jl")
 include("splitting/display.jl")
 
 # 5. QoL
@@ -42,11 +44,13 @@ include("./display.jl")
 export 
     # Types
     DBConfig, DataStore, DataTournemantSegment,
-    ScottishLower, ScottishUpper, Ireland, IrelandFirstDivision, IrelandAll,
+    ScottishLower, ScottishUpper, ScottishAll, ScottishPyramid,
+    Ireland, IrelandFirstDivision, IrelandAll,
     SouthKorea, Norway, Veikkausliiga,
+    DataScope, ScopedWalkForwardCV,
     
     # Functions
-    load_datastore_sql, load_datastore_cached,
+    load_datastore_sql, load_datastore_cached, apply_scope, club_season_tiers,
     
     # Re-export Markets
     MarketConfig, Market1X2, MarketOverUnder, MarketBTTS, MarketDC,

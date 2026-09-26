@@ -6,6 +6,7 @@
 struct ScottishLower <: DataTournemantSegment end
 struct ScottishUpper <: DataTournemantSegment end
 struct ScottishAll   <: DataTournemantSegment end
+struct ScottishPyramid <: DataTournemantSegment end
 struct Ireland       <: DataTournemantSegment end
 struct IrelandFirstDivision <: DataTournemantSegment end
 struct IrelandAll    <: DataTournemantSegment end
@@ -28,6 +29,8 @@ tournament_ids(::ScottishLower) = [56, 57]
 tournament_ids(::ScottishUpper) = [54, 55]
 # Whole SPFL pyramid; a club keeps its canonical team identity across tiers.
 tournament_ids(::ScottishAll)   = [54, 55, 56, 57]
+# Whole SPFL plus the three senior cup bridges used by scoped harness experiments.
+tournament_ids(::ScottishPyramid) = [54, 55, 56, 57, 73, 982, 1520]
 tournament_ids(::Ireland)       = [79]
 tournament_ids(::IrelandFirstDivision) = [718]
 # 79 = Premier Division, 718 = First Division. Pooled on the same argument as ScottishUpper:

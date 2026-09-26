@@ -40,6 +40,23 @@ function create_features(
     return FeatureCollection(raw_vector)
 end
 
+"Build features on the scope's canonical clock while retaining every widened row."
+function create_features(
+    splits::Vector{<:Tuple{Data.SplitBoundary,<:Any}},
+    ds::Data.DataStore,
+    model::AbstractFootballModel,
+    splitter::Data.ScopedWalkForwardCV,
+)
+    items = [
+        let feature_set = create_features(boundary, ds, model, splitter.scope.dynamics_col)
+            _align_scoped_time!(feature_set, boundary, meta, ds, splitter)
+            (feature_set, meta)
+        end
+        for (boundary, meta) in splits
+    ]
+    return FeatureCollection(items)
+end
+
 """
     create_features(boundary, ds, model, dynamics_col)
 The Micro Builder: Extracts all necessary data for a single fold using 
@@ -125,6 +142,44 @@ function create_features(
 end
 
 "Align pooled target rows to the splitter's shared effective clock."
+function _align_scoped_time!(feature_set::FeatureSet, boundary::Data.SplitBoundary,
+                             meta, ds::Data.DataStore,
+                             splitter::Data.ScopedWalkForwardCV)
+    history_ids = Set(Int.(boundary.history_match_ids))
+    target_ids = Set(Int.(boundary.target_match_ids))
+    all_ids = union(history_ids, target_ids)
+    matches_df = subset(ds.matches, :match_id => ByRow(id -> Int(id) in all_ids))
+    history_df = subset(matches_df, :match_id => ByRow(id -> Int(id) in history_ids))
+    target_df = subset(matches_df, :match_id => ByRow(id -> Int(id) in target_ids))
+    ordered_ids = Int.(vcat(history_df.match_id, target_df.match_id))
+    ordered_ids == Int.(feature_set.data[:ordered_match_ids]) || error(
+        "Scoped feature row order differs from the relational builder in fold $(boundary.fold_id)")
+
+    history_steps = sort(unique(String.(history_df.season)))
+    history_state = Dict(step => index for (index, step) in enumerate(history_steps))
+    history_indices = Int[history_state[String(season)] for season in history_df.season]
+
+    raw_step_by_id = Data._scope_step_map(
+        ds.matches, splitter.scope, meta.target_season)
+    missing_ids = Int[id for id in target_df.match_id if !haskey(raw_step_by_id, Int(id))]
+    isempty(missing_ids) || error(
+        "Scoped feature clock cannot resolve target match IDs $missing_ids")
+    raw_target_steps = sort(unique(raw_step_by_id[Int(id)] for id in target_df.match_id))
+    target_state = Dict(step => index for (index, step) in enumerate(raw_target_steps))
+    target_indices = Int[
+        length(history_steps) + target_state[raw_step_by_id[Int(id)]]
+        for id in target_df.match_id
+    ]
+
+    feature_set.data[:time_indices] = vcat(history_indices, target_indices)
+    feature_set.data[:n_history_steps] = length(history_steps)
+    feature_set.data[:n_target_steps] = length(raw_target_steps)
+    feature_set.data[:n_rounds] = length(history_steps) + length(raw_target_steps)
+    feature_set.data[:effective_target_steps] = Dict(
+        Int(id) => raw_step_by_id[Int(id)] for id in target_df.match_id)
+    return feature_set
+end
+
 function _align_splitter_time!(
     feature_set::FeatureSet,
     boundary::Data.SplitBoundary,
