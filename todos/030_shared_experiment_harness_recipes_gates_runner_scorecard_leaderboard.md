@@ -75,6 +75,9 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-26 @pi] Applied post-run review hardening: a failed control load is recorded while independently loadable candidates still score, `score_runs` now refuses non-710 target panels by default, and two-digit season rollover is tested. Standalone harness tests pass 20/20.
 
 - [2026-09-26 @claude] **Phase 1 accepted** at `4dd828b1`. Manager checks: LEADERBOARD LogLoss for g1/g2/g3/m12_td equals r04 exactly; `harness_scores` holds 10,640 rows / 19 runs / 12 subsets / scorecard v1 and `harness_experiments` 23 rows (queried directly); independent test run on mcmc-beast (`/root/BF_runs/4dd828b1`, Manifest linked from `/root/BayesianFootball`) passes 20/20; post-review diff changes error handling only, not score values. Follow-ups carried into Phase 2: `entered_spfl` cohort, cohort n in the leaderboard. Phase 2 released.
+- [2026-09-26 @pi] Implemented Phase 2 data scope: `ScottishPyramid`, validated `DataScope`, copy-only cup policy, scoped canonical folds, monitor holdouts, and the Features clock. Synthetic scope/scorer suites pass standalone; the parallel runner is 20/21 with only known T007.
+- [2026-09-26 @pi] Deterministic local checks reproduce the lower 40-fold/710-ID grid exactly, reproduce every g2 widening count on all 40 folds, and match the prototype feature IDs, time indices, step counts, team counts, and team maps on all 40 folds. No sampling was run.
+- [2026-09-26 @pi] Repeated the deterministic verifier on `mcmc-beast` at `dca65a1d` with the same exact results. Re-scored W0 at v1.1: 19/19 runs, 12,426 rows; retained all 10,640 v1 rows; regenerated the committed leaderboard with metric-specific cohort `n`.
 
 ## Verification & Findings
 
