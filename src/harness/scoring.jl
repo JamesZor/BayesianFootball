@@ -297,9 +297,12 @@ function _score_row(ref, subset, market, metric, value, lo, hi, n_obs, n_fixture
 end
 
 function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::Int,
-                    control_observations = nothing, expected_panel = nothing)
+                    control_observations = nothing, expected_panel = nothing,
+                    expected_count::Union{Nothing,Int} = nothing)
     panel = _season_panel(ds, fit, target_seasons)
     isempty(panel) && error("$(ref.label): no target fixtures in $(target_seasons)")
+    expected_count === nothing || length(panel) == expected_count || error(
+        "$(ref.label) covers $(length(panel)) target fixtures; expected $expected_count")
     if expected_panel !== nothing && Set(panel) != Set(expected_panel)
         missing_ids = setdiff(Set(expected_panel), Set(panel))
         extra_ids = setdiff(Set(panel), Set(expected_panel))
@@ -395,24 +398,35 @@ end
 function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
                     target_seasons = ["24/25", "25/26"],
                     bootstrap_B::Int = 10_000,
+                    expected_fixtures::Union{Nothing,Int} = 710,
                     failures::Union{Nothing,AbstractVector} = nothing)
     ctl = _control_ref(refs, control)
-    control_fit = Training.load_fit(Training.PostgresStorage(ctl.experiment), ctl.run_id)
-    control_bundle = _score_one(ctl, control_fit, ds, tiers;
-                                target_seasons, bootstrap_B,
-                                control_observations = :self)
-    control_fit = nothing
-    GC.gc()
+    control_bundle = try
+        fit = Training.load_fit(Training.PostgresStorage(ctl.experiment), ctl.run_id)
+        _score_one(ctl, fit, ds, tiers; target_seasons, bootstrap_B,
+                   expected_count = expected_fixtures, control_observations = :self)
+    catch error
+        failures === nothing && rethrow()
+        push!(failures, (; label = ctl.label, experiment = ctl.experiment,
+                          run_id = ctl.run_id, reason = sprint(showerror, error)))
+        nothing
+    finally
+        GC.gc()
+    end
 
-    frames = DataFrame[control_bundle.scores]
+    frames = control_bundle === nothing ? DataFrame[] : DataFrame[control_bundle.scores]
+    common_panel = control_bundle === nothing ? nothing : control_bundle.panel
+    control_observations = control_bundle === nothing ? nothing : control_bundle.observations
     for ref in refs
         ref.run_id == ctl.run_id && continue
         fit = nothing
         try
             fit = Training.load_fit(Training.PostgresStorage(ref.experiment), ref.run_id)
             bundle = _score_one(ref, fit, ds, tiers; target_seasons, bootstrap_B,
-                                expected_panel = control_bundle.panel,
-                                control_observations = control_bundle.observations)
+                                expected_panel = common_panel,
+                                expected_count = expected_fixtures,
+                                control_observations)
+            common_panel === nothing && (common_panel = bundle.panel)
             push!(frames, bundle.scores)
         catch error
             failures === nothing && rethrow()
@@ -424,6 +438,7 @@ function score_runs(refs::AbstractVector{RunRef}; ds, tiers, control = nothing,
             GC.gc()
         end
     end
+    isempty(frames) && return DataFrame()
     return vcat(frames...)
 end
 

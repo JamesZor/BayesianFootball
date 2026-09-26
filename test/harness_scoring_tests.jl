@@ -78,6 +78,7 @@ end
     @test all(relegated.clubs[m] == ["R"] for m in relegated.match_ids)
     @test_throws ArgumentError H.transition_cohort(ds, panel, tiers;
         first_n = 9, direction = :any)
+    @test H._previous_season("00/01") == "99/00"
 end
 
 @testset "Harness fixture-clustered bootstrap" begin

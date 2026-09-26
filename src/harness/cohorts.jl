@@ -37,9 +37,11 @@ function _previous_season(season::AbstractString)
     m === nothing && error("transition_cohort: unsupported season label '$season'")
     left = m.captures[1]
     width = length(left)
+    right = m.captures[2]
     start = parse(Int, left) - 1
-    finish = parse(Int, m.captures[2]) - 1
-    return lpad(string(start), width, '0') * "/" * lpad(string(finish), length(m.captures[2]), '0')
+    finish = mod(parse(Int, right) - 1, 10^length(right))
+    width == 2 && (start = mod(start, 100))
+    return lpad(string(start), width, '0') * "/" * lpad(string(finish), length(right), '0')
 end
 
 function _transition_matches(direction::Symbol, previous::Int, current::Int)

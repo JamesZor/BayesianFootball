@@ -72,10 +72,11 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-26 @pi] Implemented the Phase 1 Harness module skeleton, cohort definitions, versioned scorer, additive score/register store, W0 and register seeds, CLI scripts, and offline synthetic tests. Standalone harness tests pass (19/19); remote W0 scoring and reproduction checks remain before handoff.
 - [2026-09-26 @pi] Backfilled W0 on `mcmc-beast` from checkout `0426d681`: 19/19 runs loaded and 10,640 score rows persisted. g1/g2/g3/m12 proper scores reproduce r04 exactly; v1 slopes differ from r04 by only 0.00021–0.00030. Generated and committed `LEADERBOARD.{csv,md}` and `REGISTER.md`.
 - [2026-09-26 @pi] Investigated both REVIEW discrepancies by immutable UUID. Suite 01's old scorer on real run `2722f7e2` reproduces 0.6603526 against `ds.odds`, while harness v1 gives 0.6467857 on Betfair. Unified's 0.6545487 row was synthetic run `013af743`, explaining its disagreement with the later real controls.
+- [2026-09-26 @pi] Applied post-run review hardening: a failed control load is recorded while independently loadable candidates still score, `score_runs` now refuses non-710 target panels by default, and two-digit season rollover is tested. Standalone harness tests pass 20/20.
 
 ## Verification & Findings
 
-- `test/harness_scoring_tests.jl`: 19/19 tests pass standalone.
+- `test/harness_scoring_tests.jl`: 20/20 tests pass standalone.
 - `test/run_parallel_tests.jl`: 19/20 suites pass; only known T007 (`features_tests.jl`, `SplitClockProbe`) fails.
 - `./scripts/todo.sh check`: passes (31 tasks; AGENTS.md 19,673 bytes).
 - Full evidence, commands, UUIDs and numbers: `docs/architecture/harness_phase1_report.md`.

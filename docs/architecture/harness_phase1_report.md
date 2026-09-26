@@ -111,11 +111,11 @@ Standalone:
 julia --project -t 8 -e 'using Test, BayesianFootball, DataFrames, Dates;
 include("test/harness_scoring_tests.jl")'
 
-Harness transition cohorts                 8/8 pass
+Harness transition cohorts                 9/9 pass
 Harness fixture-clustered bootstrap         3/3 pass
 Harness compression slope convention        3/3 pass
 Harness per-subset score row counts         5/5 pass
-Total                                      19/19 pass
+Total                                      20/20 pass
 ```
 
 Parallel runner:
