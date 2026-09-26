@@ -1,5 +1,5 @@
 "A declarative model × data-scope × sampler recipe consumed by the experiment harness."
-Base.@kwdef struct Candidate{M<:Models.AbstractFootballModel,S}
+Base.@kwdef struct Candidate{M,S}
     name::String
     model::M
     scope::Data.DataScope
@@ -52,6 +52,6 @@ function fit_config(candidate::Candidate; stage::Symbol, experiment::AbstractStr
         execution = Training.QueuedExecution(max_concurrent_tasks = 16),
         tags = ["harness", "stage:$stage", "recipe:" * recipe_hash(candidate)],
         description = candidate.hypothesis,
-        save_dir = joinpath("data", "fits", String(experiment), String(stage)),
+        save_dir = joinpath("data", "fits", String(experiment), String(stage), candidate.name),
     )
 end

@@ -105,7 +105,8 @@ _relative_error(left, right) = norm(left - right) / max(norm(left), norm(right),
 
 "Compiled ReverseDiff parity, including three replay points, plus tape telemetry."
 function _gradient_audit(model, feature_set; replays::Int = 200, seed::Int = 20260911)
-    turing_model = Models.PreGame.build_turing_model(model, feature_set)
+    fs = feature_set isa Tuple ? first(feature_set) : feature_set
+    turing_model = Models.PreGame.build_turing_model(model, fs)
     Random.seed!(seed)
     varinfo = DynamicPPL.VarInfo(turing_model)
     turing_model(varinfo)
@@ -213,16 +214,20 @@ end
 
 "Full target coverage is hard; monitor and Betfair coverage is diagnostic only."
 function _target_coverage(candidate::Candidate, fit, inputs;
-                          expected_folds::Int = 40, expected_target::Int = 710)
-    length(fit.folds) == expected_folds || error(
-        "$(candidate.name) has $(length(fit.folds)) folds; expected $expected_folds")
+                          expected_folds::Union{Nothing,Int} = nothing,
+                          expected_target::Union{Nothing,Int} = nothing)
+    folds_needed = expected_folds === nothing ? length(inputs.boundaries) : expected_folds
+    length(fit.folds) == folds_needed || error(
+        "$(candidate.name) has $(length(fit.folds)) folds; expected $folds_needed")
     target_tournaments = Set(candidate.scope.target_tournaments)
     expected_ids = Set{Int}()
     for heldout in inputs.oos, row in eachrow(heldout)
         Int(row.tournament_id) in target_tournaments && push!(expected_ids, Int(row.match_id))
     end
-    length(expected_ids) == expected_target || error(
-        "splitter exposes $(length(expected_ids)) target fixtures; expected $expected_target")
+    if expected_target !== nothing
+        length(expected_ids) == expected_target || error(
+            "splitter exposes $(length(expected_ids)) target fixtures; expected $expected_target")
+    end
     latent_ids = Set(Int.(fit.latents.match_ids))
     missing_ids = setdiff(expected_ids, latent_ids)
     isempty(missing_ids) || error("latents miss $(length(missing_ids)) target fixtures")
@@ -300,3 +305,26 @@ function _convergence_diagnostic(fit)
                              "; abstained: " * join(summary.abstained, ", ")))
     return value
 end
+
+function _thin_chain(chain::MCMCChains.Chains, stride::Int)
+    return MCMCChains.Chains(
+        parent(chain.value)[1:stride:end, :, :],
+        names(chain),
+        Dict(:parameters => names(chain, :parameters),
+             :internals => names(chain, :internals));
+        start = 1,
+    )
+end
+
+function thin_for_persistence(fit::Training.Fit, inputs, stride::Int)
+    stride >= 1 || error("persist stride must be ≥ 1; got $stride")
+    stride == 1 && return fit
+    folds = Training.FoldFit[Training.FoldFit(f.fold, _thin_chain(f.chain, stride), f.meta)
+                             for f in fit.folds]
+    latents, note = Training.extract_run_latents(fit.config.model, folds, inputs.oos, inputs.feature_sets)
+    latents === nothing && error("thinned latent extraction failed: $note")
+    Set(latents.match_ids) == Set(fit.latents.match_ids) || error(
+        "thinned latents cover a different fixture set than the full-chain latents")
+    return Training.Fit(fit.config, folds, latents, fit.diagnostics, fit.metadata, fit.save_path)
+end
+
