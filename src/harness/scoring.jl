@@ -441,14 +441,18 @@ function leaderboard(scores::AbstractDataFrame)
             delta_vs_control = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control"),
             delta_lo = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :lo),
             delta_hi = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :hi))
-        extra = Dict{Symbol,Float64}()
+        extra_names = Symbol[]
+        extra_values = Float64[]
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
             subset = "transition_$(direction)_first$(first_n)"
             stem = "transition_$(direction)_first$(first_n)"
-            extra[Symbol(stem * "_logloss")] = _headline(scores, run_id, subset, "all", "logloss")
-            extra[Symbol(stem * "_bias_pp")] = _headline(scores, run_id, subset, "1X2", "transition_bias_pp")
+            push!(extra_names, Symbol(stem * "_logloss"), Symbol(stem * "_bias_pp"))
+            push!(extra_values,
+                  _headline(scores, run_id, subset, "all", "logloss"),
+                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp"))
         end
-        push!(rows, merge(base, (; extra...)))
+        extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
+        push!(rows, merge(base, extra))
     end
     return sort!(DataFrame(rows), :target_logloss_all)
 end

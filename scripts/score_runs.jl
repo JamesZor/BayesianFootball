@@ -32,9 +32,20 @@ end
 
 function main(path)
     refs = load_run_refs(path)
-    if any(ref -> ref.experiment == "scottish_lower_decoupled_xg", refs)
-        include(joinpath(@__DIR__, "..", "experiments", "scottish_lower",
-                         "12_decoupled_generative_xg", "l12_loader.jl"))
+    if any(ref -> ref.experiment == "scottish_pyramid_grw_cups", refs)
+        include(joinpath(@__DIR__, "..", "current_development",
+                         "grw_pyramid_cups", "l01_loader.jl"))
+    end
+    prototype_loaders = Dict(
+        "scottish_lower_momentum_grw" =>
+            ("10_momentum_multiscale_grw", "l10_momentum_grw_loader.jl"),
+        "scottish_lower_decompression" =>
+            ("11_decompression_pxg_covariate", "l11_decompression_loader.jl"),
+        "scottish_lower_decoupled_xg" =>
+            ("12_decoupled_generative_xg", "l12_loader.jl"))
+    for (experiment, (folder, loader)) in prototype_loaders
+        any(ref -> ref.experiment == experiment, refs) || continue
+        include(joinpath(@__DIR__, "..", "experiments", "scottish_lower", folder, loader))
     end
 
     ds = Data.load_datastore_cached(Data.ScottishLower(); max_age_hours = 10_000)
