@@ -69,6 +69,7 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
   producing the read-only suite catalogue as the API input. No harness code written yet;
   next action: RFC review.
 - [2026-09-26 @claude] Plan approved with decisions (RFC §8). Execution delegated to pi (`openai-codex/gpt-5.6-sol`, thinking high) in worktree `.worktrees/BayesianFootball-experiment-harness`, branch `feat/experiment-harness`; Claude manages and reviews each phase. Phase 1 first.
+- [2026-09-26 @pi] Implemented the Phase 1 Harness module skeleton, cohort definitions, versioned scorer, additive score/register store, W0 and register seeds, CLI scripts, and offline synthetic tests. Standalone harness tests pass (19/19); remote W0 scoring and reproduction checks remain before handoff.
 
 ## Verification & Findings
 

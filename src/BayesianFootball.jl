@@ -64,9 +64,12 @@ include("./Calibration/calibration-module.jl")
 # MatchDay hands its output to Portfolio.stake_sheet, so it must come after Portfolio.
 include("./MatchDay/matchday-module.jl")
 
+# The shared experiment scorer consumes Evaluation, Portfolio, Calibration and MatchDay.
+include("./harness/harness-module.jl")
+
 # Export the main modules and key functions/types for users
 # *** UPDATED EXPORTS ***
-export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calibration, BackTesting, Evaluation, Portfolio, MatchDay
+export Data, Features, Models, Samplers, Training, Experiments, Predictions, Markets, Calibration, BackTesting, Evaluation, Portfolio, MatchDay, Harness
 export AbstractFootballModel, Vocabulary, FeatureSet, required_mapping_keys
 
 using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLatents,

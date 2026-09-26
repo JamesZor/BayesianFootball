@@ -26,6 +26,7 @@ const TEST_FILES = [
     "inference_tests.jl",
     "test_db_storage.jl",
     "evaluation_tests.jl",
+    "harness_scoring_tests.jl",
     "unified_portfolio_tests.jl",
     "test_portfolio_attribution.jl",
 ]
