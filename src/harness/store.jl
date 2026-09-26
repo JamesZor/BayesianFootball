@@ -105,9 +105,9 @@ _harness_score_version(value) =
 """
     write_scores!(db, df)
 
-Replace every row for each `(run_id, scorecard_version, control_run_id, stage)` represented
-in `df`, then insert the long scorecard rows in one transaction. A finalist portfolio write
-cannot erase grid scores, and a partial re-score cannot leave a mixed stage scorecard.
+Replace every row for each `(run_id, scorecard_version, control_run_id, stage, subset)`
+represented in `df`, then insert the long scorecard rows in one transaction. One finalist
+container cannot erase another, and a portfolio write cannot erase grid scores.
 """
 function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
     scores = if :scorecard_version in propertynames(df)
@@ -133,21 +133,23 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
         (string(scores.run_id[i]),
          versions[i],
          control_ids[i] === missing ? missing : string(control_ids[i]),
-         String(scores.stage[i]))
+         String(scores.stage[i]),
+         String(scores.subset[i]))
         for i in eachindex(versions)
     ])
     conn = Training.Inference._db_connect(db)
     try
         Training.Inference._db_exec(conn, "BEGIN;")
         try
-            for (run_id, scorecard_version, control_run_id, stage) in run_control_versions
+            for (run_id, scorecard_version, control_run_id, stage, subset) in run_control_versions
                 Training.Inference._db_exec(conn, """
                     DELETE FROM harness_scores
                     WHERE run_id = \$1::uuid
                       AND scorecard_version = \$2
                       AND (\$3::uuid IS NULL AND control_run_id IS NULL OR control_run_id = \$3::uuid)
-                      AND stage = \$4;
-                """, (run_id, scorecard_version, control_run_id, stage))
+                      AND stage = \$4
+                      AND subset = \$5;
+                """, (run_id, scorecard_version, control_run_id, stage, subset))
             end
             for i in axes(scores, 1)
                 c_id = control_ids[i] === missing ? missing : string(control_ids[i])
