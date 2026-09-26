@@ -2,7 +2,7 @@
 
 const HARNESS_LEAGUE_TIERS = Set((54, 55, 56, 57))
 const HARNESS_DIRECTIONS =
-    (:relegated_into_L1, :promoted_into_L1, :l1_l2, :any)
+    (:relegated_into_L1, :promoted_into_L1, :entered_spfl, :l1_l2, :any)
 
 """
     club_season_tiers(ds_leagues) -> Dict{Tuple{String,String},Int}
@@ -11,26 +11,7 @@ Map each club-season to its Scottish league tournament (54--57). A club appearin
 more than one league in the same season is ambiguous and is refused rather than assigned
 according to row order.
 """
-function club_season_tiers(ds_leagues)
-    required = (:home_team, :away_team, :season, :tournament_id)
-    all(c -> hasproperty(ds_leagues.matches, c), required) ||
-        error("club_season_tiers: matches require columns $(collect(required))")
-
-    tiers = Dict{Tuple{String,String},Int}()
-    for r in eachrow(ds_leagues.matches)
-        tier = Int(r.tournament_id)
-        tier in HARNESS_LEAGUE_TIERS || continue
-        season = String(r.season)
-        for club in (String(r.home_team), String(r.away_team))
-            key = (club, season)
-            prior = get(tiers, key, tier)
-            prior == tier || error(
-                "club_season_tiers: $club appears in tiers $prior and $tier in $season")
-            tiers[key] = tier
-        end
-    end
-    return tiers
-end
+club_season_tiers(ds_leagues) = Data.club_season_tiers(ds_leagues)
 
 function _previous_season(season::AbstractString)
     m = match(r"^(\d{2}|\d{4})/(\d{2}|\d{4})$", season)
@@ -73,11 +54,16 @@ function transition_cohort(ds, panel_ids, tiers;
     sort_columns = :match_date in propertynames(rows) ? [:match_date, :match_id] : [:match_id]
     sort!(rows, sort_columns)
 
+    covered_seasons = Set(String(row.season) for row in eachrow(rows))
     transitioned = Set{Tuple{String,String}}()
     for ((club, season), current) in tiers
-        previous = get(tiers, (club, _previous_season(season)), 0)
-        previous == 0 && continue
-        _transition_matches(direction, previous, current) && push!(transitioned, (club, season))
+        previous_season = _previous_season(season)
+        previous = get(tiers, (club, previous_season), 0)
+        enters_spfl = direction === :entered_spfl && previous == 0 &&
+                      previous_season in covered_seasons
+        (enters_spfl || (previous != 0 &&
+                         _transition_matches(direction, previous, current))) &&
+            push!(transitioned, (club, season))
     end
 
     appearances = Dict{Tuple{String,String},Int}()

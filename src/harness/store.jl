@@ -86,8 +86,8 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
     isempty(scores) && return df
 
     versions = [_harness_score_version(value) for value in scores.scorecard_version]
-    all(==("v1"), versions) || error(
-        "write_scores!: Phase 1 accepts only scorecard_version=\"v1\".")
+    all(in(("v1", "v1.1")), versions) || error(
+        "write_scores!: supported scorecards are v1 and v1.1.")
     run_versions = unique([(string(scores.run_id[i]), versions[i]) for i in eachindex(versions)])
     conn = Training.Inference._db_connect(db)
     try

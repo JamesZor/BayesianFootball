@@ -1,7 +1,7 @@
 # Version-1 experiment scorecard. The proper-score helpers are a direct graduation of
 # current_development/grw_player_hybrid/l02_evaluation.jl.
 
-const SCORECARD_VERSION = "v1"
+const SCORECARD_VERSION = "v1.1"
 const SCORE_REFERENCE = "devigged_betfair_twa(-20,0]"
 const SCORE_MARKETS = ("all", "1X2", "OU2.5", "BTTS")
 const SCORE_METRICS = Evaluation.AbstractScoringRule[
@@ -40,13 +40,15 @@ function _betfair_closing_odds(ds)
     return odds
 end
 
-function _season_panel(ds, fit, seasons::AbstractVector{<:AbstractString})
+function _season_panel(ds, fit, seasons::AbstractVector{<:AbstractString};
+                       tournaments = (56, 57))
     wanted = Set(String.(seasons))
+    wanted_tournaments = Set(Int.(tournaments))
     attrs = Dict(Int(r.match_id) => (String(r.season), Int(r.tournament_id))
                  for r in eachrow(ds.matches))
     return sort!(Int[m for m in Models.latent_match_ids(fit.latents)
                      if (a = get(attrs, Int(m), nothing); a !== nothing &&
-                         a[1] in wanted && a[2] in (56, 57))])
+                         a[1] in wanted && a[2] in wanted_tournaments)])
 end
 
 function _restrict(fit, panel)
@@ -264,13 +266,18 @@ function transition_bias_pp(observations::AbstractDataFrame, ds, clubs)
               n_obs = length(deltas), n_fixtures = length(used))
 end
 
-function _subsets(ds, target_ids, odds, tiers)
+function _subsets(ds, target_ids, scored_ids, odds, tiers)
     tournament = Dict(Int(r.match_id) => Int(r.tournament_id) for r in eachrow(ds.matches))
     subsets = Dict{String,Set{Int}}(
         "target" => Set{Int}(target_ids),
         "t56" => Set{Int}(m for m in target_ids if get(tournament, m, 0) == 56),
         "t57" => Set{Int}(m for m in target_ids if get(tournament, m, 0) == 57),
         "favourites" => intersect(Set{Int}(target_ids), favourites(odds)))
+    for monitor_tournament in (54, 55)
+        ids = Set{Int}(m for m in scored_ids
+                       if get(tournament, Int(m), 0) == monitor_tournament)
+        isempty(ids) || (subsets["monitor_t$(monitor_tournament)"] = ids)
+    end
     transitions = Dict{String,Any}()
     for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
         label = "transition_$(direction)_first$(first_n)"
@@ -309,17 +316,22 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
         error("$(ref.label) covers $(length(panel)) target fixtures, not the control's " *
               "$(length(expected_panel)); missing=$(length(missing_ids)), extra=$(length(extra_ids))")
     end
-    restricted = _restrict(fit, panel)
+    scored_panel = _season_panel(ds, fit, target_seasons;
+                                 tournaments = (54, 55, 56, 57))
+    restricted = _restrict(fit, scored_panel)
+    target_restricted = length(scored_panel) == length(panel) ? restricted : _restrict(fit, panel)
     odds = _betfair_closing_odds(ds)
     families = _family_selections(odds)
     context = _context(restricted, odds, ds)
+    target_context = length(scored_panel) == length(panel) ? context :
+                     _context(target_restricted, odds, ds)
     observations = _observation_frame(ref.label, context, odds)
     delta_control = control_observations === :self ? observations : control_observations
-    subsets, transitions = _subsets(ds, panel, odds, tiers)
-    market_sup = _market_supremacy(odds, panel)
+    subsets, transitions = _subsets(ds, panel, scored_panel, odds, tiers)
+    market_sup = _market_supremacy(odds, scored_panel)
     model_sup = _model_supremacy(restricted.latents)
 
-    exact_target = Dict(r.scope => r for r in _scores(ref.label, context, families))
+    exact_target = Dict(r.scope => r for r in _scores(ref.label, target_context, families))
     rows = NamedTuple[]
     for subset in sort!(collect(keys(subsets)))
         ids = subsets[subset]
@@ -333,7 +345,7 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
                 push!(rows, _score_row(ref, subset, market, metric, value, NaN, NaN,
                                        score.n_obs, n_fixtures))
             end
-            if delta_control !== nothing
+            if delta_control !== nothing && !startswith(subset, "monitor_")
                 control_subset = delta_control[
                     in.(delta_control.match_id, Ref(ids)), :]
                 family = market == "all" ? nothing : market
@@ -468,10 +480,12 @@ function leaderboard(scores::AbstractDataFrame)
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
             subset = "transition_$(direction)_first$(first_n)"
             stem = "transition_$(direction)_first$(first_n)"
-            push!(extra_names, Symbol(stem * "_logloss"), Symbol(stem * "_bias_pp"))
+            push!(extra_names, Symbol(stem * "_logloss"), Symbol(stem * "_bias_pp"),
+                  Symbol(stem * "_n"))
             push!(extra_values,
                   _headline(scores, run_id, subset, "all", "logloss"),
-                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp"))
+                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp"),
+                  _headline(scores, run_id, subset, "all", "logloss", :n_fixtures))
         end
         extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
         push!(rows, merge(base, extra))

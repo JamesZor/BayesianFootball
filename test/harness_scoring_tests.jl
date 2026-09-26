@@ -26,14 +26,17 @@ function toy_transition_store()
     id = 1
     # Previous-season memberships establish all four transition directions.
     for (tier, club, opponent) in ((55, "R", "R0"), (57, "P", "P0"),
-                                    (56, "D", "D0"), (54, "A", "A0"))
+                                    (56, "D", "D0"), (54, "A", "A0"),
+                                    (56, "I56", "I56b"), (57, "I57", "I57b"),
+                                    (55, "I55", "I55b"))
         add_fixture!(rows, id, Date(2023, 2, id), "22/23", tier, club, opponent)
         id += 1
     end
     # Intermediate season: R relegates into L1, P promotes into L1, D drops to L2,
     # A changes 54 -> 55 and therefore belongs only to :any.
-    current = ((56, "R", "R1"), (56, "P", "P1"),
-               (57, "D", "D1"), (55, "A", "A1"))
+    current = ((56, "R", "I56"), (56, "P", "I56"),
+               (57, "D", "I57"), (55, "A", "I55"),
+               (57, "E", "I57")) # E was absent while 22/23 was covered: entered SPFL.
     current_ids = Dict{String,Vector{Int}}()
     for (tier, club, opponent) in current
         current_ids[club] = Int[]
@@ -65,12 +68,15 @@ end
         first_n = 10, direction = :promoted_into_L1)
     l1_l2 = H.transition_cohort(ds, panel, tiers;
         first_n = 10, direction = :l1_l2)
+    entered = H.transition_cohort(ds, panel, tiers;
+        first_n = 10, direction = :entered_spfl)
     any_move = H.transition_cohort(ds, panel, tiers;
         first_n = 10, direction = :any)
 
     @test relegated.match_ids == Set(current["R"][1:10])
     @test promoted.match_ids == Set(current["P"][1:10])
     @test l1_l2.match_ids == union(Set(current["P"][1:10]), Set(current["D"][1:10]))
+    @test entered.match_ids == Set(current["E"][1:10])
     @test any_move.match_ids == union((Set(current[c][1:10]) for c in ("R", "P", "D", "A"))...)
     @test !(current["R"][11] in relegated.match_ids)
     @test H.transition_cohort(ds, panel, tiers;
@@ -135,6 +141,28 @@ end
     @test slopes.n_fixtures == length(ids)
     @test slopes.compression_slope > 1.0
     @test slopes.compression_slope ≈ 2.0 atol = 0.15
+end
+
+@testset "Harness monitor subsets from synthetic latents" begin
+    matches = DataFrame(
+        match_id = [1, 2, 3, 4], tournament_id = [56, 57, 54, 55],
+        season = fill("24/25", 4), match_date = Date.(fill("2024-08-03", 4)),
+        home_team = ["h$i" for i in 1:4], away_team = ["a$i" for i in 1:4])
+    ds = harness_store(matches)
+    latents = CountLatents([1, 2, 3, 4], fill(1.2, 4, 3), fill(1.0, 4, 3))
+    fit = (; latents)
+    target = H._season_panel(ds, fit, ["24/25"])
+    scored = H._season_panel(ds, fit, ["24/25"];
+                             tournaments = (54, 55, 56, 57))
+    subsets, _ = H._subsets(ds, target, scored,
+        DataFrame(match_id = Int[], market_name = String[],
+                  prob_fair_close = Float64[]), H.club_season_tiers(ds))
+    @test target == [1, 2]
+    @test scored == [1, 2, 3, 4]
+    @test subsets["monitor_t54"] == Set([3])
+    @test subsets["monitor_t55"] == Set([4])
+    @test all(!startswith(name, "monitor_") || name in ("monitor_t54", "monitor_t55")
+              for name in keys(subsets))
 end
 
 @testset "Harness per-subset score row counts" begin
