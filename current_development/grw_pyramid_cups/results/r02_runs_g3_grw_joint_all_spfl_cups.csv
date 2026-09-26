@@ -1,0 +1,2 @@
+arm,passed,max_rhat,min_ess_bulk,min_ess_tail,divergences,wall_min,run_id
+g3_grw_joint_all_spfl_cups,true,1.0122677247790894,462.1211080743137,576.8147621318207,0,110.00572269757589,9babf9e9-0a04-43af-855c-619a4b7dac8b

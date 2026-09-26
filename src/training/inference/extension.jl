@@ -411,9 +411,9 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
                     scores_by_fold[fold.fold], runtime_per_fold,
                     stats_by_fold[fold.fold], get(per_fold_latents, fold.fold, nothing))
             end
-            _db_exec(conn, """
+            _db_exec_binary(conn, """
                 UPDATE fit_artifacts SET fit_blob = \$2::bytea WHERE run_id = \$1::uuid;
-            """, (string(run.run_id), _db_bytea(_db_artifact_blob(extended))))
+            """, (string(run.run_id),), _db_artifact_blob(extended))
             _db_exec(conn, """
                 UPDATE configs SET split_config = \$2::jsonb WHERE config_id = \$1::uuid;
             """, (string(run.run_id), _extension_split_json(

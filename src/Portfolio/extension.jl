@@ -272,11 +272,11 @@ function extend_portfolio(db::Training.PostgresStorage, key, fit::Training.Fit,
                   Training.Inference._db_nullable(summary.win_rate), summary.n_bets,
                   _portfolio_json_metadata(updated,
                       (; extended_at = string(now()), n_new_matches = length(delta_ids)))))
-            Training.Inference._db_exec(conn, """
+            Training.Inference._db_exec_binary(conn, """
                 UPDATE portfolio_artifacts SET result_blob = \$2::bytea
                 WHERE portfolio_run_id = \$1::uuid;
-            """, (string(row.portfolio_run_id),
-                  Training.Inference._db_bytea(Training.Inference._db_artifact_blob(updated))))
+            """, (string(row.portfolio_run_id),),
+                Training.Inference._db_artifact_blob(updated))
             Training.Inference._db_exec(conn, "COMMIT;")
         catch
             try
