@@ -89,8 +89,9 @@ function _filtration_check(candidate::Candidate, inputs)
             "fold $(inputs.source_indices[i]) fits a tournament outside the declared scope")
         all(id -> get(tournament, id, 0) in allowed_oos, oos_ids) || error(
             "fold $(inputs.source_indices[i]) holds out a tournament outside target/monitor")
-        all(id -> get(tournament, id, 0) ∉ scope.monitor_tournaments, train_ids) || error(
-            "fold $(inputs.source_indices[i]) fits a monitor tournament")
+        monitor_only = setdiff(Set(scope.monitor_tournaments), Set(scope.train_tournaments))
+        all(id -> get(tournament, id, 0) ∉ monitor_only, train_ids) || error(
+            "fold $(inputs.source_indices[i]) fits a monitor-only tournament")
         if !isempty(oos_ids)
             maximum(kickoff[id] for id in train_ids) < minimum(kickoff[id] for id in oos_ids) ||
                 error("fold $(inputs.source_indices[i]) does not have a strict temporal cutoff")
