@@ -12,12 +12,13 @@ function parse_args(args)
     candidates_file = nothing
     stage = nothing
     only_names = nothing
+    container = :close_option_b
 
     i = 1
     while i <= length(args)
         arg = args[i]
         if arg == "--stage"
-            i + 1 <= length(args) || error("--stage requires an argument (screen|smoke|grid)")
+            i + 1 <= length(args) || error("--stage requires an argument (screen|smoke|grid|portfolio)")
             stage = Symbol(args[i + 1])
             i += 2
         elseif startswith(arg, "--stage=")
@@ -29,6 +30,13 @@ function parse_args(args)
             i += 2
         elseif startswith(arg, "--only=")
             only_names = Set(String.(split(split(arg, "=", limit = 2)[2], ",")))
+            i += 1
+        elseif arg == "--container"
+            i + 1 <= length(args) || error("--container requires close_option_b or t25_calibrated")
+            container = Symbol(args[i + 1])
+            i += 2
+        elseif startswith(arg, "--container=")
+            container = Symbol(split(arg, "=", limit = 2)[2])
             i += 1
         elseif startswith(arg, "-")
             error("Unknown option: $arg")
@@ -42,10 +50,13 @@ function parse_args(args)
         end
     end
 
-    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid [--only name,...]")
-    stage in (:screen, :smoke, :grid) || error("Stage must be one of: screen, smoke, grid; got $stage")
+    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid|portfolio [--only name,...] [--container close_option_b|t25_calibrated]")
+    stage in (:screen, :smoke, :grid, :portfolio) || error(
+        "Stage must be one of: screen, smoke, grid, portfolio; got $stage")
+    container in (:close_option_b, :t25_calibrated) || error(
+        "Container must be close_option_b or t25_calibrated; got $container")
 
-    return (; candidates_file, stage, only_names)
+    return (; candidates_file, stage, only_names, container)
 end
 
 function main()
@@ -75,6 +86,12 @@ function main()
     candidates = parsed.only_names === nothing ?
         all_candidates :
         filter(c -> c.name in parsed.only_names, all_candidates)
+    if parsed.stage === :portfolio && !any(c -> c.role === :control, candidates)
+        controls = filter(c -> c.role === :control, all_candidates)
+        length(controls) == 1 || error(
+            "portfolio stage needs exactly one control in the candidates file; found $(length(controls))")
+        push!(candidates, only(controls))
+    end
 
     isempty(candidates) && error("No matching candidates selected to run")
 
@@ -155,6 +172,24 @@ function main()
 
             println("[SUMMARY] candidate=$(rpad(c.name, 26)) hard=$hard_str review=$review_str logloss=$ll_str slope=$sl_str run_id=$(res.run_id)")
         end
+    elseif stage === :portfolio
+        println("Running finalist portfolio stage for $(length(candidates)) candidates...")
+        refs = Harness.RunRef[]
+        for c in candidates
+            config = Harness.fit_config(c; stage = :grid, experiment = experiment)
+            run_id = Harness.find_completed_run(db, config)
+            run_id === nothing && error(
+                "Candidate $(c.name) has no completed grid run with this config hash")
+            push!(refs, Harness.RunRef(c.name, experiment, run_id, c.role))
+            push!(run_ids, run_id)
+        end
+        summary = Harness.portfolio_runs(refs; ds = ds, container = parsed.container, db = db)
+        for row in eachrow(summary)
+            println("[SUMMARY] candidate=$(rpad(row.model, 26)) container=$(parsed.container) " *
+                    @sprintf("return=%+.4f%% roi=%+.4f%% sharpe=%.4f n_panel=%d run_id=%s",
+                             row.total_return_pct, row.roi_pct, row.sharpe_ann,
+                             row.n_panel, string(row.run_id)))
+        end
     end
 
     # Upsert experiment row in harness_experiments
@@ -167,7 +202,7 @@ function main()
         todo = get_mod_var(:TODO, 30),
         question = String(get_mod_var(:QUESTION, "Experiment $experiment")),
         dimension = String(get_mod_var(:DIMENSION, "matrix")),
-        status = "completed",
+        status = String(get_mod_var(:STATUS, stage === :screen ? "screened" : "completed")),
         decision = String(get_mod_var(:DECISION, "in_progress")),
         run_ids = join([string(id) for id in run_ids], ","),
         readme = relpath(readme_path, pwd())

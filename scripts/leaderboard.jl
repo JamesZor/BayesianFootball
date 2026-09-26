@@ -18,7 +18,7 @@ function cohort_number(value, n; digits = 5, suffix = "")
     return shown == "—" ? "— (n=$count)" : shown * suffix * " (n=$count)"
 end
 
-function leaderboard_markdown(board)
+function leaderboard_markdown(board, screen_board)
     io = IOBuffer()
     println(io, "# Experiment Harness Leaderboard")
     println(io)
@@ -35,7 +35,22 @@ function leaderboard_markdown(board)
                     "$(number(row.compression_slope, digits = 3)) | $delta | `$(row.run_id)` |")
     end
     println(io)
-    println(io, "## Transition cohorts")
+    println(io, "## MAP screen (diagnostic only)")
+    println(io)
+    println(io, "> **Warning:** MAP is not comparable across model classes. Learned hierarchical " *
+                "or random-walk scales can collapse at the mode. Screen rows are never mixed " *
+                "with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid.")
+    println(io)
+    println(io, "| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen UUID |")
+    println(io, "|---|---|---:|---:|---:|---:|---|")
+    for row in eachrow(screen_board)
+        println(io, "| `$(row.model)` | `$(row.screen_validity)` | " *
+                    "$(number(row.target_logloss_all)) | $(number(row.target_logloss_1x2)) | " *
+                    "$(number(row.target_ece_all)) | $(number(row.compression_slope, digits = 3)) | " *
+                    "`$(row.run_id)` |")
+    end
+    println(io)
+    println(io, "## Posterior-grid transition cohorts")
     println(io)
     for direction in (:relegated_into_L1, :promoted_into_L1, :entered_spfl, :l1_l2, :any)
         println(io, "### `$(direction)`")
@@ -80,12 +95,25 @@ function main()
     Harness.ensure_harness_schema!(db)
     scores = Harness.read_scores(db; scorecard_version = "v1.1")
     isempty(scores) && error("harness_scores contains no v1.1 rows; run scripts/score_runs.jl first")
-    board = Harness.leaderboard(scores; control_run_id = W0_CONTROL_UUID)
+    grid_scores = filter(:stage => ==("grid"), scores)
+    screen_scores = filter(:stage => ==("screen"), scores)
+    isempty(grid_scores) && error("harness_scores contains no posterior-grid rows")
+    board = Harness.leaderboard(grid_scores; control_run_id = W0_CONTROL_UUID)
+    screen_board = isempty(screen_scores) ? DataFrame() : Harness.leaderboard(screen_scores)
+    validity = Harness.read_checks(db; stage = "screen", check = "screen_validity")
+    latest_validity = Dict{String,String}()
+    for row in eachrow(validity)
+        latest_validity[String(row.candidate)] = String(row.status)
+    end
+    if nrow(screen_board) > 0
+        screen_board.screen_validity = [get(latest_validity, String(model), "unrecorded")
+                                        for model in screen_board.model]
+    end
     register = Harness.read_experiments(db)
     isempty(register) && error("harness_experiments is empty; run scripts/seed_register.jl first")
 
     CSV.write(joinpath(EXPERIMENTS_DIR, "LEADERBOARD.csv"), board)
-    write(joinpath(EXPERIMENTS_DIR, "LEADERBOARD.md"), leaderboard_markdown(board))
+    write(joinpath(EXPERIMENTS_DIR, "LEADERBOARD.md"), leaderboard_markdown(board, screen_board))
     write(joinpath(EXPERIMENTS_DIR, "REGISTER.md"), register_markdown(register))
     println("Wrote experiments/LEADERBOARD.csv, experiments/LEADERBOARD.md, experiments/REGISTER.md")
 end

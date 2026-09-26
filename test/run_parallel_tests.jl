@@ -28,6 +28,7 @@ const TEST_FILES = [
     "evaluation_tests.jl",
     "harness_scoring_tests.jl",
     "harness_runner_tests.jl",
+    "harness_portfolio_tests.jl",
     "scoped_splitter_tests.jl",
     "unified_portfolio_tests.jl",
     "test_portfolio_attribution.jl",

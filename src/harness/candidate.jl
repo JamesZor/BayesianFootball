@@ -22,6 +22,50 @@ function recipe_hash(candidate::Candidate)
     return bytes2hex(SHA.sha256(canonical))
 end
 
+function _has_learned_scale(config)
+    for field in fieldnames(typeof(config))
+        occursin('σ', String(field)) || continue
+        getfield(config, field) isa Distributions.Distribution && return true
+    end
+    return false
+end
+
+"MAP validity label: learned hierarchical/random-walk scales make the screen diagnostic-only."
+function _screen_validity(candidate::Candidate)
+    dynamics = hasproperty(candidate.model, :dynamics) ? candidate.model.dynamics : nothing
+    limited = dynamics isa Models.PreGame.MultiScaleGRW ||
+              (dynamics !== nothing && _has_learned_scale(dynamics))
+    return limited ? "limited" : "ranking_only"
+end
+
+function _screen_validity_record(candidate::Candidate, experiment::AbstractString)
+    validity = _screen_validity(candidate)
+    run_id = uuid5(SCREEN_NAMESPACE_UUID, "$(experiment):$(recipe_hash(candidate)):screen")
+    detail = validity == "limited" ?
+        "MAP is not comparable to posterior integration for a model with a learned hierarchical/random-walk scale." :
+        "MAP is a cheap within-class ranking diagnostic, not a substitute for the NUTS grid."
+    return (;
+        run_id,
+        recipe_hash = recipe_hash(candidate),
+        experiment = String(experiment),
+        candidate = candidate.name,
+        stage = "screen",
+        check = "screen_validity",
+        severity = "diagnostic",
+        status = validity,
+        value = (; screen_validity = validity),
+        detail,
+        git_sha = Training.git_commit_id(),
+        at = now(),
+    )
+end
+
+function _record_screen_validity!(db, candidates, experiment::AbstractString)
+    records = [_screen_validity_record(candidate, experiment) for candidate in candidates]
+    write_checks!(db, records)
+    return records
+end
+
 function _smoke_sampler(candidate::Candidate)
     sampler = candidate.sampler
     return Samplers.QueuedNUTSConfig(

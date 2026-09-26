@@ -30,7 +30,30 @@ function load_run_refs(path)
                           for r in eachrow(frame)]
 end
 
-function main(path)
+function parse_args(args)
+    isempty(args) && error(
+        "usage: julia --project -t 16 scripts/score_runs.jl <runs.csv> [--portfolio close_option_b|t25_calibrated]")
+    path = first(args)
+    portfolio = nothing
+    i = 2
+    while i <= length(args)
+        if args[i] == "--portfolio"
+            i + 1 <= length(args) || error("--portfolio requires a container")
+            portfolio = Symbol(args[i + 1])
+            i += 2
+        elseif startswith(args[i], "--portfolio=")
+            portfolio = Symbol(split(args[i], "=", limit = 2)[2])
+            i += 1
+        else
+            error("unknown argument: $(args[i])")
+        end
+    end
+    portfolio === nothing || portfolio in (:close_option_b, :t25_calibrated) ||
+        error("--portfolio must be close_option_b or t25_calibrated")
+    return (; path, portfolio)
+end
+
+function main(path; portfolio = nothing)
     refs = load_run_refs(path)
     if any(ref -> ref.experiment == "scottish_pyramid_grw_cups", refs)
         include(joinpath(@__DIR__, "..", "current_development",
@@ -49,6 +72,17 @@ function main(path)
     end
 
     ds = Data.load_datastore_cached(Data.ScottishLower(); max_age_hours = 10_000)
+    db = PostgresStorage("harness")
+    Harness.ensure_harness_schema!(db)
+
+    if portfolio !== nothing
+        summary = Base.invokelatest(Harness.portfolio_runs, refs;
+            ds = ds, container = portfolio, db = db)
+        show(stdout, MIME("text/plain"), summary)
+        println("\nPortfolio-scored $(nrow(summary)) runs under $portfolio.")
+        return 0
+    end
+
     leagues = Data.load_datastore_cached(Data.ScottishAll(); max_age_hours = 10_000)
     tiers = Harness.club_season_tiers(leagues)
     failures = NamedTuple[]
@@ -57,8 +91,6 @@ function main(path)
     scores = Base.invokelatest(Harness.score_runs, refs; ds = ds, tiers = tiers,
                                failures = failures)
 
-    db = PostgresStorage("harness")
-    Harness.ensure_harness_schema!(db)
     Harness.write_scores!(db, scores)
     println("Scored $(length(unique(scores.run_id))) / $(length(refs)) runs; " *
             "wrote $(nrow(scores)) score rows.")
@@ -71,5 +103,5 @@ function main(path)
     return isempty(failures) ? 0 : 2
 end
 
-length(ARGS) == 1 || error("usage: julia --project -t 16 scripts/score_runs.jl <runs.csv>")
-exit(main(only(ARGS)))
+parsed = parse_args(ARGS)
+exit(main(parsed.path; portfolio = parsed.portfolio))

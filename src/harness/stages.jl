@@ -25,8 +25,10 @@ function screen(candidates::AbstractVector{<:Candidate};
     check_records = NamedTuple[]
 
     for c in candidates
+        validity_record = _screen_validity_record(c, experiment)
+        push!(check_records, validity_record)
         base = (;
-            run_id = nothing,
+            run_id = validity_record.run_id,
             recipe_hash = recipe_hash(c),
             experiment = String(experiment),
             candidate = c.name,
@@ -42,8 +44,7 @@ function screen(candidates::AbstractVector{<:Candidate};
                 oos_fixtures = inputs.oos,
                 quiet = true)
             _run_hard_check!(check_records, base, "latents", () -> _latent_audit(fit; require_variance = false))
-            screen_run_id = uuid5(SCREEN_NAMESPACE_UUID, "$(experiment):$(recipe_hash(c)):screen")
-            ref = RunRef(c.name, experiment, screen_run_id, c.role)
+            ref = RunRef(c.name, experiment, validity_record.run_id, c.role)
             push!(fits, ref => fit)
         catch err
             detail = sprint(showerror, err)
