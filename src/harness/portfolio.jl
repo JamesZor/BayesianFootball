@@ -172,13 +172,14 @@ function _portfolio_requested_panel(panels, panel)
 end
 
 """
-    portfolio_runs(refs; ds, container=:close_option_b, panel=:common, db=nothing,
+    portfolio_runs(refs; ds, container=:close_option_b, panel=:common,
+                   db=PostgresStorage("harness"),
                    B=4000, seed=1) -> DataFrame
 
 Load completed grid runs by immutable UUID, put every run through one common buildable
-fixture panel, and return one wide summary row per run. With `db` supplied, the same results
-are written as long `stage = "finalist"`, `market = "book"` rows under
-`portfolio_<container>` in `harness_scores`.
+fixture panel, and return one wide summary row per run. By default the same results are written
+to the harness database as long `stage = "finalist"`, `market = "book"` rows under
+`portfolio_<container>` in `harness_scores`; pass `db = nothing` only for an explicit offline run.
 
 `:close_option_b` is the exact Task 013/r05 closing contract, including its historical
 `SlateDrawdown(8)` value. `:t25_calibrated` instead prices and calibrates against the complete
@@ -189,7 +190,7 @@ function portfolio_runs(refs::AbstractVector{RunRef};
                         ds,
                         container::Symbol = :close_option_b,
                         panel = :common,
-                        db = nothing,
+                        db = Training.PostgresStorage("harness"),
                         B::Int = PORTFOLIO_BOOTSTRAP_B,
                         seed::Int = PORTFOLIO_SEED)
     container in PORTFOLIO_CONTAINERS || throw(ArgumentError(
