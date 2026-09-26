@@ -303,4 +303,89 @@ using UUIDs
         @test run_id1[1] == run_id2[1]
     end
 
+    @testset "7. Multi-control preservation (scoring same run against two controls keeps both delta rows)" begin
+        matches = DataFrame(
+            match_id = [1, 2, 3, 4],
+            tournament_id = [56, 56, 56, 56],
+            season = ["23/24", "23/24", "24/25", "24/25"],
+            match_date = [Date(2024, 1, 1), Date(2024, 2, 1), Date(2024, 8, 1), Date(2024, 8, 15)],
+            match_hour = [15, 15, 15, 15],
+            match_week = [1, 2, 1, 2],
+            match_biweek = [1, 2, 1, 2],
+            match_month = [1, 2, 8, 8],
+            home_team = ["A", "B", "A", "B"],
+            away_team = ["B", "A", "B", "A"],
+            home_score = [1, 0, 2, 1],
+            away_score = [0, 1, 1, 1],
+            neutral_venue = [false, false, false, false]
+        )
+        empty_df = DataFrame()
+        odds_df = DataFrame(
+            match_id = [3, 3, 3, 4, 4, 4],
+            market_name = ["1X2", "1X2", "1X2", "1X2", "1X2", "1X2"],
+            market_line = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            selection = [:home, :draw, :away, :home, :draw, :away],
+            is_winner = [true, false, false, false, false, true]
+        )
+        betfair_odds = DataFrame(
+            match_id = [3, 3, 3, 4, 4, 4],
+            market_name = ["1X2", "1X2", "1X2", "1X2", "1X2", "1X2"],
+            market_line = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            selection = [:home, :draw, :away, :home, :draw, :away],
+            odds = [2.0, 3.2, 3.8, 2.1, 3.1, 3.6],
+            traded_price = [2.0, 3.2, 3.8, 2.1, 3.1, 3.6],
+            minutes_to_kickoff = [-10.0, -10.0, -10.0, -10.0, -10.0, -10.0],
+            tournament_id = [56, 56, 56, 56, 56, 56]
+        )
+        ds = Data.DataStore(Data.ScottishLower(), matches, empty_df, odds_df,
+                            empty_df, empty_df, betfair_odds, empty_df, empty_df)
+
+        model = CountModelBuilder(:synth_multicontrol) |>
+            add(GlobalInterception()) |>
+            add(TimeDecayDynamics(days_half_life = 180.0)) |>
+            add(GlobalHomeAdvantage()) |>
+            add(PoissonObservation()) |>
+            build
+
+        scope = Data.DataScope(
+            name = "mc_scope",
+            train_tournaments = [56],
+            target_tournaments = [56],
+            clock_tournaments = [56],
+            target_seasons = ["24/25"],
+            history_seasons = 1
+        )
+
+        candidate = Harness.Candidate(
+            name = "synth_multicontrol",
+            model = model,
+            scope = scope,
+            role = :candidate
+        )
+
+        inputs = Harness._fold_inputs(candidate, ds; stage = :screen)
+        fit_cfg = Harness.fit_config(candidate; stage = :screen, experiment = "mc_exp")
+        fit = Training.fit_model(fit_cfg; feature_sets = inputs.feature_sets, oos_fixtures = inputs.oos, quiet = true)
+
+        ref_c    = Harness.RunRef("candidate_model", "mc_exp", UUID("11111111-1111-1111-1111-111111111111"), :candidate)
+        ref_ctl1 = Harness.RunRef("control_1",       "mc_exp", UUID("22222222-2222-2222-2222-222222222222"), :control)
+        ref_ctl2 = Harness.RunRef("control_2",       "mc_exp", UUID("33333333-3333-3333-3333-333333333333"), :control)
+
+        tiers = Harness.club_season_tiers(ds)
+
+        scores1 = Harness.score_fits([ref_ctl1 => fit, ref_c => fit]; ds = ds, tiers = tiers, control = ref_ctl1, target_seasons = ["24/25"], bootstrap_B = 100)
+        scores2 = Harness.score_fits([ref_ctl2 => fit, ref_c => fit]; ds = ds, tiers = tiers, control = ref_ctl2, target_seasons = ["24/25"], bootstrap_B = 100)
+
+        delta1 = filter(r -> r.run_id == ref_c.run_id && r.metric == "delta_logloss_vs_control", scores1)
+        @test all(r -> r.control_run_id == ref_ctl1.run_id, eachrow(delta1))
+
+        delta2 = filter(r -> r.run_id == ref_c.run_id && r.metric == "delta_logloss_vs_control", scores2)
+        @test all(r -> r.control_run_id == ref_ctl2.run_id, eachrow(delta2))
+
+        combined = vcat(scores1, scores2)
+        deltas = filter(r -> r.run_id == ref_c.run_id && r.subset == "target" && r.market == "all" && r.metric == "delta_logloss_vs_control", combined)
+        @test nrow(deltas) == 2
+        @test Set(deltas.control_run_id) == Set([ref_ctl1.run_id, ref_ctl2.run_id])
+    end
+
 end
