@@ -52,7 +52,10 @@ function main(path)
     leagues = Data.load_datastore_cached(Data.ScottishAll(); max_age_hours = 10_000)
     tiers = Harness.club_season_tiers(leagues)
     failures = NamedTuple[]
-    scores = Harness.score_runs(refs; ds, tiers, failures)
+    # Prototype loader types are defined above during this invocation. Enter the latest
+    # world before deserializing them (Julia 1.12 otherwise warns about stale bindings).
+    scores = Base.invokelatest(Harness.score_runs, refs; ds = ds, tiers = tiers,
+                               failures = failures)
 
     db = PostgresStorage("harness")
     Harness.ensure_harness_schema!(db)
