@@ -80,6 +80,8 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-26 @pi] Repeated the deterministic verifier on `mcmc-beast` at `dca65a1d` with the same exact results. Re-scored W0 at v1.1: 19/19 runs, 12,426 rows; retained all 10,640 v1 rows; regenerated the committed leaderboard with metric-specific cohort `n`.
 - [2026-09-26 @pi] Addressed independent Phase 2 review findings at `a2ad2675`: cup exclusions now fail closed and union with native venue flags, empty scoped holdouts preserve fold positions, store defaults use v1.1 centrally, rsync excludes preserve nested tracked data, and a monitor-only tournament regression test proves monitors are never fitted.
 
+- [2026-09-26 @claude] **Phase 2 accepted** at `f924807d`. Manager checks on mcmc-beast (`/root/BF_runs/f924807d`): `scoped_splitter_tests.jl` + `harness_scoring_tests.jl` all pass; `verify_harness_phase2.jl` → `LOWER_OK folds=40 unique_heldout=710`, `PYRAMID_OK folds=40 widening=exact features=exact cups=363`, `MONITOR_OK target=710 t54=396/396 t55=355/153`. AGENTS.md rsync anchor change reviewed (keeps `src/Data/data/` syncing). Neutral-venue CSV cross-checked against TODO 029 BBC venues: agrees; known limitation `12617718` (Rangers at Hampden 2024-08-17, temporary home) carried into Phase 3. Data gap: Betfair archive barely covers T55 in 25/26. Phase 3 released.
+
 ## Verification & Findings
 
 - `test/harness_scoring_tests.jl`: 20/20 tests pass standalone.
