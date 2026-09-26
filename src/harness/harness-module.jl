@@ -2,22 +2,40 @@ module Harness
 
 using DataFrames
 using Dates
+using DynamicPPL
+using ForwardDiff
 using JSON3
 using LibPQ
+using LinearAlgebra: norm
+using LogDensityProblems
+using MCMCChains
 using Random
+using ReverseDiff
+using SHA
 using Statistics
 using UUIDs
 
 using ..Data
+using ..Features
 using ..Models
+using ..Samplers
 using ..Training
+using ..Predictions
 using ..Evaluation
 using ..Calibration
 
+include("candidate.jl")
+include("checks.jl")
 include("cohorts.jl")
 include("scoring.jl")
 include("store.jl")
+include("stages.jl")
 
-export RunRef, score_runs, score_fits, leaderboard, club_season_tiers, transition_cohort
+export Candidate, recipe_hash, fit_config, HarnessCheckError,
+       screen, smoke, grid,
+       write_checks!, read_checks, has_passing_smoke, find_completed_run, InMemoryCheckStore,
+       RunRef, score_runs, score_fits, leaderboard,
+       club_season_tiers, transition_cohort,
+       write_experiment!, read_experiments
 
 end

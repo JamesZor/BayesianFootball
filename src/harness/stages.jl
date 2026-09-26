@@ -1,0 +1,323 @@
+# src/harness/stages.jl
+#
+# Execution stages for the experiment harness:
+#   - screen : in-memory MAP on all folds, scores written to harness_scores, no run persisted
+#   - smoke  : 2 folds, 2×200 NUTS, all hard checks, diagnostics recorded, saved under <exp>_smoke
+#   - grid   : requires passing smoke, resumes completed runs, per-fold checkpoints, full draws
+#              with stride fallback, score_runs against control, convergence flagged review.
+
+"Run in-memory MAP inference on all folds for a cohort of candidates and score them."
+function screen(candidates::AbstractVector{<:Candidate};
+                ds::Data.DataStore,
+                experiment::AbstractString,
+                control = nothing,
+                target_seasons = ["24/25", "25/26"],
+                bootstrap_B::Int = 10_000,
+                db = nothing)
+    if db !== nothing
+        ensure_harness_schema!(db)
+    end
+
+    fits = Pair{RunRef, Training.Fit}[]
+    errors = Tuple{String, String}[]
+    check_records = NamedTuple[]
+
+    for c in candidates
+        base = (;
+            run_id = nothing,
+            recipe_hash = recipe_hash(c),
+            experiment = String(experiment),
+            candidate = c.name,
+            stage = "screen",
+            git_sha = Training.git_commit_id()
+        )
+        try
+            inputs = _fold_inputs(c, ds; stage = :screen)
+            _run_hard_check!(check_records, base, "filtration", () -> _filtration_check(c, inputs))
+            fit_cfg = fit_config(c; stage = :screen, experiment = experiment)
+            fit = Training.fit_model(fit_cfg;
+                feature_sets = inputs.feature_sets,
+                oos_fixtures = inputs.oos,
+                quiet = true)
+            _run_hard_check!(check_records, base, "latents", () -> _latent_audit(fit; require_variance = false))
+            ref = RunRef(c.name, experiment, uuid4(), c.role)
+            push!(fits, ref => fit)
+        catch err
+            detail = sprint(showerror, err)
+            push!(errors, (c.name, detail))
+            @error "Candidate $(c.name) failed in screen stage" exception = (err, catch_backtrace())
+        end
+    end
+
+    if db !== nothing && !isempty(check_records)
+        try
+            write_checks!(db, check_records)
+        catch
+        end
+    end
+
+    isempty(fits) && error("All candidates failed in screen stage:\n" *
+                           join(["- $name: $err" for (name, err) in errors], "\n"))
+
+    tiers = club_season_tiers(ds)
+    scores = score_fits(fits; ds = ds, tiers = tiers, control = control,
+                        target_seasons = target_seasons, bootstrap_B = bootstrap_B)
+    scores.stage .= "screen"
+
+    if db !== nothing
+        write_scores!(db, scores)
+    end
+
+    return (; scores, fits, errors)
+end
+
+"Run the 2-fold correctness and diagnostic gate for a candidate."
+function smoke(candidate::Candidate;
+               ds::Data.DataStore,
+               experiment::AbstractString,
+               db = nothing)
+    if db !== nothing
+        ensure_harness_schema!(db)
+    end
+
+    inputs = _fold_inputs(candidate, ds; stage = :smoke)
+    records = NamedTuple[]
+    base = (;
+        run_id = nothing,
+        recipe_hash = recipe_hash(candidate),
+        experiment = String(experiment),
+        candidate = candidate.name,
+        stage = "smoke",
+        git_sha = Training.git_commit_id()
+    )
+
+    smoke_run_id = nothing
+    fit = nothing
+    try
+        # 1. Gradient audit on fold 1
+        grad_result = _run_hard_check!(records, base, "gradient") do
+            _gradient_audit(candidate.model, first(inputs.feature_sets))
+        end
+        _run_diagnostic!(records, base, "gradient_telemetry", "info") do
+            (; tape_bytes = grad_result.tape_bytes,
+               gradient_ms = grad_result.gradient_ms,
+               allocated_bytes = grad_result.allocated_bytes)
+        end
+
+        # 2. Filtration check
+        _run_hard_check!(records, base, "filtration") do
+            _filtration_check(candidate, inputs)
+        end
+
+        # 3. Fit 2 folds
+        fit_cfg = fit_config(candidate; stage = :smoke, experiment = experiment)
+        fit = Training.fit_model(fit_cfg;
+            feature_sets = inputs.feature_sets,
+            oos_fixtures = inputs.oos,
+            quiet = true)
+
+        # 4. Latent audit
+        _run_hard_check!(records, base, "latents") do
+            _latent_audit(fit; require_variance = true)
+        end
+
+        # 5. Score grid coherence
+        _run_hard_check!(records, base, "score_grid_coherence") do
+            _grid_diagnostics(fit.latents; check_coherence = true)
+        end
+        _run_diagnostic!(records, base, "score_grid_tail", "diagnostic") do
+            _grid_diagnostics(fit.latents; check_coherence = false)
+        end
+
+        # 6. Convergence diagnostic (recorded review, never throws)
+        _run_diagnostic!(records, base, "convergence", "review") do
+            _convergence_diagnostic(fit)
+        end
+
+        # 7. Persistence round-trip parity under <experiment>_smoke
+        if db isa Training.PostgresStorage
+            smoke_db = Training.PostgresStorage(String(experiment) * "_smoke")
+            Training.ensure_schema!(smoke_db)
+            smoke_run_id = Training.save_fit(fit, smoke_db)
+            reloaded = Training.load_fit(smoke_db, smoke_run_id)
+            _run_hard_check!(records, base, "fit_parity") do
+                _fit_parity(fit, reloaded)
+            end
+        else
+            push!(records, merge(base, (;
+                check = "fit_parity",
+                severity = "hard",
+                status = "abstain",
+                value = NamedTuple(),
+                detail = "fit_parity skipped: db is not a PostgresStorage",
+                at = now()
+            )))
+        end
+
+        if db !== nothing
+            stamped = NamedTuple[merge(r, (; run_id = smoke_run_id)) for r in records]
+            write_checks!(db, stamped)
+        end
+
+        return (; fit, run_id = smoke_run_id, records)
+    catch err
+        if db !== nothing
+            try
+                write_checks!(db, records)
+            catch
+            end
+        end
+        rethrow(err)
+    end
+end
+
+"Run the full walk-forward grid for a candidate with resume, checkpoints, and scoring."
+function grid(candidate::Candidate;
+              ds::Data.DataStore,
+              experiment::AbstractString,
+              db,
+              control = nothing,
+              target_seasons = ["24/25", "25/26"],
+              bootstrap_B::Int = 10_000)
+    ensure_harness_schema!(db)
+
+    # 1. Smoke-before-grid enforcement
+    has_passing_smoke(db, candidate) || error(
+        "Candidate $(candidate.name) has no passing smoke record in harness_checks for " *
+        "recipe_hash $(recipe_hash(candidate)); run --stage smoke first.")
+
+    fit_cfg = fit_config(candidate; stage = :grid, experiment = experiment)
+    existing_run_id = find_completed_run(db, fit_cfg)
+
+    saved_run_id = nothing
+    saved_stride = 1
+    fit = nothing
+    records = NamedTuple[]
+    base = (;
+        run_id = nothing,
+        recipe_hash = recipe_hash(candidate),
+        experiment = String(experiment),
+        candidate = candidate.name,
+        stage = "grid",
+        git_sha = Training.git_commit_id()
+    )
+
+    if existing_run_id !== nothing
+        @info "Resuming existing completed run for $(candidate.name): $existing_run_id"
+        fit = Training.load_fit(db, existing_run_id)
+        saved_run_id = existing_run_id
+    else
+        inputs = _fold_inputs(candidate, ds; stage = :grid)
+        try
+            # Filtration check
+            _run_hard_check!(records, base, "filtration") do
+                _filtration_check(candidate, inputs)
+            end
+
+            # Sampling with checkpoints
+            checkpoint_dir = joinpath("data", "checkpoints", experiment, candidate.name)
+            fit = Training.fit_model(fit_cfg;
+                feature_sets = inputs.feature_sets,
+                oos_fixtures = inputs.oos,
+                checkpoint_dir = checkpoint_dir,
+                quiet = false)
+
+            # Latents audit
+            _run_hard_check!(records, base, "latents") do
+                _latent_audit(fit; require_variance = true)
+            end
+
+            # Target coverage
+            _run_hard_check!(records, base, "target_coverage") do
+                _target_coverage(candidate, fit, inputs;
+                    expected_folds = length(inputs.boundaries),
+                    expected_target = 710)
+            end
+
+            # Diagnostics: convergence (review), monitor coverage (diagnostic)
+            _run_diagnostic!(records, base, "convergence", "review") do
+                _convergence_diagnostic(fit)
+            end
+            _run_diagnostic!(records, base, "monitor_coverage", "diagnostic") do
+                _monitor_coverage(candidate, fit, inputs, ds)
+            end
+            _run_diagnostic!(records, base, "git_telemetry", "info") do
+                (; git_sha = Training.git_commit_id(),
+                   dirty = endswith(Training.git_commit_id(), "-dirty"))
+            end
+
+            # Persistence with stride fallback (1 -> 2 -> 4)
+            for s in (1, 2, 4)
+                try
+                    thinned = s == 1 ? fit : thin_for_persistence(fit, inputs, s)
+                    saved_run_id = Training.save_fit(thinned, db)
+                    saved_stride = s
+                    fit = thinned
+                    break
+                catch err
+                    s == 4 && rethrow(err)
+                    @warn "save_fit failed at stride $s; retrying at stride $(s * 2)..." exception = err
+                end
+            end
+            _run_diagnostic!(records, base, "persistence_stride", "info") do
+                (; stride = saved_stride)
+            end
+
+            # Parity check
+            reloaded = Training.load_fit(db, saved_run_id)
+            _run_hard_check!(records, base, "fit_parity") do
+                _fit_parity(fit, reloaded)
+            end
+
+            stamped = NamedTuple[merge(r, (; run_id = saved_run_id)) for r in records]
+            write_checks!(db, stamped)
+        catch err
+            try
+                write_checks!(db, records)
+            catch
+            end
+            rethrow(err)
+        end
+    end
+
+    # Scoring
+    tiers = club_season_tiers(ds)
+    candidate_ref = RunRef(candidate.name, experiment, saved_run_id, candidate.role)
+    refs = RunRef[candidate_ref]
+
+    control_ref = nothing
+    if control isa RunRef
+        control_ref = control
+    elseif control isa AbstractString
+        # Check if control is a UUID or a run name
+        control_ref = try
+            u = UUID(control)
+            RunRef(candidate.role == :control ? candidate.name : "control", experiment, u, :control)
+        catch
+            u = Training.Inference._run_uuid(db, control)
+            RunRef(String(control), experiment, u, :control)
+        end
+    elseif candidate.role === :control
+        control_ref = candidate_ref
+    end
+
+    if control_ref !== nothing && control_ref.run_id != candidate_ref.run_id
+        push!(refs, control_ref)
+    end
+
+    # Ensure prototype loader is included if control is from scottish_pyramid_grw_cups
+    if control_ref !== nothing && control_ref.experiment == "scottish_pyramid_grw_cups"
+        pyramid_loader = joinpath(@__DIR__, "..", "..", "current_development",
+                                  "grw_pyramid_cups", "l01_loader.jl")
+        if isfile(pyramid_loader)
+            Base.include(Main, pyramid_loader)
+        end
+    end
+
+    scores = Base.invokelatest(score_runs, refs;
+        ds = ds, tiers = tiers, control = control_ref,
+        target_seasons = target_seasons, bootstrap_B = bootstrap_B)
+    write_scores!(db, scores)
+
+    return (; fit, run_id = saved_run_id, records, scores)
+end
