@@ -59,7 +59,8 @@ function register_markdown(register)
     println(io, "|---|---|---|---|---|---|---|---|---|")
     for row in eachrow(register)
         todo = ismissing(row.todo) ? "—" : lpad(string(row.todo), 3, '0')
-        record = row.readme == "absent/not run" ? row.readme : "[`record`]($(row.readme))"
+        record = row.readme == "absent/not run" ? row.readme :
+                 "[`record`](../$(row.readme))"
         println(io, "| $(row.id) | $(row.date) | $todo | $(row.question) | $(row.dimension) | " *
                     "$(row.status) | $(row.decision) | $(row.run_ids) | $record |")
     end
