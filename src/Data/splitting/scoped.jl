@@ -199,8 +199,9 @@ function create_id_boundaries(ds::DataStore, splitter::ScopedWalkForwardCV)
     matches = ds.matches
     match_ids = Int.(matches.match_id)
     kickoffs = Dict(Int(row.match_id) => _match_kickoff(row) for row in eachrow(matches))
-    training_tournaments = union(Set(scope.train_tournaments),
-                                 Set(SCOTTISH_CUP_TOURNAMENTS))
+    cup_training = scope.cups === :senior_spfl_ties ?
+                   Set(SCOTTISH_CUP_TOURNAMENTS) : Set{Int}()
+    training_tournaments = union(Set(scope.train_tournaments), cup_training)
 
     for (boundary, meta) in canonical
         heldout = get_next_matches(ds, meta, splitter)

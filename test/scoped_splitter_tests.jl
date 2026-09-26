@@ -61,6 +61,10 @@ end
         target_tournaments = [56, 57], monitor_tournaments = [54, 55],
         clock_tournaments = [56, 57], target_seasons = ["24/25"],
         history_seasons = 1, cups = :senior_spfl_ties)
+    no_cups = ScopedData.apply_scope(ds, ScopedData.DataScope(
+        name = "lower", target_seasons = ["24/25"], history_seasons = 1))
+    @test isempty(intersect(Set(no_cups.matches.tournament_id), Set([73, 982, 1520])))
+
     scoped = ScopedData.apply_scope(ds, scope)
     @test scoped !== ds
     @test scoped.matches !== ds.matches
