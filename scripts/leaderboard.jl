@@ -4,8 +4,10 @@ using BayesianFootball
 using CSV
 using DataFrames
 using Printf
+using UUIDs
 
 const EXPERIMENTS_DIR = joinpath(@__DIR__, "..", "experiments")
+const W0_CONTROL_UUID = UUID("132df5c2-c742-4e95-8693-3aeb2b2cbaef")
 
 number(value; digits = 5) = ismissing(value) || !(value isa Real) || !isfinite(value) ?
     "—" : @sprintf("%.*f", digits, value)
@@ -78,7 +80,7 @@ function main()
     Harness.ensure_harness_schema!(db)
     scores = Harness.read_scores(db; scorecard_version = "v1.1")
     isempty(scores) && error("harness_scores contains no v1.1 rows; run scripts/score_runs.jl first")
-    board = Harness.leaderboard(scores)
+    board = Harness.leaderboard(scores; control_run_id = W0_CONTROL_UUID)
     register = Harness.read_experiments(db)
     isempty(register) && error("harness_experiments is empty; run scripts/seed_register.jl first")
 
