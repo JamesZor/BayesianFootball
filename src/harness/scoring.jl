@@ -480,12 +480,14 @@ function leaderboard(scores::AbstractDataFrame)
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
             subset = "transition_$(direction)_first$(first_n)"
             stem = "transition_$(direction)_first$(first_n)"
-            push!(extra_names, Symbol(stem * "_logloss"), Symbol(stem * "_bias_pp"),
-                  Symbol(stem * "_n"))
+            push!(extra_names, Symbol(stem * "_logloss"),
+                  Symbol(stem * "_logloss_n"), Symbol(stem * "_bias_pp"),
+                  Symbol(stem * "_bias_n"))
             push!(extra_values,
                   _headline(scores, run_id, subset, "all", "logloss"),
+                  _headline(scores, run_id, subset, "all", "logloss", :n_fixtures),
                   _headline(scores, run_id, subset, "1X2", "transition_bias_pp"),
-                  _headline(scores, run_id, subset, "all", "logloss", :n_fixtures))
+                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp", :n_fixtures))
         end
         extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
         push!(rows, merge(base, extra))

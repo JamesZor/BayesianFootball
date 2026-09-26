@@ -43,13 +43,11 @@ function leaderboard_markdown(board)
         for row in eachrow(board)
             stem10 = "transition_$(direction)_first10"
             stem20 = "transition_$(direction)_first20"
-            n10 = row[Symbol(stem10 * "_n")]
-            n20 = row[Symbol(stem20 * "_n")]
             println(io, "| `$(row.model)` | " *
-                "$(cohort_number(row[Symbol(stem10 * "_logloss")], n10)) | " *
-                "$(cohort_number(row[Symbol(stem10 * "_bias_pp")], n10; digits = 3, suffix = " pp")) | " *
-                "$(cohort_number(row[Symbol(stem20 * "_logloss")], n20)) | " *
-                "$(cohort_number(row[Symbol(stem20 * "_bias_pp")], n20; digits = 3, suffix = " pp")) |")
+                "$(cohort_number(row[Symbol(stem10 * "_logloss")], row[Symbol(stem10 * "_logloss_n")])) | " *
+                "$(cohort_number(row[Symbol(stem10 * "_bias_pp")], row[Symbol(stem10 * "_bias_n")]; digits = 3, suffix = " pp")) | " *
+                "$(cohort_number(row[Symbol(stem20 * "_logloss")], row[Symbol(stem20 * "_logloss_n")])) | " *
+                "$(cohort_number(row[Symbol(stem20 * "_bias_pp")], row[Symbol(stem20 * "_bias_n")]; digits = 3, suffix = " pp")) |")
         end
         println(io)
     end
