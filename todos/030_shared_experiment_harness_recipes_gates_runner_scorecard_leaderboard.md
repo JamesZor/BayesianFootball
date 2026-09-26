@@ -74,6 +74,8 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-26 @pi] Investigated both REVIEW discrepancies by immutable UUID. Suite 01's old scorer on real run `2722f7e2` reproduces 0.6603526 against `ds.odds`, while harness v1 gives 0.6467857 on Betfair. Unified's 0.6545487 row was synthetic run `013af743`, explaining its disagreement with the later real controls.
 - [2026-09-26 @pi] Applied post-run review hardening: a failed control load is recorded while independently loadable candidates still score, `score_runs` now refuses non-710 target panels by default, and two-digit season rollover is tested. Standalone harness tests pass 20/20.
 
+- [2026-09-26 @claude] **Phase 1 accepted** at `4dd828b1`. Manager checks: LEADERBOARD LogLoss for g1/g2/g3/m12_td equals r04 exactly; `harness_scores` holds 10,640 rows / 19 runs / 12 subsets / scorecard v1 and `harness_experiments` 23 rows (queried directly); independent test run on mcmc-beast (`/root/BF_runs/4dd828b1`, Manifest linked from `/root/BayesianFootball`) passes 20/20; post-review diff changes error handling only, not score values. Follow-ups carried into Phase 2: `entered_spfl` cohort, cohort n in the leaderboard. Phase 2 released.
+
 ## Verification & Findings
 
 - `test/harness_scoring_tests.jl`: 20/20 tests pass standalone.
