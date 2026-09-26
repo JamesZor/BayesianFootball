@@ -1,0 +1,15 @@
+target,predictors,oos_r2
+delta_mkt,goal history,0.5500896047081141
+delta_mkt,wealth,0.09196586545205976
+delta_mkt,lineup (RAPM),0.031781904436370634
+delta_mkt,proxy xG,0.5441764103897374
+delta_mkt,rest & schedule,0.00030664014736447864
+delta_mkt,all five,0.6373542249423927
+delta_mkt,all but goal history,0.537052917149911
+gap,goal history,0.14562018415009792
+gap,wealth,-0.04880368844251115
+gap,lineup (RAPM),0.027108448989161094
+gap,proxy xG,0.22319264819880902
+gap,rest & schedule,-0.0021268014108444255
+gap,all five,0.31133569316296394
+gap,all but goal history,0.16338729197019952

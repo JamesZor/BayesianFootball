@@ -1,0 +1,4 @@
+model,fold,n_parameters,tape_instructions,allocated_bytes,gradient_ms,worst_density,worst_gradient
+m03_negbin_pxg_covariate,1,52,232,0,0.1672,2.2737367544323206e-13,3.0266993581304665e-13
+m03_negbin_pxg_covariate,20,56,232,0,0.244784,3.637978807091713e-12,2.86590244906182e-12
+m03_negbin_pxg_covariate,40,52,232,0,0.24272000000000002,2.2737367544323206e-13,1.2207506087416956e-12

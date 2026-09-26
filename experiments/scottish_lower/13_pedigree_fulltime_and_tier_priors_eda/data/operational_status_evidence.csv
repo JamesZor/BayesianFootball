@@ -1,0 +1,22 @@
+club_name,club_id,operational_status,evidence_level,effective_from,effective_to,source_id,classification_note
+Cove Rangers,,Part-Time,Verified,2022-07-01,2023-06-30,S001,Retrospectively verified by a 2023-05-18 first-party statement; the status must not be used as point-in-time information before publication.
+Cove Rangers,,Hybrid,Verified,2023-07-01,2024-06-30,S002;S007,First-party prospective statement calls 2023/24 transitional hybrid; January 2024 chairman's message confirms implementation. No status inferred after 2023/24.
+Airdrieonians,,Hybrid,Inferred,2021-07-01,2027-06-30,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.
+Hamilton Academical,,Full-Time,Inferred,2022-07-01,2023-06-30,S004,"Bounded backwards inference only: BBC's 2023-06-12 wording that Hamilton will 'remain' full-time supports the immediately preceding 2022/23 season, but does not verify it contemporaneously."
+Hamilton Academical,,Full-Time,Verified,2023-07-01,2024-06-30,S004,BBC Sport's 2023-06-12 report directly establishes Full-Time for 2023/24 after relegation.
+Inverness Caledonian Thistle,,Full-Time,Verified,2024-07-01,2025-06-30,S005,Inverness Courier report dated 2024-05-21 says ICT will remain full-time next season; establishes 2024/25 only.
+Arbroath,,Part-Time,Verified,2024-07-01,2025-06-30,S006,"A club article containing Ryan Flynn's full-time-to-part-time quote verifies 2024/25 at season level. Exact article publication date was not visible, so do not treat this as a precise point-in-time change date."
+Montrose,,Part-Time,Verified,2026-07-01,2027-06-30,S009,The fetched 2026/27 preview describes recruits stepping from full-time to part-time football and training Tuesday/Thursday. Publication date not rendered; season-level evidence only.
+Queen's Park,,Full-Time,Verified,2023-07-01,2024-06-30,S010,Official history explicitly anchors statement to summer2023; not the webpage publication date.
+Falkirk,,Full-Time,Verified,2025-07-01,2026-06-30,S011,Brochure cover explicitly2025/2026 season; does not verify preceding LeagueOne seasons.
+Arbroath,,Part-Time,Verified,2025-07-01,2026-06-30,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.
+Queen's Park,,Full-Time,Verified,2025-07-01,2026-06-30,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.
+Ross County,,Full-Time,Verified,2025-07-01,2026-06-30,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.
+St Johnstone,,Full-Time,Verified,2025-07-01,2026-06-30,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.
+Peterhead,,Part-Time,Verified,2023-07-01,2024-06-30,S013,2023/24 context: first season after Celtic release; January2024 photographs. Date unresolved.
+Peterhead,,Part-Time,Verified,2024-07-01,2025-06-30,S014,Incoming2024/25 context following explicitly described2023-24 Buckie season.
+Alloa Athletic,,Part-Time,Inferred,2025-07-01,2026-06-30,S015,"Manager quote;2025/26 inferred from named loan cohort and DannyRohl. Context-dated, not precise PIT evidence."
+Stenhousemuir,,Part-Time,Verified,2026-07-01,2027-06-30,S017,Championship-era2026/27 match context; no backward verification.
+Queen of the South,,Full-Time,Verified,2022-07-01,2026-06-30,S018,Explicit retrospective continuity22/23 through25/26; report reviews24/25 accounts ahead of1May2026 AGM. NOT historical PIT knowledge.
+Montrose,,Part-Time,Verified,2021-07-01,2022-06-30,S019,December2021 fifth-anniversary context. Opponent FT list conflicts with other sources and is NOT used to classify opponents.
+Alloa Athletic,,Part-Time,Verified,2021-07-01,2022-06-30,S020,Alloa1-2Celtic ScottishCup report22January2022; supports21/22 club status.

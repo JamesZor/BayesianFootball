@@ -1,0 +1,14 @@
+gate,value,tol,pass
+G1 loglik a1_grw1,1.5987211554602254e-13,1.0e-9,true
+G2 smoothed mean a1_grw1,4.7531423241764514e-15,1.0e-8,true
+G4 FFBS mean max |z| (4000 draws),1.4900625446712092,4.5,true
+G4 FFBS cov max rel err,0.04473447127325301,0.1,true
+G1 loglik a2_momentum,9.592326932761353e-14,1.0e-9,true
+G2 smoothed mean a2_momentum,4.746203430272544e-15,1.0e-8,true
+G1 loglik regime (random S),1.0658141036401503e-14,1.0e-9,true
+G2 smoothed mean regime (random S),3.805983306293115e-15,1.0e-8,true
+G5 loglik feature + Student-t ω,7.105427357601002e-15,1.0e-9,true
+G5 smoothed mean feature + Student-t ω,8.425551922819352e-15,1.0e-8,true
+"G3 RBPF(SV, σ_h→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+"G3 RBPF(regime, Δ→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+G3 RBPF(regime) pre-week means vs Kalman,1.1102230246251565e-16,1.0e-10,true

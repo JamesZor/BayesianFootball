@@ -1,0 +1,4 @@
+arm,g0,g1,g2,g3,max_rhat,min_ess_bulk,divergences,n_teams_fold2,n_cup_fold2,wall_min
+g1_grw_all_spfl,true,true,true,true,1.0207914182985254,224.38992827098127,0,43,0,1.2641517519950867
+g2_grw_all_spfl_cups,true,true,true,true,1.023979155289232,241.73627396615936,0,43,131,0.3163122653961182
+g3_grw_joint_all_spfl_cups,true,true,true,true,1.022996668165371,435.96617503531496,0,43,131,1.3253542502721152

@@ -1,0 +1,5 @@
+tournament_id,completed_fixtures,fixtures_with_any_raw_bbc_shot_event,fixtures_proxy_available_both,fixture_coverage_both,home_side_coverage,away_side_coverage,unresolved_side_event_share,mean_proxy_xg_per_side,mean_goals_per_side_covered,mean_proxy_minus_goals_per_side,mae_proxy_vs_goals_per_side,pearson_proxy_vs_goals_per_side
+54,1105,607,605,0.547511,0.549321,0.547511,0.021388,1.641616,1.390909,0.250707,0.865604,0.534789
+55,1008,545,541,0.536706,0.539683,0.537698,0.029116,1.116946,1.27634,-0.159394,0.790689,0.558078
+56,976,553,552,0.565574,0.566598,0.565574,0.025663,1.153275,1.407609,-0.254334,0.793539,0.565795
+57,979,553,551,0.562819,0.564862,0.562819,0.024045,1.095035,1.353902,-0.258867,0.810442,0.554842

@@ -1,0 +1,7 @@
+movement_direction,window,analysis_side,paired_rows,mean_m12_probability,mean_market_probability,mean_m12_minus_market,positive_kelly_rows,independent_stake_sum,independent_pnl_sum,existing_portfolio_bets,existing_stake_sum,existing_pnl_sum
+downward_tier_move,1-5,opponent_underdog_against_transitioning_archive_favourite,11,0.3206,0.2593,0.0614,9,22.43025411433528,8.803346921792995,8,106.88058907060525,1.8603467037134094
+downward_tier_move,11-20,opponent_underdog_against_transitioning_archive_favourite,31,0.3303,0.2532,0.0772,29,79.68409825695308,41.420191526519964,27,468.98919393522414,211.59598861465636
+downward_tier_move,6-10,opponent_underdog_against_transitioning_archive_favourite,14,0.3231,0.2615,0.0616,12,28.074399454989795,8.658343403283649,12,103.47331889534294,73.91136955965392
+upward_tier_move,1-5,opponent_underdog_against_transitioning_archive_favourite,7,0.2816,0.3032,-0.0216,3,4.115878818508532,-4.115878818508532,3,10.010014936667128,-10.010014936667128
+upward_tier_move,11-20,opponent_underdog_against_transitioning_archive_favourite,20,0.3054,0.2829,0.0225,10,20.62616487280176,29.92802813801399,11,106.78217243526029,326.1178109586319
+upward_tier_move,6-10,opponent_underdog_against_transitioning_archive_favourite,8,0.3002,0.2927,0.0074,3,6.025495801177613,6.101024390076025,4,19.260656901576468,-14.379416085134906

@@ -1,0 +1,4 @@
+fold,n_train,n_oos,n_history,n_target,n_teams,last_train,first_oos,ordered
+1,720,20,2,0,23,2024-05-04,2024-08-03,true
+20,1060,20,2,19,25,2025-04-19,2025-04-26,true
+40,1060,10,2,19,23,2026-04-18,2026-04-25,true

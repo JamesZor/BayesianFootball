@@ -1,0 +1,5 @@
+tier_id,tier_name,team_match_rows,rows_with_any_proposed_value,row_coverage,currencies,measurement_note
+54,Premiership,2210,46,0.021,EUR,"lineup-derived proposed values; no scrape-time guarantee, unsuitable as point-in-time resource measure"
+55,Championship,2026,32,0.016,EUR,"lineup-derived proposed values; no scrape-time guarantee, unsuitable as point-in-time resource measure"
+56,League One,1934,1931,0.998,EUR,"lineup-derived proposed values; no scrape-time guarantee, unsuitable as point-in-time resource measure"
+57,League Two,1936,1936,1.000,EUR,"lineup-derived proposed values; no scrape-time guarantee, unsuitable as point-in-time resource measure"

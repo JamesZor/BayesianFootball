@@ -1,0 +1,7 @@
+movement_direction,window,club_fixture_rows,distinct_transition_club_seasons,rows_from_complete_20_match_windows,rows_from_archive_complete_tier_seasons,mean_goal_difference,win_rate,market_probability_coverage,mean_market_team_probability,bbc_shot_difference_coverage,mean_bbc_shot_difference,bbc_proxy_xg_difference_coverage,mean_bbc_proxy_xg_difference
+downward_tier_move,1-5,140,28,120,65,0.264,0.421,0.593,0.405,0.957,1.515,0.636,0.153
+downward_tier_move,11-20,240,24,240,130,0.263,0.454,0.729,0.439,1.000,1.358,0.625,0.146
+downward_tier_move,6-10,129,28,120,65,0.403,0.450,0.705,0.414,0.930,0.617,0.581,0.103
+upward_tier_move,1-5,140,28,120,40,-0.136,0.386,0.679,0.314,0.943,-0.909,0.614,0.009
+upward_tier_move,11-20,240,24,240,80,-0.037,0.358,0.879,0.345,1.000,-0.496,0.625,-0.099
+upward_tier_move,6-10,126,28,120,40,-0.143,0.357,0.770,0.336,0.952,-1.058,0.595,-0.282

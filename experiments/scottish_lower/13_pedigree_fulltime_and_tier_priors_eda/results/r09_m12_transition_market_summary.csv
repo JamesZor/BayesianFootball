@@ -1,0 +1,7 @@
+movement_direction,window,transition_rows,m12_latent_coverage_of_transition_panel,coherent_market_coverage,paired_rows,mean_m12_team_win_probability,mean_market_team_probability,mean_m12_minus_market
+downward_tier_move,1-5,35,0.250,0.686,24,0.3746,0.3652,0.0094
+downward_tier_move,11-20,70,0.292,0.843,59,0.3647,0.3752,-0.0105
+downward_tier_move,6-10,35,0.271,0.886,31,0.3701,0.3671,0.0030
+upward_tier_move,1-5,20,0.143,0.800,16,0.4130,0.3358,0.0772
+upward_tier_move,11-20,40,0.167,0.925,37,0.4051,0.3679,0.0371
+upward_tier_move,6-10,20,0.159,0.950,19,0.3942,0.3535,0.0408

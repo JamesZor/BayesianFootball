@@ -1,0 +1,32 @@
+{
+  "run_id": "928dad3b-ccaf-4909-b6b7-4f1a815e1cab",
+  "portfolio_run_id": "a7c4c55b-f8d2-416e-ba85-9c7fe9bedc1a",
+  "saved_model_config": {
+    "type": "PoissonCountModel{GlobalInterception, TimeDecayDynamics, GlobalHomeAdvantage, Tuple{PlayerLineupPillar{BayesianFootball.Features.ShotsPlusMinusFeature, BenchWeightedPlayerAggregation, Normal{Float64}, Normal{Float64}, Nothing}, ProductionWealthCovariate{ProductionWealthFeature{RichardsSigmoid}, Truncated{Normal{Float64}, Continuous, Float64, Float64, Nothing}, SupremacyRole}}, SharedKappaJoint{MatchProxyXGFeature, Truncated{Normal{Float64}, Continuous, Float64, Float64, Float64}, Normal{Float64}}, ClampGuard}",
+    "fields": {
+      "guard": "ClampGuard()",
+      "dynamics": "TimeDecayDynamics()",
+      "covariates": "(PlayerLineupPillar(), ProductionWealthCovariate())",
+      "observation": "JointGammaPoissonObservation()",
+      "interception": "GlobalInterception()",
+      "home_advantage": "GlobalHomeAdvantage()"
+    },
+    "display": "PoissonCountModel(JointGammaPoissonObservation; GlobalInterception + GlobalHomeAdvantage + TimeDecayDynamics; predictors: lineup + production_wealth; guard: ClampGuard)"
+  },
+  "transition_clubside_rows": 1015,
+  "priced_clubside_rows": 220,
+  "priced_unique_matches": 196,
+  "paired_clubside_rows": 186,
+  "portfolio_total_bets": 1328,
+  "opponent_favourite_rows": 91,
+  "opponent_existing_bets": 65,
+  "minimum_score_support_mass": 0.9999988298884488,
+  "kernel_source": "src/predictions/score_grids/kernels.jl:53-102; types.jl:2; legacy score_computation/poisson.jl:29-62",
+  "kernel_contract": "goals 0:11; independent Poisson per draw; no renormalization; recurrence algebraic parity, not Julia bit parity",
+  "limitations": [
+    "archive snapshot differs from saved portfolio TWA[-20,0]",
+    "no causal model-lag inference",
+    "clubside rows dependent; isolated stakes not portfolio return",
+    "saved model config + BFCL route audited; no Julia serialized fit loaded"
+  ]
+}

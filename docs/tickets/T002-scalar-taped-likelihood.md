@@ -281,3 +281,34 @@ The composable prototype already uses `getindex` and the unfused-weight form, an
 gradient is 0.041-0.051 ms against 0.47-0.63 ms for the arms it reproduces. It is a
 worked example of the fix, not a reason to narrow this ticket: the 28 engines under
 `src/models/pregame/engines/` are still on the slow path.
+
+## Additional allocation evidence — TODO 022, 2026-09-21
+
+Prototype reproducer: `experiments/scottish_lower/10_momentum_multiscale_grw/r01_ad_probe.jl`;
+full linked-space parity/zero-allocation gate: `r00_momentum_preflight.jl` beside it.
+No shared `src/` implementation was changed.
+
+Two additional sources were isolated on the installed ReverseDiff stack:
+
+- `mean(raw; dims=1)` in `components/dynamics/team_level/multiscale.jl` lacks a
+  vectorized keyword-reduction rule and scalarizes downstream state operations.
+  A constant centering matrix avoids this without changing the statistical model
+  (last-bit rounding can differ).
+- Scalar broadcast operands select `tracker_∇broadcast`, whose reverse execution
+  allocates derivative arrays. After optimizing the momentum state block, the
+  fold-20 full tape still allocated **51,776 B**: instruction-level attribution
+  was **51,504 B** to `tracker_∇broadcast` and **272 B** to `fill`.
+
+The prototype lifts sampled scalars through a locally owned, preallocated
+scalar-to-array instruction; clamp bounds are length-one arrays; global effects
+avoid `fill`. All three minimal Poisson arms now replay their full compiled
+linked-space tapes with **0 B** on folds 1/20/40. Original/optimized parameter
+layouts and initial draws match exactly; log densities agree within **4.7e-10**
+and compiled/fresh/ForwardDiff gradients within **3.6e-15** at displacements up
+to ±3 per coordinate (sinusoidal probes). The independent momentum recurrence
+and Turing-returned state tests also pass. This does not close the wider ticket
+or establish correctness of every historical engine at every extreme point.
+
+Any source graduation should preserve these deterministic gates, document the
+version-sensitive ReverseDiff instruction, and use a function barrier when
+measuring allocations (top-level dispatch can otherwise be counted as replay).

@@ -1,0 +1,170 @@
+cat,team,name,appearances,t5_sub,tournaments,seasons
+B,rangers-b-u21,Rangers B U21,26,,1520,21/22–26/27
+B,celtic-b-u21,Celtic B U21,17,,1520,21/22–26/27
+B,aberdeen-b-u21,Aberdeen B U21,17,,1520,21/22–26/27
+B,hibernian-b-u21,Hibernian B U21,16,,1520,21/22–26/27
+B,kilmarnock-fc-b-u21,Kilmarnock FC B U21,16,,1520,22/23–26/27
+B,dundee-b,Dundee B,15,,1520,21/22–26/27
+B,heart-of-midlothian-b-u21,Heart of Midlothian B U21,15,,1520,21/22–26/27
+B,dundee-united-b,Dundee United B U21,15,,1520,21/22–26/27
+B,st-mirren-b-u21,St. Mirren B U21,14,,1520,21/22–26/27
+B,motherwell-b-u21,Motherwell B U21,13,,1520,22/23–26/27
+B,rangers-u21,Rangers U21,7,,1520,18/19–19/20
+B,st-mirren-u21,St. Mirren U21,7,,1520,18/19–19/20
+B,motherwell-u21,Motherwell U21,6,,1520,18/19–19/20
+B,st-johnstone-b-u21,St. Johnstone B U21,6,,1520,21/22–24/25
+B,hamilton-academical-u20,Hamilton Academical U20,5,,1520,16/17–18/19
+B,celtic-u20,Celtic U20,4,,1520,16/17–17/18
+B,motherwell-u20,Motherwell U20,4,,1520,16/17–17/18
+B,aberdeen-u20,Aberdeen U20,4,,1520,16/17–17/18
+B,partick-thistle-u20,Partick Thistle U20,4,,1520,16/17–17/18
+B,heart-of-midlothian-u21,Heart of Midlothian U21,4,,1520,18/19–19/20
+B,heart-of-midlothian-u20,Heart of Midlothian U20,4,,1520,16/17–17/18
+B,ross-county-u20,Ross County U20,3,,1520,16/17–17/18
+B,rangers-u20,Rangers U20,3,,1520,16/17–17/18
+B,hamilton-academical-u21,Hamilton Academical U21,3,,1520,18/19–19/20
+B,celtic-u21,Celtic U21,3,,1520,18/19–19/20
+B,livingston-b-u21,Livingston B U21,3,,1520,22/23–23/24
+B,st-johnstone-u20,St. Johnstone U20,2,,1520,16/17–17/18
+B,kilmarnock-u20,Kilmarnock U20,2,,1520,16/17–17/18
+B,dundee-u20,Dundee U20,2,,1520,16/17–17/18
+B,dundee-u21,Dundee U21,2,,1520,18/19–18/19
+B,kilmarnock-u21,Kilmarnock U21,2,,1520,18/19–19/20
+B,livingston-u21,Livingston U21,2,,1520,18/19–18/19
+B,st-johnstone-u21,St. Johnstone U21,2,,1520,18/19–19/20
+B,hibernian-u21,Hibernian U21,2,,1520,18/19–19/20
+B,ross-county-u21,Ross County U21,2,,1520,19/20–19/20
+B,aberdeen-u21,Aberdeen U21,2,,1520,18/19–19/20
+B,inverness-caledonian-thistle-u20,Inverness Caledonian Thistle U20,1,,1520,16/17–16/17
+B,hibernian-u20,Hibernian U20,1,,1520,17/18–17/18
+GUEST,the-new-saints,The New Saints,15,,1520,16/17–23/24
+GUEST,connahs-quay-nomads,Connah's Quay Nomads,8,,1520,17/18–19/20
+GUEST,crusaders-fc,Crusaders FC,6,,1520,16/17–18/19
+GUEST,linfield-fc,Linfield,5,,1520,16/17–22/23
+GUEST,sligo-rovers,Sligo Rovers,3,,1520,17/18–18/19
+GUEST,coleraine-fc,Coleraine FC,3,,1520,18/19–23/24
+GUEST,bohemian,Bohemian FC,3,,1520,18/19–19/20
+GUEST,wrexham,Wrexham,3,,1520,19/20–19/20
+GUEST,bala-town,Bala Town,2,,1520,16/17–23/24
+GUEST,waterford-fc,Waterford FC,2,,1520,19/20–19/20
+GUEST,solihull-moors,Solihull Moors,2,,1520,19/20–19/20
+GUEST,cliftonville-fc,Cliftonville FC,2,,1520,22/23–23/24
+GUEST,sutton-united,Sutton United,2,,1520,18/19–18/19
+GUEST,glenavon,Glenavon,2,,1520,19/20–19/20
+GUEST,boreham-wood,Boreham Wood,1,,1520,18/19–18/19
+GUEST,ballymena-united,Ballymena United,1,,1520,19/20–19/20
+GUEST,bray-wanderers,Bray Wanderers,1,,1520,17/18–17/18
+GUEST,caernarfon-town,Caernarfon Town,1,,1520,22/23–22/23
+T5,formartine-united-fc,Formartine United FC,54,T5a,"73,1520",12/13–26/27
+T5,buckie-thistle-fc,Buckie Thistle FC,53,T5a,"73,1520",10/11–25/26
+T5,brora-rangers-fc,Brora Rangers FC,50,T5a,"73,1520",10/11–25/26
+T5,east-kilbride,East Kilbride,49,T5a,"73,1520",14/15–24/25
+T5,fraserburgh-fc,Fraserburgh FC,48,T5a,"73,1520",11/12–26/27
+T5,the-spartans-fc,The Spartans FC,40,T5a,"73,1520",08/09–22/23
+T5,auchinleck-talbot,Auchinleck Talbot,37,T6+,73,09/10–25/26
+T5,banks-odee-fc,Banks O'Dee FC,34,T5a,"73,1520",09/10–26/27
+T5,inverurie-loco-works-fc,Inverurie Loco Works FC,33,T5a,"73,1520",08/09–25/26
+T5,wick-academy-fc,Wick Academy FC,33,T5a,"73,1520",09/10–25/26
+T5,linlithgow-rose,Linlithgow Rose,33,T6+,73,13/14–25/26
+T5,clachnacuddin-fc,Clachnacuddin FC,30,T5a,"73,1520",08/09–26/27
+T5,nairn-county-fc,Nairn County FC,30,T5a,"73,1520",09/10–25/26
+T5,deveronvale-fc,Deveronvale FC,30,T5a,"73,1520",09/10–25/26
+T5,forres-mechanics-fc,Forres Mechanics FC,29,T6+,73,08/09–25/26
+T5,cove-rangers,Cove Rangers,29,T5a,"73,1520",08/09–18/19
+T5,gala-fairydean-rovers-fc,Gala Fairydean Rovers FC,29,T5a,"73,1520",11/12–26/27
+T5,turriff-united-fc,Turriff United FC,29,T5a,"73,1520",12/13–25/26
+T5,university-of-stirling-fc,University of Stirling FC,29,T5a,"73,1520",12/13–25/26
+T5,bonnyrigg-rose,Bonnyrigg Rose,28,T5a,"73,1520",12/13–26/27
+T5,huntly-fc,Huntly FC,26,T6+,73,11/12–25/26
+T5,broomhill-fc,Broomhill FC,26,T5a,"73,1520",15/16–24/25
+T5,cumbernauld-colts-fc,Cumbernauld Colts FC,24,T5a,"73,1520",15/16–26/27
+T5,brechin-city,Brechin City FC,24,T5a,"73,1520",18/19–25/26
+T5,civil-service-strollers-fc,Civil Service Strollers FC,23,T6+,73,09/10–25/26
+T5,keith-fc,Keith FC,21,T6+,73,09/10–25/26
+T5,east-stirlingshire,East Stirlingshire,21,T5a,"73,1520",16/17–25/26
+T5,boness-united-fc,Bo'ness United FC,20,T5a,"73,1520",10/11–25/26
+T5,rothes-fc,Rothes FC,20,T6+,73,12/13–25/26
+T5,clydebank-fc,Clydebank FC,20,T5a,"73,1520",21/22–26/27
+T5,dalbeattie-star-fc,Dalbeattie Star FC,19,T6+,73,08/09–23/24
+T5,gretna-fc-2008,Gretna FC 2008,18,T6+,73,14/15–25/26
+T5,lothian-thistle,Lothian Thistle,18,T6+,73,14/15–23/24
+T5,lossiemouth-fc,Lossiemouth FC,17,T5a,"73,1520",09/10–25/26
+T5,threave-rovers,Threave Rovers,17,T5a,"73,1520",09/10–25/26
+T5,edinburgh-city-fc,Edinburgh City F.C.,16,T5a,"73,1520",08/09–15/16
+T5,whitehill-welfare,Whitehill Welfare,16,T6+,73,10/11–24/25
+T5,cowdenbeath,Cowdenbeath,16,T5a,"73,1520",22/23–26/27
+T5,berwick-rangers,Berwick Rangers,15,T5a,"73,1520",19/20–26/27
+T5,broxburn-athletic,Broxburn Athletic,15,T6+,73,19/20–25/26
+T5,tranent-juniors-fc,Tranent FC,15,T5a,"73,1520",20/21–25/26
+T5,preston-athletic,Preston Athletic,14,T6+,73,10/11–21/22
+T5,vale-of-leithen,Vale of Leithen,14,T6+,73,08/09–24/25
+T5,fort-william-fc,Fort William FC,13,T5a,"73,1520",12/13–23/24
+T5,edinburgh-university-afc,Edinburgh University AFC,13,T6+,73,12/13–23/24
+T5,darvel-fc,Darvel FC,13,T6+,73,21/22–25/26
+T5,strathspey-thistle-fc,Strathspey Thistle FC,12,T6+,73,14/15–25/26
+T5,sauchie-juniors,Sauchie Juniors,11,T6+,73,21/22–25/26
+T5,irvine-meadow,Irvine Meadow,10,T6+,73,09/10–24/25
+T5,beith-juniors-fc,Beith Juniors FC,10,T6+,73,10/11–23/24
+T5,culter,Culter,10,T6+,73,11/12–23/24
+T5,caledonian-braves-fc,Caledonian Braves FC,10,T6+,73,19/20–25/26
+T5,camelon-juniors,Camelon Juniors,10,T6+,73,20/21–25/26
+T5,jeanfield-swifts,Jeanfield Swifts,10,T6+,73,20/21–25/26
+T5,albion-rovers,Albion Rovers,10,T5a,"73,1520",23/24–25/26
+T5,lochee-united,Lochee United,9,T6+,73,08/09–25/26
+T5,hawick-royal-albert-fc,Hawick Royal Albert FC,9,T6+,73,12/13–17/18
+T5,selkirk,Selkirk,9,T6+,73,12/13–17/18
+T5,kelty-hearts-fc,Kelty Hearts F.C.,9,T5a,"73,1520",15/16–20/21
+T5,dunbar-united,Dunbar United,9,T6+,73,21/22–24/25
+T5,cumnock,Cumnock,9,T6+,73,21/22–25/26
+T5,musselburgh-athletic-fc,Musselburgh Athletic FC,9,T6+,73,22/23–25/26
+T5,hill-of-beath-hawthorn-fc,Hill Of Beath Hawthorn FC,9,T6+,73,19/20–25/26
+T5,coldstream-fc,Coldstream FC,8,T6+,73,12/13–25/26
+T5,st-cuthbert-wanderers,St Cuthbert Wanderers,8,T6+,73,10/11–21/22
+T5,glasgow-university,Glasgow University,7,T6+,73,12/13–25/26
+T5,golspie-sutherland,Golspie Sutherland FC,7,T6+,73,11/12–23/24
+T5,girvan-fc,Girvan FC,7,T6+,73,10/11–24/25
+T5,east-fife,East Fife,7,T5a,"73,1520",18/19–18/19
+T5,pollok-fc,Pollok FC,7,T6+,73,22/23–25/26
+T5,burntisland-shipyard,Burntisland Shipyard,6,T6+,73,12/13–25/26
+T5,montrose,Montrose,6,T5a,"73,1520",18/19–18/19
+T5,dundonald-bluebell,Dundonald Bluebell,6,T6+,73,20/21–25/26
+T5,newtongrange-star,Newtongrange Star,6,T6+,73,21/22–25/26
+T5,dunipace-fc,Dunipace FC,6,T6+,73,21/22–23/24
+T5,wigtown-bladnoch,Wigtown & Bladnoch,5,T6+,73,11/12–21/22
+T5,newton-stewart-fc,Newton Stewart FC,5,T6+,73,12/13–22/23
+T5,edusport-academy-fc,Edusport Academy FC,5,T6+,73,17/18–18/19
+T5,glenafton-athletic,Glenafton Athletic,5,T6+,73,17/18–25/26
+T5,raith-rovers,Raith Rovers,5,T5a,"73,1520",18/19–18/19
+T5,penicuik-athletic-fc,Penicuik Athletic FC,5,T6+,73,19/20–23/24
+T5,benburb,Benburb,5,T6+,73,22/23–25/26
+T5,kilwinning-rangers,Kilwinning Rangers,5,T6+,73,22/23–25/26
+T5,dundee-north-end-fc,Dundee North End FC,5,T6+,73,24/25–25/26
+T5,hurlford-united,Hurlford United,4,T6+,73,14/15–14/15
+T5,stenhousemuir,Stenhousemuir,4,T5a,"73,1520",18/19–18/19
+T5,arbroath,Arbroath,4,T5a,"73,1520",18/19–18/19
+T5,airdrieonians,Airdrieonians,4,T5a,"73,1520",18/19–18/19
+T5,haddington-athletic-fc,Haddington Athletic FC,4,T6+,73,20/21–21/22
+T5,drumchapel-united,Drumchapel United,4,T6+,73,22/23–22/23
+T5,boness-athletic-fc,Boness Athletic FC,4,T6+,73,24/25–25/26
+T5,dumbarton,Dumbarton,3,T5a,"73,1520",18/19–18/19
+T5,stranraer,Stranraer,3,T5a,"73,1520",18/19–18/19
+T5,forfar-athletic,Forfar Athletic,3,T5a,"73,1520",18/19–18/19
+T5,tynecastle,Tynecastle,3,T6+,73,21/22–24/25
+T5,dalkeith-thistle-fc,Dalkeith Thistle FC,3,T6+,73,21/22–24/25
+T5,tayport-fc,Tayport FC,3,T6+,73,23/24–25/26
+T5,shotts-bon-accord-fc,Shotts Bon Accord FC,2,T6+,73,12/13–12/13
+T5,leith-athletic-fc,Leith Athletic Fc,2,T6+,73,16/17–16/17
+T5,colville-park-afc,Colville Park AFC,2,T6+,73,17/18–17/18
+T5,carnoustie-panmure,Carnoustie Panmure,2,T6+,73,22/23–22/23
+T5,st-andrews-united,St Andrews United,2,T6+,73,23/24–23/24
+T5,luncarty-fc,Luncarty FC,2,T6+,73,23/24–23/24
+T5,johnstone-burgh-fc,Johnstone Burgh FC,2,T6+,73,25/26–25/26
+T5,carluke-rovers-fc,Carluke Rovers FC,2,T6+,73,24/25–25/26
+T5,sunnybank,Sunnybank,2,T6+,73,10/11–10/11
+T5,hermes-fc,Hermes FC,1,T6+,73,12/13–12/13
+T5,blackburn-united,Blackburn United,1,T6+,73,21/22–21/22
+T5,syngenta,Syngenta,1,T6+,73,22/23–22/23
+T5,rutherglen-glencairn-fc,Rutherglen Glencairn FC,1,T6+,73,24/25–24/25
+T5,cupar-hearts-fc,Cupar Hearts FC,1,T6+,73,24/25–24/25
+T5,bonnyton-thistle,Bonnyton Thistle,1,T6+,73,25/26–25/26
+T5,invergordon-fc,Invergordon FC,1,T6+,73,25/26–25/26

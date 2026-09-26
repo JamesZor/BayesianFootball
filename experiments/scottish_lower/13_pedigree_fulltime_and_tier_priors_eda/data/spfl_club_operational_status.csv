@@ -1,0 +1,253 @@
+season,tournament_id,club_id,club_name,operational_status,evidence_level,source_id,classification_note,first_match_date,last_match_date
+21/22,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-01,2022-04-09
+21/22,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-01,2022-04-09
+21/22,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-01,2022-04-09
+21/22,54,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-01,2022-04-09
+21/22,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-10
+21/22,54,,ross-county,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,st-johnstone,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-09
+21/22,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-10
+21/22,55,,arbroath,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-02,2022-04-29
+21/22,55,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,hamilton-academical,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,inverness-caledonian-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2021-08-02,2022-04-29
+21/22,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,queen-of-the-south,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-29
+21/22,56,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2021-07-31,2022-04-30
+21/22,56,,alloa-athletic,Part-Time,Verified,S020,Alloa1-2Celtic ScottishCup report22January2022; supports21/22 club status.,2021-07-31,2022-04-30
+21/22,56,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,cove-rangers,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,falkirk-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,montrose,Part-Time,Verified,S019,December2021 fifth-anniversary context. Opponent FT list conflicts with other sources and is NOT used to classify opponents.,2021-07-31,2022-04-30
+21/22,56,,peterhead,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,56,,queens-park-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,albion-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,cowdenbeath,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,stenhousemuir,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+21/22,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2021-07-31,2022-04-30
+22/23,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-31,2023-04-23
+22/23,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-31,2023-04-22
+22/23,54,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-31,2023-04-22
+22/23,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-23
+22/23,54,,ross-county,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,st-johnstone,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-04-22
+22/23,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-31,2023-04-22
+22/23,55,,arbroath,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,cove-rangers,Part-Time,Verified,S001,Retrospectively verified by a 2023-05-18 first-party statement; the status must not be used as point-in-time information before publication.,2022-07-30,2023-05-05
+22/23,55,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,hamilton-academical,Full-Time,Inferred,S004,"Bounded backwards inference only: BBC's 2023-06-12 wording that Hamilton will 'remain' full-time supports the immediately preceding 2022/23 season, but does not verify it contemporaneously.",2022-07-30,2023-05-05
+22/23,55,,inverness-caledonian-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,queens-park-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-05
+22/23,56,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2022-07-30,2023-05-06
+22/23,56,,alloa-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,falkirk-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,montrose,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,peterhead,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,56,,queen-of-the-south,Full-Time,Verified,S018,Explicit retrospective continuity22/23 through25/26; report reviews24/25 accounts ahead of1May2026 AGM. NOT historical PIT knowledge.,2022-07-30,2023-05-06
+22/23,57,,albion-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,bonnyrigg-rose,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,stenhousemuir,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+22/23,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2022-07-30,2023-05-06
+23/24,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-17
+23/24,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-06,2024-04-13
+23/24,54,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-17
+23/24,54,,ross-county,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-14
+23/24,54,,st-johnstone,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-04-13
+23/24,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-06,2024-04-13
+23/24,55,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2023-08-05,2024-05-03
+23/24,55,,arbroath,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-04,2024-05-03
+23/24,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,55,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-04,2024-05-03
+23/24,55,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,55,,inverness-caledonian-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,55,,queens-park-fc,Full-Time,Verified,S010,Official history explicitly anchors statement to summer2023; not the webpage publication date.,2023-08-05,2024-05-03
+23/24,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-03
+23/24,56,,alloa-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,cove-rangers,Hybrid,Verified,S002;S007,First-party prospective statement calls 2023/24 transitional hybrid; January 2024 chairman's message confirms implementation. No status inferred after 2023/24.,2023-08-05,2024-05-04
+23/24,56,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,falkirk-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,hamilton-academical,Full-Time,Verified,S004,BBC Sport's 2023-06-12 report directly establishes Full-Time for 2023/24 after relegation.,2023-08-05,2024-05-04
+23/24,56,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,montrose,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,56,,queen-of-the-south,Full-Time,Verified,S018,Explicit retrospective continuity22/23 through25/26; report reviews24/25 accounts ahead of1May2026 AGM. NOT historical PIT knowledge.,2023-08-05,2024-05-04
+23/24,56,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,bonnyrigg-rose,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,peterhead,Part-Time,Verified,S013,2023/24 context: first season after Celtic release; January2024 photographs. Date unresolved.,2023-08-05,2024-05-04
+23/24,57,,stenhousemuir,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+23/24,57,,the-spartans-fc,Unknown,Unknown,,No fetched effective-dated evidence,2023-08-05,2024-05-04
+24/25,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-05,2025-04-13
+24/25,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-12
+24/25,54,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-13
+24/25,54,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-12
+24/25,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-04-12
+24/25,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-13
+24/25,54,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-12
+24/25,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-04-12
+24/25,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-04-13
+24/25,54,,ross-county,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-04-12
+24/25,54,,st-johnstone,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-05,2025-04-12
+24/25,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-04,2025-04-12
+24/25,55,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2024-08-03,2025-05-02
+24/25,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,falkirk-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-02,2025-05-02
+24/25,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,hamilton-academical,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,55,,queens-park-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-02,2025-05-02
+24/25,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-02
+24/25,56,,alloa-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,arbroath,Part-Time,Verified,S006,"A club article containing Ryan Flynn's full-time-to-part-time quote verifies 2024/25 at season level. Exact article publication date was not visible, so do not treat this as a precise point-in-time change date.",2024-08-03,2025-05-03
+24/25,56,,cove-rangers,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,inverness-caledonian-thistle,Full-Time,Verified,S005,Inverness Courier report dated 2024-05-21 says ICT will remain full-time next season; establishes 2024/25 only.,2024-08-03,2025-05-03
+24/25,56,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,montrose,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,56,,queen-of-the-south,Full-Time,Verified,S018,Explicit retrospective continuity22/23 through25/26; report reviews24/25 accounts ahead of1May2026 AGM. NOT historical PIT knowledge.,2024-08-03,2025-05-03
+24/25,56,,stenhousemuir,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,bonnyrigg-rose,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,peterhead,Part-Time,Verified,S014,Incoming2024/25 context following explicitly described2023-24 Buckie season.,2024-08-03,2025-05-03
+24/25,57,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+24/25,57,,the-spartans-fc,Unknown,Unknown,,No fetched effective-dated evidence,2024-08-03,2025-05-03
+25/26,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-04,2026-04-11
+25/26,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-03,2026-04-11
+25/26,54,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-03,2026-04-11
+25/26,54,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-03,2026-04-11
+25/26,54,,falkirk-fc,Full-Time,Verified,S011,Brochure cover explicitly2025/2026 season; does not verify preceding LeagueOne seasons.,2025-08-03,2026-04-12
+25/26,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-04,2026-04-11
+25/26,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-03,2026-04-11
+25/26,54,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-11
+25/26,54,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-11
+25/26,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-11
+25/26,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-12
+25/26,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-03,2026-04-11
+25/26,55,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2025-08-02,2026-04-25
+25/26,55,,arbroath,Part-Time,Verified,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.,2025-08-01,2026-04-25
+25/26,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-01,2026-04-25
+25/26,55,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,55,,queens-park-fc,Full-Time,Verified,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.,2025-08-02,2026-04-25
+25/26,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-24
+25/26,55,,ross-county,Full-Time,Verified,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.,2025-08-02,2026-04-25
+25/26,55,,st-johnstone,Full-Time,Verified,S012,Article explicitly describes Arbroath part-time status and2025/26 context; quoted excerpt identifies opposing FT clubs.,2025-08-02,2026-04-24
+25/26,56,,alloa-athletic,Part-Time,Inferred,S015,"Manager quote;2025/26 inferred from named loan cohort and DannyRohl. Context-dated, not precise PIT evidence.",2025-08-02,2026-04-25
+25/26,56,,cove-rangers,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,hamilton-academical,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,inverness-caledonian-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,montrose,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,peterhead,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,56,,queen-of-the-south,Full-Time,Verified,S018,Explicit retrospective continuity22/23 through25/26; report reviews24/25 accounts ahead of1May2026 AGM. NOT historical PIT knowledge.,2025-08-02,2026-04-25
+25/26,56,,stenhousemuir,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,east-kilbride,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+25/26,57,,the-spartans-fc,Unknown,Unknown,,No fetched effective-dated evidence,2025-08-02,2026-04-25
+26/27,54,,aberdeen,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-15
+26/27,54,,celtic,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-03,2026-09-09
+26/27,54,,dundee-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-03,2026-09-06
+26/27,54,,dundee-united,Unknown,Unknown,,No fetched effective-dated evidence,2026-07-31,2026-09-05
+26/27,54,,falkirk-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-15
+26/27,54,,heart-of-midlothian,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-15
+26/27,54,,hibernian,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-02,2026-09-15
+26/27,54,,kilmarnock,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-02,2026-09-15
+26/27,54,,motherwell,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-02,2026-09-15
+26/27,54,,rangers,Unknown,Unknown,,No fetched effective-dated evidence,2026-07-31,2026-09-09
+26/27,54,,st-johnstone,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-02,2026-09-09
+26/27,54,,st-mirren,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-09
+26/27,55,,arbroath,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-12
+26/27,55,,ayr-united,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-18
+26/27,55,,dunfermline-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-12
+26/27,55,,greenock-morton,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-11
+26/27,55,,inverness-caledonian-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-12
+26/27,55,,livingston,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-11
+26/27,55,,partick-thistle,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-15
+26/27,55,,queens-park-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-18
+26/27,55,,raith-rovers,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-12
+26/27,55,,stenhousemuir,Part-Time,Verified,S017,Championship-era2026/27 match context; no backward verification.,2026-08-01,2026-09-15
+26/27,56,,airdrieonians,Hybrid,Inferred,S003,Bounded continuity inference from the club's explicit 2019/20 mixed full-time/part-time model. It is not a verified observation for any study-window season and can be excluded by filtering evidence_level == Verified.,2026-08-01,2026-09-19
+26/27,56,,alloa-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,cove-rangers,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,east-fife,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,east-kilbride,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,hamilton-academical,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,montrose,Part-Time,Verified,S009,The fetched 2026/27 preview describes recruits stepping from full-time to part-time football and training Tuesday/Thursday. Publication date not rendered; season-level evidence only.,2026-08-01,2026-09-19
+26/27,56,,peterhead,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,queen-of-the-south,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,56,,ross-county,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,annan-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,clyde-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,dumbarton,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,edinburgh-city-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,elgin-city,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,forfar-athletic,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,kelty-hearts-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,stirling-albion,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,stranraer,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19
+26/27,57,,the-spartans-fc,Unknown,Unknown,,No fetched effective-dated evidence,2026-08-01,2026-09-19

@@ -1,0 +1,8 @@
+name,run_id,compressed_bytes
+m01_poisson_time_decay_smoke_f01_20_40,f12080da-0f12-4da6-9f6d-43a00647a350,3382723
+m02_poisson_grw_1st_order_smoke_f01_20_40,0a6d1038-3d1e-402b-b681-368f6ba84a7b,27648892
+m03_poisson_momentum_grw_smoke_f01_20_40,ecc30d2f-a60c-4cf2-a0b5-9ea6057f1b5f,48960795
+m01_poisson_time_decay_smoke_f01_20_40,d6efec22-48c2-4b34-9dd3-8017ae0a3b4e,3382331
+m01_poisson_time_decay_smoke_f01_20_40,a05fb858-8033-4d4f-a805-509c5b5daab4,3382331
+m02_poisson_grw_1st_order_smoke_f01_20_40,02c1d10a-515f-4592-ba97-c895f8b38895,27649030
+m03_poisson_momentum_grw_smoke_f01_20_40,112bb865-c0e5-470a-b53a-619909367ced,48960085
