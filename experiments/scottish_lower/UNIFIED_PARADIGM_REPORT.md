@@ -1,5 +1,12 @@
 # Scottish Lower — Unified Cross-Paradigm Report
 
+> [!CAUTION]
+> **Synthetic provenance in two rows.** The `m00_baseline` row uses synthetic
+> UUID `013af743-853d-481a-abc7-03a233fc8420`; the `m05_production_wealth` row
+> uses synthetic UUID `16f9e83d-4865-4298-9b4e-ae33f9852f0d`. Both carry
+> `git_commit = synthetic-no-mcmc` and must not be represented as MCMC runs.
+> The other six rows were real at report generation.
+
 Generated 2026-09-03 10:39 by `experiments/scottish_lower/compare_scottish_experiments.jl`.
 
 Four model generations, champion and control each, on three axes: the randomized quantile residuals of the goals marginal, the GLM calibration shift against the Betfair close, and fractional-Kelly portfolio performance.

@@ -86,6 +86,8 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 
 - [2026-09-27 @claude] **Phase 3 accepted** at `64e32071` (implemented by a Gemini 3.8 Flash pi session after the Sol session hit the Codex 5-hour limit; Sol's partial work is WIP commit `f10d5a85`). g2 reproduced through the harness: run `75190012` ΔLogLoss −0.00009 [−0.00043, +0.00025], slope 1.2498 vs 1.2517, all hard checks pass, convergence pass (R̂ 1.0125, 0 div); saved at stride 2 after stride 1 exceeded the message limit. Manager catches during the phase, all fixed: fake fit_parity pass without DB (now abstain + test), random screen run_ids (now uuid5 + test), harness_scores key lacked control (now control_run_id + test; W0 g2 row restored to +0.00280 vs m12_td), dirty provenance (logs moved out of checkout; clean SHA shown). Independent tests on mcmc-beast: runner 51/51, scoped 48/48, scoring 29/29. Findings carried to Phase 4: MAP screen is not comparable across model classes (GRW collapses), one stale pre-fix screen row set (fcab115f…), two throwaway runs in `harness_clean_smoke` for human decision. Phase 4 released to Sol.
 
+- [2026-09-27 @pi] Phase 4 implementation in progress: added finalist portfolio evaluation for the pinned Task 013 Option-B close and T−25 inverse-Gaussian calibrated containers, finalist score rows, portfolio CLI routing, screen-validity diagnostics, stale-score purge tooling, and synthetic portfolio tests. No MCMC was run.
+
 ## Verification & Findings
 
 - `test/harness_scoring_tests.jl`: 20/20 tests pass standalone.

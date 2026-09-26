@@ -1,19 +1,22 @@
 # Model generations — Scottish Lower (tournaments 56 / 57)
 
-> Extracted from `AGENTS.md` (formerly §6). `AGENTS.md` keeps the one-row-per-generation
-> summary; this guide keeps the Generation 3 and 4 formulations and the Experiment 06 table.
-> Measured results and run UUIDs are authoritative in each suite's `README.md`.
+> Extracted from `AGENTS.md` (formerly §6). This guide keeps the Generation 3 and 4
+> formulations and the Experiment 06 table. For versioned, like-for-like cross-run scores,
+> use [`experiments/LEADERBOARD.md`](../../experiments/LEADERBOARD.md).
 
 Four paradigms, each a full 40-fold walk-forward grid over seasons 24/25 + 25/26
-(710 held-out matches, 2,899 scored market observations). Numbers below are the
-recorded outcomes in each suite's README, not targets.
+(710 held-out matches, 2,899 scored market observations).
 
 | Gen | Suite | Paradigm | Headline |
 |---|---|---|---|
-| **1** | [`01_poisson_2426_grid/`](../../experiments/scottish_lower/01_poisson_2426_grid/README.md) | Poisson likelihood; baseline, squad wealth, travel distance, joint, age-adjusted production wealth | `m05_production_wealth` LogLoss **0.6597**; Betfair backtest +125% to +140% bankroll |
-| **2** | [`02_negbin_2426_grid/`](../../experiments/scottish_lower/02_negbin_2426_grid/README.md) | Negative Binomial; empirical overdispersion | `r̂ ≈ 26.0–26.5` (mild overdispersion); LogLoss **0.6598**, no material gain over Poisson |
-| **3** | [`03_joint_gamma_poisson/`](../../experiments/scottish_lower/03_joint_gamma_poisson/README.md) | **Two-arm joint**: shared latent `μ`, Gamma arm on BBC commentary proxy xG, Poisson arm on goals | LogLoss **0.6571** vs Betfair close 0.6568 — the second likelihood is worth ~5× the best covariate |
+| **1** | [`01_poisson_2426_grid/`](../../experiments/scottish_lower/01_poisson_2426_grid/README.md) | Poisson likelihood; baseline and covariate variants | See the versioned harness leaderboard. |
+| **2** | [`02_negbin_2426_grid/`](../../experiments/scottish_lower/02_negbin_2426_grid/README.md) | Negative Binomial; empirical overdispersion | See the versioned harness leaderboard. |
+| **3** | [`03_joint_gamma_poisson/`](../../experiments/scottish_lower/03_joint_gamma_poisson/README.md) | **Two-arm joint**: shared latent `μ`, Gamma arm on BBC commentary proxy xG, Poisson arm on goals | See the versioned harness leaderboard. |
 | **4** | [`05_.../`](../../experiments/scottish_lower/05_player_lineup_and_pxg_fusion/README.md) + [`06_.../`](../../experiments/scottish_lower/06_joint_player_lineup_fusion/README.md) | **Joint + player-lineup hybrid**: `PlayerLineupPillar` (shots-RAPM / pxG-RAPM, starters + bench at fixed `w_bench = 0.10`) composed beside team time decay | `m12` ECE **0.0100** vs Betfair close **0.0139**; +136.6% bankroll, 1.416 annual Sharpe |
+
+> **Older-scorer caveat:** the headline numbers in the 01–03 suite READMEs were
+> calculated by an older scorer. They remain historical records, not like-for-like
+> comparisons with the versioned harness scorecard.
 
 ## 1. Generation 3 — the two-arm joint observation
 

@@ -24,6 +24,7 @@ Read the guide for the area you are touching **before** you touch it.
 | [`docs/architecture/unified_v2_architecture.md`](docs/architecture/unified_v2_architecture.md) | Per-layer detail: L0 data contract, L1 components, calibration laws, meta model |
 | [`docs/guides/experiment_database_and_config_truth_guide.md`](docs/guides/experiment_database_and_config_truth_guide.md) | Touching `mcmc_experiments`; §0 agent protocol, §2 the `betdb` split |
 | [`docs/guides/model_generations_guide.md`](docs/guides/model_generations_guide.md) | Gen 3/4 formulations, Experiment 06 results |
+| [`docs/guides/experiment_harness_guide.md`](docs/guides/experiment_harness_guide.md) | Defining `candidates.jl`, running harness stages, scorecards, leaderboard and register |
 | [`docs/guides/matchday_console_guide.md`](docs/guides/matchday_console_guide.md) | Live (8085) / replay (8086) consoles: isolation, workspace, re-solver, API |
 | [`docs/guides/extension_recipes.md`](docs/guides/extension_recipes.md) | Adding a league, component, extractor, metric, calibration law, MatchDay source |
 | [`docs/guides/testing_and_verification_guide.md`](docs/guides/testing_and_verification_guide.md) | Test tiers, known T007 failure, replay suite tiers |
@@ -211,30 +212,35 @@ streams include `match_day_inference/` (the live/replay consoles),
 exchange-microstructure research, and `MetaModels/`. `archived/` is **not** the
 active path.
 
-**`experiments/<segment>/NN_<topic>/` — completed benchmark suites.** A loader,
-smoke / production / comparison / portfolio runners, and a `README.md` carrying
-the *measured* results and run UUIDs — **source performance claims from here**. A
-production grid is not launched until the smoke runner passes every gate for every
-candidate: gradient tape, sampling, the six-part convergence audit, latent
-extraction, score grid, `save_fit`/`load_fit` round-trip, and portfolio
-persistence with an identical reloaded bet ledger. Top-level `experiments/*.md`
-files are work-package prompts — inputs, not records; never cite one as a result.
+**`experiments/<segment>/NN_<topic>/` — benchmark suites.** Each harnessed suite
+has declarative `candidates.jl` plus a `README.md` carrying its question, decision,
+measured results, scorecard version and run UUIDs; use the
+[experiment harness guide](docs/guides/experiment_harness_guide.md). A grid is not
+launched until its recipe passes smoke hard checks (gradient, filtration, latents,
+score grid and `save_fit`/`load_fit` parity); convergence is a recorded review
+flag. The generated `experiments/LEADERBOARD.md` is the cross-run score source and
+`REGISTER.md` is the decision inventory. Top-level `experiments/*.md` files are
+work-package prompts — inputs, not records; never cite one as a result.
 
 ---
 
 ## 6. Model generations — Scottish Lower (tournaments 56 / 57)
 
-Four paradigms, each a full 40-fold walk-forward grid over seasons 24/25 + 25/26
-(710 held-out matches, 2,899 scored market observations). Numbers are the
-recorded outcomes in each suite's README, not targets. Formulations and the full
-Experiment 06 table: [`docs/guides/model_generations_guide.md`](docs/guides/model_generations_guide.md).
+Four paradigms use 40-fold walk-forward evaluation over seasons 24/25 + 25/26
+(710 held-out matches, 2,899 scored market observations). The versioned,
+like-for-like cross-run results are in [`experiments/LEADERBOARD.md`](experiments/LEADERBOARD.md);
+formulations and the Experiment 06 table are in
+[`docs/guides/model_generations_guide.md`](docs/guides/model_generations_guide.md).
 
 | Gen | Suite | Paradigm | Headline |
 |---|---|---|---|
-| **1** | [`01_poisson_2426_grid/`](experiments/scottish_lower/01_poisson_2426_grid/README.md) | Poisson; baseline, squad wealth, travel distance, age-adjusted production wealth | `m05_production_wealth` LogLoss **0.6597**; Betfair backtest +125% to +140% |
-| **2** | [`02_negbin_2426_grid/`](experiments/scottish_lower/02_negbin_2426_grid/README.md) | Negative Binomial | `r̂ ≈ 26.0–26.5`; LogLoss **0.6598**, no material gain |
-| **3** | [`03_joint_gamma_poisson/`](experiments/scottish_lower/03_joint_gamma_poisson/README.md) | **Two-arm joint**: shared `μ`, Gamma arm on BBC proxy xG, Poisson arm on goals | LogLoss **0.6571** vs close 0.6568 — worth ~5× the best covariate |
-| **4** | [`05_.../`](experiments/scottish_lower/05_player_lineup_and_pxg_fusion/README.md) + [`06_.../`](experiments/scottish_lower/06_joint_player_lineup_fusion/README.md) | **Joint + player-lineup hybrid**: `PlayerLineupPillar` (RAPM, `w_bench = 0.10`) beside team time decay | `m12` ECE **0.0100** vs close **0.0139**; +136.6% bankroll, Sharpe 1.416 |
+| **1** | [`01_poisson_2426_grid/`](experiments/scottish_lower/01_poisson_2426_grid/README.md) | Poisson; baseline and covariate variants | See the harness leaderboard. |
+| **2** | [`02_negbin_2426_grid/`](experiments/scottish_lower/02_negbin_2426_grid/README.md) | Negative Binomial | See the harness leaderboard. |
+| **3** | [`03_joint_gamma_poisson/`](experiments/scottish_lower/03_joint_gamma_poisson/README.md) | **Two-arm joint**: shared `μ`, Gamma proxy-xG arm and goals arm | See the harness leaderboard. |
+| **4** | [`05_.../`](experiments/scottish_lower/05_player_lineup_and_pxg_fusion/README.md) + [`06_.../`](experiments/scottish_lower/06_joint_player_lineup_fusion/README.md) | **Joint + player-lineup hybrid**: `PlayerLineupPillar` (RAPM, `w_bench = 0.10`) beside team time decay | `m12` ECE **0.0100** vs close **0.0139**; +136.6% bankroll, Sharpe 1.416. |
+
+**Scorer caveat:** the 01–03 suite README headline numbers use an older scorer;
+do not compare them directly with versioned harness leaderboard rows.
 
 **Read Gen 4 honestly:** the lineup arms do **not** win on LogLoss — the
 team-state control `m05` is still sharpest; they buy **calibration**, which is

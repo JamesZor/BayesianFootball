@@ -2,6 +2,13 @@
 
 This directory contains all research benchmarks, walk-forward cross-validation grids, likelihood comparisons, and forensic exploratory analyses conducted on Scottish League One and League Two (`Data.ScottishLower()`):
 
+> [!IMPORTANT]
+> **Read [`REVIEW.md`](REVIEW.md) first** for the audited suite inventory, comparability
+> limits, and conclusions. For current versioned cross-run scores, use the top-level
+> [`experiments/LEADERBOARD.md`](../LEADERBOARD.md); for the question/decision inventory,
+> use [`experiments/REGISTER.md`](../REGISTER.md). Historical suite headline numbers can
+> use different scorers or price sources and are not automatically comparable.
+
 ---
 
 ### Directory Map:
