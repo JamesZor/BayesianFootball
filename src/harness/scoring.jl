@@ -401,8 +401,15 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
     odds = _betfair_closing_odds(ds)
     families = _family_selections(odds)
     context = _context(restricted, odds, ds)
-    target_context = length(scored_panel) == length(panel) ? context :
-                     _context(target_restricted, odds, ds)
+    # Evaluation's closing-line RPS traverses every odds row in its context,
+    # including fixtures without latents. Keep the target context on the exact
+    # Lower odds universe used by v1.1, even when monitor latents are present.
+    lower_ids = Set(Int(r.match_id) for r in eachrow(ds.matches)
+                    if Int(r.tournament_id) in (56, 57))
+    target_odds = odds[in.(odds.match_id, Ref(lower_ids)), :]
+    target_context = length(scored_panel) == length(panel) &&
+                     nrow(target_odds) == nrow(odds) ? context :
+                     _context(target_restricted, target_odds, ds)
     observations = _observation_frame(ref.label, context, odds)
     delta_control = control_observations === :self ? observations : control_observations
     subsets, transitions = _subsets(ds, panel, scored_panel, odds, tiers)
