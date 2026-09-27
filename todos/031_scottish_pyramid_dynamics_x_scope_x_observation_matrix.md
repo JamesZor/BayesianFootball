@@ -40,9 +40,12 @@ per-league performance against the Betfair close for 54/55 as a monitor.
       rows and transition-bias CIs missing — see Work Log) Grid scorecard (`scotland_default_v1`) for all twelve: target, per-tier (incl.
       54/55 monitor for pooled scopes), transition and cold-start subsets; paired bootstrap
       vs champion; factorial read-out (dynamics / scope / observation main effects).
-- [ ] Wave 2 on the best wave-1 cell: TODO 028's A1 league offsets / A2 tier steps, and a
-      B1 relegated prior at the TODO 029 estimate (α0 ~ N(+0.12, 0.20²), β0 ~ N(−0.16, 0.26²),
-      not +0.90); then `PlayerLineupPillar` + wealth.
+- [ ] Wave 2 (spec agreed 2026-09-27, see the decision block in the Work Log and
+      `experiments/scotland/04_pyramid_tier_transition_arms/README.md`): 15 cells on the
+      23/24–25/26 panel. Pyramid tier component (anchor, carry κ, jump η, B1-literal mode),
+      league deltas on intercept and log κ (replacing A1), a `MultiScaleGRW` target-season macro
+      step. Bases `td_spfl_cups_joint` and `grw_spfl_cups_joint` with `td_lower_joint` and
+      `m12_td` re-run; judged on the two-gate rule. `PlayerLineupPillar` + wealth (and B2) move to W4.
 - [ ] Finalist stage (T−25 calibrated portfolio) for the top candidates vs `m12_td`.
 - [ ] 2026-09-19 slate re-priced (Cove v Ross County, Hamilton v QoS) from the finalists
       with a fold trained to the card (see the card-injection procedure).
@@ -87,6 +90,43 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   (h) per-candidate `--only` invocations overwrite the `harness_experiments` row (run_ids = the last
       candidate only, metadata from that commit); corrected by hand for W1;
   (i) `score_runs.jl` uses the `ScottishLower` datastore, so the 54/55 monitor subsets are never scored.
+- [2026-09-27 @claude] **Decision — Wave 2 spec (grill-me session with the human).** Contract:
+  `experiments/scotland/04_pyramid_tier_transition_arms/README.md`. Agreed points:
+  1. **Panel:** target 23/24–25/26 (frozen). W1's panel held only 3 relegated / 4 promoted / 1 entered
+     club; the new one holds 5 / 6 / 2. 26/27 to date is the W2.5 live check. Every base is re-run.
+  2. **Bases:** `td_spfl_cups_joint` and `grw_spfl_cups_joint`, each the paired control for its own
+     arms. `td_lower_joint` is re-run as the lower-scope control, and `m12_td` as a non-gating reference.
+  3. **A2 = one tier component.**
+     - Tier sets the shrinkage target: anchor = first tier in the fold window (full-pyramid tier table
+       in the lower scope).
+     - Carry κ of the tier change: κ ≡ 0 or κ ~ Beta(1.5, 4). The current-season additive form (κ = 1)
+       is rejected, because it contradicts TODO 029's +0.28.
+     - One step s ~ TN(0.47, 0.16); fixed 0.48/0.52 α/β split; Old Firm pseudo-tier o ~ TN(1.15, 0.10).
+  4. **`MultiScaleGRW` gap:** the target season is entered by a micro (σₖ) step only; there is no
+     macro step at the summer boundary. Fix = opt-in `target_season_step`, run as its own arm.
+  5. **Jump:** per-change η ~ N(0, σ_j²), σ_j ~ Gamma(2, 0.08), persisting after the change, on α
+     and β.
+  6. **League δ** (the human's proposal): zero-sum deltas on the intercept and log κ, fixed
+     N(0, 0.10). Replaces A1. Dropped if the W1 residual goals/(κμ) by league is within ±3%.
+  7. **B1:** no pooled B1. Lower scope gets A2 (full-pyramid anchor) + carry + jump, plus a B1-literal
+     arm (TODO 029 table incl. promoted). B2 is deferred to W4.
+  8. **Cells:** 15 (full ladder on TD, combinations only on GRW).
+  9. **Decision rule:**
+     - Gate 1: ΔLL vs own base, CI upper < +0.002.
+     - Gate 2: club-season-clustered bias CI; |bias| falls on both relegated and promoted into L1
+       (first 20), and the Δ|bias| CI excludes 0 on at least one.
+  10. **Harness Phase B**, built while the grids run: (g), scorecard v1.2 + panel labels, (i), (h).
+      No MAP screen.
+  11. **Build Phase A:** pi Sol, straight into `src/` as opt-in components, on branch
+      `feat/w2-tier-components`, with a 7-part test bar.
+  12. **Sampler:** as W1; one re-run at acceptance 0.80 if a cell fails convergence review.
+  13. **Pre-authorised launches:** the TD batch auto-launches after 5/5 smokes; the GRW batch
+      launches overnight after the TD read-out, with cells 9 and 11 cut if A2 is inert on TD.
+  14. **Order after W2:** W2.5 slate re-price → W3 (conditional) → W4 lineup + wealth (+B2) → W5
+      T−25 portfolio.
+  15. **Housekeeping:** close 028; new TODOs for the fixed-scale MAP screen and the T55 Betfair
+      backfill; delete the `harness_clean_smoke` runs after showing the rows; open the harness PR
+      after #43 merges.
 
 ## Verification & Findings
 

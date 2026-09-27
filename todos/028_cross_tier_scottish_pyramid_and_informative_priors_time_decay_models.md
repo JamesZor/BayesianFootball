@@ -4,11 +4,11 @@
 |---|---|
 | ID | 028 |
 | Title | Cross-Tier Scottish Pyramid and Informative Priors Time-Decay Models |
-| Status | BLOCKED |
+| Status | COMPLETED |
 | Priority | P1 |
-| Assignee | pi |
+| Assignee | claude |
 | Created | 2026-09-24 |
-| Updated | 2026-09-26 |
+| Updated | 2026-09-27 |
 | Related Files / Commits / PRs | `experiments/scotland/01_time_decay_cross_tier_and_priors/` |
 
 ## Context & Problem Statement
@@ -66,6 +66,14 @@ This task designs, trains, and benchmarks candidate solutions across the Scottis
 - [2026-09-24 @pi] User approved a separate longer one-fold pilot at 4×1,000 draws, 500 adaptation and acceptance **0.65** (overriding the work-package's 0.85 proposal). Completed all five on mcmc-beast: all pass R-hat/ESS; m00/B1/B2 pass all convergence checks, A1/A2 retain 22/1 divergences. All pilot Fits pass PostgreSQL parity; sampler/filtration/persistence assertions 55/55. Tape/grid blockers remain and no production/portfolio was launched. Recorded five new UUIDs in `results/LONGER_PILOT_FINDINGS.md`; prepared production recipe corrected to 0.65.
 
 - [2026-09-26 @claude] Re-scoped with the human: the remaining work moves to TODO 031 (TimeDecay and GRW side by side across lower / SPFL / SPFL + cups × Poisson / joint) on the shared harness of TODO 030, which reclassifies the tape-allocation and grid-mass gates as warnings. A1/A2/B1/B2 become TODO 031 wave-2 arms; B1 uses TODO 029's +0.12 relegated prior, not +0.90. Stays BLOCKED until 031 lands, then it is closed as superseded.
+
+- [2026-09-27 @claude] **Closed as SUPERSEDED** (status COMPLETED is the tracker's only closed state; this task's own acceptance criteria were *not* met here). With the human's agreement, its arms are redefined in TODO 031 wave 2 (`experiments/scotland/04_pyramid_tier_transition_arms/README.md`):
+  - A1 → league deltas on the intercept and log κ;
+  - A2 → the anchored tier component with carry κ and jump η;
+  - B1 → a lower-scope B1-literal arm (TODO 029 priors), subsumed by A2 + carry + jump in pooled scopes;
+  - B2 → deferred to TODO 031 W4.
+
+  The hand-written `l01_cross_tier_loader.jl` engines are not reused.
 
 ## Verification & Findings
 
