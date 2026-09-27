@@ -190,9 +190,9 @@ Zero-sum across teams at every round, `raw .- mean(raw, dims = 1)`, with the mea
 `(1 × n_teams) * (n_teams × n_rounds)` product.
 
 ReverseDiff 1.17 has no rule for `mean(::TrackedMatrix; dims)`: it falls back to element-wise
-taping, which put ~8,700 scalar instructions per side on the W2 largest-fold tape (17,619 of its
-instructions) and returned an `Array{TrackedReal}` whose subtraction allocated on every replay.
-The matrix product is one preallocated instruction. Same quantity; summation order differs
+taping — ~1,800 scalar instructions per side on the W2 largest fold (the tape shrank from 17,619 to
+13,972 instructions) — and returns an `Array{TrackedReal}` whose subtraction allocated 240 B on
+every replay. The matrix product is one preallocated instruction. Same quantity; summation order differs
 (≤ 1e-12 relative, `scripts/tape_allocation_audit.jl --compare-parity`). `Float64` and ForwardDiff
 evaluation go through the same product.
 """

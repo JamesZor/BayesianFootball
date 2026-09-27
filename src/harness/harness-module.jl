@@ -29,6 +29,7 @@ using ..Calibration
 using ..MatchDay
 
 include("candidate.jl")
+include("tape_profile.jl")
 include("checks.jl")
 include("cohorts.jl")
 include("scoring.jl")

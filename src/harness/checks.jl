@@ -14,6 +14,20 @@ function _check_record(base, check, severity, status, value, detail)
         value = _check_value(value), detail = String(detail), at = now()))
 end
 
+"""
+Hard checks a smoke stage must record as passes before `grid` will sample a recipe
+(`has_passing_smoke`). A smoke recorded before a check existed does not satisfy it: re-smoke.
+"""
+const SMOKE_REQUIRED_CHECKS = ("gradient", "tape_allocation", "filtration", "latents",
+                               "score_grid_coherence", "fit_parity")
+
+"""
+Most heap bytes one compiled-tape gradient may allocate before the `tape_allocation` smoke check
+fails. The builder engine allocates 0; the allowance covers runtime bookkeeping only. A tracked
+scalar in a fused broadcast costs O(rows) — tens of KB on any real fold — so the gap is wide.
+"""
+const TAPE_ALLOCATION_LIMIT_BYTES = 1024
+
 "Run a hard check, append its durable row, and throw `HarnessCheckError` on failure."
 function _run_hard_check!(records::AbstractVector, base, check::AbstractString, f::Function)
     try
@@ -157,6 +171,51 @@ function _gradient_audit(model, feature_set; replays::Int = 200, seed::Int = 202
               tape_bytes = Base.summarysize(raw_tape), gradient_ms = Float64(best_ns) / 1.0e6,
               allocated_bytes, compiled_fresh_error, reversediff_forward_error,
               worst_perturbed_error, log_density)
+end
+
+"""
+    _tape_allocation_check(model, feature_sets; max_bytes) -> NamedTuple
+
+Bytes per compiled ReverseDiff gradient on every given fold, measured where NUTS evaluates it: at a
+linked (unconstrained) prior draw, on the compiled tape, as the minimum over 20 warmed replays.
+Fails above `max_bytes`, naming every allocating tape instruction.
+
+Latency alone hides this defect. The W2 `td_base` gradient took 0.24 ms — well inside the AD guide's
+latency bar — while allocating 432 KB, and at 16 threads the collector halved sampler throughput.
+docs/turing_ad_performance_guide.md §10.5.
+"""
+function _tape_allocation_check(model, feature_sets;
+                                max_bytes::Int = TAPE_ALLOCATION_LIMIT_BYTES,
+                                seed::Int = 20260911)
+    folds = NamedTuple[]
+    failures = String[]
+    for (i, entry) in enumerate(feature_sets)
+        fs = entry isa Tuple ? first(entry) : entry
+        turing_model = Models.PreGame.build_turing_model(model, fs)
+        Random.seed!(seed)
+        varinfo = DynamicPPL.link!!(DynamicPPL.VarInfo(turing_model), turing_model)
+        theta = copy(varinfo[:])
+        density = DynamicPPL.LogDensityFunction(
+            turing_model, DynamicPPL.getlogjoint_internal, varinfo)
+        objective = values -> LogDensityProblems.logdensity(density, values)
+        raw_tape = ReverseDiff.GradientTape(objective, theta)
+        tape = ReverseDiff.compile(raw_tape)
+        bytes = compiled_gradient_bytes(tape, similar(theta), theta)
+        push!(folds, (; fold = i, allocated_bytes = bytes,
+                        tape_instructions = length(raw_tape.tape),
+                        n_parameters = length(theta)))
+        if bytes > max_bytes
+            listing = join(("#$(row.index) $(row.bytes) B $(row.description)"
+                            for row in tape_allocation_profile(raw_tape)), "; ")
+            push!(failures, "fold $i allocates $bytes B per compiled gradient " *
+                            "(limit $max_bytes B): " * (isempty(listing) ? "no single instruction allocates in isolation" : listing))
+        end
+    end
+    isempty(failures) || error(join(failures, " | ") *
+        " — a scalar inside a fused broadcast takes ReverseDiff's allocating " *
+        "tracker_∇broadcast; see docs/turing_ad_performance_guide.md §10.5")
+    return (; max_allocated_bytes = maximum(f.allocated_bytes for f in folds), max_bytes,
+              folds = Tuple(folds))
 end
 
 "Finite, positive count latents; MCMC latents must also be non-degenerate."

@@ -4,6 +4,14 @@ using DataFrames
 using Dates
 using UUIDs
 
+# The pre-fix clamp: bare `Float64` bounds put `Real`s in the broadcast, which is what sends
+# ReverseDiff to its allocating `tracker_∇broadcast` adjoint (AD guide §10.5).
+struct TapeGateScalarClamp <: BayesianFootball.Models.PreGame.Builder.AbstractRateGuard end
+BayesianFootball.Models.PreGame.Builder.apply_guard(::TapeGateScalarClamp, η) =
+    clamp.(η, -10.0, 10.0)
+BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
+    "scalar clamp (test only)"
+
 @testset "Harness Runner and Gate Verification" begin
 
     @testset "1. recipe_hash stability and sensitivity" begin
@@ -231,6 +239,12 @@ using UUIDs
         stored = Harness.read_checks(store; candidate = "synth_smoke", stage = "smoke")
         @test nrow(stored) >= 5
         @test "gradient" in stored.check
+        @test "tape_allocation" in stored.check
+        tape_row = only(filter(r -> r.check == "tape_allocation", eachrow(stored)))
+        @test tape_row.severity == "hard"
+        @test tape_row.status == "pass"
+        @test tape_row.value.max_allocated_bytes == 0
+        @test length(tape_row.value.folds) >= 1
         @test "filtration" in stored.check
         @test "latents" in stored.check
         @test "score_grid_coherence" in stored.check
@@ -251,6 +265,78 @@ using UUIDs
             end
         end
         @test Harness.has_passing_smoke(valid_store, candidate) == true
+
+        # A smoke recorded before the tape_allocation gate existed does not unlock the grid.
+        pre_gate_store = Harness.InMemoryCheckStore()
+        for r in valid_store.checks
+            r.check == "tape_allocation" || push!(pre_gate_store.checks, r)
+        end
+        @test Harness.has_passing_smoke(pre_gate_store, candidate) == false
+        @test "tape_allocation" in Harness.SMOKE_REQUIRED_CHECKS
+    end
+
+    @testset "5b. tape_allocation fails on an allocating tape and names the instruction" begin
+        matches = DataFrame(
+            match_id = [1, 2, 3, 4],
+            tournament_id = [56, 56, 56, 56],
+            season = ["23/24", "23/24", "24/25", "24/25"],
+            match_date = [Date(2024, 1, 1), Date(2024, 2, 1), Date(2024, 8, 1), Date(2024, 8, 15)],
+            match_hour = [15, 15, 15, 15],
+            match_week = [1, 2, 1, 2],
+            match_biweek = [1, 2, 1, 2],
+            match_month = [1, 2, 8, 8],
+            home_team = ["A", "B", "A", "B"],
+            away_team = ["B", "A", "B", "A"],
+            home_score = [1, 0, 2, 1],
+            away_score = [0, 1, 1, 1],
+            neutral_venue = [false, false, false, false]
+        )
+        empty_df = DataFrame()
+        ds = Data.DataStore(Data.ScottishLower(), matches, empty_df, empty_df,
+                            empty_df, empty_df, empty_df, empty_df, empty_df)
+        scope = Data.DataScope(name = "tape_scope", train_tournaments = [56],
+            target_tournaments = [56], clock_tournaments = [56],
+            target_seasons = ["24/25"], history_seasons = 1)
+        model = CountModelBuilder(:tape_gate) |>
+            add(GlobalInterception()) |>
+            add(TimeDecayDynamics(days_half_life = 180.0)) |>
+            add(GlobalHomeAdvantage()) |>
+            add(PoissonObservation()) |>
+            build
+        inputs = Harness._fold_inputs(
+            Harness.Candidate(name = "tape_gate", model = model, scope = scope), ds;
+            stage = :smoke)
+
+        clean = Harness._tape_allocation_check(model, inputs.feature_sets)
+        @test clean.max_allocated_bytes == 0
+        @test clean.max_bytes == Harness.TAPE_ALLOCATION_LIMIT_BYTES == 1024
+
+        # The pre-fix ClampGuard: bare Float64 bounds inside the broadcast. The builder only
+        # constructs its own guard types, so assemble the model directly, as the l10 prototype did.
+        allocating = BayesianFootball.Models.PreGame.Builder.PoissonCountModel(
+            model.interception, model.dynamics, model.home_advantage, model.covariates,
+            model.observation, TapeGateScalarClamp())
+        err = try
+            Harness._tape_allocation_check(allocating, inputs.feature_sets; max_bytes = 0)
+            nothing
+        catch e
+            e
+        end
+        @test err isa ErrorException
+        @test occursin("allocates", err.msg)
+        @test occursin("tracker_∇broadcast[clamp]", err.msg)
+        @test occursin("§10.5", err.msg)
+
+        # Through the hard-check wrapper it is a HarnessCheckError with a durable failing row.
+        records = NamedTuple[]
+        base = (; run_id = nothing, recipe_hash = "h", experiment = "e", candidate = "c",
+                  stage = "smoke", git_sha = "g")
+        @test_throws Harness.HarnessCheckError Harness._run_hard_check!(
+            records, base, "tape_allocation") do
+            Harness._tape_allocation_check(allocating, inputs.feature_sets; max_bytes = 0)
+        end
+        @test only(records).status == "fail"
+        @test only(records).severity == "hard"
     end
 
     @testset "6. Deterministic screen run_id across repeated screen calls" begin

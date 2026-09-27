@@ -2,7 +2,8 @@
 #
 # Execution stages for the experiment harness:
 #   - screen : in-memory MAP on all folds, scores written to harness_scores, no run persisted
-#   - smoke  : 2 folds, 2×200 NUTS, all hard checks, diagnostics recorded, saved under <exp>_smoke
+#   - smoke  : 2 folds, 2×200 NUTS, all hard checks (SMOKE_REQUIRED_CHECKS, incl. tape_allocation),
+#              diagnostics recorded, saved under <exp>_smoke
 #   - grid   : requires passing smoke, resumes completed runs, per-fold checkpoints, full draws
 #              with stride fallback, score_runs against control, convergence flagged review.
 
@@ -116,6 +117,12 @@ function smoke(candidate::Candidate;
             (; tape_bytes = grad_result.tape_bytes,
                gradient_ms = grad_result.gradient_ms,
                allocated_bytes = grad_result.allocated_bytes)
+        end
+
+        # 1b. Bytes per compiled gradient on every smoke fold, in NUTS's linked space. Hard:
+        #     a fast gradient that allocates still starves 16 sampler threads through the GC.
+        _run_hard_check!(records, base, "tape_allocation") do
+            _tape_allocation_check(candidate.model, inputs.feature_sets)
         end
 
         # 2. Filtration check
