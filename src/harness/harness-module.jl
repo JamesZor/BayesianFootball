@@ -11,6 +11,7 @@ using LinearAlgebra: norm
 import Logging
 using LogDensityProblems
 using MCMCChains
+import Profile
 using Random
 using ReverseDiff
 using SHA

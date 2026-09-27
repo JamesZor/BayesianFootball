@@ -366,13 +366,25 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test fixed.wall_seconds > 0 && fixed.window_seconds > 0
         @test fixed.ms_per_leapfrog isa Real && fixed.efficiency_ratio isa Real
         @test fixed.bytes_per_leapfrog isa Real && fixed.gc_share isa Real
+        # rev2: GC from GC_Diff, utilisation and stalls from the statistical profiler.
+        @test fixed.gc_pauses >= 0 && fixed.gc_allocd_bytes >= 0
+        @test fixed.utilisation_source == "profile"
+        @test fixed.sampler_utilisation isa Real && 0.0 <= fixed.sampler_utilisation <= 1.0
+        @test fixed.sampler_utilisation_min <= fixed.sampler_utilisation
+        @test count(t -> t.pool == "default", fixed.profile_threads) >= 1
+        @test fixed.gc_stall_share isa Real && fixed.jit_share isa Real
+        @test fixed.top_frames isa AbstractVector && length(fixed.top_frames) <= 15
+        # Profile.Allocs on full sampler steps reports sites outside the tape.
+        @test !isempty(fixed.non_tape_step_sites)
+        @test all(s -> s.source == "nuts_step" && s.est_bytes_per_unit > 0, fixed.non_tape_step_sites)
+        @test all(s -> s.source == "gradient", fixed.non_tape_gradient_sites)
         if Sys.islinux()
             @test fixed.sampler_thread_ids_found == Threads.nthreads()
-            @test fixed.sampler_utilisation isa Real && fixed.process_utilisation isa Real
+            @test fixed.proc_sampler_utilisation isa Real && fixed.process_utilisation isa Real
         end
         @test !any(f -> f.flag == "tape_allocation", Harness.sampling_performance_flags(fixed))
         healthy = merge(fixed, (; gc_share = 0.02, sampler_utilisation = 0.95,
-                                  efficiency_ratio = 1.2))
+                                  efficiency_ratio = 1.2, gc_stall_share = 0.0, jit_share = 0.0))
         @test isempty(Harness.sampling_performance_flags(healthy))
 
         # The deliberately allocating (pre-fix) engine is flagged for review, with the cause named.
@@ -395,10 +407,12 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         idle = Harness.sampling_performance_flags(merge(healthy, (; sampler_utilisation = 0.40)))
         @test [f.flag for f in idle] == ["sampler_utilisation"]
         @test occursin("too few chains", only(idle).diagnosis)
-        contended = Harness.sampling_performance_flags(
-            merge(healthy, (; gc_share = 0.40, sampler_utilisation = 0.45, efficiency_ratio = 3.0)))
+        contended = Harness.sampling_performance_flags(merge(healthy,
+            (; gc_share = 0.40, sampler_utilisation = 0.45, efficiency_ratio = 3.0,
+               gc_stall_share = 0.30)))
         @test [f.flag for f in contended] == ["gc_share", "sampler_utilisation", "efficiency_ratio"]
-        @test occursin("stopped in collections", contended[2].diagnosis)
+        @test occursin("wait at safepoints", contended[2].diagnosis)
+        @test occursin("30.0% of awake sampler-thread samples in GC-stall frames", contended[2].diagnosis)
 
         # The report carries every section; the allocating one lists its instructions.
         report = Harness.write_sampling_performance_report(
@@ -406,7 +420,9 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
             title = "Sampling performance — slow", context = (; candidate = "slow"))
         text = read(report, String)
         for section in ("# Sampling performance — slow", "## Verdict", "## Metrics",
-                        "## Allocating tape instructions", "## Diagnosis")
+                        "## Threads (statistical profiler)", "### Top frames by self samples",
+                        "## Allocating tape instructions", "## Allocation outside the tape",
+                        "## Diagnosis")
             @test occursin(section, text)
         end
         @test occursin("**review**", text)
@@ -415,11 +431,36 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
                        read(Harness.write_sampling_performance_report(
                            joinpath(mktempdir(), "fixed.md"), healthy, NamedTuple[]), String))
 
-        # Without /proc (macOS, a container) CPU metrics degrade to "unavailable" and cannot flag.
+        # Profile-thread parsing, checked on a hand-built buffer: thread 1 awake twice (once in a
+        # GC stall), asleep once. Blocks are [leaf ip, …, threadid, taskid, clock, sleep+1, 0, 0].
+        stall = Base.StackTraces.StackFrame(:jl_safepoint_wait_gc, Symbol("safepoint.c"), 268,
+                                            nothing, true, false, UInt64(0))
+        work = Base.StackTraces.StackFrame(:gradient!, Symbol("api.jl"), 10,
+                                           nothing, false, false, UInt64(0))
+        # Julia 1.12's `-t N` adds an interactive thread 1, so take a real default-pool thread id.
+        tid = UInt64(fetch(Threads.@spawn :default Threads.threadid()))
+        buffer = UInt64[0x10, tid, 7, 99, 1, 0, 0,     # awake, in work
+                        0x20, tid, 7, 99, 1, 0, 0,     # awake, in a GC stall
+                        0x10, tid, 7, 99, 2, 0, 0]     # asleep
+        summary = Harness.profile_thread_summary(buffer,
+            Dict(UInt64(0x10) => [work], UInt64(0x20) => [stall]))
+        @test only(summary.threads).samples == 3
+        @test only(summary.threads).utilisation ≈ 2 / 3
+        @test summary.gc_stall_share == 0.5
+        @test first(summary.top_frames).self == 1
+
+        # The profiler switched off: utilisation falls back to /proc and says so; with no /proc
+        # either (macOS, a container) CPU metrics degrade to "unavailable" and cannot flag.
+        proc_only = Harness.sampling_performance_probe(model, fs, sampler; n_chains = 1,
+            n_warmup = 3, n_samples = 3, profile = false, allocs = false)
+        @test proc_only.utilisation_source == (Sys.islinux() ? "proc" : "unavailable")
+        @test proc_only.gc_stall_share == "unavailable"
         @test Harness._proc_cpu_snapshot(joinpath(mktempdir(), "no_proc")) === nothing
         blind = Harness.sampling_performance_probe(model, fs, sampler; n_chains = 1,
-            n_warmup = 3, n_samples = 3, proc_root = joinpath(mktempdir(), "no_proc"))
+            n_warmup = 3, n_samples = 3, profile = false, allocs = false,
+            proc_root = joinpath(mktempdir(), "no_proc"))
         @test blind.sampler_utilisation == "unavailable"
+        @test blind.utilisation_source == "unavailable"
         @test blind.process_utilisation == "unavailable"
         @test blind.other_cpu_cores == "unavailable"
         @test blind.gc_share isa Real

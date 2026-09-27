@@ -4,11 +4,15 @@
 #
 #   julia --project -t 16 scripts/sampling_perf_probe.jl <candidates.jl> --only NAME
 #         [--chains 16] [--warmup 50] [--samples 50] [--report FILE.md]
-#         [--single-chain 150,150]
+#         [--single-chain 150,150] [--overhead] [--no-profile] [--no-allocs]
 #
 # Default: `--chains` defaults to Threads.nthreads(); 50 + 50 iterations, exactly the smoke's probe
 # (src/harness/perf_monitor.jl, experiments/claude_zero_alloc_addendum_perf_monitor.md). Prints
 # the metrics, the review flags and writes the markdown report.
+#
+# `--overhead` runs the probe twice, with and without the statistical profiler, and prints the wall
+# time ratio (rev2 item 6: must stay within ~10 %). `--no-profile` / `--no-allocs` switch the
+# profiler and the Profile.Allocs pass off.
 #
 # `--single-chain W,S` instead runs ONE chain of W warm-up + S draws under `@timed` with
 # `discard_adapt = false` and prints GC %, GiB allocated, leapfrogs, KB and ms per leapfrog (the
@@ -31,7 +35,7 @@ end
 
 module PerfProbe
 using BayesianFootball
-import DynamicPPL, LogDensityProblems, Logging, Random, ReverseDiff, Turing
+import DynamicPPL, LogDensityProblems, Logging, Profile, Random, ReverseDiff, Turing
 include(joinpath(@__DIR__, "..", "src", "harness", "tape_profile.jl"))
 include(joinpath(@__DIR__, "..", "src", "harness", "perf_monitor.jl"))
 end
@@ -44,6 +48,9 @@ function parse_args(args)
     samples = 50
     report = nothing
     single = nothing
+    overhead = false
+    profile = true
+    allocs = true
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -59,6 +66,12 @@ function parse_args(args)
             report = args[i + 1]; i += 2
         elseif arg == "--single-chain"
             single = parse.(Int, split(args[i + 1], ",")); i += 2
+        elseif arg == "--overhead"
+            overhead = true; i += 1
+        elseif arg == "--no-profile"
+            profile = false; i += 1
+        elseif arg == "--no-allocs"
+            allocs = false; i += 1
         elseif startswith(arg, "-")
             error("unknown option $arg")
         else
@@ -67,7 +80,7 @@ function parse_args(args)
     end
     (file === nothing || only === nothing) &&
         error("usage: sampling_perf_probe.jl <candidates.jl> --only NAME [options]")
-    return (; file, only, chains, warmup, samples, report, single)
+    return (; file, only, chains, warmup, samples, report, single, overhead, profile, allocs)
 end
 
 function largest_fold(candidate)
@@ -109,14 +122,33 @@ function main()
     end
 
     metrics = PerfProbe.sampling_performance_probe(candidate.model, fold.fs, candidate.sampler;
-        n_chains = opts.chains, n_warmup = opts.warmup, n_samples = opts.samples)
+        n_chains = opts.chains, n_warmup = opts.warmup, n_samples = opts.samples,
+        profile = opts.profile, allocs = opts.allocs)
     flags = PerfProbe.sampling_performance_flags(metrics)
     for key in keys(metrics)
-        key === :allocating_instructions && continue
-        println("METRIC ", rpad(String(key), 28), " ", getproperty(metrics, key))
+        value = getproperty(metrics, key)
+        value isa AbstractVector && eltype(value) <: NamedTuple && continue
+        println("METRIC ", rpad(String(key), 32), " ", value)
     end
     for row in metrics.allocating_instructions
         println("ALLOC  #", row.index, " ", row.bytes, " B  ", row.description)
+    end
+    for t in metrics.profile_threads
+        println("THREAD ", t.thread, " ", t.pool, " samples=", t.samples, " util=", round(t.utilisation, digits = 3))
+    end
+    for f in metrics.top_frames
+        println("FRAME  ", f.self, "  ", f.frame)
+    end
+    for site in vcat(metrics.non_tape_gradient_sites, metrics.non_tape_step_sites)
+        println("SITE   ", site.source, "  ", round(site.est_bytes_per_unit, digits = 1), " B  ", site.site)
+    end
+    if opts.overhead
+        bare = PerfProbe.sampling_performance_probe(candidate.model, fold.fs, candidate.sampler;
+            n_chains = opts.chains, n_warmup = opts.warmup, n_samples = opts.samples,
+            profile = false, allocs = false)
+        @printf("OVERHEAD wall_with_profiler=%.2f wall_without=%.2f ratio=%.3f window_with=%.2f window_without=%.2f\n",
+                metrics.wall_seconds, bare.wall_seconds, metrics.wall_seconds / bare.wall_seconds,
+                metrics.window_seconds, bare.window_seconds)
     end
     status = isempty(flags) ? "pass" : "review"
     for f in flags

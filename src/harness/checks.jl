@@ -272,6 +272,8 @@ function _smoke_sampling_performance!(records, base, candidate, inputs;
                                 (report === nothing ? "" : " — report: $report"))
         (; report = something(report, "not written"), gc_share = metrics.gc_share,
            sampler_utilisation = metrics.sampler_utilisation,
+           utilisation_source = metrics.utilisation_source,
+           gc_stall_share = metrics.gc_stall_share,
            ms_per_leapfrog = metrics.ms_per_leapfrog,
            efficiency_ratio = metrics.efficiency_ratio)
     end
