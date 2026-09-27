@@ -181,7 +181,7 @@ scoped_splitter_tests.jl:   48/48 pass
 The parallel runner included the new portfolio suite:
 
 ```text
-22 / 23 suites passed in 256.9s
+22 / 23 suites passed in 264.5s
 ```
 
 The only failure was the known T007 signature in `features_tests.jl`:
