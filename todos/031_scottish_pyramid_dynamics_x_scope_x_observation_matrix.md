@@ -205,6 +205,21 @@ per-league performance against the Betfair close for 54/55 as a monitor.
     re-smoking every recipe once.
   - Proper fix, to be scheduled: smoke parity must detect a pre-existing `configs` row (skip or
     compare against the stored fit explicitly), or smokes must carry a per-run nonce tag.
+- [2026-09-27 @claude] **W2 runs, fixed engine.**
+  - **Smokes:** 15/15 from `a76a65df`, each 6/6 hard checks (incl. `tape_allocation`). Every smoke
+    carries `sampling_performance` review (TD GC 16–39%, GRW efficiency 4.4–6.4×; see TODO 035).
+    The monitor's `util` reads ~100% even under GC because the profiler counts GC-stall samples as
+    busy; fix under TODO 035.
+  - **TD batch:** 10/10 grids from `a76a65df` in 84 min (td_base 6 min vs 18 min pre-fix). All
+    have their hard checks passing, 1,070 target fixtures, 60 folds, stride 1. Divergences ≤ 29/240k.
+  - **Convergence rule:** `td_a2_carry_jump` (R̂ 1.0117) and `td_a2_carry_jump_ldelta` (R̂ 1.0169)
+    breach the agreed 1.01. They are queued for one rerun at acceptance 0.80 (`12bccd03`, ENV
+    `W2_ACCEPT_080`), chained after the GRW batch.
+  - **GRW cut rule does not fire:** cell 4 vs cell 1 moves |bias| by 5.0 pp (relegated) and
+    4.6 pp (promoted). All 5 GRW cells were launched from `a76a65df` at 20:45 CEST.
+  - **Preliminary** (in-process v1.2, vs `td_base`): `td_a2` ΔLL −0.0018 [−0.004, 0.000];
+    relegated bias −9.50 → −4.16, promoted +5.39 → −0.02, both Δ|bias| CIs excluding 0.
+    Final scoring per base follows the grids.
 
 ## Verification & Findings
 
