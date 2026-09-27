@@ -13,7 +13,12 @@
 > **Revised 2026-08-28.** Rule 4 was **backwards** and every engine followed it. If you have
 > read this guide before, read §5 again. See [T002](tickets/T002-scalar-taped-likelihood.md).
 >
-> **Summary in `AGENTS.md`.** `AGENTS.md` carries a five-bullet digest of §3, §4 and §9; this
+> **Revised 2026-09-27 — bytes per gradient is a metric.** A 0.24 ms gradient allocated 432 KB
+> and halved 16-thread NUTS throughput through the garbage collector. Latency alone hides this.
+> Read §10.5 and Rule 7; every builder recipe now replays its compiled tape at 0 bytes, and the
+> harness smoke fails any that does not.
+>
+> **Summary in `AGENTS.md`.** `AGENTS.md` carries a six-bullet digest of §3, §4, §9 and §10.5; this
 > guide is the authority. Measured reference points: the Scottish joint/hybrid arms compile to
 > **0.025–0.028 ms** per gradient, and tape length grows with **model structure**, not fixture
 > count (checked in §10.3). The older "~0.64 ms" target once quoted in `AGENTS.md` is superseded
@@ -32,7 +37,7 @@
 7. [Composing a Variable Number of Terms](#7-composing-a-variable-number-of-terms)
 8. [The Builder Pattern: Feature Layer Does the Work](#8-the-builder-pattern-feature-layer-does-the-work)
 9. [Numerical Safety](#9-numerical-safety)
-10. [Benchmarking and Verifying Your Model](#10-benchmarking-and-verifying-your-model)
+10. [Benchmarking and Verifying Your Model](#10-benchmarking-and-verifying-your-model) — incl. [§10.5 bytes per gradient](#105-bytes-per-gradient-is-a-metric)
 11. [Reference Implementations](#11-reference-implementations)
 12. [AD Backend Comparison](#12-ad-backend-comparison)
 13. [Checklist](#13-checklist)
@@ -192,9 +197,9 @@ A branch on a **type** is fine and free — it is resolved at compile time and e
 instruction at all. A branch on a **value** is the problem:
 
 ```julia
-# ✅ DO — dispatch, resolved before the tape exists
+# ✅ DO — dispatch, resolved before the tape exists (bounds as `Ref`s — see Rule 7)
 apply_guard(::NoGuard, η)   = η
-apply_guard(g::ClampGuard, η) = clamp.(η, g.lo, g.hi)
+apply_guard(g::ClampGuard, η) = clamp.(η, Ref(g.lo), Ref(g.hi))
 
 # ❌ AVOID — a runtime test, even though it looks like configuration
 η = config.use_guard ? clamp.(η, -10.0, 10.0) : η
@@ -259,6 +264,26 @@ log_fact = loggamma.(Float64.(y) .+ 1.0)
 ```
 
 And once it is data, keep it out of the tracked kernel — see §6.
+
+### Rule 7: No bare scalars inside a fused broadcast
+
+A `Real` — a sampled scalar **or** a plain constant — inside a fused broadcast that also holds a
+tracked array sends ReverseDiff to `tracker_∇broadcast`, which allocates O(rows) on **every**
+gradient. Latency looks fine; 16 threads spend their time in the garbage collector. §10.5.
+
+```julia
+# ❌ AVOID — ν and log_norm are tracked scalars, 1.0 is a Real: 153 KB per side per gradient
+g = (ν - 1.0) .* log_x .- (ν .* x) .* inv_μ .- ν .* η .+ log_norm
+η = clamp.(η, -10.0, 10.0)                      # 58 KB per side
+
+# ✅ DO — reduce first, multiply the scalar after; constants as Refs; sampled scalars lifted
+proxy = (ν - 1.0) * sum(log_x .* w) - ν * sum(wx .* exp.(.-η)) - ν * sum(η .* w) + …
+η = clamp.(η, Ref(-10.0), Ref(10.0))
+q = tape_scalar(w_att) .* home .- tape_scalar(w_def) .* away
+```
+
+An **unfused** binary `+ - * /` of a tracked scalar and an array (`z .* σ`, `η .+ log_κ`) is
+fine — it has its own preallocated kernel. The failure is the scalar inside a *fused* kernel.
 
 ---
 
@@ -604,10 +629,11 @@ caution first, because guards are branches.
 ### Clamp log-rates
 
 ```julia
-log_λ = clamp.(intercept .+ attack .+ defence, -10.0, 10.0)
+log_λ = clamp.(intercept .+ attack .+ defence, Ref(-10.0), Ref(10.0))
 ```
 
-Without this, `exp(50.0) = Inf` and `Poisson(Inf)` throws.
+Without this, `exp(50.0) = Inf` and `Poisson(Inf)` throws. The bounds are `Ref`s, not bare
+`Float64`s: bare, they make `clamp` a 58 KB-per-gradient allocation on a 2,390-row fold (§10.5).
 
 > [!CAUTION]
 > `clamp` is a value-dependent branch and a suspect in the compiled-tape divergence in §2.
@@ -673,6 +699,8 @@ clamp — it has no branch at all:
 
 ```julia
 using DynamicPPL, LogDensityProblems, ReverseDiff, ForwardDiff, Statistics, LinearAlgebra
+# (for NUTS's own space, link first: vi = DynamicPPL.link!!(VarInfo(model), model) and
+#  LogDensityFunction(model, DynamicPPL.getlogjoint_internal, vi) — scripts/tape_allocation_audit.jl)
 
 model = PreGame.build_turing_model(model_config, feature_set)
 vi = DynamicPPL.VarInfo(model); model(vi); θ = copy(vi[:])
@@ -688,6 +716,8 @@ t = minimum([@elapsed ReverseDiff.gradient!(g, tape, θ) for _ in 1:400])
 
 println("instructions: ", length(raw.tape))
 println("gradient:     ", round(t * 1e3, digits = 4), " ms")
+bytes_per_gradient(tape, g, θ) = minimum(@allocated(ReverseDiff.gradient!(g, tape, θ)) for _ in 1:20)
+println("bytes:        ", bytes_per_gradient(tape, g, θ))   # must be 0 — §10.5
 ```
 
 Run verbatim against the reference engine on fold 1 this prints `instructions: 80`,
@@ -708,6 +738,7 @@ Run verbatim against the reference engine on fold 1 this prints `instructions: 8
 | Metric | Good | Bad |
 |:-------|:-----|:----|
 | Gradient (720 matches, ~50 params) | < 0.1 ms | > 0.5 ms |
+| **Bytes per compiled gradient** (§10.5) | **0** | **> 1 KB** — fails the smoke |
 | Tape instructions | O(10s), flat in row count | O(N) per observation |
 | Tape compilation | < 30 s | > 2 min |
 
@@ -760,6 +791,68 @@ from the equations rather than from the engine, and compare at several prior dra
 `current_development/scottish_lower/05_composable_count_builder/l04_equations.jl` is the
 pattern. It also gives you a free regression test on the engine: two implementations of one
 density that agree to the last bit are very unlikely to be wrong in the same way.
+
+### 10.5 Bytes per gradient is a metric
+
+**Latency alone hides this.** In September 2026 the W2 `td_base` recipe (TimeDecay +
+joint Gamma/Poisson + the default `ClampGuard`, 2,390 rows, 92 parameters) evaluated its compiled
+gradient in 0.24 ms — well inside §10.1's bar — and allocated **432 KB on every one**. At 16
+threads the 16 sampler threads ran at 39–49 % CPU while ~8 GC threads each accumulated about ⅔ of
+a sampler thread's CPU time. Nothing in the latency number, the tape length or the gradient checks
+said anything was wrong. Measured before and after on all 27 W1/W2 recipes:
+`docs/architecture/zero_alloc_engine_report.md`.
+
+**The failure mode.** ReverseDiff 1.17 differentiates a *fused* broadcast
+(`derivatives/broadcast.jl`, `get_implementation`) in one of two ways:
+
+| every argument is … | adjoint | bytes per replay |
+|---|---|---|
+| an array (tracked or not), or a non-`Real` such as a `Ref` | `∇broadcast` — per-element dual partials in a buffer allocated once, at recording | **0** |
+| … but **any** argument is a `Real`, tracked **or untracked** | `tracker_∇broadcast` — the reverse pass builds fresh partial arrays for every argument | **O(rows × args)**, every gradient |
+
+So each of these allocates on every gradient:
+
+- a **tracked scalar in a fused kernel** — `(ν - 1) .* log_x .- ν .* η .+ log_norm`,
+  `σ_κ .* (raw .- mean(raw))`, `w_att .* home .- w_def .* away`, `step .* (a .+ carry .* d)`;
+- a **constant `Real` in a fused kernel with a tracked array** — `c.share .* B_h .- (1 - c.share) .* B_a`,
+  and above all **`clamp.(η, lo, hi)` with scalar bounds**;
+- two ReverseDiff rules that allocate on their own: `fill(tracked_scalar, n)`, and
+  `mean(tracked_matrix; dims)`, which has no rule, tapes element by element (≈ 1,800 scalar
+  instructions per GRW side) and returns an `Array{TrackedReal}` whose subtraction allocates.
+
+An **unfused** binary `+ - * / ^` of a tracked scalar and an array (`z .* σ`, `η .+ log_κ`) has its
+own preallocated kernel and is fine.
+
+**The fixes** (all in `src/`; see `src/models/pregame/tape_scalars.jl`):
+
+| case | fix | example in `src/` |
+|---|---|---|
+| scalar multiplies a term that is summed anyway | **reduce first, multiply after**: `ν * sum(x .* w)` | `_gamma_proxy_ll` (engine.jl) — also faster: nothing per match is differentiated w.r.t. ν |
+| scalars in a linear combination of data vectors | regroup so each scalar meets ONE vector in an **unfused** binary broadcast; combine data vectors in the builder | `PyramidTiers` `_tier_side` |
+| `scale .* (raw .- mean(raw))` | **split** into two unfused broadcasts — same operations, same order | league deltas, hierarchical κ / HA |
+| sampled scalar inside a non-linear per-match kernel | **lift** it: `tape_scalar(r)` → one-element tracked vector | NegBin `_negbin_goals_ll` (`loggamma.(y .+ r)`) |
+| constant in a fused kernel, `clamp` bounds | **`Ref(c)`** — untracked to ReverseDiff, a scalar to everything else | `apply_guard(::ClampGuard, η)` |
+| `fill(tracked, n)` | `tape_fill(x, n)` | `GlobalInterception`, `GlobalHomeAdvantage` |
+| `mean(M; dims = 1)` | a constant matrix product `fill(1/n, 1, n) * M` | `_grw_centre` (multiscale.jl) |
+
+Lifting keeps the per-element arithmetic bit-identical but differentiates a wider dual kernel —
+on the six-input pyramid kernel that was *slower* than the allocating original at one thread.
+Prefer reduce-first or unfused regrouping; lift where the scalar sits inside a non-linear kernel.
+
+**How to measure.**
+
+- One model: `bytes_per_gradient` in §10.1 — the **minimum** over ≥ 20 warmed replays behind a
+  function barrier (a single sample can catch runtime bookkeeping), in the linked space NUTS uses.
+- Which instruction: `tape_allocation_profile(raw_tape)` (`src/harness/tape_profile.jl`) replays
+  each instruction alone and prints `tracker_∇broadcast[clamp](T2390, Real, Real) -> T2390`-style
+  rows (`T` tracked array, `TReal` tracked scalar, `Real` plain scalar).
+- Every recipe and fold: `scripts/tape_allocation_audit.jl <candidates.jl>…` (with
+  `--save-parity`/`--compare-parity` for before/after equality).
+- Gates: `test/tape_allocation_tests.jl` asserts 0 bytes across the builder's component matrix;
+  the harness smoke's **hard** `tape_allocation` check fails above 1,024 bytes and names the
+  instructions; its **review** `sampling_performance` probe runs `nthreads()` chains on the
+  largest fold and flags GC share > 15 %, sampler utilisation < 75 % or in-situ/bare gradient
+  ratio > 2 (`src/harness/perf_monitor.jl`), with a report and diagnosis per candidate.
 
 ---
 
@@ -827,6 +920,11 @@ Before submitting a new model engine:
 - [ ] Rate guard present, named, and shown not to bind at the draws you use
 - [ ] `1e-6` floor on rate parameters where the density needs it
 - [ ] Rejection guards branch-free (`ifelse`), no early `return`
+
+**Allocation**
+- [ ] No `Real` — sampled or constant — inside a fused broadcast with a tracked array (Rule 7)
+- [ ] `clamp` bounds are `Ref`s; no `fill(tracked, n)`; no `mean(tracked; dims)` — §10.5
+- [ ] Compiled gradient allocates **0 bytes** (min over ≥ 20 warmed replays, linked space) — §10.5
 
 **Verification**
 - [ ] Log-density matches an independent re-derivation to ≤ 1e-9 — §10.4

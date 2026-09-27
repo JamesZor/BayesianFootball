@@ -263,6 +263,9 @@ what converts into Kelly growth. `m12` is the hybrid the MatchDay consoles load;
   distribution-safe imputation).
 - Select parameters with `A[idx]`, **not** `view(A, idx)`; no array mutation.
 - Guard numerics branch-free: `clamp` log-rates, `Turing.@addlogprob! ifelse(bad, -Inf, 0.0)`.
+- **Bytes per gradient is a metric**: no `Real` (sampled or constant) in a fused broadcast with a
+  tracked array — reduce first (`ν * sum(x .* w)`), `Ref` bounds, or `tape_scalar`. The compiled
+  gradient must allocate 0 B (smoke `tape_allocation` hard check; guide §10.5).
 
 **Credentials.** **Never** commit, paste into a prompt, or print a raw password or
 a credential-bearing URL. `BF_DB_URL` comes from the environment (`.env`, git-ignored);
