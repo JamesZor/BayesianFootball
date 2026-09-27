@@ -14,6 +14,7 @@ const TEST_FILES = [
     "features_tests.jl",
     "pregame_tests.jl",
     "builder_tests.jl",
+    "pyramid_tier_tests.jl",
     "test_production_wealth_feature.jl",
     "test_pxg_rapm_features.jl",
     "test_bench_and_late_game_features.jl",
