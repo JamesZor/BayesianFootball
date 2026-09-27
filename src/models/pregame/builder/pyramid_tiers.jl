@@ -329,14 +329,14 @@ predictor_sites(c::PyramidTiers) = _tier_predictor_sites(c, Val(c.tier_term))
 function _tier_predictor_sites(c::PyramidTiers, marker)
     sites = Symbol[]
     marker isa Val{true} && push!(sites, Symbol("pyramid_tiers.step"))
-    c.carry isa EstimatedCarry && push!(sites, Symbol("pyramid_tiers.carry.κ"))
+    c.carry isa EstimatedCarry && push!(sites, Symbol("pyramid_tiers.κ"))
     (marker isa Val{false} || c.old_firm_prior === nothing) ||
-        push!(sites, Symbol("pyramid_tiers.old_firm.offset"))
+        push!(sites, Symbol("pyramid_tiers.offset"))
     if c.jump isa EstimatedJump
-        append!(sites, [Symbol("pyramid_tiers.jump.σ"), Symbol("pyramid_tiers.jump.raw_α"),
-                        Symbol("pyramid_tiers.jump.raw_β")])
+        append!(sites, [Symbol("pyramid_tiers.σ"), Symbol("pyramid_tiers.raw_α"),
+                        Symbol("pyramid_tiers.raw_β")])
     elseif c.jump isa FixedTransitionPriors
-        append!(sites, [Symbol("pyramid_tiers.jump.raw_α"), Symbol("pyramid_tiers.jump.raw_β")])
+        append!(sites, [Symbol("pyramid_tiers.raw_α"), Symbol("pyramid_tiers.raw_β")])
     end
     return sites
 end
@@ -356,20 +356,20 @@ _tier_extract_step(chain, prefix, ::Val{true}) = _chain_draws(chain, Symbol("$pr
 _tier_extract_step(chain, prefix, ::Val{false}) = zeros(size(chain, 1) * size(chain, 3))
 _tier_extract_carry(chain, prefix, ::NoCarry) = zeros(size(chain, 1) * size(chain, 3))
 _tier_extract_carry(chain, prefix, c::FixedCarry) = fill(c.value, size(chain, 1) * size(chain, 3))
-_tier_extract_carry(chain, prefix, ::EstimatedCarry) = _chain_draws(chain, Symbol("$prefix.carry.κ"))
+_tier_extract_carry(chain, prefix, ::EstimatedCarry) = _chain_draws(chain, Symbol("$prefix.κ"))
 _tier_extract_old(chain, prefix, ::Val{false}, prior) = zeros(size(chain, 1) * size(chain, 3))
 _tier_extract_old(chain, prefix, ::Val{true}, ::Nothing) = zeros(size(chain, 1) * size(chain, 3))
 _tier_extract_old(chain, prefix, ::Val{true}, prior) =
-    _chain_draws(chain, Symbol("$prefix.old_firm.offset"))
+    _chain_draws(chain, Symbol("$prefix.offset"))
 _tier_extract_jump(chain, prefix, ::NoJump) = nothing
 function _tier_extract_jump(chain, prefix, ::EstimatedJump)
-    σ = _chain_draws(chain, Symbol("$prefix.jump.σ"))
-    return (; α = σ .* _tier_chain_matrix(chain, "$prefix.jump.raw_α"),
-              β = σ .* _tier_chain_matrix(chain, "$prefix.jump.raw_β"))
+    σ = _chain_draws(chain, Symbol("$prefix.σ"))
+    return (; α = σ .* _tier_chain_matrix(chain, "$prefix.raw_α"),
+              β = σ .* _tier_chain_matrix(chain, "$prefix.raw_β"))
 end
 function _tier_extract_jump(chain, prefix, jump::FixedTransitionPriors)
-    raw_α = _tier_chain_matrix(chain, "$prefix.jump.raw_α")
-    raw_β = _tier_chain_matrix(chain, "$prefix.jump.raw_β")
+    raw_α = _tier_chain_matrix(chain, "$prefix.raw_α")
+    raw_β = _tier_chain_matrix(chain, "$prefix.raw_β")
     # Event-specific locations/scales are carried in the OOS bridge as well; the
     # chain alone retains one raw draw per ordered event.
     return (; raw_α, raw_β, fixed = jump)
