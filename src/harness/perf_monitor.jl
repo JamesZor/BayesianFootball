@@ -431,9 +431,13 @@ candidate's acceptance target, tree depth and initialisation, and measure:
     every thread has a chain — so the straggler tail every short probe has is not mistaken for poor
     utilisation; whole-run GC share beside it;
   * with `profile = true`, the statistical profiler (`Profile.init(n = profile_n, delay =
-    profile_delay)`) from the start of the window until the first chain finishes or the buffer is
-    90 % full — a sub-window, which bounds the profiler's overhead: per-thread utilisation of the
-    sampler threads (mean, min), GC-stall and JIT shares, top 15 frames. Without it, or if the
+    profile_delay)`) from the start of the window until the first chain finishes, the buffer is
+    90 % full or `profile_max_seconds` pass — a sub-window, which bounds the profiler's overhead
+    (rev2 item 6: measured +13.7 % on the GC-heavy pre-fix `td_base` when the whole 16.7 s window
+    was profiled): per-thread utilisation of the sampler threads (mean, min), GC-stall and JIT
+    shares, top 15 frames. NOTE: at 16 threads a sampler thread waiting at a GC safepoint counts
+    as awake (it spins), so `sampler_utilisation` can read 100 % while half its samples are GC
+    stalls; `sampler_work_share` = utilisation × (1 − GC-stall share) is reported beside it. Without it, or if the
     profiler cannot start, utilisation comes from `/proc/self/task` and `utilisation_source` says so;
   * with `allocs = true`, `non_tape_allocations` (single-threaded, before the window).
 
@@ -444,6 +448,7 @@ function sampling_performance_probe(model, fs, sampler;
                                     n_warmup::Int = 50, n_samples::Int = 50,
                                     profile::Bool = true, profile_n::Int = 10^7,
                                     profile_delay::Float64 = 0.002,
+                                    profile_max_seconds::Float64 = 5.0,
                                     allocs::Bool = true,
                                     proc_root::AbstractString = "/proc",
                                     seed::Int = 20260911)
@@ -480,7 +485,7 @@ function sampling_performance_probe(model, fs, sampler;
     profile_seconds = 0.0
     if profiling
         while !first_done[] && Profile.len_data() < 0.9 * Profile.maxlen_data() &&
-              !all(istaskdone, tasks)
+              (time_ns() - start.t) / 1e9 < profile_max_seconds && !all(istaskdone, tasks)
             sleep(0.05)
         end
         Profile.stop_timer()
@@ -534,6 +539,9 @@ function sampling_performance_probe(model, fs, sampler;
         profile_seconds = profiling ? profile_seconds : PERF_UNAVAILABLE,
         profile_threads = profiled === nothing ? NamedTuple[] : profiled.threads,
         gc_stall_share = profiled === nothing ? PERF_UNAVAILABLE : profiled.gc_stall_share,
+        sampler_work_share = profiled === nothing || !(utilisation isa Real) ||
+                             !(profiled.gc_stall_share isa Real) ? PERF_UNAVAILABLE :
+                             utilisation * (1 - profiled.gc_stall_share),
         jit_share = profiled === nothing ? PERF_UNAVAILABLE : profiled.jit_share,
         top_frames = profiled === nothing ? NamedTuple[] : profiled.top_frames,
         proc_sampler_utilisation = proc_util,
@@ -676,6 +684,7 @@ function write_sampling_performance_report(path::AbstractString, m, flags;
             ("sampler-thread utilisation, mean ($(m.utilisation_source))", _pct(m.sampler_utilisation), "< $(_pct(thresholds.min_sampler_utilisation))"),
             ("sampler-thread utilisation, min", _pct(m.sampler_utilisation_min), ""),
             ("sampler samples in GC-stall frames", _pct(m.gc_stall_share), ""),
+            ("sampler work share = utilisation × (1 − GC-stall share)", _pct(m.sampler_work_share), "(reported; spinning at a safepoint counts as awake)"),
             ("sampler samples in JIT/LLVM frames", _pct(m.jit_share), ""),
             ("profiled sub-window", _fmt(m.profile_seconds) * " s", ""),
             ("/proc sampler-thread CPU ÷ (window × threads) (fallback)", _pct(m.proc_sampler_utilisation), ""),
