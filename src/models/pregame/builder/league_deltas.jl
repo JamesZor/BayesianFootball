@@ -96,8 +96,14 @@ end
     log_κ ~ o.log_kappa_prior
     intercept_raw ~ filldist(Normal(0.0, 1.0), n_tiers)
     kappa_raw ~ filldist(Normal(0.0, 1.0), n_competitions)
-    δ_intercept = o.kappa.intercept_scale .* (intercept_raw .- mean(intercept_raw))
-    δ_kappa = o.kappa.kappa_scale .* (kappa_raw .- mean(kappa_raw))
+    # Centre, THEN scale, as two unfused broadcasts. Fused, `scale .* (raw .- mean(raw))` carries a
+    # constant and a tracked scalar into one kernel and takes ReverseDiff's allocating
+    # `tracker_∇broadcast` (AD guide §10.5); unfused, each step is a preallocated binary kernel and
+    # the arithmetic is the same operations in the same order.
+    intercept_centred = intercept_raw .- mean(intercept_raw)
+    δ_intercept = o.kappa.intercept_scale .* intercept_centred
+    kappa_centred = kappa_raw .- mean(kappa_raw)
+    δ_kappa = o.kappa.kappa_scale .* kappa_centred
     return (; ν, log_κ, δ_intercept, δ_kappa)
 end
 
@@ -115,19 +121,19 @@ end
     ξ_h = η_h .+ obs.δ_intercept[od.tier_home_idx]
     ξ_a = η_a .+ obs.δ_intercept[od.tier_away_idx]
 
-    # The competition delta is shared by both sides and enters goals only.
-    ζ_h = ξ_h .+ obs.log_κ .+ obs.δ_kappa[od.competition_idx]
-    ζ_a = ξ_a .+ obs.log_κ .+ obs.δ_kappa[od.competition_idx]
+    # The competition delta is shared by both sides and enters goals only. `+ log κ` is its own
+    # (unfused) step: a tracked scalar inside the fused three-term sum would take the allocating
+    # `tracker_∇broadcast` adjoint. Same additions, same order.
+    ζ_h_league = ξ_h .+ obs.log_κ
+    ζ_a_league = ξ_a .+ obs.log_κ
+    ζ_h = ζ_h_league .+ obs.δ_kappa[od.competition_idx]
+    ζ_a = ζ_a_league .+ obs.δ_kappa[od.competition_idx]
     ll_h = yh .* ζ_h .- exp.(ζ_h) .- lfh
     ll_a = ya .* ζ_a .- exp.(ζ_a) .- lfa
     goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
 
-    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
-    inv_μ_h = exp.(.-ξ_h)
-    inv_μ_a = exp.(.-ξ_a)
-    g_h = (ν - 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* inv_μ_h .- ν .* ξ_h .+ log_norm
-    g_a = (ν - 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* inv_μ_a .- ν .* ξ_a .+ log_norm
-    proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
+    # The Gamma arm reads ξ — the tier intercept, not κ — exactly as the shared mode reads η.
+    proxy_ll = _gamma_proxy_ll(ν, ξ_h, ξ_a, od)
     return goals_ll + proxy_ll
 end
 

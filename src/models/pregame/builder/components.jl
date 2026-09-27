@@ -945,7 +945,11 @@ bind — which `cb_clamp_headroom` measures rather than assumes.
 """
 struct NoGuard <: AbstractRateGuard end
 
-apply_guard(g::ClampGuard, η) = clamp.(η, g.lo, g.hi)
+# The bounds go in as `Ref`s, not bare `Float64`s. Any `Real` argument sends a ReverseDiff
+# broadcast to `tracker_∇broadcast`, whose reverse pass allocated 2 × 57.6 KB per gradient on the
+# W2 fold; a `Ref` is an untracked constant to ReverseDiff and a scalar to every other broadcast,
+# so the element-wise `clamp` is unchanged. See `tape_scalars.jl` and the AD guide §10.5.
+apply_guard(g::ClampGuard, η) = clamp.(η, Ref(g.lo), Ref(g.hi))
 apply_guard(::NoGuard, η)     = η
 
 guard_describe(g::ClampGuard) = "clamp to [$(g.lo), $(g.hi)]"

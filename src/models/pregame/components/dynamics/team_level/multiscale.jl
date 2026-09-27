@@ -184,6 +184,24 @@ end
 # ==========================================
 
 """
+    _grw_centre(raw, n_teams) -> raw minus its per-round team mean
+
+Zero-sum across teams at every round, `raw .- mean(raw, dims = 1)`, with the mean written as a
+`(1 × n_teams) * (n_teams × n_rounds)` product.
+
+ReverseDiff 1.17 has no rule for `mean(::TrackedMatrix; dims)`: it falls back to element-wise
+taping, which put ~8,700 scalar instructions per side on the W2 largest-fold tape (17,619 of its
+instructions) and returned an `Array{TrackedReal}` whose subtraction allocated on every replay.
+The matrix product is one preallocated instruction. Same quantity; summation order differs
+(≤ 1e-12 relative, `scripts/tape_allocation_audit.jl --compare-parity`). `Float64` and ForwardDiff
+evaluation go through the same product.
+"""
+function _grw_centre(raw, n_teams::Int)
+    column_mean = fill(1.0 / n_teams, 1, n_teams) * raw
+    return raw .- column_mean
+end
+
+"""
 One side (attack or defence) of the walk, with target-season micro steps.
 
 Returns a `(n_teams, n_rounds)` matrix of zero-centred states.
@@ -208,7 +226,7 @@ Returns a `(n_teams, n_rounds)` matrix of zero-centred states.
     season_states = (z_season .* σₛ) * season_accumulator
     target_states = (z_target .* σₖ) * target_accumulator
     raw = initial_states .+ season_states .+ target_states
-    return raw .- mean(raw, dims = 1)
+    return _grw_centre(raw, n_teams)
 end
 
 """
@@ -233,7 +251,7 @@ empty accumulator: an unused site would still widen θ and appear in the chain.
     initial_states = reshape(z_init .* σ₀, n_teams, 1) * initial_accumulator
     season_states = (z_season .* σₛ) * season_accumulator
     raw = initial_states .+ season_states
-    return raw .- mean(raw, dims = 1)
+    return _grw_centre(raw, n_teams)
 end
 
 """

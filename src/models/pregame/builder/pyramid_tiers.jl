@@ -313,13 +313,22 @@ _tier_add_jump(base, jump, incidence, ::Val{:β}) = base .+ incidence * jump.β
         _tier_old_firm(design.tier_marker, c.old_firm_prior), false)
     jump ~ to_submodel(_tier_jump(c.jump, design), false)
 
-    B_home = step .* (design.anchor_home .+ carry .* design.delta_home) .+
-             old_firm .* design.old_firm_home
-    B_away = step .* (design.anchor_away .+ carry .* design.delta_away) .+
-             old_firm .* design.old_firm_away
-    defence_share = 1.0 - c.attack_share
-    tier_h = c.attack_share .* B_home .- defence_share .* B_away
-    tier_a = c.attack_share .* B_away .- defence_share .* B_home
+    # `step`, `carry` and `old_firm` are sampled scalars or fixed `Float64`s depending on the
+    # variant, and the attack/defence shares are constants. Bare, any one of them sends these
+    # fused kernels to ReverseDiff's allocating `tracker_∇broadcast` (AD guide §10.5; 2 × 115 KB +
+    # 2 × 77 KB per gradient on the W2 fold). `tape_scalar` lifts a sampled scalar to a one-element
+    # tracked vector and wraps a constant in `Ref`; the element-wise arithmetic is unchanged.
+    s = CB_PG.tape_scalar(step)
+    κ = CB_PG.tape_scalar(carry)
+    o = CB_PG.tape_scalar(old_firm)
+    B_home = s .* (design.anchor_home .+ κ .* design.delta_home) .+
+             o .* design.old_firm_home
+    B_away = s .* (design.anchor_away .+ κ .* design.delta_away) .+
+             o .* design.old_firm_away
+    attack_share = CB_PG.tape_scalar(c.attack_share)
+    defence_share = CB_PG.tape_scalar(1.0 - c.attack_share)
+    tier_h = attack_share .* B_home .- defence_share .* B_away
+    tier_a = attack_share .* B_away .- defence_share .* B_home
     attack_h = _tier_add_jump(tier_h, jump, design.events_home, Val(:α))
     attack_a = _tier_add_jump(tier_a, jump, design.events_away, Val(:α))
     h = _tier_add_jump(attack_h, jump, design.events_away, Val(:β))
