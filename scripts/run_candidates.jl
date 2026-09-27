@@ -13,6 +13,7 @@ function parse_args(args)
     stage = nothing
     only_names = nothing
     container = :close_option_b
+    log_dir = nothing
 
     i = 1
     while i <= length(args)
@@ -38,6 +39,10 @@ function parse_args(args)
         elseif startswith(arg, "--container=")
             container = Symbol(split(arg, "=", limit = 2)[2])
             i += 1
+        elseif arg == "--log-dir"
+            i + 1 <= length(args) || error("--log-dir requires a directory")
+            log_dir = args[i + 1]
+            i += 2
         elseif startswith(arg, "-")
             error("Unknown option: $arg")
         else
@@ -50,17 +55,20 @@ function parse_args(args)
         end
     end
 
-    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid|portfolio [--only name,...] [--container close_option_b|t25_calibrated]")
+    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid|portfolio [--only name,...] [--container close_option_b|t25_calibrated] [--log-dir DIR]")
     stage in (:screen, :smoke, :grid, :portfolio) || error(
         "Stage must be one of: screen, smoke, grid, portfolio; got $stage")
     container in (:close_option_b, :t25_calibrated) || error(
         "Container must be close_option_b or t25_calibrated; got $container")
 
-    return (; candidates_file, stage, only_names, container)
+    return (; candidates_file, stage, only_names, container, log_dir)
 end
 
 function main()
     parsed = parse_args(ARGS)
+    # Smoke performance reports go to <log dir>/smoke_perf/<experiment>/<candidate>.md;
+    # the harness reads BF_LOG_DIR (default ../logs/<short sha>, outside the checkout).
+    parsed.log_dir === nothing || (ENV["BF_LOG_DIR"] = abspath(parsed.log_dir))
     candidates_path = abspath(parsed.candidates_file)
     isfile(candidates_path) || error("Candidates file not found: $candidates_path")
 
@@ -146,7 +154,10 @@ function main()
             hard_str = hard_pass ? "PASS" : "FAIL"
             review_str = review_pass ? "PASS" : "FAIL"
 
-            println("[SUMMARY] candidate=$(rpad(c.name, 26)) hard=$hard_str review=$review_str logloss=n/a slope=n/a run_id=$(res.run_id)")
+            println("[SUMMARY] candidate=$(rpad(c.name, 26)) hard=$hard_str review=$review_str logloss=n/a slope=n/a " *
+                    Harness.perf_summary(res.perf) * " run_id=$(res.run_id)")
+            res.perf === nothing || res.perf.report === nothing ||
+                println("[PERF] candidate=$(c.name) report=$(res.perf.report)")
         end
     elseif stage === :grid
         println("Running grid stage for $(length(candidates)) candidates...")

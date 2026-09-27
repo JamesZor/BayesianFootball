@@ -184,23 +184,39 @@ compiled-tape-safe dispersion bound.
                          lfh::Vector{Float64}, lfa::Vector{Float64},
                          n_teams::Int, n_months::Int, ::Nothing)
     disp ~ to_submodel(_build_count_dispersion(o.dispersion, n_teams, n_months))
-    λ_h = exp.(η_h)
-    λ_a = exp.(η_a)
+    return _negbin_goals_ll(disp, η_h, η_a, yh, ya, wts, lfh, lfa)
+end
 
-    # Evaluate the density directly. Constructing a DiscreteDistribution inside
-    # this broadcast makes ForwardDiff dual values flow through the generic
-    # integer-support path when ReverseDiff compiles the tape. The direct formula
-    # is mathematically identical and keeps every tracked operation continuous.
-    total_h = log.(disp.h .+ λ_h)
-    total_a = log.(disp.a .+ λ_a)
-    ll_h = SpecialFunctions.loggamma.(yh .+ disp.h) .-
-           SpecialFunctions.loggamma.(disp.h) .- lfh .+
-           disp.h .* (log.(disp.h) .- total_h) .+
-           yh .* (η_h .- total_h)
-    ll_a = SpecialFunctions.loggamma.(ya .+ disp.a) .-
-           SpecialFunctions.loggamma.(disp.a) .- lfa .+
-           disp.a .* (log.(disp.a) .- total_a) .+
-           ya .* (η_a .- total_a)
+"""
+    _negbin_goals_ll(disp, ζ_h, ζ_a, yh, ya, wts, lfh, lfa) -> scalar
+
+`Σᵢ wᵢ · log NegBin(yᵢ; r, λᵢ = e^ζᵢ)` over both sides, shared by the single-arm NegBin and the
+joint NegBin goals arm.
+
+Evaluate the density directly. Constructing a DiscreteDistribution inside this broadcast makes
+ForwardDiff dual values flow through the generic integer-support path when ReverseDiff compiles the
+tape. The direct formula is mathematically identical and keeps every tracked operation continuous.
+
+The dispersion `r` is a tracked scalar and enters every per-match term, so it goes in as
+`tape_scalar(r)` — a one-element tracked vector. Left bare, it sends both kernels to ReverseDiff's
+allocating `tracker_∇broadcast` (AD guide §10.5). The per-match arithmetic is the same operations in
+the same order; only the adjoint changes.
+"""
+function _negbin_goals_ll(disp, ζ_h, ζ_a, yh, ya, wts, lfh, lfa)
+    r_h = CB_PG.tape_scalar(disp.h)
+    r_a = CB_PG.tape_scalar(disp.a)
+    λ_h = exp.(ζ_h)
+    λ_a = exp.(ζ_a)
+    total_h = log.(r_h .+ λ_h)
+    total_a = log.(r_a .+ λ_a)
+    ll_h = SpecialFunctions.loggamma.(yh .+ r_h) .-
+           SpecialFunctions.loggamma.(r_h) .- lfh .+
+           r_h .* (log.(r_h) .- total_h) .+
+           yh .* (ζ_h .- total_h)
+    ll_a = SpecialFunctions.loggamma.(ya .+ r_a) .-
+           SpecialFunctions.loggamma.(r_a) .- lfa .+
+           r_a .* (log.(r_a) .- total_a) .+
+           ya .* (ζ_a .- total_a)
     return sum(ll_h .* wts) + sum(ll_a .* wts)
 end
 
@@ -227,7 +243,7 @@ in that declaration order.
     δ_κ        = σ_κ · (raw − mean(raw))
     log κ_team = log κ_global + δ_κ
 
-Both transformations are pure broadcasts of tracked values against tracked scalars — the same
+Both transformations are unfused broadcasts of tracked values against tracked scalars — the same
 shape `build_dynamics(::TimeDecayDynamics, …)` uses for α/β, and for the same two reasons. The
 non-centred `raw` keeps the funnel out of the geometry when σ_κ approaches its lower bound, and
 subtracting the mean removes the exact ridge along which `log κ_global` and a common shift of the
@@ -243,9 +259,50 @@ two be compared without a special case in the extractor.
     σ_κ ~ o.kappa.σ_prior
     κ_team_raw ~ filldist(Normal(0.0, 1.0), n_teams)
 
-    δ_κ = σ_κ .* (κ_team_raw .- mean(κ_team_raw))
+    # Two unfused broadcasts, not `σ_κ .* (raw .- mean(raw))`: a tracked scalar inside a fused
+    # kernel takes ReverseDiff's allocating `tracker_∇broadcast` (AD guide §10.5). Same arithmetic.
+    κ_centred = κ_team_raw .- mean(κ_team_raw)
+    δ_κ = σ_κ .* κ_centred
     log_κ_team = log_κ .+ δ_κ
     return (; ν, log_κ, σ_κ, log_κ_team)
+end
+
+"""
+    _gamma_proxy_ll(ν, ξ_h, ξ_a, od) -> scalar
+
+The Gamma proxy-xG arm, `Σᵢ wᵢ · log Gamma(xᵢ; ν, μᵢ/ν)` over both sides, with `μ = exp(ξ)` and
+`wᵢ` the availability-masked decay weights. One function for every joint observation (shared,
+hierarchical and competition κ; Poisson and NegBin goals arm), so the arm cannot drift between
+them.
+
+    log Gamma(x; ν, μ/ν) = (ν−1)·log x − ν·x·e^(−ξ) − ν·ξ + ν·log ν − log Γ(ν)
+
+Every term is linear in a function of ν alone, so ν multiplies AFTER the reduction:
+
+    Σ w·g = (ν−1)·Σ w·log x  −  ν·Σ (w·x)·e^(−ξ)  −  ν·Σ w·ξ  +  (ν·log ν − log Γ(ν))·Σ w
+
+WHY. The previous per-match broadcast `(ν − 1) .* log_x .- (ν .* x) .* inv_μ .- ν .* ξ .+ log_norm`
+carried the tracked scalar ν inside a fused kernel. ReverseDiff sends any broadcast with a `Real`
+argument to `tracker_∇broadcast`, whose reverse pass allocated 153.7 KB per side per gradient on the
+W2 fold — 307 KB of the 432 KB `td_base` allocated in total (docs/turing_ad_performance_guide.md
+§10.5). Reduced first, the tape holds two array-only broadcasts and two sums per side, all on
+ReverseDiff's preallocated paths, and ν appears only in scalar instructions. It is also the cheaper
+kernel: nothing per match is differentiated with respect to ν.
+
+`Σ w·log x`, `w·x` and `Σ w` are data. They are evaluated when the tape is recorded and baked in as
+constants; they cost nothing per gradient. The value equals the per-match form up to summation
+order (≤ 1e-12 relative, checked by scripts/tape_allocation_audit.jl `--compare-parity`).
+"""
+function _gamma_proxy_ll(ν, ξ_h, ξ_a, od::JointGammaPoissonDesign)
+    w = od.mask_weights
+    Σw = sum(w)
+    Σw_log_x = sum(od.log_pxg_h .* w) + sum(od.log_pxg_a .* w)
+    wx_h = od.pxg_h .* w
+    wx_a = od.pxg_a .* w
+    Σwx_inv_μ = sum(wx_h .* exp.(.-ξ_h)) + sum(wx_a .* exp.(.-ξ_a))
+    Σw_ξ = sum(ξ_h .* w) + sum(ξ_a .* w)
+    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
+    return (ν - 1.0) * Σw_log_x - ν * Σwx_inv_μ - ν * Σw_ξ + log_norm * (Σw + Σw)
 end
 
 """
@@ -254,8 +311,8 @@ Two arms on one latent `μ = exp(η)`.
     ARM 1   pxg ~ Gamma(ν, μ/ν)        masked to the matches that have a measurement
     ARM 2   y   ~ Poisson(κ · μ)       every match in the fold
 
-Both are written out in log-intensity space with every data-only quantity precomputed, so the tape
-sees only broadcasts of tracked scalars against constant vectors:
+Both are written out in log-intensity space with every data-only quantity precomputed; the Gamma
+arm is `_gamma_proxy_ll`, which reduces over matches before ν touches anything:
 
     log Gamma(x; ν, μ/ν) = (ν−1)·log x − ν·x·e^(−η) − ν·η + ν·log ν − log Γ(ν)
     log Poisson(y; κμ)   = y·(η + log κ) − e^(η + log κ) − log Γ(y+1)
@@ -286,14 +343,7 @@ decay weight in its own broadcast — see docs/tickets/T002.
     goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
 
     # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
-    # `log_norm` collects the two terms that depend on ν alone. Broadcasting it in as a tracked
-    # scalar is one tape node; recomputing `loggamma(ν)` per match would be n.
-    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
-    inv_μ_h = exp.(.-η_h)
-    inv_μ_a = exp.(.-η_a)
-    g_h = (ν - 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* inv_μ_h .- ν .* η_h .+ log_norm
-    g_a = (ν - 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* inv_μ_a .- ν .* η_a .+ log_norm
-    proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
+    proxy_ll = _gamma_proxy_ll(ν, η_h, η_a, od)
 
     return goals_ll + proxy_ll
 end
@@ -311,7 +361,7 @@ the away side's — κ is a property of who is shooting, not of the fixture.
 WHY ONLY THE POISSON ARM MOVES. `μ` is what the Gamma arm measures, and the whole identification
 argument for κ is that the proxy is unbiased for `μ`. Letting κ into the Gamma arm would make it a
 rescale of the latent again, and σ_κ would then be fitting the pxG measurement scale rather than
-finishing. The Gamma broadcast below is therefore byte-for-byte the shared-mode one.
+finishing. The Gamma arm below is therefore the shared-mode one — the same `_gamma_proxy_ll` call.
 
 `log_κ_team[od.home_idx]` is `getindex`, NOT `view` — see the note in `composable_count_engine`
 §3. On this ReverseDiff version a `view` of a `TrackedArray` walks the tape element by element,
@@ -334,12 +384,7 @@ between a tape whose length is set by the model and one whose length is set by t
     goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
 
     # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
-    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
-    inv_μ_h = exp.(.-η_h)
-    inv_μ_a = exp.(.-η_a)
-    g_h = (ν - 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* inv_μ_h .- ν .* η_h .+ log_norm
-    g_a = (ν - 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* inv_μ_a .- ν .* η_a .+ log_norm
-    proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
+    proxy_ll = _gamma_proxy_ll(ν, η_h, η_a, od)
 
     return goals_ll + proxy_ll
 end
@@ -351,7 +396,7 @@ Two arms on one latent `μ = exp(η)`, with an OVERDISPERSED goals arm.
     ARM 1   pxg ~ Gamma(ν, μ/ν)                     masked to the matches that have a measurement
     ARM 2   y   ~ RobustNegativeBinomial(r, κ·μ)     every match in the fold
 
-Arm 1 is byte-for-byte `_observe(::SharedKappaJoint, …)`'s Gamma broadcast, and it is meant to stay
+Arm 1 is `_observe(::SharedKappaJoint, …)`'s Gamma arm — the same `_gamma_proxy_ll` — and it is meant to stay
 that way: the identification argument for κ is that the proxy is unbiased for `μ`, so the proxy arm
 must not see κ — and now also must not see `r`. Dispersion is a statement about how goals scatter
 around `κ·μ`; the pxG measurement's own scatter is what `ν` already is. Letting `r` into arm 1 would
@@ -386,27 +431,10 @@ The arms are not fused into one broadcast, for the measured reason recorded in
     # --- ARM 2: NegBin goals on λ = κ·μ, over the whole fold -------------------
     ζ_h = η_h .+ obs.log_κ
     ζ_a = η_a .+ obs.log_κ
-    λ_h = exp.(ζ_h)
-    λ_a = exp.(ζ_a)
-    total_h = log.(disp.h .+ λ_h)
-    total_a = log.(disp.a .+ λ_a)
-    ll_h = SpecialFunctions.loggamma.(yh .+ disp.h) .-
-           SpecialFunctions.loggamma.(disp.h) .- lfh .+
-           disp.h .* (log.(disp.h) .- total_h) .+
-           yh .* (ζ_h .- total_h)
-    ll_a = SpecialFunctions.loggamma.(ya .+ disp.a) .-
-           SpecialFunctions.loggamma.(disp.a) .- lfa .+
-           disp.a .* (log.(disp.a) .- total_a) .+
-           ya .* (ζ_a .- total_a)
-    goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
+    goals_ll = _negbin_goals_ll(disp, ζ_h, ζ_a, yh, ya, wts, lfh, lfa)
 
     # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
-    log_norm = ν * log(ν) - SpecialFunctions.loggamma(ν)
-    inv_μ_h = exp.(.-η_h)
-    inv_μ_a = exp.(.-η_a)
-    g_h = (ν - 1.0) .* od.log_pxg_h .- (ν .* od.pxg_h) .* inv_μ_h .- ν .* η_h .+ log_norm
-    g_a = (ν - 1.0) .* od.log_pxg_a .- (ν .* od.pxg_a) .* inv_μ_a .- ν .* η_a .+ log_norm
-    proxy_ll = sum(g_h .* od.mask_weights) + sum(g_a .* od.mask_weights)
+    proxy_ll = _gamma_proxy_ll(ν, η_h, η_a, od)
 
     return goals_ll + proxy_ll
 end

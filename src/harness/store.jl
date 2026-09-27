@@ -449,7 +449,7 @@ function has_passing_smoke(db::Training.PostgresStorage, candidate_or_hash)
     nrow(rows) == 0 && return false
     any(r -> r.severity == "hard" && r.status != "pass", eachrow(rows)) && return false
     hard_passes = Set(r.check for r in eachrow(rows) if r.severity == "hard" && r.status == "pass")
-    required = Set(["gradient", "filtration", "latents", "score_grid_coherence", "fit_parity"])
+    required = Set(SMOKE_REQUIRED_CHECKS)
     return issubset(required, hard_passes)
 end
 
@@ -534,7 +534,7 @@ function has_passing_smoke(store::InMemoryCheckStore, candidate_or_hash)
     nrow(rows) == 0 && return false
     any(r -> r.severity == "hard" && r.status != "pass", eachrow(rows)) && return false
     hard_passes = Set(r.check for r in eachrow(rows) if r.severity == "hard" && r.status == "pass")
-    required = Set(["gradient", "filtration", "latents", "score_grid_coherence", "fit_parity"])
+    required = Set(SMOKE_REQUIRED_CHECKS)
     return issubset(required, hard_passes)
 end
 

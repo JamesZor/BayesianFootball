@@ -84,6 +84,10 @@ end
 # 2. Allocation-free candidate engine
 # ==============================================================================
 
+# SUPERSEDED (2026-09-27): the src builder engine no longer allocates on replay —
+# see src/models/pregame/tape_scalars.jl, docs/turing_ad_performance_guide.md §10.5 and
+# docs/architecture/zero_alloc_engine_report.md. These adapters are kept so the l11 results
+# reproduce; new work should use the production engine directly.
 # The production composable engine is the mathematical reference. Its scalar
 # broadcasts allocate on ReverseDiff replay in this package version. These local
 # adapters preserve its sampled sites and equations while lifting every sampled

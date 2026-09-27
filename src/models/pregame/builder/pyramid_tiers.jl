@@ -306,6 +306,19 @@ _tier_add_jump(base, ::Nothing, incidence, ::Val{:β}) = base
 _tier_add_jump(base, jump, incidence, ::Val{:α}) = base .+ incidence * jump.α
 _tier_add_jump(base, jump, incidence, ::Val{:β}) = base .+ incidence * jump.β
 
+"""
+`step·anchor + step_carry·delta + old_firm·old_firm_flag` for one side, the three data vectors
+already combined across the two sides by the attack/defence shares. Each scalar meets its vector in
+its own UNFUSED binary broadcast — ReverseDiff's preallocated scalar-array kernel — and only arrays
+enter the final sum. A scalar that is a fixed `Float64` (no step, no carry) gives a plain array.
+"""
+function _tier_side(step, step_carry, old_firm, anchor, delta, old_firm_flag)
+    level = anchor .* step
+    carried = delta .* step_carry
+    firm = old_firm_flag .* old_firm
+    return level .+ carried .+ firm
+end
+
 @model function _predictor_term(c::PyramidTiers, design::PyramidTierDesign)
     step ~ to_submodel(_tier_step(design.tier_marker, c.step_prior), false)
     carry ~ to_submodel(_tier_carry(c.carry), false)
@@ -313,13 +326,30 @@ _tier_add_jump(base, jump, incidence, ::Val{:β}) = base .+ incidence * jump.β
         _tier_old_firm(design.tier_marker, c.old_firm_prior), false)
     jump ~ to_submodel(_tier_jump(c.jump, design), false)
 
-    B_home = step .* (design.anchor_home .+ carry .* design.delta_home) .+
-             old_firm .* design.old_firm_home
-    B_away = step .* (design.anchor_away .+ carry .* design.delta_away) .+
-             old_firm .* design.old_firm_away
-    defence_share = 1.0 - c.attack_share
-    tier_h = c.attack_share .* B_home .- defence_share .* B_away
-    tier_a = c.attack_share .* B_away .- defence_share .* B_home
+    # tier_h = a·B_home − d·B_away with B = step·(anchor + carry·delta) + old_firm·old_firm_flag,
+    # regrouped so that each sampled scalar multiplies ONE data vector in an unfused binary
+    # broadcast:
+    #
+    #     tier_h = step·(a·anchor_h − d·anchor_a) + (step·carry)·(a·delta_h − d·delta_a)
+    #              + old_firm·(a·old_firm_h − d·old_firm_a)
+    #
+    # The bracketed combinations are data (a, d are fixed shares), built when the tape is recorded.
+    # Written as fused per-match kernels with the scalars inside, `step`, `carry`, `old_firm` and
+    # the shares sent ReverseDiff to its allocating `tracker_∇broadcast` (2 × 115 KB + 2 × 77 KB per
+    # gradient on the W2 fold; AD guide §10.5); lifting them to one-element vectors removed the
+    # allocation but made a slower six-input dual kernel. This form is allocation-free AND cheaper.
+    # Equal to the per-match form up to rounding (≤ 1e-12 relative, audit `--compare-parity`).
+    att = c.attack_share
+    def = 1.0 - c.attack_share
+    step_carry = step * carry
+    tier_h = _tier_side(step, step_carry, old_firm,
+        att .* design.anchor_home .- def .* design.anchor_away,
+        att .* design.delta_home .- def .* design.delta_away,
+        att .* design.old_firm_home .- def .* design.old_firm_away)
+    tier_a = _tier_side(step, step_carry, old_firm,
+        att .* design.anchor_away .- def .* design.anchor_home,
+        att .* design.delta_away .- def .* design.delta_home,
+        att .* design.old_firm_away .- def .* design.old_firm_home)
     attack_h = _tier_add_jump(tier_h, jump, design.events_home, Val(:α))
     attack_a = _tier_add_jump(tier_a, jump, design.events_away, Val(:α))
     h = _tier_add_jump(attack_h, jump, design.events_away, Val(:β))

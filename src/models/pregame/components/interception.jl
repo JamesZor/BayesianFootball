@@ -25,7 +25,9 @@ end
 # ==========================================
 @model function build_interception(config::GlobalInterception, n_seasons::Int, n_months::Int)
     μ ~ config.μ 
-    return (; μ_base=fill(μ, n_seasons), δ_month=zeros(n_months))
+    # `tape_fill`, not `fill`: ReverseDiff's `fill` rule allocates on every compiled-tape replay.
+    # Identical values; see tape_scalars.jl.
+    return (; μ_base=tape_fill(μ, n_seasons), δ_month=zeros(n_months))
 end
 
 @model function build_interception(config::SeasonalInterception, n_seasons::Int, n_months::Int)

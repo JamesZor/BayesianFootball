@@ -23,14 +23,19 @@ end
 # ==========================================
 @model function build_home_advantage(config::GlobalHomeAdvantage, n_teams::Int)
     γ_global ~ config.γ_global
-    return fill(γ_global, n_teams)
+    # `tape_fill`, not `fill`: ReverseDiff's `fill` rule allocates on every compiled-tape replay.
+    # Identical values; see tape_scalars.jl.
+    return tape_fill(γ_global, n_teams)
 end
 
 @model function build_home_advantage(config::HierarchicalTeamHomeAdvantage, n_teams::Int)
     γ_base ~ config.γ_base
     σ_γ ~ config.σ_γ
     γ_team_raw ~ filldist(Normal(0, 1), n_teams) 
-    return γ_base .+ (γ_team_raw .* σ_γ)
+    # Scale, then shift, as two unfused broadcasts: fused, the two tracked scalars send the kernel
+    # to ReverseDiff's allocating `tracker_∇broadcast`. Same operations, same order.
+    scaled = γ_team_raw .* σ_γ
+    return γ_base .+ scaled
 end
 
 
@@ -39,7 +44,10 @@ end
     γ_base ~ config.γ_base
     σ_γ ~ config.σ_γ
     γ_league_raw ~ filldist(Normal(0, 1), n_leagues) 
-    return γ_base .+ (γ_league_raw .* σ_γ)
+    # Scale, then shift, as two unfused broadcasts: fused, the two tracked scalars send the kernel
+    # to ReverseDiff's allocating `tracker_∇broadcast`. Same operations, same order.
+    scaled = γ_league_raw .* σ_γ
+    return γ_base .+ scaled
 end
 
 

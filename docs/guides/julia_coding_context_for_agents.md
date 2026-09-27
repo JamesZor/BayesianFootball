@@ -302,7 +302,7 @@ frozen at whatever it did during recording, and the gradient is **silently wrong
 ```julia
 # ✅ dispatch — resolved at compile time, emits no tape instruction
 apply_guard(::NoGuard, η)     = η
-apply_guard(g::ClampGuard, η) = clamp.(η, g.lo, g.hi)
+apply_guard(g::ClampGuard, η) = clamp.(η, Ref(g.lo), Ref(g.hi))   # Refs: AD guide §10.5
 
 # ❌ a runtime test, even though it reads like configuration
 η = cfg.guard_on ? clamp.(η, -10.0, 10.0) : η
@@ -603,6 +603,7 @@ worse than a red one.
 | `view(A, idx)` inside `@model` | `A[idx]` | 5x, tape goes scalar |
 | `sum(w .* (y .* η .- ...))` | `ll = y .* η .- ...; sum(ll .* w)` | 1.6x |
 | `loggamma.(y .+ 1)` inside `@model` | precompute in the builder | it is data |
+| a scalar (`ν`, `σ`, `1.0`, clamp bounds) inside a fused broadcast | `ν * sum(x .* w)`, `Ref(c)`, `tape_scalar(ν)` | allocates O(rows) per gradient — AD guide §10.5 |
 | runtime loop over `Vector{AbstractCfg}` in `@model` | `Tuple` + `Base.tail` recursion | unrolls at compile time |
 | `zeros(n)` for an absent term | `nothing` + dispatch | costs tape nodes forever |
 | `@assert cond` | `cond \|\| error("... and here is the fix")` | may be compiled out; no context |

@@ -14,9 +14,12 @@ using Statistics
 using Dates
 using Random
 using MCMCChains
+import ReverseDiff
 
 # 2. feature_set updates & Architecture
 include("./types.jl")
+# Before the components: `tape_fill` / `tape_scalar` are used inside their `@model`s.
+include("./tape_scalars.jl")
 include("./components/dispersion.jl")
 include("./components/interception.jl")
 include("./components/home_advantage.jl")

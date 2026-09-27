@@ -168,6 +168,20 @@ end
 # Team dynamics need no fixture-level design object.
 dynamics_design(::CB_PG.AbstractDynamicsConfig, feature_set, n_matches::Int) = nothing
 
+"""
+Attack-minus-defence lineup effects for both sides: `h = w_att·home − w_def·away`, and mirrored.
+
+The weights are sampled scalars inside a fused broadcast, so they go in as `tape_scalar` —
+one-element tracked vectors. Bare, they send the kernel to ReverseDiff's allocating
+`tracker_∇broadcast` (2 × 34 KB per gradient on the m12 fold; AD guide §10.5). Same arithmetic.
+"""
+function _player_side_effects(w_att, w_def, home, away)
+    attack = CB_PG.tape_scalar(w_att)
+    defence = CB_PG.tape_scalar(w_def)
+    return (; h = attack .* home .- defence .* away,
+              a = attack .* away .- defence .* home)
+end
+
 @model function _player_bench_weight(::Nothing, fixed_weight::Float64)
     return fixed_weight
 end
@@ -183,10 +197,7 @@ end
 )
     w_att ~ config.w_att_prior
     w_def ~ config.w_def_prior
-    return (;
-        h = w_att .* design.home .- w_def .* design.away,
-        a = w_att .* design.away .- w_def .* design.home,
-    )
+    return _player_side_effects(w_att, w_def, design.home, design.away)
 end
 
 @model function _player_lineup_term(
@@ -197,10 +208,10 @@ end
     w_def ~ config.w_def_prior
     bench ~ to_submodel(
         _player_bench_weight(config.w_bench_prior, config.aggregation.w_bench), false)
-    home = design.home .+ bench .* design.bench_home
-    away = design.away .+ bench .* design.bench_away
-    return (; h = w_att .* home .- w_def .* away,
-              a = w_att .* away .- w_def .* home)
+    b = CB_PG.tape_scalar(bench)
+    home = design.home .+ b .* design.bench_home
+    away = design.away .+ b .* design.bench_away
+    return _player_side_effects(w_att, w_def, home, away)
 end
 
 @model function _player_lineup_term(
@@ -213,17 +224,22 @@ end
     w_def_M ~ config.w_def_prior
     bench ~ to_submodel(_player_bench_weight(config.w_bench_prior, 0.25), false)
 
-    home_F = design.home_F .+ bench .* design.bench_home_F
-    home_M = design.home_M .+ bench .* design.bench_home_M
-    home_D = design.home_D .+ bench .* design.bench_home_D
-    away_F = design.away_F .+ bench .* design.bench_away_F
-    away_M = design.away_M .+ bench .* design.bench_away_M
-    away_D = design.away_D .+ bench .* design.bench_away_D
+    b = CB_PG.tape_scalar(bench)
+    home_F = design.home_F .+ b .* design.bench_home_F
+    home_M = design.home_M .+ b .* design.bench_home_M
+    home_D = design.home_D .+ b .* design.bench_home_D
+    away_F = design.away_F .+ b .* design.bench_away_F
+    away_M = design.away_M .+ b .* design.bench_away_M
+    away_D = design.away_D .+ b .* design.bench_away_D
+    aF = CB_PG.tape_scalar(w_att_F)
+    aM = CB_PG.tape_scalar(w_att_M)
+    dD = CB_PG.tape_scalar(w_def_D)
+    dM = CB_PG.tape_scalar(w_def_M)
     return (;
-        h = w_att_F .* home_F .+ w_att_M .* home_M .-
-            w_def_D .* away_D .- w_def_M .* away_M,
-        a = w_att_F .* away_F .+ w_att_M .* away_M .-
-            w_def_D .* home_D .- w_def_M .* home_M,
+        h = aF .* home_F .+ aM .* home_M .-
+            dD .* away_D .- dM .* away_M,
+        a = aF .* away_F .+ aM .* away_M .-
+            dD .* home_D .- dM .* home_M,
     )
 end
 
@@ -233,10 +249,7 @@ end
 )
     w_att ~ config.w_att_prior
     w_def ~ config.w_def_prior
-    return (;
-        h = w_att .* design.home .- w_def .* design.away,
-        a = w_att .* design.away .- w_def .* design.home,
-    )
+    return _player_side_effects(w_att, w_def, design.home, design.away)
 end
 
 _player_chain_vector(chain::Chains, name::Symbol) = vec(Array(chain[name]))

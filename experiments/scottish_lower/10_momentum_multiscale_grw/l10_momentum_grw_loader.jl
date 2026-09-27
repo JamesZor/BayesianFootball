@@ -70,6 +70,11 @@ polynomial_power(x, n::Real) = n == 0 ? one(x) : x^Int(n)
 # ReverseDiff's broadcast oracle dualizes even constant integer arguments.
 # Exponents are immutable design data, so deliberately do not differentiate n.
 polynomial_power(x, n::ForwardDiff.Dual) = polynomial_power(x, ForwardDiff.value(n))
+# SUPERSEDED (2026-09-27): the src builder engine is now zero-allocation itself —
+# `tape_scalar`/`tape_fill` (src/models/pregame/tape_scalars.jl), `Ref` clamp bounds in
+# `ClampGuard`, and a matrix-product GRW centring; gated by test/tape_allocation_tests.jl and the
+# harness `tape_allocation` smoke check (docs/turing_ad_performance_guide.md §10.5). The local
+# `array_scalar` / `ArrayClampGuard` adapters below are kept only so this prototype reproduces.
 # A scalar broadcast takes ReverseDiff's allocating tracker_∇broadcast path.
 # Lift a scalar to a length-one TrackedArray WITHOUT changing the sampled site
 # or distribution. The instruction owns its buffer; no global/shared scratch.
