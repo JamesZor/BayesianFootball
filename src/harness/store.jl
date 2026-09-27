@@ -30,6 +30,30 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
             ALTER TABLE harness_scores ADD COLUMN IF NOT EXISTS control_run_id UUID;
         """)
         Training.Inference._db_exec(conn, """
+            ALTER TABLE harness_scores ADD COLUMN IF NOT EXISTS panel TEXT;
+        """)
+        # Historical scorecards have no seasons field. Infer only known frozen
+        # panels from each run's own target/all fixture count; leave other panels
+        # explicitly unknown rather than falsely labelling them W1.
+        Training.Inference._db_exec(conn, """
+            UPDATE harness_scores AS score SET panel =
+                CASE target.n_fixtures
+                    WHEN 710 THEN '56+57|24/25,25/26|n=710'
+                    WHEN 1070 THEN '56+57|23/24,24/25,25/26|n=1070'
+                    ELSE '56+57|unknown|n=' || COALESCE(target.n_fixtures::text, 'unknown')
+                END
+            FROM (
+                SELECT run_id, scorecard_version, stage, MAX(n_fixtures) AS n_fixtures
+                FROM harness_scores
+                WHERE subset = 'target' AND market = 'all' AND metric = 'logloss'
+                GROUP BY run_id, scorecard_version, stage
+            ) AS target
+            WHERE score.run_id = target.run_id
+              AND score.scorecard_version = target.scorecard_version
+              AND score.stage = target.stage
+              AND score.panel IS NULL;
+        """)
+        Training.Inference._db_exec(conn, """
             ALTER TABLE harness_scores DROP CONSTRAINT IF EXISTS harness_scores_pkey;
         """)
         Training.Inference._db_exec(conn, """
@@ -50,8 +74,12 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
                 status TEXT NOT NULL,
                 decision TEXT NOT NULL,
                 run_ids TEXT NOT NULL,
-                readme TEXT NOT NULL
+                readme TEXT NOT NULL,
+                run_commits JSONB NOT NULL DEFAULT '{}'::jsonb
             );
+        """)
+        Training.Inference._db_exec(conn, """
+            ALTER TABLE harness_experiments ADD COLUMN IF NOT EXISTS run_commits JSONB NOT NULL DEFAULT '{}'::jsonb;
         """)
         Training.Inference._db_exec(conn, """
             CREATE TABLE IF NOT EXISTS harness_checks (
@@ -126,8 +154,17 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
     isempty(scores) && return df
 
     versions = [_harness_score_version(value) for value in scores.scorecard_version]
-    all(in(("v1", "v1.1")), versions) || error(
-        "write_scores!: supported scorecards are v1 and v1.1.")
+    all(in(("v1", "v1.1", "v1.2")), versions) || error(
+        "write_scores!: supported scorecards are v1, v1.1, and v1.2.")
+    panels = if :panel in propertynames(scores)
+        String.(scores.panel)
+    else
+        # Older portfolio and seeded rows retain a distinct unknown label until
+        # a known target panel can be established by the backfill above.
+        fill("56+57|unknown|n=unknown", nrow(scores))
+    end
+    all(i -> versions[i] != "v1.2" || panels[i] != "56+57|unknown|n=unknown", eachindex(versions)) ||
+        error("write_scores!: v1.2 rows require an explicit panel")
     control_ids = [_harness_nullable(scores.control_run_id[i]) for i in eachindex(scores.control_run_id)]
     run_control_versions = unique([
         (string(scores.run_id[i]),
@@ -156,17 +193,17 @@ function write_scores!(db::Training.PostgresStorage, df::AbstractDataFrame)
                 Training.Inference._db_exec(conn, """
                     INSERT INTO harness_scores (
                         run_id, model, stage, scorecard_version, subset, market, metric,
-                        value, lo, hi, n_obs, n_fixtures, reference, control_run_id
+                        value, lo, hi, n_obs, n_fixtures, reference, control_run_id, panel
                     ) VALUES (
                         \$1::uuid, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10,
-                        \$11, \$12, \$13, \$14::uuid
+                        \$11, \$12, \$13, \$14::uuid, \$15
                     );
                 """, (string(scores.run_id[i]), String(scores.model[i]), String(scores.stage[i]), versions[i],
                       String(scores.subset[i]), String(scores.market[i]), String(scores.metric[i]),
                       Float64(scores.value[i]), _harness_nullable(scores.lo[i]),
                       _harness_nullable(scores.hi[i]), _harness_nullable(scores.n_obs[i]),
                       _harness_nullable(scores.n_fixtures[i]), String(scores.reference[i]),
-                      c_id))
+                      c_id, panels[i]))
             end
             Training.Inference._db_exec(conn, "COMMIT;")
         catch
@@ -196,7 +233,7 @@ function read_scores(db::Training.PostgresStorage; run_id = nothing,
     conn = Training.Inference._db_connect(db)
     try
         return Training.Inference._db_rows(conn, """
-            SELECT run_id, model, stage, scorecard_version, subset, market, metric, value,
+            SELECT run_id, model, stage, scorecard_version, panel, subset, market, metric, value,
                    lo, hi, n_obs, n_fixtures, reference, control_run_id
             FROM harness_scores
             WHERE (\$1::uuid IS NULL OR run_id = \$1::uuid)
@@ -227,18 +264,28 @@ end
 
 Upsert one static register row by its stable textual ID.  `run_ids` deliberately remains text:
 older EDA-only suites and a missing suite 09 have no model-run UUID to invent.
+On conflict, run IDs and optional UUID-keyed `run_commits` are merged atomically so
+independent `--only` invocations cannot erase one another's provenance.
 """
+# Mirrors the atomic SQL upsert's sorted, de-duplicated union; useful for
+# offline register assertions when the experiment database is unavailable.
+function _merge_experiment_run_ids(existing::AbstractString, incoming::AbstractString)
+    ids = filter(!isempty, split(string(existing, ",", incoming), ","))
+    return join(sort!(unique(String.(ids))), ",")
+end
+
 function write_experiment!(db::Training.PostgresStorage, row)
     values = NamedTuple{_HARNESS_EXPERIMENT_COLUMNS}(Tuple(
         _harness_row_value(row, column) for column in _HARNESS_EXPERIMENT_COLUMNS))
     ismissing(values.id) && error("experiment row id must not be missing.")
     ismissing(values.date) && error("experiment row date must not be missing.")
+    commits = :run_commits in propertynames(row) ? getproperty(row, :run_commits) : Dict{String,String}()
     conn = Training.Inference._db_connect(db)
     try
         Training.Inference._db_exec(conn, """
             INSERT INTO harness_experiments (
-                id, date, todo, question, dimension, status, decision, run_ids, readme
-            ) VALUES (\$1, \$2::date, \$3, \$4, \$5, \$6, \$7, \$8, \$9)
+                id, date, todo, question, dimension, status, decision, run_ids, readme, run_commits
+            ) VALUES (\$1, \$2::date, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10::jsonb)
             ON CONFLICT (id) DO UPDATE SET
                 date = EXCLUDED.date,
                 todo = EXCLUDED.todo,
@@ -246,11 +293,17 @@ function write_experiment!(db::Training.PostgresStorage, row)
                 dimension = EXCLUDED.dimension,
                 status = EXCLUDED.status,
                 decision = EXCLUDED.decision,
-                run_ids = EXCLUDED.run_ids,
+                run_ids = (
+                    SELECT COALESCE(string_agg(DISTINCT id, ',' ORDER BY id), '')
+                    FROM unnest(string_to_array(harness_experiments.run_ids || ',' || EXCLUDED.run_ids, ',')) AS ids(id)
+                    WHERE id <> ''
+                ),
+                run_commits = harness_experiments.run_commits || EXCLUDED.run_commits,
                 readme = EXCLUDED.readme;
         """, (string(values.id), string(values.date), _harness_nullable(values.todo),
               String(values.question), String(values.dimension), String(values.status),
-              String(values.decision), String(values.run_ids), String(values.readme)))
+              String(values.decision), String(values.run_ids), String(values.readme),
+              JSON3.write(commits)))
     finally
         close(conn)
     end
@@ -262,7 +315,7 @@ function read_experiments(db::Training.PostgresStorage)
     conn = Training.Inference._db_connect(db)
     try
         return Training.Inference._db_rows(conn, """
-            SELECT id, date, todo, question, dimension, status, decision, run_ids, readme
+            SELECT id, date, todo, question, dimension, status, decision, run_ids, readme, run_commits
             FROM harness_experiments
             ORDER BY CASE WHEN id ~ '^[0-9]+\$' THEN length(id) ELSE 99 END, id;
         """)

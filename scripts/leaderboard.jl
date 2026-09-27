@@ -22,52 +22,62 @@ function leaderboard_markdown(board, screen_board)
     io = IOBuffer()
     println(io, "# Experiment Harness Leaderboard")
     println(io)
-    println(io, "Scorecard `v1.1`; reference: de-vigged Betfair TWA (−20, 0] close. " *
+    println(io, "Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. " *
                 "Lower LogLoss/ECE is better; compression slope is market-on-model (ideal 1).")
     println(io)
-    println(io, "| Model | Target LL | 1X2 LL | ECE | Compression | Δ LL vs control [95% CI] | Run UUID |")
-    println(io, "|---|---:|---:|---:|---:|---:|---|")
-    for row in eachrow(board)
-        delta = number(row.delta_vs_control) * " [" * number(row.delta_lo) * ", " *
-                number(row.delta_hi) * "]"
-        println(io, "| `$(row.model)` | $(number(row.target_logloss_all)) | " *
-                    "$(number(row.target_logloss_1x2)) | $(number(row.target_ece_all)) | " *
-                    "$(number(row.compression_slope, digits = 3)) | $delta | `$(row.run_id)` |")
-    end
+    println(io, "> **Panel isolation:** rankings and paired deltas are shown only within one target panel; " *
+                "rows from different panels are never combined.")
     println(io)
-    println(io, "## MAP screen (diagnostic only)")
-    println(io)
-    println(io, "> **Warning:** MAP is not comparable across model classes. Learned hierarchical " *
-                "or random-walk scales can collapse at the mode. Screen rows are never mixed " *
-                "with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid. " *
-                "Each screen recipe UUID is derived from the recipe hash and is not a row in `mcmc_experiments.runs`.")
-    println(io)
-    println(io, "| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen recipe UUID |")
-    println(io, "|---|---|---:|---:|---:|---:|---|")
-    for row in eachrow(screen_board)
-        println(io, "| `$(row.model)` | `$(row.screen_validity)` | " *
-                    "$(number(row.target_logloss_all)) | $(number(row.target_logloss_1x2)) | " *
-                    "$(number(row.target_ece_all)) | $(number(row.compression_slope, digits = 3)) | " *
-                    "`$(row.run_id)` |")
-    end
-    println(io)
-    println(io, "## Posterior-grid transition cohorts")
-    println(io)
-    for direction in (:relegated_into_L1, :promoted_into_L1, :entered_spfl, :l1_l2, :any)
-        println(io, "### `$(direction)`")
+    for panel_board in groupby(board, :panel)
+        panel = first(panel_board.panel)
+        println(io, "## Posterior grid — panel `$(panel)`")
         println(io)
-        println(io, "| Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |")
-        println(io, "|---|---:|---:|---:|---:|")
-        for row in eachrow(board)
-            stem10 = "transition_$(direction)_first10"
-            stem20 = "transition_$(direction)_first20"
-            println(io, "| `$(row.model)` | " *
-                "$(cohort_number(row[Symbol(stem10 * "_logloss")], row[Symbol(stem10 * "_logloss_n")])) | " *
-                "$(cohort_number(row[Symbol(stem10 * "_bias_pp")], row[Symbol(stem10 * "_bias_n")]; digits = 3, suffix = " pp")) | " *
-                "$(cohort_number(row[Symbol(stem20 * "_logloss")], row[Symbol(stem20 * "_logloss_n")])) | " *
-                "$(cohort_number(row[Symbol(stem20 * "_bias_pp")], row[Symbol(stem20 * "_bias_n")]; digits = 3, suffix = " pp")) |")
+        println(io, "| Model | Target LL | 1X2 LL | ECE | Compression | Δ LL vs control [95% CI] | Run UUID |")
+        println(io, "|---|---:|---:|---:|---:|---:|---|")
+        for row in eachrow(panel_board)
+            delta = number(row.delta_vs_control) * " [" * number(row.delta_lo) * ", " *
+                number(row.delta_hi) * "]"
+            println(io, "| `$(row.model)` | $(number(row.target_logloss_all)) | " *
+                        "$(number(row.target_logloss_1x2)) | $(number(row.target_ece_all)) | " *
+                        "$(number(row.compression_slope, digits = 3)) | $delta | `$(row.run_id)` |")
         end
         println(io)
+        println(io, "### Transition cohorts — panel `$(panel)`")
+        println(io)
+        for direction in (:relegated_into_L1, :promoted_into_L1, :entered_spfl, :l1_l2, :any)
+            println(io, "#### `$(direction)`")
+            println(io)
+            println(io, "| Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |")
+            println(io, "|---|---:|---:|---:|---:|")
+            for row in eachrow(panel_board)
+                stem10 = "transition_$(direction)_first10"
+                stem20 = "transition_$(direction)_first20"
+                println(io, "| `$(row.model)` | " *
+                    "$(cohort_number(row[Symbol(stem10 * "_logloss")], row[Symbol(stem10 * "_logloss_n")])) | " *
+                    "$(cohort_number(row[Symbol(stem10 * "_bias_pp")], row[Symbol(stem10 * "_bias_n")]; digits = 3, suffix = " pp")) | " *
+                    "$(cohort_number(row[Symbol(stem20 * "_logloss")], row[Symbol(stem20 * "_logloss_n")])) | " *
+                    "$(cohort_number(row[Symbol(stem20 * "_bias_pp")], row[Symbol(stem20 * "_bias_n")]; digits = 3, suffix = " pp")) |")
+            end
+            println(io)
+        end
+    end
+    for panel_board in (isempty(screen_board) ? [] : groupby(screen_board, :panel))
+        panel = first(panel_board.panel)
+        println(io, "## MAP screen (diagnostic only) — panel `$(panel)`")
+        println(io)
+        println(io, "> **Warning:** MAP is not comparable across model classes. Learned hierarchical " *
+                    "or random-walk scales can collapse at the mode. Screen rows are never mixed " *
+                    "with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid. " *
+                    "Each screen recipe UUID is derived from the recipe hash and is not a row in `mcmc_experiments.runs`.")
+        println(io)
+        println(io, "| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen recipe UUID |")
+        println(io, "|---|---|---:|---:|---:|---:|---|")
+        for row in eachrow(panel_board)
+            println(io, "| `$(row.model)` | `$(row.screen_validity)` | " *
+                        "$(number(row.target_logloss_all)) | $(number(row.target_logloss_1x2)) | " *
+                        "$(number(row.target_ece_all)) | $(number(row.compression_slope, digits = 3)) | " *
+                        "`$(row.run_id)` |")
+        end
     end
     return String(take!(io))
 end
@@ -94,8 +104,8 @@ end
 function main()
     db = PostgresStorage("harness")
     Harness.ensure_harness_schema!(db)
-    scores = Harness.read_scores(db; scorecard_version = "v1.1")
-    isempty(scores) && error("harness_scores contains no v1.1 rows; run scripts/score_runs.jl first")
+    scores = Harness.read_scores(db; scorecard_version = "v1.2")
+    isempty(scores) && error("harness_scores contains no v1.2 rows; run scripts/score_runs.jl first")
     grid_scores = filter(:stage => ==("grid"), scores)
     screen_scores = filter(:stage => ==("screen"), scores)
     isempty(grid_scores) && error("harness_scores contains no posterior-grid rows")
@@ -119,5 +129,7 @@ function main()
     println("Wrote experiments/LEADERBOARD.csv, experiments/LEADERBOARD.md, experiments/REGISTER.md")
 end
 
-isempty(ARGS) || error("usage: julia --project scripts/leaderboard.jl")
-main()
+if abspath(PROGRAM_FILE) == @__FILE__
+    isempty(ARGS) || error("usage: julia --project scripts/leaderboard.jl")
+    main()
+end

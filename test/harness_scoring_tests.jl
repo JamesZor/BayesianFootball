@@ -5,6 +5,7 @@ using DataFrames
 using Dates
 using Distributions
 using Random
+using UUIDs
 using Statistics
 
 const H = BayesianFootball.Harness
@@ -161,14 +162,67 @@ end
     @test scored == [1, 2, 3, 4]
     @test subsets["monitor_t54"] == Set([3])
     @test subsets["monitor_t55"] == Set([4])
+    lower = Data.DataStore(Data.ScottishLower(), matches[matches.tournament_id .>= 56, :],
+                           DataFrame(), DataFrame(), DataFrame(), DataFrame(),
+                           DataFrame(), DataFrame(), DataFrame())
+    lower_target = H._season_panel(lower, fit, ["24/25"])
+    @test lower_target == target
+    lower_subsets, _ = H._subsets(lower, lower_target, lower_target,
+        DataFrame(match_id = Int[], market_name = String[],
+                  prob_fair_close = Float64[]), H.club_season_tiers(lower))
+    @test all(lower_subsets[label] == subsets[label] for label in ("target", "t56", "t57"))
     @test all(!startswith(name, "monitor_") || name in ("monitor_t54", "monitor_t55")
               for name in keys(subsets))
 end
 
 @testset "Harness scorecard version defaults" begin
-    @test H.SCORECARD_VERSION == "v1.1"
+    @test H.SCORECARD_VERSION == "v1.2"
     @test H._harness_score_version(nothing) == H.SCORECARD_VERSION
     @test H._harness_score_version(missing) == H.SCORECARD_VERSION
+end
+
+@testset "Club-season transition bias bootstrap and paired absolute bias" begin
+    matches = DataFrame(match_id = collect(1:80), season = fill("24/25", 80),
+        home_team = repeat(["A", "B", "C", "D"], inner = 20),
+        away_team = fill("Opponent", 80))
+    ds = harness_store(matches)
+    clubs = Dict(i => [matches.home_team[i]] for i in 1:80)
+    obs = DataFrame(match_id = collect(1:80), selection = fill(:home, 80),
+        family = fill("1X2", 80), p_market = fill(0.4, 80),
+        p_model = repeat([0.25, 0.35, 0.45, 0.55], inner = 20))
+    bias = H.transition_bias_pp(obs, ds, clubs; B = 2_000, seed = 11)
+    @test bias.value == 100 * mean([obs.p_model[mid] - obs.p_market[mid]
+                                      for (mid, _) in clubs])  # v1.1 iteration order
+    @test bias.n_obs == 80
+    @test bias == H.transition_bias_pp(obs, ds, clubs; B = 2_000, seed = 11)
+    rng = MersenneTwister(11)
+    fixture_ci = quantile([100 * mean(rand(rng, obs.p_model .- obs.p_market, 80))
+                           for _ in 1:2_000], [0.025, 0.975])
+    @test bias.hi - bias.lo > fixture_ci[2] - fixture_ci[1]
+    identical = H._delta_abs_bias_vs_control(obs, obs, ds, clubs; B = 2_000)
+    @test identical.value == identical.lo == identical.hi == 0.0
+    control = copy(obs)
+    control.p_model .= 0.45
+    improved = H._delta_abs_bias_vs_control(obs, control, ds, clubs; B = 2_000)
+    @test improved.value < 0
+end
+
+@testset "Panel isolation in leaderboard" begin
+    ref = H.RunRef("same", "synthetic", UUID("11111111-1111-1111-1111-111111111111"), :control)
+    one = H._score_row(ref, "target", "all", "logloss", 0.3, NaN, NaN, 1, 1;
+                       panel = "56+57|24/25,25/26|n=710")
+    two = merge(one, (; panel = "56+57|23/24,24/25,25/26|n=1070", value = 0.8))
+    board = H.leaderboard(DataFrame([one, two]))
+    @test nrow(board) == 2
+    @test Set(board.panel) == Set([one.panel, two.panel])
+    @test Dict(r.panel => r.target_logloss_all for r in eachrow(board)) ==
+          Dict(one.panel => 0.3, two.panel => 0.8)
+    script = Module(:LeaderboardScriptTest)
+    Base.include(script, joinpath(@__DIR__, "..", "scripts", "leaderboard.jl"))
+    md = script.leaderboard_markdown(board, DataFrame())
+    @test occursin("## Posterior grid — panel `$(one.panel)`", md)
+    @test occursin("## Posterior grid — panel `$(two.panel)`", md)
+    @test count("| `same` |", md) == 12  # headline + five cohort tables per panel
 end
 
 @testset "Harness per-subset score row counts" begin

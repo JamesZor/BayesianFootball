@@ -103,6 +103,7 @@ function main()
     ds = Data.load_datastore_cached(Data.ScottishPyramid(); max_age_hours = 10_000)
 
     run_ids = UUID[]
+    run_commits = Dict{String,Any}()
 
     get_mod_var(sym, default = nothing) = isdefined(CandidatesModule, sym) ?
         Base.invokelatest(getproperty, CandidatesModule, sym) : default
@@ -134,7 +135,11 @@ function main()
         println("Running smoke stage for $(length(candidates)) candidates...")
         for c in candidates
             res = Harness.smoke(c; ds = ds, experiment = experiment, db = db)
-            push!(run_ids, res.run_id)
+            if res.run_id !== nothing
+                push!(run_ids, res.run_id)
+                run_commits[string(res.run_id)] =
+                    (; candidate = c.name, git_sha = res.fit.metadata.git_commit)
+            end
 
             hard_pass = all(r -> r.status == "pass", filter(r -> r.severity == "hard", res.records))
             review_pass = all(r -> r.status == "pass", filter(r -> r.severity == "review", res.records))
@@ -149,6 +154,8 @@ function main()
         for c in candidates
             res = Harness.grid(c; ds = ds, experiment = experiment, db = db, control = control)
             push!(run_ids, res.run_id)
+            run_commits[string(res.run_id)] =
+                (; candidate = c.name, git_sha = res.fit.metadata.git_commit)
             scores = res.scores
 
             sub_ll = subset(scores,
@@ -182,6 +189,10 @@ function main()
                 "Candidate $(c.name) has no completed grid run with this config hash")
             push!(refs, Harness.RunRef(c.name, experiment, run_id, c.role))
             push!(run_ids, run_id)
+            # Preserve the fit's original commit, not the checkout doing this reuse.
+            fit = Training.load_fit(db, run_id)
+            run_commits[string(run_id)] =
+                (; candidate = c.name, git_sha = fit.metadata.git_commit)
         end
         summary = Harness.portfolio_runs(refs; ds = ds, container = parsed.container, db = db)
         for row in eachrow(summary)
@@ -205,6 +216,7 @@ function main()
         status = String(get_mod_var(:STATUS, stage === :screen ? "screened" : "completed")),
         decision = String(get_mod_var(:DECISION, "in_progress")),
         run_ids = join([string(id) for id in run_ids], ","),
+        run_commits = run_commits,
         readme = relpath(readme_path, pwd())
     )
     Harness.write_experiment!(db, exp_row)

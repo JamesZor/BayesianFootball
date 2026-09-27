@@ -1,7 +1,7 @@
 # Version-1 experiment scorecard. The proper-score helpers are a direct graduation of
 # current_development/grw_player_hybrid/l02_evaluation.jl.
 
-const SCORECARD_VERSION = "v1.1"
+const SCORECARD_VERSION = "v1.2"
 const SCORE_REFERENCE = "devigged_betfair_twa(-20,0]"
 const SCORE_MARKETS = ("all", "1X2", "OU2.5", "BTTS")
 const SCORE_METRICS = Evaluation.AbstractScoringRule[
@@ -243,27 +243,95 @@ function _observation_scores(frame::AbstractDataFrame, market::String)
         rps = _rps(frame, :model), market_rps = _rps(frame, :market))
 end
 
-function transition_bias_pp(observations::AbstractDataFrame, ds, clubs)
-    isempty(clubs) && return (; value = NaN, n_obs = 0, n_fixtures = 0)
-    fixtures = Dict(Int(r.match_id) => (String(r.home_team), String(r.away_team))
+function _transition_bias_observations(observations::AbstractDataFrame, ds, clubs)
+    fixtures = Dict(Int(r.match_id) => (String(r.home_team), String(r.away_team), String(r.season))
                     for r in eachrow(ds.matches))
-    deltas = Float64[]
-    used = Set{Int}()
+    rows = DataFrame(match_id = Int[], club = String[], season = String[], delta = Float64[])
     for (mid, transitioned) in clubs
-        teams = get(fixtures, mid, nothing)
-        teams === nothing && continue
+        fixture = get(fixtures, mid, nothing)
+        fixture === nothing && continue
+        home, away, season = fixture
         for club in transitioned
-            selection = club == teams[1] ? :home : club == teams[2] ? :away : nothing
+            selection = club == home ? :home : club == away ? :away : nothing
             selection === nothing && continue
-            row = filter(r -> r.match_id == mid && r.selection === selection &&
-                              r.family == "1X2", observations)
-            nrow(row) == 1 || continue
-            push!(deltas, row.p_model[1] - row.p_market[1])
-            push!(used, mid)
+            matched = filter(r -> r.match_id == mid && r.selection === selection &&
+                                r.family == "1X2", observations)
+            nrow(matched) == 1 || continue
+            push!(rows, (; match_id = Int(mid), club = String(club), season,
+                          delta = Float64(matched.p_model[1] - matched.p_market[1])))
         end
     end
-    return (; value = isempty(deltas) ? NaN : 100 * mean(deltas),
-              n_obs = length(deltas), n_fixtures = length(used))
+    return rows
+end
+
+function _clustered_bias_bootstrap(observations::AbstractDataFrame; B::Int = 10_000,
+                                   seed::Int = 20260927)
+    nrow(observations) == 0 && return (; value = NaN, lo = NaN, hi = NaN,
+                                        samples = Float64[])
+    groups = combine(groupby(observations, [:club, :season]), :delta => sum => :s,
+                     nrow => :n)
+    rng = MersenneTwister(seed)
+    stats = Vector{Float64}(undef, B)
+    indexes = Vector{Int}(undef, nrow(groups))
+    @inbounds for k in eachindex(stats)
+        rand!(rng, indexes, 1:nrow(groups))
+        total = 0.0
+        n = 0
+        for index in indexes
+            total += groups.s[index]
+            n += groups.n[index]
+        end
+        stats[k] = 100 * total / n
+    end
+    value = 100 * mean(observations.delta)
+    return (; value, lo = quantile(stats, 0.025), hi = quantile(stats, 0.975), samples = stats)
+end
+
+"""Transitioning-club model-minus-market win-probability bias in percentage points.
+
+Confidence intervals use a paired club-season-clustered bootstrap, preserving every fixture
+within a resampled club-season unit.
+"""
+function transition_bias_pp(observations::AbstractDataFrame, ds, clubs;
+                            B::Int = 10_000, seed::Int = 20260927)
+    values = _transition_bias_observations(observations, ds, clubs)
+    boot = _clustered_bias_bootstrap(values; B, seed)
+    return (; value = boot.value, lo = boot.lo, hi = boot.hi, n_obs = nrow(values),
+              n_fixtures = length(unique(values.match_id)), samples = boot.samples)
+end
+
+function _delta_abs_bias_vs_control(observations::AbstractDataFrame, control_observations,
+                                    ds, clubs; B::Int = 10_000, seed::Int = 20260927)
+    arm = _transition_bias_observations(observations, ds, clubs)
+    control = _transition_bias_observations(control_observations, ds, clubs)
+    paired = innerjoin(rename(arm, :delta => :arm_delta),
+                       rename(control, :delta => :control_delta);
+                       on = [:match_id, :club, :season])
+    nrow(paired) == 0 && return (; value = NaN, lo = NaN, hi = NaN,
+                                  n_obs = 0, n_fixtures = 0)
+    groups = combine(groupby(paired, [:club, :season]),
+                     :arm_delta => sum => :arm_s,
+                     :control_delta => sum => :control_s,
+                     nrow => :n)
+    rng = MersenneTwister(seed)
+    stats = Vector{Float64}(undef, B)
+    indexes = Vector{Int}(undef, nrow(groups))
+    @inbounds for k in eachindex(stats)
+        rand!(rng, indexes, 1:nrow(groups))
+        arm_total = 0.0
+        control_total = 0.0
+        n = 0
+        for index in indexes
+            arm_total += groups.arm_s[index]
+            control_total += groups.control_s[index]
+            n += groups.n[index]
+        end
+        stats[k] = 100 * (abs(arm_total / n) - abs(control_total / n))
+    end
+    n = sum(groups.n)
+    value = 100 * (abs(sum(groups.arm_s) / n) - abs(sum(groups.control_s) / n))
+    return (; value, lo = quantile(stats, 0.025), hi = quantile(stats, 0.975),
+              n_obs = nrow(paired), n_fixtures = length(unique(paired.match_id)))
 end
 
 function _subsets(ds, target_ids, scored_ids, odds, tiers)
@@ -295,10 +363,15 @@ _metric_pairs(score) = (("logloss", score.logloss),
     ("market_mce", score.market_mce), ("rps", score.rps),
     ("market_rps", score.market_rps))
 
+function _panel_label(target_seasons, n_fixtures; tournaments = (56, 57))
+    return join(tournaments, "+") * "|" * join(String.(target_seasons), ",") *
+           "|n=$(n_fixtures)"
+end
+
 function _score_row(ref, subset, market, metric, value, lo, hi, n_obs, n_fixtures;
-                    control_run_id = nothing)
+                    control_run_id = nothing, panel::AbstractString)
     return (; run_id = ref.run_id, model = ref.label, stage = "grid",
-        scorecard_version = SCORECARD_VERSION, subset = String(subset),
+        scorecard_version = SCORECARD_VERSION, panel = String(panel), subset = String(subset),
         market = String(market), metric = String(metric), value = Float64(value),
         lo = Float64(lo), hi = Float64(hi), n_obs = Int(n_obs),
         n_fixtures = Int(n_fixtures), reference = SCORE_REFERENCE,
@@ -314,6 +387,7 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
     isempty(panel) && error("$(ref.label): no target fixtures in $(target_seasons)")
     expected_count === nothing || length(panel) == expected_count || error(
         "$(ref.label) covers $(length(panel)) target fixtures; expected $expected_count")
+    panel_label = _panel_label(target_seasons, length(panel))
     if expected_panel !== nothing && Set(panel) != Set(expected_panel)
         missing_ids = setdiff(Set(expected_panel), Set(panel))
         extra_ids = setdiff(Set(panel), Set(expected_panel))
@@ -347,7 +421,7 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
                 length(unique(subset_obs.match_id[subset_obs.family .== market]))
             for (metric, value) in _metric_pairs(score)
                 push!(rows, _score_row(ref, subset, market, metric, value, NaN, NaN,
-                                       score.n_obs, n_fixtures))
+                                       score.n_obs, n_fixtures; panel = panel_label))
             end
             if delta_control !== nothing && !startswith(subset, "monitor_")
                 control_subset = delta_control[
@@ -358,18 +432,28 @@ function _score_one(ref::RunRef, fit, ds, tiers; target_seasons, bootstrap_B::In
                 c_id = control_ref !== nothing ? control_ref.run_id : nothing
                 push!(rows, _score_row(ref, subset, market,
                     "delta_logloss_vs_control", boot.delta, boot.lo, boot.hi,
-                    boot.n_obs, boot.n_fixtures; control_run_id = c_id))
+                    boot.n_obs, boot.n_fixtures; control_run_id = c_id, panel = panel_label))
             end
         end
         slopes = _slopes(model_sup, market_sup, ids)
         push!(rows, _score_row(ref, subset, "1X2", "compression_slope",
-            slopes.compression_slope, NaN, NaN, slopes.n_fixtures, slopes.n_fixtures))
+            slopes.compression_slope, NaN, NaN, slopes.n_fixtures, slopes.n_fixtures;
+            panel = panel_label))
         push!(rows, _score_row(ref, subset, "1X2", "model_on_market_slope",
-            slopes.model_on_market_slope, NaN, NaN, slopes.n_fixtures, slopes.n_fixtures))
+            slopes.model_on_market_slope, NaN, NaN, slopes.n_fixtures, slopes.n_fixtures;
+            panel = panel_label))
         if haskey(transitions, subset)
-            bias = transition_bias_pp(subset_obs, ds, transitions[subset].clubs)
+            bias = transition_bias_pp(subset_obs, ds, transitions[subset].clubs; B = bootstrap_B)
             push!(rows, _score_row(ref, subset, "1X2", "transition_bias_pp",
-                bias.value, NaN, NaN, bias.n_obs, bias.n_fixtures))
+                bias.value, bias.lo, bias.hi, bias.n_obs, bias.n_fixtures; panel = panel_label))
+            if delta_control !== nothing
+                delta_bias = _delta_abs_bias_vs_control(subset_obs, delta_control, ds,
+                    transitions[subset].clubs; B = bootstrap_B)
+                c_id = control_ref !== nothing ? control_ref.run_id : nothing
+                push!(rows, _score_row(ref, subset, "1X2", "delta_abs_bias_vs_control",
+                    delta_bias.value, delta_bias.lo, delta_bias.hi, delta_bias.n_obs,
+                    delta_bias.n_fixtures; control_run_id = c_id, panel = panel_label))
+            end
         end
     end
     return (; scores = DataFrame(rows), observations, panel)
@@ -393,6 +477,7 @@ end
 function score_fits(fits::AbstractVector{<:Pair}; ds, tiers,
                     control = nothing,
                     target_seasons = ["24/25", "25/26"],
+                    expected_fixtures::Union{Nothing,Int} = nothing,
                     bootstrap_B::Int = 10_000)
     refs = RunRef[first(pair) for pair in fits]
     ctl = _control_ref(refs, control)
@@ -400,14 +485,14 @@ function score_fits(fits::AbstractVector{<:Pair}; ds, tiers,
     haskey(lookup, ctl.run_id) || error("control fit $(ctl.run_id) was not supplied")
     control_bundle = _score_one(ctl, lookup[ctl.run_id], ds, tiers;
                                 target_seasons, bootstrap_B,
-                                control_observations = :self,
+                                expected_count = expected_fixtures, control_observations = :self,
                                 control_ref = ctl)
     frames = DataFrame[control_bundle.scores]
     for ref in refs
         ref.run_id == ctl.run_id && continue
         push!(frames, _score_one(ref, lookup[ref.run_id], ds, tiers;
             target_seasons, bootstrap_B, expected_panel = control_bundle.panel,
-            control_observations = control_bundle.observations,
+            expected_count = expected_fixtures, control_observations = control_bundle.observations,
             control_ref = ctl).scores)
     end
     return vcat(frames...)
@@ -487,17 +572,18 @@ end
 """Collapse the long score table into the committed Phase-1 headline leaderboard."""
 function leaderboard(scores::AbstractDataFrame; control_run_id = nothing)
     rows = NamedTuple[]
-    for group in groupby(scores, [:run_id, :model])
+    :panel in propertynames(scores) || error("leaderboard requires panel-labelled scores")
+    for group in groupby(scores, [:panel, :run_id, :model])
         run_id = first(group.run_id)
         base = (;
-            run_id, model = first(group.model),
-            target_logloss_all = _headline(scores, run_id, "target", "all", "logloss"),
-            target_logloss_1x2 = _headline(scores, run_id, "target", "1X2", "logloss"),
-            target_ece_all = _headline(scores, run_id, "target", "all", "ece"),
-            compression_slope = _headline(scores, run_id, "target", "1X2", "compression_slope"),
-            delta_vs_control = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control"; control_run_id),
-            delta_lo = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :lo; control_run_id),
-            delta_hi = _headline(scores, run_id, "target", "all", "delta_logloss_vs_control", :hi; control_run_id))
+            run_id, panel = first(group.panel), model = first(group.model),
+            target_logloss_all = _headline(group, run_id, "target", "all", "logloss"),
+            target_logloss_1x2 = _headline(group, run_id, "target", "1X2", "logloss"),
+            target_ece_all = _headline(group, run_id, "target", "all", "ece"),
+            compression_slope = _headline(group, run_id, "target", "1X2", "compression_slope"),
+            delta_vs_control = _headline(group, run_id, "target", "all", "delta_logloss_vs_control"; control_run_id),
+            delta_lo = _headline(group, run_id, "target", "all", "delta_logloss_vs_control", :lo; control_run_id),
+            delta_hi = _headline(group, run_id, "target", "all", "delta_logloss_vs_control", :hi; control_run_id))
         extra_names = Symbol[]
         extra_values = Float64[]
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
@@ -507,13 +593,13 @@ function leaderboard(scores::AbstractDataFrame; control_run_id = nothing)
                   Symbol(stem * "_logloss_n"), Symbol(stem * "_bias_pp"),
                   Symbol(stem * "_bias_n"))
             push!(extra_values,
-                  _headline(scores, run_id, subset, "all", "logloss"),
-                  _headline(scores, run_id, subset, "all", "logloss", :n_fixtures),
-                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp"),
-                  _headline(scores, run_id, subset, "1X2", "transition_bias_pp", :n_fixtures))
+                  _headline(group, run_id, subset, "all", "logloss"),
+                  _headline(group, run_id, subset, "all", "logloss", :n_fixtures),
+                  _headline(group, run_id, subset, "1X2", "transition_bias_pp"),
+                  _headline(group, run_id, subset, "1X2", "transition_bias_pp", :n_fixtures))
         end
         extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
         push!(rows, merge(base, extra))
     end
-    return sort!(DataFrame(rows), :target_logloss_all)
+    return sort!(DataFrame(rows), [:panel, :target_logloss_all])
 end

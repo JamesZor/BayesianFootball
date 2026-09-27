@@ -410,4 +410,40 @@ using UUIDs
         @test Set(deltas.control_run_id) == Set([ref_ctl1.run_id, ref_ctl2.run_id])
     end
 
+    @testset "8. Run CSV control groups and panel CLI" begin
+        script = Module(:ScoreRunsScriptTest)
+        Base.include(script, joinpath(@__DIR__, "..", "scripts", "score_runs.jl"))
+        parsed = script.parse_args(["runs.csv", "--target-seasons", "23/24,24/25,25/26",
+                                    "--expected-fixtures", "none"])
+        @test parsed.target_seasons == ["23/24", "24/25", "25/26"]
+        @test parsed.expected_fixtures === nothing
+        @test script.parse_args(["runs.csv"]).expected_fixtures == 710
+        mktemp() do path, io
+            write(io, "label,experiment,run_id,role,control\n" *
+                "td_base,synth,11111111-1111-1111-1111-111111111111,control,\n" *
+                "td_arm,synth,22222222-2222-2222-2222-222222222222,candidate,td_base\n" *
+                "grw_base,synth,33333333-3333-3333-3333-333333333333,control,\n" *
+                "grw_arm,synth,44444444-4444-4444-4444-444444444444,candidate,33333333-3333-3333-3333-333333333333\n")
+            flush(io)
+            groups = script.load_run_groups(path)
+            @test length(groups) == 2
+            @test [[ref.label for ref in group.refs] for group in groups] ==
+                  [["td_base", "td_arm"], ["grw_base", "grw_arm"]]
+            @test [group.control.label for group in groups] == ["td_base", "grw_base"]
+        end
+    end
+
+    @testset "9. Sequential --only register merges preserve both runs" begin
+        first_id = "11111111-1111-1111-1111-111111111111"
+        second_id = "22222222-2222-2222-2222-222222222222"
+        run_ids = Harness._merge_experiment_run_ids("", first_id)
+        run_ids = Harness._merge_experiment_run_ids(run_ids, second_id)
+        @test Set(split(run_ids, ',')) == Set([first_id, second_id])
+        @test Harness._merge_experiment_run_ids(run_ids, first_id) == run_ids
+        # SQL upsert merges JSONB commit metadata by UUID, rather than replacing it.
+        first_commit = Dict(first_id => (candidate = "td_base", git_sha = "sha1"))
+        second_commit = Dict(second_id => (candidate = "grw_base", git_sha = "sha2"))
+        @test length(merge(first_commit, second_commit)) == 2
+    end
+
 end
