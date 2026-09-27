@@ -430,6 +430,15 @@ using UUIDs
             @test [[ref.label for ref in group.refs] for group in groups] ==
                   [["td_base", "td_arm"], ["grw_base", "grw_arm"]]
             @test [group.control.label for group in groups] == ["td_base", "grw_base"]
+            arm = DataFrame(match_id = collect(1:4), selection = fill(:home, 4),
+                            family = fill("1X2", 4), ll_model = fill(1.5, 4))
+            base_loss = Dict("td_base" => 1.0, "grw_base" => 2.0)
+            deltas = [Harness._paired_bootstrap(arm,
+                          DataFrame(match_id = collect(1:4), selection = fill(:home, 4),
+                                    family = fill("1X2", 4),
+                                    ll_model = fill(base_loss[group.control.label], 4));
+                          B = 100).delta for group in groups]
+            @test deltas == [0.5, -0.5]
         end
     end
 
