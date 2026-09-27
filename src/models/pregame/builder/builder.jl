@@ -438,14 +438,21 @@ function validate(b::CountModelBuilder)
     # A prior with support below 0 would let σ_κ flip sign, which reflects the delta set through
     # the origin and leaves the likelihood invariant — a label-switching mode, not a wider prior.
     kappa_mode_valid = !(obs isa JointGammaPoissonObservation) ||
-        !(obs.kappa isa HierarchicalKappa) ||
-        (minimum(obs.kappa.σ_prior) >= 0.0 && isfinite(quantile(obs.kappa.σ_prior, 0.99)))
+        (obs.kappa isa CompetitionKappa ?
+            (isfinite(obs.kappa.intercept_scale) && obs.kappa.intercept_scale > 0.0 &&
+             isfinite(obs.kappa.kappa_scale) && obs.kappa.kappa_scale > 0.0) :
+         !(obs.kappa isa HierarchicalKappa) ||
+            (minimum(obs.kappa.σ_prior) >= 0.0 &&
+             isfinite(quantile(obs.kappa.σ_prior, 0.99))))
     push!(out, cb_result("hierarchical kappa prior is well posed",
         kappa_mode_valid,
         obs isa JointGammaNegBinObservation ?
             "JointGammaNegBinObservation has no kappa mode — one league finishing factor by " *
             "construction, so that r and κ are not both widening the goals arm" :
         !(obs isa JointGammaPoissonObservation) ? "not a joint observation" :
+        obs.kappa isa CompetitionKappa ?
+            (kappa_mode_valid ? "CompetitionKappa fixed scales are positive and finite" :
+             "CompetitionKappa scales must be positive and finite") :
         !(obs.kappa isa HierarchicalKappa) ? "SharedKappa — one finishing factor for the league" :
         kappa_mode_valid ?
             "σ_κ >= $(minimum(obs.kappa.σ_prior)), per-team δ_κ zero-centred over $(nameof(typeof(obs.kappa)))" :
@@ -622,6 +629,8 @@ _sites_observation(::SharedKappaJoint) = [Symbol("obs.ν"), Symbol("obs.log_κ")
 # ... and inside `_joint_hierarchical_kappa_params`, which extends it rather than reordering it.
 _sites_observation(::HierarchicalKappaJoint) =
     [Symbol("obs.ν"), Symbol("obs.log_κ"), Symbol("obs.σ_κ"), Symbol("obs.κ_team_raw")]
+_sites_observation(::CompetitionKappaJoint) =
+    [Symbol("obs.ν"), Symbol("obs.log_κ"), Symbol("obs.intercept_raw"), Symbol("obs.kappa_raw")]
 _sites_observation(o::NegativeBinomialObservation) = _sites_dispersion(o.dispersion)
 _sites_dispersion(::CB_PG.GlobalDispersion)   = [Symbol("disp.log_r")]
 _sites_dispersion(::CB_PG.HomeAwayDispersion) = [Symbol("disp.log_r"), Symbol("disp.δ_r_home")]
@@ -654,6 +663,10 @@ end
 # rather than by widening `_cb_site_width`'s structural signature with an argument it never reads.
 function _cb_site_width(m::ComposableCountModel, site::Symbol, n_teams::Int, n_seasons::Int)
     site === Symbol("obs.κ_team_raw") && return n_teams
+    (site === Symbol("obs.intercept_raw") || site === Symbol("obs.kappa_raw") ||
+     site === Symbol("pyramid_tiers.jump.raw_α") ||
+     site === Symbol("pyramid_tiers.jump.raw_β")) && error(
+        "site $site has a fold-dependent width; read it from the realised design or chain")
     site === Symbol("dyn.α.z_init") && return n_teams
     site === Symbol("dyn.β.z_init") && return n_teams
     # MultiScaleGRW's `z_season` and `z_target` are (teams x steps) MATRICES whose
@@ -697,11 +710,19 @@ cb_parameter_count(m::ComposableCountModel, n_teams::Int; n_seasons::Int=1) =
 cb_parameter_count(m::ComposableCountModel, n_teams::Int, n_seasons::Int) =
     cb_parameter_count(m, n_teams; n_seasons)
 
+_cb_dynamics_display(dynamics) = string(nameof(typeof(dynamics)))
+_cb_observation_display(observation) = string(nameof(typeof(observation)))
+_cb_observation_display(o::CompetitionKappaJoint) =
+    "JointGammaPoissonObservation(CompetitionKappa(intercept_scale=$(o.kappa.intercept_scale),kappa_scale=$(o.kappa.kappa_scale)))"
+_cb_predictor_display(term) = string(predictor_name(term))
+_cb_predictor_display(c::PyramidTiers) =
+    "pyramid_tiers(tier_term=$(c.tier_term),anchor=$(c.anchor),carry=$(c.carry),jump=$(c.jump),old_firm=$(c.old_firm_prior !== nothing))"
+
 function Base.show(io::IO, m::ComposableCountModel)
-    fam = string(nameof(typeof(m.observation)))
-    covs = isempty(m.covariates) ? "none" : join(string.(cb_predictor_names(m)), " + ")
+    fam = _cb_observation_display(m.observation)
+    covs = isempty(m.covariates) ? "none" : join(_cb_predictor_display.(m.covariates), " + ")
     print(io, nameof(typeof(m)), "(", fam, "; ",
           nameof(typeof(m.interception)), " + ", nameof(typeof(m.home_advantage)), " + ",
-          nameof(typeof(m.dynamics)), "; predictors: ", covs,
+          _cb_dynamics_display(m.dynamics), "; predictors: ", covs,
           "; guard: ", nameof(typeof(m.guard)), ")")
 end

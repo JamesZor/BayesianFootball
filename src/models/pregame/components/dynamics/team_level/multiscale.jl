@@ -92,6 +92,10 @@ Base.@kwdef struct MultiScaleGRW <: AbstractDynamicsConfig
     β_σ₀::ContinuousUnivariateDistribution = Gamma(2, 0.10)
     β_σₛ::ContinuousUnivariateDistribution = Gamma(2, 0.055)
     β_σₖ::ContinuousUnivariateDistribution = Gamma(2, 0.012)
+
+    # Opt in to one macro innovation over the history/target season boundary.
+    # Kept off so established recipes retain their exact chain schema and density.
+    target_season_step::Bool = false
 end
 
 # ==========================================
@@ -99,7 +103,7 @@ end
 # ==========================================
 
 """
-    grw_accumulators(n_history, n_target) -> (; initial, season, target)
+    grw_accumulators(n_history, n_target; target_season_step = false) -> (; initial, season, target)
 
 The cumulative sum of the walk, expressed as three constant 0/1 linear maps.
 
@@ -110,23 +114,31 @@ without a single `cumsum` or `hcat` on the AD tape.
 
 Throws when `n_history < 1`: a walk needs a level to start from.
 """
-function grw_accumulators(n_history::Int, n_target::Int)
+function grw_accumulators(n_history::Int, n_target::Int;
+                          target_season_step::Bool = false)
     n_history >= 1 ||
         error("MultiScaleGRW requires at least one history season; got $n_history")
     n_target >= 0 ||
         error("MultiScaleGRW target-step count is negative: $n_target")
 
-    n_season_transitions = n_history - 1
+    # The opt-in boundary innovation has an observed target state only when the
+    # fold contains target steps. A zero-target fold integrates it at OOS time,
+    # rather than sampling a site absent from its likelihood.
+    n_season_transitions = n_history - 1 + Int(target_season_step && n_target >= 1)
     n_rounds = n_history + n_target
 
     # The level is present in every state.
     initial = ones(Float64, 1, n_rounds)
 
-    # Macro transition t moves the walk from history season t into season t+1,
-    # so it is present from state t+1 onward.
+    # History macro transition t moves the walk from history season t into
+    # season t+1, so it is present from state t+1 onward. The optional final
+    # row is the summer boundary and first appears at the first target state.
     season = zeros(Float64, n_season_transitions, n_rounds)
-    for transition in 1:n_season_transitions
+    for transition in 1:(n_history - 1)
         season[transition, (transition + 1):n_rounds] .= 1.0
+    end
+    if target_season_step && n_target >= 1
+        season[end, (n_history + 1):n_rounds] .= 1.0
     end
 
     # Micro step k is present from the k-th target state onward.
@@ -251,10 +263,11 @@ Retained so the legacy engines keep working, and corrected to the
 """
 @model function build_dynamics(config::MultiScaleGRW, n_teams::Int,
                                n_history::Int, n_target::Int)
-    acc = grw_accumulators(n_history, n_target)
+    acc = grw_accumulators(n_history, n_target;
+                           target_season_step = config.target_season_step)
     state ~ to_submodel(
         _grw_pair(config, acc.initial, acc.season, acc.target,
-                  n_teams, n_history - 1, n_target,
+                  n_teams, size(acc.season, 1), n_target,
                   n_target == 0 ? Val(false) : Val(true)),
         false)
     return (; α = state.α, β = state.β)
@@ -289,9 +302,10 @@ Returns `(n_teams, n_rounds, n_samples)` — teams, time, draws — which is the
 the composable extractor and the out-of-sample hook index into.
 """
 function _grw_reconstruct_trajectory(chain::Chains, prefix::String,
-                                     n_teams::Int, n_history::Int, n_target::Int)
+                                     n_teams::Int, n_history::Int, n_target::Int;
+                                     target_season_step::Bool = false)
     n_samples = size(chain, 1) * size(chain, 3)
-    n_season_transitions = n_history - 1
+    n_season_transitions = n_history - 1 + Int(target_season_step && n_target >= 1)
 
     σ₀ = reshape(vec(Array(chain[_grw_chain_symbol(chain, "$prefix.σ₀")])), n_samples, 1, 1)
     σₛ = reshape(vec(Array(chain[_grw_chain_symbol(chain, "$prefix.σₛ")])), n_samples, 1, 1)
@@ -334,11 +348,13 @@ Legacy six-argument extractor matching the legacy `build_dynamics` above.
 
 Returns `α` and `β` as `(n_teams, n_rounds, n_samples)` arrays.
 """
-function extract_dynamics(chain::Chains, ::MultiScaleGRW, prefix::String,
+function extract_dynamics(chain::Chains, config::MultiScaleGRW, prefix::String,
                           n_teams::Int, n_history::Int, n_target::Int)
     return (;
-        α = _grw_reconstruct_trajectory(chain, "$prefix.α", n_teams, n_history, n_target),
-        β = _grw_reconstruct_trajectory(chain, "$prefix.β", n_teams, n_history, n_target),
+        α = _grw_reconstruct_trajectory(chain, "$prefix.α", n_teams, n_history, n_target;
+                                         target_season_step = config.target_season_step),
+        β = _grw_reconstruct_trajectory(chain, "$prefix.β", n_teams, n_history, n_target;
+                                         target_season_step = config.target_season_step),
     )
 end
 
@@ -351,9 +367,25 @@ The composable extractor is handed a chain and a team count but not the fold's t
 geometry, so the geometry is counted back off the site names. Counting team 1's
 sites is enough because `filldist` emits a full rectangular grid.
 """
-function grw_step_counts(chain::Chains, prefix::String)
+function grw_step_counts(chain::Chains, prefix::String, config::MultiScaleGRW)
     available = String.(names(chain))
     n_target = count(name -> startswith(name, "$prefix.α.z_target[1,"), available)
     n_season_transitions = count(name -> startswith(name, "$prefix.α.z_season[1,"), available)
-    return (; n_history = n_season_transitions + 1, n_target)
+    boundary_count = Int(config.target_season_step && n_target >= 1)
+    n_history = n_season_transitions - boundary_count + 1
+    n_history >= 1 || error("MultiScaleGRW chain has invalid macro-step geometry")
+    return (; n_history, n_target)
+end
+
+grw_step_counts(chain::Chains, prefix::String) =
+    grw_step_counts(chain, prefix, MultiScaleGRW())
+
+"Deterministic, per-fold posterior-predictive summer innovations for an empty target block."
+function _grw_oos_boundary_innovations(chain::Chains, prefix::String,
+                                       n_teams::Int, seed::Int)
+    n_samples = size(chain, 1) * size(chain, 3)
+    σₛ = reshape(vec(Array(chain[_grw_chain_symbol(chain, "$prefix.σₛ")])), n_samples, 1)
+    side_seed = seed + (endswith(prefix, ".β") ? 1 : 0)
+    rng = Random.MersenneTwister(side_seed)
+    return Random.randn(rng, n_samples, n_teams) .* σₛ
 end

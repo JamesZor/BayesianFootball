@@ -131,6 +131,9 @@ function create_features(
     # backward-compatible — nothing else reads these keys.
     F_data[:history_match_ids] = Set(Int.(boundary.history_match_ids))
     F_data[:target_match_ids]  = Set(Int.(boundary.target_match_ids))
+    # Stable identity for posterior-predictive innovations that must survive
+    # feature/fit serialization; never touch global RNG state in a forecast.
+    F_data[:grw_oos_seed] = boundary.fold_id
 
     # 5. DYNAMIC PIPELINE
     # The model asks for features, and we dispatch to add_feature! overloads

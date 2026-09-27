@@ -89,6 +89,10 @@ using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLaten
                ProductionWealthFeature, WealthCovariate,
                ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
                PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+               PyramidTiers, PyramidTierFeature, PyramidTierDesign,
+               AbstractTierCarry, NoCarry, EstimatedCarry, FixedCarry,
+               AbstractTierJump, NoJump, EstimatedJump, FixedTransitionPriors,
+               DEFAULT_TRANSITION_PRIORS,
                predictor_name, predictor_features, predictor_design, predictor_sites,
                predictor_extract, predictor_oos,
                covariate_name, covariate_role, covariate_prior, covariate_features,
@@ -101,8 +105,9 @@ using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLaten
                 JointGammaPoissonObservation, JointGammaPoissonDesign,
                 JointGammaNegBinObservation, JointGammaObservation,
                 CBNegBinFamilyObservation,
-                AbstractKappaMode, SharedKappa, HierarchicalKappa,
-                SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+                AbstractKappaMode, SharedKappa, HierarchicalKappa, CompetitionKappa,
+                SharedKappaJoint, HierarchicalKappaJoint, CompetitionKappaJoint,
+                kappa_mode_width, cb_hpdi,
                 observation_features, observation_design,
                 add!, add, replace!, validate,
                build_count_model, build, cb_predictor_terms, cb_predictor_names,
@@ -136,7 +141,11 @@ export AbstractPredictorTerm, AbstractCovariateConfig,
        AbstractAgeWeightingCurve, RichardsSigmoid, ShiftedGamma, GaussianPrime,
        age_weight, ProductionWealthFeature, WealthCovariate,
        ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
-       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate
+       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+       PyramidTiers, PyramidTierFeature, PyramidTierDesign,
+       AbstractTierCarry, NoCarry, EstimatedCarry, FixedCarry,
+       AbstractTierJump, NoJump, EstimatedJump, FixedTransitionPriors,
+       DEFAULT_TRANSITION_PRIORS
 # The two pxG covariate feeds live in `Features`, not the builder, because both reuse the
 # plus-minus segment/shot machinery. Re-exported here so a runner assembling a model can name the
 # feature and its covariate in the same breath, as it already can for production wealth.
@@ -156,8 +165,9 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
        JointGammaPoissonObservation, JointGammaPoissonDesign,
        JointGammaNegBinObservation, JointGammaObservation,
        CBNegBinFamilyObservation,
-       AbstractKappaMode, SharedKappa, HierarchicalKappa,
-       SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+       AbstractKappaMode, SharedKappa, HierarchicalKappa, CompetitionKappa,
+       SharedKappaJoint, HierarchicalKappaJoint, CompetitionKappaJoint,
+       kappa_mode_width, cb_hpdi,
        observation_features, observation_design
 export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,

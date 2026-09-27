@@ -18,6 +18,8 @@ const CB_TI = TypesInterfaces
 
 include("player_dynamics.jl")
 include("components.jl")
+include("pyramid_tiers.jl")
+include("league_deltas.jl")
 include("builder.jl")
 include("engine.jl")
 # The MultiScaleGRW seam. After `engine.jl`, because it adds methods to the generic
@@ -35,7 +37,11 @@ export AbstractPredictorTerm, AbstractCovariateConfig,
        AbstractAgeWeightingCurve, RichardsSigmoid, ShiftedGamma, GaussianPrime,
        age_weight, ProductionWealthFeature, WealthCovariate,
        ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
-       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate
+       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+       PyramidTiers, PyramidTierFeature, PyramidTierDesign,
+       AbstractTierCarry, NoCarry, EstimatedCarry, FixedCarry,
+       AbstractTierJump, NoJump, EstimatedJump, FixedTransitionPriors,
+       DEFAULT_TRANSITION_PRIORS
 export predictor_name, predictor_features, predictor_design, predictor_sites,
        predictor_extract, predictor_oos
 export covariate_name, covariate_role, covariate_prior, covariate_features,
@@ -48,8 +54,9 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
        JointGammaPoissonObservation, JointGammaPoissonDesign,
        JointGammaNegBinObservation, JointGammaObservation,
        CBNegBinFamilyObservation,
-       AbstractKappaMode, SharedKappa, HierarchicalKappa,
-       SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+       AbstractKappaMode, SharedKappa, HierarchicalKappa, CompetitionKappa,
+       SharedKappaJoint, HierarchicalKappaJoint, CompetitionKappaJoint,
+       kappa_mode_width, cb_hpdi,
        CBPoissonFamilyObservation,
        observation_features, observation_design
 export add!, add, replace!, validate, build, build_count_model

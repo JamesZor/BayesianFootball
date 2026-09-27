@@ -143,6 +143,13 @@ function apply_scope(ds::DataStore, scope::DataScope)
     end
 
     kept_matches = matches[keep, :]
+    # Preserve the schedule-known SPFL membership table from the UNSCOPED store.
+    # A lower-only scope drops tournaments 54/55, but a relegated club's first
+    # window anchor must still be its higher-tier membership. DataFrame metadata
+    # travels with the detached store without widening DataStore or changing any
+    # model/scope display (and therefore cannot enter a harness recipe hash).
+    DataFrames.metadata!(kept_matches, "full_club_season_tiers",
+                         club_season_tiers(matches); style = :note)
     kept_ids = Set(Int.(kept_matches.match_id))
     return DataStore(ds.segment, kept_matches,
         _scope_copy_domain(ds.statistics, kept_ids),

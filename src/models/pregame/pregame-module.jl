@@ -6,12 +6,13 @@ module PreGame
 using ...TypesInterfaces
 
 # Macro libraries MUST be loaded at the top
-using Turing, Distributions, DataFrames
+using Turing, Distributions, DataFrames, Random
 using ..MyDistributions 
 using ..Features
 using LinearAlgebra
 using Statistics
 using Dates
+using Random
 using MCMCChains
 
 # 2. feature_set updates & Architecture
@@ -79,6 +80,10 @@ using .Builder: CountModelBuilder, PoissonCountModel, NegBinCountModel,
     age_weight, ProductionWealthFeature, WealthCovariate,
     ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
     PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+    PyramidTiers, PyramidTierFeature, PyramidTierDesign,
+    AbstractTierCarry, NoCarry, EstimatedCarry, FixedCarry,
+    AbstractTierJump, NoJump, EstimatedJump, FixedTransitionPriors,
+    DEFAULT_TRANSITION_PRIORS,
     predictor_name, predictor_features, predictor_design, predictor_sites,
     predictor_extract, predictor_oos,
     covariate_name, covariate_role, covariate_prior, covariate_features,
@@ -90,8 +95,9 @@ using .Builder: CountModelBuilder, PoissonCountModel, NegBinCountModel,
     JointGammaPoissonObservation, JointGammaPoissonDesign,
     JointGammaNegBinObservation, JointGammaObservation,
     CBNegBinFamilyObservation,
-    AbstractKappaMode, SharedKappa, HierarchicalKappa,
-    SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+    AbstractKappaMode, SharedKappa, HierarchicalKappa, CompetitionKappa,
+    SharedKappaJoint, HierarchicalKappaJoint, CompetitionKappaJoint,
+    kappa_mode_width, cb_hpdi,
     observation_features, observation_design,
     add!, add, replace!, validate, build, build_count_model,
     cb_predictor_terms, cb_predictor_names, cb_covariates, cb_covariate_names,
@@ -120,7 +126,11 @@ export AbstractPredictorTerm, AbstractCovariateConfig,
        age_weight, ProductionWealthFeature, BenchDepthFeature, LateGameChanceFeature,
        WealthCovariate,
        ProductionWealthCovariate, BenchDepthCovariate, DistanceCovariate,
-       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate
+       PxGCovariate, LateGameChanceCovariate, PxGRapmCovariate,
+       PyramidTiers, PyramidTierFeature, PyramidTierDesign,
+       AbstractTierCarry, NoCarry, EstimatedCarry, FixedCarry,
+       AbstractTierJump, NoJump, EstimatedJump, FixedTransitionPriors,
+       DEFAULT_TRANSITION_PRIORS
 export predictor_name, predictor_features, predictor_design, predictor_sites,
        predictor_extract, predictor_oos
 export covariate_name, covariate_role, covariate_prior, covariate_features,
@@ -132,8 +142,9 @@ export AbstractObservationConfig, PoissonObservation, NegativeBinomialObservatio
        JointGammaPoissonObservation, JointGammaPoissonDesign,
        JointGammaNegBinObservation, JointGammaObservation,
        CBNegBinFamilyObservation,
-       AbstractKappaMode, SharedKappa, HierarchicalKappa,
-       SharedKappaJoint, HierarchicalKappaJoint, kappa_mode_width, cb_hpdi,
+       AbstractKappaMode, SharedKappa, HierarchicalKappa, CompetitionKappa,
+       SharedKappaJoint, HierarchicalKappaJoint, CompetitionKappaJoint,
+       kappa_mode_width, cb_hpdi,
        observation_features, observation_design
 export add!, add, replace!, validate, build, build_count_model
 export cb_predictor_terms, cb_predictor_names, cb_covariates,

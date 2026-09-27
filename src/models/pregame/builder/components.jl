@@ -1051,6 +1051,18 @@ default. Chain sites: `obs.log_κ`.
 struct SharedKappa <: AbstractKappaMode end
 
 """
+    CompetitionKappa
+
+A shared global finishing factor plus fixed-scale, zero-sum observation deltas:
+attacking-side SPFL-tier intercept deltas (scale 0.10) and match-competition
+finishing deltas (scale 0.25). All senior cups share one competition level.
+"""
+Base.@kwdef struct CompetitionKappa <: AbstractKappaMode
+    intercept_scale::Float64 = 0.10
+    kappa_scale::Float64 = 0.25
+end
+
+"""
     HierarchicalKappa
 
 A team-specific finishing multiplier, partially pooled around the league factor:
@@ -1082,6 +1094,8 @@ end
 
 "How many scalar parameters the mode adds beyond `obs.log_κ`, given the team count."
 kappa_mode_width(::SharedKappa, n_teams::Int) = 0
+kappa_mode_width(::CompetitionKappa, n_teams::Int) = error(
+    "CompetitionKappa width depends on the fold's tier and competition geometry")
 kappa_mode_width(::HierarchicalKappa, n_teams::Int) = 1 + n_teams
 
 """
@@ -1136,6 +1150,8 @@ const SharedKappaJoint = JointGammaPoissonObservation{F,S,K,SharedKappa} where {
 "The two-arm joint observation with a partially pooled per-team finishing factor."
 const HierarchicalKappaJoint =
     JointGammaPoissonObservation{F,S,K,<:HierarchicalKappa} where {F,S,K}
+const CompetitionKappaJoint =
+    JointGammaPoissonObservation{F,S,K,CompetitionKappa} where {F,S,K}
 
 """
     JointGammaPoissonDesign
@@ -1163,6 +1179,11 @@ struct JointGammaPoissonDesign
     home_idx::Vector{Int}
     away_idx::Vector{Int}
     n_observed::Int
+    tier_home_idx::Vector{Int}
+    tier_away_idx::Vector{Int}
+    competition_idx::Vector{Int}
+    n_tiers::Int
+    n_competitions::Int
 end
 
 """
@@ -1340,7 +1361,11 @@ Extra features this observation's likelihood reads. Concatenated onto the struct
 features by `Features.required_features`. Most observations read nothing beyond the goals.
 """
 observation_features(::AbstractObservationConfig) = CB_Features.AbstractFeatureConfig[]
-observation_features(o::JointGammaObservation) =
+_joint_observation_features(::AbstractKappaMode, o) =
+    CB_Features.AbstractFeatureConfig[o.feature]
+observation_features(o::JointGammaPoissonObservation) =
+    _joint_observation_features(o.kappa, o)
+observation_features(o::JointGammaNegBinObservation) =
     CB_Features.AbstractFeatureConfig[o.feature]
 
 """
@@ -1360,8 +1385,8 @@ observation_design(::AbstractObservationConfig, feature_set, n_matches::Int,
 # goal density cannot see: the proxy observations, their logs, and the availability mask folded into
 # the decay weights. Swapping Poisson for negative binomial changes none of it, so sharing the
 # method is what keeps that true rather than something to re-check.
-function observation_design(o::JointGammaObservation, feature_set, n_matches::Int,
-                            match_weights::Vector{Float64})
+function _joint_observation_design(o::JointGammaObservation, feature_set, n_matches::Int,
+                                   match_weights::Vector{Float64})
     d = feature_set.data
     for key in (:flat_pxg_home, :flat_pxg_away, :flat_pxg_obs_available)
         haskey(d, key) || error(
@@ -1405,6 +1430,18 @@ function observation_design(o::JointGammaObservation, feature_set, n_matches::In
         "log-observation is precomputed for every match, masked or not. " *
         "MatchProxyXGFeature enforces this with its `floor` and `dummy` fields.")
 
+    neutral = ones(Int, n_matches)
     return JointGammaPoissonDesign(pxg_h, pxg_a, log.(pxg_h), log.(pxg_a),
-                                   mask .* match_weights, home_idx, away_idx, Int(sum(mask)))
+                                   mask .* match_weights, home_idx, away_idx, Int(sum(mask)),
+                                   neutral, neutral, neutral, 1, 1)
 end
+
+_joint_mode_design(::AbstractKappaMode, o, feature_set, n_matches::Int,
+                   match_weights::Vector{Float64}) =
+    _joint_observation_design(o, feature_set, n_matches, match_weights)
+observation_design(o::JointGammaPoissonObservation, feature_set, n_matches::Int,
+                   match_weights::Vector{Float64}) =
+    _joint_mode_design(o.kappa, o, feature_set, n_matches, match_weights)
+observation_design(o::JointGammaNegBinObservation, feature_set, n_matches::Int,
+                   match_weights::Vector{Float64}) =
+    _joint_observation_design(o, feature_set, n_matches, match_weights)

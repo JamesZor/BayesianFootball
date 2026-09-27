@@ -575,6 +575,11 @@ function _cb_extract_dynamics(chain::Chains,
     return CB_PG.extract_dynamics(chain, config, prefix, n_teams)
 end
 
+_cb_extract_dynamics(chain::Chains,
+                     config::Union{CB_PG.TimeDecayDynamics,CB_PG.StaticZeroDynamics},
+                     prefix::String, n_teams::Int, feature_set) =
+    _cb_extract_dynamics(chain, config, prefix, n_teams)
+
 function _cb_oos_dynamics(
     config::Union{CB_PG.TimeDecayDynamics,CB_PG.StaticZeroDynamics}, draw,
     lineup_map, match_id::Int, home_index::Int, away_index::Int, n_samples::Int,
@@ -599,7 +604,7 @@ function CB_PG.extract_parameters(model::ComposableCountModel,
 
     inter_nt = CB_PG.extract_interception(chain, model.interception, n_seasons)
     ha_mat   = CB_PG.extract_home_advantage(chain, model.home_advantage, n_teams)
-    dyn_nt   = _cb_extract_dynamics(chain, model.dynamics, "dyn", n_teams)
+    dyn_nt   = _cb_extract_dynamics(chain, model.dynamics, "dyn", n_teams, feature_set)
     lineup_map = get(d, :player_lineup_ratings_map,
                      Dict{Int,CB_Features.PMLineupAggregate}())
 
@@ -614,7 +619,7 @@ function CB_PG.extract_parameters(model::ComposableCountModel,
         for term in model.covariates
     ]
 
-    disp_nt = _cb_extract_observation(model.observation, chain, n_teams)
+    disp_nt = _cb_extract_observation(model.observation, chain, n_teams, feature_set)
 
     global_ha = model.home_advantage isa CB_PG.GlobalHomeAdvantage
     results = Dict{Int, NamedTuple}()
@@ -648,7 +653,7 @@ function CB_PG.extract_parameters(model::ComposableCountModel,
         λ_a = exp.(η_a)
 
         results[mid] = _cb_rates(model.observation, λ_h, λ_a, disp_nt, h_idx, a_idx,
-                                 Dates.month(row.match_date))
+                                 _cb_rate_index(model.observation, row))
     end
     return results
 end
@@ -668,6 +673,10 @@ function _cb_checked_oos(c::AbstractCovariateConfig, feature_set, df)
 end
 
 _cb_extract_observation(::PoissonObservation, chain, n_teams) = nothing
+_cb_extract_observation(observation, chain, n_teams, feature_set) =
+    _cb_extract_observation(observation, chain, n_teams)
+
+_cb_rate_index(::AbstractObservationConfig, row) = Dates.month(row.match_date)
 
 function _cb_extract_observation(::SharedKappaJoint, chain, n_teams)
     ν = vec(Array(chain[Symbol("obs.ν")]))

@@ -84,7 +84,7 @@ one state too many still runs, still samples and still scores — it just reads 
 fixture against the wrong state. That failure is silent, so it is checked here
 rather than trusted.
 """
-function dynamics_design(::CB_PG.MultiScaleGRW, feature_set, n_matches::Int)
+function dynamics_design(config::CB_PG.MultiScaleGRW, feature_set, n_matches::Int)
     d = feature_set.data
     home_ids = Vector{Int}(d[:flat_home_ids])
     away_ids = Vector{Int}(d[:flat_away_ids])
@@ -104,7 +104,8 @@ function dynamics_design(::CB_PG.MultiScaleGRW, feature_set, n_matches::Int)
     all(t -> 1 <= t <= n_rounds, time_indices) ||
         error("MultiScaleGRW time index outside 1:$n_rounds")
 
-    acc = CB_PG.grw_accumulators(n_history, n_target)
+    acc = CB_PG.grw_accumulators(
+        n_history, n_target; target_season_step = config.target_season_step)
     return GRWDynamicsDesign(
         CartesianIndex.(home_ids, time_indices),
         CartesianIndex.(away_ids, time_indices),
@@ -132,7 +133,7 @@ end
             design.initial_accumulator,
             design.season_accumulator,
             design.target_accumulator,
-            n_teams, design.n_history - 1, design.n_target,
+            n_teams, size(design.season_accumulator, 1), design.n_target,
             design.target_marker),
         false)
     return (;
@@ -149,15 +150,27 @@ end
 
 # The generic composable extractor hands over a chain and a team count but not the
 # fold's time geometry, so the geometry is recovered from the site names.
-function _cb_extract_dynamics(chain::Chains, ::CB_PG.MultiScaleGRW,
+function _cb_extract_dynamics(chain::Chains, config::CB_PG.MultiScaleGRW,
+                              prefix::String, n_teams::Int, feature_set)
+    counts = CB_PG.grw_step_counts(chain, prefix, config)
+    α = CB_PG._grw_reconstruct_trajectory(
+        chain, "$prefix.α", n_teams, counts.n_history, counts.n_target;
+        target_season_step = config.target_season_step)
+    β = CB_PG._grw_reconstruct_trajectory(
+        chain, "$prefix.β", n_teams, counts.n_history, counts.n_target;
+        target_season_step = config.target_season_step)
+    config.target_season_step && counts.n_target == 0 || return (; α, β)
+
+    seed = Int(get(feature_set.data, :grw_oos_seed, 0))
+    return (; α, β,
+            oos_α = CB_PG._grw_oos_boundary_innovations(chain, "$prefix.α", n_teams, seed),
+            oos_β = CB_PG._grw_oos_boundary_innovations(chain, "$prefix.β", n_teams, seed))
+end
+
+function _cb_extract_dynamics(chain::Chains, config::CB_PG.MultiScaleGRW,
                               prefix::String, n_teams::Int)
-    counts = CB_PG.grw_step_counts(chain, prefix)
-    return (;
-        α = CB_PG._grw_reconstruct_trajectory(
-            chain, "$prefix.α", n_teams, counts.n_history, counts.n_target),
-        β = CB_PG._grw_reconstruct_trajectory(
-            chain, "$prefix.β", n_teams, counts.n_history, counts.n_target),
-    )
+    return _cb_extract_dynamics(chain, config, prefix, n_teams,
+                                (; data = Dict{Symbol,Any}()))
 end
 
 """
@@ -172,14 +185,16 @@ Note the trailing `:` indexing: `draw.α` here is `(teams, time, samples)`, not 
 `(samples, teams)` matrix the static components return.
 """
 function _cb_oos_dynamics(
-    ::CB_PG.MultiScaleGRW, draw, lineup_map, match_id::Int,
+    config::CB_PG.MultiScaleGRW, draw, lineup_map, match_id::Int,
     home_index::Int, away_index::Int, n_samples::Int,
 )
     final = size(draw.α, 2)
+    boundary_α = config.target_season_step && hasproperty(draw, :oos_α) ? draw.oos_α : zeros(n_samples, size(draw.α, 1))
+    boundary_β = config.target_season_step && hasproperty(draw, :oos_β) ? draw.oos_β : zeros(n_samples, size(draw.β, 1))
     return (;
-        att_h = home_index > 0 ? vec(draw.α[home_index, final, :]) : zeros(n_samples),
-        def_a = away_index > 0 ? vec(draw.β[away_index, final, :]) : zeros(n_samples),
-        att_a = away_index > 0 ? vec(draw.α[away_index, final, :]) : zeros(n_samples),
-        def_h = home_index > 0 ? vec(draw.β[home_index, final, :]) : zeros(n_samples),
+        att_h = home_index > 0 ? vec(draw.α[home_index, final, :]) .+ boundary_α[:, home_index] : zeros(n_samples),
+        def_a = away_index > 0 ? vec(draw.β[away_index, final, :]) .+ boundary_β[:, away_index] : zeros(n_samples),
+        att_a = away_index > 0 ? vec(draw.α[away_index, final, :]) .+ boundary_α[:, away_index] : zeros(n_samples),
+        def_h = home_index > 0 ? vec(draw.β[home_index, final, :]) .+ boundary_β[:, home_index] : zeros(n_samples),
     )
 end
