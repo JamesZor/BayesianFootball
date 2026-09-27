@@ -85,8 +85,11 @@ function describe_tape_instruction(instruction)
                   _tape_arg_shape(instruction.output))
 end
 
+"One allocating tape instruction: its position on the tape, bytes per replay, and shape."
+const TapeAllocationRow = NamedTuple{(:index, :bytes, :description),Tuple{Int,Int,String}}
+
 """
-    tape_allocation_profile(raw_tape; reps = 3) -> Vector{NamedTuple}
+    tape_allocation_profile(raw_tape; reps = 3) -> Vector{TapeAllocationRow}
 
 Every instruction of a recorded `GradientTape` that allocates when replayed on its own, as
 `(; index, bytes, description)`. The per-instruction sum is not exactly the compiled total — the
@@ -97,7 +100,7 @@ Replaying instructions one at a time scribbles on the tape's value and derivativ
 Measure the compiled gradient first; re-run a gradient before trusting its numbers again.
 """
 function tape_allocation_profile(raw_tape; reps::Int = 3)
-    rows = NamedTuple{(:index, :bytes, :description),Tuple{Int,Int,String}}[]
+    rows = TapeAllocationRow[]
     for (index, instruction) in enumerate(raw_tape.tape)
         bytes = _instruction_bytes(instruction, reps)
         bytes > 0 && push!(rows, (; index, bytes, description = describe_tape_instruction(instruction)))

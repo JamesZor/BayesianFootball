@@ -8,6 +8,7 @@ using ForwardDiff
 using JSON3
 using LibPQ
 using LinearAlgebra: norm
+import Logging
 using LogDensityProblems
 using MCMCChains
 using Random
@@ -15,6 +16,7 @@ using ReverseDiff
 using SHA
 using Statistics
 using UUIDs
+import Turing
 
 using ..Data
 using ..Features
@@ -30,6 +32,7 @@ using ..MatchDay
 
 include("candidate.jl")
 include("tape_profile.jl")
+include("perf_monitor.jl")
 include("checks.jl")
 include("cohorts.jl")
 include("scoring.jl")

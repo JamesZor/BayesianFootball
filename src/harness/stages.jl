@@ -86,11 +86,26 @@ function screen(candidates::AbstractVector{<:Candidate};
     return (; scores, fits, errors)
 end
 
-"Run the 2-fold correctness and diagnostic gate for a candidate."
+"""
+    smoke(candidate; ds, experiment, db = nothing, perf_probe = true, perf_chains = nthreads(),
+          perf_warmup = 50, perf_samples = 50, log_dir = default_harness_log_dir(),
+          proc_root = "/proc")
+
+Run the 2-fold correctness and diagnostic gate for a candidate, then — unless `perf_probe = false`
+— the load-realistic sampling-performance probe on the largest smoke fold (`perf_chains` chains of
+`perf_warmup + perf_samples` iterations; a `review` row, never hard), writing its report to
+`<log_dir>/smoke_perf/<experiment>/<candidate>.md`. Returns `(; fit, run_id, records, perf)`.
+"""
 function smoke(candidate::Candidate;
                ds::Data.DataStore,
                experiment::AbstractString,
-               db = nothing)
+               db = nothing,
+               perf_probe::Bool = true,
+               perf_chains::Int = Threads.nthreads(),
+               perf_warmup::Int = 50,
+               perf_samples::Int = 50,
+               log_dir::AbstractString = default_harness_log_dir(),
+               proc_root::AbstractString = "/proc")
     if db !== nothing
         ensure_harness_schema!(db)
     end
@@ -108,6 +123,7 @@ function smoke(candidate::Candidate;
 
     smoke_run_id = nothing
     fit = nothing
+    perf = nothing
     try
         # 1. Gradient audit on fold 1
         grad_result = _run_hard_check!(records, base, "gradient") do
@@ -150,6 +166,14 @@ function smoke(candidate::Candidate;
             _grid_diagnostics(fit.latents; check_coherence = false)
         end
 
+        # 5b. Load-realistic sampling performance on the largest smoke fold: every sampler
+        #     thread under the concurrency the grid will see. Review, never hard.
+        if perf_probe
+            perf = _smoke_sampling_performance!(records, base, candidate, inputs;
+                experiment, n_chains = perf_chains, n_warmup = perf_warmup,
+                n_samples = perf_samples, log_dir, proc_root)
+        end
+
         # 6. Convergence diagnostic (recorded review, never throws)
         _run_diagnostic!(records, base, "convergence", "review") do
             _convergence_diagnostic(fit)
@@ -180,7 +204,7 @@ function smoke(candidate::Candidate;
             write_checks!(db, stamped)
         end
 
-        return (; fit, run_id = smoke_run_id, records)
+        return (; fit, run_id = smoke_run_id, records, perf)
     catch err
         if db !== nothing
             try

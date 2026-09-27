@@ -191,24 +191,16 @@ function _tape_allocation_check(model, feature_sets;
     failures = String[]
     for (i, entry) in enumerate(feature_sets)
         fs = entry isa Tuple ? first(entry) : entry
-        turing_model = Models.PreGame.build_turing_model(model, fs)
-        Random.seed!(seed)
-        varinfo = DynamicPPL.link!!(DynamicPPL.VarInfo(turing_model), turing_model)
-        theta = copy(varinfo[:])
-        density = DynamicPPL.LogDensityFunction(
-            turing_model, DynamicPPL.getlogjoint_internal, varinfo)
-        objective = values -> LogDensityProblems.logdensity(density, values)
-        raw_tape = ReverseDiff.GradientTape(objective, theta)
-        tape = ReverseDiff.compile(raw_tape)
-        bytes = compiled_gradient_bytes(tape, similar(theta), theta)
-        push!(folds, (; fold = i, allocated_bytes = bytes,
-                        tape_instructions = length(raw_tape.tape),
-                        n_parameters = length(theta)))
-        if bytes > max_bytes
+        m = tape_metrics(model, fs; seed, latency_reps = 20)
+        push!(folds, (; fold = i, allocated_bytes = m.allocated_bytes,
+                        gradient_ms = m.gradient_ms, tape_instructions = m.tape_instructions,
+                        n_parameters = m.n_parameters))
+        if m.allocated_bytes > max_bytes
             listing = join(("#$(row.index) $(row.bytes) B $(row.description)"
-                            for row in tape_allocation_profile(raw_tape)), "; ")
-            push!(failures, "fold $i allocates $bytes B per compiled gradient " *
-                            "(limit $max_bytes B): " * (isempty(listing) ? "no single instruction allocates in isolation" : listing))
+                            for row in m.allocating_instructions), "; ")
+            push!(failures, "fold $i allocates $(m.allocated_bytes) B per compiled gradient " *
+                            "(limit $max_bytes B): " *
+                            (isempty(listing) ? "no single instruction allocates in isolation" : listing))
         end
     end
     isempty(failures) || error(join(failures, " | ") *
@@ -216,6 +208,75 @@ function _tape_allocation_check(model, feature_sets;
         "tracker_∇broadcast; see docs/turing_ad_performance_guide.md §10.5")
     return (; max_allocated_bytes = maximum(f.allocated_bytes for f in folds), max_bytes,
               folds = Tuple(folds))
+end
+
+"""
+    default_harness_log_dir() -> String
+
+Where the harness writes per-run logs such as smoke performance reports: `ENV["BF_LOG_DIR"]` if
+set, else `../logs/<short sha>` beside the working directory — on the beast, a run from
+`/root/BF_runs/<sha>` writes to `/root/BF_runs/logs/<sha>`, the log convention of AGENTS.md §8.
+Never inside the git checkout.
+"""
+function default_harness_log_dir()
+    haskey(ENV, "BF_LOG_DIR") && return ENV["BF_LOG_DIR"]
+    sha = first(replace(string(Training.git_commit_id()), "-dirty" => ""), 8)
+    return joinpath(dirname(abspath(pwd())), "logs", sha)
+end
+
+smoke_perf_report_path(log_dir::AbstractString, experiment::AbstractString,
+                       candidate::AbstractString) =
+    joinpath(log_dir, "smoke_perf", String(experiment), String(candidate) * ".md")
+
+"""
+    _smoke_sampling_performance!(records, base, candidate, inputs; ...) -> NamedTuple
+
+The smoke's load-realistic probe (experiments/claude_zero_alloc_addendum_perf_monitor.md):
+`sampling_performance_probe` on the smoke's largest fold, persisted as an `info` row carrying every
+metric (`sampling_performance_metrics`) and a `review` row (`sampling_performance`) that fails when
+any `SAMPLING_PERF_THRESHOLDS` limit is breached. Never hard: a slow model is a finding for a human
+or an agent to review, not a correctness failure. Writes the markdown report under
+`<log_dir>/smoke_perf/<experiment>/<candidate>.md`.
+"""
+function _smoke_sampling_performance!(records, base, candidate, inputs;
+                                      experiment::AbstractString,
+                                      n_chains::Int, n_warmup::Int, n_samples::Int,
+                                      log_dir::AbstractString,
+                                      proc_root::AbstractString = "/proc")
+    entry = inputs.feature_sets[end]
+    fs = entry isa Tuple ? first(entry) : entry
+    metrics = _run_diagnostic!(records, base, "sampling_performance_metrics", "info") do
+        sampling_performance_probe(candidate.model, fs, candidate.sampler;
+                                   n_chains, n_warmup, n_samples, proc_root)
+    end
+    flags = metrics === nothing ? nothing : sampling_performance_flags(metrics)
+    report = nothing
+    if metrics !== nothing
+        path = smoke_perf_report_path(log_dir, experiment, candidate.name)
+        report = try
+            write_sampling_performance_report(path, metrics, flags;
+                title = "Sampling performance — $(candidate.name)",
+                context = (; experiment = String(experiment), candidate = candidate.name,
+                             recipe_hash = base.recipe_hash, git_sha = base.git_sha,
+                             fold = "$(inputs.source_indices[end]) (the smoke's largest)"))
+        catch err
+            @warn "could not write the smoke performance report to $path" exception = err
+            nothing
+        end
+    end
+    _run_diagnostic!(records, base, "sampling_performance", "review") do
+        metrics === nothing && error(
+            "the sampling-performance probe failed; see the sampling_performance_metrics row")
+        isempty(flags) || error(join(("$(f.flag) = $(_fmt(f.value)) (threshold " *
+                                      "$(_fmt(f.threshold))): $(f.diagnosis)" for f in flags), " | ") *
+                                (report === nothing ? "" : " — report: $report"))
+        (; report = something(report, "not written"), gc_share = metrics.gc_share,
+           sampler_utilisation = metrics.sampler_utilisation,
+           ms_per_leapfrog = metrics.ms_per_leapfrog,
+           efficiency_ratio = metrics.efficiency_ratio)
+    end
+    status = metrics === nothing || !isempty(flags) ? "review" : "pass"
+    return (; status, metrics, flags, report)
 end
 
 "Finite, positive count latents; MCMC latents must also be non-degenerate."

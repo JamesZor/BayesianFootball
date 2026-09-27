@@ -226,8 +226,17 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
             role = :candidate
         )
 
-        res = Harness.smoke(candidate; ds = ds, experiment = "synth_exp", db = store)
+        perf_dir = mktempdir()
+        res = Harness.smoke(candidate; ds = ds, experiment = "synth_exp", db = store,
+                            perf_chains = 2, perf_warmup = 5, perf_samples = 5,
+                            log_dir = perf_dir)
         @test res.fit isa Training.Fit
+        # The sampling-performance probe ran on the largest fold, wrote its report where it was
+        # told to, and recorded an info row with the metrics plus a review row — never hard.
+        @test res.perf.status in ("pass", "review")
+        @test res.perf.report == joinpath(perf_dir, "smoke_perf", "synth_exp", "synth_smoke.md")
+        @test isfile(res.perf.report)
+        @test occursin("perf=$(res.perf.status)", Harness.perf_summary(res.perf))
         @test res.run_id === nothing # No fabricated run_id without PostgresStorage
 
         # A no-DB smoke records fit_parity as abstain, so has_passing_smoke MUST be false
@@ -246,6 +255,12 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test tape_row.value.max_allocated_bytes == 0
         @test length(tape_row.value.folds) >= 1
         @test "filtration" in stored.check
+        perf_rows = filter(r -> startswith(r.check, "sampling_performance"), eachrow(stored))
+        @test Set(r.check for r in perf_rows) ==
+              Set(["sampling_performance_metrics", "sampling_performance"])
+        @test only(filter(r -> r.check == "sampling_performance", perf_rows)).severity == "review"
+        @test only(filter(r -> r.check == "sampling_performance_metrics", perf_rows)).severity == "info"
+        @test !("sampling_performance" in Harness.SMOKE_REQUIRED_CHECKS)
         @test "latents" in stored.check
         @test "score_grid_coherence" in stored.check
         @test "fit_parity" in stored.check
@@ -337,6 +352,81 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         end
         @test only(records).status == "fail"
         @test only(records).severity == "hard"
+
+        # --- the sampling-performance monitor on the same synthetic league -------------------
+        fs = first(inputs.feature_sets[end])
+        sampler = Samplers.QueuedNUTSConfig(n_samples = 5, n_warmup = 5, n_chains = 2,
+                                            max_depth = 4, show_progress = false)
+        fixed = Harness.sampling_performance_probe(model, fs, sampler;
+                                                   n_chains = 2, n_warmup = 5, n_samples = 5)
+        @test fixed.tape_bytes_per_gradient == 0
+        @test isempty(fixed.allocating_instructions)
+        @test fixed.leapfrogs == sum(fixed.leapfrogs_per_chain) > 0
+        @test length(fixed.leapfrogs_per_chain) == 2
+        @test fixed.wall_seconds > 0 && fixed.window_seconds > 0
+        @test fixed.ms_per_leapfrog isa Real && fixed.efficiency_ratio isa Real
+        @test fixed.bytes_per_leapfrog isa Real && fixed.gc_share isa Real
+        if Sys.islinux()
+            @test fixed.sampler_thread_ids_found == Threads.nthreads()
+            @test fixed.sampler_utilisation isa Real && fixed.process_utilisation isa Real
+        end
+        @test !any(f -> f.flag == "tape_allocation", Harness.sampling_performance_flags(fixed))
+        healthy = merge(fixed, (; gc_share = 0.02, sampler_utilisation = 0.95,
+                                  efficiency_ratio = 1.2))
+        @test isempty(Harness.sampling_performance_flags(healthy))
+
+        # The deliberately allocating (pre-fix) engine is flagged for review, with the cause named.
+        slow = Harness.sampling_performance_probe(allocating, fs, sampler;
+                                                  n_chains = 2, n_warmup = 5, n_samples = 5)
+        @test slow.tape_bytes_per_gradient > 0
+        @test any(r -> occursin("tracker_∇broadcast[clamp]", r.description),
+                  slow.allocating_instructions)
+        slow_flags = Harness.sampling_performance_flags(
+            merge(slow, (; tape_bytes_per_gradient = 2 * Harness.TAPE_ALLOCATION_LIMIT_BYTES)))
+        @test any(f -> f.flag == "tape_allocation" && occursin("§10.5", f.diagnosis), slow_flags)
+
+        # Each threshold fires on its own, and the diagnosis reads the other metrics.
+        th = Harness.SAMPLING_PERF_THRESHOLDS
+        @test (th.max_gc_share, th.min_sampler_utilisation, th.max_efficiency_ratio) ==
+              (0.15, 0.75, 2.0)
+        gc_only = Harness.sampling_performance_flags(merge(healthy, (; gc_share = 0.30)))
+        @test [f.flag for f in gc_only] == ["gc_share"]
+        @test occursin("non-tape path", only(gc_only).diagnosis)
+        idle = Harness.sampling_performance_flags(merge(healthy, (; sampler_utilisation = 0.40)))
+        @test [f.flag for f in idle] == ["sampler_utilisation"]
+        @test occursin("too few chains", only(idle).diagnosis)
+        contended = Harness.sampling_performance_flags(
+            merge(healthy, (; gc_share = 0.40, sampler_utilisation = 0.45, efficiency_ratio = 3.0)))
+        @test [f.flag for f in contended] == ["gc_share", "sampler_utilisation", "efficiency_ratio"]
+        @test occursin("stopped in collections", contended[2].diagnosis)
+
+        # The report carries every section; the allocating one lists its instructions.
+        report = Harness.write_sampling_performance_report(
+            joinpath(mktempdir(), "nested", "slow.md"), slow, slow_flags;
+            title = "Sampling performance — slow", context = (; candidate = "slow"))
+        text = read(report, String)
+        for section in ("# Sampling performance — slow", "## Verdict", "## Metrics",
+                        "## Allocating tape instructions", "## Diagnosis")
+            @test occursin(section, text)
+        end
+        @test occursin("**review**", text)
+        @test occursin("tracker_∇broadcast[clamp]", text)
+        @test occursin("None — the compiled tape replays without allocating.",
+                       read(Harness.write_sampling_performance_report(
+                           joinpath(mktempdir(), "fixed.md"), healthy, NamedTuple[]), String))
+
+        # Without /proc (macOS, a container) CPU metrics degrade to "unavailable" and cannot flag.
+        @test Harness._proc_cpu_snapshot(joinpath(mktempdir(), "no_proc")) === nothing
+        blind = Harness.sampling_performance_probe(model, fs, sampler; n_chains = 1,
+            n_warmup = 3, n_samples = 3, proc_root = joinpath(mktempdir(), "no_proc"))
+        @test blind.sampler_utilisation == "unavailable"
+        @test blind.process_utilisation == "unavailable"
+        @test blind.other_cpu_cores == "unavailable"
+        @test blind.gc_share isa Real
+        @test !any(f -> f.flag == "sampler_utilisation", Harness.sampling_performance_flags(
+            merge(blind, (; gc_share = 0.0, efficiency_ratio = 1.0))))
+        @test occursin("util=n/a",
+            Harness.perf_summary((; status = "pass", metrics = blind, flags = [], report = nothing)))
     end
 
     @testset "6. Deterministic screen run_id across repeated screen calls" begin
