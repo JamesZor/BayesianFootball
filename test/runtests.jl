@@ -23,6 +23,7 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
 
     println("Running MultiScaleGRW dynamics tests...")
     include("test_multiscale_grw.jl")
+    include("pyramid_tier_tests.jl")
 
     println("Running player-lineup dynamics tests...")
     include("test_player_lineup_dynamics.jl")

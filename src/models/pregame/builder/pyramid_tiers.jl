@@ -108,8 +108,10 @@ _tier_coefficient(tournament::Int) = -Float64(_tier_number(tournament) - 1)
 _is_old_firm(club::String) = club == "celtic" || club == "rangers"
 
 function _full_tier_table(ds)
-    return DataFrames.metadata(ds.matches, "full_club_season_tiers",
-        CB_Features.Data.club_season_tiers(ds.matches))
+    metadata = DataFrames.metadata(ds.matches)
+    haskey(metadata, "full_club_season_tiers") || error(
+        "pyramid features require Data.apply_scope so the full tier table is available")
+    return metadata["full_club_season_tiers"]
 end
 
 function _tier_anchor_table(anchor::Symbol, ds)

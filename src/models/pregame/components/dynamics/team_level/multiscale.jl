@@ -77,25 +77,54 @@ model = CountModelBuilder(:m00_baseline_grw) |>
     build
 ```
 """
-Base.@kwdef struct MultiScaleGRW <: AbstractDynamicsConfig
-    # Innovation shapes (non-centred z-scores).
-    z₀::ContinuousUnivariateDistribution = Normal(0, 1)
-    zₛ::ContinuousUnivariateDistribution = Normal(0, 1)
-    zₖ::ContinuousUnivariateDistribution = Normal(0, 1)
+# Keep the established nine-field type layout unchanged: historical fit artifacts
+# embed this concrete struct through Julia Serialization.
+struct MultiScaleGRW <: AbstractDynamicsConfig
+    z₀::ContinuousUnivariateDistribution
+    zₛ::ContinuousUnivariateDistribution
+    zₖ::ContinuousUnivariateDistribution
+    α_σ₀::ContinuousUnivariateDistribution
+    α_σₛ::ContinuousUnivariateDistribution
+    α_σₖ::ContinuousUnivariateDistribution
+    β_σ₀::ContinuousUnivariateDistribution
+    β_σₛ::ContinuousUnivariateDistribution
+    β_σₖ::ContinuousUnivariateDistribution
+end
 
-    # Attack scales: level, per-season macro step, per-target micro step.
-    α_σ₀::ContinuousUnivariateDistribution = Gamma(2, 0.06)
-    α_σₛ::ContinuousUnivariateDistribution = Gamma(2, 0.03)
-    α_σₖ::ContinuousUnivariateDistribution = Gamma(2, 0.015)
+# The opt-in form is a separate concrete type so adding the option does not alter
+# the serialized representation of established `MultiScaleGRW` fits.
+struct TargetSeasonMultiScaleGRW <: AbstractDynamicsConfig
+    z₀::ContinuousUnivariateDistribution
+    zₛ::ContinuousUnivariateDistribution
+    zₖ::ContinuousUnivariateDistribution
+    α_σ₀::ContinuousUnivariateDistribution
+    α_σₛ::ContinuousUnivariateDistribution
+    α_σₖ::ContinuousUnivariateDistribution
+    β_σ₀::ContinuousUnivariateDistribution
+    β_σₛ::ContinuousUnivariateDistribution
+    β_σₖ::ContinuousUnivariateDistribution
+end
 
-    # Defence scales.
-    β_σ₀::ContinuousUnivariateDistribution = Gamma(2, 0.10)
-    β_σₛ::ContinuousUnivariateDistribution = Gamma(2, 0.055)
-    β_σₖ::ContinuousUnivariateDistribution = Gamma(2, 0.012)
+const AnyMultiScaleGRW = Union{MultiScaleGRW,TargetSeasonMultiScaleGRW}
+_target_season_step(::MultiScaleGRW) = false
+_target_season_step(::TargetSeasonMultiScaleGRW) = true
+Base.getproperty(config::AnyMultiScaleGRW, name::Symbol) =
+    name === :target_season_step ? _target_season_step(config) : getfield(config, name)
 
-    # Opt in to one macro innovation over the history/target season boundary.
-    # Kept off so established recipes retain their exact chain schema and density.
-    target_season_step::Bool = false
+function MultiScaleGRW(;
+    z₀::ContinuousUnivariateDistribution = Normal(0, 1),
+    zₛ::ContinuousUnivariateDistribution = Normal(0, 1),
+    zₖ::ContinuousUnivariateDistribution = Normal(0, 1),
+    α_σ₀::ContinuousUnivariateDistribution = Gamma(2, 0.06),
+    α_σₛ::ContinuousUnivariateDistribution = Gamma(2, 0.03),
+    α_σₖ::ContinuousUnivariateDistribution = Gamma(2, 0.015),
+    β_σ₀::ContinuousUnivariateDistribution = Gamma(2, 0.10),
+    β_σₛ::ContinuousUnivariateDistribution = Gamma(2, 0.055),
+    β_σₖ::ContinuousUnivariateDistribution = Gamma(2, 0.012),
+    target_season_step::Bool = false,
+)
+    constructor = target_season_step ? TargetSeasonMultiScaleGRW : MultiScaleGRW
+    return constructor(z₀, zₛ, zₖ, α_σ₀, α_σₛ, α_σₖ, β_σ₀, β_σₛ, β_σₖ)
 end
 
 # ==========================================
@@ -214,7 +243,7 @@ Attack and defence walks, sharing innovation shapes but not scales.
 inside the model body, which is the AD-safety rule this repository enforces.
 """
 @model function _grw_pair(
-    config::MultiScaleGRW,
+    config::AnyMultiScaleGRW,
     initial_accumulator::Matrix{Float64},
     season_accumulator::Matrix{Float64},
     target_accumulator::Matrix{Float64},
@@ -235,7 +264,7 @@ inside the model body, which is the AD-safety rule this repository enforces.
 end
 
 @model function _grw_pair(
-    config::MultiScaleGRW,
+    config::AnyMultiScaleGRW,
     initial_accumulator::Matrix{Float64},
     season_accumulator::Matrix{Float64},
     ::Matrix{Float64},
@@ -252,7 +281,7 @@ end
 end
 
 """
-    build_dynamics(config::MultiScaleGRW, n_teams, n_history, n_target)
+    build_dynamics(config::AnyMultiScaleGRW, n_teams, n_history, n_target)
 
 Legacy four-argument entry point, used by the hand-written `standard/` team engines.
 
@@ -261,7 +290,7 @@ fold in `dynamics_design` rather than rebuilding them on every model constructio
 Retained so the legacy engines keep working, and corrected to the
 `n_history + n_target` state contract described at the top of this file.
 """
-@model function build_dynamics(config::MultiScaleGRW, n_teams::Int,
+@model function build_dynamics(config::AnyMultiScaleGRW, n_teams::Int,
                                n_history::Int, n_target::Int)
     acc = grw_accumulators(n_history, n_target;
                            target_season_step = config.target_season_step)
@@ -342,13 +371,13 @@ function _grw_reconstruct_trajectory(chain::Chains, prefix::String,
 end
 
 """
-    extract_dynamics(chain, ::MultiScaleGRW, prefix, n_teams, n_history, n_target)
+    extract_dynamics(chain, ::AnyMultiScaleGRW, prefix, n_teams, n_history, n_target)
 
 Legacy six-argument extractor matching the legacy `build_dynamics` above.
 
 Returns `α` and `β` as `(n_teams, n_rounds, n_samples)` arrays.
 """
-function extract_dynamics(chain::Chains, config::MultiScaleGRW, prefix::String,
+function extract_dynamics(chain::Chains, config::AnyMultiScaleGRW, prefix::String,
                           n_teams::Int, n_history::Int, n_target::Int)
     return (;
         α = _grw_reconstruct_trajectory(chain, "$prefix.α", n_teams, n_history, n_target;
@@ -367,7 +396,7 @@ The composable extractor is handed a chain and a team count but not the fold's t
 geometry, so the geometry is counted back off the site names. Counting team 1's
 sites is enough because `filldist` emits a full rectangular grid.
 """
-function grw_step_counts(chain::Chains, prefix::String, config::MultiScaleGRW)
+function grw_step_counts(chain::Chains, prefix::String, config::AnyMultiScaleGRW)
     available = String.(names(chain))
     n_target = count(name -> startswith(name, "$prefix.α.z_target[1,"), available)
     n_season_transitions = count(name -> startswith(name, "$prefix.α.z_season[1,"), available)
@@ -385,7 +414,7 @@ function _grw_oos_boundary_innovations(chain::Chains, prefix::String,
                                        n_teams::Int, seed::Int)
     n_samples = size(chain, 1) * size(chain, 3)
     σₛ = reshape(vec(Array(chain[_grw_chain_symbol(chain, "$prefix.σₛ")])), n_samples, 1)
-    side_seed = seed + (endswith(prefix, ".β") ? 1 : 0)
+    side_seed = 2 * seed + (endswith(prefix, ".β") ? 1 : 0)
     rng = Random.MersenneTwister(side_seed)
     return Random.randn(rng, n_samples, n_teams) .* σₛ
 end

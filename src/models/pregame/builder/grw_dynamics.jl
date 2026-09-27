@@ -19,7 +19,7 @@
 # 1. VALIDATION AND WEIGHTING CONTRACT
 # ==============================================================================
 
-_cb_dynamics_supported(::CB_PG.MultiScaleGRW) = true
+_cb_dynamics_supported(::CB_PG.AnyMultiScaleGRW) = true
 
 # MultiScaleGRW represents recency as latent state, so the likelihood must weight
 # every fixture equally. Applying time decay ON TOP of a random walk would discount
@@ -27,16 +27,16 @@ _cb_dynamics_supported(::CB_PG.MultiScaleGRW) = true
 # log density, and again by letting the walk drift away from the state that fitted
 # it. `TimeDecayDynamics` makes the opposite choice — no state motion, decayed
 # weights — and the two are alternatives rather than layers.
-_dynamics_weighting_valid(::CB_PG.MultiScaleGRW) = true
-_dynamics_weighting_detail(::CB_PG.MultiScaleGRW) =
+_dynamics_weighting_valid(::CB_PG.AnyMultiScaleGRW) = true
+_dynamics_weighting_detail(::CB_PG.AnyMultiScaleGRW) =
     "unit likelihood weights; recency is represented by latent macro/micro states"
-dynamics_match_weights(::CB_PG.MultiScaleGRW, dates::Vector{Float64}) =
+dynamics_match_weights(::CB_PG.AnyMultiScaleGRW, dates::Vector{Float64}) =
     ones(Float64, length(dates))
 
 # Declaration order inside `_grw_pair`, which is the θ layout. A fold with no
 # observed target steps does not sample `σₖ`/`z_target` (see
 # `_grw_trajectory_no_target`), so those two sites are absent from such a chain.
-_sites_dynamics(::CB_PG.MultiScaleGRW) = [
+_sites_dynamics(::CB_PG.AnyMultiScaleGRW) = [
     Symbol("dyn.α.σ₀"), Symbol("dyn.α.σₛ"), Symbol("dyn.α.σₖ"),
     Symbol("dyn.α.z_init"), Symbol("dyn.α.z_season"), Symbol("dyn.α.z_target"),
     Symbol("dyn.β.σ₀"), Symbol("dyn.β.σₛ"), Symbol("dyn.β.σₖ"),
@@ -84,7 +84,7 @@ one state too many still runs, still samples and still scores — it just reads 
 fixture against the wrong state. That failure is silent, so it is checked here
 rather than trusted.
 """
-function dynamics_design(config::CB_PG.MultiScaleGRW, feature_set, n_matches::Int)
+function dynamics_design(config::CB_PG.AnyMultiScaleGRW, feature_set, n_matches::Int)
     d = feature_set.data
     home_ids = Vector{Int}(d[:flat_home_ids])
     away_ids = Vector{Int}(d[:flat_away_ids])
@@ -123,7 +123,7 @@ end
 # by (team, time): a fixture reads the state its own time step, so the same team
 # contributes differently in September and in April.
 @model function _cb_dynamics_effects(
-    config::CB_PG.MultiScaleGRW,
+    config::CB_PG.AnyMultiScaleGRW,
     home_ids::Vector{Int}, away_ids::Vector{Int},
     design::GRWDynamicsDesign, n_teams::Int,
 )
@@ -150,7 +150,7 @@ end
 
 # The generic composable extractor hands over a chain and a team count but not the
 # fold's time geometry, so the geometry is recovered from the site names.
-function _cb_extract_dynamics(chain::Chains, config::CB_PG.MultiScaleGRW,
+function _cb_extract_dynamics(chain::Chains, config::CB_PG.AnyMultiScaleGRW,
                               prefix::String, n_teams::Int, feature_set)
     counts = CB_PG.grw_step_counts(chain, prefix, config)
     α = CB_PG._grw_reconstruct_trajectory(
@@ -167,7 +167,7 @@ function _cb_extract_dynamics(chain::Chains, config::CB_PG.MultiScaleGRW,
             oos_β = CB_PG._grw_oos_boundary_innovations(chain, "$prefix.β", n_teams, seed))
 end
 
-function _cb_extract_dynamics(chain::Chains, config::CB_PG.MultiScaleGRW,
+function _cb_extract_dynamics(chain::Chains, config::CB_PG.AnyMultiScaleGRW,
                               prefix::String, n_teams::Int)
     return _cb_extract_dynamics(chain, config, prefix, n_teams,
                                 (; data = Dict{Symbol,Any}()))
@@ -185,7 +185,7 @@ Note the trailing `:` indexing: `draw.α` here is `(teams, time, samples)`, not 
 `(samples, teams)` matrix the static components return.
 """
 function _cb_oos_dynamics(
-    config::CB_PG.MultiScaleGRW, draw, lineup_map, match_id::Int,
+    config::CB_PG.AnyMultiScaleGRW, draw, lineup_map, match_id::Int,
     home_index::Int, away_index::Int, n_samples::Int,
 )
     final = size(draw.α, 2)

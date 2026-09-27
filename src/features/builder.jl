@@ -30,7 +30,9 @@ function create_features(
     splitter::Union{Data.CVConfig,Data.GroupedCVConfig},
 )
     raw_vector = [
-        let feature_set = create_features(boundary, ds, model, splitter.dynamics_col)
+        let feature_set = create_features(
+                boundary, ds, model, splitter.dynamics_col;
+                target_season = String(meta.target_season))
             _align_splitter_time!(
                 feature_set, boundary, meta, ds, splitter.dynamics_col)
             (feature_set, meta)
@@ -48,7 +50,9 @@ function create_features(
     splitter::Data.ScopedWalkForwardCV,
 )
     items = [
-        let feature_set = create_features(boundary, ds, model, splitter.scope.dynamics_col)
+        let feature_set = create_features(
+                boundary, ds, model, splitter.scope.dynamics_col;
+                target_season = String(meta.target_season))
             _align_scoped_time!(feature_set, boundary, meta, ds, splitter)
             (feature_set, meta)
         end
@@ -66,7 +70,8 @@ function create_features(
     boundary::Data.SplitBoundary, 
     ds::Data.DataStore, 
     model::AbstractFootballModel,
-    dynamics_col::Symbol
+    dynamics_col::Symbol;
+    target_season::Union{Nothing,AbstractString}=nothing,
 )
     F_data = Dict{Symbol, Any}()
     
@@ -134,6 +139,10 @@ function create_features(
     # Stable identity for posterior-predictive innovations that must survive
     # feature/fit serialization; never touch global RNG state in a forecast.
     F_data[:grw_oos_seed] = boundary.fold_id
+    resolved_target_season = target_season === nothing && !isempty(target_df) ?
+        first(sort!(unique(String.(target_df.season)))) : target_season
+    resolved_target_season === nothing ||
+        (F_data[:target_season] = String(resolved_target_season))
 
     # 5. DYNAMIC PIPELINE
     # The model asks for features, and we dispatch to add_feature! overloads

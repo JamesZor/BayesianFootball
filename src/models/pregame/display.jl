@@ -28,7 +28,7 @@ math_formula(::HierarchicalTeamKappa) = "κ_team_raw ~ Normal(0,1)\nκ_linear = 
 
 # Dynamics
 math_formula(::TimeDecayDynamics) = "α, β ~ Normal(0, σ)\nw_match = 0.5^(Δdays / half_life)"
-math_formula(::MultiScaleGRW) = "α[t] ~ Normal(α[t-1], σ)\nβ[t] ~ Normal(β[t-1], σ)"
+math_formula(::AnyMultiScaleGRW) = "α[t] ~ Normal(α[t-1], σ)\nβ[t] ~ Normal(β[t-1], σ)"
 
 # ------------------------------------------------------------------------------
 # 1. Model Components (AbstractModelComponent)

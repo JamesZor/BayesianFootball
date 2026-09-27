@@ -711,7 +711,7 @@ cb_parameter_count(m::ComposableCountModel, n_teams::Int, n_seasons::Int) =
     cb_parameter_count(m, n_teams; n_seasons)
 
 _cb_dynamics_display(dynamics) = string(nameof(typeof(dynamics)))
-_cb_dynamics_display(dynamics::CB_PG.MultiScaleGRW) = dynamics.target_season_step ?
+_cb_dynamics_display(dynamics::CB_PG.AnyMultiScaleGRW) = dynamics.target_season_step ?
     "MultiScaleGRW(target_season_step=true)" : "MultiScaleGRW"
 _cb_observation_display(observation) = string(nameof(typeof(observation)))
 _cb_observation_display(o::CompetitionKappaJoint) =

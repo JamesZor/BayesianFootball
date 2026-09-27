@@ -10,6 +10,7 @@ using LogDensityProblems
 using ReverseDiff
 using ForwardDiff
 using LinearAlgebra
+using Turing
 
 const PyramidGRW = BayesianFootball.Models.PreGame
 const PyramidBuilder = PyramidGRW.Builder
@@ -109,10 +110,10 @@ function _pyramid_rows()
     return DataFrame(rows)
 end
 
-function _pyramid_store()
+function _pyramid_store(rows = _pyramid_rows())
     empty = DataFrame()
     return BayesianFootball.Data.DataStore(BayesianFootball.Data.ScottishPyramid(),
-        _pyramid_rows(), empty, empty, empty, empty, empty, empty, empty)
+        rows, empty, empty, empty, empty, empty, empty, empty)
 end
 
 function _pyramid_scope(; lower = false)
@@ -182,6 +183,29 @@ end
     @test cup.away.anchor + cup.away.delta == 0.0
     @test cup.away.old_firm == 1.0
 
+    # Production plumbing supplies the declared target season before pyramid
+    # extraction. A scheduled tier from target+1 must not widen the event design.
+    future_rows = _pyramid_rows()
+    push!(future_rows, (match_id = 14, tournament_id = 55, season = "24/25",
+        match_date = Date("2024-08-03"), match_hour = 15, match_week = 1,
+        match_biweek = 1, match_month = 8, home_team = "changer",
+        away_team = "champ", home_score = 0, away_score = 0,
+        neutral_venue = false))
+    future_scoped = BayesianFootball.Data.apply_scope(
+        _pyramid_store(future_rows), _pyramid_scope())
+    boundary = BayesianFootball.Data.SplitBoundary(1, 1, collect(1:8), collect(9:13))
+    meta = BayesianFootball.Data.GroupedSplitMetaData(
+        [54, 55, 56, 57], "22/23", "23/24", 2, 1, 0)
+    splitter = BayesianFootball.Data.ScopedWalkForwardCV(_pyramid_scope())
+    future_fs = first(BayesianFootball.Features.create_features(
+        [(boundary, meta)], future_scoped, _pyramid_model(), splitter))[1]
+    base_fs = first(BayesianFootball.Features.create_features(
+        [(boundary, meta)], pooled, _pyramid_model(), splitter))[1]
+    @test future_fs.data[:target_season] == "23/24"
+    for key in filter(key -> startswith(String(key), "pyramid_"), keys(base_fs.data))
+        @test future_fs.data[key] == base_fs.data[key]
+    end
+
     source = (; home = (; anchor = -1.0, delta = -1.0, old_firm = 0.0,
                          incidence = Float64[]),
                 away = (; anchor = -1.0, delta = 0.0, old_firm = 0.0,
@@ -224,9 +248,14 @@ end
     @test EstimatedJump().scale_prior == Gamma(2.0, 0.08)
     @test CompetitionKappa().intercept_scale == 0.10
     @test CompetitionKappa().kappa_scale == 0.25
-    @test DEFAULT_TRANSITION_PRIORS[2] ==
-          (from = 56, to = 57, α_mean = 0.03, α_sd = 0.20,
-           β_mean = -0.04, β_sd = 0.24)
+    @test DEFAULT_TRANSITION_PRIORS == (
+        (from = 55, to = 56, α_mean = 0.12, α_sd = 0.20,
+         β_mean = -0.16, β_sd = 0.26),
+        (from = 56, to = 57, α_mean = 0.03, α_sd = 0.20,
+         β_mean = -0.04, β_sd = 0.24),
+        (from = 57, to = 56, α_mean = 0.00, α_sd = 0.21,
+         β_mean = 0.01, β_sd = 0.31),
+    )
 
     base = CountModelBuilder(:base) |> add(GlobalInterception()) |>
         add(TimeDecayDynamics(days_half_life = 180.0)) |>
@@ -238,6 +267,28 @@ end
     c0 = Harness.Candidate(name = "a", model = base, scope = _pyramid_scope(), role = :control)
     c1 = Harness.Candidate(name = "b", model = same, scope = _pyramid_scope(), role = :candidate)
     @test Harness.recipe_hash(c0) == Harness.recipe_hash(c1)
+
+    w1_lower = BayesianFootball.Data.DataScope(
+        name = "lower", train_tournaments = [56, 57], cups = :none,
+        target_tournaments = [56, 57], monitor_tournaments = Int[],
+        clock_tournaments = [56, 57], target_seasons = ["24/25", "25/26"],
+        history_seasons = 2, dynamics_col = :match_biweek)
+    w1_joint = JointGammaPoissonObservation(
+        feature = BayesianFootball.Features.MatchProxyXGFeature(k = 25.0, fallback = :none),
+        shape_prior = truncated(Normal(4.0, 1.5), 0.5, Inf),
+        log_kappa_prior = Normal(0.0, 0.2))
+    w1_model = CountModelBuilder(:td_lower_joint) |> add(GlobalInterception()) |>
+        add(TimeDecayDynamics(days_half_life = 180.0)) |> add(GlobalHomeAdvantage()) |>
+        add(w1_joint) |> build
+    w1_candidate = Harness.Candidate(name = "td_lower_joint", model = w1_model,
+        scope = w1_lower, role = :control)
+    @test Harness.recipe_hash(w1_candidate) ==
+          "722ed88a7efe8c82eb013f789f4d41936fbcea597fa8b9d8cef3f620d062e9fc"
+    w1_grw = CountModelBuilder(:grw_lower_joint) |> add(GlobalInterception()) |>
+        add(MultiScaleGRW()) |> add(GlobalHomeAdvantage()) |> add(w1_joint) |> build
+    @test Harness.recipe_hash(Harness.Candidate(name = "grw_lower_joint",
+        model = w1_grw, scope = w1_lower)) ==
+          "d373b3393d5079129fa7bed773b28e23cf2c5b67a2904b9ea189f9d37a55f8a6"
     @test string(_pyramid_model(tiers = PyramidTiers(carry = NoCarry()))) !=
           string(_pyramid_model(tiers = PyramidTiers(carry = EstimatedCarry())))
 end
@@ -274,4 +325,55 @@ end
         @test audit.worst_perturbed_error <= 1.0e-8
         @test isfinite(audit.log_density)
     end
+end
+
+@testset "Pyramid and league-delta extraction parity" begin
+    pooled = BayesianFootball.Data.apply_scope(_pyramid_store(), _pyramid_scope())
+    boundary = BayesianFootball.Data.SplitBoundary(1, 1, collect(1:8), collect(9:13))
+    meta = BayesianFootball.Data.GroupedSplitMetaData(
+        [54, 55, 56, 57], "22/23", "23/24", 2, 1, 0)
+    splitter = BayesianFootball.Data.ScopedWalkForwardCV(_pyramid_scope())
+    model = _league_delta_model(TimeDecayDynamics(days_half_life = 180.0))
+    fs = first(BayesianFootball.Features.create_features(
+        [(boundary, meta)], pooled, model, splitter))[1]
+    turing_model = PyramidGRW.build_turing_model(model, fs)
+    chain = Turing.sample(turing_model, Turing.Prior(), 2; progress = false)
+
+    tiers = only(model.covariates)
+    draws = BayesianFootball.predictor_extract(chain, tiers, "pyramid_tiers")
+    match_id = first(boundary.history_match_ids)
+    source = fs.data[:pyramid_oos_bridge][match_id]
+    actual = BayesianFootball.predictor_oos(
+        tiers, draws, fs.data[:pyramid_oos_bridge], (; match_id))
+    design = first(PyramidBuilder.cb_design(model, fs).predictor_designs)
+    row = findfirst(==(match_id), fs.data[:ordered_match_ids])
+    home_base = draws.step .* (design.anchor_home[row] .+
+        draws.carry .* design.delta_home[row]) .+
+        draws.old_firm .* design.old_firm_home[row]
+    away_base = draws.step .* (design.anchor_away[row] .+
+        draws.carry .* design.delta_away[row]) .+
+        draws.old_firm .* design.old_firm_away[row]
+    jump_h = draws.jump.α * vec(design.events_home[row, :])
+    jump_a = draws.jump.α * vec(design.events_away[row, :])
+    concede_h = draws.jump.β * vec(design.events_home[row, :])
+    concede_a = draws.jump.β * vec(design.events_away[row, :])
+    expected_h = 0.48 .* home_base .- 0.52 .* away_base .+ jump_h .+ concede_a
+    expected_a = 0.48 .* away_base .- 0.52 .* home_base .+ jump_a .+ concede_h
+    @test actual.h ≈ expected_h atol = 1.0e-12
+    @test actual.a ≈ expected_a atol = 1.0e-12
+
+    observation = PyramidBuilder._cb_extract_observation(
+        model.observation, chain, fs.data[:n_teams], fs)
+    league = observation.bridge[match_id]
+    rates = PyramidBuilder._cb_rates(model.observation, ones(2), ones(2),
+        observation, 1, 1, match_id)
+    expected_home = exp.(observation.δ_intercept[:, league.tier_home_idx])
+    expected_away = exp.(observation.δ_intercept[:, league.tier_away_idx])
+    expected_finishing = observation.κ .*
+        exp.(observation.δ_kappa[:, league.competition_idx])
+    @test rates.μ_h ≈ expected_home atol = 1.0e-12
+    @test rates.μ_a ≈ expected_away atol = 1.0e-12
+    @test rates.κ_competition ≈ expected_finishing atol = 1.0e-12
+    @test rates.λ_h ≈ expected_home .* expected_finishing atol = 1.0e-12
+    @test rates.λ_a ≈ expected_away .* expected_finishing atol = 1.0e-12
 end
