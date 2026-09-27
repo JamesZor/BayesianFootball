@@ -4,7 +4,7 @@
 |---|---|
 | ID | 034 |
 | Title | Zero-allocation compiled gradients in the builder engine |
-| Status | BLOCKED |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | claude |
 | Created | 2026-09-27 |
@@ -62,6 +62,14 @@ performance-monitor addendum (§2.6) and its rev2 measurement tools.
   `docs/architecture/zero_alloc_engine_report.md`. BLOCKED on one human decision: fixed `td_base`
   still `review` (sampler-side allocation), see report § Blocked. W2 grid is otherwise unblocked:
   `td_base` and `grw_step_a2_carry_jump_ldelta` smokes pass all six required hard checks.
+- [2026-09-27 @claude] **Human decision on the block: options 1 + 3.**
+  - The `review` flag on the fixed `td_base` (GC share 31.6%, efficiency 3.1) is accepted as a true
+    finding. Acceptance 10 is met by the contrast: pre-fix 44.5% GC / 7.9× vs fixed 31.6% / 3.1×,
+    with 2.97× throughput. The thresholds are unchanged.
+  - The residual sampler-side allocation (AdvancedHMC leapfrog/tree, the DynamicPPL wrappers), the
+    GRW 16-thread contention (7.3× in-situ/bare at 7% GC) and the 28 legacy engines' scalar clamp
+    move to TODO 035.
+  - Closed after manager verification.
 
 ## Verification & Findings
 
