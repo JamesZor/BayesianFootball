@@ -193,6 +193,18 @@ per-league performance against the Betfair close for 54/55 as a monitor.
       the grids await `fix/zero-alloc-engine` (Claude CLI, TODO 034).
     - The grid-panel coverage fix is on `run/w2-grid` `1a8f4a03`; Phase B carries the general
       version.
+- [2026-09-27 @claude] **Harness follow-up (j): an unchanged recipe cannot be re-smoked.**
+  - Cause: `Training.save_fit` deduplicates on `configs.config_hash`, which excludes `time:` tags,
+    so it returns the *existing* run's ID without saving the new fit. The smoke's `fit_parity` then
+    compares the new in-memory fit with the old reloaded one and fails ("FitConfig changed on
+    reload", the `time:` tag differs). A failed hard smoke record then permanently blocks that
+    recipe's grid.
+  - Hit on the first post-merge `td_base` smoke at `a76a65df`, because the zero-alloc agent had
+    already smoked it for evidence at `6f146ae2`.
+  - Resolved for W2 by deleting the two evidence smoke runs and all 33 W2 check rows, then
+    re-smoking every recipe once.
+  - Proper fix, to be scheduled: smoke parity must detect a pre-existing `configs` row (skip or
+    compare against the stored fit explicitly), or smokes must carry a per-run nonce tag.
 
 ## Verification & Findings
 
