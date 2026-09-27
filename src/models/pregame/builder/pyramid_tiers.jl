@@ -348,7 +348,7 @@ function _tier_chain_matrix(chain, base::String)
     samples = size(chain, 1) * size(chain, 3)
     out = Matrix{Float64}(undef, samples, n)
     for i in 1:n
-        out[:, i] = _chain_draws(chain, _grw_chain_symbol(chain, base, i))
+        out[:, i] = _chain_draws(chain, CB_PG._grw_chain_symbol(chain, base, i))
     end
     return out
 end
