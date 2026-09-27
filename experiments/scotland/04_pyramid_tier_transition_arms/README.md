@@ -70,13 +70,31 @@ For club i in a fixture of season s(t):
 | B1-literal mode | Same η, but with **fixed** TODO 029 priors per direction and the tier term off: relegated into L1 α N(+0.12, 0.20²), β N(−0.16, 0.26²); relegated into L2 α N(+0.03, 0.20²), β N(−0.04, 0.24²); promoted into L1 α N(0.00, 0.21²), β N(+0.01, 0.31²). Other directions get no η |
 | Cup ties | `:senior_spfl_ties` keeps only non-neutral ties where both clubs have an SPFL tier that season, so each side uses its own club's tier. No T5/B-team nodes |
 
-### 2.3 League observation deltas (replaces TODO 028's A1)
-Zero-sum per-league deltas on the **intercept** and on **log κ** of `JointGammaPoissonObservation`,
-indexed by the **attacking side's club tier** that season, so cup ties generalise. Non-centred, fixed
-prior **N(0, 0.10)** with no learned scale (4 groups). ν and home advantage stay shared.
-- **Gate before running:** from W1 `td_spfl_cups_joint` (`4346604b`), compare observed goals with
-  the posterior κ·μ by league.
-- If every league's residual is within ±3%, cells 5, 6, 10 and 11 are dropped.
+### 2.3 League observation deltas (replaces TODO 028's A1; amended 2026-09-27 after step 0)
+- **Intercept δ_int:** zero-sum per-league deltas, indexed by the **attacking side's club tier**
+  that season. Non-centred, fixed prior **N(0, 0.10)**. This is the A1 null check (TODO 029: |δ| ≤ 0.07).
+- **League κ, `δ_κ[c]`:** zero-sum per **match competition** c ∈ {54, 55, 56, 57, cups}, shared
+  by **both sides** of the match, on the **goals arm only**: `y ~ Poisson(κ·e^{δ_κ[c]}·μ)`.
+  Non-centred, fixed prior **N(0, 0.25)**, no learned scale. The pxG Gamma arm and ν are unchanged,
+  and home advantage stays shared.
+- **Step-0 evidence** (2026-09-27, betdb pxG, 23/24–25/26, logs in `/root/BF_runs/logs/7ff12250/`):
+
+  | Competition | goals ÷ pxG | vs pooled | Attempts per match | Blocked per match |
+  |---|---|---|---|---|
+  | 54 Premiership | 0.849 | −21% | 25.4 | 7.7 |
+  | 55 Championship | 1.149 | +6% | 18.8 | 3.9 |
+  | 56 League One | 1.231 | +14% | 19.0 | 2.8 |
+  | 57 League Two | 1.237 | +15% | 18.4 | 3.0 |
+
+  95% CIs are about ±4%, so the ±3% gate is passed decisively.
+  - The cause is a pxG measurement property: many Premiership attempts are blocked and rarely score,
+    and below the Premiership BBC under-records blocked attempts (SofaScore has T55 at 21.3 shots
+    with 5.9 blocked).
+  - Every W1 pooled joint cell read Premiership pxG about 27% high relative to goals. Lower-scope
+    models are unaffected (56 ≈ 57).
+- **Why key δ_κ by match rather than attacking side:** an attacking-side κ leaves a Premiership club's
+  α and β both inflated, which would over-predict a lower-tier side's goals against it in cup ties.
+  Those ties are what identify the tier step s.
 
 ## 3. Cells (15)
 

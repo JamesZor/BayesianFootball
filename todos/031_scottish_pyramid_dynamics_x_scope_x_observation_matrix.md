@@ -107,7 +107,7 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   5. **Jump:** per-change η ~ N(0, σ_j²), σ_j ~ Gamma(2, 0.08), persisting after the change, on α
      and β.
   6. **League δ** (the human's proposal): zero-sum deltas on the intercept and log κ, fixed
-     N(0, 0.10). Replaces A1. Dropped if the W1 residual goals/(κμ) by league is within ±3%.
+     N(0, 0.10); log κ amended after step 0, see below. Replaces A1. Dropped if the W1 residual goals/(κμ) by league is within ±3%.
   7. **B1:** no pooled B1. Lower scope gets A2 (full-pyramid anchor) + carry + jump, plus a B1-literal
      arm (TODO 029 table incl. promoted). B2 is deferred to W4.
   8. **Cells:** 15 (full ladder on TD, combinations only on GRW).
@@ -127,6 +127,15 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   15. **Housekeeping:** close 028; new TODOs for the fixed-scale MAP screen and the T55 Betfair
       backfill; delete the `harness_clean_smoke` runs after showing the rows; open the harness PR
       after #43 merges.
+- [2026-09-27 @claude] **Step 0 (league-δ gate), and an amendment agreed with the human.**
+  - Measured goals ÷ pxG by league on 23/24–25/26: 54 0.849, 55 1.149, 56 1.231, 57 1.237
+    (pooled 1.080; ±4% CIs). The gate passes, so the league-δ cells stay.
+  - Cause: pxG measurement. Premiership commentary logs 25.4 attempts per match (7.7 blocked)
+    against 18–19 (2.8–3.9 blocked) below it; SofaScore shows BBC under-recording blocks in T55.
+  - **Amendment:** δ on log κ is keyed by the **match's competition** (54/55/56/57/cups, shared by
+    both sides), prior N(0, 0.25). This replaces "attacking side's tier, N(0, 0.10)", which would
+    bias the tier step through cup ties. The intercept δ is unchanged.
+  - W1 pooled joint cells carried this mismatch.
 
 ## Verification & Findings
 
