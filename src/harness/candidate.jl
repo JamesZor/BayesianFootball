@@ -22,19 +22,37 @@ function recipe_hash(candidate::Candidate)
     return bytes2hex(SHA.sha256(canonical))
 end
 
+function _scale_field(field::Symbol)
+    name = lowercase(String(field))
+    return occursin('σ', name) || occursin("sigma", name) ||
+           occursin('τ', name) || occursin("tau", name)
+end
+
+_has_learned_scale(::Distributions.Distribution) = false
+_has_learned_scale(config::Tuple) = any(_has_learned_scale, config)
 function _has_learned_scale(config)
-    for field in fieldnames(typeof(config))
-        occursin('σ', String(field)) || continue
-        getfield(config, field) isa Distributions.Distribution && return true
+    type = typeof(config)
+    isstructtype(type) || return false
+    for field in fieldnames(type)
+        value = getfield(config, field)
+        _scale_field(field) && value isa Distributions.Distribution && return true
+        value isa Tuple && _has_learned_scale(value) && return true
+        parentmodule(typeof(value)) === Models.PreGame &&
+            _has_learned_scale(value) && return true
     end
     return false
 end
 
 "MAP validity label: learned hierarchical/random-walk scales make the screen diagnostic-only."
 function _screen_validity(candidate::Candidate)
-    dynamics = hasproperty(candidate.model, :dynamics) ? candidate.model.dynamics : nothing
-    limited = dynamics isa Models.PreGame.MultiScaleGRW ||
-              (dynamics !== nothing && _has_learned_scale(dynamics))
+    model = candidate.model
+    components = Any[]
+    for field in (:interception, :dynamics, :home_advantage, :observation, :guard)
+        hasproperty(model, field) && push!(components, getproperty(model, field))
+    end
+    hasproperty(model, :covariates) && append!(components, model.covariates)
+    limited = any(component -> component isa Models.PreGame.MultiScaleGRW ||
+                                _has_learned_scale(component), components)
     return limited ? "limited" : "ranking_only"
 end
 

@@ -89,7 +89,7 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-27 @pi] Phase 4 implementation in progress: added finalist portfolio evaluation for the pinned Task 013 Option-B close and T−25 inverse-Gaussian calibrated containers, finalist score rows, portfolio CLI routing, screen-validity diagnostics, stale-score purge tooling, and synthetic portfolio tests. No MCMC was run.
 - [2026-09-27 @pi] Reproduced Task 013 r05 exactly for m12/m05 on the 632-fixture common panel (returns +606.5369617% / +495.5042768%; 1302 / 1280 bets). The new T−25 calibrated panel has 611 fixtures and returns +265.7839196% / +276.8452761%; both finalist containers are persisted independently.
 - [2026-09-27 @pi] Purged 654/654 stale screen rows for `fcab115f…` from `harness_scores` only; deterministic `630d12ec…` remained at 654. Backfilled 12/12 W1 `screen_validity = limited` diagnostics and regenerated separate grid/screen leaderboard sections plus the three requested register rows.
-- [2026-09-27 @pi] Phase 4 verification: portfolio 18/18, runner 54/54, scorer 29/29 and scoped splitter 48/48 standalone; parallel 22/23 with only known T007. `todo.sh check` and `git diff --check` pass. Full evidence is in `docs/architecture/harness_phase4_report.md`; task intentionally remains ACTIVE for manager review.
+- [2026-09-27 @pi] Phase 4 verification: portfolio 25/25, runner 55/55, scorer 29/29 and scoped splitter 48/48 standalone; parallel 22/23 with only known T007. `todo.sh check` and `git diff --check` pass. Full evidence is in `docs/architecture/harness_phase4_report.md`; task intentionally remains ACTIVE for manager review.
 
 ## Verification & Findings
 

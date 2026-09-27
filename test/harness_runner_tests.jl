@@ -31,6 +31,13 @@ using UUIDs
             add(PoissonObservation()) |>
             build
 
+        hierarchical_home_model = CountModelBuilder(:hierarchical_home) |>
+            add(GlobalInterception()) |>
+            add(StaticZeroDynamics()) |>
+            add(HierarchicalTeamHomeAdvantage()) |>
+            add(PoissonObservation()) |>
+            build
+
         sampler1 = Samplers.QueuedNUTSConfig(n_samples = 1000, n_warmup = 500, n_chains = 4)
         sampler2 = Samplers.QueuedNUTSConfig(n_samples = 500, n_warmup = 250, n_chains = 2)
 
@@ -39,6 +46,8 @@ using UUIDs
         c3 = Harness.Candidate(name = "c3", model = model2, scope = scope1, sampler = sampler1)
         c4 = Harness.Candidate(name = "c4", model = model1, scope = scope2, sampler = sampler1)
         c5 = Harness.Candidate(name = "c5", model = fixed_model, scope = scope1, sampler = sampler1)
+        c6 = Harness.Candidate(name = "c6", model = hierarchical_home_model,
+                               scope = scope1, sampler = sampler1)
 
         # Same model and scope but different sampler -> identical recipe_hash
         @test Harness.recipe_hash(c1) == Harness.recipe_hash(c2)
@@ -50,6 +59,7 @@ using UUIDs
         @test Harness._screen_validity(c1) == "limited"
         @test Harness._screen_validity(c3) == "limited"
         @test Harness._screen_validity(c5) == "ranking_only"
+        @test Harness._screen_validity(c6) == "limited"
     end
 
     @testset "2. Severity routing (hard check fails vs review diagnostic)" begin

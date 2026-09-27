@@ -20,6 +20,8 @@ longer-lived material.
   engine, password-safe connection, incremental extension. **§2 draws the line between it and
   `betdb`, the operational database on `archpc:5433`** — read that section first if you are
   unsure which database a task needs.
+- [`experiment_harness_guide.md`](guides/experiment_harness_guide.md) — choosing the EDA,
+  component or experiment lane; declaring candidates; running stages; reading scorecards.
 - [`matchday_console_guide.md`](guides/matchday_console_guide.md) — the live (8085) and replay
   (8086) consoles: schema isolation, the point-in-time source swaps, the Gödel-terminal
   workspace, the dynamic slate re-solver, what the consoles refuse to pretend, the API surface.

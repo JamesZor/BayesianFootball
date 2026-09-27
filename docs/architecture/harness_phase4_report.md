@@ -58,6 +58,9 @@ three had no usable selections, leaving 632. The Phase-4 acceptance invocation s
 named finalists. Starting from all 710 fixtures, the harness explicitly recorded the 75 no-quote
 and three no-selection refusals and independently reached the same 632 IDs. Exact downstream
 metrics establish that this is the same effective panel, not a hand-picked substitute.
+`capture_ratio` also matches because these ledgers contain no pushes; the graduated production
+summary excludes pushes from conditional edge means whereas the prototype counted them as losses,
+so a future push-bearing panel should be recomputed rather than compared numerically by fiat.
 
 The database holds 30 long rows (15 metrics × 2 runs) at
 `subset = portfolio_close_option_b`, `market = book`, `stage = finalist`, all addressed by
@@ -74,7 +77,9 @@ JULIA_PKG_PRECOMPILE_AUTO=0 julia --project -t 16 scripts/score_runs.jl \
 
 This builds the complete point-in-time book with `as_of_minutes = -25`, calibrates every
 posterior draw with `InverseGaussianLaw(w_base = 0.25, sigma = 0.35)` and enforces the book
-instant. Both finalists used one 611-fixture common buildable panel.
+instant. Both finalists used one 611-fixture common buildable panel. The staking policy remains
+pinned at λ = 8 solely to keep this a container/instant comparison with Task 013; operational
+T−25 deployment uses the separately validated λ = 20/28 risk knee.
 
 | Model / UUID | Panel | Slates | Bets | Return % | ROI % | Sharpe | Calmar | Max DD % | Win % | Mean edge pp | Exposure | Capture |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -167,8 +172,8 @@ Portfolio API cleanup.
 Standalone suites:
 
 ```text
-harness_portfolio_tests.jl: 18/18 pass
-harness_runner_tests.jl:    54/54 pass
+harness_portfolio_tests.jl: 25/25 pass
+harness_runner_tests.jl:    55/55 pass
 harness_scoring_tests.jl:   29/29 pass
 scoped_splitter_tests.jl:   48/48 pass
 ```

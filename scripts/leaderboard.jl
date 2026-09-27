@@ -39,9 +39,10 @@ function leaderboard_markdown(board, screen_board)
     println(io)
     println(io, "> **Warning:** MAP is not comparable across model classes. Learned hierarchical " *
                 "or random-walk scales can collapse at the mode. Screen rows are never mixed " *
-                "with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid.")
+                "with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid. " *
+                "Each screen recipe UUID is derived from the recipe hash and is not a row in `mcmc_experiments.runs`.")
     println(io)
-    println(io, "| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen UUID |")
+    println(io, "| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen recipe UUID |")
     println(io, "|---|---|---:|---:|---:|---:|---|")
     for row in eachrow(screen_board)
         println(io, "| `$(row.model)` | `$(row.screen_validity)` | " *

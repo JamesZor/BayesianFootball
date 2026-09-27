@@ -5,10 +5,10 @@ using Distributions
 
 const EXPERIMENT = "scottish_dynamics_scope_matrix_w1"
 const TODO = 31
-const QUESTION = "Factorial evaluation of dynamics × scope × observation on Scottish Lower and monitor tiers"
+const QUESTION = "How do dynamics scope and observation interact across the Scottish pyramid?"
 const DIMENSION = "dynamics_scope_observation"
-const STATUS = "active"
-const DECISION = "pending"
+const STATUS = "screened"
+const DECISION = "MAP screen completed; validity is limited for learned scales and the NUTS grid is pending."
 const README = joinpath(@__DIR__, "README.md")
 const CONTROL = "td_lower_joint"
 

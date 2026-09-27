@@ -27,9 +27,9 @@ Scorecard `v1.1`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 ## MAP screen (diagnostic only)
 
-> **Warning:** MAP is not comparable across model classes. Learned hierarchical or random-walk scales can collapse at the mode. Screen rows are never mixed with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid.
+> **Warning:** MAP is not comparable across model classes. Learned hierarchical or random-walk scales can collapse at the mode. Screen rows are never mixed with the posterior grid table or its Δ columns; promotion requires smoke + NUTS grid. Each screen recipe UUID is derived from the recipe hash and is not a row in `mcmc_experiments.runs`.
 
-| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen UUID |
+| Candidate | Screen validity | Target LL | 1X2 LL | ECE | Compression | Screen recipe UUID |
 |---|---|---:|---:|---:|---:|---|
 | `td_spfl_cups_joint` | `limited` | 0.64199 | 0.61476 | 0.01000 | 1.258 | `caa4820f-72a3-52c1-bc9b-0ae0fb6c03dd` |
 | `td_lower_joint` | `limited` | 0.64327 | 0.61623 | 0.01783 | 1.316 | `6b284f40-02a6-5c9f-b258-010e193adb1b` |

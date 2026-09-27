@@ -154,8 +154,22 @@ mutable struct InMemoryScoreStore
     InMemoryScoreStore() = new(DataFrame())
 end
 ensure_harness_schema!(::InMemoryScoreStore) = nothing
+function _score_partition_key(row)
+    control = ismissing(row.control_run_id) || row.control_run_id === nothing ? nothing :
+              string(row.control_run_id)
+    return (string(row.run_id), String(row.scorecard_version), control,
+            String(row.stage), String(row.subset))
+end
+
 function write_scores!(store::InMemoryScoreStore, scores::AbstractDataFrame)
-    store.scores = DataFrame(scores)
+    incoming = DataFrame(scores)
+    isempty(incoming) && return scores
+    keys = Set(_score_partition_key(row) for row in eachrow(incoming))
+    if !isempty(store.scores)
+        keep = [_score_partition_key(row) ∉ keys for row in eachrow(store.scores)]
+        store.scores = store.scores[keep, :]
+    end
+    store.scores = isempty(store.scores) ? incoming : vcat(store.scores, incoming; cols = :union)
     return scores
 end
 
@@ -196,6 +210,16 @@ function portfolio_runs(refs::AbstractVector{RunRef};
     container in PORTFOLIO_CONTAINERS || throw(ArgumentError(
         "portfolio container must be one of $(PORTFOLIO_CONTAINERS); got :$container"))
     isempty(refs) && error("portfolio_runs requires at least one RunRef")
+    labels = getfield.(refs, :label)
+    run_ids = getfield.(refs, :run_id)
+    if !allunique(labels)
+        duplicate = first(label for label in labels if count(==(label), labels) > 1)
+        error("portfolio_runs requires unique labels; duplicate label $(repr(duplicate))")
+    end
+    if !allunique(run_ids)
+        duplicate = first(run_id for run_id in run_ids if count(==(run_id), run_ids) > 1)
+        error("portfolio_runs requires unique run IDs; duplicate run_id $duplicate")
+    end
     control = _control_ref(refs, nothing)
 
     odds = _portfolio_odds(ds, container)

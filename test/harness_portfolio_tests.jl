@@ -107,15 +107,47 @@ end
         sharpe_ann = 1.2, calmar = 0.8, max_drawdown_pct = -12.0,
         win_rate_pct = 40.0, mean_edge_pp = 2.0, mean_exposure = 0.1,
         capture_ratio = 1.1, n_bets = 20, n_slates = 5, n_panel = 8)])
-    rows = Harness._portfolio_score_rows(summary, :close_option_b, control_id)
+    close_rows = Harness._portfolio_score_rows(summary, :close_option_b, control_id)
+    t25_rows = Harness._portfolio_score_rows(summary, :t25_calibrated, control_id)
+    grid_rows = copy(close_rows)
+    grid_rows.stage .= "grid"
+    grid_rows.subset .= "target"
+
     store = Harness.InMemoryScoreStore()
-    Harness.write_scores!(store, rows)
-    @test nrow(store.scores) == 15
-    @test all(==("finalist"), store.scores.stage)
-    @test all(==("portfolio_close_option_b"), store.scores.subset)
-    @test all(==("book"), store.scores.market)
-    @test all(==(control_id), store.scores.control_run_id)
-    growth = filter(:metric => ==("growth_per_slate"), store.scores)
+    Harness.write_scores!(store, grid_rows)
+    Harness.write_scores!(store, close_rows)
+    Harness.write_scores!(store, t25_rows)
+    @test nrow(store.scores) == 45
+    @test Set(store.scores.stage) == Set(["grid", "finalist"])
+    @test Set(store.scores.subset) ==
+          Set(["target", "portfolio_close_option_b", "portfolio_t25_calibrated"])
+
+    revised = copy(summary)
+    revised.total_return_pct .= 20.0
+    revised_close = Harness._portfolio_score_rows(revised, :close_option_b, control_id)
+    Harness.write_scores!(store, revised_close)
+    @test nrow(store.scores) == 45
+    @test count(==("target"), store.scores.subset) == 15
+    @test count(==("portfolio_t25_calibrated"), store.scores.subset) == 15
+    close_saved = filter(:subset => ==("portfolio_close_option_b"), store.scores)
+    @test nrow(close_saved) == 15
+    @test only(filter(:metric => ==("total_return_pct"), close_saved).value) == 20.0
+    @test all(==("book"), close_saved.market)
+    @test all(==(control_id), close_saved.control_run_id)
+    growth = filter(:metric => ==("growth_per_slate"), close_saved)
     @test only(growth.lo) == -0.01
     @test only(growth.hi) == 0.03
+end
+
+@testset "Harness finalist refuses duplicate run addresses" begin
+    id1 = UUID("00000000-0000-0000-0000-000000000041")
+    id2 = UUID("00000000-0000-0000-0000-000000000042")
+    duplicate_label = Harness.RunRef[
+        Harness.RunRef("same", "synthetic", id1, :control),
+        Harness.RunRef("same", "synthetic", id2, :candidate)]
+    duplicate_id = Harness.RunRef[
+        Harness.RunRef("control", "synthetic", id1, :control),
+        Harness.RunRef("candidate", "synthetic", id1, :candidate)]
+    @test_throws ErrorException Harness.portfolio_runs(duplicate_label; ds = nothing, db = nothing)
+    @test_throws ErrorException Harness.portfolio_runs(duplicate_id; ds = nothing, db = nothing)
 end
