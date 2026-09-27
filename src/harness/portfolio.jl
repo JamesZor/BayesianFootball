@@ -133,6 +133,9 @@ function _portfolio_score_rows(summary::AbstractDataFrame, container::Symbol,
             model = String(row.model),
             stage = "finalist",
             scorecard_version = SCORECARD_VERSION,
+            # This finalist path currently fixes the W1 seasons; the buildable
+            # common panel may be smaller than the full 710-fixture target.
+            panel = _panel_label(["24/25", "25/26"], Int(row.n_panel)),
             subset = subset_name,
             market = "book",
             metric = String(metric),

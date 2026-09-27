@@ -53,6 +53,23 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
               AND score.stage = target.stage
               AND score.panel IS NULL;
         """)
+        # Finalist rows have only their smaller *buildable* fixture count. Recover
+        # target seasons from that run's grid row, then retain their own n_fixtures.
+        Training.Inference._db_exec(conn, """
+            UPDATE harness_scores AS score SET panel =
+                split_part(grid.panel, '|', 1) || '|' ||
+                split_part(grid.panel, '|', 2) || '|n=' || score.n_fixtures::text
+            FROM (
+                SELECT run_id, scorecard_version, MAX(panel) AS panel
+                FROM harness_scores
+                WHERE stage = 'grid' AND subset = 'target' AND market = 'all'
+                  AND metric = 'logloss' AND panel IS NOT NULL
+                GROUP BY run_id, scorecard_version
+            ) AS grid
+            WHERE score.stage = 'finalist' AND score.panel IS NULL
+              AND score.run_id = grid.run_id
+              AND score.scorecard_version = grid.scorecard_version;
+        """)
         Training.Inference._db_exec(conn, """
             ALTER TABLE harness_scores DROP CONSTRAINT IF EXISTS harness_scores_pkey;
         """)

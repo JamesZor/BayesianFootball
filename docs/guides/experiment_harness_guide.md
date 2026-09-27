@@ -141,7 +141,16 @@ when the scorecard version, reference price instant, subset, market, and metric
 match. A new scorecard can change the market frame or definition; it is not a
 cosmetic label.
 
-Paired deltas additionally carry `control_run_id`. The same candidate run may
+Scorecard v1.2 rows also carry `panel` (`56+57|target-seasons|n=fixtures`).
+Rank and compare only within the same panel; `scripts/score_runs.jl` accepts
+`--target-seasons 23/24,24/25,25/26 --expected-fixtures N|none` (W1 defaults:
+24/25,25/26 and 710). Existing v1.1 panels are backfilled from each run's
+own target fixture count where a frozen panel is known; unknown counts remain
+explicitly labelled unknown, never assumed to be W1.
+
+Paired deltas additionally carry `control_run_id`. A CSV with an optional `control` column (paired base label or UUID) can
+score multiple control groups in one invocation; with no column the sole
+`role=:control` remains the base. The same candidate run may
 legitimately have different deltas against different controls, so never merge,
 quote, or overwrite delta rows while ignoring that UUID. State both the
 candidate run UUID and control run UUID in a README when quoting a delta or its
@@ -159,7 +168,9 @@ scorecard or price source.
 ## 6. Add or update a register row
 
 `run_candidates.jl` upserts `harness_experiments` from the metadata in
-`candidates.jl` after a stage. Before running it, set `EXPERIMENT`, `TODO`,
+`candidates.jl` after a stage. Its `run_ids` are atomically merged on conflict
+(`--only` cannot erase another candidate's run), with UUID-keyed `run_commits`
+JSONB preserving each fit's original commit SHA. Before running it, set `EXPERIMENT`, `TODO`,
 `QUESTION`, `DIMENSION`, `STATUS`, `DECISION`, and `README` truthfully. After a
 screen, use a status such as `screened` with `grid pending`; after a completed
 decision, record the conclusion and immutable run UUIDs. Do not call a

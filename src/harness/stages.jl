@@ -203,7 +203,8 @@ function grid(candidate::Candidate;
     fit_cfg = fit_config(candidate; stage = :grid, experiment = experiment)
     # The panel comes from the candidate's DataScope, not the W1 default.
     target_seasons = candidate.scope.target_seasons
-    expected_fixtures = target_seasons == ["24/25", "25/26"] ? 710 : nothing
+    expected_fixtures = target_seasons == ["24/25", "25/26"] ? 710 :
+                        target_seasons == ["23/24", "24/25", "25/26"] ? 1070 : nothing
     existing_run_id = find_completed_run(db, fit_cfg)
 
     saved_run_id = nothing

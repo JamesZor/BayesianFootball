@@ -109,6 +109,8 @@ end
         capture_ratio = 1.1, n_bets = 20, n_slates = 5, n_panel = 8)])
     close_rows = Harness._portfolio_score_rows(summary, :close_option_b, control_id)
     t25_rows = Harness._portfolio_score_rows(summary, :t25_calibrated, control_id)
+    @test unique(close_rows.panel) == ["56+57|24/25,25/26|n=8"]
+    @test all(close_rows.scorecard_version .== "v1.2")
     grid_rows = copy(close_rows)
     grid_rows.stage .= "grid"
     grid_rows.subset .= "target"

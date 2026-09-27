@@ -159,6 +159,16 @@ per-league performance against the Betfair close for 54/55 as a monitor.
     - (b) The lower-scope full-pyramid arm samples prior-only events and an Old Firm offset that no
       lower-scope match informs. Harmless; kept.
 
+- [2026-09-27 @pi] **Wave 2 Phase B scoring implementation and W1 validation.**
+  Centred the season-opening GRW innovation (`8effca72`); scorecard v1.2 now
+  carries a panel and clustered transition-bias/paired absolute-bias intervals,
+  monitor scoring, per-row controls, and atomic per-run register merging. W1
+  re-score: 12/12, 8,388 v1.2 rows, all 7,848 common old/new metric rows
+  numerically identical (max absolute difference 0 for every metric); 120 bias
+  and 120 paired absolute-bias rows have CIs. Of eight pooled W1 cells, only
+  five persisted monitor latents; the three reused pre-harness GRW artifacts
+  have no monitor rows to score. See `docs/architecture/w2_phaseB_report.md`.
+
 ## Verification & Findings
 
 - Wave 1 (2026-09-27): 12/12 cells scored (scorecard v1.1, 710 target fixtures). Results,
