@@ -8,6 +8,8 @@ using ReverseDiff
 using LinearAlgebra
 using ThreadPinning
 using Printf
+using Turing
+using Serialization
 
 pinthreads(:cores)
 LinearAlgebra.BLAS.set_num_threads(1)
@@ -42,7 +44,25 @@ function audit_model(model, feature_set)
     all(isfinite, gradient) || error("non-finite compiled gradient")
     return (; parameters = length(theta), compile_seconds,
               gradient_ms = 1_000 * gradient_seconds,
-              tape_instructions = length(raw.tape))
+              tape_instructions = length(raw.tape), turing_model)
+end
+
+function audit_oos(model, feature_set, heldout, turing_model)
+    isempty(heldout) && error("OOS audit received no held-out fixtures")
+    chain = Turing.sample(turing_model, Turing.Prior(), 2; progress = false)
+    rates = PG.extract_parameters(model, heldout, feature_set, chain)
+    all(row -> haskey(rates, Int(row.match_id)), eachrow(heldout)) ||
+        error("OOS extraction missed a held-out fixture")
+    all(values -> all(isfinite, values.λ_h) && all(isfinite, values.λ_a) &&
+                  all(>(0.0), values.λ_h) && all(>(0.0), values.λ_a), values(rates)) ||
+        error("OOS extraction produced invalid rates")
+    buffer = IOBuffer()
+    Serialization.serialize(buffer, chain)
+    seekstart(buffer)
+    reloaded = Serialization.deserialize(buffer)
+    reloaded_rates = PG.extract_parameters(model, heldout, feature_set, reloaded)
+    rates == reloaded_rates || error("OOS extraction changed after chain reload")
+    return length(rates)
 end
 
 raw_ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishPyramid())
@@ -60,6 +80,9 @@ for candidate in W2.CANDIDATES
         feature_set = first(BayesianFootball.Features.create_features(
             selected, ds, candidate.model, splitter))[1]
         result = audit_model(candidate.model, feature_set)
+        heldout = BayesianFootball.Data.get_next_matches(
+            ds, boundaries[index][2], splitter)
+        audit_oos(candidate.model, feature_set, heldout, result.turing_model)
         @printf("%s,%s,%d,%s,%d,%d,%.6f,%.6f,%d\n",
             candidate.name, label, index, boundaries[index][2].target_season,
             feature_set.data[:n_target_steps], result.parameters,
