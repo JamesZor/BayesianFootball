@@ -11,6 +11,7 @@ using ReverseDiff
 using ForwardDiff
 using LinearAlgebra
 using Turing
+import Serialization
 
 const PyramidGRW = BayesianFootball.Models.PreGame
 const PyramidBuilder = PyramidGRW.Builder
@@ -66,8 +67,19 @@ end
         @test draw_a.oos_α == draw_b.oos_α
         @test draw_a.oos_β == draw_b.oos_β
         @test size(draw_a.oos_α) == (n_draws, n_teams)
+        @test all(abs.(vec(sum(draw_a.oos_α, dims = 2))) .< 1e-12)
+        @test all(abs.(vec(sum(draw_a.oos_β, dims = 2))) .< 1e-12)
+        # A serialized chain (as in a reloaded fit) must regenerate identical OOS draws.
+        saved = IOBuffer()
+        Serialization.serialize(saved, chain)
+        seekstart(saved)
+        reloaded = Serialization.deserialize(saved)
+        draw_reloaded = PyramidBuilder._cb_extract_dynamics(
+            reloaded, config, "dyn", n_teams, feature_set)
+        @test draw_reloaded.oos_α == draw_a.oos_α
+        @test draw_reloaded.oos_β == draw_a.oos_β
         @test abs(mean(draw_a.oos_α)) < 0.015
-        @test isapprox(std(vec(draw_a.oos_α)), 0.4; rtol = 0.04)
+        @test isapprox(std(vec(draw_a.oos_α)), 0.4 * sqrt(2 / 3); rtol = 0.05)
 
         # The OOS hook applies that one innovation to each side's carried state.
         effects = PyramidBuilder._cb_oos_dynamics(

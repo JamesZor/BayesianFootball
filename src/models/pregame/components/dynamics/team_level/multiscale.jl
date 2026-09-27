@@ -416,5 +416,6 @@ function _grw_oos_boundary_innovations(chain::Chains, prefix::String,
     σₛ = reshape(vec(Array(chain[_grw_chain_symbol(chain, "$prefix.σₛ")])), n_samples, 1)
     side_seed = 2 * seed + (endswith(prefix, ".β") ? 1 : 0)
     rng = Random.MersenneTwister(side_seed)
-    return Random.randn(rng, n_samples, n_teams) .* σₛ
+    z = Random.randn(rng, n_samples, n_teams)
+    return (z .- mean(z, dims = 2)) .* σₛ
 end
