@@ -1,0 +1,8 @@
+label,experiment,run_id,role
+m12_td,scottish_lower_joint_player_2426,132df5c2-c742-4e95-8693-3aeb2b2cbaef,control
+td_spfl_poisson,scottish_dynamics_scope_matrix_w1,4712735f-afd0-4b73-8d52-c54b4d096daa,candidate
+td_spfl_joint,scottish_dynamics_scope_matrix_w1,7d8d69e7-25c7-4279-841e-68c664a78a3d,candidate
+td_spfl_cups_poisson,scottish_dynamics_scope_matrix_w1,1440ab9c-72a0-45dd-8c8e-a3b69e7509be,candidate
+td_spfl_cups_joint,scottish_dynamics_scope_matrix_w1,4346604b-85ca-4d5b-9f92-b4732512a0c4,candidate
+grw_lower_joint,scottish_dynamics_scope_matrix_w1,decb01be-f214-47bb-bc7b-bcc309026bda,candidate
+grw_spfl_joint,scottish_dynamics_scope_matrix_w1,82e01a3b-d686-4e29-a269-3702b96fc5ba,candidate

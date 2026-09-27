@@ -7,8 +7,8 @@ const EXPERIMENT = "scottish_dynamics_scope_matrix_w1"
 const TODO = 31
 const QUESTION = "How do dynamics scope and observation interact across the Scottish pyramid?"
 const DIMENSION = "dynamics_scope_observation"
-const STATUS = "screened"
-const DECISION = "MAP screen completed; validity is limited for learned scales and the NUTS grid is pending."
+const STATUS = "completed"
+const DECISION = "Grid complete, no promotion: joint obs wins all 6 pairs; GRW decompresses (1.16 vs 1.92); pooling worsens transition bias, cups partly repair; W2 base pending human choice."
 const README = joinpath(@__DIR__, "README.md")
 const CONTROL = "97c7a3d9-a05a-4029-90cb-e34279b8c791"  # td_lower_joint = s12_m02 (scottish_lower_decoupled_xg); UUID so grid() scores against the reused run
 
