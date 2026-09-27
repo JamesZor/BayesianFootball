@@ -191,9 +191,14 @@ function grid(candidate::Candidate;
               experiment::AbstractString,
               db,
               control = nothing,
-              target_seasons = ["24/25", "25/26"],
+              target_seasons = candidate.scope.target_seasons,
               bootstrap_B::Int = 10_000)
     ensure_harness_schema!(db)
+    # The panel comes from the candidate's DataScope (TODO 031 W2). Known panels keep an
+    # exact fixture-count check; an unknown panel checks coverage without a fixed count.
+    expected_fixtures = get(Dict(["24/25", "25/26"] => 710,
+                                 ["23/24", "24/25", "25/26"] => 1070),
+                            collect(String.(target_seasons)), nothing)
 
     # 1. Smoke-before-grid enforcement
     has_passing_smoke(db, candidate) || error(
@@ -245,7 +250,7 @@ function grid(candidate::Candidate;
             _run_hard_check!(records, base, "target_coverage") do
                 _target_coverage(candidate, fit, inputs;
                     expected_folds = length(inputs.boundaries),
-                    expected_target = 710)
+                    expected_target = expected_fixtures)
             end
 
             # Diagnostics: convergence (review), monitor coverage (diagnostic)
@@ -330,7 +335,8 @@ function grid(candidate::Candidate;
 
     scores = Base.invokelatest(score_runs, refs;
         ds = ds, tiers = tiers, control = control_ref,
-        target_seasons = target_seasons, bootstrap_B = bootstrap_B)
+        target_seasons = target_seasons, expected_fixtures = expected_fixtures,
+        bootstrap_B = bootstrap_B)
     write_scores!(db, scores)
 
     return (; fit, run_id = saved_run_id, records, scores)
