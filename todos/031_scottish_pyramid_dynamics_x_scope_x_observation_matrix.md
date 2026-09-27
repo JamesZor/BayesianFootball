@@ -168,6 +168,24 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   and 120 paired absolute-bias rows have CIs. Of eight pooled W1 cells, only
   five persisted monitor latents; the three reused pre-harness GRW artifacts
   have no monitor rows to score. See `docs/architecture/w2_phaseB_report.md`.
+- [2026-09-27 @claude] **W2 Phase B accepted** at `fdc472ec` (pi, Sol 6.0).
+  - **Manager rerun on a clean beast checkout:** harness scoring 43/43, runner 65/65, portfolio
+    27/27, pyramid tiers 94/94, splitter 48/48.
+  - **DB check:** 7,848 shared v1.1/v1.2 W1 rows are identical (max |Δ| 0.0, no NaN mismatch); every
+    `harness_scores` row carries a panel (W1 710; finalists 632/611); the club-season-clustered
+    bias CIs are present; the W1 register row lists 12/12 runs.
+  - **Limitation accepted (manager decision):** the reused pre-harness W1 GRW runs g1
+    `f00ec78a`, g2 `a6f62436` and g3 `9babf9e9` have no persisted 54/55 latents, so they have no
+    monitor rows. They are not refitted, and W2's fresh grids persist monitor latents.
+  - **Incident, same day:**
+    - The W2 TD grid ran at 40–50% sampler CPU. Cause: the builder engine allocated 432 KB per
+      compiled gradient (`clamp` guard + a fused Gamma-arm broadcast with tracked scalars →
+      ReverseDiff `tracker_∇broadcast`), a GC storm at 16 threads.
+    - It had been fixed before, but only in prototypes (`l10`/`l11`).
+    - With the human, all W2 runs and rows were deleted (17 runs, 1,476 score rows, 139 checks) and
+      the grids await `fix/zero-alloc-engine` (Claude CLI, TODO 034).
+    - The grid-panel coverage fix is on `run/w2-grid` `1a8f4a03`; Phase B carries the general
+      version.
 
 ## Verification & Findings
 
