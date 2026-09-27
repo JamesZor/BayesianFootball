@@ -59,7 +59,7 @@ const DEFAULT_SAMPLER = Samplers.QueuedNUTSConfig(
     silence_initial_stepsize = true,
 )
 
-# TODO 031 W2 convergence rule (README §7): a cell whose grid fails R̂ ≤ 1.01 is re-run once at
+# TODO 031 W2 convergence rule (README §7): a cell whose grid fails R̂ ≤ 1.05 is re-run once at
 # acceptance 0.80. Opt in per cell with ENV W2_ACCEPT_080="name1,name2". The sampler is not part of
 # `recipe_hash`, so the smoke stays valid; the grid config hash differs, so the rerun is a new run.
 const ACCEPT_080 = Set(filter(!isempty, strip.(split(get(ENV, "W2_ACCEPT_080", ""), ","))))

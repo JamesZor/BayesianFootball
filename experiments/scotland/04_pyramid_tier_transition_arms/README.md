@@ -182,7 +182,8 @@ they exist, for scoring.
 ## 7. Sampler, runs and authority
 
 - `QueuedNUTSConfig` 4 × (500 + 1000), acceptance 0.65, max depth 10, `-t 16`, one grid at a time.
-- If a cell fails the convergence review (R̂ > 1.01, or > 160 divergences of 160k), re-run it once at
+- If a cell fails the convergence review (R̂ > 1.05, amended from 1.01 by the human on 2026-09-27;
+  or divergences above 0.1% of draws), re-run it once at
   acceptance 0.80. Record both runs.
 - **Pre-authorised:**
   - **TD batch** (1–6, 12–15): launch once every smoke passes 5/5 hard checks.

@@ -220,6 +220,13 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   - **Preliminary** (in-process v1.2, vs `td_base`): `td_a2` ΔLL −0.0018 [−0.004, 0.000];
     relegated bias −9.50 → −4.16, promoted +5.39 → −0.02, both Δ|bias| CIs excluding 0.
     Final scoring per base follows the grids.
+- [2026-09-27 @claude] **Decision (human): the convergence rerun threshold is R̂ > 1.05, not 1.01.**
+  - `td_a2_carry_jump` (R̂ 1.0117, bulk ESS 506) and `td_a2_carry_jump_ldelta` (R̂ 1.0169, bulk ESS
+    451) therefore pass. The queued acceptance-0.80 rerun was cancelled before it started.
+  - The divergence limit (0.1% of draws) is unchanged.
+  - The opt-in `W2_ACCEPT_080` hook in `candidates.jl` (`12bccd03`) stays, inert unless set.
+  - Manager's note for the record: current guidance (Vehtari et al. 2021) recommends 1.01; ESS > 400
+    on both cells supports the human's call.
 
 ## Verification & Findings
 
