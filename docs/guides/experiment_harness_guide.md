@@ -145,7 +145,8 @@ Scorecard v1.2 rows also carry `panel` (`56+57|target-seasons|n=fixtures`).
 Rank and compare only within the same panel; `scripts/score_runs.jl` accepts
 `--target-seasons 23/24,24/25,25/26 --expected-fixtures N|none` (W1 defaults:
 24/25,25/26 and 710). Existing v1.1 panels are backfilled from each run's
-own target fixture count where a frozen panel is known; unknown counts remain
+own priced target fixture count where a frozen panel is known (W1's 627
+Betfair-covered fixtures identify its 710-fixture target panel); unknown counts remain
 explicitly labelled unknown, never assumed to be W1.
 
 Paired deltas additionally carry `control_run_id`. A CSV with an optional `control` column (paired base label or UUID) can

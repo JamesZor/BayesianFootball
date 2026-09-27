@@ -33,11 +33,14 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
             ALTER TABLE harness_scores ADD COLUMN IF NOT EXISTS panel TEXT;
         """)
         # Historical scorecards have no seasons field. Infer only known frozen
-        # panels from each run's own target/all fixture count; leave other panels
-        # explicitly unknown rather than falsely labelling them W1.
+        # panels from each run's own target/all priced fixture count. The W1
+        # scorecard priced 627 of its 710 target fixtures at the Betfair close;
+        # a target/all n_fixtures of 627 therefore identifies the known W1
+        # panel. Unknown counts remain explicit, not assumed to be W1.
         Training.Inference._db_exec(conn, """
             UPDATE harness_scores AS score SET panel =
                 CASE target.n_fixtures
+                    WHEN 627 THEN '56+57|24/25,25/26|n=710'
                     WHEN 710 THEN '56+57|24/25,25/26|n=710'
                     WHEN 1070 THEN '56+57|23/24,24/25,25/26|n=1070'
                     ELSE '56+57|unknown|n=' || COALESCE(target.n_fixtures::text, 'unknown')
@@ -51,7 +54,7 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
             WHERE score.run_id = target.run_id
               AND score.scorecard_version = target.scorecard_version
               AND score.stage = target.stage
-              AND score.panel IS NULL;
+              AND (score.panel IS NULL OR score.panel LIKE '56+57|unknown|n=%');
         """)
         # Finalist rows have only their smaller *buildable* fixture count. Recover
         # target seasons from that run's grid row, then retain their own n_fixtures.
@@ -66,7 +69,8 @@ function ensure_harness_schema!(db::Training.PostgresStorage)
                   AND metric = 'logloss' AND panel IS NOT NULL
                 GROUP BY run_id, scorecard_version
             ) AS grid
-            WHERE score.stage = 'finalist' AND score.panel IS NULL
+            WHERE score.stage = 'finalist'
+              AND (score.panel IS NULL OR score.panel LIKE '56+57|unknown|n=%')
               AND score.run_id = grid.run_id
               AND score.scorecard_version = grid.scorecard_version;
         """)
