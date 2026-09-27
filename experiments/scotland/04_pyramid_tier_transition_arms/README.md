@@ -50,6 +50,10 @@ starts from the last history season's level plus one **micro** step (σₖ ≈ 0
 before the season being scored carries one biweek's worth of movement. The flag adds one σₛ macro
 innovation between the last history season and the first target state. **Default off**, so W1 and
 m00 stay reproducible.
+**Season-opening folds** (no target-season data, `n_target = 0`) have no fitted state to carry the step.
+There, the forecast integrates it: per draw, σₛ·z is added to each club's last-season level, with z
+seeded by fold and centred across teams. The mean is unchanged and the uncertainty is honest.
+Confirmed by the human, 2026-09-27.
 
 ### 2.2 Pyramid tier component
 For club i in a fixture of season s(t):

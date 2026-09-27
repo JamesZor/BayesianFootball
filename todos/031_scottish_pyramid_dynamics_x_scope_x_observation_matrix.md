@@ -146,6 +146,18 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   sampling was run. W1 hashes are unchanged and a persisted W1 GRW fit loads under the
   compatibility-preserving layout. Evidence and telemetry:
   `docs/architecture/w2_phaseA_report.md`.
+- [2026-09-27 @claude] **W2 Phase A accepted** at `c50db345` (pi, `feat/w2-tier-components`).
+  - **Manager rerun on a clean beast checkout:** pyramid tiers 90/90, GRW 124/124, builder 108/108,
+    splitter 48/48, harness runner 55/55, scoring 29/29, portfolio 25/25.
+  - **Recipe hashes:** 12/12 W1 hashes are identical to `harness_checks`; the 15 W2 hashes are unique
+    and new.
+  - **Instantiation:** all 15 cells build on 2 folds each; gradients 0.07–0.37 ms.
+  - **Human decision:** season-opening GRW folds integrate the summer step in the forecast.
+  - **Findings:**
+    - (a) The forecast boundary innovation is not centred across teams. This is Phase B item 0 and
+      must land before the GRW grids.
+    - (b) The lower-scope full-pyramid arm samples prior-only events and an Old Firm offset that no
+      lower-scope match informs. Harmless; kept.
 
 ## Verification & Findings
 
