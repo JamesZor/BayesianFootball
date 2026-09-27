@@ -38,7 +38,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [027](027_eda_scottish_club_pedigree_full_time_status_and_tier_priors.md) | EDA: Scottish club pedigree, full-time status, and tier priors | BLOCKED | P1 | pi | 2026-09-23 |
 | [028](028_cross_tier_scottish_pyramid_and_informative_priors_time_decay_models.md) | Cross-Tier Scottish Pyramid and Informative Priors Time-Decay Models | BLOCKED | P1 | pi | 2026-09-26 |
 | [029](029_cross_tier_scottish_cup_and_pyramid_hierarchy_eda.md) | Cross-tier Scottish Cup and pyramid hierarchy EDA | COMPLETED | P1 | claude | 2026-09-24 |
-| [030](030_shared_experiment_harness_recipes_gates_runner_scorecard_leaderboard.md) | Shared experiment harness: recipes, gates, runner, scorecard, leaderboard | ACTIVE | P1 | pi | 2026-09-26 |
+| [030](030_shared_experiment_harness_recipes_gates_runner_scorecard_leaderboard.md) | Shared experiment harness: recipes, gates, runner, scorecard, leaderboard | COMPLETED | P1 | pi | 2026-09-27 |
 | [031](031_scottish_pyramid_dynamics_x_scope_x_observation_matrix.md) | Scottish pyramid dynamics x scope x observation matrix | BLOCKED | P1 | unassigned | 2026-09-26 |
 <!-- TASKS:END -->
 

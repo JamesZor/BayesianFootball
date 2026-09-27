@@ -4,11 +4,11 @@
 |---|---|
 | ID | 030 |
 | Title | Shared experiment harness: recipes, gates, runner, scorecard, leaderboard |
-| Status | ACTIVE |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-09-26 |
-| Updated | 2026-09-26 |
+| Updated | 2026-09-27 |
 | Related Files / Commits / PRs | `docs/architecture/rfc_experiment_harness.md`, `docs/architecture/experiment_harness_suite_catalogue.md`, TODO 010, TODO 031 |
 
 ## Context & Problem Statement
@@ -90,6 +90,7 @@ Plan: `docs/architecture/rfc_experiment_harness.md` §6. Each phase is usable on
 - [2026-09-27 @pi] Reproduced Task 013 r05 exactly for m12/m05 on the 632-fixture common panel (returns +606.5369617% / +495.5042768%; 1302 / 1280 bets). The new T−25 calibrated panel has 611 fixtures and returns +265.7839196% / +276.8452761%; both finalist containers are persisted independently.
 - [2026-09-27 @pi] Purged 654/654 stale screen rows for `fcab115f…` from `harness_scores` only; deterministic `630d12ec…` remained at 654. Backfilled 12/12 W1 `screen_validity = limited` diagnostics and regenerated separate grid/screen leaderboard sections plus the three requested register rows.
 - [2026-09-27 @pi] Phase 4 verification: portfolio 25/25, runner 55/55, scorer 29/29 and scoped splitter 48/48 standalone; parallel 22/23 with only known T007. `todo.sh check` and `git diff --check` pass. Full evidence is in `docs/architecture/harness_phase4_report.md`; task intentionally remains ACTIVE for manager review.
+- [2026-09-27 @claude] **Phase 4 accepted** at `faece758`; **TODO 030 COMPLETED**. Manager checks: pi's reviewer approved `8359b8f4`; all 30 `portfolio_close_option_b` finalist rows in `harness_scores` equal `r05_portfolio_summary.csv` for m12 `132df5c2…` / m05 `ed541a7c…` (0 diffs, growth CI included); `portfolio_t25_calibrated` rows match the report (611 panel, 1001/977 bets); `fcab115f…` has 0 rows, `630d12ec…` 654; 12/12 W1 `screen_validity = limited`; LEADERBOARD.csv has no screen rows. On mcmc-beast (`/root/BF_runs/faece758`, `-t 8`): runner 55/55, scoring 29/29, scoped splitter 48/48, portfolio 25/25. `todo.sh check` passes (AGENTS.md 20,004 bytes). Follow-ups carried to TODO 031: (a) `run_candidates.jl` grid loop has no try/catch; (b) `grid()` resolves a string control by name, so pass a UUID for external controls; (c) `Harness.grid()` only includes the pyramid prototype loader, so in-process scoring against a suite-12 control fails with `UndefVarError: DecoupledGenerativeXG` (run is saved first; `score_runs.jl` has the full loader table); (d) the MAP screen *inflates* non-centred scales (fold-20 probe: GRW α.σₖ 0.934 MAP vs 0.017 NUTS; TD σ_a 0.632 vs 0.111), so the LEADERBOARD warning's "collapse" wording is wrong and a fixed-scale MAP screen is the proposed fix; (e) `harness_checks.at` stores beast local time (CEST) labelled UTC; (f) two `harness_clean_smoke` throwaway runs await a human decision.
 
 ## Verification & Findings
 
