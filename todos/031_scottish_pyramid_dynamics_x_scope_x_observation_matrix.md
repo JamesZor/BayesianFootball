@@ -90,6 +90,13 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   (h) per-candidate `--only` invocations overwrite the `harness_experiments` row (run_ids = the last
       candidate only, metadata from that commit); corrected by hand for W1;
   (i) `score_runs.jl` uses the `ScottishLower` datastore, so the 54/55 monitor subsets are never scored.
+- [2026-09-27 @claude] W2 blocker → [TODO 034](034_zero_allocation_compiled_gradients_in_the_builder_engine.md)
+  (branch `fix/zero-alloc-engine`): the builder engine now replays compiled tapes at 0 B/gradient
+  (was 423 KB for `td_base`); 16-thread throughput 2.97× `td_base`, 1.80× `grw_step_a2_carry_jump_ldelta`;
+  recipe hashes unchanged. Smoke adds a hard `tape_allocation` check (now required by
+  `has_passing_smoke`) and a review `sampling_performance` probe; `td_base` and
+  `grw_step_a2_carry_jump_ldelta` re-smoked and pass all hard checks. Report:
+  `docs/architecture/zero_alloc_engine_report.md`.
 - [2026-09-27 @claude] **Decision — Wave 2 spec (grill-me session with the human).** Contract:
   `experiments/scotland/04_pyramid_tier_transition_arms/README.md`. Agreed points:
   1. **Panel:** target 23/24–25/26 (frozen). W1's panel held only 3 relegated / 4 promoted / 1 entered
