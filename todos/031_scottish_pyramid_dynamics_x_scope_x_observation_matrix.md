@@ -136,6 +136,16 @@ per-league performance against the Betfair close for 54/55 as a monitor.
     both sides), prior N(0, 0.25). This replaces "attacking side's tier, N(0, 0.10)", which would
     bias the tier step through cup ties. The intercept δ is unchanged.
   - W1 pooled joint cells carried this mismatch.
+- [2026-09-27 @pi] **Wave 2 Phase A complete.** Built the opt-in target-season GRW
+  boundary step, pyramid anchor/carry/jump/B1 components, competition-aware joint
+  deltas, and all 15 declarative W2 cells on `feat/w2-tier-components`. Laptop
+  verification: focused suites green and canonical `test/runtests.jl` 4429/4429;
+  the parallel runner remains 23/24 only because of known T007. Beast SHA `248ec796`
+  compiled finite ReverseDiff gradients and exercised OOS extraction/reload parity
+  for all 15 candidates on fold 1 and first-24/25 (30/30); no smoke, grid or posterior
+  sampling was run. W1 hashes are unchanged and a persisted W1 GRW fit loads under the
+  compatibility-preserving layout. Evidence and telemetry:
+  `docs/architecture/w2_phaseA_report.md`.
 
 ## Verification & Findings
 
