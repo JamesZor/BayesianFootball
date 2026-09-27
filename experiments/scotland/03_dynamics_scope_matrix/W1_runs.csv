@@ -1,0 +1,13 @@
+label,experiment,run_id,role
+td_lower_joint,scottish_lower_decoupled_xg,97c7a3d9-a05a-4029-90cb-e34279b8c791,control
+td_lower_poisson,scottish_lower_decoupled_xg,de7fa956-87e8-418f-afb4-61ce01cb9f7d,candidate
+grw_lower_poisson,scottish_lower_multiscale_grw_2426,f64a00a2-34a0-4f31-8c58-c093c92d54b7,candidate
+grw_spfl_poisson,scottish_pyramid_grw_cups,f00ec78a-28ca-464e-91d4-dd1af384415c,candidate
+grw_spfl_cups_poisson,scottish_pyramid_grw_cups,a6f62436-ec8a-461d-8bd5-dc1861a2daaa,candidate
+grw_spfl_cups_joint,scottish_pyramid_grw_cups,9babf9e9-0a04-43af-855c-619a4b7dac8b,candidate
+td_spfl_poisson,scottish_dynamics_scope_matrix_w1,4712735f-afd0-4b73-8d52-c54b4d096daa,candidate
+td_spfl_joint,scottish_dynamics_scope_matrix_w1,7d8d69e7-25c7-4279-841e-68c664a78a3d,candidate
+td_spfl_cups_poisson,scottish_dynamics_scope_matrix_w1,1440ab9c-72a0-45dd-8c8e-a3b69e7509be,candidate
+td_spfl_cups_joint,scottish_dynamics_scope_matrix_w1,4346604b-85ca-4d5b-9f92-b4732512a0c4,candidate
+grw_lower_joint,scottish_dynamics_scope_matrix_w1,decb01be-f214-47bb-bc7b-bcc309026bda,candidate
+grw_spfl_joint,scottish_dynamics_scope_matrix_w1,82e01a3b-d686-4e29-a269-3702b96fc5ba,candidate
