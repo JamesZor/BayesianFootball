@@ -299,7 +299,7 @@ end
               β = design.jump_β_mean .+ design.jump_β_sd .* raw_β)
 end
 
-_tier_add_jump(base, ::Nothing, incidence, side) = base
+_tier_add_jump(base, ::Nothing, incidence, ::Val) = base
 _tier_add_jump(base, jump, incidence, ::Val{:α}) = base .+ incidence * jump.α
 _tier_add_jump(base, jump, incidence, ::Val{:β}) = base .+ incidence * jump.β
 
