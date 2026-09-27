@@ -256,6 +256,11 @@ end
 @testset "Pyramid and league deltas are compiled-AD safe" begin
     pooled = BayesianFootball.Data.apply_scope(_pyramid_store(), _pyramid_scope())
     boundary = BayesianFootball.Data.SplitBoundary(1, 1, collect(1:8), collect(9:13))
+    no_jump_model = _pyramid_model(tiers = PyramidTiers(carry = NoCarry(), jump = NoJump()))
+    no_jump_fs = BayesianFootball.Features.create_features(
+        boundary, pooled, no_jump_model, :match_biweek)
+    no_jump_turing = PyramidGRW.build_turing_model(no_jump_model, no_jump_fs)
+    @test length(DynamicPPL.VarInfo(no_jump_turing)[:]) > 0
     for dynamics in (TimeDecayDynamics(days_half_life = 180.0),
                      MultiScaleGRW(target_season_step = true))
         model = _league_delta_model(dynamics)
