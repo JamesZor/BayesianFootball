@@ -1,0 +1,364 @@
+threads: 16  started 2026-09-28T21:59:53.374
+HT window: 2238 BBC-timed; fallback window [52.0, 60.9] min after the sofascore kick-off
+BBC break: start median 49.0 (p10 47.1, p90 52.0), end median 63.2 (p10 60.9, p90 66.5)
+proxy-xG cell table: 106 cells, base rate 0.125, penalty 0.79 (fitted on training shots)
+HT-book sanity: the 2+-goal leader is the HT market favourite in 99.7% of 380 matches
+28×12 DataFrame
+ Row │ league  season  played  anchor  ht_1x2  ht_1x2_imputed  ht_ou25  bbc_timed_window  bbc_first_half  sofa_incidents  sofa_period_stats  sofa_shot_xg
+     │ String  String  Int64   Int64   Int64   Int64           Int64    Int64             Int64           Int64           Int64              Int64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ Champ   20/21      135       0       0               0        0                 0               0             135                  0             0
+   2 │ Champ   21/22      180       0       0               0        1                 0               0             180                  0             0
+   3 │ Champ   22/23      180     119     133              33      121                 0               0             180                  0             0
+   4 │ Champ   23/24      180     149     160              35      151               171             180             180                  0           155
+   5 │ Champ   24/25      180     118     120              24      101               178             180             180                  0           178
+   6 │ Champ   25/26      175       5       5               1        5               174             175             175                  0           172
+   7 │ Champ   26/27       35      27       0               0        0                15              15              35                  0            10
+   8 │ L1      20/21       90       0       0               0        0                 0               0              90                  0             0
+   9 │ L1      21/22      180     133     114              41      102                 0               0             180                  0             0
+  10 │ L1      22/23      180     148     115              46      120                 0               0             180                  0             0
+  11 │ L1      23/24      180     113     137              51      110               180             180             180                  0             0
+  12 │ L1      24/25      180      93     141              62      122               178             180             180                  0             0
+  13 │ L1      25/26      175     102     124              31      141               175             175             175                  0             0
+  14 │ L1      26/27       39      29       0               0        0                19              19              39                  0             0
+  15 │ L2      20/21       90       0       0               0        0                 0               0              90                  0             0
+  16 │ L2      21/22      180      83      84              27       70                 0               0             180                  0             0
+  17 │ L2      22/23      180     135     105              54      111                 0               0             180                  0             0
+  18 │ L2      23/24      180     102      93              42       87               178             180             180                  0             0
+  19 │ L2      24/25      180      82     102              43      101               179             180             180                  0             0
+  20 │ L2      25/26      175      77      97              43       92               172             175             175                  0             0
+  21 │ L2      26/27       40      30       0               0        0                20              20              40                  0             0
+  22 │ Prem    20/21      198       0       0               0        0                 0               0             198                198             0
+  23 │ Prem    21/22      198     157     171              15      149                 0               0             198                198             0
+  24 │ Prem    22/23      198     182     174              29      159                 0               0             198                198             0
+  25 │ Prem    23/24      198     178     188              16      179               195             198             198                198             0
+  26 │ Prem    24/25      198     190     183              17      163               193             198             198                198             0
+  27 │ Prem    25/26      198     190     192              12      177               198             198             198                198           198
+  28 │ Prem    26/27       42      27       0               0        0                13              13              42                 42            12
+4×7 DataFrame
+ Row │ stat    intercept  log_lam_for  log_lam_against  home         mean_obs  n_rows
+     │ String  Float64    Float64      Float64          Float64      Float64   Int64
+─────┼────────────────────────────────────────────────────────────────────────────────
+   1 │ cor      0.536328     0.920009        0.0601241  -0.00251412   2.36347    1084
+   2 │ sot      0.322154     0.959301        0.105511   -0.00956321   1.94649    1084
+   3 │ pxg     -0.521151     0.396935       -0.47838    -0.00209223   0.6081     1084
+   4 │ sh       1.53434      0.415365       -0.357794    0.00132493   4.89576    1084
+52×6 DataFrame
+ Row │ model                       term                 estimate     se           z            n_matches
+     │ String                      String               Float64      Float64      Float64      Int64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (1) state only              log s₂ (intercept)   -0.568951      0.0427608  -13.3054          1499
+   2 │ (1) state only              home                 -0.00933076    0.0420374   -0.221963        1499
+   3 │ (1) state only              lead 1               -0.0216204     0.0574502   -0.376333        1499
+   4 │ (1) state only              lead 2+               0.0610201     0.0872914    0.699039        1499
+   5 │ (1) state only              trail 1               0.0648318     0.0597914    1.0843          1499
+   6 │ (1) state only              trail 2+              0.0994752     0.0983905    1.01102         1499
+   7 │ (1) state only              red for              -0.34383       0.159669    -2.15339         1499
+   8 │ (1) state only              red against           0.344213      0.106078     3.2449          1499
+   9 │ (1) state only              HT goals (cap 4)     -0.0301981     0.0248044   -1.21745         1499
+  10 │ (1) state only              FT-draw inflation δ   0.0477498   NaN          NaN               1499
+  11 │ (2) state + pxG/on-target   log s₂ (intercept)   -0.628036      0.0788317   -7.9668           542
+  12 │ (2) state + pxG/on-target   home                 -0.0098466     0.0698008   -0.141067         542
+  13 │ (2) state + pxG/on-target   lead 1                0.0833661     0.0988359    0.84348          542
+  14 │ (2) state + pxG/on-target   lead 2+               0.0547034     0.156356     0.349864         542
+  15 │ (2) state + pxG/on-target   trail 1               0.301421      0.10124      2.97729          542
+  16 │ (2) state + pxG/on-target   trail 2+              0.528594      0.158361     3.33791          542
+  17 │ (2) state + pxG/on-target   red for              -0.269066      0.319826    -0.841288         542
+  18 │ (2) state + pxG/on-target   red against           0.0414813     0.255172     0.162562         542
+  19 │ (2) state + pxG/on-target   HT goals (cap 4)     -0.0814571     0.0476257   -1.71036          542
+  20 │ (2) state + pxG/on-target   pxG gap for           0.229477      0.0937062    2.4489           542
+  21 │ (2) state + pxG/on-target   pxG gap against      -0.010423      0.107355    -0.0970894        542
+  22 │ (2) state + pxG/on-target   on-target z for      -0.00983844    0.044077    -0.22321          542
+  23 │ (2) state + pxG/on-target   on-target z against  -0.0342217     0.0445858   -0.767548         542
+  24 │ (2) state + pxG/on-target   FT-draw inflation δ   0.0275004   NaN          NaN                542
+  25 │ (2b) + shots/corners        log s₂ (intercept)   -0.62859       0.0807953   -7.78003          542
+  26 │ (2b) + shots/corners        home                 -0.0119427     0.069827    -0.171033         542
+  27 │ (2b) + shots/corners        lead 1                0.0933612     0.0994724    0.938564         542
+  28 │ (2b) + shots/corners        lead 2+               0.0787167     0.158324     0.497188         542
+  29 │ (2b) + shots/corners        trail 1               0.285523      0.101988     2.79957          542
+  30 │ (2b) + shots/corners        trail 2+              0.494311      0.160887     3.07241          542
+  31 │ (2b) + shots/corners        red for              -0.262361      0.32062     -0.818292         542
+  32 │ (2b) + shots/corners        red against           0.015599      0.256857     0.0607301        542
+  33 │ (2b) + shots/corners        HT goals (cap 4)     -0.0800488     0.0490743   -1.63117          542
+  34 │ (2b) + shots/corners        pxG gap for           0.152742      0.128535     1.18833          542
+  35 │ (2b) + shots/corners        pxG gap against       0.0752911     0.142643     0.527829         542
+  36 │ (2b) + shots/corners        on-target z for      -0.0270305     0.0488435   -0.55341          542
+  37 │ (2b) + shots/corners        on-target z against  -0.0122266     0.0497327   -0.245847         542
+  38 │ (2b) + shots/corners        shots z for           0.0343427     0.0506486    0.678057         542
+  39 │ (2b) + shots/corners        shots z against      -0.0522308     0.0520564   -1.00335          542
+  40 │ (2b) + shots/corners        corners z for         0.0219262     0.0311581    0.703708         542
+  41 │ (2b) + shots/corners        corners z against     0.0133485     0.0304991    0.437668         542
+  42 │ (2b) + shots/corners        FT-draw inflation δ   0.0287551   NaN          NaN                542
+  43 │ (1′) state only, 23/24 fit  log s₂ (intercept)   -0.640028      0.0738767   -8.66347          542
+  44 │ (1′) state only, 23/24 fit  home                 -0.0156446     0.0696891   -0.224491         542
+  45 │ (1′) state only, 23/24 fit  lead 1                0.122169      0.0965427    1.26544          542
+  46 │ (1′) state only, 23/24 fit  lead 2+               0.15451       0.148881     1.03781          542
+  47 │ (1′) state only, 23/24 fit  trail 1               0.279301      0.0989853    2.82164          542
+  48 │ (1′) state only, 23/24 fit  trail 2+              0.461726      0.153307     3.01177          542
+  49 │ (1′) state only, 23/24 fit  red for              -0.292771      0.318827    -0.918276         542
+  50 │ (1′) state only, 23/24 fit  red against           0.0911965     0.253929     0.359141         542
+  51 │ (1′) state only, 23/24 fit  HT goals (cap 4)     -0.0748003     0.0431186   -1.73476          542
+  52 │ (1′) state only, 23/24 fit  FT-draw inflation δ   0.0309111   NaN          NaN                542
+blend weight on model (2): 0.127 (fit on 463 23/24 matches)
+90×9 DataFrame
+ Row │ sample                     group   model                       n      logloss   d_vs_market   lo            hi          se
+     │ String                     String  String                      Int64  Float64   Float64       Float64       Float64     Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ common (BBC + HT book)     pooled  (0) HT market                 736  0.800845   0.0           0.0          0.0         0.0
+   2 │ common (BBC + HT book)     pooled  (1) state only                736  0.806816   0.00597138   -0.00247705   0.0150143   0.00455526
+   3 │ common (BBC + HT book)     pooled  (1′) state only, 23/24 fit    736  0.811685   0.0108402     0.00165916   0.0207055   0.00509741
+   4 │ common (BBC + HT book)     pooled  (2) state + pxG/on-target     736  0.813994   0.0131493     0.00354193   0.0237521   0.00528631
+   5 │ common (BBC + HT book)     pooled  (2b) + shots/corners          736  0.815769   0.014924      0.00543065   0.0249871   0.00513879
+   6 │ common (BBC + HT book)     pooled  (3) blend (2) × market        736  0.801365   0.000520276  -0.000592798  0.00167497  0.00058679
+   7 │ common (BBC + HT book)     Prem    (0) HT market                 367  0.783985   0.0           0.0          0.0         0.0
+   8 │ common (BBC + HT book)     Prem    (1) state only                367  0.78442    0.000435609  -0.00974962   0.0112605   0.00551149
+   9 │ common (BBC + HT book)     Prem    (1′) state only, 23/24 fit    367  0.786811   0.00282681   -0.00932627   0.0141839   0.0061043
+  10 │ common (BBC + HT book)     Prem    (2) state + pxG/on-target     367  0.78986    0.00587551   -0.0069956    0.0188634   0.00671749
+  11 │ common (BBC + HT book)     Prem    (2b) + shots/corners          367  0.790379   0.00639439   -0.00776708   0.0198898   0.00680227
+  12 │ common (BBC + HT book)     Prem    (3) blend (2) × market        367  0.78389   -9.43329e-5   -0.00176813   0.00155031  0.000851232
+  13 │ common (BBC + HT book)     Champ   (0) HT market                 104  0.755162   0.0           0.0          0.0         0.0
+  14 │ common (BBC + HT book)     Champ   (1) state only                104  0.752315  -0.00284729   -0.016417     0.0113604   0.00733076
+  15 │ common (BBC + HT book)     Champ   (1′) state only, 23/24 fit    104  0.756282   0.00111961   -0.0160534    0.0170536   0.00891024
+  16 │ common (BBC + HT book)     Champ   (2) state + pxG/on-target     104  0.752815  -0.00234788   -0.0192309    0.0138225   0.00828424
+  17 │ common (BBC + HT book)     Champ   (2b) + shots/corners          104  0.758469   0.00330702   -0.0110776    0.0179083   0.00745734
+  18 │ common (BBC + HT book)     Champ   (3) blend (2) × market        104  0.754333  -0.000829179  -0.00306984   0.0012873   0.00108648
+  19 │ common (BBC + HT book)     L1      (0) HT market                 150  0.897343   0.0           0.0          0.0         0.0
+  20 │ common (BBC + HT book)     L1      (1) state only                150  0.914229   0.0168859    -0.00578458   0.0427332   0.0125704
+  21 │ common (BBC + HT book)     L1      (1′) state only, 23/24 fit    150  0.917123   0.0197796    -0.00255763   0.0441605   0.0121706
+  22 │ common (BBC + HT book)     L1      (2) state + pxG/on-target     150  0.919776   0.0224336     0.00298656   0.0440224   0.0107263
+  23 │ common (BBC + HT book)     L1      (2b) + shots/corners          150  0.92171    0.0243667     0.00591168   0.0456484   0.0103569
+  24 │ common (BBC + HT book)     L1      (3) blend (2) × market        150  0.898669   0.00132568   -0.000731541  0.00345765  0.00112505
+  25 │ common (BBC + HT book)     L2      (0) HT market                 115  0.770097   0.0           0.0          0.0         0.0
+  26 │ common (BBC + HT book)     L2      (1) state only                115  0.787474   0.0173765    -0.0111589    0.0521074   0.0164815
+  27 │ common (BBC + HT book)     L2      (1′) state only, 23/24 fit    115  0.803641   0.0335441    -5.69509e-5   0.0706695   0.0182767
+  28 │ common (BBC + HT book)     L2      (2) state + pxG/on-target     115  0.808364   0.038267      0.00518725   0.0759857   0.0182823
+  29 │ common (BBC + HT book)     L2      (2b) + shots/corners          115  0.810431   0.0403338     0.00814278   0.0769011   0.0179728
+  30 │ common (BBC + HT book)     L2      (3) blend (2) × market        115  0.772749   0.00265152   -0.000467201  0.0058902   0.00156681
+  31 │ all with HT book           pooled  (0) HT market                 736  0.800845   0.0           0.0          0.0         0.0
+  32 │ all with HT book           pooled  (1) state only                736  0.806816   0.00597138   -0.00247705   0.0150143   0.00455526
+  33 │ all with HT book           pooled  (1′) state only, 23/24 fit    736  0.811685   0.0108402     0.00165916   0.0207055   0.00509741
+  34 │ all with HT book           pooled  (2) state + pxG/on-target     736  0.813994   0.0131493     0.00354193   0.0237521   0.00528631
+  35 │ all with HT book           pooled  (2b) + shots/corners          736  0.815769   0.014924      0.00543065   0.0249871   0.00513879
+  36 │ all with HT book           pooled  (3) blend (2) × market        736  0.801365   0.000520276  -0.000592798  0.00167497  0.00058679
+  37 │ all with HT book           Prem    (0) HT market                 367  0.783985   0.0           0.0          0.0         0.0
+  38 │ all with HT book           Prem    (1) state only                367  0.78442    0.000435609  -0.00974962   0.0112605   0.00551149
+  39 │ all with HT book           Prem    (1′) state only, 23/24 fit    367  0.786811   0.00282681   -0.00932627   0.0141839   0.0061043
+  40 │ all with HT book           Prem    (2) state + pxG/on-target     367  0.78986    0.00587551   -0.0069956    0.0188634   0.00671749
+  41 │ all with HT book           Prem    (2b) + shots/corners          367  0.790379   0.00639439   -0.00776708   0.0198898   0.00680227
+  42 │ all with HT book           Prem    (3) blend (2) × market        367  0.78389   -9.43329e-5   -0.00176813   0.00155031  0.000851232
+  43 │ all with HT book           Champ   (0) HT market                 104  0.755162   0.0           0.0          0.0         0.0
+  44 │ all with HT book           Champ   (1) state only                104  0.752315  -0.00284729   -0.016417     0.0113604   0.00733076
+  45 │ all with HT book           Champ   (1′) state only, 23/24 fit    104  0.756282   0.00111961   -0.0160534    0.0170536   0.00891024
+  46 │ all with HT book           Champ   (2) state + pxG/on-target     104  0.752815  -0.00234788   -0.0192309    0.0138225   0.00828424
+  47 │ all with HT book           Champ   (2b) + shots/corners          104  0.758469   0.00330702   -0.0110776    0.0179083   0.00745734
+  48 │ all with HT book           Champ   (3) blend (2) × market        104  0.754333  -0.000829179  -0.00306984   0.0012873   0.00108648
+  49 │ all with HT book           L1      (0) HT market                 150  0.897343   0.0           0.0          0.0         0.0
+  50 │ all with HT book           L1      (1) state only                150  0.914229   0.0168859    -0.00578458   0.0427332   0.0125704
+  51 │ all with HT book           L1      (1′) state only, 23/24 fit    150  0.917123   0.0197796    -0.00255763   0.0441605   0.0121706
+  52 │ all with HT book           L1      (2) state + pxG/on-target     150  0.919776   0.0224336     0.00298656   0.0440224   0.0107263
+  53 │ all with HT book           L1      (2b) + shots/corners          150  0.92171    0.0243667     0.00591168   0.0456484   0.0103569
+  54 │ all with HT book           L1      (3) blend (2) × market        150  0.898669   0.00132568   -0.000731541  0.00345765  0.00112505
+  55 │ all with HT book           L2      (0) HT market                 115  0.770097   0.0           0.0          0.0         0.0
+  56 │ all with HT book           L2      (1) state only                115  0.787474   0.0173765    -0.0111589    0.0521074   0.0164815
+  57 │ all with HT book           L2      (1′) state only, 23/24 fit    115  0.803641   0.0335441    -5.69509e-5   0.0706695   0.0182767
+  58 │ all with HT book           L2      (2) state + pxG/on-target     115  0.808364   0.038267      0.00518725   0.0759857   0.0182823
+  59 │ all with HT book           L2      (2b) + shots/corners          115  0.810431   0.0403338     0.00814278   0.0769011   0.0179728
+  60 │ all with HT book           L2      (3) blend (2) × market        115  0.772749   0.00265152   -0.000467201  0.0058902   0.00156681
+  61 │ common, no imputed runner  pooled  (0) HT market                 597  0.782128   0.0           0.0          0.0         0.0
+  62 │ common, no imputed runner  pooled  (1) state only                597  0.791265   0.00913747   -0.00147056   0.0198952   0.00562276
+  63 │ common, no imputed runner  pooled  (1′) state only, 23/24 fit    597  0.798134   0.0160065     0.00405954   0.027756    0.0059124
+  64 │ common, no imputed runner  pooled  (2) state + pxG/on-target     597  0.798262   0.016134      0.00440479   0.0284758   0.00616243
+  65 │ common, no imputed runner  pooled  (2b) + shots/corners          597  0.799115   0.0169877     0.00556584   0.0286949   0.00597284
+  66 │ common, no imputed runner  pooled  (3) blend (2) × market        597  0.782981   0.000853572  -0.000472611  0.00210777  0.000660956
+  67 │ common, no imputed runner  Prem    (0) HT market                 338  0.787239   0.0           0.0          0.0         0.0
+  68 │ common, no imputed runner  Prem    (1) state only                338  0.788047   0.000808496  -0.0108721    0.0122617   0.00596003
+  69 │ common, no imputed runner  Prem    (1′) state only, 23/24 fit    338  0.790783   0.00354444   -0.0100702    0.0167219   0.0067262
+  70 │ common, no imputed runner  Prem    (2) state + pxG/on-target     338  0.792559   0.00532014   -0.0082252    0.0184776   0.00692474
+  71 │ common, no imputed runner  Prem    (2b) + shots/corners          338  0.793024   0.00578533   -0.00729326   0.0194661   0.00699438
+  72 │ common, no imputed runner  Prem    (3) blend (2) × market        338  0.787038  -0.000200966  -0.00194758   0.00152348  0.000877083
+  73 │ common, no imputed runner  Champ   (0) HT market                  86  0.706923   0.0           0.0          0.0         0.0
+  74 │ common, no imputed runner  Champ   (1) state only                 86  0.705796  -0.00112682   -0.0173427    0.0145829   0.00813005
+  75 │ common, no imputed runner  Champ   (1′) state only, 23/24 fit     86  0.713828   0.00690559   -0.0133513    0.0245173   0.00997569
+  76 │ common, no imputed runner  Champ   (2) state + pxG/on-target      86  0.70438   -0.002543     -0.0211664    0.0132452   0.00886386
+  77 │ common, no imputed runner  Champ   (2b) + shots/corners           86  0.709013   0.00208972   -0.0143048    0.016399    0.00775125
+  78 │ common, no imputed runner  Champ   (3) blend (2) × market         86  0.706045  -0.000878146  -0.00335454   0.00118638  0.00118193
+  79 │ common, no imputed runner  L1      (0) HT market                 104  0.884551   0.0           0.0          0.0         0.0
+  80 │ common, no imputed runner  L1      (1) state only                104  0.912544   0.0279933    -0.00389097   0.0714284   0.0190513
+  81 │ common, no imputed runner  L1      (1′) state only, 23/24 fit    104  0.918381   0.0338296     0.00547451   0.069862    0.015752
+  82 │ common, no imputed runner  L1      (2) state + pxG/on-target     104  0.919995   0.0354436     0.0101784    0.0643732   0.0134321
+  83 │ common, no imputed runner  L1      (2b) + shots/corners          104  0.919415   0.0348636     0.0108687    0.0602516   0.0122827
+  84 │ common, no imputed runner  L1      (3) blend (2) × market        104  0.887625   0.00307432    0.000350304  0.00627627  0.00150245
+  85 │ common, no imputed runner  L2      (0) HT market                  69  0.696448   0.0           0.0          0.0         0.0
+  86 │ common, no imputed runner  L2      (1) state only                 69  0.730758   0.0343101    -0.00735654   0.0887521   0.0255414
+  87 │ common, no imputed runner  L2      (1′) state only, 23/24 fit     69  0.75798    0.0615319     0.0173327    0.11832     0.0265075
+  88 │ common, no imputed runner  L2      (2) state + pxG/on-target      69  0.759729   0.0632808     0.0160746    0.124293    0.0284724
+  89 │ common, no imputed runner  L2      (2b) + shots/corners           69  0.759937   0.0634885     0.0160446    0.12315     0.028638
+  90 │ common, no imputed runner  L2      (3) blend (2) × market         69  0.701278   0.00483044    0.00103336   0.00922024  0.00216858
+30×9 DataFrame
+ Row │ sample  group                                        model                       n      logloss   d_vs_market   lo            hi           se
+     │ String  String                                       String                      Int64  Float64   Float64       Float64       Float64      Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ common  level                                        (0) HT market                 272  1.0217     0.0           0.0          0.0          0.0
+   2 │ common  level                                        (1) state only                272  1.03531    0.0136081    -0.00405309   0.0327543    0.00953001
+   3 │ common  level                                        (1′) state only, 23/24 fit    272  1.04247    0.0207682    -0.000678725  0.0437033    0.0114054
+   4 │ common  level                                        (2) state + pxG/on-target     272  1.05091    0.0292074     0.00721888   0.0520638    0.0114459
+   5 │ common  level                                        (2b) + shots/corners          272  1.05315    0.0314453     0.00950731   0.0546259    0.0114032
+   6 │ common  level                                        (3) blend (2) × market        272  1.02342    0.00171674   -0.000696857  0.00404258   0.00119701
+   7 │ common  one-goal lead                                (0) HT market                 325  0.842946   0.0           0.0          0.0          0.0
+   8 │ common  one-goal lead                                (1) state only                325  0.844086   0.00114031   -0.00881232   0.0114418    0.00522238
+   9 │ common  one-goal lead                                (1′) state only, 23/24 fit    325  0.843113   0.000167549  -0.0110571    0.0110226    0.00559826
+  10 │ common  one-goal lead                                (2) state + pxG/on-target     325  0.842547  -0.000398806  -0.0115585    0.0102148    0.0055767
+  11 │ common  one-goal lead                                (2b) + shots/corners          325  0.843215   0.000269598  -0.0112462    0.011121     0.00590004
+  12 │ common  one-goal lead                                (3) blend (2) × market        325  0.842317  -0.000628626  -0.00206548   0.000731263  0.000716056
+  13 │ common  two+ goal lead                               (0) HT market                 139  0.270228   0.0           0.0          0.0          0.0
+  14 │ common  two+ goal lead                               (1) state only                139  0.272551   0.00232322   -0.0181762    0.0317727    0.0130463
+  15 │ common  two+ goal lead                               (1′) state only, 23/24 fit    139  0.286594   0.0163668    -0.00701696   0.0407914    0.012485
+  16 │ common  two+ goal lead                               (2) state + pxG/on-target     139  0.283631   0.0134035    -0.00822243   0.0347414    0.0112106
+  17 │ common  two+ goal lead                               (2b) + shots/corners          139  0.287086   0.0168585    -0.00456987   0.0366144    0.0107929
+  18 │ common  two+ goal lead                               (3) blend (2) × market        139  0.271093   0.000865271  -0.00188894   0.0034363    0.00138885
+  19 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (0) HT market                 119  0.932823   0.0           0.0          0.0          0.0
+  20 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (1) state only                119  0.947026   0.014203     -0.0125793    0.0461576    0.0142288
+  21 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (1′) state only, 23/24 fit    119  0.950036   0.0172131    -0.0113063    0.0497968    0.0148724
+  22 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (2) state + pxG/on-target     119  0.964599   0.0317756     0.00349422   0.0586525    0.0136804
+  23 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (2b) + shots/corners          119  0.968753   0.0359294     0.00603093   0.0647888    0.0147346
+  24 │ common  pxG-dominant side not leading (|gap| ≥ 0.5)  (3) blend (2) × market        119  0.935054   0.00223098   -0.0012923    0.00530416   0.00167634
+  25 │ common  all other                                    (0) HT market                 617  0.77539    0.0           0.0          0.0          0.0
+  26 │ common  all other                                    (1) state only                617  0.779774   0.00438376   -0.00634468   0.0153818    0.00562287
+  27 │ common  all other                                    (1′) state only, 23/24 fit    617  0.785001   0.00961108   -0.00209751   0.0215048    0.00597808
+  28 │ common  all other                                    (2) state + pxG/on-target     617  0.784947   0.00955686   -0.00212297   0.0220136    0.00614017
+  29 │ common  all other                                    (2b) + shots/corners          617  0.786263   0.0108727     0.000333765  0.0220412    0.00570898
+  30 │ common  all other                                    (3) blend (2) × market        617  0.775581   0.000190335  -0.00113588   0.00153363   0.000678971
+5×6 DataFrame
+ Row │ model                       n      logloss   d_vs_market  lo            hi
+     │ String                      Int64  Float64   Float64      Float64       Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────
+   1 │ (0) HT market                 621  0.543505    0.0         0.0          0.0
+   2 │ (1) state only                621  0.557126    0.0136205   0.00444922   0.0248206
+   3 │ (1′) state only, 23/24 fit    621  0.559931    0.0164257   0.00677009   0.0285248
+   4 │ (2) state + pxG/on-target     621  0.55537     0.0118646   0.00140621   0.024496
+   5 │ (2b) + shots/corners          621  0.553663    0.0101583  -0.000585381  0.0227982
+┌ Warning: Assignment to `p` in soft scope is ambiguous because a global variable by the same name exists: `p` will be treated as a new local. Disambiguate by using `local p` to suppress this warning or `global p` to assign to the existing global variable.
+└ @ ~/BF_runs/clv_napkin_dev/current_development/clv_napkin/r07_halftime.jl:581
+15×6 DataFrame
+ Row │ sample                     group   model                       n      se           mde
+     │ String                     String  String                      Int64  Float64      Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ common (BBC + HT book)     pooled  (1) state only                736  0.00455526   0.0127547
+   2 │ common (BBC + HT book)     pooled  (1′) state only, 23/24 fit    736  0.00509741   0.0142727
+   3 │ common (BBC + HT book)     pooled  (2) state + pxG/on-target     736  0.00528631   0.0148017
+   4 │ common (BBC + HT book)     pooled  (2b) + shots/corners          736  0.00513879   0.0143886
+   5 │ common (BBC + HT book)     pooled  (3) blend (2) × market        736  0.00058679   0.00164301
+   6 │ all with HT book           pooled  (1) state only                736  0.00455526   0.0127547
+   7 │ all with HT book           pooled  (1′) state only, 23/24 fit    736  0.00509741   0.0142727
+   8 │ all with HT book           pooled  (2) state + pxG/on-target     736  0.00528631   0.0148017
+   9 │ all with HT book           pooled  (2b) + shots/corners          736  0.00513879   0.0143886
+  10 │ all with HT book           pooled  (3) blend (2) × market        736  0.00058679   0.00164301
+  11 │ common, no imputed runner  pooled  (1) state only                597  0.00562276   0.0157437
+  12 │ common, no imputed runner  pooled  (1′) state only, 23/24 fit    597  0.0059124    0.0165547
+  13 │ common, no imputed runner  pooled  (2) state + pxG/on-target     597  0.00616243   0.0172548
+  14 │ common, no imputed runner  pooled  (2b) + shots/corners          597  0.00597284   0.016724
+  15 │ common, no imputed runner  pooled  (3) blend (2) × market        597  0.000660956  0.00185068
+7×6 DataFrame
+ Row │ model                          term                   estimate    se           z           n_matches
+     │ String                         String                 Float64     Float64      Float64     Int64
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (4) HT market + pxG/on-target  log scale (intercept)   0.0867612    0.0542252    1.60002         463
+   2 │ (4) HT market + pxG/on-target  home                   -0.0795729    0.0742423   -1.0718          463
+   3 │ (4) HT market + pxG/on-target  pxG gap for             0.12688      0.0980554    1.29396         463
+   4 │ (4) HT market + pxG/on-target  pxG gap against         0.0235413    0.113988     0.206525        463
+   5 │ (4) HT market + pxG/on-target  on-target z for        -0.0374699    0.0440313   -0.850983        463
+   6 │ (4) HT market + pxG/on-target  on-target z against    -0.035371     0.0443953   -0.796728        463
+   7 │ (4) HT market + pxG/on-target  FT-draw inflation δ     0.141208   NaN          NaN               463
+inversion check (β = 0): mean |LL(inverted) − LL(market)| = 2.60e-04 on the test sample
+14×9 DataFrame
+ Row │ sample                     group                                        model                          n      logloss   d_vs_market  lo            hi          se
+     │ String                     String                                       String                         Int64  Float64   Float64      Float64       Float64     Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ common (BBC + HT book)     pooled                                       (4) HT market + pxG/on-target    736  0.805024  0.00417941   -0.000460095  0.00892263  0.00251435
+   2 │ common (BBC + HT book)     Prem                                         (4) HT market + pxG/on-target    367  0.786226  0.00224155   -0.00442474   0.00838782  0.00332937
+   3 │ common (BBC + HT book)     Champ                                        (4) HT market + pxG/on-target    104  0.757494  0.00233117   -0.0112716    0.0161464   0.00705091
+   4 │ common (BBC + HT book)     L1                                           (4) HT market + pxG/on-target    150  0.899001  0.00165783   -0.0077417    0.0110946   0.00516346
+   5 │ common (BBC + HT book)     L2                                           (4) HT market + pxG/on-target    115  0.785421  0.0153242     0.00363962   0.0268945   0.0060794
+   6 │ common, no imputed runner  pooled                                       (4) HT market + pxG/on-target    597  0.786446  0.00431856   -0.000528898  0.00923667  0.00258723
+   7 │ common, no imputed runner  Prem                                         (4) HT market + pxG/on-target    338  0.790649  0.00341047   -0.0036712    0.0101179   0.00364817
+   8 │ common, no imputed runner  Champ                                        (4) HT market + pxG/on-target     86  0.708396  0.00147274   -0.0118139    0.0143513   0.00689761
+   9 │ common, no imputed runner  L1                                           (4) HT market + pxG/on-target    104  0.887815  0.00326442   -0.0077258    0.0144677   0.00568798
+  10 │ common, no imputed runner  L2                                           (4) HT market + pxG/on-target     69  0.710351  0.0139027     0.00399396   0.024465    0.00526019
+  11 │ common                     level                                        (4) HT market + pxG/on-target    272  1.03162   0.00991691    0.00228637   0.0178609   0.00405349
+  12 │ common                     one-goal lead                                (4) HT market + pxG/on-target    325  0.843311  0.000365264  -0.00749033   0.00813214  0.00393183
+  13 │ common                     two+ goal lead                               (4) HT market + pxG/on-target    139  0.272098  0.00187006   -0.00665367   0.00936781  0.00395563
+  14 │ common                     pxG-dominant side not leading (|gap| ≥ 0.5)  (4) HT market + pxG/on-target    119  0.945031  0.0122078    -0.000924527  0.0259142   0.00686948
+12×9 DataFrame
+ Row │ model                          side    n_bets  mean_edge_pp  pnl_per_bet  lo          hi         roi_on_risk  median_odds
+     │ String                         String  Int64   Float64       Float64      Float64     Float64    Float64      Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (1) state only                 all        774       4.49032   0.0715172   -0.0621039  0.202684    0.0374774       2.86941
+   2 │ (1) state only                 back       405       4.49186   0.178042     0.0255216  0.353381    0.178042        2.95
+   3 │ (1) state only                 lay        369       4.48864  -0.0453999   -0.21939    0.114535   -0.0156273       2.72
+   4 │ (2) state + pxG/on-target      all        981       4.88926   0.00206189  -0.132493   0.152028    0.00153541      2.98
+   5 │ (2) state + pxG/on-target      back       500       4.70422  -0.0106103   -0.214051   0.213972   -0.0106103       4.15
+   6 │ (2) state + pxG/on-target      lay        481       5.08161   0.0152346   -0.0966043  0.119475    0.00896506      2.29
+   7 │ (3) blend (2) × market         all         24       2.97035  -0.24846     -0.61136    0.189329   -0.245241        2.19
+   8 │ (3) blend (2) × market         back        11       2.62132  -0.228913    -1.0        0.444667   -0.228913        3.9
+   9 │ (3) blend (2) × market         lay         13       3.26568  -0.265       -0.785392   0.332958   -0.258731        1.54
+  10 │ (4) HT market + pxG/on-target  all        809       3.18883  -0.0327182   -0.14519    0.0781301  -0.0273299       2.82
+  11 │ (4) HT market + pxG/on-target  back       404       2.88255  -0.0320923   -0.195947   0.143344   -0.0320923       3.5375
+  12 │ (4) HT market + pxG/on-target  lay        405       3.49435  -0.0333425   -0.150783   0.0746043  -0.0239215       1.96
+24×6 DataFrame
+ Row │ model                          side    state           n_bets  pnl_per_bet  roi_on_risk
+     │ String                         String  String          Int64   Float64      Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (1) state only                 back    level              212   0.165827     0.165827
+   2 │ (1) state only                 back    one-goal lead      151   0.206841     0.206841
+   3 │ (1) state only                 lay     level              199  -0.0944178   -0.0620431
+   4 │ (1) state only                 back    two+ goal lead      42   0.136158     0.136158
+   5 │ (1) state only                 lay     two+ goal lead      35   0.0275714    0.00326725
+   6 │ (1) state only                 lay     one-goal lead      135   0.00793766   0.00226163
+   7 │ (2) state + pxG/on-target      back    level              241  -0.0873919   -0.0873919
+   8 │ (2) state + pxG/on-target      lay     level              210  -0.018602    -0.012417
+   9 │ (2) state + pxG/on-target      back    one-goal lead      189   0.0468624    0.0468624
+  10 │ (2) state + pxG/on-target      lay     one-goal lead      194   0.0626396    0.0287355
+  11 │ (2) state + pxG/on-target      back    two+ goal lead      70   0.0985614    0.0985614
+  12 │ (2) state + pxG/on-target      lay     two+ goal lead      77  -0.0119194   -0.0114892
+  13 │ (3) blend (2) × market         back    one-goal lead        4   0.0439       0.0439
+  14 │ (3) blend (2) × market         lay     one-goal lead        2   0.98         0.544444
+  15 │ (3) blend (2) × market         lay     level               10  -0.1405      -0.245844
+  16 │ (3) blend (2) × market         back    level                6  -0.282274    -0.282274
+  17 │ (3) blend (2) × market         back    two+ goal lead       1  -1.0         -1.0
+  18 │ (3) blend (2) × market         lay     two+ goal lead       1  -4.0         -1.0
+  19 │ (4) HT market + pxG/on-target  lay     one-goal lead      190   0.0543697    0.0458698
+  20 │ (4) HT market + pxG/on-target  back    one-goal lead      208   0.0684164    0.0684164
+  21 │ (4) HT market + pxG/on-target  lay     level              178  -0.139151    -0.0754397
+  22 │ (4) HT market + pxG/on-target  back    level              166  -0.175137    -0.175137
+  23 │ (4) HT market + pxG/on-target  lay     two+ goal lead      37   0.0252703    0.0852713
+  24 │ (4) HT market + pxG/on-target  back    two+ goal lead      30   0.0625633    0.0625633
+26/27 HT order book: 126 matches with a complete two-sided 1X2 book in the break (63 BBC-timed)
+3×9 DataFrame
+ Row │ role       n      median_spread_ticks  median_spread_pp  median_back_size  median_lay_size  share_back_ge20  share_back_ge50  median_snapshots
+     │ String     Int64  Float64              Float64           Float64           Float64          Float64          Float64          Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ favourite    126                  3.0          1.62877             28.495           49.495         0.595238         0.373016               3.0
+   2 │ draw         126                  4.0          1.16967             14.565           24.46          0.428571         0.285714               3.0
+   3 │ outsider     126                  4.0          0.976088            10.6             12.955         0.285714         0.190476               3.0
+4×8 DataFrame
+ Row │ model                      side    n_bets  mean_edge_vs_mid_pp  mean_edge_vs_exec_pp  share_edge_survives  median_size  realised_pnl
+     │ String                     String  Int64   Float64              Float64               Float64              Float64      Float64
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (1) state only             lay         55              4.09057               2.47819             0.963636       35.25        13.1502
+   2 │ (1) state only             back        48              4.61356               2.30015             0.9375         18.15       -16.4968
+   3 │ (2) state + pxG/on-target  lay         33              5.62336               3.64324             0.939394       29.045        4.2202
+   4 │ (2) state + pxG/on-target  back        42              4.45518               2.0346              0.928571        8.0         -7.05
+9×10 DataFrame
+ Row │ model                          policy                              n_positions  share_closed  share_added  mean_hold  mean_policy  d_vs_hold   lo          hi
+     │ String                         String                              Int64        Float64       Float64      Float64    Float64      Float64     Float64     Float64
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ (1) state only                 always close                               1472      0.460598    0.0        0.0597582    0.0440291  -0.0157291  -0.0951513  0.0608658
+   2 │ (1) state only                 A: close if model < lay price              1472      0.460598    0.0        0.0597582    0.0732767   0.0135185  -0.0382818  0.0640457
+   3 │ (1) state only                 B: A + add if model > price + 2 pp         1472      0.460598    0.222826   0.0597582    0.105845    0.0460871  -0.0187065  0.117283
+   4 │ (2) state + pxG/on-target      always close                               1472      0.491168    0.0        0.0597582    0.0440291  -0.0157291  -0.0951513  0.0608658
+   5 │ (2) state + pxG/on-target      A: close if model < lay price              1472      0.491168    0.0        0.0597582    0.0477489  -0.0120093  -0.0651934  0.0407181
+   6 │ (2) state + pxG/on-target      B: A + add if model > price + 2 pp         1472      0.491168    0.222826   0.0597582    0.0387491  -0.0210091  -0.102183   0.0597882
+   7 │ (4) HT market + pxG/on-target  always close                               1472      0.61481     0.0        0.0597582    0.0440291  -0.0157291  -0.0951513  0.0608658
+   8 │ (4) HT market + pxG/on-target  A: close if model < lay price              1472      0.61481     0.0        0.0597582    0.0297548  -0.0300033  -0.0875047  0.0239157
+   9 │ (4) HT market + pxG/on-target  B: A + add if model > price + 2 pp         1472      0.61481     0.0441576  0.0597582    0.0330507  -0.0267074  -0.088612   0.0299978
+DONE r07_halftime 2026-09-28T22:00:47.774

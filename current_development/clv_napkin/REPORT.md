@@ -49,6 +49,11 @@ Code: `l01_clv_napkin.jl` (loader) and `r01_clv_napkin.jl` (runner). Every numbe
     T−25m, CIs below 0). The same bets at mid or LTP show +0.05 to +0.2 pp and EV 0% to +3%, so
     the LTP-era edge fits inside the 4-tick spread. The live book opens only about 3 h out and
     offers a median £6.
+  - **§16 (brief 07), half-time re-pricing:** the Betfair price during the half-time break beats
+    every HT model on the full-time result. First-half BBC stats (pxG, on target, shots, corners)
+    add nothing detectable on top of the HT score, or on top of the HT market itself. The best
+    use of the model is weight 0.13 in a log-pool, which ties the market. Model-guided closing of a
+    pre-match back does not beat holding.
 - **Compression doesn't explain CLV.** On W0/W1 the observation model (joint pxG vs goals-only)
   does. On W2, the ρ = +0.64 comes from the pooled-TD arms, not from the slope.
 
@@ -1848,3 +1853,309 @@ source `.env` without printing it, then run
 It issues read-only betdb SELECTs and loads the persisted fit for pricing,
 but does **not** run sampling. The matched wealth-sample baseline was also
 recomputed in the same warm session after the original full runner run.
+
+## 16. Half-time re-pricing
+
+Brief 07. Code: `l07_halftime.jl` (loader) and `r07_halftime.jl` (runner). Results are in
+`out/r07_*.csv` and the run log is `out/r07_run.log`. There is no MCMC; the only fits are Poisson
+GLMs (IRLS) and 1-D maximum likelihood. (§15 is left for brief 06.)
+
+**Answer.**
+- **Does the first half tell us more than the HT market? No, not in anything we can measure.**
+  - Scored on the full-time result, the Betfair price during the break beats every HT model on
+    the 24/25–25/26 test set: 736 matches in 54–57.
+  - The full model (anchor + HT score + reds + first-half pxG and on-target gaps) is **worse**
+    than the market by +0.013 nats of 1X2 log-loss per match [+0.004, +0.024].
+  - The first-half stats don't even beat the same model without them, fitted on the same 23/24
+    season.
+  - Put the stats on top of the HT market's *own* second-half rates and they add nothing
+    (Δ +0.004 [−0.000, +0.009]).
+  - The best the model can do is contribute weight 0.13 to a log-pool with the market, and that
+    pool ties the market: Δ +0.0005 [−0.0006, +0.0017].
+- **Where?** Nowhere. The shortfall is largest exactly where an edge would plausibly live:
+  - level games (+0.029);
+  - games where a side dominated the first half on pxG without leading (+0.032, CI above 0);
+  - League One and League Two (+0.022 and +0.038).
+
+  The market already prices the first half at least as well as our stats, and the model
+  over-reacts to them.
+- **Does it survive the spread?** In arithmetic only.
+  - The 26/27 order book in the break has a 3–4 tick spread (1.0–1.6 pp) and £11–28 median back
+    size.
+  - A 2 pp-rule edge mostly clears that spread (93–96% of bets), but that edge is not real.
+    Against the HT last traded price over two test seasons, the rule's bets make
+    +0.002 units a bet [−0.13, +0.15] for the full model.
+- **Does model-guided closing beat holding? No.**
+  - "Close a pre-match back when the model values it below the lay price" is within ±0.03 units
+    of "always hold" for every model, with CIs spanning 0.
+  - That is before paying the in-play spread, which the archive (LTP only) cannot charge.
+- **For the model:** re-pricing at half-time is not an edge. If anything is to be taken from
+  this:
+  - the HT market is a strong **anchor** for an in-play model, not a target to beat;
+  - first-half pxG carries a small real signal about second-half scoring (β ≈ +0.23 per pxG
+    above expectation, z 2.4, in-sample 23/24), but the market already prices it.
+
+### 16.1 Data and definitions
+
+- **HT market price:**
+  - For each runner, the **median last traded price** of the ticks inside the half-time break.
+    The markets are then de-vigged multiplicatively, with an overround gate of 0.9–1.1.
+  - **The break comes from BBC live text:** from the first `half_end` post + 1 min to the
+    second-half `kick_off` post − 0.5 min.
+  - **Why not the brief's window:** `sofascore.matches.injury_time1` is 0 for most matches, so
+    KO + 45 + added time would have included the end of the first half. The BBC break starts at
+    median KO + 49.0 min (p10 47.1, p90 52.0) and ends at KO + 63.2 (p10 60.9, p90 66.5), against
+    the sofascore kick-off.
+  - **Fallback where BBC timing is missing:** [KO + 52.0, KO + 60.9], a window inside the break
+    for about 80% of matches.
+  - **Missing runner:** if exactly one runner has no tick in the break, it is imputed as
+    1 − Σ(other implied) and flagged. Results are shown with and without those markets.
+  - **Sanity check:** a side leading by 2+ at HT is the HT market favourite in **99.7%** of 380
+    such matches.
+- **HT state:**
+  - The sofascore HT score.
+  - First-half red cards (red or second yellow, minute ≤ 45) from `sofascore.match_incidents`,
+    which covers every match.
+- **First-half performance** from BBC live text (minute ≤ 45, added time included):
+  - shots, shots on target and corners per side;
+  - proxy xG from `src`'s shot-cell table (`Features.build_shots`, `fit_shot_xg`,
+    `predict_xg`): 106 zone × body × context cells, base rate 0.125. It is **fitted on training
+    matches only**.
+  - Each stat is compared with what the pre-match anchor expected: a quasi-Poisson GLM of the
+    first-half stat on log λ_for, log λ_against and home, fitted on 23/24.
+  - Gaps are raw for pxG (obs − E) and Pearson for counts ((obs − E)/√E).
+  - "Big chances" are not tagged in the BBC text, so they are not used.
+- **Other sources checked:**
+  - `sofascore.match_statistics` has per-period (`1ST`) stats **for the Premiership only**.
+  - `match_shotmap` shot xG covers the Championship 23/24–25/26 and the Premiership 25/26 only.
+  - BBC is the only source that covers all four leagues, from 23/24.
+- **Pre-match anchor:**
+  - The de-vigged close (TWA over (−20, 0]) for 1X2 + O/U 1.5/2.5/3.5, inverted with §14's best
+    grid (bivariate + COM, λ₃ 0.08, ν 1.08).
+  - λ_pre is the grid's goal means.
+- **Model:**
+  - Second-half goals of each team follow
+    `g2 ~ Poisson(λ_pre · s₂ · exp(β'perf + γ'state))` (team rows, IRLS).
+  - The state terms are: home; lead 1; lead 2+; trail 1; trail 2+; red for; red against; and HT
+    goals (capped at 4).
+  - Full-time 1X2 given HT comes from the HT score plus the two second-half Poissons, with
+    full-time-draw cells inflated by δ (1-D ML on the training set). O/U 2.5 comes from the same
+    grid, without δ.
+- **Models compared:**
+  - (0) the HT market.
+  - (1) state only, fitted on 21/22–23/24.
+  - (1′) state only, fitted on 23/24: the like-for-like control for (2).
+  - (2) state + pxG gap for/against + on-target z for/against, fitted on 23/24 (BBC starts
+    23/24).
+  - (2b) (2) + shots and corners.
+  - (3) a log-pool of (2) with the market, weight fitted on 23/24.
+  - (4) the **HT market's own** second-half rates, from inverting its de-vigged 1X2 given the HT
+    score (exactly identified; with β = 0 it reproduces the market to |ΔLL| = 2.6e-4), times
+    exp(β'perf), fitted on 23/24.
+
+  Model (4) is the direct test of "does the first half tell us more than the market".
+- **Scoring:** mean FT 1X2 log-loss given HT (nats) and binary O/U 2.5 FT log-loss. Model minus
+  market is resampled with a paired, match-day-clustered bootstrap (2,000 draws).
+
+Coverage for the test seasons (`r07_coverage.csv` has every season):
+
+| League | Season | Played | Anchor | HT 1X2 book | of which imputed runner | HT O/U 2.5 | BBC-timed break | BBC first half | SofaScore 1ST-period stats | SofaScore shot xG |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Prem | 24/25 | 198 | 190 | 183 | 17 | 163 | 193 | 198 | 198 | 0 |
+| Prem | 25/26 | 198 | 190 | 192 | 12 | 177 | 198 | 198 | 198 | 198 |
+| Champ | 24/25 | 180 | 118 | 120 | 24 | 101 | 178 | 180 | 0 | 178 |
+| Champ | 25/26 | 175 | 5 | 5 | 1 | 5 | 174 | 175 | 0 | 172 |
+| L1 | 24/25 | 180 | 93 | 141 | 62 | 122 | 178 | 180 | 0 | 0 |
+| L1 | 25/26 | 175 | 102 | 124 | 31 | 141 | 175 | 175 | 0 | 0 |
+| L2 | 24/25 | 180 | 82 | 102 | 43 | 101 | 179 | 180 | 0 | 0 |
+| L2 | 25/26 | 175 | 77 | 97 | 43 | 92 | 172 | 175 | 0 | 0 |
+
+**Scored sample (anchor + HT book + BBC):** 736 test matches (Prem 367, Champ 104, L1 150,
+L2 115). BBC covers every test match that has an HT book, so the "common" and "all with HT book"
+rows in `r07_logloss.csv` are identical.
+
+The Championship archive is nearly empty for 25/26, as in §14.
+
+The training sets are:
+- (1): 1,499 matches;
+- (2), (1′) and (4): 463–542 matches, all from 23/24.
+
+### 16.2 Does the first half beat the HT market? (FT 1X2 log-loss given HT)
+
+Δ = model − market (positive = worse than the market); 95% match-day-clustered CI.
+
+| Model | Pooled (n = 736) | Prem (367) | Champ (104) | L1 (150) | L2 (115) |
+|---|---|---|---|---|---|
+| (0) HT market, log-loss | 0.8008 | 0.7840 | 0.7552 | 0.8973 | 0.7701 |
+| (1) state only (3 seasons) | +0.0060 [−0.0025, +0.0150] | +0.0004 [−0.010, +0.011] | −0.0028 [−0.016, +0.011] | +0.0169 [−0.006, +0.043] | +0.0174 [−0.011, +0.052] |
+| (1′) state only (23/24) | +0.0108 [+0.0017, +0.0207] | +0.0028 | +0.0011 | +0.0198 | +0.0335 |
+| (2) + pxG / on-target | **+0.0131 [+0.0035, +0.0238]** | +0.0059 [−0.007, +0.019] | −0.0023 [−0.019, +0.014] | +0.0224 [+0.003, +0.044] | +0.0383 [+0.005, +0.076] |
+| (2b) + shots / corners | +0.0149 [+0.0054, +0.0250] | +0.0064 | +0.0033 | +0.0244 | +0.0403 |
+| (3) log-pool (2) × market, w = 0.13 | **+0.0005 [−0.0006, +0.0017]** | −0.0001 | −0.0008 | +0.0013 | +0.0027 |
+| (4) HT market rates × perf | **+0.0042 [−0.0005, +0.0089]** | +0.0022 | +0.0023 | +0.0017 | +0.0153 [+0.004, +0.027] |
+
+Without markets that have an imputed runner (n = 597), the ordering is the same: (2) +0.016
+[+0.004, +0.028], (3) +0.0009, (4) +0.0043 [−0.0005, +0.0092].
+
+**Do the stats add to the score state?** Compare (2) and (1′), both fitted on 23/24:
++0.0131 vs +0.0108. So no.
+
+**Coefficients** (`r07_coefficients.csv`):
+- **Pxg is the only first-half stat with a signal.** In (2), the pxG gap *for* is
+  +0.23 per pxG (z 2.4). Its against gap and both on-target terms are ≈ 0. With the HT market as
+  the offset, (4), it falls to +0.13 (z 1.3).
+- **Red cards matter:** a red for is −0.34 (z −2.2) and a red against is +0.34 (z 3.2), from
+  (1) over three seasons.
+- **One training season is unstable.** The "trail by 1" effect is +0.30 (z 3.0) on 23/24 alone
+  but +0.06 over 21/22–23/24. That instability is why (1′) and (2) lose to (1) out of sample.
+- **Second half:** its share of the match rate is s₂ = exp(−0.57) = 0.57. The full-time-draw
+  inflation δ is +0.03 to +0.05, and +0.14 in (4).
+
+**O/U 2.5 FT given HT** (n = 621 with an HT O/U book): the market's log-loss is 0.5435.
+
+| Model | Δ vs market |
+|---|---|
+| (1) | +0.014 [+0.004, +0.025] |
+| (2) | +0.012 [+0.001, +0.024] |
+| (2b) | +0.010 [−0.001, +0.023] |
+| (4) | +0.024 [+0.007, +0.045] |
+
+Model (4) is inverted from the 1X2 alone, so its totals are not the market's O/U.
+
+### 16.3 Where would an edge live? (common sample)
+
+| Group | n | (2) Δ vs market | (4) Δ vs market | (3) Δ |
+|---|---:|---|---|---|
+| Level at HT | 272 | +0.029 [+0.007, +0.052] | +0.010 [+0.002, +0.018] | +0.0017 |
+| One-goal lead | 325 | −0.0004 [−0.012, +0.010] | +0.0004 [−0.007, +0.008] | −0.0006 |
+| Two+ goal lead | 139 | +0.013 [−0.008, +0.035] | +0.0019 [−0.007, +0.009] | +0.0009 |
+| pxG-dominant side (\|gap\| ≥ 0.5) **not leading** | 119 | +0.032 [+0.003, +0.059] | +0.012 [−0.001, +0.026] | +0.0022 |
+| Everything else | 617 | +0.0096 [−0.002, +0.022] | — | +0.0002 |
+
+- **The "dominated but not ahead" games are where the model is worst:** it shades too far
+  toward the side that dominated.
+- **Level games:** the loss comes mostly from the draw. (4)'s δ = 0.14, fitted on 23/24,
+  over-prices draws on the test seasons.
+
+### 16.4 Tradability
+
+**Archive rule, test seasons** (`r07_trade_rule.csv`): back the full-time 1X2 at the HT LTP when
+the model is above the de-vigged HT market by more than 2 pp, lay when below. Stake 1 unit, 2%
+commission on winnings.
+
+| Model | Bets | Mean edge claimed | P&L per bet [CI] | ROI on risk |
+|---|---:|---:|---|---:|
+| (1) state only | 774 | 4.5 pp | +0.072 [−0.062, +0.203] | +3.7% |
+| … of which backs | 405 | 4.5 pp | +0.178 [+0.026, +0.353] | +17.8% |
+| … of which lays | 369 | 4.5 pp | −0.045 [−0.219, +0.115] | −1.6% |
+| (2) + pxG / on-target | 981 | 4.9 pp | +0.002 [−0.132, +0.152] | +0.2% |
+| (3) log-pool | 24 | 3.0 pp | −0.248 [−0.611, +0.189] | −24.5% |
+| (4) HT market × perf | 809 | 3.2 pp | −0.033 [−0.145, +0.078] | −2.7% |
+
+(1)'s backs are the one cell of twelve (4 models × back/lay/all) whose CI excludes 0 (p ≈ 0.02),
+and they lean on level and one-goal states (`r07_trade_rule_cells.csv`). They do not survive a
+multiple-comparison correction. The same model's log-loss is worse than the market's, and its
+lays lose. Treat it as noise unless it replicates.
+
+**26/27 order book during the break** (`r07_orderbook_ht_2627.csv`, 126 matches with a complete
+two-sided 1X2 book; 63 with a BBC-timed break, the rest the fallback window):
+
+| Runner | Median spread | Median spread (pp) | Median best-back size | Median best-lay size | Share of back sizes ≥ £20 / ≥ £50 |
+|---|---:|---:|---:|---:|---|
+| Favourite | 3 ticks | 1.6 | £28 | £49 | 60% / 37% |
+| Draw | 4 ticks | 1.2 | £15 | £24 | 43% / 29% |
+| Outsider | 4 ticks | 1.0 | £11 | £13 | 29% / 19% |
+
+On 26/27, the 2 pp rule measured against the order-book mid:
+- (1) makes 103 bets and (2) makes 75, with claimed edges of 4.1–5.6 pp against the mid.
+- At the executable back or lay price those edges are still 2.0–3.6 pp, and 93–96% of bets keep
+  a positive edge.
+- Realised P&L: (1) −3.3 units over 103 bets; (2) −2.8 units over 75.
+
+**So the spread is not what kills the idea:** the archive shows the claimed edges aren't there
+to begin with. The typical 0.5–0.8 pp half-spread and £10–30 of size would cap any real edge
+further.
+
+### 16.5 Hedging a pre-match back at half-time (test seasons)
+
+**Setup** (`r07_hedge.csv`):
+- **Positions:** 1 unit backed pre-match on the home side and, separately, on the away side, at
+  the close TWA odds. That gives 1,472 positions from the common sample.
+- **Price at HT:** the median LTP, used as both lay and back price. This is optimistic for any
+  trade at HT, since the archive has no spread.
+- **Close:** lay o_pre/o_HT at o_HT. P&L = o_pre/o_HT − 1 whatever happens, less 2% commission
+  on a gain.
+- **Hold:** P&L = (o_pre − 1)(1 − c) if the side wins, else −1. The mean for hold is +0.060 per
+  position.
+
+Δ is the policy minus hold, per position:
+
+| Policy | Model | Share closed | Δ vs hold [CI] |
+|---|---|---:|---|
+| Always close | — | 100% | −0.016 [−0.095, +0.061] |
+| A: close if p_model < 1/o_HT | (1) | 46% | +0.014 [−0.038, +0.064] |
+| A | (2) | 49% | −0.012 [−0.065, +0.041] |
+| A | (4) | 61% | −0.030 [−0.088, +0.024] |
+| B: A, plus add 1 unit if p_model > 1/o_HT + 2 pp | (1) | 46% (22% added) | +0.046 [−0.019, +0.117] |
+| B | (2) | 49% (22% added) | −0.021 [−0.102, +0.060] |
+| B | (4) | 61% (4% added) | −0.027 [−0.089, +0.030] |
+
+- **Model-guided closing does not beat holding.** Every CI spans 0, and the one positive point
+  estimate belongs to model (1), whose probabilities score worse than the market's (§16.2).
+- **A fair price makes closing EV-neutral.** Closing at a fair market price is zero-EV, so the
+  only thing a model could add is better information than the HT price, and §16.2 says it has
+  none.
+- **In practice, closing loses.** A real close pays the half-spread (about 0.5–0.8 pp of
+  probability in 26/27), which would push every close-based policy further below hold.
+
+### 16.6 Power
+
+The smallest pooled log-loss difference this test sample can detect (80% power, two-sided 5%,
+2.8 × the bootstrap SE):
+
+| Comparison | Minimum detectable effect (nats per match) |
+|---|---:|
+| (2) vs market | 0.015 |
+| (1) vs market | 0.013 |
+| (4) vs market | 0.007 |
+| (3) blend vs market | 0.0016 |
+
+- A **gain** of 0.005 nats over the market, which would be a lot for a betting edge, is inside
+  (4)'s and (2)'s noise.
+- **But the point estimates all sit on the wrong side.** Every point estimate is ≥ 0, and (2)'s
+  and (1′)'s CIs exclude 0 on the losing side.
+- **Per-league results are about 2× less precise** (for example, L2 (2): SE 0.018).
+
+### 16.7 Caveats
+
+- **The archive is LTP only.**
+  - The HT market is a median of last-traded prices in the break, not an executable price.
+    Imputing a missing runner touches 1–62 markets per test league-season; results hold without them.
+  - The hedging and archive rule tables therefore price at LTP, which is optimistic for the
+    trader.
+- **Training depth:**
+  - The performance models learn from one season (23/24) because BBC live text starts then.
+    One season's state coefficients are visibly unstable (trail 1: +0.30 vs +0.06).
+  - A pooled 23/24–24/25 fit tested on 25/26 would roughly double the training data, but would
+    halve the test set and the power.
+- **Proxy xG and "dominance":**
+  - Proxy xG is the `src` cell table (zone × body × context from BBC text), not an event-level
+    xG. On-target and shot counts are raw.
+  - The "dominance" subgroup is a post-hoc cut (|pxG supremacy gap| ≥ 0.5, dominant side not
+    leading); it was not pre-registered.
+- **Timing:**
+  - Kick-off times are sofascore's scheduled starts. BBC timestamps pin the break for 2,238
+    matches (172–198 of each test league-season); elsewhere the fallback window is used.
+  - The 26/27 order book is 3-minute snapshots (median 3 in the break) and stops at
+    2026-09-20, as in §13.
+- **Anchor:** the §14 grid is used as a fixed transform. The anchor is the close, so the models
+  know nothing the pre-match market didn't.
+- **Not a betting test:** these are descriptive rules on realised outcomes, not a staking study.
+
+**Reproduce** (on `mcmc-beast` in `/root/BF_runs/clv_napkin_dev`; source `.env` without printing
+it). The run needs §13's rebuilt DataStore at `out/r04_datastore_ScottishPyramid.jls`, makes
+read-only betdb SELECTs and runs no sampling:
+
+```bash
+julia --project -t 16 current_development/clv_napkin/r07_halftime.jl > /root/BF_runs/logs/clv_napkin/r07_run.log 2>&1
+```

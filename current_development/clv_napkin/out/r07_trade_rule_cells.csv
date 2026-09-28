@@ -1,0 +1,25 @@
+model,side,state,n_bets,pnl_per_bet,roi_on_risk
+(1) state only,back,level,212,0.16582650503364577,0.16582650503364577
+(1) state only,back,one-goal lead,151,0.20684111047625578,0.20684111047625578
+(1) state only,lay,level,199,-0.0944178494853981,-0.06204307367245387
+(1) state only,back,two+ goal lead,42,0.1361580073579215,0.1361580073579215
+(1) state only,lay,two+ goal lead,35,0.027571428571428674,0.003267254659646878
+(1) state only,lay,one-goal lead,135,0.007937660432709992,0.0022616324880828714
+(2) state + pxG/on-target,back,level,241,-0.08739188738511652,-0.08739188738511652
+(2) state + pxG/on-target,lay,level,210,-0.018602015952871708,-0.01241699414130306
+(2) state + pxG/on-target,back,one-goal lead,189,0.04686243863076569,0.04686243863076569
+(2) state + pxG/on-target,lay,one-goal lead,194,0.062639559905315,0.028735528489039493
+(2) state + pxG/on-target,back,two+ goal lead,70,0.09856142857142858,0.09856142857142858
+(2) state + pxG/on-target,lay,two+ goal lead,77,-0.011919378598366117,-0.011489234756929563
+(3) blend (2) × market,back,one-goal lead,4,0.043899999999999995,0.043899999999999995
+(3) blend (2) × market,lay,one-goal lead,2,0.98,0.5444444444444444
+(3) blend (2) × market,lay,level,10,-0.14050000000000004,-0.2458442694663167
+(3) blend (2) × market,back,level,6,-0.282274143302181,-0.282274143302181
+(3) blend (2) × market,back,two+ goal lead,1,-1.0,-1.0
+(3) blend (2) × market,lay,two+ goal lead,1,-4.0,-1.0
+(4) HT market + pxG/on-target,lay,one-goal lead,190,0.05436972300596578,0.04586983090790928
+(4) HT market + pxG/on-target,back,one-goal lead,208,0.06841643346202832,0.06841643346202832
+(4) HT market + pxG/on-target,lay,level,178,-0.13915148792810192,-0.07543972609647667
+(4) HT market + pxG/on-target,back,level,166,-0.17513734939759032,-0.17513734939759032
+(4) HT market + pxG/on-target,lay,two+ goal lead,37,0.02527027027027028,0.0852713178294574
+(4) HT market + pxG/on-target,back,two+ goal lead,30,0.0625633333333333,0.0625633333333333

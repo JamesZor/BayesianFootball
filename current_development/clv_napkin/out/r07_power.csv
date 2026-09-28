@@ -1,0 +1,18 @@
+sample,group,model,n,se,mde
+common (BBC + HT book),pooled,(1) state only,736,0.004555258937184606,0.012754725024116897
+common (BBC + HT book),pooled,"(1′) state only, 23/24 fit",736,0.005097407661604064,0.014272741452491378
+common (BBC + HT book),pooled,(2) state + pxG/on-target,736,0.005286311612403555,0.014801672514729953
+common (BBC + HT book),pooled,(2b) + shots/corners,736,0.005138789517275326,0.014388610648370912
+common (BBC + HT book),pooled,(3) blend (2) × market,736,0.0005867903993275507,0.001643013118117142
+all with HT book,pooled,(1) state only,736,0.004555258937184606,0.012754725024116897
+all with HT book,pooled,"(1′) state only, 23/24 fit",736,0.005097407661604064,0.014272741452491378
+all with HT book,pooled,(2) state + pxG/on-target,736,0.005286311612403555,0.014801672514729953
+all with HT book,pooled,(2b) + shots/corners,736,0.005138789517275326,0.014388610648370912
+all with HT book,pooled,(3) blend (2) × market,736,0.0005867903993275507,0.001643013118117142
+"common, no imputed runner",pooled,(1) state only,597,0.005622757605082556,0.015743721294231156
+"common, no imputed runner",pooled,"(1′) state only, 23/24 fit",597,0.005912399783782246,0.016554719394590287
+"common, no imputed runner",pooled,(2) state + pxG/on-target,597,0.0061624331054894455,0.017254812695370447
+"common, no imputed runner",pooled,(2b) + shots/corners,597,0.005972840964213387,0.016723954699797483
+"common, no imputed runner",pooled,(3) blend (2) × market,597,0.0006609557133794872,0.001850675997462564
+common (BBC + HT book),pooled,(4) HT market + pxG/on-target,736,0.002514350244116427,0.007040180683525995
+"common, no imputed runner",pooled,(4) HT market + pxG/on-target,597,0.002587230943379884,0.007244246641463675
