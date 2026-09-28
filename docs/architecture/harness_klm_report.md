@@ -57,3 +57,65 @@ The harness review is deliberately separate from these gates/monitors. Targeted 
 - Active/experimental strict R̂ or ESS: `current_development/multiscale_grw/l01_loader.jl` (R̂ 1.01, ESS 400), `current_development/scottish_lower/_protocol/sampling.jl` (1.01/400), `current_development/scottish_lower/00_team_poisson/l04_sampling_gates.jl` (1.01), `current_development/scottish_lower/archive/open_play_rebuild/r06_remote_nuts_smoke.jl` (1.01/400), `current_development/scottish_lower/05_composable_count_builder/l05_parity.jl` and `r01_demo.jl` (1.01); `current_development/grw_joint_negbin/l01_loader.jl`, `grw_player_hybrid/l01_loader.jl`, `grw_market_smile/l01_loader.jl` (strict advisory 1.01); `experiments/scottish_lower/11_decompression_pxg_covariate/l12_workflow.jl` and `12_decoupled_generative_xg/l13_workflow.jl` (strict 1.01); `experiments/scottish_lower/06_joint_player_lineup_fusion/r64_smoke_hierarchical_kappa.jl` (ESS 400), `r69_verify_matchday_2627.jl` (tail ESS 400 monitor); `experiments/scottish_lower/08_goal_decomposition/r08_sampling_budget_benchmark.jl` (ESS 400).
 - Other standalone diagnostics at 1.01: `current_development/team_wealth/r04_train_wealth_ireland.jl`, `r07_train_wealth_anchored.jl`; `current_development/smile_negbin/r02_train_ireland.jl`, `r03_pipeline_smoke.jl`; `current_development/orderbook_layer2/r02_train_ireland.jl`, `r08_train_ireland_noanchor.jl`; `current_development/scottish_upper/r01_smoke.jl`, `r02_grid_family.jl`, `r03_eval_family.jl`, `r04_grid_pillar.jl`; `current_development/scottish_proxy_xg/r02_smoke.jl`, `r03_grid.jl`; `current_development/bbc_xg_proxy/r03_funnel_smoke.jl`, `r04_funnel_hier_smoke.jl`, `r06_funnel_full_spec.jl`, `r07_funnel_iso_grid.jl`, `r07b_funnel_iso_pilot.jl`; archived `current_development/scottish_lower/archive/proxy_xg/r02_smoke.jl`, `r03_grid.jl`, `archive/wealth/r03_grid_wealth.jl`, `archive/neg_bin/r01_smoke_negbin.jl`; `current_development/match_day_inference/r17_extend_to_card.jl` (comment about a strict legacy fold).
 - Tests with threshold assertions: `test/inference_tests.jl:192-213` (1.01/400); the unrelated 1.01 odds in portfolio/MatchDay tests and match-odds tick bands are **not** convergence rules. No non-harness thresholds were weakened.
+## Fix round 1 (Claude CLI builder, 2026-09-28)
+
+Responds to the independent review `docs/architecture/harness_klm_review.md` (CHANGES_REQUIRED,
+F1–F11). pi started this round and ran out of quota. Claude CLI (Opus 5.5) took over the
+uncommitted draft, reviewed it finding by finding, and fixed what was missing or wrong. That
+covered one test-breaking `include`, the F5 test, the runbook's F2 SQL gate and the indentation.
+The brief is `experiments/claude_klm_fix1_brief.md`.
+
+| ID | Disposition | Change | Test / evidence |
+|---|---|---|---|
+| F1 (major) | **Fixed** | `scripts/run_candidates.jl:parse_args` rejects `--test-db` unless `--stage screen`, naming the production-bound stages. Harness guide and runbook say the flag is screen-only. | Runner suite: `parse_args` refuses smoke, grid and portfolio, and `main()` refuses `--stage smoke --test-db`. |
+| F2 (major) | **Fixed** | `harness_klm_W0_rescore_v12.csv` adds the 12 W1 grid UUIDs to the `m12_td` (`132df5c2`) group under their v1.1 labels, including the six aliases (26 distinct UUIDs). The runbook step-2 count becomes 26. Step 4 requires every v1.1 (UUID, label), and it now includes a read-only SQL gate: after the re-score, 12 W1 UUIDs have a v1.2 delta against `132df5c2`, and the `97c7a3d9` count is unchanged. | Runner suite §8: 26 refs, 26 distinct UUIDs, alias→UUID map, 25 refs in the `m12_td` group. Production, read-only: the CSV's 25 (label, UUID) candidate pairs **equal** the v1.1 `delta_logloss_vs_control` pairs against `132df5c2`, and all 26 `runs.experiment_name` match. Gate SQL baseline: `97c7a3d9` → 12, `132df5c2` → none. |
+| F3 | **Fixed** | New `scripts/klm_test_db_guard.jl:assert_klm_test_database!` keeps the parsed-name check. It then connects and requires `SELECT current_database() = 'mcmc_experiments_test'` before any schema write. It is used by `run_candidates.jl` and both `validate_klm_*` test-DB scripts. | Runner suite: an unset URL and a production-named URL are refused by `main()`. `<test url>?dbname=postgres` parses as `mcmc_experiments_test` but is refused after connecting. |
+| F4 | **Fixed** | `write_experiment!` SQL and `_merge_experiment_run_ids` split on `[,;]` and trim. A `preserve_completed` upsert that contributes no run IDs keeps the completed row's `run_ids` **byte-identical**. Without that, the new split would rewrite W1's seeded `;` list as `,` on re-screen. | DB suite (test DB): a seeded `;` completed row survives an empty re-screen unchanged, and a later merge yields the comma union. Offline mirror asserts the same. |
+| F5 | **Fixed** (runbook + fallback) | Runbook §1 now runs "immediately after merge", before any other `save_fit`/`extend_fit`. `extend_fit` reads `layout` only when the column exists, so a pre-migration row is single-blob. `save_fit` **refuses** with a clear error when the per-fold schema is absent. It does not fall back, because a whole-Fit blob reinstates the 1 GiB wall. It checks before any write. | New `test_extension` testset: rename `fit_artifacts.layout` and `fit_fold_artifacts` in the test DB (renames, so no row is lost), then `save_fit` throws "per-fold schema is not installed" and `extend_fit` extends a legacy run 2→3 folds. The schema is restored in `finally`, and the run reloads with 3 folds. |
+| F6 | **Fixed** | `Harness._chain_parity` compares `parent(chain.value)` (draws **and** internals), `names`, `name_map` and `logevidence` with `isequal`. `_fit_parity` and `validate_klm_large_roundtrip.jl` use it. | Runner suite: an identical chain passes. A changed internal value fails, and so does a renamed internal. Strict round trip below. |
+| F7 | **Fixed** | (a) `main()` refusal tests (see F1/F3). (b) The pairing test uses different deltas per panel and asserts each (panel, control) value. (c) The rehearsal validator requires exact `run_ids` equality. | Scoring suite, runner suite; rehearsal below. |
+| F8 | **Not changed; documented** | `harness_checks` has no invocation identifier. A failed smoke writes its rows with `run_id` NULL, so "latest invocation" can only be guessed from timestamps. A reliable rule needs a new column, which is beyond this additive-schema round. The harness guide now gives the manual procedure: confirm the latest smoke passes all hard checks, archive, then delete only the specific stale failed hard-check IDs, and only with authorisation. | Production has zero failed hard smoke rows (review), so nothing is blocked today. |
+| F9 | **Fixed** | Harness guide states the rule, R̂ > 1.05 or divergence > 0.1% of post-warm-up draws, cites `HARNESS_REVIEW_MAX_RHAT` and `HARNESS_REVIEW_MAX_DIVERGENCE_RATE`, and lists ESS/BFMI/tree depth as notes. | Docs. |
+| F10 | **Fixed** (2 of 3); **annotated** (1) | The BFMI note reads `<=`, matching the test. `DualStorage.save_fit` forwards `on_duplicate` to PostgreSQL only, and the DB guide documents it. `g2_harness_repro` stays self-controlled. `leaderboard` deliberately includes self-controls (as does `m12_td`), and the runbook says to annotate its Δ 0 as not a v1.1 pairing. | DB suite: `DualStorage` `:return` returns the run, and `:error` throws. |
+| F11 | **Fixed** | `test_db_storage` and `test_extension` delete their experiment's `runs`, `config_registry`, `harness_experiments` and `harness_checks` rows in `finally`. | `runs`, `config_registry` and `harness_experiments` counts in `mcmc_experiments_test` are 0 after each suite (below). |
+
+Also fixed: pi's last dev run (`/root/BF_runs/logs/klm/fix1_dev.log`, status 1) errored in "Screen CLI
+test-database opt-in". The test includes `run_candidates.jl` into a bare `Module(...)`, which
+has no `include`. The script now uses `Base.include(@__MODULE__, …)`.
+
+### Fix round 1 evidence — clean pushed SHA `5e70f2a2`
+
+These were run on mcmc-beast from `beast_checkout.sh 5e70f2a2cca00acf4285ed38b8f452ad30505635`, with the Scottish caches
+copied from `/root/BF_runs/a76a65df/.cache/`. Julia 1.12.4 was run with `-t 16` through the `klm_env.sh` credential wrapper, and
+no credential was printed. `BF_EXPERIMENTS_TEST_DB_URL` named `mcmc_experiments_test`. Each item ran in its own process in tmux
+`claude_klm_fix1`, one after another. The runner is `/root/BF_runs/logs/klm/fix1_suite.sh`, logs are
+`/root/BF_runs/logs/klm/fix1_clean_<name>.log`, and the summary is `fix1_clean_summary.tsv`. No sampling was run.
+
+| Check | Result | Wall (process) |
+|---|---|---|
+| `test/test_db_storage.jl` (test DB) | **154/154** (was 150; +4 F4/F10) | 68 s (tests 36.1 s) |
+| `test/test_extension.jl` (test DB) | **51/51** (was 47; +4 F5 pre-migration) | 44 s (tests 28.0 s) |
+| `test/harness_scoring_tests.jl` | **46/46** (9 top-level sets) | 30 s |
+| `test/harness_runner_tests.jl` | **182/182** (was 165) | 110 s (tests 1m35.3 s) |
+| `scripts/validate_klm_large_roundtrip.jl` (strict `_chain_parity`) | **PASS**: 1,993,184,800 raw fold bytes, 1,896,612,795 compressed, 120 folds, largest blob 28,621,776 B, save 10.62 s, load 5.49 s, peak RSS 6,500,580 KiB | 41 s |
+| `scripts/validate_klm_legacy_loads.jl` (production, read-only) | **4/4**: `ce7ea22f` 60 folds (500,194,4)…(500,1830,4); `c4a0fa94` 60 (250,238,4)…(250,1960,4); `132df5c2` 45 (800,69,4)…(800,71,4); `aad544b3` 42 (800,65,4)…(800,67,4) | 25 s |
+| Test-DB debris after each item (F11) | `runs`/`config_registry`/`harness_experiments` = **0/0/0** after every item | — |
+
+**W1 MAP screen rehearsal (Amendment 1).** It was re-run because this round touches the screen path (the
+`--test-db` guard and the register upsert). The runner is `fix1_rehearsal.sh`, with logs `fix1_clean_{seed,screen,screen_check}.log`.
+
+- The test DB was seeded with the W1 register row from `w1_register_before.json`. Before seeding, read-only, that snapshot
+  matched production field for field.
+- `run_candidates.jl … --stage screen --test-db` scored **12/12 hard PASS** in **563 s**.
+- `validate_klm_screen_rehearsal.jl` (21 s) printed `KLM_SCREEN_PASS ids=12 checks=12 score_rows=8640
+  panel=56+57|24/25,25/26|n=710 register=preserved markdown_map_rows=12`. That check now requires **exact** `run_ids`
+  equality, so the seeded semicolon list survived byte for byte.
+
+The same set also passed on the rsynced dev tree before the push (`fix1_dev2_*`), with the same counts.
+
+**Production.** Access was read-only: SELECTs, `load_fit`, and a `SET default_transaction_read_only` session for the
+runbook gate SQL. A final post-run production recheck was not executed, because the session's permission layer
+blocked it. Nothing in this round writes to production. The test-DB guard asserts `current_database()` before any write.
+
+**Test DB state.** The rehearsal left its rows in `mcmc_experiments_test`: 8,640 screen scores, its `harness_checks` rows and the W1
+register row. The reset (`DROP SCHEMA public CASCADE`) was not run from this session. It is left for the operator.

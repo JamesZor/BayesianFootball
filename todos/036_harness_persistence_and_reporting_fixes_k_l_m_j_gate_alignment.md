@@ -90,6 +90,8 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
 
 - [2026-09-28 @pi] Build phase complete on clean pushed SHAs `af5645b4`, `5d1103f7` and `37429d59`: W1 MAP-only rehearsal (12/12; 8,640 v1.2 scores; 12 validity checks), >1.2 GiB test-DB round trip, four read-only production legacy loads, 9/9 focused suites, parallel 24/25 (known T007 only). Test-created objects were dropped; the separate database remains. No production writes. Report and runbook: `docs/architecture/harness_klm_report.md` and `docs/architecture/harness_klm_prod_runbook.md`. Board production, review and merge remain pending explicit approval.
 
+- [2026-09-28 @claude] Fix round 1 (Claude CLI builder, taking over pi's uncommitted draft) for review F1–F11: F1–F7, F9–F11 fixed with tests, F8 documented (no invocation ID in `harness_checks`). Clean pushed SHA `5e70f2a2`: DB 154/154, extension 51/51, scoring 46/46, runner 182/182, strict >1.2 GiB round trip PASS, legacy loads 4/4, W1 screen rehearsal 12/12 + validator PASS on the test DB. Production read-only. Table in `docs/architecture/harness_klm_report.md` § Fix round 1.
+
 ## Verification & Findings
 
 Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Final evidence and exact numbers are in the report linked above.
