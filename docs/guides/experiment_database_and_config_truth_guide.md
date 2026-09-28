@@ -682,7 +682,8 @@ default; `on_duplicate = :error` instead names the existing run and refuses a si
 
 ```julia
 storage = DualStorage(FileStorage("results"), db)
-addresses = save_fit(fit, storage; quiet = true)
+addresses = save_fit(fit, storage; quiet = true, on_duplicate = :return)
+# `on_duplicate = :error` is forwarded only to PostgreSQL; `quiet` goes to FileStorage.
 # addresses.path   -> filesystem directory
 # addresses.run_id -> PostgreSQL UUID
 ```

@@ -727,6 +727,8 @@ function save_fit(fit::Fit, storage::PostgresStorage; on_duplicate::Symbol = :re
                 "save_fit: recipe already belongs to run $old_id; load/resume that run or change the recipe before sampling again")
             return old_id
         end
+        _db_has_column(conn, "fit_artifacts", "layout") || error(
+            "save_fit: per-fold schema is not installed; run ensure_schema!(db) at the deployment boundary before sampling")
 
         run_id = uuid4()
         fold_ids = UUID[uuid4() for _ in fit.folds]
@@ -824,9 +826,10 @@ function save_fit(fit::Fit, storage::PostgresStorage; on_duplicate::Symbol = :re
 end
 
 "Write both backends. The return names both independently addressable artefacts."
-function save_fit(fit::Fit, storage::DualStorage; kwargs...)
+function save_fit(fit::Fit, storage::DualStorage; on_duplicate::Symbol = :return, kwargs...)
+    on_duplicate in (:return, :error) || error("save_fit: on_duplicate must be :return or :error")
     path = save_fit(fit, storage.file; kwargs...)
-    run_id = save_fit(fit, storage.db)
+    run_id = save_fit(fit, storage.db; on_duplicate)
     return (; path, run_id)
 end
 

@@ -287,12 +287,14 @@ Upsert one static register row by its stable textual ID.  `run_ids` deliberately
 older EDA-only suites and a missing suite 09 have no model-run UUID to invent.
 On conflict, run IDs and optional UUID-keyed `run_commits` are merged atomically so
 independent `--only` invocations cannot erase one another's provenance. A re-screen passes
-`preserve_completed=true`: an existing completed experiment keeps all register metadata.
+`preserve_completed=true`: an existing completed experiment keeps all register metadata, and
+its `run_ids` text verbatim when the re-screen contributes none. Seeded rows separate IDs with
+`;`, so a merge splits on `,` or `;` and writes `,`.
 """
 # Mirrors the atomic SQL upsert's sorted, de-duplicated union; useful for
 # offline register assertions when the experiment database is unavailable.
 function _merge_experiment_run_ids(existing::AbstractString, incoming::AbstractString)
-    ids = filter(!isempty, split(string(existing, ",", incoming), ","))
+    ids = filter(!isempty, strip.(split(string(existing, ",", incoming), r"[,;]")))
     return join(sort!(unique(String.(ids))), ",")
 end
 
@@ -322,11 +324,15 @@ function write_experiment!(db::Training.PostgresStorage, row;
                               THEN harness_experiments.status ELSE EXCLUDED.status END,
                 decision = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
                                 THEN harness_experiments.decision ELSE EXCLUDED.decision END,
-                run_ids = (
-                    SELECT COALESCE(string_agg(DISTINCT id, ',' ORDER BY id), '')
-                    FROM unnest(string_to_array(harness_experiments.run_ids || ',' || EXCLUDED.run_ids, ',')) AS ids(id)
-                    WHERE id <> ''
-                ),
+                run_ids = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                    AND EXCLUDED.run_ids = ''
+                               THEN harness_experiments.run_ids
+                               ELSE (
+                                   SELECT COALESCE(string_agg(DISTINCT trim(id), ',' ORDER BY trim(id)), '')
+                                   FROM unnest(regexp_split_to_array(
+                                       harness_experiments.run_ids || ',' || EXCLUDED.run_ids, '[,;]')) AS ids(id)
+                                   WHERE trim(id) <> ''
+                               ) END,
                 run_commits = harness_experiments.run_commits || EXCLUDED.run_commits,
                 readme = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
                                 THEN harness_experiments.readme ELSE EXCLUDED.readme END;

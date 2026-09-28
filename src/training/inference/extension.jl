@@ -407,30 +407,34 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
             isempty(conflict) || error(
                 "extend_fit: folds $(join(conflict, ", ")) were inserted concurrently; retry preview_extension.")
 
-            layout = _db_rows(conn, """
-                SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid FOR UPDATE;
-            """, (string(run.run_id),))
+            # Before the additive schema migration, all existing artefacts are single-blob.
+            has_layout = _db_has_column(conn, "fit_artifacts", "layout")
+            layout = _db_rows(conn, has_layout ?
+                "SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid FOR UPDATE;" :
+                "SELECT run_id FROM fit_artifacts WHERE run_id = \$1::uuid FOR UPDATE;",
+                (string(run.run_id),))
             nrow(layout) == 1 || error("extend_fit: missing artefact for $(run.run_id)")
+            layout_value = has_layout ? String(layout.layout[1]) : "single"
             for fold in new_folds
                 _extension_insert_fold!(conn, run.run_id, fold,
                     diagnostics_by_fold[fold.fold], existing.diagnostics.thresholds,
                     scores_by_fold[fold.fold], runtime_per_fold,
                     stats_by_fold[fold.fold], get(per_fold_latents, fold.fold, nothing))
-                if layout.layout[1] == "per_fold"
+                if layout_value == "per_fold"
                     _db_exec_binary(conn, """
                         INSERT INTO fit_fold_artifacts (run_id, fold_idx, fold_blob)
                         VALUES (\$1::uuid, \$2, \$3::bytea);
                     """, (string(run.run_id), fold.fold), _db_artifact_blob(fold))
                 end
             end
-            updated_artifact = if layout.layout[1] == "per_fold"
+            updated_artifact = if layout_value == "per_fold"
                 shell_folds = FoldFit[FoldFit(f.fold, nothing, f.meta) for f in extended.folds]
                 Fit(extended.config, shell_folds, nothing, extended.diagnostics,
                     extended.metadata, extended.save_path)
-            elseif layout.layout[1] == "single"
+            elseif layout_value == "single"
                 extended
             else
-                error("extend_fit: unknown artefact layout $(layout.layout[1])")
+                error("extend_fit: unknown artefact layout $layout_value")
             end
             _db_exec_binary(conn, """
                 UPDATE fit_artifacts SET fit_blob = \$2::bytea WHERE run_id = \$1::uuid;
