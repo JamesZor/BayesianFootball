@@ -88,8 +88,8 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
 - [2026-09-28 @pi] Partial build paused under the original work package §6: all 12 v1.1 MAP-screen UUIDs lack a persisted `runs` row, so `scripts/score_runs.jl` cannot re-score them at v1.2 without re-fitting MAP. Production untouched.
 - [2026-09-28 @pi] Resumed per human Amendment 1 (`experiments/pi_harness_klm_amendment1.md`): MAP-only re-screen is now permitted, with rehearsal against `mcmc_experiments_test` and completed W1 register metadata preserved. Finishing the build phase; production remains read-only.
 
+- [2026-09-28 @pi] Build phase complete on clean pushed SHAs `af5645b4`, `5d1103f7` and `37429d59`: W1 MAP-only rehearsal (12/12; 8,640 v1.2 scores; 12 validity checks), >1.2 GiB test-DB round trip, four read-only production legacy loads, 9/9 focused suites, parallel 24/25 (known T007 only). Test-created objects were dropped; the separate database remains. No production writes. Report and runbook: `docs/architecture/harness_klm_report.md` and `docs/architecture/harness_klm_prod_runbook.md`. Board production, review and merge remain pending explicit approval.
+
 ## Verification & Findings
 
-Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database.
-
-- [2026-09-28 @pi] Build-phase evidence on clean pushed SHAs `af5645b4` and `5d1103f7`: W1 MAP-only rehearsal in `mcmc_experiments_test` 12/12 candidates, 8,640 v1.2 score rows, 12 validity checks, completed register preserved; test DB >1.2 GiB round trip (1,993,184,800 raw fold bytes; 44s), four read-only production legacy loads, 9/9 focused suites green, and parallel 24/25 with only known T007. The separate test DB is retained but its 15 test-created public objects were dropped after verification; no production write or non-MAP sampling. Details, logs and next-step runbook: `docs/architecture/harness_klm_report.md` and `harness_klm_prod_runbook.md`. (m)'s production board, Claude review, merge and production acceptance stay unchecked pending explicit approval.
+Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Final evidence and exact numbers are in the report linked above.
