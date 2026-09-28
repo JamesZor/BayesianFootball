@@ -660,9 +660,26 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test Set(deltas.control_run_id) == Set([ref_ctl1.run_id, ref_ctl2.run_id])
     end
 
+    @testset "Screen CLI test-database opt-in" begin
+        script = Module(:CandidatesScriptTest)
+        Base.include(script, joinpath(@__DIR__, "..", "scripts", "run_candidates.jl"))
+        parsed = script.parse_args(["candidates.jl", "--stage", "screen", "--test-db"])
+        @test parsed.test_db
+        @test !script.parse_args(["candidates.jl", "--stage", "screen"]).test_db
+    end
+
     @testset "8. Run CSV control groups and panel CLI" begin
         script = Module(:ScoreRunsScriptTest)
         Base.include(script, joinpath(@__DIR__, "..", "scripts", "score_runs.jl"))
+        w0_path = joinpath(@__DIR__, "..", "docs", "architecture",
+                           "harness_klm_W0_rescore_v12.csv")
+        w0_refs = script.load_run_refs(w0_path)
+        w0_groups = script.load_run_groups(w0_path)
+        @test length(w0_refs) == 14
+        @test length(w0_groups) == 2
+        @test sum(length(group.refs) for group in w0_groups) == 14
+        @test Set(group.control.label for group in w0_groups) ==
+              Set(["m12_td", "g2_harness_repro"])
         parsed = script.parse_args(["runs.csv", "--target-seasons", "23/24,24/25,25/26",
                                     "--expected-fixtures", "none"])
         @test parsed.target_seasons == ["23/24", "24/25", "25/26"]

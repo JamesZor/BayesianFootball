@@ -44,7 +44,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [033](033_backfill_championship_betfair_archive_for_the_t55_monitor.md) | Backfill Championship Betfair archive for the T55 monitor | BACKLOG | P2 | unassigned | 2026-09-27 |
 | [034](034_zero_allocation_compiled_gradients_in_the_builder_engine.md) | Zero-allocation compiled gradients in the builder engine | COMPLETED | P1 | claude | 2026-09-27 |
 | [035](035_sampler_side_allocation_and_grw_multi_thread_contention.md) | Sampler-side allocation and GRW multi-thread contention | BACKLOG | P2 | unassigned | 2026-09-27 |
-| [036](036_harness_persistence_and_reporting_fixes_k_l_m_j_gate_alignment.md) | Harness persistence and reporting fixes (k, l, m, j, gate alignment) | BLOCKED | P1 | pi | 2026-09-28 |
+| [036](036_harness_persistence_and_reporting_fixes_k_l_m_j_gate_alignment.md) | Harness persistence and reporting fixes (k, l, m, j, gate alignment) | ACTIVE | P1 | pi | 2026-09-28 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

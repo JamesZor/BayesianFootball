@@ -14,6 +14,7 @@ function parse_args(args)
     only_names = nothing
     container = :close_option_b
     log_dir = nothing
+    test_db = false
 
     i = 1
     while i <= length(args)
@@ -39,6 +40,9 @@ function parse_args(args)
         elseif startswith(arg, "--container=")
             container = Symbol(split(arg, "=", limit = 2)[2])
             i += 1
+        elseif arg == "--test-db"
+            test_db = true
+            i += 1
         elseif arg == "--log-dir"
             i + 1 <= length(args) || error("--log-dir requires a directory")
             log_dir = args[i + 1]
@@ -55,13 +59,13 @@ function parse_args(args)
         end
     end
 
-    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid|portfolio [--only name,...] [--container close_option_b|t25_calibrated] [--log-dir DIR]")
+    candidates_file !== nothing || error("Usage: julia --project -t 16 scripts/run_candidates.jl <candidates.jl> --stage screen|smoke|grid|portfolio [--only name,...] [--container close_option_b|t25_calibrated] [--log-dir DIR] [--test-db]")
     stage in (:screen, :smoke, :grid, :portfolio) || error(
         "Stage must be one of: screen, smoke, grid, portfolio; got $stage")
     container in (:close_option_b, :t25_calibrated) || error(
         "Container must be close_option_b or t25_calibrated; got $container")
 
-    return (; candidates_file, stage, only_names, container, log_dir)
+    return (; candidates_file, stage, only_names, container, log_dir, test_db)
 end
 
 function main()
@@ -103,7 +107,16 @@ function main()
 
     isempty(candidates) && error("No matching candidates selected to run")
 
-    db = Training.PostgresStorage(experiment)
+    db = if parsed.test_db
+        url = get(ENV, "BF_EXPERIMENTS_TEST_DB_URL", "")
+        isempty(strip(url)) && error("--test-db requires BF_EXPERIMENTS_TEST_DB_URL")
+        target = Training.PostgresStorage(url, experiment)
+        target.dbname == "mcmc_experiments_test" || error(
+            "--test-db refuses non-test database $(target.dbname)")
+        target
+    else
+        Training.PostgresStorage(experiment)
+    end
     Training.ensure_schema!(db)
     Harness.ensure_harness_schema!(db)
 
@@ -230,7 +243,7 @@ function main()
         run_commits = run_commits,
         readme = relpath(readme_path, pwd())
     )
-    Harness.write_experiment!(db, exp_row)
+    Harness.write_experiment!(db, exp_row; preserve_completed = stage === :screen)
 
     return 0
 end

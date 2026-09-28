@@ -86,7 +86,9 @@ julia --project -t 16 scripts/run_candidates.jl \
 
 Use `--only name1,name2` to limit a smoke or grid. `smoke` and `grid` require
 at least eight Julia threads and pin threads; the normal beast invocation is
-`-t 16`. `portfolio` reuses completed grid runs and accepts
+`-t 16`. Every smoke invocation gets a new `smoke_nonce:` config tag, so re-smoking an
+unchanged recipe saves a distinct fit while its `harness_checks.recipe_hash` remains stable.
+Grid fits are saved at full stride 1; persistence failures are errors, not thinning requests. `portfolio` reuses completed grid runs and accepts
 `close_option_b` or `t25_calibrated`; it does not sample a new fit.
 
 | Stage | Purpose | Pass condition and interpretation |
@@ -104,8 +106,14 @@ telemetry, not a pass certificate. Inspect `harness_checks` and the runner's
 
 ### MAP screen caveat
 
-Screen is a triage tool, not posterior inference. It is useful for simple
-within-class ranking, but it cannot replace the NUTS grid. In particular,
+Screen is a triage tool, not posterior inference. Screen fits are in memory only; the
+synthetic recipe UUIDs cannot be re-scored with `score_runs.jl`. To refresh a MAP screen
+for a new scorecard, re-run `--stage screen`. For a test-database rehearsal, set
+`BF_EXPERIMENTS_TEST_DB_URL` to the isolated `mcmc_experiments_test` and pass `--test-db`:
+the script rejects missing or mispointed test URLs and preserves the metadata of an existing
+completed experiment register row on re-screen.
+
+It is useful for simple within-class ranking, but it cannot replace the NUTS grid. In particular,
 models with learned hierarchical or random-walk scales (including
 `TimeDecayDynamics`, which learns attack/defence σ, and `MultiScaleGRW`) receive
 `screen_validity = "limited"`: MAP shrinkage can

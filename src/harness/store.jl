@@ -286,7 +286,8 @@ end
 Upsert one static register row by its stable textual ID.  `run_ids` deliberately remains text:
 older EDA-only suites and a missing suite 09 have no model-run UUID to invent.
 On conflict, run IDs and optional UUID-keyed `run_commits` are merged atomically so
-independent `--only` invocations cannot erase one another's provenance.
+independent `--only` invocations cannot erase one another's provenance. A re-screen passes
+`preserve_completed=true`: an existing completed experiment keeps all register metadata.
 """
 # Mirrors the atomic SQL upsert's sorted, de-duplicated union; useful for
 # offline register assertions when the experiment database is unavailable.
@@ -295,7 +296,8 @@ function _merge_experiment_run_ids(existing::AbstractString, incoming::AbstractS
     return join(sort!(unique(String.(ids))), ",")
 end
 
-function write_experiment!(db::Training.PostgresStorage, row)
+function write_experiment!(db::Training.PostgresStorage, row;
+                           preserve_completed::Bool = false)
     values = NamedTuple{_HARNESS_EXPERIMENT_COLUMNS}(Tuple(
         _harness_row_value(row, column) for column in _HARNESS_EXPERIMENT_COLUMNS))
     ismissing(values.id) && error("experiment row id must not be missing.")
@@ -308,23 +310,30 @@ function write_experiment!(db::Training.PostgresStorage, row)
                 id, date, todo, question, dimension, status, decision, run_ids, readme, run_commits
             ) VALUES (\$1, \$2::date, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10::jsonb)
             ON CONFLICT (id) DO UPDATE SET
-                date = EXCLUDED.date,
-                todo = EXCLUDED.todo,
-                question = EXCLUDED.question,
-                dimension = EXCLUDED.dimension,
-                status = EXCLUDED.status,
-                decision = EXCLUDED.decision,
+                date = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                            THEN harness_experiments.date ELSE EXCLUDED.date END,
+                todo = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                            THEN harness_experiments.todo ELSE EXCLUDED.todo END,
+                question = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.question ELSE EXCLUDED.question END,
+                dimension = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                 THEN harness_experiments.dimension ELSE EXCLUDED.dimension END,
+                status = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                              THEN harness_experiments.status ELSE EXCLUDED.status END,
+                decision = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.decision ELSE EXCLUDED.decision END,
                 run_ids = (
                     SELECT COALESCE(string_agg(DISTINCT id, ',' ORDER BY id), '')
                     FROM unnest(string_to_array(harness_experiments.run_ids || ',' || EXCLUDED.run_ids, ',')) AS ids(id)
                     WHERE id <> ''
                 ),
                 run_commits = harness_experiments.run_commits || EXCLUDED.run_commits,
-                readme = EXCLUDED.readme;
+                readme = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.readme ELSE EXCLUDED.readme END;
         """, (string(values.id), string(values.date), _harness_nullable(values.todo),
               String(values.question), String(values.dimension), String(values.status),
               String(values.decision), String(values.run_ids), String(values.readme),
-              JSON3.write(commits)))
+              JSON3.write(commits), preserve_completed))
     finally
         close(conn)
     end

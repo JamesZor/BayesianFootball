@@ -129,7 +129,29 @@ end
             experiment = "db_storage_test_$(uuid4())"
             storage = PostgresStorage(test_url, experiment)
             ensure_schema!(storage)
+            BayesianFootball.Harness.ensure_harness_schema!(storage)
             fit = db_storage_fit(mktempdir())
+
+            @testset "Completed register survives re-screen" begin
+                harness = BayesianFootball.Harness
+                original = (; id = experiment, date = Date(2026, 9, 27), todo = 31,
+                            question = "Original", dimension = "dynamics", status = "completed",
+                            decision = "Co-finalists", run_ids = string(uuid4()),
+                            readme = "experiments/original/README.md")
+                harness.write_experiment!(storage, original)
+                new_id = string(uuid4())
+                replacement = merge(original, (; date = Date(2026, 9, 28),
+                    question = "Changed", status = "screened", decision = "pending",
+                    run_ids = new_id, readme = "new README"))
+                harness.write_experiment!(storage, replacement; preserve_completed = true)
+                row = only(eachrow(filter(:id => ==(experiment), harness.read_experiments(storage))))
+                @test row.date == original.date
+                @test row.status == original.status
+                @test row.decision == original.decision
+                @test row.question == original.question
+                @test row.readme == original.readme
+                @test Set(split(row.run_ids, ',')) == Set([original.run_ids, new_id])
+            end
 
             fit_hash = save_config(storage, "production-fit", fit.config;
                                    description = "single source of truth",
@@ -211,6 +233,34 @@ end
             @test_throws ErrorException save_fit(fit, storage; on_duplicate = :error)
             @test_throws ErrorException save_fit(fit, storage; on_duplicate = :ignore)
             @test length(config_hash(fit, storage)) == 64
+
+            @testset "Repeated smoke identities and fit parity" begin
+                harness = BayesianFootball.Harness
+                scope = Data.DataScope(name = "smoke_nonce_test", train_tournaments = [56],
+                                       target_tournaments = [56], clock_tournaments = [56])
+                candidate = harness.Candidate(name = fit.config.name,
+                    model = db_storage_count_model(), scope = scope, role = :control)
+                configs = [harness._smoke_fit_config(candidate, experiment) for _ in 1:2]
+                @test harness.recipe_hash(candidate) == harness.recipe_hash(candidate)
+                @test configs[1].tags != configs[2].tags
+                repeats = UUID[]
+                for cfg in configs
+                    smoke_fit = Fit(cfg, fit.folds, fit.latents, fit.diagnostics,
+                                    fit.metadata, fit.save_path)
+                    push!(repeats, save_fit(smoke_fit, storage; on_duplicate = :error))
+                    @test harness._fit_parity(smoke_fit, load_fit(storage, last(repeats))).folds == 1
+                end
+                @test allunique(repeats)
+                conn = LibPQ.Connection(test_url)
+                try
+                    for id in repeats
+                        close(LibPQ.execute(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                             (string(id),)))
+                    end
+                finally
+                    close(conn)
+                end
+            end
 
             loaded = load_fit(run_id, storage)
             @test loaded isa Fit
@@ -397,6 +447,9 @@ end
                 config_set = LibPQ.execute(conn,
                     "DELETE FROM config_registry WHERE experiment_name = \$1;", (experiment,))
                 close(config_set)
+                register_set = LibPQ.execute(conn,
+                    "DELETE FROM harness_experiments WHERE id = \$1;", (experiment,))
+                close(register_set)
             finally
                 close(conn)
             end

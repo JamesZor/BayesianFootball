@@ -9,6 +9,14 @@
 
 const SCREEN_NAMESPACE_UUID = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+"A new smoke identity for every invocation, independent of the scientific recipe hash."
+function _smoke_fit_config(candidate::Candidate, experiment::AbstractString)
+    config = fit_config(candidate; stage = :smoke, experiment)
+    # Never use a time: tag: `_db_recipe_tags` excludes those from config_hash.
+    push!(config.tags, "smoke_nonce:" * string(uuid4()))
+    return config
+end
+
 "Run in-memory MAP inference on all folds for a cohort of candidates and score them."
 function screen(candidates::AbstractVector{<:Candidate};
                 ds::Data.DataStore,
@@ -147,10 +155,7 @@ function smoke(candidate::Candidate;
         end
 
         # 3. Fit 2 folds
-        fit_cfg = fit_config(candidate; stage = :smoke, experiment = experiment)
-        # Nonce is deliberately not a time: tag: it must enter config_hash, while
-        # harness_checks.recipe_hash stays keyed to the unchanged scientific recipe.
-        push!(fit_cfg.tags, "smoke_nonce:" * string(uuid4()))
+        fit_cfg = _smoke_fit_config(candidate, experiment)
         fit = Training.fit_model(fit_cfg;
             feature_sets = inputs.feature_sets,
             oos_fixtures = inputs.oos,
