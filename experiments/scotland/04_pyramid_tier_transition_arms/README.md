@@ -338,4 +338,11 @@ compression by cell. The market scores 0.6235 on T54 and 0.6324 on T55.
   2. `W2_m12_vs_td_base_runs.csv`;
   3. `W2_finalists_vs_b1lit_runs.csv`.
 
-  Then `scripts/leaderboard.jl`. Logs are in `/root/BF_runs/logs/4fc4582a/w2_score/`.
+  Logs are in `/root/BF_runs/logs/4fc4582a/w2_score/`.
+- **Register:** the row was upserted from `candidates.jl` at `3bdad93e`, and `REGISTER.md` was
+  regenerated.
+- **`LEADERBOARD.md` is deliberately not regenerated.** `leaderboard.jl` reads v1.2 rows only, and
+  the W0 reference runs (including `m12_td` `132df5c2`) have only v1.1 rows, so regenerating would
+  drop them. It also shows Δ only against the W0 control, so every W2 Δ would read "—". This README
+  is the W2 score record; the scores are in `harness_scores` (v1.2, W2 panel). See harness
+  follow-up (m), TODO 031.

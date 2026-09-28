@@ -257,6 +257,12 @@ per-league performance against the Betfair close for 54/55 as a monitor.
     - `grw_base` is 1,015 MB at stride 2. Every other W2 GRW arm fell back to stride 4, the last
       rung, where `stages.jl` rethrows and the sampling is lost.
     - Fix: chunk the artefact per fold, or store Float32.
+  - **Harness follow-up (m):** `scripts/leaderboard.jl` reads v1.2 rows only.
+    - Regenerating it would drop the 14 W0 reference runs, which have only v1.1 rows (`m12_td`
+      `132df5c2`, `m05`, `m13`, …), and the MAP-screen section.
+    - It shows Δ only against the W0 control, so it cannot display W2's per-base Δs.
+    - `LEADERBOARD.md` is therefore left at v1.1. Only `REGISTER.md` was regenerated (+1 row, W2).
+    - Fix: re-score W0 under v1.2 (scoring only), and have the board use each row's own control.
   - **Pending the human:** stale in-process v1.2 rows pairing `grw_base` and the 3 lower-scope
     cells with `td_base` (not on the leaderboard) await a delete decision.
 
