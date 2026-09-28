@@ -1,0 +1,3 @@
+label,experiment,run_id,role,control
+td_base,scottish_pyramid_tier_transition_w2,1cdff82a-4910-4d88-b7e0-5a465510ac96,control,
+m12_td_ref,scottish_pyramid_tier_transition_w2,973baafa-2950-4393-b47e-9d7c901f2af2,candidate,td_base

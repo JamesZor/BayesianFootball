@@ -6,8 +6,8 @@ const EXPERIMENT = "scottish_pyramid_tier_transition_w2"
 const TODO = 31
 const QUESTION = "Can explicit pyramid tiers and transition events fix cross-tier compression and league-change bias?"
 const DIMENSION = "pyramid_tiers_transition_observation"
-const STATUS = "spec agreed, not run"
-const DECISION = "spec agreed, not run"
+const STATUS = "completed"
+const DECISION = "Transition fix demonstrated by tier target A2 (8 arms pass both gates, all with A2); LL tie among passers; co-finalists td_lower_a2full_carry_jump + grw_step_a2_carry_jump (human); b1lit excluded for prior leakage; TD compression 1.46-1.61, W3 stays."
 const README = joinpath(@__DIR__, "README.md")
 # Candidate has one experiment-wide role/control and cannot encode a different
 # paired control per row. The manager scores GRW rows vs grw_base and lower rows

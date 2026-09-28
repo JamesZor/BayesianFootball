@@ -1,0 +1,7 @@
+label,experiment,run_id,role,control
+td_lower_b1lit,scottish_pyramid_tier_transition_w2,5cf71ee6-e4d2-4e86-96a6-fc52c316cbac,control,
+td_lower_a2full_carry_jump,scottish_pyramid_tier_transition_w2,6c0aa3ea-7e0e-466b-a102-aa18346be8c0,candidate,td_lower_b1lit
+td_a2,scottish_pyramid_tier_transition_w2,87330b48-77ac-46af-8e53-2c2b2cfea7e5,candidate,td_lower_b1lit
+td_a2_carry_jump_ldelta,scottish_pyramid_tier_transition_w2,bf877fb1-0e6f-4ce1-b366-0ecf3c08f071,candidate,td_lower_b1lit
+grw_step_a2_carry_jump,scottish_pyramid_tier_transition_w2,c4a0fa94-42bf-4c1c-99bd-7511f0272062,candidate,td_lower_b1lit
+m12_td_ref,scottish_pyramid_tier_transition_w2,973baafa-2950-4393-b47e-9d7c901f2af2,candidate,td_lower_b1lit

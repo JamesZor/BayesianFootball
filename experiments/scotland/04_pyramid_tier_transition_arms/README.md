@@ -1,7 +1,9 @@
 # 04 — Pyramid tier and transition arms (TODO 031 Wave 2)
 
-**Status: SPEC AGREED 2026-09-27, not yet built.** This README is the wave-2 contract agreed with
-the human in the 2026-09-27 grill-me session. Results will be appended below it. Experiment name
+**Status: COMPLETED 2026-09-28. Transition fix demonstrated by the tier target (A2); two
+co-finalists go on: `td_lower_a2full_carry_jump` and `grw_step_a2_carry_jump`** (human decision;
+see [Result](#result--wave-2-grid-2026-09-28-scorecard-v12)). Sections 1–8 are the wave-2 contract
+agreed with the human in the 2026-09-27 grill-me session; results follow them. Experiment name
 `scottish_pyramid_tier_transition_w2`. Predecessor: [`03_dynamics_scope_matrix`](../03_dynamics_scope_matrix/README.md)
 (W1). Tracking: [`todos/031`](../../../todos/031_scottish_pyramid_dynamics_x_scope_x_observation_matrix.md).
 Priors: [`02_cross_tier_cups_and_pyramid_eda`](../02_cross_tier_cups_and_pyramid_eda/README.md) §7 (TODO 029).
@@ -200,3 +202,140 @@ they exist, for scoring.
 3. **W4:** `PlayerLineupPillar` + wealth. Revisit B2 (market-derived prior) here if the outliers
    persist.
 4. **W5:** T−25 calibrated finalist portfolio vs `m12_td`.
+
+## Result — Wave 2 grid (2026-09-28, scorecard `v1.2`)
+
+**Decision (human, 2026-09-28): the transition fix is demonstrated, by the tier target A2. Two
+co-finalists go on to W3/W4, one per dynamics family: `td_lower_a2full_carry_jump` (TD, lower scope)
+and `grw_step_a2_carry_jump` (GRW, pooled + cups).**
+- Eight arms pass both gates, and every one of them carries A2 (or its B1-literal sibling).
+- The gate-passers tie on target LogLoss (paired table below), so "best" had no statistical winner.
+- The literal lowest-LogLoss arm, `td_lower_b1lit`, is set aside for prior leakage (caveats).
+
+Reference: de-vigged Betfair TWA (−20, 0] close. Target = 1,070 held-out 56/57 fixtures in 60 folds
+(panel `56+57|23/24,24/25,25/26|n=1070`); every cell is scored on identical observation counts.
+- **Compression:** market-on-model 1X2 slope. 1 is ideal; above 1 means the model is compressed.
+- **Bias:** mean model − market win probability of the transitioning club, in pp, over its first
+  20 league matches. Positive means over-rated. CIs are club-season-clustered.
+- **Deltas:** paired fixture-clustered bootstraps (B = 10,000) against the arm's **own base**.
+  Gate 1 needs ΔLL CI upper < +0.002. Gate 2 needs Δ|bias| < 0 on both cohorts, with at least one
+  CI below 0.
+- **Cohort sizes (first 20):** relegated into L1 90 fixtures, promoted into L1 107, entered SPFL 15.
+
+| Cell | Target LL | ECE | Compression (all / t56 / t57) | Relegated → L1 bias | Promoted → L1 bias | ΔLL vs base [95% CI] | Δ\|bias\| rel / pro | Gates | Run |
+|---|---:|---:|---|---:|---:|---:|---|:-:|---|
+| `td_base` (ctl) | 0.6392 | 0.0099 | 1.51 / 1.58 / 1.38 | −9.50 [−13.76, −4.83] | +5.39 [+3.38, +7.38] | 0 | — | — | `1cdff82a` |
+| `td_a2` | 0.6374 | 0.0107 | 1.51 / 1.50 / 1.51 | −4.16 [−7.30, +0.29] | −0.02 [−1.55, +1.40] | −0.0018 [−0.0040, +0.0005] | −5.34* / −5.36* | ✓✓ | `87330b48` |
+| `td_a2_carry` | 0.6375 | 0.0104 | 1.58 / 1.59 / 1.57 | −5.14 [−8.32, −0.81] | +0.86 [−0.74, +2.30] | −0.0017 [−0.0037, +0.0003] | −4.36* / −4.52* | ✓✓ | `f29455af` |
+| `td_a2_carry_jump` | 0.6369 | 0.0163 | 1.56 / 1.56 / 1.53 | −4.50 [−6.79, −1.01] | +0.77 [−0.97, +2.57] | −0.0022 [−0.0043, −0.0002] | −5.00* / −4.61* | ✓✓ | `e812e223` |
+| `td_ldelta` | 0.6386 | 0.0076 | 1.53 / 1.61 / 1.38 | −9.04 [−13.27, −4.32] | +6.16 [+4.20, +8.13] | −0.0006 [−0.0024, +0.0012] | −0.46* / **+0.78*** | ✓✗ | `0af24493` |
+| `td_a2_carry_jump_ldelta` | 0.6368 | 0.0112 | 1.61 / 1.63 / 1.57 | −4.30 [−6.61, −0.75] | +1.31 [−0.30, +3.08] | −0.0024 [−0.0050, +0.0002] | −5.20* / −4.07* | ✓✓ | `bf877fb1` |
+| `grw_base` (ctl) | 0.6404 | 0.0113 | 1.14 / 1.19 / 1.03 | −5.44 [−10.14, −1.07] | +3.41 [+0.76, +6.86] | 0 | — | — | `ce7ea22f` |
+| `grw_step` | 0.6384 | 0.0152 | 1.15 / 1.20 / 1.06 | −4.51 [−7.80, −1.67] | +3.20 [+0.67, +6.62] | **−0.0020 [−0.0037, −0.0004]** | −0.92 / −0.21 | ✓✗ | `79247533` |
+| **`grw_step_a2_carry_jump`** | 0.6377 | 0.0102 | 1.20 / 1.22 / 1.14 | −2.65 [−5.20, +0.13] | +1.19 [−0.91, +4.12] | **−0.0026 [−0.0046, −0.0007]** | −2.78* / −2.22 | ✓✓ | `c4a0fa94` |
+| `grw_step_ldelta` | 0.6379 | 0.0149 | 1.16 / 1.21 / 1.05 | −4.38 [−7.56, −1.40] | +4.05 [+1.62, +7.27] | −0.0025 [−0.0051, +0.0000] | −1.06 / **+0.64*** | ✓✗ | `8987f71e` |
+| `grw_step_a2_carry_jump_ldelta` | 0.6375 | 0.0188 | 1.21 / 1.24 / 1.14 | −2.51 [−4.98, +0.28] | +2.02 [−0.24, +5.07] | **−0.0029 [−0.0054, −0.0005]** | −2.92* / −1.39* | ✓✓ | `399a9190` |
+| `td_lower_base` (ctl) | 0.6383 | 0.0102 | 1.60 / 1.69 / 1.42 | −4.24 [−6.28, −2.19] | +4.46 [+2.87, +6.00] | 0 | — | — | `0dd74a52` |
+| **`td_lower_a2full_carry_jump`** | 0.6369 | 0.0111 | 1.46 / 1.46 / 1.44 | **−0.63 [−1.56, +0.58]** | **+0.88 [−0.93, +2.56]** | −0.0014 [−0.0029, +0.0002] | −3.60* / −3.57* | ✓✓ | `6c0aa3ea` |
+| `td_lower_b1lit` ⚠ | 0.6362 | 0.0099 | 1.32 / 1.34 / 1.26 | +0.97 [−0.86, +2.87] | +2.59 [+0.45, +4.91] | −0.0021 [−0.0044, +0.0002] | −3.27 / −1.86* | ✓✓ | `5cf71ee6` |
+| `m12_td_ref` (reference) | 0.6377 | 0.0151 | 1.45 / 1.48 / 1.36 | −2.52 [−6.45, +1.37] | +4.72 [+2.28, +7.28] | −0.0006 [−0.0024, +0.0012] | −1.71 / +0.26 | (✓✗) | `973baafa` |
+
+\* Δ|bias| CI excludes 0. `m12_td_ref` is paired against `td_lower_base` and does not gate. Against
+`td_base` it has ΔLL −0.0015 [−0.0048, +0.0019] and Δ|bias| −6.98* / −0.67.
+
+**Leading arms paired against `td_lower_b1lit`** (the lowest target LogLoss). No arm is
+distinguishable on LogLoss:
+
+| Arm | ΔLL target [95% CI] | Δ\|bias\| relegated | Δ\|bias\| promoted |
+|---|---:|---:|---:|
+| `td_a2_carry_jump_ldelta` | +0.0005 [−0.0023, +0.0033] | +3.33 [+0.37, +6.17] | −1.28 [−2.26, −0.12] |
+| `td_lower_a2full_carry_jump` | +0.0007 [−0.0011, +0.0024] | −0.34 [−2.43, +1.22] | −1.71 [−2.72, +0.18] |
+| `td_a2` | +0.0012 [−0.0024, +0.0047] | +3.19 [−0.36, +6.87] | −2.57 [−3.91, +0.89] |
+| `grw_step_a2_carry_jump` | +0.0015 [−0.0024, +0.0053] | +1.69 [−0.94, +4.76] | −1.40 [−2.74, +0.40] |
+| `m12_td_ref` | +0.0015 [−0.0015, +0.0045] | +1.55 [−2.21, +5.90] | +2.12 [−0.76, +5.03] |
+
+**54/55 monitor (pooled scopes; reported, not gating).** Monitor LogLoss (all markets) and
+compression by cell. The market scores 0.6235 on T54 and 0.6324 on T55.
+
+| Cell | T54 LL | T55 LL | T54 compression | T55 compression |
+|---|---:|---:|---:|---:|
+| `td_base` | 0.6396 | 0.6452 | 1.58 | 1.71 |
+| `td_a2` | 0.6352 | 0.6421 | 1.29 | 1.67 |
+| `td_a2_carry` | 0.6350 | 0.6423 | 1.30 | 1.74 |
+| `td_a2_carry_jump` | 0.6348 | 0.6422 | 1.30 | 1.67 |
+| `td_ldelta` | 0.6338 | 0.6457 | 1.56 | 1.74 |
+| `td_a2_carry_jump_ldelta` | 0.6304 | 0.6426 | 1.28 | 1.73 |
+| `grw_base` | 0.6403 | 0.6433 | 1.26 | 1.19 |
+| `grw_step` | 0.6395 | 0.6440 | 1.29 | 1.23 |
+| `grw_step_a2_carry_jump` | 0.6377 | 0.6419 | 1.28 | 1.25 |
+| `grw_step_ldelta` | 0.6315 | 0.6455 | 1.25 | 1.23 |
+| `grw_step_a2_carry_jump_ldelta` | 0.6302 | 0.6434 | 1.25 | 1.26 |
+
+### Findings
+
+1. **The tier target A2 is the transition fix.** Every arm with A2 passes both gates, in all three
+   scopes. Against its own base, relegated |bias| falls by 2.8–5.3 pp and promoted by 1.4–5.4 pp.
+   No arm without A2 passes gate 2.
+2. **Carry κ and jump η add nothing on the pooled TD scope.** `td_a2` alone has the best promoted
+   bias there. In the lower scope, the full-pyramid anchor with carry and jump gives the smallest
+   residual bias of any cell: −0.63 / +0.88 at first 20 (+2.03 / +0.89 at first 10), with both CIs
+   including 0.
+3. **League δ does its designed job and nothing else.** It fixes the Premiership pxG scale on the
+   monitor: T54 LogLoss 0.6396 → 0.6338 on TD, and 0.6395 → 0.6315 for `grw_step`. It does not
+   improve the League One/Two target, and it makes promoted clubs **worse** (Δ|bias| +0.78 and
+   +0.64, both CIs above 0). Keep it only where the Premiership is priced.
+4. **The GRW summer macro step improves LogLoss on its own** (−0.0020 [−0.0037, −0.0004]). It does
+   not move transition bias. All four GRW arms beat `grw_base` on LogLoss with CIs below 0.
+5. **Compression is not fixed on TD.** A2 leaves pooled TD at 1.51–1.61 and brings lower-scope TD
+   from 1.60 to 1.46. GRW stays the least compressed (1.14–1.21); A2 adds about +0.06 there. On the
+   Premiership monitor A2 does decompress TD (T54 1.58 → 1.29). §8's condition for dropping W3 (TD
+   winner at compression ≈ 1.0–1.2) is **not met**, so W3 stays in.
+6. **Every gate-passer is within noise of the live `m12` on target LogLoss.** `m12_td_ref` over-rates
+   promoted clubs by +4.72 pp [+2.28, +7.28]. Neither co-finalist does.
+7. **Entered-SPFL clubs get worse under A2 in the pooled scopes** (2 clubs, 15 fixtures; diagnostic
+   only). TD moves from −9.0 to between −12.2 and −13.3; GRW from −4.4/−5.1 to −9.0/−9.1. A2 anchors
+   those clubs at their first, lowest tier with no η. Revisit with B2 or wealth in W4.
+8. **ECE rises on some arms:** `td_a2_carry_jump` 0.0163, `grw_step` 0.0152,
+   `grw_step_a2_carry_jump_ldelta` 0.0188 and `m12_td_ref` 0.0151, against 0.010–0.011 for the bases.
+   Both co-finalists are at ≤ 0.0111.
+
+### Caveats
+
+- **B1-literal leaks the target.** Its fixed TODO 029 priors precision-weight structural ratings
+  with the **closing market's view of each transitioning club over its first five league games**,
+  over 2021/22–2026/27 ([02 README](../02_cross_tier_cups_and_pyramid_eda/README.md) §7, Option B).
+  That window includes this panel's relegated and promoted cohorts, and gate 2 scores exactly those
+  clubs against the same market. So `td_lower_b1lit`'s lead on LogLoss and compression is not
+  clean evidence, and it is not a finalist.
+- **A weaker overlap exists for A2.** The step prior TruncatedNormal(0.47, 0.16) comes from
+  2021/22+ results (not prices), and s is re-estimated in every fold.
+- **The finalists were selected on this panel.** Treat their margins as exploratory until the W2.5
+  live re-price and the 26/27 fixtures accumulate.
+- **Convergence.** Every cell is under the human's rerun rule: R̂ ≤ 1.018 against 1.05, and
+  divergences ≤ 70 / 240,000 (0.029%) against 0.1%. So no 0.80 reruns were made.
+  - Three GRW arms carry a `review` fail from the harness's own ESS > 400 gate:
+    `grw_step_a2_carry_jump` (tail ESS 372, fold 40), `grw_step_ldelta` (bulk 344, fold 59) and
+    `grw_step_a2_carry_jump_ldelta` (329). ESS is not part of the rerun rule, so this is accepted.
+  - A failed review stores `{}` in `harness_checks.value`. The R̂ and divergence figures above come
+    from the grid logs (harness follow-up (k), TODO 031).
+- **Persistence.** `grw_base` was saved at stride 2 (2,000 draws). The four GRW arms were saved at
+  stride 4 (1,000 draws), because their stride-2 fits exceed PostgreSQL's 1 GiB field limit.
+  `grw_base` itself is 1,015 MB at stride 2. That is ample for scoring, but the harness ladder ends
+  at stride 4 (harness follow-up (l), TODO 031).
+- **Stale rows.** `harness_scores` still holds pre-rescore v1.2 rows that pair `grw_base` and the
+  three lower-scope cells with `td_base` (written in-process at grid time). They do not feed the
+  leaderboard. Deletion awaits the human.
+
+### Reproduction
+
+- **Smokes:** 15/15 at `a76a65df`, each 6/6 hard checks.
+- **Grids:** `a76a65df` on mcmc-beast via `harness_queue.sh`. The TD batch (10 cells) took 84 min;
+  the GRW batch took 97 / 112 / 156 / 114 / 152 min per cell. Logs are in
+  `/root/BF_runs/logs/a76a65df/`.
+- **Scoring:** from a clean `4fc4582a` checkout with the grids' own datastore cache (md5
+  `db3ed548`), `--target-seasons 23/24,24/25,25/26 --expected-fixtures 1070`, in three passes:
+  1. `W2_runs.csv`: each arm against its own base;
+  2. `W2_m12_vs_td_base_runs.csv`;
+  3. `W2_finalists_vs_b1lit_runs.csv`.
+
+  Then `scripts/leaderboard.jl`. Logs are in `/root/BF_runs/logs/4fc4582a/w2_score/`.

@@ -8,7 +8,7 @@
 | Priority | P1 |
 | Assignee | claude |
 | Created | 2026-09-26 |
-| Updated | 2026-09-27 |
+| Updated | 2026-09-28 |
 | Related Files / Commits / PRs | TODO 030 (dependency), TODO 028 (superseded), TODO 029, `current_development/grw_pyramid_cups/`, `experiments/scotland/` |
 
 ## Context & Problem Statement
@@ -40,12 +40,14 @@ per-league performance against the Betfair close for 54/55 as a monitor.
       rows and transition-bias CIs missing — see Work Log) Grid scorecard (`scotland_default_v1`) for all twelve: target, per-tier (incl.
       54/55 monitor for pooled scopes), transition and cold-start subsets; paired bootstrap
       vs champion; factorial read-out (dynamics / scope / observation main effects).
-- [ ] Wave 2 (spec agreed 2026-09-27, see the decision block in the Work Log and
+- [x] Wave 2 (spec agreed 2026-09-27, see the decision block in the Work Log and
       `experiments/scotland/04_pyramid_tier_transition_arms/README.md`): 15 cells on the
       23/24–25/26 panel. Pyramid tier component (anchor, carry κ, jump η, B1-literal mode),
       league deltas on intercept and log κ (replacing A1), a `MultiScaleGRW` target-season macro
       step. Bases `td_spfl_cups_joint` and `grw_spfl_cups_joint` with `td_lower_joint` and
       `m12_td` re-run; judged on the two-gate rule. `PlayerLineupPillar` + wealth (and B2) move to W4.
+      **Done 2026-09-28:** 15/15 grids scored (v1.2, n = 1,070); A2 is the transition fix; co-finalists
+      `td_lower_a2full_carry_jump` and `grw_step_a2_carry_jump` (human decision).
 - [ ] Finalist stage (T−25 calibrated portfolio) for the top candidates vs `m12_td`.
 - [ ] 2026-09-19 slate re-priced (Cove v Ross County, Hamilton v QoS) from the finalists
       with a fold trained to the card (see the card-injection procedure).
@@ -228,8 +230,42 @@ per-league performance against the Betfair close for 54/55 as a monitor.
   - Manager's note for the record: current guidance (Vehtari et al. 2021) recommends 1.01; ESS > 400
     on both cells supports the human's call.
 
+- [2026-09-28 @claude] **W2 complete; decision (human): two co-finalists.**
+  - **GRW batch** from `a76a65df`: 5/5 grids, hard checks 4/4, 1,070 / 60, verified in the DB by the
+    manager: `grw_base` `ce7ea22f`, `grw_step` `79247533`, `grw_step_a2_carry_jump` `c4a0fa94`,
+    `grw_step_ldelta` `8987f71e`, `grw_step_a2_carry_jump_ldelta` `399a9190`.
+    - R̂ ≤ 1.018 and divergences ≤ 70 / 240k, so no 0.80 reruns under the 1.05 rule.
+    - Three arms carry a `review` fail from the harness's own ESS > 400 gate (tail 372, bulk 344,
+      329); accepted.
+  - **Scoring** from a clean `4fc4582a` checkout with the grids' datastore cache (md5 `db3ed548`),
+    in three passes: 15 runs against their own base; `m12_td_ref` against `td_base`; the leading
+    arms against `td_lower_b1lit`. Results and tables are in the W2 README.
+  - **Gates:** 8 arms pass both gates, and all carry A2 (or B1-literal).
+    - `td_ldelta`, `grw_step` and `grw_step_ldelta` fail gate 2. League δ worsens promoted bias.
+    - The gate-passers tie on target LogLoss: paired against `td_lower_b1lit`, every CI includes 0.
+  - **Excluded:** `td_lower_b1lit` (lowest LogLoss 0.6362, compression 1.32). The B1 priors
+    include the closing market's first-5-game view of the in-panel transition clubs (TODO 029 §7),
+    so gate 2 is partly in-sample.
+  - **Decision (human):** carry `td_lower_a2full_carry_jump` (bias −0.63 / +0.88, compression 1.46)
+    and `grw_step_a2_carry_jump` (compression 1.20, bias −2.65 / +1.19) to W3/W4.
+    - TD compression is 1.46–1.61, so W3 stays.
+    - Next agreed step: W2.5 (re-price the 2026-09-19 slate), pending the human's go-ahead.
+  - **Harness follow-up (k):** a failed `convergence` review writes `value = {}`, dropping R̂, ESS
+    and divergences. Only the grid log keeps them. The check should persist its metrics on failure.
+  - **Harness follow-up (l):** a whole fit is one `fit_artifacts.fit_blob`, and PostgreSQL caps a
+    field at 1 GiB even on the binary path.
+    - `grw_base` is 1,015 MB at stride 2. Every other W2 GRW arm fell back to stride 4, the last
+      rung, where `stages.jl` rethrows and the sampling is lost.
+    - Fix: chunk the artefact per fold, or store Float32.
+  - **Pending the human:** stale in-process v1.2 rows pairing `grw_base` and the 3 lower-scope
+    cells with `td_base` (not on the leaderboard) await a delete decision.
+
 ## Verification & Findings
 
 - Wave 1 (2026-09-27): 12/12 cells scored (scorecard v1.1, 710 target fixtures). Results,
   main effects and caveats: `experiments/scotland/03_dynamics_scope_matrix/README.md`; rows in
   `experiments/LEADERBOARD.md`; register row `scottish_dynamics_scope_matrix_w1` = completed.
+- Wave 2 (2026-09-28): 15/15 cells scored (v1.2, 1,070 target fixtures, 60 folds). A2 is the
+  transition fix; co-finalists `td_lower_a2full_carry_jump` and `grw_step_a2_carry_jump`. Results:
+  `experiments/scotland/04_pyramid_tier_transition_arms/README.md`; register row
+  `scottish_pyramid_tier_transition_w2` = completed.

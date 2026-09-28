@@ -39,7 +39,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [028](028_cross_tier_scottish_pyramid_and_informative_priors_time_decay_models.md) | Cross-Tier Scottish Pyramid and Informative Priors Time-Decay Models | COMPLETED | P1 | claude | 2026-09-27 |
 | [029](029_cross_tier_scottish_cup_and_pyramid_hierarchy_eda.md) | Cross-tier Scottish Cup and pyramid hierarchy EDA | COMPLETED | P1 | claude | 2026-09-24 |
 | [030](030_shared_experiment_harness_recipes_gates_runner_scorecard_leaderboard.md) | Shared experiment harness: recipes, gates, runner, scorecard, leaderboard | COMPLETED | P1 | pi | 2026-09-27 |
-| [031](031_scottish_pyramid_dynamics_x_scope_x_observation_matrix.md) | Scottish pyramid dynamics x scope x observation matrix | ACTIVE | P1 | claude | 2026-09-27 |
+| [031](031_scottish_pyramid_dynamics_x_scope_x_observation_matrix.md) | Scottish pyramid dynamics x scope x observation matrix | ACTIVE | P1 | claude | 2026-09-28 |
 | [032](032_fixed_scale_map_screen_for_non_centred_models.md) | Fixed-scale MAP screen for non-centred models | BACKLOG | P2 | unassigned | 2026-09-27 |
 | [033](033_backfill_championship_betfair_archive_for_the_t55_monitor.md) | Backfill Championship Betfair archive for the T55 monitor | BACKLOG | P2 | unassigned | 2026-09-27 |
 | [034](034_zero_allocation_compiled_gradients_in_the_builder_engine.md) | Zero-allocation compiled gradients in the builder engine | COMPLETED | P1 | claude | 2026-09-27 |
