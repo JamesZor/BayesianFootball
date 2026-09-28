@@ -154,3 +154,98 @@ run calls no `write_scores!` and no `ensure_harness_schema!`.
 Not re-run in this round: the 12-cell screen rehearsal (563 s of MAP fitting; this round's screen
 path changes are covered by the runner/DB tests and the builder's log), the legacy loads (no
 change to `load_fit`) and the parallel suite. The test DB was reset to an empty schema afterwards.
+
+## Re-review 2 (Claude CLI, Opus 5.5, 2026-09-28) — head `f44cda6b`
+
+**VERDICT: ACCEPT**
+
+F12 and F13 are fixed. The `score_runs.jl` split does not change behaviour, and F1–F11 have not
+regressed. The runbook's §2 + §4 rehearsal passes read-only against current production. No
+blocker or major findings remain open.
+
+### F12 / F13
+
+- **Code** (`src/harness/scoring.jl:590–642`). `leaderboard` now groups by `(panel, run_id)`
+  and takes the label-independent headline and cohort metrics from the whole group. It emits one
+  row per `(label, control)` pair found in that run's target/all delta rows. A run with no deltas
+  keeps one row per label. The sort now includes `:model` and `:control_name` as tie-breaks, so
+  the order is deterministic. `control_name` comes from the control's self-pair row
+  (`run_id == control_run_id`), falling back to `first(model)`. This fixes F13 independently of
+  row order.
+- **Test.** The new scoring testset reproduces the §2 shape: the alias owns the NULL-control
+  metrics and the m12 delta, while the native label owns only its delta. It runs both row orders
+  and asserts finite headline and cohort values plus exact `(label, control) → (LL, Δ)` pairs.
+  Before this fix, the old `(panel, run_id, model)` grouping would fail its NaN assertions.
+- **Builder's `scripts/validate_klm_board_dryrun.jl`** (clean `f44cda6b`, production read-only)
+  prints `KLM_BOARD_DRYRUN_PASS`, with scored = 26 in 248 s, `replaced_rows` = 7,596 and
+  `board_rows` = 68. There are 0 NaN headline rows and 0 "—" Target LL cells. All 32/32 v1.1
+  pairs are present with Target LL matching v1.1 within 5e-6. W1 has 12 m12 deltas and 12
+  td_lower_joint deltas, and every W1 row names its control `td_lower_joint`. I read the script
+  before running it. It calls only `read_scores`, `read_experiments` and `load_fit` (through
+  `score_runs`); there is no `write_scores!` and no schema call.
+- **My own dry run** (`f2_dryrun3.jl`, run-ID types normalised; this is my code, not the
+  builder's). It applies `write_scores!`'s replace-by-key to a copy of production v1.2 and
+  checks invariants across **all panels**:
+  - the set of board `(panel, run, label, control)` rows equals the set of grid delta pairings
+    plus the label rows of runs without deltas (68 = 68; missing 0, extra 0, no duplicates);
+  - 0 of the 47 grid `(panel, run, label)` triples are dropped from the board, and 0 rows have a
+    NaN Target LL;
+  - all six W1 aliases and their native labels show identical finite metrics, for example
+    `td_lower_joint` and `s12_m02_td_joint` both at 0.64375 / slope 1.928;
+  - the W2 panel has all 30 production pairings. Spot checks against the W2 README match:
+    `td_lower_a2full_carry_jump` vs `td_lower_base` −0.0014, `grw_step_ldelta` vs `grw_base`
+    −0.0025, `grw_step_a2_carry_jump_ldelta` vs `grw_base` −0.0029.
+- **Runbook.** §2 now states correctly that the W1 v1.2 non-delta rows are rewritten and
+  relabelled. §4 adds a finite-headline gate and requires `KLM_BOARD_DRYRUN_PASS` before §2.
+
+### `score_runs.jl` split
+
+`main` still loads the groups, `unique!`s the refs, includes the loaders, loads the datastore,
+opens the harness DB, calls `ensure_harness_schema!` and handles the portfolio branch, in the
+same order. It then calls `score_csv_groups`, which contains the loop moved verbatim (same
+`invokelatest`, kwargs and failures vector), followed by `write_scores!` and the same printout
+and exit code. The only differences are that `tiers` is computed inside the helper, and that
+`include_run_loaders` `include`s into the same (script) module as before. The dry run over this
+path produced **17,684** score rows for 26/26 runs, identical to my re-review 1 run on
+`b04abd02`, which used the pre-split code path. The runner suite §8 still covers CSV parsing and
+grouping.
+
+### F1–F11 regression check
+
+The four suites were re-run on clean `f44cda6b`. Counts match or exceed round 1, and the only
+additions are the 14 F12/F13 scoring assertions. The test DB held 0/0/0
+`runs`/`config_registry`/`harness_experiments` rows after each suite (F11). None of the F1–F11
+code sites changed in this round; the only source diff is `scoring.jl:leaderboard`.
+
+### Remaining non-blocking notes (no action required for merge)
+
+- **Runbook §2 rewrites 7,596 existing production v1.2 rows.** They are the W1 non-delta rows,
+  relabelled to the CSV alias. The step is therefore not strictly additive, but the runbook now
+  says so, the values are recomputed from the same fits and the same panel, and the new
+  `leaderboard` makes the relabelling invisible on the board. Optional hardening: have §4 also
+  confirm that the rewritten Target LL of each W1 UUID equals its pre-§2 value.
+- **F8 is still documented rather than changed.** This remains acceptable, as judged in
+  re-review 1.
+- **Nit** (`scoring.jl:603–606`). Consider a run that has deltas, plus a label that owns only
+  NULL-control metric rows and no delta. That label gets no board row. The rows' numbers stay
+  visible under the run's other labels, so no metric is lost. The invariant check found no such
+  label in the current production data (0 of 47 dropped), so this is a note, not a defect.
+
+### Commands run (mcmc-beast, clean `beast_checkout.sh f44cda6b`, tmux `claude_klm_review`, logs `/root/BF_runs/logs/klm_review/rr2/`)
+
+| Check | Result | Builder's claim |
+|---|---|---|
+| `test/test_db_storage.jl` | **154/154** | — (unchanged since round 1: 154) |
+| `test/test_extension.jl` | **51/51** | — (51) |
+| `test/harness_scoring_tests.jl` | **60/60** | 60/60 |
+| `test/harness_runner_tests.jl` | **182/182** | 182/182 |
+| Test-DB debris after each suite | 0/0/0 | — |
+| `scripts/validate_klm_board_dryrun.jl` (production read-only) | **`KLM_BOARD_DRYRUN_PASS`** (figures above) | PASS, same figures |
+| Reviewer invariant dry run `f2_dryrun3.jl` | 26/26, 17,684 rows, 0 failures; 68/68 pairings; 0 dropped labels; 0 NaN | — |
+
+Before launching, I found another session's Julia REPL (`claude_clv_napkin`, `-t 8`). It was
+idle (2.7% CPU, load 0.29), so I did not wait for it. Final read-only production recheck after all runs: 324
+`fit_artifacts`, no `fit_fold_artifacts` table, no `layout` column, 20,262 v1.2 score rows (as
+in re-review 1), and the W1 register `completed` with `md5(run_ids)` `4a164c17…` unchanged.
+Production is untouched. The test DB was then reset to an empty schema and the tmux session
+closed.
