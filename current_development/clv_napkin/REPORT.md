@@ -867,3 +867,42 @@ The earliest O/U 2.5 EV has a point of about +10% and a CI upper bound of +27% t
 **Reproduce:** on mcmc-beast, after r01 has written `out/probs.jls`, run
 `nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r02_clv_leadtime.jl`. It takes about 5–10 min.
 
+
+## 12. Price movement as a signal
+
+*(Sections 12.1–12.2 and 12.4–12.6 are filled in after the confirmation run. This pre-registration
+was committed before any confirmation-season statistic was computed.)*
+
+### 12.3 Pre-registered confirmatory hypotheses (frozen from discovery)
+
+- **Discovery** is 21/22–23/24 and **confirmation** is 24/25–25/26, all tournaments 54–57, 1X2.
+- Code: `r03_price_movement.jl` §8, run once with `C3_PHASE=confirmation`.
+- Every window, threshold and signal below was fixed on discovery.
+- **Test:** each p is a one-sided slate-bootstrap tail share (B = 4,000, floor 1/B). Holm is applied
+  across all six at α = 0.05.
+- **Definitions:**
+  - "gap15" and "droplast" are the bounce-free moves (l03 `c3_bf_move`), measured on 1/odds. They
+    never use the entry tick.
+  - The slope is the OLS slope of y = p_close − 1/odds_LTP(t_m) on that move, among markets that
+    had formed by the window start and are fresh at t_m.
+
+| id | hypothesis (one-sided) | discovery estimate [95% CI] | n (disc.) |
+|---|---|---|---|
+| H1 | League One (56): slope of the T−25m→close move on the T−2h→T−25m gap15 move **< 0** (late reversion) | −0.131 [−0.194, −0.067] | 1,314 sel. |
+| H2 | League Two (57): slope of the T−60m→close move on the T−6h→T−60m gap15 move **< 0** | −0.101 [−0.190, −0.035] | 798 sel. |
+| H3 | Premiership (54): slope of the T−25m→close move on the T−2h→T−25m gap15 move **> 0** (late momentum) | +0.054 [+0.023, +0.085] | 1,704 sel. |
+| H4 | 56/57, grw_step_a2_carry_jump 1X2 bets with edge ≥ 2 pp at T−60m: mean CLV when the gap15 move since the earliest book went *against* the model (< −0.1 pp) minus mean CLV when it went *with* it (> +0.1 pp) **> 0** | +0.43 pp [−0.12, +1.01] | 197 bets |
+| H5 | League Two (57), market only: back every 1X2 runner whose droplast move since T−6h is ≤ −2 pp, at the T−60m LTP. EV@close at 2% commission **> 0** | +0.40% [−0.81, +1.69] | 124 bets |
+| H6 | League One (56), market only: back every 1X2 runner whose gap15 move since T−3h is ≤ −2 pp, at the T−25m LTP. Mean CLV **> 0** | +0.45 pp [+0.20, +0.71] | 132 bets |
+
+**Why these six:**
+- H1–H3 are the B2 cells where the bounce-free slope has a discovery |z| ≥ 2.5 and the gap15 and
+  droplast variants agree.
+- H4 is the B4 question in the direction discovery pointed. The *model agrees with the steam*
+  direction lost in discovery.
+- H5 is the single best market-only EV@close cell out of about 800 B5 cells. It is included to
+  measure the winner's curse, and it is expected to fail.
+- H6 is the tradeable form of H1: the CLV of a rule, not a slope.
+
+**Not tested but reported:** everything else in §12. It is re-run on confirmation with the frozen
+code (B1–B5 tables) as description, not as tests.
