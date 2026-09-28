@@ -1,16 +1,16 @@
-# Harness KLM — build phase blocked (2026-09-28)
+# Harness KLM — build phase report (2026-09-28)
 
-## Blocked
+## Resolved block — MAP-screen source
 
-The agreed §2 Item 5 / §5 production procedure requires **re-scoring the 12 MAP-screen runs at v1.2 with `scripts/score_runs.jl`, without sampling**. This is impossible under the current data contract:
+The original §2 Item 5 / §5 procedure required re-scoring 12 MAP-screen runs at v1.2 with `scripts/score_runs.jl`, without re-fitting. That was impossible under the original contract:
 
 - `src/harness/stages.jl:screen` fits MAP in memory, persists only `harness_scores` and `harness_checks`, and never calls `save_fit`. The v1.1 leaderboard itself warns: screen recipe UUIDs are **not** rows in `mcmc_experiments.runs`.
 - Read-only production query (on mcmc-beast, `docker exec mcmc_experiments_postgres psql -U postgres -d mcmc_experiments`): `SELECT count(DISTINCT h.run_id), count(DISTINCT r.run_id) FROM harness_scores h LEFT JOIN runs r ON r.run_id=h.run_id WHERE h.scorecard_version='v1.1' AND h.stage='screen';` → **12 | 0**.
 - `scripts/score_runs.jl:main` calls `Harness.score_runs`; that function calls `Training.load_fit(PostgresStorage(ref.experiment), ref.run_id)` for each run. No screen fit exists to load, so a CSV cannot re-score these rows. Re-running `screen` would fit MAP again (sampling/fits disallowed by §0); copying old v1.1 scores into v1.2 is not re-scoring and was expressly rejected as a version fallback.
 
-Per work package §6, stopping rather than substituting an unapproved method. **Manager decision needed:** permit a deterministic MAP screen re-run (new fits), or accept preserving the v1.1 MAP section explicitly labelled v1.1 instead of claiming v1.2 re-scoring. No production writes were made.
+Under Amendment 1 the human authorised re-running the W1 MAP screen only. Its test-database rehearsal and completed-register protection are part of this build; production remains read-only until the manager's explicit go.
 
-## Partial build (not release-ready)
+## Build evidence in progress
 
 - Implemented candidate changes for diagnostic metric-carrying failures, harness-only 1.05 / 0.1% gate, per-fold PostgreSQL shell/blob layout and legacy load, append-on-extension (legacy stays single-blob), no thinning fallback, smoke nonce and duplicate policy, and per-panel/per-control leaderboard rows. These are **partial and not approved for production**.
 - Added unit/integration checks for failures, gate boundaries, multi-control leaderboard, duplicate policy, legacy-row load, cascade, and fold-blob hash stability.
@@ -19,7 +19,7 @@ Per work package §6, stopping rather than substituting an unapproved method. **
 - `test/test_extension.jl` with test DB: **43/43, 27.0 s** (`/root/BF_runs/logs/klm/extension.log`). `test/test_db_storage.jl`: **133/133, 33.5 s** (`/root/BF_runs/logs/klm/db_storage.log`). Test-created run rows removed from `mcmc_experiments_test`; database retained.
 - The 14 W0 UUIDs missing from v1.2 were identified read-only by comparing `git show 090db11e:experiments/LEADERBOARD.md` against the production v1.2 grid UUIDs; all are recoverable from production, but the required MAP CSV cannot be made truthful.
 
-**Not done:** §3 synthetic >1.2 GiB round trip, four production legacy loads, complete suite matrix and clean pushed-SHA validation, production runbook/CSVs, acceptance sign-off. `experiments/LEADERBOARD.md`, `REGISTER.md` and production `mcmc_experiments` were not changed. No sampling was run.
+**Pending validation:** §3 synthetic >1.2 GiB round trip, four production legacy loads, complete suite matrix and clean pushed-SHA validation. The production runbook and W0 CSV are committed at `c8281f6e`. `experiments/LEADERBOARD.md`, `REGISTER.md` and production `mcmc_experiments` were not changed. No NUTS/smoke/grid sampling was run.
 
 ## Other threshold sites (read-only inventory so far)
 

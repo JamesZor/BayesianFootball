@@ -439,9 +439,9 @@ function _harness_convergence_value(summary)
     notes = String[]
     summary.min_ess_bulk < 400 && push!(notes, "bulk ESS $(summary.min_ess_bulk) < 400")
     summary.min_ess_tail < 400 && push!(notes, "tail ESS $(summary.min_ess_tail) < 400")
-    summary.min_bfmi < summary.thresholds.min_bfmi &&
+    summary.min_bfmi <= summary.thresholds.min_bfmi &&
         push!(notes, "BFMI $(summary.min_bfmi) < $(summary.thresholds.min_bfmi)")
-    summary.treedepth_rate > summary.thresholds.max_treedepth_rate &&
+    summary.treedepth_rate >= summary.thresholds.max_treedepth_rate &&
         push!(notes, "tree-depth cap rate $(summary.treedepth_rate) > $(summary.thresholds.max_treedepth_rate)")
     value = (; passed = isempty(failures), max_rhat = summary.max_rhat,
               min_ess_bulk = summary.min_ess_bulk, min_ess_tail = summary.min_ess_tail,

@@ -63,10 +63,7 @@ function screen(candidates::AbstractVector{<:Candidate};
     end
 
     if db !== nothing && !isempty(check_records)
-        try
-            write_checks!(db, check_records)
-        catch
-        end
+        write_checks!(db, check_records)
     end
 
     isempty(fits) && error("All candidates failed in screen stage:\n" *

@@ -30,7 +30,7 @@ function main()
     n = length(source.folds)
     raw_fold_bytes = sum(serial_size, source.folds; init = 0)
     target_bytes = ceil(Int, 1.2 * 1024^3)
-    copies = cld(target_bytes, raw_fold_bytes) + 1
+    copies = max(2, cld(target_bytes + 1, raw_fold_bytes))
     folds = Training.FoldFit[]
     for repeat_idx in 1:copies, fold in source.folds
         push!(folds, Training.FoldFit((repeat_idx - 1) * n + fold.fold,
@@ -52,13 +52,14 @@ function main()
         run_id = Training.save_fit(original, TARGET_DB; on_duplicate = :error)
         save_seconds = time() - save_start
         conn = Training.Inference._db_connect(TARGET_DB)
-        largest_blob = try
+        largest_blob, compressed_bytes = try
             rows = Training.Inference._db_rows(conn, """
-                SELECT max(octet_length(fold_blob))::bigint AS n, count(*)::int AS folds
+                SELECT max(octet_length(fold_blob))::bigint AS n,
+                       sum(octet_length(fold_blob))::bigint AS total, count(*)::int AS folds
                 FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
             """, (string(run_id),))
             rows.folds[1] == length(folds) || error("Stored $(rows.folds[1]) folds, expected $(length(folds))")
-            Int(rows.n[1])
+            (Int(rows.n[1]), Int(rows.total[1]))
         finally
             close(conn)
         end
@@ -78,8 +79,9 @@ function main()
         end
         Harness._structural_equal(original.latents, reloaded.latents) || error("latents changed")
         original.save_path == reloaded.save_path || error("save_path changed")
-        println("KLM_LARGE_PASS serialized_fold_bytes=$raw_bytes folds=$(length(folds)) " *
-                "largest_fold_blob=$largest_blob save_seconds=$(round(save_seconds; digits=2)) " *
+        println("KLM_LARGE_PASS serialized_fold_bytes=$raw_bytes compressed_fold_bytes=$compressed_bytes " *
+                "folds=$(length(folds)) largest_fold_blob=$largest_blob " *
+                "save_seconds=$(round(save_seconds; digits=2)) " *
                 "load_seconds=$(round(load_seconds; digits=2)) peak_rss_kib=$(peak_rss_kib())")
     finally
         if run_id !== nothing

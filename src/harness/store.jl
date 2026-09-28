@@ -357,8 +357,18 @@ end
 """
     write_checks!(db, records)
 
-Append check records to the `harness_checks` table.
+Append check records to the `harness_checks` table. Unmeasured diagnostics are represented
+as JSON null, not non-standard NaN/Inf tokens that would roll back the entire check batch.
 """
+_harness_json_safe(value::AbstractFloat) = isfinite(value) ? value : nothing
+_harness_json_safe(value::NamedTuple) =
+    NamedTuple{keys(value)}(map(_harness_json_safe, values(value)))
+_harness_json_safe(value::Tuple) = map(_harness_json_safe, value)
+_harness_json_safe(value::AbstractArray) = map(_harness_json_safe, value)
+_harness_json_safe(value::AbstractDict) =
+    Dict(key => _harness_json_safe(item) for (key, item) in value)
+_harness_json_safe(value) = value
+
 function write_checks!(db::Training.PostgresStorage, records)
     isempty(records) && return records
     conn = Training.Inference._db_connect(db)
@@ -368,7 +378,8 @@ function write_checks!(db::Training.PostgresStorage, records)
             for rec in records
                 run_id = hasproperty(rec, :run_id) ? rec.run_id : nothing
                 val = hasproperty(rec, :value) ? rec.value : NamedTuple()
-                val_json = val === nothing || ismissing(val) ? "{}" : JSON3.write(val)
+                val_json = val === nothing || ismissing(val) ? "{}" :
+                           JSON3.write(_harness_json_safe(val))
                 detail = hasproperty(rec, :detail) ? rec.detail : ""
                 git_sha = hasproperty(rec, :git_sha) ? rec.git_sha : nothing
                 at_val = hasproperty(rec, :at) ? rec.at : now()

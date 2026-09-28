@@ -190,6 +190,44 @@ end
             @test no_op.config.sampler.sampled_folds == [3]
         end
 
+        @testset "legacy single-blob extension keeps its layout" begin
+            legacy_cfg = FitConfig(name = "legacy_incremental_$(uuid4())",
+                                   model = initial.config.model, splitter = splitter,
+                                   sampler = sampler, execution = initial.config.execution,
+                                   save_dir = mktempdir())
+            legacy_fit = Fit(legacy_cfg, initial.folds, initial.latents,
+                             initial.diagnostics, initial.metadata, initial.save_path)
+            legacy_id = save_fit(legacy_fit, db)
+            inf = Training.Inference
+            conn = inf._db_connect(db)
+            try
+                inf._db_exec_binary(conn, """
+                    UPDATE fit_artifacts SET layout = 'single', fit_blob = \$2::bytea
+                    WHERE run_id = \$1::uuid;
+                """, (string(legacy_id),), inf._db_artifact_blob(legacy_fit))
+                inf._db_exec(conn, "DELETE FROM fit_fold_artifacts WHERE run_id = \$1::uuid;",
+                             (string(legacy_id),))
+            finally
+                close(conn)
+            end
+            extended_legacy = extend_fit(db, legacy_id, ds_three; quiet = true)
+            @test length(extended_legacy) == 3
+            @test length(load_fit(db, legacy_id)) == 3
+            conn = inf._db_connect(db)
+            try
+                @test only(inf._db_rows(conn, """
+                    SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;
+                """, (string(legacy_id),)).layout) == "single"
+                @test only(inf._db_rows(conn, """
+                    SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                """, (string(legacy_id),)).n) == 0
+                inf._db_exec(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                             (string(legacy_id),))
+            finally
+                close(conn)
+            end
+        end
+
         @testset "portfolio roll-forward" begin
             initial_fit = Fit(initial.config, initial.folds, initial.latents,
                               initial.diagnostics, initial.metadata, initial.save_path)

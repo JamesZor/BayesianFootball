@@ -132,6 +132,40 @@ end
             BayesianFootball.Harness.ensure_harness_schema!(storage)
             fit = db_storage_fit(mktempdir())
 
+            @testset "Diagnostic failures persist metrics and JSON-safe missing telemetry" begin
+                harness = BayesianFootball.Harness
+                base = (; run_id = uuid4(), recipe_hash = "klm_$(uuid4())",
+                         experiment, candidate = "synthetic", stage = "screen",
+                         git_sha = "test")
+                records = NamedTuple[]
+                harness._run_diagnostic!(records, base, "convergence", "review") do
+                    throw(harness.DiagnosticFailure((; max_rhat = 1.06, min_bfmi = NaN),
+                                                    "R-hat exceeds 1.05"))
+                end
+                harness._run_diagnostic!(records, base, "unexpected", "diagnostic") do
+                    error("unexpected fault")
+                end
+                harness.write_checks!(storage, records)
+                conn = LibPQ.Connection(test_url)
+                try
+                    saved = DataFrame(LibPQ.execute(conn, """
+                        SELECT "check", status, value, detail FROM harness_checks
+                        WHERE recipe_hash = \$1 ORDER BY id;
+                    """, (base.recipe_hash,)))
+                    @test nrow(saved) == 2
+                    @test saved.status == ["fail", "fail"]
+                    @test occursin("1.06", String(saved.value[1]))
+                    @test occursin("null", String(saved.value[1]))
+                    @test String(saved.value[2]) == "{}"
+                    @test occursin("unexpected fault", saved.detail[2])
+                    close(LibPQ.execute(conn,
+                        "DELETE FROM harness_checks WHERE recipe_hash = \$1;",
+                        (base.recipe_hash,)))
+                finally
+                    close(conn)
+                end
+            end
+
             @testset "Completed register survives re-screen" begin
                 harness = BayesianFootball.Harness
                 original = (; id = experiment, date = Date(2026, 9, 27), todo = 31,
