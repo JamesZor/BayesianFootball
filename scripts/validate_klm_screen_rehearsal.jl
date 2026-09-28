@@ -20,6 +20,8 @@ length(unique(checks.run_id)) == 12 || error("Missing screen_validity checks")
 all(r -> r.status in ("limited", "ranking_only"), eachrow(checks)) ||
     error("Unexpected screen_validity status")
 board = Harness.leaderboard(screen)
+validity = Dict(String(r.candidate) => String(r.status) for r in eachrow(checks))
+board.screen_validity = [get(validity, String(model), "unrecorded") for model in board.model]
 module_for_markdown = Module(:KlmScreenBoard)
 Base.include(module_for_markdown, joinpath(@__DIR__, "leaderboard.jl"))
 markdown = module_for_markdown.leaderboard_markdown(board[1:0, :], board)
