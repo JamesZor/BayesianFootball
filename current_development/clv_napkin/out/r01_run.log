@@ -1,0 +1,127 @@
+[ Info: Loading DataStore for ScottishPyramid from local cache (Age: 0.5 hours)...
+close    markets refused: Dict("incomplete" => 10908, "overround" => 5)
+T−25     markets refused: Dict("incomplete" => 3181, "stale" => 11598, "overround" => 3)
+T−60     markets refused: Dict("incomplete" => 2355, "stale" => 15545, "overround" => 1)
+earliest markets refused: Dict("overround" => 86)
+runs: 40 (panel,run) rows; missing slopes: 0
+reused 40 cached probability frames
+
+23/24,24/25,25/26  (x = 1X2 compression slope, y = mean clv_pp at e = 2)
+clv_pp  +0.19
+  |                                                e           
+  |                                                            
+  |                                                            
+  |                                                            
+  |                                              a        c   f
+  |                                                            
+  |                                              b             
+  |                                                    d       
+  |                                                            
+  |       i                                                    
+  |                                        m                   
+  |  h       k            n                                    
+  |                                                          l 
+  |g                                      o                    
+  |                                                            
+  |   j                                                        
+    +0.10                                            slope 1.14 → 1.61
+
+   a  td_base                          slope 1.51  clv +0.163  roi2 +1.7  n 1417
+   b  td_a2                            slope 1.51  clv +0.152  roi2 +3.1  n 1419
+   c  td_a2_carry                      slope 1.58  clv +0.164  roi2 +3.5  n 1411
+   d  td_a2_carry_jump                 slope 1.56  clv +0.144  roi2 +3.6  n 1398
+   e  td_ldelta                        slope 1.53  clv +0.187  roi2 +1.8  n 1325
+   f  td_a2_carry_jump_ldelta          slope 1.61  clv +0.162  roi2 +3.4  n 1335
+   g  grw_base                         slope 1.14  clv +0.107  roi2 +4.6  n 1436
+   h  grw_step                         slope 1.15  clv +0.119  roi2 +4.1  n 1406
+   i  grw_step_a2_carry_jump           slope 1.20  clv +0.131  roi2 +3.7  n 1395
+   j  grw_step_ldelta                  slope 1.16  clv +0.097  roi2 +4.5  n 1334
+   k  grw_step_a2_carry_jump_ldelta    slope 1.21  clv +0.120  roi2 +2.6  n 1344
+   l  td_lower_base                    slope 1.60  clv +0.116  roi2 +3.3  n 1340
+   m  td_lower_a2full_carry_jump       slope 1.46  clv +0.130  roi2 +5.1  n 1321
+   n  td_lower_b1lit                   slope 1.32  clv +0.122  roi2 +2.6  n 1337
+   o  m12_td_ref                       slope 1.45  clv +0.110  roi2 +4.5  n 1319
+
+W2@24/25,25/26  (x = 1X2 compression slope, y = mean clv_pp at e = 2)
+clv_pp  +0.27
+  |                                                e           
+  |                                                            
+  |                                                            
+  |                                              a             
+  |                                                            
+  |                                                            
+  |                                                       c   f
+  |                                                            
+  |                                                            
+  |                                                    d       
+  |                                              b             
+  |                                                            
+  |                                                            
+  |          k                                               l 
+  |g hj   i               n                m                   
+  |                                       o                    
+    +0.18                                            slope 1.14 → 1.61
+
+   a  td_base                          slope 1.51  clv +0.253  roi2 +6.3  n 880
+   b  td_a2                            slope 1.51  clv +0.214  roi2 +9.0  n 881
+   c  td_a2_carry                      slope 1.58  clv +0.239  roi2 +9.4  n 876
+   d  td_a2_carry_jump                 slope 1.56  clv +0.218  roi2 +9.4  n 856
+   e  td_ldelta                        slope 1.53  clv +0.274  roi2 +4.5  n 841
+   f  td_a2_carry_jump_ldelta          slope 1.61  clv +0.236  roi2 +8.9  n 829
+   g  grw_base                         slope 1.14  clv +0.187  roi2 +4.2  n 915
+   h  grw_step                         slope 1.15  clv +0.190  roi2 +3.7  n 895
+   i  grw_step_a2_carry_jump           slope 1.20  clv +0.186  roi2 +5.5  n 882
+   j  grw_step_ldelta                  slope 1.16  clv +0.187  roi2 +4.4  n 845
+   k  grw_step_a2_carry_jump_ldelta    slope 1.21  clv +0.193  roi2 +5.5  n 845
+   l  td_lower_base                    slope 1.60  clv +0.192  roi2 +4.2  n 827
+   m  td_lower_a2full_carry_jump       slope 1.46  clv +0.191  roi2 +7.7  n 815
+   n  td_lower_b1lit                   slope 1.32  clv +0.190  roi2 +2.9  n 838
+   o  m12_td_ref                       slope 1.45  clv +0.183  roi2 +6.5  n 822
+
+24/25,25/26  (x = 1X2 compression slope, y = mean clv_pp at e = 2)
+clv_pp  +0.25
+  |               j                                            
+  |                                                            
+  |                                                            
+  |                                                            
+  |                            n                               
+  |lf          h o               v                             
+  |                 m                      x   y               
+  |      q       w              g                              
+  |         p                                                  
+  |                                 i                          
+  |                                                            
+  |    s                                                      b
+  |                                                           r
+  |    c                                                      u
+  |  t   e                                                     
+  | d                                                          
+    +0.07                                            slope 1.07 → 2.79
+
+   a  td_lower_joint                   slope 1.93  clv +0.189  roi2 +4.4  n 825
+   b  FLOOR s12_m01_td_poisson         slope 2.78  clv +0.113  roi2 +4.7  n 837
+   c  grw_lower_poisson                slope 1.19  clv +0.094  roi2 +5.5  n 884
+   d  grw_spfl_poisson                 slope 1.10  clv +0.069  roi2 +6.4  n 887
+   e  grw_spfl_cups_poisson            slope 1.25  clv +0.085  roi2 +7.6  n 872
+   f  grw_spfl_cups_joint              slope 1.10  clv +0.186  roi2 +4.1  n 915
+   g  td_spfl_poisson                  slope 1.91  clv +0.162  roi2 +5.6  n 840
+   h  td_spfl_joint                    slope 1.40  clv +0.186  roi2 +5.4  n 942
+   i  td_spfl_cups_poisson             slope 2.03  clv +0.136  roi2 +6.7  n 826
+   j  td_spfl_cups_joint               slope 1.50  clv +0.247  roi2 +5.7  n 889
+   k  grw_lower_joint                  slope 1.24  clv +0.167  roi2 +4.8  n 841
+   l  grw_spfl_joint                   slope 1.07  clv +0.182  roi2 +3.4  n 923
+   m  m12_td (live)                    slope 1.57  clv +0.181  roi2 +6.7  n 823
+   n  m05_joint_td                     slope 1.87  clv +0.204  roi2 +5.6  n 813
+   o  m13_joint_td                     slope 1.49  clv +0.191  roi2 +9.6  n 834
+   p  m12_grw                          slope 1.33  clv +0.149  roi2 +8.1  n 867
+   q  m05_joint_grw                    slope 1.24  clv +0.169  roi2 +5.2  n 845
+   r  s10_m01_td_poisson               slope 2.79  clv +0.103  roi2 +4.6  n 834
+   s  s10_m02_grw_poisson              slope 1.19  clv +0.116  roi2 +4.9  n 883
+   t  s10_m03_momentum_grw             slope 1.13  clv +0.077  roi2 +8.3  n 899
+   u  s11_m01_td_poisson               slope 2.77  clv +0.097  roi2 +5.2  n 840
+   v  s11_m02_td_joint                 slope 1.93  clv +0.191  roi2 +4.3  n 824
+   w  s11_m03_negbin_pxg               slope 1.48  clv +0.161  roi2 +1.1  n 848
+   x  s12_m03_funnel_shared            slope 2.23  clv +0.181  roi2 +4.5  n 871
+   y  s12_m04_funnel_hier              slope 2.34  clv +0.173  roi2 +3.3  n 850
+
+DONE r01_clv_napkin
