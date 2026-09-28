@@ -44,6 +44,11 @@ Code: `l01_clv_napkin.jl` (loader) and `r01_clv_napkin.jl` (runner). Every numbe
     Of six pre-registered price-movement hypotheses, only one confirmed: League Two prices
     partly revert between T−6h and T−60m. Given the close, movement predicts nothing about
     results, and no market-only rule clears commission.
+  - **§13 (brief 04), 26/27 live season on the order book:** at the executable back price,
+    grw_spfl_joint's L1/L2 bets lost to the close at every entry time (CLV −0.6 pp at T−60m and
+    T−25m, CIs below 0). The same bets at mid or LTP show +0.05 to +0.2 pp and EV 0% to +3%, so
+    the LTP-era edge fits inside the 4-tick spread. The live book opens only about 3 h out and
+    offers a median £6.
 - **Compression doesn't explain CLV.** On W0/W1 the observation model (joint pxG vs goals-only)
   does. On W2, the ρ = +0.64 comes from the pooled-TD arms, not from the slope.
 
@@ -1329,4 +1334,298 @@ Conditional logit per 1X2 market: P(win_i) = softmax(c·log p_close_i + g·m_i),
 nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_leadtime_monitor.jl                   # §11, ~6 min
 C3_PHASE=discovery    nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_price_movement.jl   # §12 discovery, ~4 min
 C3_PHASE=confirmation nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_price_movement.jl   # §12 confirmation (the once-only run is done)
+```
+
+## 13. 26/27 live season: grw_spfl_joint on the order book
+
+Brief 04. Code: `l04_live_orderbook.jl` (loader), `r04_extend_grw_spfl_joint.jl` (the one sampling
+job), `r04_live_orderbook.jl` (evaluation). Numbers: `out/r04_*.csv`; logs `out/r04_extend_run.log`,
+`out/r04_run.log`.
+
+**Answer.** At the price you could actually have backed at, `grw_spfl_joint` lost to the close in
+League One/Two this season at every entry time with data. At T−60m, 61 bets (edge ≥ 2 pp) had mean
+CLV −0.59 pp [−1.19, −0.09] and EV@close −0.9% [−4.9, +1.9] after 2% commission. At T−25m, 70 bets had
+CLV −0.60 pp [−0.91, −0.19] and EV −3.0% [−4.4, −1.2]. Realised ROI was −16% to −27%, but its CIs span
+about ±30 points and mean nothing. **The same bets priced at the mid or at the LTP look like §10:**
+CLV +0.05 to +0.2 pp and EV 0% to +3%. So the whole LTP-era edge fits inside the spread, which is
+a median 4 ticks, or about 0.8 pp of probability, at the back price. The model's selection is worth
+about +0.15 pp over backing everything (the null is −0.74 pp at T−60m), which is a fifth of the
+spread. **Early entry is barely possible.** The live book opens a median 3 h before the off: only 4
+fixtures have a book at T−24h, 8 at T−6h and 28 at T−3h. **Size is tiny.** The median offer at the
+back price is £6 at T−60m and £9 at T−25m, and only 8–13% of bets had £50 or more. **The model
+disagrees with the market far more than in 24/25–25/26:** the mean edge on bets is about 10 pp,
+against 6–8 pp in §10. Most of that disagreement comes from the four clubs that changed tier this
+summer (28 of 79 fixtures). On those fixtures the model's 1X2 log-loss is 0.99, against the mid close's
+0.83; on the rest it is about level (1.03 vs 1.02). **The sample is 8 match days and 60–70 bets per
+usable instant.** It can detect a CLV of about 0.5–0.8 pp and an EV of about 2–5%, and nothing smaller.
+The one result that clears its CI is negative: at the executable back price, CLV < 0.
+
+### 13.1 Step 1: the order book and coverage
+
+- **Tables** (`betfair_live`):
+  - `market_metadata` holds `market_id`, `event_id`, `event_name`, `competition(_id)`, `market_type`,
+    `home_team`, `away_team` and `open_date`.
+  - `order_book_1m` holds `market_id`, `symbol`, `ts`, `bid_prices[]`, `bid_volumes[]`, `ask_prices[]`,
+    `ask_volumes[]`, `total_matched` (runner), `market_matched` and `last_price_traded`.
+  - Prices and volumes are integers ×10⁴. `bid` is the back side and `ask` the lay side (as in
+    `MatchDay.BookLevels`); every bet's back price is below its mid.
+- **Depth:** the best 3 levels are present (mean array length 2.6–3.0).
+- **Volume:** runner `total_matched` and `market_matched` are populated. On the 08-01 round they are
+  populated on 57–88% of rows per market.
+- **LTP:** `last_price_traded` is NULL throughout the 08-01 round and populated from 08-08 on. In the
+  last 3 h before the off it is present on about 80% of rows.
+- **Cadence:** despite the table name, snapshots arrive every **3 min** (median). The pre-off series
+  has holes: the median fixture's longest gap is 18 min, and 33 of 60 fixtures have a gap longer
+  than 15 min.
+- **Mapping:** `market_metadata.event_id` joins to `betfair.match_meta` (70 of 70 rows verified), which
+  gives the sofascore `match_id`. Runners arrive already normalised to `home`/`draw`/`away`. Betfair
+  `open_date` equals the sofascore kick-off for all 70 markets.
+- **Results and model inputs** (fresh `ScottishPyramid` DataStore from betdb, 5,323 matches):
+  - Every 26/27 L1/L2 fixture in betdb (79, through 2026-09-19) has a result.
+  - The 09-26 round is not in betdb yet, and not in `betfair_live` either.
+  - BBC live-text commentary (the joint model's pxG) covers the L1/L2 league rounds through 08-22 (39
+    of 79 fixtures) and **none of the league rounds from 08-28 on**. Cup midweeks are covered.
+  - The joint model masks missing pxG (Poisson arm only), so this is not blocking. It affects only
+    fold 44's training: 48 of its 115 26/27 fixtures carry no pxG.
+- **Collector:** the newest row in `order_book_1m` is 2026-09-20 12:56 UTC, and the newest
+  `market_metadata` row is 09-20. **The collector appears to have written nothing since 20 September.**
+
+Coverage by match day (L1/L2, 26/27). "First book" is the first snapshot with all three runners
+two-sided, in minutes before kick-off. Instant columns count fixtures with a complete two-sided book
+no more than 15 min old.
+
+| Date | Played | Market | Pre-off snapshots | First book (median, min) | earliest | T−24h | T−6h | T−3h | T−60m | T−25m |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 08-01 | 10 | 10 | 10 | 1,685 | 10 | 4 | 8 | 10 | 9 | 10 |
+| 08-08 | 10 | 10 | 10 | 120 | 10 | 0 | 0 | 0 | 10 | 10 |
+| 08-15 | 9 | 9 | 9 | 113 | 9 | 0 | 0 | 0 | 7 | 9 |
+| 08-22 | 10 | 10 | **0** (first tick 14:06, after the off) | — | 0 | 0 | 0 | 0 | 0 | 0 |
+| 08-28 | 1 | 1 | 1 | 103 | 1 | 0 | 0 | 0 | 1 | 1 |
+| 08-29 | 9 | **0** | 0 | — | 0 | 0 | 0 | 0 | 0 | 0 |
+| 09-05 | 10 | 10 | 10 | 238 | 10 | 0 | 0 | 10 | 6 | 10 |
+| 09-12 | 9 | 9 | 9 | 168 | 9 | 0 | 0 | 0 | 9 | 9 |
+| 09-15 | 1 | 1 | 1 | 88 | 1 | 0 | 0 | 0 | 1 | 1 |
+| 09-19 | 10 | 10 | 10 | 203 | 10 | 0 | 0 | 8 | 10 | 10 |
+| **total** | **79** | **70** | **60** | **185.5** (range 86–1,685) | **60** | **4** | **8** | **28** | **53** | **60** |
+
+Book quality by time to the off (all two-sided runner rows):
+
+| Band | Fixtures | Median spread (ticks) | Median spread (% of back) | Median best-back size (£) | Median best-3 back depth (£) | Median market matched (£) | LTP present |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| > 24h | 6 | 9 | 12.3% | 10.7 | 81 | — | 0% |
+| 6–24h | 10 | 6 | 8.3% | 6.5 | 80 | 131 | 0% |
+| 3–6h | 30 | 4 | 5.0% | 5.8 | 30 | 394 | 32% |
+| 1–3h | 60 | 4 | 5.1% | 5.9 | 39 | 476 | 79% |
+| 25–60m | 60 | 4 | 4.9% | 7.0 | 52 | 551 | 83% |
+| 0–25m | 60 | 3 | 4.2% | 15.0 | 62 | 1,191 | 82% |
+
+### 13.2 Step 2: the walk-forward extension (the one sampling job)
+
+- **What was sampled:**
+  - model: the persisted fit's own model;
+  - sampler: `QueuedNUTSConfig`, 1,000 draws, 500 warmup, 4 chains, the original settings;
+  - execution: `QueuedExecution(16)`, `-t 16`, threads pinned;
+  - splitter: the run's `ScopedWalkForwardCV` scope with "26/27" appended to `target_seasons`.
+- **Checks before sampling:**
+  - positions 1–40 of the extended splitter hold out exactly the 1,461 fixtures the persisted fit
+    holds out;
+  - only positions 41–44 were sampled;
+  - every training fixture sits on a calendar day strictly before the fold's first held-out day
+    (a Date comparison, per the LastHistorical note);
+  - there is no lineup input in this model.
+- **Time:** 2.4 min of wall time.
+- **Persistence:** nothing was written to `mcmc_experiments`. The extension (folds, chains,
+  diagnostics, latents) is serialised to `/root/BF_runs/clv_napkin_dev/out/r04_ext_grw_spfl_joint.jls`
+  on the beast. The rebuilt DataStore sits next to it.
+- **Deviation from the brief's wording.** The brief says "train on everything before the match
+  day's date, then predict that day". W1's folds do not do that: `ScopedWalkForwardCV` holds out
+  the next **biweekly** clock step and trains strictly before the step's first day. I kept W1's
+  splitter, which is what `extend_fit` would use and what "the same way the W1 folds did" means in
+  code. As a result, a step's later days are predicted with one or two weeks' less data. Example:
+  09-05 is predicted from data through 08-22.
+
+| Fold | Held-out L1/L2 days | Train fixtures (26/27, with pxG) | Max R̂ (param) | Min bulk / tail ESS | Divergences | Rerun? |
+|---|---|---|---|---|---|---|
+| 41 | 08-01, 08-08 (20) | 1,461 (0, 0) | 1.0032 (`dyn.β.σ₀`) | 1,477 / 2,116 | 0 / 4,000 | no |
+| 42 | 08-15, 08-22 (19) | 1,503 (42, 42) | 1.0037 (`dyn.α.σ₀`) | 982 / 1,643 | 0 / 4,000 | no |
+| 43 | 08-28, 08-29, 09-05 (20) | 1,528 (67, 67) | 1.0060 | 919 / 1,649 | 0 / 4,000 | no |
+| 44 | 09-12, 09-15, 09-19 (20) | 1,576 (115, 67) | 1.0077 | 1,140 / 1,860 | 0 / 4,000 | no |
+
+- **Diagnostics:** tree-depth saturation was 0% and min BFMI was 0.60. The run passes
+  `audit_convergence` against the run's own thresholds. All 79 L1/L2 fixtures and 77 54/55 monitor
+  fixtures have held-out latents.
+
+### 13.3 Per instant: executable back price (1X2, edge ≥ 2 pp vs the de-vigged mid, 1 unit, 2% commission)
+
+- **Close:** the de-vigged mid-price TWA over (−20, 0].
+- **Size:** the size offered at the price taken. ≥ £20/£50/£100 is the share of bets whose taken
+  price had at least that much on offer.
+- **CIs:** slate-bootstrapped, B = 2,000.
+
+| Entry | Fixtures with book | Bets | Slates | Mean edge (pp) | CLV pp [CI] | EV@close 2% [CI] | ROI 2% [CI] | Median back size (£) | ≥ £20 | ≥ £50 | ≥ £100 | Median spread (ticks) | Mean odds |
+|---|---:|---:|---:|---:|---|---|---|---:|---:|---:|---:|---:|---:|
+| earliest | 60 | 72 | 8 | 9.7 | −1.96 [−4.58, −0.52] | −3.9 [−10.1, −0.6] | −20 [−53, +7] | 5.8 | 26% | 11% | 3% | 6 | 4.14 |
+| T−24h | 4 | 3 | — | — | — | — | — | 6.2 | 0% | 0% | 0% | 22 | — |
+| T−6h | 8 | 7 | 1 | 14.5 | −0.57 (1 slate) | −5.5 (1 slate) | −16 (1 slate) | 4.0 | 29% | 14% | 0% | 4 | 3.64 |
+| T−3h | 28 | 33 | 3 | 11.8 | −0.73 [−1.77, +0.06] | −2.0 [−7.5, +2.0] | +1 [−25, +29] | 5.0 | 24% | 9% | 0% | 4 | 3.99 |
+| **T−60m** | 53 | 61 | 8 | 10.3 | **−0.59 [−1.19, −0.09]** | **−0.9 [−4.9, +1.9]** | −27 [−57, +8] | 6.0 | 20% | 8% | 0% | 4 | 4.32 |
+| **T−25m** | 60 | 70 | 8 | 10.0 | **−0.60 [−0.91, −0.19]** | **−3.0 [−4.4, −1.2]** | −16 [−46, +16] | 9.4 | 37% | 13% | 4% | 4 | 4.06 |
+
+The same bet set, priced three ways, plus the market-only null (back every selection at the back
+price) and the §2 LTP-based close as a cross-check. The LTP rows are fewer because LTP is NULL on
+08-01 and missing on about 20% of snapshots.
+
+| Entry | Null bets | Null CLV pp [CI] | Null EV@close 2% [CI] | Model bets at MID: CLV / EV | At LTP: n, CLV / EV | At BACK vs the LTP close: n, CLV / EV |
+|---|---:|---|---|---|---|---|
+| earliest | 180 | −1.71 [−3.19, −0.93] | −4.3 [−8.1, −2.1] | +0.19 / +2.5% | 61: +0.05 / +2.8% | 61: −0.75 / −1.4% |
+| T−24h | 12 | −2.55 (1 slate) | −7.1 (1 slate) | — | — | — |
+| T−6h | 24 | −0.95 (1 slate) | −4.9 (1 slate) | +0.26 / −2.6% | — | — |
+| T−3h | 84 | −0.90 [−1.01, −0.81] | −3.0 [−4.5, −1.1] | +0.15 / +1.5% | 23: +0.21 / +3.2% | 23: −0.20 / +0.5% |
+| T−60m | 159 | −0.74 [−0.89, −0.64] | −2.2 [−3.7, −1.2] | +0.20 / +2.4% | 52: +0.10 / +2.2% | 52: −0.32 / +0.3% |
+| T−25m | 180 | −0.76 [−0.84, −0.69] | −3.4 [−3.6, −2.9] | +0.19 / +0.0% | 60: +0.19 / +0.8% | 60: −0.46 / −2.6% |
+
+- **The LTP close is kinder than the mid close.** From T−3h on it lifts back-price CLV by
+  0.1–0.5 pp, on smaller bet sets. The LTP sits 0.1–0.4 pp nearer the back side than the mid does
+  (§13.4).
+- **Neither close makes the back-price bets clearly profitable.** Only T−3h (+0.5%, 23 bets) and
+  T−60m (+0.3%) show point estimates above 0 against the LTP close.
+
+### 13.4 Spread and size: what §10–§12 lose once the entry is executable
+
+Paired on the same bets (those with an LTP at entry). The first two columns are how many probability
+points the back price costs relative to the mid and to the LTP. The last three are EV@close (2%) at
+each price.
+
+| Entry | Bets | Back − mid (pp) | Back − LTP (pp) | EV at mid | EV at LTP | EV at back |
+|---|---:|---:|---:|---:|---:|---:|
+| earliest | 61 | +0.98 | +0.86 | +2.7% | +2.8% | −1.4% |
+| T−3h | 23 | +0.87 | +0.49 | +4.2% | +3.2% | +0.4% |
+| T−60m | 52 | +0.80 | +0.50 | +3.7% | +2.2% | +0.3% |
+| T−25m | 60 | +0.79 | +0.67 | +0.6% | +0.8% | −2.5% |
+
+**What the spread costs.**
+- The LTP-based entries of §10–§12 were half to two-thirds of a spread better than any price you
+  could actually back at. The back price is 0.5–0.9 pp of probability worse than the LTP and about
+  0.8–1.0 pp worse than the mid.
+- Measured at the LTP, this season's bets reproduce the shape of §10 (+2% to +3% EV@close from T−3h
+  to T−60m, falling to about +1% at T−25m). At the back price, the same bets are −2.5% to +0.4%.
+- §10 put the biggest 56/57 1X2 CLV at +0.5 to +0.9 pp. That is smaller than the median 4-tick
+  spread, which is about 5% of the price at 1–3 h out and still 4% in the last 25 minutes.
+
+**What size is on offer.** The queue is small:
+- The median best-back size is £5–7 from T−6h to T−25m, rising to £15 only in the last 25 minutes.
+- The best three back levels together hold a median £30–60.
+- Matched volume in the whole market is a median £475 at 1–3 h out and £1,190 in the last 25 minutes.
+
+So a 1-unit bet above about £10 would walk the book. This matches the §10 finding that early LTPs
+were thin and stale: in League One/Two, "early" means about 3 h and a £6 queue, not 24 h.
+
+### 13.5 §12's AGAINST/WITH split at T−60m (descriptive, not a test)
+
+Direction is the change in the de-vigged mid probability of the selection, from the earlier instant
+to T−60m. "WITH" means it shortened toward the model's side by more than 0.1 pp. Bets are at the back
+price, edge ≥ 2 pp.
+
+| Since | Group | Bets | CLV pp [CI] | EV@close 2% [CI] |
+|---|---|---:|---|---|
+| T−3h | all | 26 | −0.46 [−1.72, +0.43] | −0.8 [−7.7, +4.9] |
+| T−3h | price WITH model | 9 | +0.43 [−0.48, +2.44] | −1.2 [−4.1, +3.8] |
+| T−3h | price AGAINST model | 11 | −1.60 [−2.71, +0.31] | −4.5 [−10.5, +7.7] |
+| T−3h | flat | 6 | +0.30 [−0.49, +1.88] | +6.4 [+3.3, +12.6] |
+| earliest book | all | 61 | −0.59 [−1.19, −0.09] | −0.9 [−4.9, +1.9] |
+| earliest book | price WITH model | 19 | +0.01 [−1.08, +1.21] | −1.8 [−5.9, +2.6] |
+| earliest book | price AGAINST model | 34 | −1.34 [−2.11, −0.56] | −4.1 [−8.5, +0.1] |
+| earliest book | flat | 8 | +1.16 [−0.78, +4.21] | +15.0 [−0.2, +42.3] |
+
+- **The sign is the reverse of §12:** here AGAINST is worse than WITH. The T−3h version has only 20
+  directional bets on 3 match days, because the book rarely exists at T−3h. That is too few to confirm
+  or refute the §12 candidate.
+- **Since the earliest book (a variant the brief did not ask for),** 34 AGAINST bets lost 1.3 pp of
+  CLV. The transition-club fixtures of §13.6 are not what drives this: they make up 13 of the 34
+  AGAINST bets and 6 of the 19 WITH bets.
+
+### 13.6 Where the disagreement lives: clubs that changed tier
+
+- **The clubs:** Airdrieonians and Ross County came down from the Championship into League One,
+  East Kilbride came up from League Two, and Kelty Hearts went down from League One to League Two. They appear in 28 of the 79 fixtures.
+- **The model's edge there is about double** (13–17 pp vs 7–8 pp). These are the fixtures where the
+  model is worst: 1X2 log-loss 0.993 vs the mid close's 0.827 on 22 of them, against 1.029 vs 1.018 on
+  the other 38.
+- **Example:** Peterhead v Ross County. The model had Peterhead at 0.53 to win; the mid close had
+  0.17.
+- **Why:** this is the known W1 transition bias (see the W1 README). GRW has no summer macro step, so a
+  club's rating enters the new season almost unchanged. Pooling over the SPFL does not tell the model
+  that a relegated Championship side is a League One favourite.
+
+| Entry | Group | Bets | Mean edge (pp) | CLV pp [CI] | EV@close 2% [CI] | ROI 2% |
+|---|---|---:|---:|---|---|---:|
+| earliest | transition fixture | 30 | 13.1 | −2.06 [−4.79, +0.23] | −3.7 [−15.2, +7.0] | −48% |
+| earliest | other | 42 | 7.2 | −1.89 [−4.53, +0.23] | −4.1 [−9.0, +1.1] | +1% |
+| T−3h | transition fixture | 14 | 16.9 | −2.05 [−4.75, −0.65] | −6.1 [−19.5, −0.0] | −30% |
+| T−3h | other | 19 | 8.1 | +0.25 [−0.42, +1.06] | +1.0 [−1.6, +4.7] | +23% |
+| T−60m | transition fixture | 25 | 14.6 | −0.99 [−2.76, +0.90] | −0.8 [−11.1, +11.7] | −42% |
+| T−60m | other | 36 | 7.4 | −0.31 [−1.59, +1.04] | −1.0 [−6.3, +4.5] | −17% |
+| T−25m | transition fixture | 28 | 14.2 | −0.75 [−1.28, −0.23] | −3.2 [−5.8, −0.8] | −38% |
+| T−25m | other | 42 | 7.2 | −0.50 [−0.74, −0.07] | −2.9 [−3.9, −0.7] | −2% |
+
+Excluding those fixtures does not rescue the model at the back price. At T−25m, the other fixtures
+still have CLV −0.50 [−0.74, −0.07] and EV −2.9%.
+
+### 13.7 What this sample can and cannot say
+
+- **Size of the sample:** 60–70 bets per usable instant, clustered in 8 match days. T−3h has 33 bets
+  on 3 days; T−6h and T−24h have too few to use.
+- **CI widths (edge ≥ 2):**
+
+  | Entry | CLV CI width | EV CI width | ROI CI width |
+  |---|---:|---:|---:|
+  | T−60m | 1.1 pp | 6.8 pts | 64 pts |
+  | T−25m | 0.7 pp | 3.2 pts | 62 pts |
+
+- **Detectable effects:** with 80% power at a two-sided 5% level, the minimum detectable effect is
+  about 1.43 × the CI half-width.
+
+  | Effect | T−60m | T−25m |
+  |---|---:|---:|
+  | CLV | 0.8 pp | 0.5 pp |
+  | EV@close | 4.9% | 2.3% |
+  | Realised ROI | 46 pts | 44 pts |
+
+- **What it can say.** A CLV of −0.6 pp is the size of the spread, and the data can see that. A true
+  EV of +1% to +2%, the size of §10's early edge, is below what it can detect.
+- **What it cannot say.**
+  - Realised ROI over two months says nothing.
+  - An 8-cluster bootstrap understates the uncertainty.
+  - Nothing here tests a hypothesis. It describes one model on one partial season.
+
+### 13.8 Caveats
+
+- **One model.** It is W1's `grw_spfl_joint`: GRW, the most decompressed cell (slope 1.07), with a
+  known transition bias. The fixed pre-registration candidate from §12.8 (m05_joint_td) was not
+  extended, since the brief allowed one job.
+- **Biweekly folds, as in W1** (§13.2). The second day of a two-week step is predicted with up to two
+  weeks' less data than a weekly refit would have. This matters most for the transition clubs, whose
+  ratings are moving fastest.
+- **Missing pxG in fold 44** (09-12 to 09-19): 42% of its 26/27 training fixtures lack BBC commentary.
+  A BBC backfill would change fold 44's inputs.
+- **Holes in the book.**
+  - The 08-22 round was recorded only after kick-off, and the 08-29 round was not recorded at all.
+  - The 08-01 round has no LTP.
+  - The collector stopped on 20 September.
+  - 19 of the 79 played fixtures could not be priced.
+- **Execution is idealised.** The fill is assumed at the best back for the full unit, with no queue
+  priority or latency, and on a 3-minute snapshot rather than the true minute. Where the unit exceeds
+  the best-back size (most bets above about £6), the real price would be worse.
+- **Mid close vs LTP close.** The mid close is the brief's definition. It is noisier far from the
+  off, when spreads are wide, but in (−20, 0] the median spread is 3 ticks. The LTP close is shown as
+  the §2 cross-check.
+
+**Reproduce** (mcmc-beast, `/root/BF_runs/clv_napkin_dev`, `.env` sourced):
+
+```bash
+# once: rebuild the DataStore from betdb (read-only) into out/, then the one sampling job (~3 min)
+julia --project -e 'using BayesianFootball, Serialization; mkpath("/root/BF_runs/clv_napkin_dev/out"); serialize("/root/BF_runs/clv_napkin_dev/out/r04_datastore_ScottishPyramid.jls", BayesianFootball.Data.load_datastore_sql(BayesianFootball.Data.ScottishPyramid()))'
+julia --project -t 16 current_development/clv_napkin/r04_extend_grw_spfl_joint.jl > /root/BF_runs/logs/clv_napkin/r04_extend.log 2>&1
+# evaluation (~1 min; SELECTs from betfair_live)
+julia --project -t 8 current_development/clv_napkin/r04_live_orderbook.jl
 ```

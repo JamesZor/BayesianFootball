@@ -1,0 +1,25 @@
+
+threads: 16  started 2026-09-28T17:36:41.938
+fit: grw_spfl_joint  folds 40  sampler QueuedNUTSConfig(1000, 4, 500, 0.65, 10, UniformInit(range=[-0.001, 0.001]), false, true)  execution QueuedExecution(16)
+datastore: 5323 matches, last 2026-09-23
+new positions: [41, 42, 43, 44] of 44
+4×11 DataFrame
+ Row │ fold   time_step  n_train  train_last  heldout_first  heldout_last  n_heldout  n_heldout_l1l2  heldout_days                      n_train_2627  n_train_2627_pxg
+     │ Int64  Int64      Int64    Date        Date           Date          Int64      Int64           String                            Int64         Int64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │    41          0     1461  2026-04-25  2026-07-31     2026-08-09           42              20  2026-08-01 2026-08-08                        0                 0
+   2 │    42          1     1503  2026-08-09  2026-08-15     2026-08-22           25              19  2026-08-15 2026-08-22                       42                42
+   3 │    43          2     1528  2026-08-22  2026-08-28     2026-09-06           48              20  2026-08-28 2026-08-29 2026-09-05            67                67
+   4 │    44          3     1576  2026-09-06  2026-09-09     2026-09-20           41              20  2026-09-12 2026-09-15 2026-09-19           115                67
+sampled 4 folds in 2.4 min
+4×11 DataFrame
+ Row │ fold   max_rhat  worst_rhat             min_ess_bulk  min_ess_tail  n_divergent  n_transitions  divergence_pct  treedepth_pct  min_bfmi  rerun
+     │ Int64  Float64   String                 Float64       Float64       Int64        Int64          Float64         Float64        Float64   Bool
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │    41   1.00318  dyn.β.σ₀                   1477.32        2116.26            0           4000             0.0            0.0  0.600787  false
+   2 │    42   1.00372  dyn.α.σ₀                    982.0         1643.49            0           4000             0.0            0.0  0.697464  false
+   3 │    43   1.00599  dyn.α.z_target[43, 2]       918.624       1649.44            0           4000             0.0            0.0  0.70462   false
+   4 │    44   1.0077   dyn.β.z_target[12, 3]      1140.02        1859.53            0           4000             0.0            0.0  0.839166  false
+run-level verdict: passed = true  failures: String[]
+held-out latents: 156
+DONE r04_extend_grw_spfl_joint 2026-09-28T17:39:24.753
