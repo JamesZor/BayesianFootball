@@ -139,11 +139,8 @@ function parse_args(args)
     return (; help = false, path, portfolio, target_seasons, expected_fixtures)
 end
 
-function main(path; portfolio = nothing, target_seasons = DEFAULT_TARGET_SEASONS,
-              expected_fixtures = DEFAULT_EXPECTED_FIXTURES)
-    groups = load_run_groups(path)
-    refs = reduce(vcat, (group.refs for group in groups); init = Harness.RunRef[])
-    unique!(refs)
+"Include the prototype loaders whose experiments occur in `refs` (type definitions for load_fit)."
+function include_run_loaders(refs)
     if any(ref -> ref.experiment == "scottish_pyramid_grw_cups", refs)
         include(joinpath(@__DIR__, "..", "current_development",
                          "grw_pyramid_cups", "l01_loader.jl"))
@@ -159,6 +156,37 @@ function main(path; portfolio = nothing, target_seasons = DEFAULT_TARGET_SEASONS
         any(ref -> ref.experiment == experiment, refs) || continue
         include(joinpath(@__DIR__, "..", "experiments", "scottish_lower", folder, loader))
     end
+    return nothing
+end
+
+"""
+Score every CSV control group in memory; nothing is written. Returns `(; scores, failures)`.
+`scripts/validate_klm_board_dryrun.jl` uses this to rehearse the runbook without writing.
+"""
+function score_csv_groups(groups, ds; target_seasons = DEFAULT_TARGET_SEASONS,
+                          expected_fixtures = DEFAULT_EXPECTED_FIXTURES)
+    tiers = Harness.club_season_tiers(ds)
+    failures = NamedTuple[]
+    frames = DataFrame[]
+    # `include_run_loaders` defines prototype types during this invocation. Enter the latest
+    # world before deserializing them (Julia 1.12 otherwise warns about stale bindings).
+    for group in groups
+        scores = Base.invokelatest(Harness.score_runs, group.refs; ds = ds, tiers = tiers,
+                                   control = group.control,
+                                   target_seasons = target_seasons,
+                                   expected_fixtures = expected_fixtures,
+                                   failures = failures)
+        isempty(scores) || push!(frames, scores)
+    end
+    return (; scores = isempty(frames) ? DataFrame() : vcat(frames...), failures)
+end
+
+function main(path; portfolio = nothing, target_seasons = DEFAULT_TARGET_SEASONS,
+              expected_fixtures = DEFAULT_EXPECTED_FIXTURES)
+    groups = load_run_groups(path)
+    refs = reduce(vcat, (group.refs for group in groups); init = Harness.RunRef[])
+    unique!(refs)
+    include_run_loaders(refs)
 
     # The pyramid store is a strict superset of the Lower panel and supplies the
     # 54/55 monitor fixtures for pooled fits.
@@ -174,21 +202,7 @@ function main(path; portfolio = nothing, target_seasons = DEFAULT_TARGET_SEASONS
         return 0
     end
 
-    tiers = Harness.club_season_tiers(ds)
-    failures = NamedTuple[]
-    frames = DataFrame[]
-    # Prototype loader types are defined above during this invocation. Enter the latest
-    # world before deserializing them (Julia 1.12 otherwise warns about stale bindings).
-    for group in groups
-        scores = Base.invokelatest(Harness.score_runs, group.refs; ds = ds, tiers = tiers,
-                                   control = group.control,
-                                   target_seasons = target_seasons,
-                                   expected_fixtures = expected_fixtures,
-                                   failures = failures)
-        isempty(scores) || push!(frames, scores)
-    end
-    scores = isempty(frames) ? DataFrame() : vcat(frames...)
-
+    (; scores, failures) = score_csv_groups(groups, ds; target_seasons, expected_fixtures)
     Harness.write_scores!(db, scores)
     println("Scored $(length(unique(scores.run_id))) / $(length(refs)) runs; " *
             "wrote $(nrow(scores)) score rows.")

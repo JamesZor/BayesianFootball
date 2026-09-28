@@ -28,8 +28,13 @@ absent from the v1.2 grid **plus 12 distinct W1 grid UUIDs** whose original v1.1
 against `m12_td` (`132df5c2`) must be retained. Six W1 rows use their v1.1 alias labels:
 `s12_m01_td_poisson`, `s12_m02_td_joint`, `m00_baseline_grw`, `g1_grw_all_spfl`,
 `g2_grw_all_spfl_cups`, `g3_grw_joint_all_spfl_cups`. The W1 UUIDs already have a
-v1.2 comparison against `td_lower_joint` (`97c7a3d9`); `write_scores!` adds the
-m12 pairing without erasing it. Thirteen W0-only rows retain their recorded `m12_td`
+v1.2 comparison against `td_lower_joint` (`97c7a3d9`). `write_scores!` replaces every
+row sharing `(run_id, scorecard_version, control_run_id, stage, subset)`, so §2 **rewrites the
+12 W1 runs' existing v1.2 non-delta rows** (LL, ECE, compression, cohorts; NULL
+`control_run_id`), relabelled with the CSV label, and adds the m12 delta rows. Their
+`97c7a3d9` delta rows keep the native W1 label, because their key differs. `Harness.leaderboard`
+takes the label-independent metrics from the whole `(panel, run_id)` group, so both labels keep
+their numbers on the board (fix round 2, F12). Thirteen W0-only rows retain their recorded `m12_td`
 control; `g2_harness_repro` had no recorded v1.1 delta and is self-controlled to preserve
 that distinction. Its new zero delta [0, 0] is **not** a historical comparison; annotate
 rather than claiming an old pairing. The file uses the frozen W1 panel **56+57 | 24/25,25/26 | n=710**. Verify UUIDs and experiments read-only in `runs` before executing. `scripts/score_runs.jl` includes the `scottish_lower_momentum_grw`, `scottish_lower_decompression`, and `scottish_lower_decoupled_xg` prototype loaders when those experiments occur; the remaining run types live in `src/`.
@@ -42,7 +47,7 @@ rather than claiming an old pairing. The file uses the frozen W1 panel **56+57 |
 ```
 
 Require **26 distinct scored runs** (14 W0-only plus 12 W1 grid UUIDs), no failures,
-v1.2 rows for all 14 W0-only UUIDs and 12 W1 deltas against `132df5c2`. The procedure writes only `harness_scores` v1.2; existing v1.1 rows stay untouched.
+v1.2 rows for all 14 W0-only UUIDs and 12 W1 deltas against `132df5c2`. The procedure writes only `harness_scores` v1.2: it adds rows for the 14 W0-only UUIDs and the m12 deltas, and rewrites the W1 runs' v1.2 non-delta rows as above. Existing v1.1 rows stay untouched.
 
 ## 3. W1 MAP screen re-run (Amendment 1)
 
@@ -73,6 +78,15 @@ Verify that their existing `97c7a3d9-a05a-4029-90cb-e34279b8c791` deltas were no
 overwritten. The six alias labels must be visible in the board, not merely present in SQL.
 Confirm the v1.2 MAP section is present, warning-labelled and separate, with 12 W1 cells. For W2 read the `grw_*` / `td_*` deltas against each row's `control_name` and UUID; compare numerically with `experiments/scotland/04_pyramid_tier_transition_arms/README.md`. Panels must remain separate; no W0-vs-W2 delta. Compare the W1 register row to its pre-screen state, and confirm no v1.1 scores were deleted. Require zero missing v1.1 UUIDs, labels or W1-vs-m12 pairings. The only intentionally
 new self-delta is the annotated `g2_harness_repro` comparison; do not call it a v1.1 control.
+
+**Every grid board row must have a finite Target LL.** In `experiments/LEADERBOARD.csv`, no
+row may have a NaN or empty `target_logloss_all`, `target_logloss_1x2`, `target_ece_all` or
+`compression_slope`. In `LEADERBOARD.md`, no posterior-grid headline row may show `—` in the
+Target LL column. A row that has lost its metrics fails this gate even when its UUID, label and
+deltas are all present. Before §2, rehearse the whole of §2 + §4 read-only with
+`scripts/validate_klm_board_dryrun.jl` (it scores the CSV in memory, applies the replace-by-key
+to a copy of the production v1.2 rows and gates the rendered board); require
+`KLM_BOARD_DRYRUN_PASS`.
 
 The W1-vs-m12 part of the gate, read-only (run it before §2 and after §4; the list is the
 12 W1 grid UUIDs, CSV lines 15–26):
