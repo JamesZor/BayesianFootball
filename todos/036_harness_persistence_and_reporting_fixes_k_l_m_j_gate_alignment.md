@@ -63,13 +63,13 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
         real `grw_base` W2 fit;
   - [x] legacy runs still load;
   - [x] existing suites green (parallel runner: only known T007).
-- [ ] One Claude CLI (Opus 5.5) review at the end, with at most 2 fix rounds, then escalation to
+- [x] One Claude CLI (Opus 5.5) review at the end, with at most 2 fix rounds, then escalation to
       the human.
-- [ ] Merged into `feat/w2-tier-components`.
+- [x] Merged into `feat/w2-tier-components` (`01e9936a`).
 - [ ] Production steps, run by pi after the human's go:
-  - [ ] schema created in `mcmc_experiments`;
-  - [ ] W0 and MAP-screen runs re-scored at v1.2;
-  - [ ] `LEADERBOARD.md` regenerated and committed.
+  - [x] schema created in `mcmc_experiments`;
+  - [ ] W0 and MAP-screen runs re-scored at v1.2 (W0 done; MAP screen deferred by the human);
+  - [x] `LEADERBOARD.md` regenerated and committed.
 
 ## Ideas & Candidate Solutions
 
@@ -97,3 +97,11 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
 ## Verification & Findings
 
 Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Final evidence and exact numbers are in the report linked above.
+- [2026-09-28 @claude] Re-review 2 ACCEPT at `f44cda6b`. Merged into `feat/w2-tier-components` as `01e9936a`. On the human's go, the manager ran runbook §1, §2 and §4 on mcmc-beast (`/root/BF_runs/01e9936a`, logs `/root/BF_runs/logs/klm/`):
+  - §1: `fit_fold_artifacts` was created, `fit_artifacts.layout` defaults to `single`, and the 324 fits are untouched.
+  - §2: 26/26 runs scored, 17,684 rows. v1.2 went from 20,262 to 30,350 rows; v1.1 is unchanged at 26,256.
+  - The W1 controls now hold 12 deltas against `132df5c2` and 12 against `97c7a3d9`. That pairing is intact.
+  - Every `harness_experiments` row hash is unchanged.
+  - §4: the board has 68 rows and none lacks a headline. All 26 v1.1 UUIDs, all v1.1 labels and all six aliases are present.
+  - **§3 (the W1 MAP re-screen) was skipped at the human's direction,** after the CLV napkin redirected effort away from model search. As a result the board has no MAP-screen section, whereas v1.1 showed one (diagnostic only; see memory: MAP screen inflates non-centred scales). This is the only open item.
+

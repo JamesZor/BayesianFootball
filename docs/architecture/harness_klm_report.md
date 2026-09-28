@@ -162,3 +162,20 @@ The six W1 rows that the reviewer saw render as "—" now read as follows (rende
 | `grw_spfl_cups_joint` | 0.64385 | 0.61718 | 0.00953 | 1.105 | `td_lower_joint` | 0.00010 |
 
 Production was only read. The runner suite's guard test connects to `mcmc_experiments_test` but creates nothing: before and after every item it still had no `runs` table (the empty schema left by the reviewer).
+
+## Production (manager, 2026-09-28)
+
+Merged SHA `01e9936a`, run on mcmc-beast (`/root/BF_runs/01e9936a`, `-t 16`; logs `/root/BF_runs/logs/klm/`). Timings: §1 16:22:45–16:23:19, §2 16:23:19–16:28:57, §4 16:28:57–16:29:19 (CEST). **§3 (the MAP re-screen) was not run; the human deferred it.**
+
+| Check | Before | After |
+|---|---|---|
+| `fit_artifacts` rows / layouts | 324 / (no column) | 324 / 1 (`single`) |
+| `fit_fold_artifacts` | absent | present, 0 rows |
+| v1.1 score rows | 26,256 | 26,256 |
+| v1.2 score rows | 20,262 | 30,350 (+17,684 written, −7,596 replaced) |
+| W1 grid deltas vs `132df5c2` (m12) | 0 | 12 |
+| W1 grid deltas vs `97c7a3d9` | 12 | 12 |
+| `harness_experiments` row md5s | — | all unchanged |
+| Board rows / rows missing a headline | — | 68 / 0 |
+| v1.1 UUIDs and labels missing from the board | — | 0 / 0; all six aliases present |
+| MAP-screen section | present (v1.1) | **absent (§3 deferred)** |
