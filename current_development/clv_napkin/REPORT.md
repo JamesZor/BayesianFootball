@@ -1629,3 +1629,222 @@ julia --project -t 16 current_development/clv_napkin/r04_extend_grw_spfl_joint.j
 # evaluation (~1 min; SELECTs from betfair_live)
 julia --project -t 8 current_development/clv_napkin/r04_live_orderbook.jl
 ```
+
+## 14. How the market prices matches
+
+Brief 05. Code: `l05_market_structure.jl` / `r05_market_structure.jl`; results:
+`out/r05_*.csv` and `out/r05_heatmap.txt`. **No new posterior fit or MCMC.**
+
+**Answer.** At the first available close, the market rates clubs mainly by their *previous
+season's strength and tier*, not by a flat newly promoted/relegated prior: last-season goal
+difference plus tier-change indicators explain 70% of the in-sample variation in early-season
+market strength (173 club-seasons), and last-season *market* strength adds explanatory power on
+its paired sample. Transition clubs are **already substantially re-rated at their first quoted
+match**; promoted clubs' first-match strength is near their later-season level on average, while
+relegated clubs can still move, but the latter estimate is too noisy to put a precise number of
+weeks on adaptation. The correct-score book is not independent Poisson: it puts extra mass on
+1-1 and 2-2 and less on 1-0/0-1. Of the grids tested, a **shared-goals bivariate component
+(λ₃ ≈ 0.08) with mildly under-dispersed COM-Poisson marginals (ν ≈ 1.08)** best *describes* the
+CS quotes; a simple bivariate Poisson (λ₃ ≈ 0.09) also beats Poisson and DC (ρ ≈ −0.04).
+**Recommendation:** first fix cross-tier initial states (seed from prior-season market strength
+where available, and test a tier-aware fallback); separately prototype shared-goal covariance
+and test its proper scores prospectively. Merely swapping our score grid cannot repair the
+much larger model–market **rate** gap on transition fixtures.
+
+### 14.1 Data, inversion and rating definition
+
+- **Archive:** Scottish Premiership / Championship / League One / League Two (tournaments
+  54–57), 21/22–25/26. Core close is a de-vigged last-20-minute TWA of Betfair LTP from
+  `betfair.odds_history`, as in §2. The CS comparison instead uses each runner's last
+  pre-kick-off trade at most 120 minutes old: require at least 16 of 19 runners including
+  the low-score block, normalise over the **present runners**, and compare grids on that
+  same conditional set. These are asynchronous, thin exchange quotes, **not** a simultaneous
+  complete de-vigged CS book; this is the most important limitation on claims about its shape.
+- **Live:** 26/27 `betfair_live.order_book_1m`, two-sided best-back/best-lay mid, last-20-minute
+  TWA, de-vigged for 1X2 and goal lines. As in §13, this covers dates only through 20 September.
+- **Inversion:** minimise summed KL to de-vigged 1X2 and the available under 1.5/2.5/3.5
+  probabilities using the chosen bivariate + COM grid. Report λ as its *actual expected
+  goals* (the bivariate component contributes to both sides), not just its independent
+  component rates. A two-parameter grid cannot fit all independent prices exactly. The
+  independent-Poisson 1X2 + under-2.5 inversion is retained in `r05_market_lambda.csv`.
+  There are 2,356 archive and 113 live match inversions; the mean summed inversion KL is
+  0.00039. Only 1X2 and under 2.5 are needed for inclusion.
+- **Ratings:** per league-season, least squares on
+  `log λ_h = μ + H + attack_h − defence_a` and
+  `log λ_a = μ + attack_a − defence_h`, with attack/defence random walks by *team match*,
+  ridge identification, and a common smoothing penalty. Earlier-date one-step error chooses
+  penalty 4 (log-rate RMSE 0.0954, vs 0.0959 at penalty 1); the resulting full-season
+  *smoothed* paths and opponent-adjusted per-match `net = attack + defence` are in
+  `r05_rating_paths.csv`. A season's full path uses later quotes to smooth earlier ratings;
+  for a first-match-vs-settled comparison use the **per-match quote** `net`, not the
+  full-season smoothed estimate. Different league-season centres are not comparable as an
+  absolute cross-tier rating without the tier label.
+
+| League | Played 21/22–25/26 | Core 1X2 + O/U 2.5 | Also O/U 1.5 & 3.5 | With usable CS | Complete 19-runner CS | 26/27 live core |
+|---|---:|---:|---:|---:|---:|---:|
+| Premiership | 990 | 897 | 641 | 764 | 485 | 27 |
+| Championship | 895 | 391 | 177 | 122 | 60 | 27 |
+| League One | 895 | 589 | 180 | 98 | 23 | 29 |
+| League Two | 895 | 479 | 130 | 60 | 13 | 30 |
+
+The CS results are heavily Premiership-weighted (764/1,044); lower-division estimates are
+thin. The 26/27 live book has a CS set on 112 of 113 inverted fixtures.
+
+### 14.2 What predicts the market's team ratings?
+
+Early strength is the within-league-season-centred opponent-adjusted net rating averaged
+across the first three **available** matches (at least two). Prior tier and final position,
+last-season goal difference per game, and the previous market rating use the preceding
+season's data. The time-variation outcome for first weeks is the change from matches 1–3
+to matches 6–10; 26/27 has not reached a settled level (defined here using matches 16+).
+These are descriptive, in-sample OLS R², **not** predictive or causal explanations; several
+club-seasons share a team and league and the reported HC1 standard errors are not
+team-clustered.
+
+| Explanatory block | Outcome / sample | n | In-sample R² | Main coefficients (log net-strength units) |
+|---|---|---:|---:|---|
+| Tier-change indicators only | season start, all four leagues | 173 | 0.031 | promoted −0.09; relegated +0.13 vs stayed |
+| + previous final table | same | 173 | **0.705** | prior GD/game × stayed +0.63 (SE 0.06); × promoted +0.27 (0.08); × relegated +0.23 (0.10); prior rank adds little conditional on GD |
+| Previous table alone | paired with next row | 126 | 0.692 | prior GD/game × stayed +0.62 |
+| + previous market rating | same 126 | **0.790** | rating carry × stayed +0.92 (SE 0.14); × tier movers +0.19 (0.37), imprecise; prior GD effects shrink |
+| Previous table alone | L1/L2, *matched* lineup sample | 47 | 0.539 | — |
+| + starting-XI wealth, turnover | same 47 | 0.549 | wealth +0.077 (SE 0.089); turnover −0.073 (0.169) |
+| Previous table | settled strength, all leagues | 186 | 0.506 | prior GD/game × stayed +0.58 |
+| Previous table | change from matches 1–3 to 6–10 | 125 | 0.060 | no robust tier-change slope |
+
+The lineup rows use a *proxy* of `src/models/pregame/builder/components.jl`'s
+`ProductionWealthFeature`: age-weighted log starting-XI `proposed_market_value`, averaged
+over a team's first three covered games, and starter turnover relative to the previous
+season. The production feature instead uses matchup log-wealth differences and
+kickoff-safe valuation fallback; do **not** interpret this proxy as a pixel-identical
+ablation of `m05_joint_production_wealth_grw`. Of 237 team-seasons, 174 have no usable
+wealth measure. Comparing the 80-row L1/L2 table-only R² (0.375) to the 47-row wealth R²
+(0.549) would be a sample-composition error: **the paired lift is only 0.010**. Player
+ratings exist in the SofaScore lineups, but coverage and point-in-time availability did
+not support a reliable extra pre-season rating regressor here. Full-time/part-time status
+is **not** a populated historical betdb feature. The separate research panel in
+`experiments/scottish_lower/13_pedigree_fulltime_and_tier_priors_eda/STATUS_NOTES.md`
+has 21 Verified, 8 Inferred and 223 Unknown season labels; it is retrospectively sourced,
+not a point-in-time full-census input, so no FT coefficient is claimed.
+
+**How fast for tier movers?** In historical seasons with an available match-16+ level,
+mean *first-match minus settled* opponent-adjusted net strength is −0.016 for promoted
+clubs (16 first-match quotes; bootstrap CI [−0.110, +0.069]), −0.126 for relegated clubs
+(12; [−0.312, +0.058]), and +0.027 for stayers (109). The mean gap for promoted clubs
+is near zero also across matches 6–10; relegated-club point estimates vary by round
+rather than tracing a clean decay. Season-start (matches 1–3) to settled changes average
+−0.019 for 23 promoted club-seasons and +0.049 for 22 relegated club-seasons with both
+endpoints (`r05_transition_analogues.csv`). **Conclusion:** the first market quote
+already incorporates the new tier; the data cannot identify a universal convergence
+half-life. Missing early quotes and using an end-of-season reference both matter.
+
+The four 26/27 transition clubs (rates in goals per match from the **same fixture**, first
+available live close vs held-out `grw_spfl_joint`; home/away oriented to the club):
+
+| Club, change | First quoted match | Market λ for / against | GRW λ for / against | Market net / GRW net | Later quoted market net (last available) |
+|---|---|---|---|---|---|
+| Airdrieonians, Champ → L1 | 08-01 at Cove (away) | 1.58 / 1.08 | 0.84 / 1.51 | +0.11 / −0.85 | +0.14 on 09-19 |
+| East Kilbride, L2 → L1 | 08-01 vs Queen of the South | 2.06 / 1.04 | 1.66 / 1.23 | +0.19 / −0.19 | +0.19 on 09-19 |
+| Kelty Hearts, L1 → L2 | 08-01 at Forfar (away) | 1.57 / 1.17 | 0.93 / 1.49 | +0.07 / −0.70 | −0.11 on 09-19 |
+| Ross County, Champ → L1 | 08-01 at Peterhead (away) | 1.86 / 0.93 | 0.97 / 1.59 | +0.70 / −0.49 | +0.64 on 09-19 |
+
+These *first quotes*, not retrospectively smoothed priors, already see Ross County as
+strong. The different opponents/venues make a raw λ sequence **not** a rating path; the
+last column uses the opponent-adjusted rating. No 26/27 club has a match-16+ settled
+level yet. Full fixture-level examples (23 quotes) are in `r05_transition_2627.csv`.
+
+On the matched held-out fixtures, model-minus-market log net strength for
+`grw_spfl_joint` is +0.402 on promoted teams' first five matches (42 team-games),
+−0.242 on relegated teams' first five (37), and −0.024 on stayers (281); at match 6+
+it is +0.115 / −0.105 / −0.004 respectively. `m12_td` on 56/57 has +0.295
+(promoted, n=13), −0.009 (relegated, n=22), −0.028 (stayed, n=73) in the first five.
+These are aggregates across different seasons, and **do not** mean every transition
+moves in the same direction: the individual 26/27 Ross County error is far larger.
+Among ≥8-match team-seasons the largest absolute discrepancies include
+`m12_td` Inverness 25/26 (−0.603), East Kilbride 25/26 (−0.359) and
+`grw_spfl_joint` Celtic 24/25 (−0.374); see `r05_model_vs_market_team.csv`.
+The grw model's matched CS sample has 1X2 KL(market‖model) ×1,000 of 23.5
+and under-2.5 KL ×1,000 of 27.4 (463 fixtures); m12 has 39.8 and 5.7 (77).
+Those marginal mismatches are far larger than the grid-shape differences below.
+
+### 14.3 What is the market's score grid?
+
+Per fixture, each candidate fits **two** rate parameters to 1X2 + under 2.5;
+its global shape parameter is then chosen to minimise mean KL(market CS ‖ grid CS),
+conditional on the CS runners present. All parameter CIs and KL-difference CIs resample
+**match dates** (2,000 cluster draws), conditional on this grid of candidate values.
+Thus the numbers are in-sample descriptions, not a held-out model contest, and should
+not be read as the exchange's literal generative algorithm.
+
+| Grid | Scottish n=1,044: mean CS KL ×1,000 | ΔKL vs Poisson ×1,000 [95% CI] | CS shape (95% CI) | Independently fitted from goal lines¹ |
+|---|---:|---|---|---|
+| Independent Poisson | 4.990 | 0 | — | — |
+| Dixon–Coles | 4.486 | −0.505 [−0.541, −0.469] | ρ −0.04 [−0.04, −0.04] | ρ −0.07 |
+| Bivariate Poisson | 3.849 | −1.141 [−1.213, −1.068] | shared λ₃ 0.09 [0.09, 0.09] | λ₃ 0.07 |
+| Negative binomial | 4.990 | 0 | κ 0 (Poisson boundary) | κ 0 |
+| COM-Poisson marginals | 4.205 | −0.785 [−0.856, −0.708] | ν 1.08 [1.08, 1.08] | ν 1.10 |
+| Simple diagonal inflation | 4.277 | −0.713 [−0.778, −0.643] | δ 0.09 [0.09, 0.09] | δ 0.10 |
+| DC + COM | 3.703 | −1.287 [−1.361, −1.212] | (ρ, ν) (−0.04, 1.08) | (−0.07, 0.98) |
+| **Bivariate + COM** | **3.083** | **−1.908 [−2.002, −1.812]** | **(λ₃, ν) (0.08, 1.08); bootstrap λ₃ [0.08, 0.09], ν 1.08** | (0.10, 1.18) |
+
+¹ Goal-line column: choose the shape solely by best simultaneous fit to 1X2 and under
+1.5/2.5/3.5 on matches with all three lines; **not** the CS sample or the same
+objective, so disagreement (especially ν) is a consistency warning. CIs that print as
+a single grid step do not imply exact identification. `r05_grid_fit.csv` has all four
+leagues and four expected-total bins. By league the CS-selected simple DC ρ is −0.04,
+−0.05, −0.04, −0.04 and bivariate λ₃ is 0.09, 0.10, 0.10, 0.09
+(Prem / Champ / L1 / L2); the combined bivariate+COM advantage is present in all
+four, but L1/L2 contain only 98/60 matches. The DC correction weakens from
+ρ ≈ −0.05 at expected total <2.4 to ≈ −0.02 at ≥3.2, whereas shared λ₃
+remains ≈0.09–0.10. A liquid-league reference, the English Premier League
+(n=1,486 CS books), has the **same** winner: KL 2.163 vs Poisson 3.890,
+λ₃=0.08, ν=1.08 (`r05_grid_fit_epl.csv`).
+
+Mean market-minus-fitted-Poisson CS residuals (percentage points; conditional on
+available CS runners), and the residual after the best bivariate+COM shape:
+
+| Residual | 0-0 | 1-0 | 0-1 | 1-1 | 2-2 | CS draw total² | 1X2 draw³ |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Poisson | +0.12 | −0.37 | −0.47 | **+0.71** | **+0.55** | **+1.60** | +1.55 |
+| Bivariate + COM | +0.16 | −0.35 | −0.41 | +0.27 | +0.16 | +0.65 | +0.60 |
+
+² Sum over the draw CS runners present, including Any Other Draw. ³ 1X2 market draw
+minus the *grid fitted jointly to 1X2 and O/U 2.5*, not an independently fitted draw.
+The Poisson CS draw residual is +2.19 pp for expected total <2.4 but only
++0.28 pp at ≥3.2; full league/total splits with date-cluster intervals are in
+`r05_residuals.csv`. The 4×4 ASCII residual heatmaps (and EPL control) are in
+`r05_heatmap.txt`. Even the winning candidate leaves a structured 1-0/0-1
+deficit and 1-1 excess: do not hard-code it as a final observation model.
+
+**Our models are not showing that market pattern.** Their own posterior-mean CS
+minus a Poisson fit to their *own* 1X2 + under 2.5 is *negative* at 1-1
+(−0.10 pp m12, −0.28 pp grw) and 2-2 (−0.06 / −0.19); market minus the
+same Poisson reference is +0.71 / +0.55. These comparisons mix posterior
+draws differently and are diagnostic rather than a likelihood identification.
+On the **same** 77 m12 CS fixtures, market-CS KL ×1,000 is 60.76 for the model's
+own grid, 61.15 if its core probabilities are priced with Poisson, and 62.87
+if priced with the CS-selected shape. On the 463 grw fixtures: 69.07, 67.64,
+68.23 respectively. When instead the *market rates* are inverted and priced,
+Poisson / best-grid KL falls to 8.90 / 6.91 (m12 panel) and 5.28 / 3.04
+(grw panel). Therefore transplanting the market grid **without** correcting
+rates is not supported as an improvement. `r05_model_grid_shape.csv` and
+`r05_model_grid_kl.csv` preserve both comparisons.
+
+**Thinner-market consistency (descriptive, not a bet):** relative to the grid
+fitted only to 1X2 + under 2.5, the archive's median-style *mean absolute*
+deviations are 0.92 pp for BTTS (market bias −0.47 pp), 0.69 pp for under
+1.5 (bias −0.55) and 0.60 pp for under 3.5 (bias +0.30). In the live
+26/27 mid book, they are 1.16 / 0.55 / 0.46 pp respectively. CS-cell
+absolute deviations are about 0.25–0.48 pp for the best grid, on the
+conditional runner set. `r05_consistency.csv` has counts, 90th-percentile
+absolute deviations and Poisson controls; its CS and goal-line numbers
+cannot be directly equated to executable cross-market arbitrage once spread,
+commission, missing runners and asynchrony are considered.
+
+**Reproduce:** on `mcmc-beast`, in `/root/BF_runs/clv_napkin_dev` with the
+existing `out/probs.jls`, §13's extension and rebuilt datastore available;
+source `.env` without printing it, then run
+`julia --project -t 16 current_development/clv_napkin/r05_market_structure.jl`.
+It issues read-only betdb SELECTs and loads the persisted fit for pricing,
+but does **not** run sampling. The matched wealth-sample baseline was also
+recomputed in the same warm session after the original full runner run.

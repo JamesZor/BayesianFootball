@@ -1,0 +1,9 @@
+sample,grid,kind,n,theta_cs,theta_cs_lo,theta_cs_hi,at_edge,kl_x1000,dkl_vs_poisson_x1000,dkl_lo,dkl_hi,theta_ou,theta_ou_lo,theta_ou_hi,ou_misfit_x1000
+EPL,(a) independent Poisson,poisson,1486,0.0,0.0,0.0,true,3.88990142687349,0.0,0.0,0.0,NaN,NaN,NaN,NaN
+EPL,(b) Dixon–Coles ρ,dc,1486,-0.04,-0.04,-0.04,false,3.4342108016787476,-0.45569062519474285,-0.48360764971499415,-0.42706620910629756,NaN,NaN,NaN,NaN
+EPL,(c) bivariate Poisson λ₃,bp,1486,0.09,0.08,0.09,false,3.0236486361965915,-0.8662527906769,-0.9117537747350305,-0.821033934960709,NaN,NaN,NaN,NaN
+EPL,(d) negative binomial κ,nb,1486,0.0,0.0,0.0,true,3.88990142687349,0.0,0.0,0.0,NaN,NaN,NaN,NaN
+EPL,(d′) Conway–Maxwell–Poisson ν,com,1486,1.08,1.08,1.08,false,3.0998261043241975,-0.7900753225492941,-0.8471578517055847,-0.7299746950804907,NaN,NaN,NaN,NaN
+EPL,(e) diagonal inflation δ,diag,1486,0.1,0.1,0.1,false,3.024074073532776,-0.8658273533407157,-0.9263908707919845,-0.8020940373282803,NaN,NaN,NaN,NaN
+EPL,(b+d′) Dixon–Coles ρ + COM ν,dc_com,1486,"(-0.04, 1.08)","(-0.04, 1.08)","(-0.04, 1.08)",false,2.635840777849614,-1.2540606490238768,-1.315262664979545,-1.1919817637667054,NaN,NaN,NaN,NaN
+EPL,(c+d′) bivariate λ₃ + COM ν,bp_com,1486,"(0.08, 1.08)","(0.08, 1.08)","(0.08, 1.08)",false,2.162640545253186,-1.7272608816203052,-1.8030502811277547,-1.6520810704206292,NaN,NaN,NaN,NaN
