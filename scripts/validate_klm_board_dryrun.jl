@@ -108,7 +108,7 @@ function dryrun_main()
 
     script = Module(:DryrunBoard)
     Base.include(script, joinpath(@__DIR__, "leaderboard.jl"))
-    markdown = script.leaderboard_markdown(board, DataFrame())
+    markdown = Base.invokelatest(script.leaderboard_markdown, board, DataFrame())
     out = get(ENV, "KLM_DRYRUN_BOARD", "")
     isempty(out) || write(out, markdown)
     dash_ll = _dryrun_dash_target_ll(markdown)
