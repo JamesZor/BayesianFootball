@@ -129,233 +129,380 @@ end
             experiment = "db_storage_test_$(uuid4())"
             storage = PostgresStorage(test_url, experiment)
             ensure_schema!(storage)
+            BayesianFootball.Harness.ensure_harness_schema!(storage)
             fit = db_storage_fit(mktempdir())
+            try
+                @testset "Diagnostic failures persist metrics and JSON-safe missing telemetry" begin
+                    harness = BayesianFootball.Harness
+                    base = (; run_id = uuid4(), recipe_hash = "klm_$(uuid4())",
+                             experiment, candidate = "synthetic", stage = "screen",
+                             git_sha = "test")
+                    records = NamedTuple[]
+                    harness._run_diagnostic!(records, base, "convergence", "review") do
+                        throw(harness.DiagnosticFailure((; max_rhat = 1.06, min_bfmi = NaN),
+                                                        "R-hat exceeds 1.05"))
+                    end
+                    harness._run_diagnostic!(records, base, "unexpected", "diagnostic") do
+                        error("unexpected fault")
+                    end
+                    harness.write_checks!(storage, records)
+                    conn = LibPQ.Connection(test_url)
+                    try
+                        saved = DataFrame(LibPQ.execute(conn, """
+                            SELECT "check", status, value, detail FROM harness_checks
+                            WHERE recipe_hash = \$1 ORDER BY id;
+                        """, (base.recipe_hash,)))
+                        @test nrow(saved) == 2
+                        @test saved.status == ["fail", "fail"]
+                        @test occursin("1.06", String(saved.value[1]))
+                        @test occursin("null", String(saved.value[1]))
+                        @test String(saved.value[2]) == "{}"
+                        @test occursin("unexpected fault", saved.detail[2])
+                        close(LibPQ.execute(conn,
+                            "DELETE FROM harness_checks WHERE recipe_hash = \$1;",
+                            (base.recipe_hash,)))
+                    finally
+                        close(conn)
+                    end
+                end
 
-            fit_hash = save_config(storage, "production-fit", fit.config;
-                                   description = "single source of truth",
-                                   tags = ["production", "poisson"])
-            @test length(fit_hash) == 64
-            truth_fit = load_fit_config(storage, "production-fit")
-            @test truth_fit isa FitConfig
-            @test string(truth_fit.model) == string(fit.config.model)
-            @test load_fit_config(storage, fit_hash).name == fit.config.name
+                @testset "Completed register survives re-screen" begin
+                    harness = BayesianFootball.Harness
+                    original = (; id = experiment, date = Date(2026, 9, 27), todo = 31,
+                                question = "Original", dimension = "dynamics", status = "completed",
+                                decision = "Co-finalists", run_ids = string(uuid4(), ";", uuid4()),
+                                readme = "experiments/original/README.md")
+                    harness.write_experiment!(storage, original)
+                    harness.write_experiment!(storage, merge(original, (; run_ids = "", status = "screened"));
+                                              preserve_completed = true)
+                    @test only(filter(:id => ==(experiment), harness.read_experiments(storage))).run_ids ==
+                          original.run_ids
+                    new_id = string(uuid4())
+                    replacement = merge(original, (; date = Date(2026, 9, 28),
+                        question = "Changed", status = "screened", decision = "pending",
+                        run_ids = new_id, readme = "new README"))
+                    harness.write_experiment!(storage, replacement; preserve_completed = true)
+                    row = only(eachrow(filter(:id => ==(experiment), harness.read_experiments(storage))))
+                    @test row.date == original.date
+                    @test row.status == original.status
+                    @test row.decision == original.decision
+                    @test row.question == original.question
+                    @test row.readme == original.readme
+                    @test Set(split(row.run_ids, ',')) == union(Set(split(original.run_ids, ';')), Set([new_id]))
+                    @test harness._merge_experiment_run_ids(" $new_id;$(split(original.run_ids, ';')[1]) ",
+                        split(original.run_ids, ';')[2]) == row.run_ids
+                end
 
-            book = BookSpec(markets = Data.MarketConfig(Data.AbstractMarket[
-                                Data.Market1X2(), Data.MarketOverUnder(2.5)]),
-                            shrink = Portfolio.NoShrinkage())
-            policy = PolicySpec()
-            portfolio_hash = save_config(storage, "production-portfolio", (book, policy);
-                                         tags = ["production", "portfolio"])
-            loaded_book, loaded_policy = load_portfolio_spec(storage, portfolio_hash)
-            @test string(loaded_book) == string(book)
-            @test string(loaded_policy) == string(policy)
-            @test_throws ErrorException load_portfolio_spec(storage, "production-fit")
-            @test_throws ErrorException load_fit_config(storage, "production-portfolio")
+                fit_hash = save_config(storage, "production-fit", fit.config;
+                                       description = "single source of truth",
+                                       tags = ["production", "poisson"])
+                @test length(fit_hash) == 64
+                truth_fit = load_fit_config(storage, "production-fit")
+                @test truth_fit isa FitConfig
+                @test string(truth_fit.model) == string(fit.config.model)
+                @test load_fit_config(storage, fit_hash).name == fit.config.name
 
-            listed = list_configs(storage)
-            @test nrow(listed) == 2
-            @test Set(listed.config_type) == Set(["fit", "portfolio"])
-            @test nrow(list_configs(storage; tag = "poisson")) == 1
-            @test nrow(list_configs(storage; config_type = "portfolio")) == 1
-            @test list_configs(storage; tag = "production").tags isa Vector
-            fit_config_id = only(listed.id[listed.config_type .== "fit"])
-            @test load_fit_config(storage, fit_config_id).name == fit.config.name
+                book = BookSpec(markets = Data.MarketConfig(Data.AbstractMarket[
+                                    Data.Market1X2(), Data.MarketOverUnder(2.5)]),
+                                shrink = Portfolio.NoShrinkage())
+                policy = PolicySpec()
+                portfolio_hash = save_config(storage, "production-portfolio", (book, policy);
+                                             tags = ["production", "portfolio"])
+                loaded_book, loaded_policy = load_portfolio_spec(storage, portfolio_hash)
+                @test string(loaded_book) == string(book)
+                @test string(loaded_policy) == string(policy)
+                @test_throws ErrorException load_portfolio_spec(storage, "production-fit")
+                @test_throws ErrorException load_fit_config(storage, "production-portfolio")
 
-            # Updating a name replaces its metadata without creating a second recipe row.
-            @test save_config(storage, "production-fit", fit.config;
-                              description = "promoted", tags = ["production"]) == fit_hash
-            @test nrow(list_configs(storage; config_type = "fit")) == 1
+                listed = list_configs(storage)
+                @test nrow(listed) == 2
+                @test Set(listed.config_type) == Set(["fit", "portfolio"])
+                @test nrow(list_configs(storage; tag = "poisson")) == 1
+                @test nrow(list_configs(storage; config_type = "portfolio")) == 1
+                @test list_configs(storage; tag = "production").tags isa Vector
+                fit_config_id = only(listed.id[listed.config_type .== "fit"])
+                @test load_fit_config(storage, fit_config_id).name == fit.config.name
 
-            model = db_storage_count_model()
-            splitter = Data.CVConfig(target_seasons = ["24/25"])
-            sampler = BayesianFootball.Samplers.MAPConfig()
-            model_id = save_model(storage, "m00_joint_baseline", model;
-                                  description = "baseline count model", tags = ["baseline"])
-            splitter_id = save_splitter(storage, "split_2426", splitter; tags = ["walkforward"])
-            sampler_id = save_sampler(storage, "map_smoke", sampler; tags = ["smoke"])
-            book_id = save_book_spec(storage, "main_book", book; tags = ["production"])
-            policy_id = save_policy_spec(storage, "flat_policy", policy; tags = ["production"])
-            @test all(id -> id isa Integer,
-                      (model_id, splitter_id, sampler_id, book_id, policy_id))
+                # Updating a name replaces its metadata without creating a second recipe row.
+                @test save_config(storage, "production-fit", fit.config;
+                                  description = "promoted", tags = ["production"]) == fit_hash
+                @test nrow(list_configs(storage; config_type = "fit")) == 1
 
-            @test string(load_model(storage, model_id)) == string(model)
-            @test string(load_model(storage, "m00_joint_baseline")) == string(model)
-            @test string(load_model(storage, :m00_joint_baseline)) == string(model)
-            @test string(load_splitter(storage, splitter_id)) == string(splitter)
-            @test string(load_splitter(storage, "split_2426")) == string(splitter)
-            @test string(load_sampler(storage, sampler_id)) == string(sampler)
-            @test string(load_sampler(storage, "map_smoke")) == string(sampler)
-            @test string(load_book_spec(storage, book_id)) == string(book)
-            @test string(load_book_spec(storage, "main_book")) == string(book)
-            @test string(load_policy_spec(storage, policy_id)) == string(policy)
-            @test string(load_policy_spec(storage, "flat_policy")) == string(policy)
-            @test_throws ErrorException load_model(storage, sampler_id)
+                model = db_storage_count_model()
+                splitter = Data.CVConfig(target_seasons = ["24/25"])
+                sampler = BayesianFootball.Samplers.MAPConfig()
+                model_id = save_model(storage, "m00_joint_baseline", model;
+                                      description = "baseline count model", tags = ["baseline"])
+                splitter_id = save_splitter(storage, "split_2426", splitter; tags = ["walkforward"])
+                sampler_id = save_sampler(storage, "map_smoke", sampler; tags = ["smoke"])
+                book_id = save_book_spec(storage, "main_book", book; tags = ["production"])
+                policy_id = save_policy_spec(storage, "flat_policy", policy; tags = ["production"])
+                @test all(id -> id isa Integer,
+                          (model_id, splitter_id, sampler_id, book_id, policy_id))
 
-            search_io = IOBuffer()
-            search_result = search_configs(storage, "baseline"; io = search_io)
-            @test nrow(search_result) == 1
-            @test occursin("m00_joint_baseline", String(take!(search_io)))
-            @test nrow(search_configs(storage, "tag=\"production\""; io = devnull)) == 4
-            @test nrow(search_configs(storage, "config_type=:model"; io = devnull)) == 1
+                @test string(load_model(storage, model_id)) == string(model)
+                @test string(load_model(storage, "m00_joint_baseline")) == string(model)
+                @test string(load_model(storage, :m00_joint_baseline)) == string(model)
+                @test string(load_splitter(storage, splitter_id)) == string(splitter)
+                @test string(load_splitter(storage, "split_2426")) == string(splitter)
+                @test string(load_sampler(storage, sampler_id)) == string(sampler)
+                @test string(load_sampler(storage, "map_smoke")) == string(sampler)
+                @test string(load_book_spec(storage, book_id)) == string(book)
+                @test string(load_book_spec(storage, "main_book")) == string(book)
+                @test string(load_policy_spec(storage, policy_id)) == string(policy)
+                @test string(load_policy_spec(storage, "flat_policy")) == string(policy)
+                @test_throws ErrorException load_model(storage, sampler_id)
 
-            show_io = IOBuffer()
-            shown_model = show_config(storage, model_id; io = show_io)
-            show_text = String(take!(show_io))
-            @test shown_model isa BayesianFootball.Models.ComposableCountModel
-            @test occursin("Architecture", show_text)
-            @test occursin("interception", show_text)
+                search_io = IOBuffer()
+                search_result = search_configs(storage, "baseline"; io = search_io)
+                @test nrow(search_result) == 1
+                @test occursin("m00_joint_baseline", String(take!(search_io)))
+                @test nrow(search_configs(storage, "tag=\"production\""; io = devnull)) == 4
+                @test nrow(search_configs(storage, "config_type=:model"; io = devnull)) == 1
 
-            run_id = save_fit(fit, storage)
-            @test run_id isa UUID
-            @test save_fit(fit, storage) == run_id # config-hash deduplication
-            @test length(config_hash(fit, storage)) == 64
+                show_io = IOBuffer()
+                shown_model = show_config(storage, model_id; io = show_io)
+                show_text = String(take!(show_io))
+                @test shown_model isa BayesianFootball.Models.ComposableCountModel
+                @test occursin("Architecture", show_text)
+                @test occursin("interception", show_text)
 
-            loaded = load_fit(run_id, storage)
-            @test loaded isa Fit
-            @test loaded.latents isa CountLatents
-            @test loaded.latents.match_ids == fit.latents.match_ids
-            @test loaded.latents.λ_home == fit.latents.λ_home
-            @test Array(loaded[1].chain) == Array(fit[1].chain)
+                run_id = save_fit(fit, storage)
+                @test run_id isa UUID
+                @test save_fit(fit, storage) == run_id # config-hash deduplication
+                @test_throws ErrorException save_fit(fit, storage; on_duplicate = :error)
+                @test_throws ErrorException save_fit(fit, storage; on_duplicate = :ignore)
+                @test length(config_hash(fit, storage)) == 64
 
-            @testset "Binary bytea parameters carry an over-1GB-hex artifact" begin
-                inference = BayesianFootball.Training.Inference
-                conn = inference._db_connect(storage)
+                @testset "Repeated smoke identities and fit parity" begin
+                    harness = BayesianFootball.Harness
+                    scope = Data.DataScope(name = "smoke_nonce_test", train_tournaments = [56],
+                                           target_tournaments = [56], clock_tournaments = [56])
+                    candidate = harness.Candidate(name = fit.config.name,
+                        model = db_storage_count_model(), scope = scope, role = :control)
+                    configs = [harness._smoke_fit_config(candidate, experiment) for _ in 1:2]
+                    @test harness.recipe_hash(candidate) == harness.recipe_hash(candidate)
+                    @test configs[1].tags != configs[2].tags
+                    repeats = UUID[]
+                    for cfg in configs
+                        smoke_fit = Fit(cfg, fit.folds, fit.latents, fit.diagnostics,
+                                        fit.metadata, fit.save_path)
+                        push!(repeats, save_fit(smoke_fit, storage; on_duplicate = :error))
+                        @test harness._fit_parity(smoke_fit, load_fit(storage, last(repeats))).folds == 1
+                    end
+                    @test allunique(repeats)
+                    conn = LibPQ.Connection(test_url)
+                    try
+                        for id in repeats
+                            close(LibPQ.execute(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                                 (string(id),)))
+                        end
+                    finally
+                        close(conn)
+                    end
+                end
+
+                loaded = load_fit(run_id, storage)
+                @test loaded isa Fit
+                @test loaded.latents isa CountLatents
+                @test loaded.latents.match_ids == fit.latents.match_ids
+                @test loaded.latents.λ_home == fit.latents.λ_home
+                @test Array(loaded[1].chain) == Array(fit[1].chain)
+                @test BayesianFootball.Harness._structural_equal(loaded.config, fit.config)
+                @test BayesianFootball.Harness._structural_equal(loaded.diagnostics, fit.diagnostics)
+                @test BayesianFootball.Harness._structural_equal(loaded.metadata, fit.metadata)
+                @test length(loaded.folds) == length(fit.folds)
+
+                @testset "Legacy single-blob compatibility and cascade" begin
+                    inf = Training.Inference
+                    conn = inf._db_connect(storage)
+                    try
+                        rows = inf._db_rows(conn, """
+                            SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;
+                        """, (string(run_id),))
+                        @test rows.layout == ["per_fold"]
+                        @test inf._db_rows(conn, """
+                            SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                        """, (string(run_id),)).n[1] == length(fit)
+                        # Simulate a pre-upgrade row, without changing the original test run.
+                        legacy_cfg = FitConfig(name = "legacy_$(uuid4())", model = fit.config.model,
+                            splitter = fit.config.splitter, sampler = fit.config.sampler,
+                            execution = fit.config.execution, save_dir = fit.config.save_dir)
+                        legacy_fit = Fit(legacy_cfg, fit.folds, fit.latents, fit.diagnostics,
+                                         fit.metadata, fit.save_path)
+                        legacy_id = save_fit(legacy_fit, storage)
+                        inf._db_exec_binary(conn, """
+                            UPDATE fit_artifacts SET layout = 'single', fit_blob = \$2::bytea
+                            WHERE run_id = \$1::uuid;
+                        """, (string(legacy_id),), inf._db_artifact_blob(legacy_fit))
+                        inf._db_exec(conn, "DELETE FROM fit_fold_artifacts WHERE run_id = \$1::uuid;",
+                                     (string(legacy_id),))
+                        old = load_fit(storage, legacy_id)
+                        @test Array(old[1].chain) == Array(legacy_fit[1].chain)
+                        @test old.latents.λ_home == legacy_fit.latents.λ_home
+                        inf._db_exec(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                     (string(legacy_id),))
+                    finally
+                        close(conn)
+                    end
+                end
+
+                @testset "Binary bytea parameters carry an over-1GB-hex artifact" begin
+                    inference = BayesianFootball.Training.Inference
+                    conn = inference._db_connect(storage)
+                    try
+                        inference._db_exec(conn, """
+                            CREATE TEMP TABLE binary_blob_probe (tag text, blob bytea);
+                        """)
+                        # Exact round trip of bytes a hex parameter cannot represent at all.
+                        edges = UInt8[0x00, 0x27, 0x5c, 0xff, 0x0a, 0x0d]
+                        inference._db_exec_binary(conn,
+                            "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
+                            ("edges",), edges)
+                        rows = inference._db_rows(conn,
+                            "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",))
+                        @test Vector{UInt8}(rows.blob[1]) == edges
+
+                        # 600MB is under the 1GB protocol cap in binary and over it in hex,
+                        # which is exactly the regime that produced "invalid message length".
+                        big = rand(Xoshiro(4242), UInt8, 600 * 1024 * 1024)
+                        @test 2 * length(big) > 1024^3   # the hex form would be rejected
+                        inference._db_exec_binary(conn,
+                            "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
+                            ("big",), big)
+                        sizes = inference._db_rows(conn, """
+                            SELECT octet_length(blob) AS n FROM binary_blob_probe WHERE tag = \$1;
+                        """, ("big",))
+                        @test sizes.n[1] == length(big)
+
+                        # Reading it back matters just as much: a hex-rendered RESULT doubles the
+                        # value and the server refuses to allocate for it past 1GB.
+                        @test inference._db_query_blob(conn,
+                            "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",)) == edges
+                        round_tripped = inference._db_query_blob(conn,
+                            "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("big",))
+                        @test length(round_tripped) == length(big)
+                        @test round_tripped == big
+                        @test inference._db_query_blob(conn,
+                            "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("absent",)) === nothing
+                    finally
+                        close(conn)
+                    end
+                end
+
+                @testset "Canonical Poisson 2426 registry and five-run round trip" begin
+                    grid_models = pg21_models()
+                    grid_splitter = pg21_splitter()
+                    grid_sampler = pg21_sampler()
+                    grid_configs = pg21_fit_configs(grid_models, grid_splitter, grid_sampler)
+                    grid_model_ids = Dict{String,Int}()
+                    grid_run_ids = Dict{String,UUID}()
+
+                    for (name, model) in grid_models
+                        grid_model_ids[name] = save_model(
+                            storage, name, model;
+                            description = PG21_MODEL_DESCRIPTIONS[name], tags = PG21_TAGS)
+                    end
+                    canonical_splitter_id = save_splitter(
+                        storage, "scottish_lower_2426_40fold", grid_splitter;
+                        tags = PG21_TAGS)
+                    canonical_sampler_id = save_sampler(
+                        storage, "queued_nuts_4x800", grid_sampler; tags = PG21_TAGS)
+                    for name in PG21_MODEL_NAMES
+                        hash = save_config(storage, name * "_fit", grid_configs[name];
+                                           tags = PG21_TAGS)
+                        @test length(hash) == 64
+                        canonical_fit = Fit(grid_configs[name], fit.folds, fit.latents,
+                                            fit.diagnostics, fit.metadata, fit.save_path)
+                        grid_run_ids[name] = save_fit(canonical_fit, storage)
+                        round_trip = load_fit(storage, name)
+                        @test Array(round_trip[1].chain) == Array(fit[1].chain)
+                        @test round_trip.latents.λ_home == fit.latents.λ_home
+                        @test config_hash(canonical_fit, storage) ==
+                              config_hash(round_trip, storage)
+                    end
+
+                    @test length(unique(values(grid_run_ids))) == 5
+                    @test load_model(storage, "m05_production_wealth") isa
+                          BayesianFootball.Models.ComposableCountModel
+                    @test string(load_model(storage, grid_model_ids["m05_production_wealth"])) ==
+                          string(load_model(storage, "m05_production_wealth"))
+                    @test string(load_splitter(storage, canonical_splitter_id)) ==
+                          string(grid_splitter)
+                    @test string(load_sampler(storage, canonical_sampler_id)) ==
+                          string(grid_sampler)
+                    wealth_rows = search_configs(storage, "wealth"; io = devnull)
+                    wealth_names = Set(String.(wealth_rows.name))
+                    @test "m02_wealth" in wealth_names
+                    @test "m05_production_wealth" in wealth_names
+                end
+
+                conn_for_id = LibPQ.Connection(test_url)
+                run_rows = try
+                    DataFrame(LibPQ.execute(conn_for_id,
+                        "SELECT id FROM runs WHERE run_id = \$1::uuid;", (string(run_id),)))
+                finally
+                    close(conn_for_id)
+                end
+                run_integer_id = Int(run_rows.id[1])
+                @test load_fit(storage, run_integer_id).latents.λ_home == fit.latents.λ_home
+                @test load_fit(storage, fit.config.name).latents.λ_home == fit.latents.λ_home
+                @test load_fit(storage, Symbol(fit.config.name)).latents.λ_home == fit.latents.λ_home
+
+                explore_io = IOBuffer()
+                experiments = explore_experiments(storage; io = explore_io)
+                @test storage.experiment_name in experiments.experiment_name
+                @test occursin("Top LogLoss", String(take!(explore_io)))
+
+                dual = DualStorage(FileStorage(mktempdir()), storage)
+                both = save_fit(fit, dual; quiet = true)
+                @test both.run_id == run_id
+                @test isfile(joinpath(both.path, "results.jld2"))
+                @test save_fit(fit, dual; quiet = true, on_duplicate = :return).run_id == run_id
+                @test_throws ErrorException save_fit(fit, dual; quiet = true, on_duplicate = :error)
+
+                result = db_storage_portfolio_result()
+                portfolio_id = save_portfolio_db(result, run_id, storage;
+                                                  book_spec_hash = "book-test",
+                                                  policy_spec_hash = "policy-test")
+                reloaded = load_portfolio_db(portfolio_id, storage)
+                @test reloaded isa PortfolioResult
+                @test reloaded.summary.total_return_pct == result.summary.total_return_pct
+                @test isequal(reloaded.trajectory.bets, result.trajectory.bets)
+
+                conn = LibPQ.Connection(test_url)
                 try
-                    inference._db_exec(conn, """
-                        CREATE TEMP TABLE binary_blob_probe (tag text, blob bytea);
-                    """)
-                    # Exact round trip of bytes a hex parameter cannot represent at all.
-                    edges = UInt8[0x00, 0x27, 0x5c, 0xff, 0x0a, 0x0d]
-                    inference._db_exec_binary(conn,
-                        "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
-                        ("edges",), edges)
-                    rows = inference._db_rows(conn,
-                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",))
-                    @test Vector{UInt8}(rows.blob[1]) == edges
-
-                    # 600MB is under the 1GB protocol cap in binary and over it in hex,
-                    # which is exactly the regime that produced "invalid message length".
-                    big = rand(Xoshiro(4242), UInt8, 600 * 1024 * 1024)
-                    @test 2 * length(big) > 1024^3   # the hex form would be rejected
-                    inference._db_exec_binary(conn,
-                        "INSERT INTO binary_blob_probe (tag, blob) VALUES (\$1, \$2::bytea);",
-                        ("big",), big)
-                    sizes = inference._db_rows(conn, """
-                        SELECT octet_length(blob) AS n FROM binary_blob_probe WHERE tag = \$1;
-                    """, ("big",))
-                    @test sizes.n[1] == length(big)
-
-                    # Reading it back matters just as much: a hex-rendered RESULT doubles the
-                    # value and the server refuses to allocate for it past 1GB.
-                    @test inference._db_query_blob(conn,
-                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("edges",)) == edges
-                    round_tripped = inference._db_query_blob(conn,
-                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("big",))
-                    @test length(round_tripped) == length(big)
-                    @test round_tripped == big
-                    @test inference._db_query_blob(conn,
-                        "SELECT blob FROM binary_blob_probe WHERE tag = \$1;", ("absent",)) === nothing
+                    rows = DataFrame(LibPQ.execute(conn,
+                        "SELECT COUNT(*) AS n FROM configs WHERE config_id = \$1::uuid;",
+                        (string(run_id),)))
+                    @test rows.n[1] == 1
+                    bets = DataFrame(LibPQ.execute(conn,
+                        "SELECT COUNT(*) AS n FROM portfolio_bets WHERE portfolio_run_id = \$1::uuid;",
+                        (string(portfolio_id),)))
+                    @test bets.n[1] == 2
+                    result_set = LibPQ.execute(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                               (string(run_id),))
+                    close(result_set)
+                    @test only(DataFrame(LibPQ.execute(conn, """
+                        SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                    """, (string(run_id),))).n) == 0
                 finally
                     close(conn)
                 end
-            end
-
-            @testset "Canonical Poisson 2426 registry and five-run round trip" begin
-                grid_models = pg21_models()
-                grid_splitter = pg21_splitter()
-                grid_sampler = pg21_sampler()
-                grid_configs = pg21_fit_configs(grid_models, grid_splitter, grid_sampler)
-                grid_model_ids = Dict{String,Int}()
-                grid_run_ids = Dict{String,UUID}()
-
-                for (name, model) in grid_models
-                    grid_model_ids[name] = save_model(
-                        storage, name, model;
-                        description = PG21_MODEL_DESCRIPTIONS[name], tags = PG21_TAGS)
-                end
-                canonical_splitter_id = save_splitter(
-                    storage, "scottish_lower_2426_40fold", grid_splitter;
-                    tags = PG21_TAGS)
-                canonical_sampler_id = save_sampler(
-                    storage, "queued_nuts_4x800", grid_sampler; tags = PG21_TAGS)
-                for name in PG21_MODEL_NAMES
-                    hash = save_config(storage, name * "_fit", grid_configs[name];
-                                       tags = PG21_TAGS)
-                    @test length(hash) == 64
-                    canonical_fit = Fit(grid_configs[name], fit.folds, fit.latents,
-                                        fit.diagnostics, fit.metadata, fit.save_path)
-                    grid_run_ids[name] = save_fit(canonical_fit, storage)
-                    round_trip = load_fit(storage, name)
-                    @test Array(round_trip[1].chain) == Array(fit[1].chain)
-                    @test round_trip.latents.λ_home == fit.latents.λ_home
-                    @test config_hash(canonical_fit, storage) ==
-                          config_hash(round_trip, storage)
-                end
-
-                @test length(unique(values(grid_run_ids))) == 5
-                @test load_model(storage, "m05_production_wealth") isa
-                      BayesianFootball.Models.ComposableCountModel
-                @test string(load_model(storage, grid_model_ids["m05_production_wealth"])) ==
-                      string(load_model(storage, "m05_production_wealth"))
-                @test string(load_splitter(storage, canonical_splitter_id)) ==
-                      string(grid_splitter)
-                @test string(load_sampler(storage, canonical_sampler_id)) ==
-                      string(grid_sampler)
-                wealth_rows = search_configs(storage, "wealth"; io = devnull)
-                wealth_names = Set(String.(wealth_rows.name))
-                @test "m02_wealth" in wealth_names
-                @test "m05_production_wealth" in wealth_names
-            end
-
-            conn_for_id = LibPQ.Connection(test_url)
-            run_rows = try
-                DataFrame(LibPQ.execute(conn_for_id,
-                    "SELECT id FROM runs WHERE run_id = \$1::uuid;", (string(run_id),)))
             finally
-                close(conn_for_id)
-            end
-            run_integer_id = Int(run_rows.id[1])
-            @test load_fit(storage, run_integer_id).latents.λ_home == fit.latents.λ_home
-            @test load_fit(storage, fit.config.name).latents.λ_home == fit.latents.λ_home
-            @test load_fit(storage, Symbol(fit.config.name)).latents.λ_home == fit.latents.λ_home
-
-            explore_io = IOBuffer()
-            experiments = explore_experiments(storage; io = explore_io)
-            @test storage.experiment_name in experiments.experiment_name
-            @test occursin("Top LogLoss", String(take!(explore_io)))
-
-            dual = DualStorage(FileStorage(mktempdir()), storage)
-            both = save_fit(fit, dual; quiet = true)
-            @test both.run_id == run_id
-            @test isfile(joinpath(both.path, "results.jld2"))
-
-            result = db_storage_portfolio_result()
-            portfolio_id = save_portfolio_db(result, run_id, storage;
-                                              book_spec_hash = "book-test",
-                                              policy_spec_hash = "policy-test")
-            reloaded = load_portfolio_db(portfolio_id, storage)
-            @test reloaded isa PortfolioResult
-            @test reloaded.summary.total_return_pct == result.summary.total_return_pct
-            @test isequal(reloaded.trajectory.bets, result.trajectory.bets)
-
-            conn = LibPQ.Connection(test_url)
-            try
-                rows = DataFrame(LibPQ.execute(conn,
-                    "SELECT COUNT(*) AS n FROM configs WHERE config_id = \$1::uuid;",
-                    (string(run_id),)))
-                @test rows.n[1] == 1
-                bets = DataFrame(LibPQ.execute(conn,
-                    "SELECT COUNT(*) AS n FROM portfolio_bets WHERE portfolio_run_id = \$1::uuid;",
-                    (string(portfolio_id),)))
-                @test bets.n[1] == 2
-                result_set = LibPQ.execute(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
-                                           (string(run_id),))
-                close(result_set)
-                config_set = LibPQ.execute(conn,
-                    "DELETE FROM config_registry WHERE experiment_name = \$1;", (experiment,))
-                close(config_set)
-            finally
-                close(conn)
+                # An assertion failure must not leave the five registry-grid runs behind.
+                conn = LibPQ.Connection(test_url)
+                try
+                    for statement in (
+                        "DELETE FROM runs WHERE experiment_name = \$1;",
+                        "DELETE FROM config_registry WHERE experiment_name = \$1;",
+                        "DELETE FROM harness_experiments WHERE id = \$1;",
+                        "DELETE FROM harness_checks WHERE experiment = \$1;")
+                        close(LibPQ.execute(conn, statement, (experiment,)))
+                    end
+                finally
+                    close(conn)
+                end
             end
         end
     end

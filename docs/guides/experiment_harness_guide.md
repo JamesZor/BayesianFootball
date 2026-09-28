@@ -86,7 +86,10 @@ julia --project -t 16 scripts/run_candidates.jl \
 
 Use `--only name1,name2` to limit a smoke or grid. `smoke` and `grid` require
 at least eight Julia threads and pin threads; the normal beast invocation is
-`-t 16`. `portfolio` reuses completed grid runs and accepts
+`-t 16`. `--test-db` is **screen-only**; smoke, grid and portfolio refuse it because
+those stages have production-bound read/save paths. Every smoke invocation gets a new `smoke_nonce:` config tag, so re-smoking an
+unchanged recipe saves a distinct fit while its `harness_checks.recipe_hash` remains stable.
+Grid fits are saved at full stride 1; persistence failures are errors, not thinning requests. `portfolio` reuses completed grid runs and accepts
 `close_option_b` or `t25_calibrated`; it does not sample a new fit.
 
 | Stage | Purpose | Pass condition and interpretation |
@@ -98,14 +101,32 @@ at least eight Julia threads and pin threads; the normal beast invocation is
 
 A **hard** check failure makes the stage invalid. A `review` diagnostic—most
 notably convergence—does not discard the persisted grid run, but it is a
-promotion blocker until reviewed. `info` and `diagnostic` rows provide
+promotion blocker until reviewed. The harness review fails **only** for R̂ > 1.05 or
+post-warm-up divergence rate > 0.1% of draws (`HARNESS_REVIEW_MAX_RHAT` and
+`HARNESS_REVIEW_MAX_DIVERGENCE_RATE` in `src/harness/checks.jl`); ESS <400,
+BFMI and tree depth are recorded notes, not blockers. `info` and `diagnostic` rows provide
 telemetry, not a pass certificate. Inspect `harness_checks` and the runner's
 `[SUMMARY]` lines; never report a run as accepted merely because it has a UUID.
 
+**Re-smoke after a hard failure.** Historical failed hard smoke checks still block the grid even
+if a later nonce smoke passes; `has_passing_smoke` conservatively considers the full recipe
+history. Inspect `harness_checks` for the candidate's exact `recipe_hash` and confirm the latest
+smoke run has **all** required hard checks passing. If the only blocker is an older failed
+invocation, an authorised operator can archive its `id`/`run_id`/failure details, then remove
+**only those specific stale failed hard-check IDs** from `harness_checks` and re-evaluate the gate.
+This is a manual, reviewable cleanup, never an automatic deletion; no production cleanup may be
+performed before explicit go prod. A latest failing or incomplete smoke cannot be bypassed.
+
 ### MAP screen caveat
 
-Screen is a triage tool, not posterior inference. It is useful for simple
-within-class ranking, but it cannot replace the NUTS grid. In particular,
+Screen is a triage tool, not posterior inference. Screen fits are in memory only; the
+synthetic recipe UUIDs cannot be re-scored with `score_runs.jl`. To refresh a MAP screen
+for a new scorecard, re-run `--stage screen`. For a test-database rehearsal, set
+`BF_EXPERIMENTS_TEST_DB_URL` to the isolated `mcmc_experiments_test` and pass `--test-db`:
+the script rejects missing or mispointed test URLs and preserves the metadata of an existing
+completed experiment register row on re-screen.
+
+It is useful for simple within-class ranking, but it cannot replace the NUTS grid. In particular,
 models with learned hierarchical or random-walk scales (including
 `TimeDecayDynamics`, which learns attack/defence σ, and `MultiScaleGRW`) receive
 `screen_validity = "limited"`: MAP shrinkage can

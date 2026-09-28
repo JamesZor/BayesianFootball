@@ -150,7 +150,8 @@ Eleven tables, described column by column in the schema reference below:
 | `runs` | one row per inference run: status, Git provenance, timings |
 | `fold_results` | per-fold convergence audit and out-of-sample proper scores |
 | `match_latents` | point-in-time posterior predictions per fixture, with compressed draws |
-| `fit_artifacts` | the exact serialized `Fit` |
+| `fit_artifacts` | layout-marked run-level `Fit` shell, or a legacy complete `Fit` |
+| `fit_fold_artifacts` | one exact compressed `FoldFit` blob per fold for new runs |
 | `portfolio_runs` | headline ROI / drawdown / Sharpe per portfolio simulation |
 | `portfolio_bets` | the **backtest** trade ledger — one row per simulated bet |
 | `portfolio_artifacts` | the exact serialized `PortfolioResult`, plus the `BookSpec`/`PolicySpec` used |
@@ -413,11 +414,24 @@ Indexes and constraints: unique `(experiment_name, name)`; unique `idx_config_re
 | Column | Type | Constraint / meaning |
 |---|---|---|
 | `run_id` | `UUID` | Primary key and foreign key to `runs(run_id)` with `ON DELETE CASCADE`. |
-| `fit_blob` | `BYTEA` | Not null Zstd-compressed serialized `Fit`. |
+| `fit_blob` | `BYTEA` | Not null Zstd-compressed serialized `Fit`: legacy full fit or new chain-free shell. |
+| `layout` | `TEXT` | `single` for legacy rows (default), `per_fold` for new runs. |
 
-This exact artefact preserves chains, typed configuration, diagnostics, and metadata.
-`load_fit` replaces its latent panel with the copy reconstructed from `match_latents` when
-relational latent rows exist.
+### 4.8a `fit_fold_artifacts`
+
+| Column | Type | Constraint / meaning |
+|---|---|---|
+| `run_id` | `UUID` | Foreign key to `runs(run_id)` with `ON DELETE CASCADE`. |
+| `fold_idx` | `INT` | Fold index; `(run_id, fold_idx)` is the primary key. |
+| `fold_blob` | `BYTEA` | Not null Zstd-compressed serialized complete `FoldFit`. |
+
+New runs store one small shell (config, diagnostics, metadata, ordered fold metadata) and
+serialize/compress one fold at a time, below PostgreSQL's 1 GiB per-field limit. `load_fit`
+reassembles fold blobs in shell order; legacy `single` rows load unchanged (even before the
+`layout` column is installed, when its absence denotes the legacy schema). Both layouts replace
+their latent panel with the relational copy when `match_latents` rows exist. `extend_fit`
+appends fold blobs without rewriting existing ones for new runs; a legacy extension retains
+the original whole-fit rewrite and layout.
 
 ### 4.9 `portfolio_artifacts`
 
@@ -659,15 +673,17 @@ portfolio_run_id = save_portfolio_db(
 result_again = load_portfolio_db(portfolio_run_id, db)
 ```
 
-`save_fit` writes `runs`, `configs`, `fold_results`, `match_latents`, and `fit_artifacts` in
-one database transaction. `save_portfolio_db` writes `portfolio_runs`, `portfolio_bets`, and
+`save_fit` writes `runs`, `configs`, `fold_results`, `match_latents`, `fit_artifacts`, and
+`fit_fold_artifacts` in one database transaction. Duplicate hashes return the original UUID by
+default; `on_duplicate = :error` instead names the existing run and refuses a silent grid reuse. `save_portfolio_db` writes `portfolio_runs`, `portfolio_bets`, and
 `portfolio_artifacts` in one transaction.
 
 `DualStorage` retains a local atomic filesystem copy as well:
 
 ```julia
 storage = DualStorage(FileStorage("results"), db)
-addresses = save_fit(fit, storage; quiet = true)
+addresses = save_fit(fit, storage; quiet = true, on_duplicate = :return)
+# `on_duplicate = :error` is forwarded only to PostgreSQL; `quiet` goes to FileStorage.
 # addresses.path   -> filesystem directory
 # addresses.run_id -> PostgreSQL UUID
 ```
@@ -682,7 +698,8 @@ result = extend_portfolio(db, portfolio_uuid, fit, latest_ds.odds, latest_ds)
 
 `preview_extension` derives current splitter boundaries and reports only positions absent from
 `fold_results`. `extend_fit` samples those positions and updates fold diagnostics, OOS scores,
-compressed match latents, the exact Fit artefact, and run telemetry in one transaction. Pass
+compressed match latents, the exact Fit shell (or legacy single blob), and run telemetry in one
+transaction. New per-fold layouts append only the new fold blobs. Pass
 `splitter = updated_splitter` when opening a new target season. `extend_portfolio` prices fixtures
 absent from the existing bet ledger, continues from the closing bankroll, and atomically refreshes
 the bet ledger, headline summary, and exact result artefact. Book and policy specs are recovered

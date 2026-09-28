@@ -7,7 +7,6 @@ using Printf
 using UUIDs
 
 const EXPERIMENTS_DIR = joinpath(@__DIR__, "..", "experiments")
-const W0_CONTROL_UUID = UUID("132df5c2-c742-4e95-8693-3aeb2b2cbaef")
 
 number(value; digits = 5) = ismissing(value) || !(value isa Real) || !isfinite(value) ?
     "—" : @sprintf("%.*f", digits, value)
@@ -32,14 +31,14 @@ function leaderboard_markdown(board, screen_board)
         panel = first(panel_board.panel)
         println(io, "## Posterior grid — panel `$(panel)`")
         println(io)
-        println(io, "| Model | Target LL | 1X2 LL | ECE | Compression | Δ LL vs control [95% CI] | Run UUID |")
-        println(io, "|---|---:|---:|---:|---:|---:|---|")
+        println(io, "| Model | Target LL | 1X2 LL | ECE | Compression | Control | Δ LL vs control [95% CI] | Run UUID |")
+        println(io, "|---|---:|---:|---:|---:|---|---:|---|")
         for row in eachrow(panel_board)
             delta = number(row.delta_vs_control) * " [" * number(row.delta_lo) * ", " *
                 number(row.delta_hi) * "]"
             println(io, "| `$(row.model)` | $(number(row.target_logloss_all)) | " *
                         "$(number(row.target_logloss_1x2)) | $(number(row.target_ece_all)) | " *
-                        "$(number(row.compression_slope, digits = 3)) | $delta | `$(row.run_id)` |")
+                        "$(number(row.compression_slope, digits = 3)) | `$(row.control_name)` | $delta | `$(row.run_id)` |")
         end
         println(io)
         println(io, "### Transition cohorts — panel `$(panel)`")
@@ -109,7 +108,7 @@ function main()
     grid_scores = filter(:stage => ==("grid"), scores)
     screen_scores = filter(:stage => ==("screen"), scores)
     isempty(grid_scores) && error("harness_scores contains no posterior-grid rows")
-    board = Harness.leaderboard(grid_scores; control_run_id = W0_CONTROL_UUID)
+    board = Harness.leaderboard(grid_scores)
     screen_board = isempty(screen_scores) ? DataFrame() : Harness.leaderboard(screen_scores)
     validity = Harness.read_checks(db; stage = "screen", check = "screen_validity")
     latest_validity = Dict{String,String}()

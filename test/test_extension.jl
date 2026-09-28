@@ -105,122 +105,221 @@ end
         @test length(initial) == 2
         empty!(initial.config.sampler.sampled_folds)
         run_id = save_fit(initial, db)
-
-        @testset "preview and selective Fit extension" begin
-            io = IOBuffer()
-            preview = preview_extension(db, run_id, ds_three; io)
-            output = String(take!(io))
-            @test preview.delta_folds == [3]
-            @test preview.existing_count == 2
-            @test preview.new_count == 1
-            @test !preview.is_uptodate
-            @test occursin("New Folds to Fit", output)
-            @test occursin("2025-01-15", output)
-
-            extended = extend_fit(db, run_id, ds_three; quiet = true)
-            @test length(extended) == 3
-            @test [fold.fold for fold in extended.folds] == [1, 2, 3]
-            @test extended.config.sampler.sampled_folds == [3]
-            @test latent_match_ids(extended.latents) == [201, 202, 203]
-
-            conn = LibPQ.Connection(test_url)
-            try
-                folds = DataFrame(LibPQ.execute(conn, """
-                    SELECT fold_idx, logloss, brier, rps, n_matches
-                    FROM fold_results WHERE run_id = \$1::uuid ORDER BY fold_idx;
-                """, (string(run_id),)))
-                @test folds.fold_idx == [1, 2, 3]
-                @test folds.n_matches[3] == 1
-                @test !ismissing(folds.logloss[3])
-                @test !ismissing(folds.brier[3])
-                @test !ismissing(folds.rps[3])
-                latents = DataFrame(LibPQ.execute(conn, """
-                    SELECT COUNT(*) AS n FROM match_latents ml
-                    JOIN fold_results fr ON fr.fold_id = ml.fold_id
-                    WHERE fr.run_id = \$1::uuid;
-                """, (string(run_id),)))
-                @test latents.n[1] == 3
-                artifact = DataFrame(LibPQ.execute(conn, """
-                    SELECT octet_length(fit_blob) AS bytes FROM fit_artifacts
-                    WHERE run_id = \$1::uuid;
-                """, (string(run_id),)))
-                @test artifact.bytes[1] > 0
-                split_config = DataFrame(LibPQ.execute(conn, """
-                    SELECT split_config->>'n_folds_total' AS n_folds_total,
-                           split_config->>'latest_fold_idx' AS latest_fold_idx,
-                           split_config->>'latest_fold_date' AS latest_fold_date
-                    FROM configs WHERE config_id = \$1::uuid;
-                """, (string(run_id),)))
-                @test split_config.n_folds_total[1] == "3"
-                @test split_config.latest_fold_idx[1] == "3"
-                @test split_config.latest_fold_date[1] == "2025-01-15"
-            finally
-                close(conn)
-            end
-
-            loaded = load_fit(db, run_id)
-            @test length(loaded) == 3
-            @test latent_match_ids(loaded.latents) == [201, 202, 203]
-
-            up_to_date_io = IOBuffer()
-            current = preview_extension(db, run_id, ds_three; io = up_to_date_io)
-            @test current.is_uptodate
-            @test current.new_count == 0
-            @test occursin("is up-to-date (3 folds completed). 0 new folds needed.",
-                           String(take!(up_to_date_io)))
-            no_op = extend_fit(db, run_id, ds_three; quiet = true)
-            @test length(no_op) == 3
-            @test no_op.config.sampler.sampled_folds == [3]
-        end
-
-        @testset "portfolio roll-forward" begin
-            initial_fit = Fit(initial.config, initial.folds, initial.latents,
-                              initial.diagnostics, initial.metadata, initial.save_path)
-            odds = extension_odds([201, 202, 203])
-            book = BookSpec(markets = Data.MarketConfig(Data.AbstractMarket[Data.Market1X2()]),
-                            shrink = Portfolio.NoShrinkage())
-            policy = PolicySpec(trust = FlatTrust(1.0), risk = SlateDrawdown(50.0),
-                                cap = FixedCap(0.50))
-            first_result, _, _ = run_portfolio_simulation(
-                book, policy, initial_fit, odds, ds_two;
-                require_converged = false, bootstrap = false, quiet = true)
-            @test first_result.summary.n_bets > 0
-            portfolio_id = save_portfolio_db(first_result, run_id, db;
-                                              book_spec = book, policy_spec = policy)
-            extended_fit = load_fit(db, run_id)
-            # Specs are recovered losslessly from portfolio_artifacts when omitted.
-            updated = extend_portfolio(db, portfolio_id, extended_fit, odds, ds_three)
-            @test updated.summary.n_bets > first_result.summary.n_bets
-            @test 203 in updated.trajectory.bets.match_id
-            @test length(updated.daily_states) >= length(first_result.daily_states)
-
-            conn = LibPQ.Connection(test_url)
-            try
-                summary = DataFrame(LibPQ.execute(conn, """
-                    SELECT n_bets, total_return_pct, flat_roi_pct
-                    FROM portfolio_runs WHERE portfolio_run_id = \$1::uuid;
-                """, (string(portfolio_id),)))
-                @test summary.n_bets[1] == updated.summary.n_bets
-                @test summary.total_return_pct[1] == updated.summary.total_return_pct
-                @test summary.flat_roi_pct[1] == updated.summary.roi
-                new_bets = DataFrame(LibPQ.execute(conn, """
-                    SELECT COUNT(*) AS n FROM portfolio_bets
-                    WHERE portfolio_run_id = \$1::uuid AND match_id = 203;
-                """, (string(portfolio_id),)))
-                @test new_bets.n[1] > 0
-            finally
-                close(conn)
-            end
-            @test load_portfolio_db(portfolio_id, db).summary.n_bets == updated.summary.n_bets
-        end
-
-        conn = LibPQ.Connection(test_url)
         try
-            result = LibPQ.execute(conn,
-                "DELETE FROM runs WHERE experiment_name = \$1;", (experiment,))
-            close(result)
+            original_blobs = let conn = LibPQ.Connection(test_url)
+                try
+                    DataFrame(LibPQ.execute(conn, """
+                        SELECT fold_idx, md5(fold_blob) AS digest FROM fit_fold_artifacts
+                        WHERE run_id = \$1::uuid ORDER BY fold_idx;
+                    """, (string(run_id),)))
+                finally
+                    close(conn)
+                end
+            end
+            @test original_blobs.fold_idx == [1, 2]
+
+            @testset "preview and selective Fit extension" begin
+                io = IOBuffer()
+                preview = preview_extension(db, run_id, ds_three; io)
+                output = String(take!(io))
+                @test preview.delta_folds == [3]
+                @test preview.existing_count == 2
+                @test preview.new_count == 1
+                @test !preview.is_uptodate
+                @test occursin("New Folds to Fit", output)
+                @test occursin("2025-01-15", output)
+
+                extended = extend_fit(db, run_id, ds_three; quiet = true)
+                @test length(extended) == 3
+                @test [fold.fold for fold in extended.folds] == [1, 2, 3]
+                @test extended.config.sampler.sampled_folds == [3]
+                @test latent_match_ids(extended.latents) == [201, 202, 203]
+
+                conn = LibPQ.Connection(test_url)
+                try
+                    folds = DataFrame(LibPQ.execute(conn, """
+                        SELECT fold_idx, logloss, brier, rps, n_matches
+                        FROM fold_results WHERE run_id = \$1::uuid ORDER BY fold_idx;
+                    """, (string(run_id),)))
+                    @test folds.fold_idx == [1, 2, 3]
+                    blobs = DataFrame(LibPQ.execute(conn, """
+                        SELECT fold_idx, md5(fold_blob) AS digest FROM fit_fold_artifacts
+                        WHERE run_id = \$1::uuid ORDER BY fold_idx;
+                    """, (string(run_id),)))
+                    @test blobs.fold_idx == [1, 2, 3]
+                    @test blobs.digest[1:2] == original_blobs.digest
+                    @test folds.n_matches[3] == 1
+                    @test !ismissing(folds.logloss[3])
+                    @test !ismissing(folds.brier[3])
+                    @test !ismissing(folds.rps[3])
+                    latents = DataFrame(LibPQ.execute(conn, """
+                        SELECT COUNT(*) AS n FROM match_latents ml
+                        JOIN fold_results fr ON fr.fold_id = ml.fold_id
+                        WHERE fr.run_id = \$1::uuid;
+                    """, (string(run_id),)))
+                    @test latents.n[1] == 3
+                    artifact = DataFrame(LibPQ.execute(conn, """
+                        SELECT octet_length(fit_blob) AS bytes FROM fit_artifacts
+                        WHERE run_id = \$1::uuid;
+                    """, (string(run_id),)))
+                    @test artifact.bytes[1] > 0
+                    split_config = DataFrame(LibPQ.execute(conn, """
+                        SELECT split_config->>'n_folds_total' AS n_folds_total,
+                               split_config->>'latest_fold_idx' AS latest_fold_idx,
+                               split_config->>'latest_fold_date' AS latest_fold_date
+                        FROM configs WHERE config_id = \$1::uuid;
+                    """, (string(run_id),)))
+                    @test split_config.n_folds_total[1] == "3"
+                    @test split_config.latest_fold_idx[1] == "3"
+                    @test split_config.latest_fold_date[1] == "2025-01-15"
+                finally
+                    close(conn)
+                end
+
+                loaded = load_fit(db, run_id)
+                @test length(loaded) == 3
+                @test latent_match_ids(loaded.latents) == [201, 202, 203]
+
+                up_to_date_io = IOBuffer()
+                current = preview_extension(db, run_id, ds_three; io = up_to_date_io)
+                @test current.is_uptodate
+                @test current.new_count == 0
+                @test occursin("is up-to-date (3 folds completed). 0 new folds needed.",
+                               String(take!(up_to_date_io)))
+                no_op = extend_fit(db, run_id, ds_three; quiet = true)
+                @test length(no_op) == 3
+                @test no_op.config.sampler.sampled_folds == [3]
+            end
+
+            @testset "legacy single-blob extension keeps its layout" begin
+                legacy_cfg = FitConfig(name = "legacy_incremental_$(uuid4())",
+                                       model = initial.config.model, splitter = splitter,
+                                       sampler = sampler, execution = initial.config.execution,
+                                       save_dir = mktempdir())
+                legacy_fit = Fit(legacy_cfg, initial.folds, initial.latents,
+                                 initial.diagnostics, initial.metadata, initial.save_path)
+                legacy_id = save_fit(legacy_fit, db)
+                inf = Training.Inference
+                conn = inf._db_connect(db)
+                try
+                    inf._db_exec_binary(conn, """
+                        UPDATE fit_artifacts SET layout = 'single', fit_blob = \$2::bytea
+                        WHERE run_id = \$1::uuid;
+                    """, (string(legacy_id),), inf._db_artifact_blob(legacy_fit))
+                    inf._db_exec(conn, "DELETE FROM fit_fold_artifacts WHERE run_id = \$1::uuid;",
+                                 (string(legacy_id),))
+                finally
+                    close(conn)
+                end
+                extended_legacy = extend_fit(db, legacy_id, ds_three; quiet = true)
+                @test length(extended_legacy) == 3
+                @test length(load_fit(db, legacy_id)) == 3
+                conn = inf._db_connect(db)
+                try
+                    @test only(inf._db_rows(conn, """
+                        SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;
+                    """, (string(legacy_id),)).layout) == "single"
+                    @test only(inf._db_rows(conn, """
+                        SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                    """, (string(legacy_id),)).n) == 0
+                    inf._db_exec(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                 (string(legacy_id),))
+                finally
+                    close(conn)
+                end
+            end
+
+            @testset "portfolio roll-forward" begin
+                initial_fit = Fit(initial.config, initial.folds, initial.latents,
+                                  initial.diagnostics, initial.metadata, initial.save_path)
+                odds = extension_odds([201, 202, 203])
+                book = BookSpec(markets = Data.MarketConfig(Data.AbstractMarket[Data.Market1X2()]),
+                                shrink = Portfolio.NoShrinkage())
+                policy = PolicySpec(trust = FlatTrust(1.0), risk = SlateDrawdown(50.0),
+                                    cap = FixedCap(0.50))
+                first_result, _, _ = run_portfolio_simulation(
+                    book, policy, initial_fit, odds, ds_two;
+                    require_converged = false, bootstrap = false, quiet = true)
+                @test first_result.summary.n_bets > 0
+                portfolio_id = save_portfolio_db(first_result, run_id, db;
+                                                  book_spec = book, policy_spec = policy)
+                extended_fit = load_fit(db, run_id)
+                # Specs are recovered losslessly from portfolio_artifacts when omitted.
+                updated = extend_portfolio(db, portfolio_id, extended_fit, odds, ds_three)
+                @test updated.summary.n_bets > first_result.summary.n_bets
+                @test 203 in updated.trajectory.bets.match_id
+                @test length(updated.daily_states) >= length(first_result.daily_states)
+
+                conn = LibPQ.Connection(test_url)
+                try
+                    summary = DataFrame(LibPQ.execute(conn, """
+                        SELECT n_bets, total_return_pct, flat_roi_pct
+                        FROM portfolio_runs WHERE portfolio_run_id = \$1::uuid;
+                    """, (string(portfolio_id),)))
+                    @test summary.n_bets[1] == updated.summary.n_bets
+                    @test summary.total_return_pct[1] == updated.summary.total_return_pct
+                    @test summary.flat_roi_pct[1] == updated.summary.roi
+                    new_bets = DataFrame(LibPQ.execute(conn, """
+                        SELECT COUNT(*) AS n FROM portfolio_bets
+                        WHERE portfolio_run_id = \$1::uuid AND match_id = 203;
+                    """, (string(portfolio_id),)))
+                    @test new_bets.n[1] > 0
+                finally
+                    close(conn)
+                end
+                @test load_portfolio_db(portfolio_id, db).summary.n_bets == updated.summary.n_bets
+            end
+
+            @testset "pre-migration schema: extend_fit falls back, save_fit refuses" begin
+                premigration_fit(name) = Fit(
+                    FitConfig(name = name, model = initial.config.model, splitter = splitter,
+                              sampler = sampler, execution = initial.config.execution,
+                              save_dir = mktempdir()),
+                    initial.folds, initial.latents, initial.diagnostics, initial.metadata,
+                    initial.save_path)
+                legacy_fit = premigration_fit("premigration_$(uuid4())")
+                legacy_id = save_fit(legacy_fit, db)
+                inf = Training.Inference
+                conn = inf._db_connect(db)
+                try
+                    inf._db_exec_binary(conn, """
+                        UPDATE fit_artifacts SET layout = 'single', fit_blob = \$2::bytea
+                        WHERE run_id = \$1::uuid;
+                    """, (string(legacy_id),), inf._db_artifact_blob(legacy_fit))
+                    inf._db_exec(conn, "DELETE FROM fit_fold_artifacts WHERE run_id = \$1::uuid;",
+                                 (string(legacy_id),))
+                    # Renames, not drops, so every other row survives the simulated old schema.
+                    inf._db_exec(conn, "ALTER TABLE fit_artifacts RENAME COLUMN layout TO layout_premigration;")
+                    inf._db_exec(conn, "ALTER TABLE fit_fold_artifacts RENAME TO fit_fold_artifacts_premigration;")
+                finally
+                    close(conn)
+                end
+                try
+                    @test_throws "per-fold schema is not installed" save_fit(
+                        premigration_fit("premigration_$(uuid4())"), db)
+                    @test length(extend_fit(db, legacy_id, ds_three; quiet = true)) == 3
+                    @test length(load_fit(db, legacy_id)) == 3
+                finally
+                    conn = inf._db_connect(db)
+                    try
+                        inf._db_exec(conn, "ALTER TABLE fit_fold_artifacts_premigration RENAME TO fit_fold_artifacts;")
+                        inf._db_exec(conn, "ALTER TABLE fit_artifacts RENAME COLUMN layout_premigration TO layout;")
+                    finally
+                        close(conn)
+                    end
+                end
+                @test length(load_fit(db, legacy_id)) == 3
+            end
+
         finally
-            close(conn)
+            # Always remove mock model runs, even when an extension assertion fails.
+            conn = LibPQ.Connection(test_url)
+            try
+                close(LibPQ.execute(conn,
+                    "DELETE FROM runs WHERE experiment_name = \$1;", (experiment,)))
+            finally
+                close(conn)
+            end
         end
     end
 end

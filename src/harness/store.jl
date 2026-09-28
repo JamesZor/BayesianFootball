@@ -286,16 +286,20 @@ end
 Upsert one static register row by its stable textual ID.  `run_ids` deliberately remains text:
 older EDA-only suites and a missing suite 09 have no model-run UUID to invent.
 On conflict, run IDs and optional UUID-keyed `run_commits` are merged atomically so
-independent `--only` invocations cannot erase one another's provenance.
+independent `--only` invocations cannot erase one another's provenance. A re-screen passes
+`preserve_completed=true`: an existing completed experiment keeps all register metadata, and
+its `run_ids` text verbatim when the re-screen contributes none. Seeded rows separate IDs with
+`;`, so a merge splits on `,` or `;` and writes `,`.
 """
 # Mirrors the atomic SQL upsert's sorted, de-duplicated union; useful for
 # offline register assertions when the experiment database is unavailable.
 function _merge_experiment_run_ids(existing::AbstractString, incoming::AbstractString)
-    ids = filter(!isempty, split(string(existing, ",", incoming), ","))
+    ids = filter(!isempty, strip.(split(string(existing, ",", incoming), r"[,;]")))
     return join(sort!(unique(String.(ids))), ",")
 end
 
-function write_experiment!(db::Training.PostgresStorage, row)
+function write_experiment!(db::Training.PostgresStorage, row;
+                           preserve_completed::Bool = false)
     values = NamedTuple{_HARNESS_EXPERIMENT_COLUMNS}(Tuple(
         _harness_row_value(row, column) for column in _HARNESS_EXPERIMENT_COLUMNS))
     ismissing(values.id) && error("experiment row id must not be missing.")
@@ -308,23 +312,34 @@ function write_experiment!(db::Training.PostgresStorage, row)
                 id, date, todo, question, dimension, status, decision, run_ids, readme, run_commits
             ) VALUES (\$1, \$2::date, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10::jsonb)
             ON CONFLICT (id) DO UPDATE SET
-                date = EXCLUDED.date,
-                todo = EXCLUDED.todo,
-                question = EXCLUDED.question,
-                dimension = EXCLUDED.dimension,
-                status = EXCLUDED.status,
-                decision = EXCLUDED.decision,
-                run_ids = (
-                    SELECT COALESCE(string_agg(DISTINCT id, ',' ORDER BY id), '')
-                    FROM unnest(string_to_array(harness_experiments.run_ids || ',' || EXCLUDED.run_ids, ',')) AS ids(id)
-                    WHERE id <> ''
-                ),
+                date = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                            THEN harness_experiments.date ELSE EXCLUDED.date END,
+                todo = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                            THEN harness_experiments.todo ELSE EXCLUDED.todo END,
+                question = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.question ELSE EXCLUDED.question END,
+                dimension = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                 THEN harness_experiments.dimension ELSE EXCLUDED.dimension END,
+                status = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                              THEN harness_experiments.status ELSE EXCLUDED.status END,
+                decision = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.decision ELSE EXCLUDED.decision END,
+                run_ids = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                    AND EXCLUDED.run_ids = ''
+                               THEN harness_experiments.run_ids
+                               ELSE (
+                                   SELECT COALESCE(string_agg(DISTINCT trim(id), ',' ORDER BY trim(id)), '')
+                                   FROM unnest(regexp_split_to_array(
+                                       harness_experiments.run_ids || ',' || EXCLUDED.run_ids, '[,;]')) AS ids(id)
+                                   WHERE trim(id) <> ''
+                               ) END,
                 run_commits = harness_experiments.run_commits || EXCLUDED.run_commits,
-                readme = EXCLUDED.readme;
+                readme = CASE WHEN \$11::boolean AND harness_experiments.status = 'completed'
+                                THEN harness_experiments.readme ELSE EXCLUDED.readme END;
         """, (string(values.id), string(values.date), _harness_nullable(values.todo),
               String(values.question), String(values.dimension), String(values.status),
               String(values.decision), String(values.run_ids), String(values.readme),
-              JSON3.write(commits)))
+              JSON3.write(commits), preserve_completed))
     finally
         close(conn)
     end
@@ -345,10 +360,20 @@ function read_experiments(db::Training.PostgresStorage)
     end
 end
 
+_harness_json_safe(value::AbstractFloat) = isfinite(value) ? value : nothing
+_harness_json_safe(value::NamedTuple) =
+    NamedTuple{keys(value)}(map(_harness_json_safe, values(value)))
+_harness_json_safe(value::Tuple) = map(_harness_json_safe, value)
+_harness_json_safe(value::AbstractArray) = map(_harness_json_safe, value)
+_harness_json_safe(value::AbstractDict) =
+    Dict(key => _harness_json_safe(item) for (key, item) in value)
+_harness_json_safe(value) = value
+
 """
     write_checks!(db, records)
 
-Append check records to the `harness_checks` table.
+Append check records to the `harness_checks` table. Unmeasured diagnostics are represented
+as JSON null, not non-standard NaN/Inf tokens that would roll back the entire check batch.
 """
 function write_checks!(db::Training.PostgresStorage, records)
     isempty(records) && return records
@@ -359,7 +384,8 @@ function write_checks!(db::Training.PostgresStorage, records)
             for rec in records
                 run_id = hasproperty(rec, :run_id) ? rec.run_id : nothing
                 val = hasproperty(rec, :value) ? rec.value : NamedTuple()
-                val_json = val === nothing || ismissing(val) ? "{}" : JSON3.write(val)
+                val_json = val === nothing || ismissing(val) ? "{}" :
+                           JSON3.write(_harness_json_safe(val))
                 detail = hasproperty(rec, :detail) ? rec.detail : ""
                 git_sha = hasproperty(rec, :git_sha) ? rec.git_sha : nothing
                 at_val = hasproperty(rec, :at) ? rec.at : now()

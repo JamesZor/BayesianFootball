@@ -44,25 +44,25 @@ TODO 031 wave 2 surfaced five harness defects. They are logged in the TODO 031 W
 The design decisions were agreed with the human in a grill-me session on 2026-09-28. Detail and
 test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
 
-- [ ] (k) A failed diagnostic persists its computed metrics in `harness_checks.value`.
-- [ ] Gate alignment: the harness convergence review fails only on R̂ > 1.05 or divergence rate
+- [x] (k) A failed diagnostic persists its computed metrics in `harness_checks.value`.
+- [x] Gate alignment: the harness convergence review fails only on R̂ > 1.05 or divergence rate
       > 0.1%. ESS below 400 is recorded as a note and does not fail the review.
-- [ ] (l) Per-fold artefacts:
-  - [ ] a new table `fit_fold_artifacts`, with one blob per fold and a slim run-level shell;
-  - [ ] `load_fit` reads both the new and the legacy layout;
-  - [ ] `extend_fit` appends folds;
-  - [ ] stride is always 1, and the thinning fallback is removed;
-  - [ ] no migration of existing runs.
-- [ ] (j) Smoke saves carry a per-invocation nonce. `save_fit(...; on_duplicate = :return | :error)`,
+- [x] (l) Per-fold artefacts:
+  - [x] a new table `fit_fold_artifacts`, with one blob per fold and a slim run-level shell;
+  - [x] `load_fit` reads both the new and the legacy layout;
+  - [x] `extend_fit` appends folds;
+  - [x] stride is always 1, and the thinning fallback is removed;
+  - [x] no migration of existing runs.
+- [x] (j) Smoke saves carry a per-invocation nonce. `save_fit(...; on_duplicate = :return | :error)`,
       and the harness grid path uses `:error`.
 - [ ] (m) The leaderboard shows each row's Δ against its own recorded control, and a runbook plus
       CSVs re-score the 14 W0 runs and the MAP-screen runs at v1.2. The regenerated board loses no
       run relative to the v1.1 board.
 - [ ] Validation:
-  - [ ] a synthetic save/load round trip above 1 GiB, bit-exact, on the test DB, starting from the
+  - [x] a synthetic save/load round trip above 1 GiB, bit-exact, on the test DB, starting from the
         real `grw_base` W2 fit;
-  - [ ] legacy runs still load;
-  - [ ] existing suites green.
+  - [x] legacy runs still load;
+  - [x] existing suites green (parallel runner: only known T007).
 - [ ] One Claude CLI (Opus 5.5) review at the end, with at most 2 fix rounds, then escalation to
       the human.
 - [ ] Merged into `feat/w2-tier-components`.
@@ -85,6 +85,15 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
   (grill-me, 2026-09-28), and the build is delegated to pi-solo (`openai-codex/gpt-6-sol`,
   thinking high) on `fix/harness-klm`. Review is by Claude CLI (Opus 5.5) at the end.
 
+- [2026-09-28 @pi] Partial build paused under the original work package §6: all 12 v1.1 MAP-screen UUIDs lack a persisted `runs` row, so `scripts/score_runs.jl` cannot re-score them at v1.2 without re-fitting MAP. Production untouched.
+- [2026-09-28 @pi] Resumed per human Amendment 1 (`experiments/pi_harness_klm_amendment1.md`): MAP-only re-screen is now permitted, with rehearsal against `mcmc_experiments_test` and completed W1 register metadata preserved. Finishing the build phase; production remains read-only.
+
+- [2026-09-28 @pi] Build phase complete on clean pushed SHAs `af5645b4`, `5d1103f7` and `37429d59`: W1 MAP-only rehearsal (12/12; 8,640 v1.2 scores; 12 validity checks), >1.2 GiB test-DB round trip, four read-only production legacy loads, 9/9 focused suites, parallel 24/25 (known T007 only). Test-created objects were dropped; the separate database remains. No production writes. Report and runbook: `docs/architecture/harness_klm_report.md` and `docs/architecture/harness_klm_prod_runbook.md`. Board production, review and merge remain pending explicit approval.
+
+- [2026-09-28 @claude] Fix round 1 (Claude CLI builder, taking over pi's uncommitted draft) for review F1–F11: F1–F7, F9–F11 fixed with tests, F8 documented (no invocation ID in `harness_checks`). Clean pushed SHA `5e70f2a2`: DB 154/154, extension 51/51, scoring 46/46, runner 182/182, strict >1.2 GiB round trip PASS, legacy loads 4/4, W1 screen rehearsal 12/12 + validator PASS on the test DB. Production read-only. Table in `docs/architecture/harness_klm_report.md` § Fix round 1.
+
+- [2026-09-28 @claude] Fix round 2 for re-review 1: F12 (leaderboard takes label-independent metrics from the whole (panel, run_id) group, one row per (label, control); runbook §2 wording, §4 finite Target LL gate) and F13 (control named by its self-pair row) fixed with a scoring test. Clean SHA `c33d942e`: scoring 60/60, runner 182/182, read-only board dry run `KLM_BOARD_DRYRUN_PASS` (26 scored, 7,596 rows replaced in memory, 0 NaN headline rows, 32/32 v1.1 pairs). Report § Fix round 2.
+
 ## Verification & Findings
 
-Not run yet.
+Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Final evidence and exact numbers are in the report linked above.

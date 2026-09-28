@@ -708,8 +708,9 @@ function _db_insert_latents!(conn::LibPQ.Connection, fold_id::UUID, latents::Cou
     return nothing
 end
 
-"Persist a fit and return its run UUID. Identical config hashes are idempotent."
-function save_fit(fit::Fit, storage::PostgresStorage)
+"""Persist a fit with per-fold artefacts. `on_duplicate=:error` rejects an existing recipe."""
+function save_fit(fit::Fit, storage::PostgresStorage; on_duplicate::Symbol = :return)
+    on_duplicate in (:return, :error) || error("save_fit: on_duplicate must be :return or :error")
     latents = getfield(fit, :latents)
     latents === nothing || latents isa CountLatents || error(
         "PostgresStorage currently stores CountLatents; got $(typeof(latents)). " *
@@ -721,8 +722,13 @@ function save_fit(fit::Fit, storage::PostgresStorage)
         existing = _db_rows(conn,
             "SELECT config_id FROM configs WHERE config_hash = \$1 LIMIT 1;", (hash,))
         if nrow(existing) == 1
-            return UUID(string(existing.config_id[1]))
+            old_id = UUID(string(existing.config_id[1]))
+            on_duplicate === :error && error(
+                "save_fit: recipe already belongs to run $old_id; load/resume that run or change the recipe before sampling again")
+            return old_id
         end
+        _db_has_column(conn, "fit_artifacts", "layout") || error(
+            "save_fit: per-fold schema is not installed; run ensure_schema!(db) at the deployment boundary before sampling")
 
         run_id = uuid4()
         fold_ids = UUID[uuid4() for _ in fit.folds]
@@ -790,12 +796,21 @@ function save_fit(fit::Fit, storage::PostgresStorage)
                 _db_insert_latents!(conn, first(fold_ids), latents)
             end
 
-            artifact = _db_artifact_blob(fit)
-            # Bound in binary: a multi-fold posterior artifact exceeds the 1GB protocol
-            # message limit once hex-encoded. See `_db_exec_binary`.
-            _db_exec_binary(conn,
-                "INSERT INTO fit_artifacts (run_id, fit_blob) VALUES (\$1::uuid, \$2::bytea);",
-                (string(run_id),), artifact)
+            # The shell retains fold order/metadata but no chains or duplicate latent panel.
+            # Serialize each fold only when its binary insert is ready, never the whole fit.
+            shell_folds = FoldFit[FoldFit(f.fold, nothing, f.meta) for f in fit.folds]
+            shell = Fit(fit.config, shell_folds, nothing, fit.diagnostics,
+                        fit.metadata, fit.save_path)
+            _db_exec_binary(conn, """
+                INSERT INTO fit_artifacts (run_id, fit_blob, layout)
+                VALUES (\$1::uuid, \$2::bytea, 'per_fold');
+            """, (string(run_id),), _db_artifact_blob(shell))
+            for fold in fit.folds
+                _db_exec_binary(conn, """
+                    INSERT INTO fit_fold_artifacts (run_id, fold_idx, fold_blob)
+                    VALUES (\$1::uuid, \$2, \$3::bytea);
+                """, (string(run_id), fold.fold), _db_artifact_blob(fold))
+            end
             _db_exec(conn, "COMMIT;")
         catch
             try
@@ -811,9 +826,10 @@ function save_fit(fit::Fit, storage::PostgresStorage)
 end
 
 "Write both backends. The return names both independently addressable artefacts."
-function save_fit(fit::Fit, storage::DualStorage; kwargs...)
+function save_fit(fit::Fit, storage::DualStorage; on_duplicate::Symbol = :return, kwargs...)
+    on_duplicate in (:return, :error) || error("save_fit: on_duplicate must be :return or :error")
     path = save_fit(fit, storage.file; kwargs...)
-    run_id = save_fit(fit, storage.db)
+    run_id = save_fit(fit, storage.db; on_duplicate)
     return (; path, run_id)
 end
 
@@ -844,17 +860,44 @@ function _db_load_count_latents(conn::LibPQ.Connection, run_id::UUID)
     return CountLatents(Int.(rows.match_id), lambda_home, lambda_away)
 end
 
-"Load an exact `Fit`, replacing its latent panel with the relationally reconstructed copy."
+"Load either the legacy single-blob Fit or a per-fold Fit shell and its ordered folds."
 function load_fit(run_id::UUID, storage::PostgresStorage)
     conn = _db_connect(storage)
     try
-        # Read in binary: a hex-rendered result doubles the artifact and the server refuses to
-        # allocate for it once past 1GB. See `_db_query_blob`.
+        # Production may still have the pre-upgrade schema during the read-only build phase.
+        # Absence of the marker unambiguously means every existing row is a legacy full Fit.
+        layout = if _db_has_column(conn, "fit_artifacts", "layout")
+            rows = _db_rows(conn,
+                "SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
+            nrow(rows) == 1 || error("load_fit: no PostgreSQL fit artefact for run $run_id.")
+            String(rows.layout[1])
+        else
+            "single"
+        end
         blob = _db_query_blob(conn,
             "SELECT fit_blob FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
-        blob === nothing && error("load_fit: no PostgreSQL fit artefact for run $run_id.")
+        blob === nothing && error("load_fit: missing shell/blob for run $run_id.")
         fit = _db_artifact_value(blob)
         fit isa Fit || error("load_fit: PostgreSQL artefact for $run_id holds $(typeof(fit)).")
+        if layout == "per_fold"
+            folds = FoldFit[]
+            for placeholder in fit.folds
+                fold_blob = _db_query_blob(conn, """
+                    SELECT fold_blob FROM fit_fold_artifacts
+                    WHERE run_id = \$1::uuid AND fold_idx = \$2;
+                """, (string(run_id), placeholder.fold))
+                fold_blob === nothing && error(
+                    "load_fit: missing fold $(placeholder.fold) for run $run_id")
+                fold = _db_artifact_value(fold_blob)
+                fold isa FoldFit && fold.fold == placeholder.fold || error(
+                    "load_fit: corrupt fold $(placeholder.fold) for run $run_id")
+                push!(folds, fold)
+            end
+            fit = Fit(fit.config, _inf_narrow(folds), fit.latents, fit.diagnostics,
+                      fit.metadata, fit.save_path)
+        elseif layout != "single"
+            error("load_fit: unknown layout $layout for run $run_id")
+        end
         latents = _db_load_count_latents(conn, run_id)
         latents === nothing && return fit
         return Fit(fit.config, fit.folds, latents, fit.diagnostics, fit.metadata, fit.save_path)

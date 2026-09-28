@@ -5,9 +5,17 @@
 #   - smoke  : 2 folds, 2×200 NUTS, all hard checks (SMOKE_REQUIRED_CHECKS, incl. tape_allocation),
 #              diagnostics recorded, saved under <exp>_smoke
 #   - grid   : requires passing smoke, resumes completed runs, per-fold checkpoints, full draws
-#              with stride fallback, score_runs against control, convergence flagged review.
+#              at stride 1, score_runs against control, convergence flagged review.
 
 const SCREEN_NAMESPACE_UUID = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+"A new smoke identity for every invocation, independent of the scientific recipe hash."
+function _smoke_fit_config(candidate::Candidate, experiment::AbstractString)
+    config = fit_config(candidate; stage = :smoke, experiment)
+    # Never use a time: tag: `_db_recipe_tags` excludes those from config_hash.
+    push!(config.tags, "smoke_nonce:" * string(uuid4()))
+    return config
+end
 
 "Run in-memory MAP inference on all folds for a cohort of candidates and score them."
 function screen(candidates::AbstractVector{<:Candidate};
@@ -55,10 +63,7 @@ function screen(candidates::AbstractVector{<:Candidate};
     end
 
     if db !== nothing && !isempty(check_records)
-        try
-            write_checks!(db, check_records)
-        catch
-        end
+        write_checks!(db, check_records)
     end
 
     isempty(fits) && error("All candidates failed in screen stage:\n" *
@@ -147,7 +152,7 @@ function smoke(candidate::Candidate;
         end
 
         # 3. Fit 2 folds
-        fit_cfg = fit_config(candidate; stage = :smoke, experiment = experiment)
+        fit_cfg = _smoke_fit_config(candidate, experiment)
         fit = Training.fit_model(fit_cfg;
             feature_sets = inputs.feature_sets,
             oos_fixtures = inputs.oos,
@@ -295,19 +300,8 @@ function grid(candidate::Candidate;
                    dirty = endswith(Training.git_commit_id(), "-dirty"))
             end
 
-            # Persistence with stride fallback (1 -> 2 -> 4)
-            for s in (1, 2, 4)
-                try
-                    thinned = s == 1 ? fit : thin_for_persistence(fit, inputs, s)
-                    saved_run_id = Training.save_fit(thinned, db)
-                    saved_stride = s
-                    fit = thinned
-                    break
-                catch err
-                    s == 4 && rethrow(err)
-                    @warn "save_fit failed at stride $s; retrying at stride $(s * 2)..." exception = err
-                end
-            end
+            # No thinning: a failed save is a real error, not a request to discard draws.
+            saved_run_id = Training.save_fit(fit, db; on_duplicate = :error)
             _run_diagnostic!(records, base, "persistence_stride", "info") do
                 (; stride = saved_stride)
             end

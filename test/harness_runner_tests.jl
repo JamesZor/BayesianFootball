@@ -3,6 +3,7 @@ using BayesianFootball
 using DataFrames
 using Dates
 using UUIDs
+using MCMCChains
 
 # The pre-fix clamp: bare `Float64` bounds put `Real`s in the broadcast, which is what sends
 # ReverseDiff to its allocating `tracker_∇broadcast` adjoint (AD guide §10.5).
@@ -119,6 +120,52 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test sum(stored_df.status .== "fail") == 2
         @test sum(stored_df.severity .== "hard") == 2
         @test sum(stored_df.severity .== "review") == 1
+        @test isempty(records[2].value)
+
+        # Expected diagnostic failures carry their metrics through the durable store.
+        metrics = (; max_rhat = 1.06, divergences = 12)
+        Harness._run_diagnostic!(records, base, "metrics", "review") do
+            throw(Harness.DiagnosticFailure(metrics, "R-hat exceeded"))
+        end
+        Harness.write_checks!(store, records[end:end])
+        saved = only(eachrow(Harness.read_checks(store; check = "metrics")))
+        @test saved.value == metrics
+        @test saved.status == "fail"
+        @test saved.detail == "R-hat exceeded"
+    end
+
+    @testset "Harness-only convergence rule" begin
+        summary = (; max_rhat = 1.04, min_ess_bulk = 300.0, min_ess_tail = 300.0,
+                    n_divergent = 0, divergence_rate = 0.0, min_bfmi = 0.2,
+                    treedepth_rate = 0.1, thresholds = Training.ConvergenceThresholds(),
+                    abstained = String[])
+        value = Harness._harness_convergence_value(summary)
+        @test value.passed && length(value.notes) == 4
+        @test Harness._harness_convergence_value(merge(summary, (; max_rhat = 1.05))).passed
+        @test Harness._harness_convergence_value(merge(summary, (; divergence_rate = 0.001))).passed
+        for bad in (merge(summary, (; max_rhat = 1.06)),
+                    merge(summary, (; divergence_rate = 0.0011)))
+            records = NamedTuple[]
+            Harness._run_diagnostic!(records, (; run_id = nothing), "convergence", "review") do
+                Harness._harness_convergence_value(bad)
+            end
+            @test only(records).status == "fail"
+            @test only(records).value.max_rhat == bad.max_rhat
+            @test only(records).value.divergence_rate == bad.divergence_rate
+        end
+    end
+
+    @testset "Full chain parity includes sampler internals and section names" begin
+        values = reshape(collect(1.0:12.0), 3, 4, 1)
+        sections = Dict(:parameters => [:a, :b], :internals => [:numerical_error, :step_size])
+        chain = Chains(values, [:a, :b, :numerical_error, :step_size], sections)
+        @test Harness._chain_parity(chain, deepcopy(chain))
+        changed = deepcopy(chain)
+        parent(changed.value)[1, 3, 1] = -99.0
+        @test_throws ErrorException Harness._chain_parity(chain, changed)
+        renamed = Chains(values, [:a, :b, :error_code, :step_size],
+                         Dict(:parameters => [:a, :b], :internals => [:error_code, :step_size]))
+        @test_throws ErrorException Harness._chain_parity(chain, renamed)
     end
 
     @testset "3. Grid stage refuses without passing smoke" begin
@@ -627,9 +674,71 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test Set(deltas.control_run_id) == Set([ref_ctl1.run_id, ref_ctl2.run_id])
     end
 
+    @testset "Screen CLI test-database opt-in" begin
+        script = Module(:CandidatesScriptTest)
+        Base.include(script, joinpath(@__DIR__, "..", "scripts", "run_candidates.jl"))
+        parsed = script.parse_args(["candidates.jl", "--stage", "screen", "--test-db"])
+        @test parsed.test_db
+        @test !script.parse_args(["candidates.jl", "--stage", "screen"]).test_db
+        @test_throws ErrorException script.parse_args(["candidates.jl", "--stage", "smoke", "--test-db"])
+        for stage in ("grid", "portfolio")
+            @test_throws ErrorException script.parse_args(["candidates.jl", "--stage", stage, "--test-db"])
+        end
+        original_args = copy(ARGS)
+        candidates_path = joinpath(@__DIR__, "..", "experiments", "scotland",
+                                   "03_dynamics_scope_matrix", "candidates.jl")
+        try
+            empty!(ARGS)
+            append!(ARGS, [candidates_path, "--stage", "smoke", "--test-db"])
+            @test_throws ErrorException script.main()
+            ARGS[findfirst(==("smoke"), ARGS)] = "screen"
+            withenv("BF_EXPERIMENTS_TEST_DB_URL" => nothing) do
+                @test_throws ErrorException script.main()
+            end
+            withenv("BF_EXPERIMENTS_TEST_DB_URL" => "postgresql://postgres@localhost/mcmc_experiments") do
+                @test_throws ErrorException script.main()
+            end
+        finally
+            empty!(ARGS)
+            append!(ARGS, original_args)
+        end
+        test_url = get(ENV, "BF_EXPERIMENTS_TEST_DB_URL", "")
+        if startswith(test_url, "postgresql://") &&
+           script.Training.PostgresStorage(test_url, "guard").dbname == "mcmc_experiments_test"
+            storage = script.Training.PostgresStorage(test_url, "guard")
+            @test script.assert_klm_test_database!(storage) === storage
+            separator = occursin('?', test_url) ? '&' : '?'
+            overridden = script.Training.PostgresStorage(test_url * separator * "dbname=postgres", "guard")
+            @test overridden.dbname == "mcmc_experiments_test"
+            @test_throws ErrorException script.assert_klm_test_database!(overridden)
+        end
+    end
+
     @testset "8. Run CSV control groups and panel CLI" begin
         script = Module(:ScoreRunsScriptTest)
         Base.include(script, joinpath(@__DIR__, "..", "scripts", "score_runs.jl"))
+        w0_path = joinpath(@__DIR__, "..", "docs", "architecture",
+                           "harness_klm_W0_rescore_v12.csv")
+        w0_refs = script.load_run_refs(w0_path)
+        w0_groups = script.load_run_groups(w0_path)
+        @test length(w0_refs) == 26
+        @test length(w0_groups) == 2
+        @test sum(length(group.refs) for group in w0_groups) == 26
+        @test length(unique(ref.run_id for ref in w0_refs)) == 26
+        w1_aliases = Set(["s12_m01_td_poisson", "s12_m02_td_joint",
+                          "m00_baseline_grw", "g1_grw_all_spfl",
+                          "g2_grw_all_spfl_cups", "g3_grw_joint_all_spfl_cups"])
+        @test issubset(w1_aliases, Set(ref.label for ref in w0_refs))
+        @test Dict(ref.label => string(ref.run_id) for ref in w0_refs if ref.label in w1_aliases) == Dict(
+            "s12_m01_td_poisson" => "de7fa956-87e8-418f-afb4-61ce01cb9f7d",
+            "s12_m02_td_joint" => "97c7a3d9-a05a-4029-90cb-e34279b8c791",
+            "m00_baseline_grw" => "f64a00a2-34a0-4f31-8c58-c093c92d54b7",
+            "g1_grw_all_spfl" => "f00ec78a-28ca-464e-91d4-dd1af384415c",
+            "g2_grw_all_spfl_cups" => "a6f62436-ec8a-461d-8bd5-dc1861a2daaa",
+            "g3_grw_joint_all_spfl_cups" => "9babf9e9-0a04-43af-855c-619a4b7dac8b")
+        @test length(only(filter(g -> g.control.label == "m12_td", w0_groups)).refs) == 25
+        @test Set(group.control.label for group in w0_groups) ==
+              Set(["m12_td", "g2_harness_repro"])
         parsed = script.parse_args(["runs.csv", "--target-seasons", "23/24,24/25,25/26",
                                     "--expected-fixtures", "none"])
         @test parsed.target_seasons == ["23/24", "24/25", "25/26"]
@@ -666,6 +775,7 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         run_ids = Harness._merge_experiment_run_ids(run_ids, second_id)
         @test Set(split(run_ids, ',')) == Set([first_id, second_id])
         @test Harness._merge_experiment_run_ids(run_ids, first_id) == run_ids
+        @test Harness._merge_experiment_run_ids(" $second_id;$first_id ", first_id) == run_ids
         # SQL upsert merges JSONB commit metadata by UUID, rather than replacing it.
         first_commit = Dict(first_id => (candidate = "td_base", git_sha = "sha1"))
         second_commit = Dict(second_id => (candidate = "grw_base", git_sha = "sha2"))
