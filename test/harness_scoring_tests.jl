@@ -250,6 +250,49 @@ end
                (panel_b, "base_a") => 0.07, (panel_b, "base_b") => -0.04)
 end
 
+@testset "Leaderboard keeps metrics for a UUID scored under two labels" begin
+    # The runbook §2 shape: re-scoring under an alias moves the NULL-control metric rows to the
+    # alias, while the native label keeps only its delta rows (write_scores! replace-by-key).
+    panel = "56+57|24/25,25/26|n=710"
+    ctl_id, arm_id = uuid4(), uuid4()
+    ctl_alias = H.RunRef("s12_m02_td_joint", "synthetic", ctl_id, :candidate)
+    ctl_native = H.RunRef("td_lower_joint", "synthetic", ctl_id, :control)
+    arm_alias = H.RunRef("g1_grw_all_spfl", "synthetic", arm_id, :candidate)
+    arm_native = H.RunRef("grw_spfl_poisson", "synthetic", arm_id, :candidate)
+    m12 = H.RunRef("m12_td", "synthetic", uuid4(), :control)
+    cohort = "transition_$(first(H.HARNESS_DIRECTIONS))_first10"
+    metrics(ref, ll) = [
+        H._score_row(ref, "target", "all", "logloss", ll, NaN, NaN, 1, 1; panel),
+        H._score_row(ref, "target", "1X2", "logloss", ll + 0.3, NaN, NaN, 1, 1; panel),
+        H._score_row(ref, "target", "all", "ece", 0.02, NaN, NaN, 1, 1; panel),
+        H._score_row(ref, "target", "1X2", "compression_slope", 1.1, NaN, NaN, 1, 1; panel),
+        H._score_row(ref, cohort, "all", "logloss", ll + 0.05, NaN, NaN, 1, 12; panel)]
+    delta(ref, control, value) = H._score_row(ref, "target", "all", "delta_logloss_vs_control",
+        value, value - 0.01, value + 0.01, 1, 1; control_run_id = control.run_id, panel)
+    rows = NamedTuple[
+        metrics(ctl_alias, 0.64)..., delta(ctl_alias, m12, 0.0004),  # alias rows come first
+        delta(ctl_native, ctl_native, 0.0),
+        metrics(arm_alias, 0.66)..., delta(arm_alias, m12, 0.02), delta(arm_native, ctl_native, 0.01),
+        metrics(m12, 0.65)..., delta(m12, m12, 0.0)]
+    for frame in (DataFrame(rows), DataFrame(reverse(rows)))
+        board = H.leaderboard(frame)
+        @test nrow(board) == 5
+        @test all(isfinite, board.target_logloss_all)
+        @test all(isfinite, board.target_logloss_1x2)
+        @test all(isfinite, board.target_ece_all)
+        @test all(isfinite, board.compression_slope)
+        @test all(isfinite, board[!, Symbol(cohort * "_logloss")])
+        pairs = Dict((r.model, r.control_name) => (r.target_logloss_all, r.delta_vs_control)
+                     for r in eachrow(board))
+        @test pairs == Dict(
+            ("td_lower_joint", "td_lower_joint") => (0.64, 0.0),
+            ("s12_m02_td_joint", "m12_td") => (0.64, 0.0004),
+            ("grw_spfl_poisson", "td_lower_joint") => (0.66, 0.01),
+            ("g1_grw_all_spfl", "m12_td") => (0.66, 0.02),
+            ("m12_td", "m12_td") => (0.65, 0.0))
+    end
+end
+
 @testset "Harness per-subset score row counts" begin
     frame = DataFrame(match_id = repeat([1, 2], inner = 7),
         selection = repeat([:home, :draw, :away, :over_25, :under_25,

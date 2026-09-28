@@ -576,19 +576,35 @@ function _headline(scores, run_id, subset, market, metric, field = :value;
     return Float64(rows[1, field])
 end
 
-"""Collapse scores into one headline per panel/run/control pairing (including self-controls)."""
+_is_delta_row(r) = r.subset == "target" && r.market == "all" &&
+                   r.metric == "delta_logloss_vs_control"
+_control_key(id) = ismissing(id) || id === nothing ? "" : string(id)
+
+"""
+Collapse scores into one headline per panel/run/(label, control) pairing (including
+self-controls). A UUID re-scored under a second label (an alias) keeps one row per label: the
+headline and transition metrics do not depend on the label, so they come from the whole
+`(panel, run_id)` group, wherever `write_scores!` left the NULL-control rows. A control is named
+by the label of its own self-pair row.
+"""
 function leaderboard(scores::AbstractDataFrame)
     rows = NamedTuple[]
     :panel in propertynames(scores) || error("leaderboard requires panel-labelled scores")
-    labels = Dict((string(first(g.panel)), string(first(g.run_id))) => String(first(g.model))
-                  for g in groupby(scores, [:panel, :run_id]))
-    for group in groupby(scores, [:panel, :run_id, :model])
+    control_labels = Dict{Tuple{String,String},String}()
+    for g in groupby(scores, [:panel, :run_id])
+        self = filter(r -> _is_delta_row(r) && _control_key(r.control_run_id) == string(r.run_id), g)
+        control_labels[(string(first(g.panel)), string(first(g.run_id)))] =
+            String(first(nrow(self) > 0 ? self.model : g.model))
+    end
+    for group in groupby(scores, [:panel, :run_id])
         run_id = first(group.run_id)
-        delta_rows = filter(r -> r.subset == "target" && r.market == "all" &&
-                                 r.metric == "delta_logloss_vs_control", group)
-        control_ids = nrow(delta_rows) == 0 ? [missing] : unique(delta_rows.control_run_id)
+        delta_rows = filter(_is_delta_row, group)
+        # One row per label that owns deltas; a run without any delta keeps one row per label.
+        pairings = nrow(delta_rows) == 0 ?
+            [(String(model), missing) for model in unique(group.model)] :
+            unique(p -> (p[1], _control_key(p[2])),
+                   [(String(r.model), r.control_run_id) for r in eachrow(delta_rows)])
         headline = (;
-            run_id, panel = first(group.panel), model = first(group.model),
             target_logloss_all = _headline(group, run_id, "target", "all", "logloss"),
             target_logloss_1x2 = _headline(group, run_id, "target", "1X2", "logloss"),
             target_ece_all = _headline(group, run_id, "target", "all", "ece"),
@@ -608,17 +624,19 @@ function leaderboard(scores::AbstractDataFrame)
                   _headline(group, run_id, subset, "1X2", "transition_bias_pp", :n_fixtures))
         end
         extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
-        for control_id in control_ids
-            paired = nrow(delta_rows) == 0 ? delta_rows :
-                     filter(r -> isequal(r.control_run_id, control_id), delta_rows)
-            control_name = ismissing(control_id) ? "—" :
-                get(labels, (string(headline.panel), string(control_id)), string(control_id))
+        panel = first(group.panel)
+        for (model, control_id) in pairings
+            paired = filter(r -> r.model == model &&
+                                 _control_key(r.control_run_id) == _control_key(control_id),
+                            delta_rows)
+            control_name = _control_key(control_id) == "" ? "—" :
+                get(control_labels, (string(panel), string(control_id)), string(control_id))
             delta = isempty(paired) ? (NaN, NaN, NaN) :
                     (Float64(paired.value[1]), Float64(paired.lo[1]), Float64(paired.hi[1]))
-            push!(rows, merge(headline, (;
+            push!(rows, merge((; run_id, panel, model), headline, (;
                 control_run_id = control_id, control_name,
                 delta_vs_control = delta[1], delta_lo = delta[2], delta_hi = delta[3]), extra))
         end
     end
-    return sort!(DataFrame(rows), [:panel, :target_logloss_all])
+    return sort!(DataFrame(rows), [:panel, :target_logloss_all, :model, :control_name])
 end
