@@ -119,3 +119,46 @@ blocked it. Nothing in this round writes to production. The test-DB guard assert
 
 **Test DB state.** The rehearsal left its rows in `mcmc_experiments_test`: 8,640 screen scores, its `harness_checks` rows and the W1
 register row. The reset (`DROP SCHEMA public CASCADE`) was not run from this session. It is left for the operator.
+
+## Fix round 2 (Claude CLI builder, 2026-09-28)
+
+Responds to "Re-review 1" in `docs/architecture/harness_klm_review.md` (CHANGES_REQUIRED: F12 major, F13 minor).
+F12 uses the reviewer's preferred code-only approach, so the six W1 alias labels that F2 required stay on the board.
+
+| ID | Disposition | Change | Test / evidence |
+|---|---|---|---|
+| F12 (major) | **Fixed** | `Harness.leaderboard` (`src/harness/scoring.jl`) now groups by `(panel, run_id)`, not `(panel, run_id, model)`. The headline (Target LL, 1X2 LL, ECE, compression) and transition-cohort extras are label-independent, so they come from the whole group, whichever label `write_scores!` left the NULL-control rows under. It emits one row per **(label, control)** pairing present in that run's delta rows. A run with no delta rows keeps one row per label, and legacy NULL-control deltas still pair. Runbook §2 now states that the re-score **rewrites the 12 W1 runs' v1.2 non-delta rows, relabelled**, while their `97c7a3d9` delta rows keep the native label. §4 gains a gate: every grid board row must have a finite Target LL, 1X2 LL, ECE and compression (no `—`). It also requires `KLM_BOARD_DRYRUN_PASS` from the new read-only `scripts/validate_klm_board_dryrun.jl` before §2. | New scoring testset "Leaderboard keeps metrics for a UUID scored under two labels" (14 assertions). A control and an arm each carry a native label and an alias; the alias owns the NULL-control metric rows and the m12 delta, and the native label owns only its delta. Across both row orders it asserts 5 rows, all headline and cohort values finite, and each (label, control) → (LL, Δ) pair. Board dry run below. |
+| F13 | **Fixed** | A control is named by the label of its own self-pair row (`run_id == control_run_id` on the target/all delta), falling back to `first(model)`. | The same testset puts the control's alias rows first (the reviewer's failing order) and asserts that its native pairings name `td_lower_joint`. The dry run names the control of all 12 W1 `97c7a3d9` rows `td_lower_joint`. |
+
+`scripts/score_runs.jl`: `main` is split into `include_run_loaders` and `score_csv_groups`. Behaviour is unchanged
+(`main` still loads, scores, then calls `write_scores!`), so the dry run exercises exactly the production scoring path.
+
+### Fix round 2 evidence — clean pushed SHA `c33d942e`
+
+These were run on mcmc-beast from `beast_checkout.sh c33d942edccd32ce7e495bd83c63d248db772ede`, with Scottish caches from `a76a65df`. Julia was
+run with `-t 16` through `klm_env.sh`, in tmux `claude_klm_fix2`. Logs are `/root/BF_runs/logs/klm/fix1_fix2{final,dry}_*`. No sampling was run.
+
+| Check | Result | Wall (process) |
+|---|---|---|
+| `test/harness_scoring_tests.jl` | **60/60** (was 46; +14 F12/F13) | 40 s |
+| `test/harness_runner_tests.jl` | **182/182** | 131 s (tests 1m52.2 s) |
+| `scripts/validate_klm_board_dryrun.jl` (production **read-only**: `read_scores`, `read_experiments`, `load_fit`; no `write_scores!`, no schema call) | **`KLM_BOARD_DRYRUN_PASS`**: 26/26 CSV runs scored in memory (287 s, 0 failures). The replace-by-key removed **7,596** production v1.2 rows from the in-memory copy, the reviewer's count. **68** grid board rows, **0** with a NaN headline, **0** `—` Target LL in the rendered Markdown. **32/32** v1.1 first-table (label, UUID) pairs present, and all 32 reproduce their v1.1 Target LL within 5e-6. 12 W1 UUIDs carry a `132df5c2` delta and 12 a `97c7a3d9` delta, whose control is named `td_lower_joint`. | 338 s |
+
+The scoring and runner suites also passed on `d227f1f7` (60/60, 182/182). That run differs only in the dry-run script's
+`invokelatest` fix: the first clean dry run stopped with a world-age `MethodError` when it called the included
+`leaderboard_markdown`.
+
+The six W1 rows that the reviewer saw render as "—" now read as follows (rendered board
+`/root/BF_runs/logs/klm/fix2_clean_board.md`, posterior grid, panel `56+57|24/25,25/26|n=710`):
+
+| Model | Target LL | 1X2 LL | ECE | Compression | Control | Δ LL vs control |
+|---|---:|---:|---:|---:|---|---:|
+| `td_lower_joint` | 0.64375 | 0.61746 | 0.01427 | 1.928 | `td_lower_joint` | 0.00000 |
+| `s12_m02_td_joint` (alias, same UUID) | 0.64375 | 0.61746 | 0.01427 | 1.928 | `m12_td` | 0.00038 |
+| `td_lower_poisson` | 0.64679 | 0.62040 | 0.01249 | 2.781 | `td_lower_joint` | 0.00304 |
+| `grw_lower_poisson` | 0.64460 | 0.61689 | 0.01617 | 1.190 | `td_lower_joint` | 0.00085 |
+| `grw_spfl_poisson` | 0.64644 | 0.61939 | 0.01221 | 1.099 | `td_lower_joint` | 0.00270 |
+| `grw_spfl_cups_poisson` | 0.64617 | 0.61634 | 0.01806 | 1.252 | `td_lower_joint` | 0.00242 |
+| `grw_spfl_cups_joint` | 0.64385 | 0.61718 | 0.00953 | 1.105 | `td_lower_joint` | 0.00010 |
+
+Production was only read. The runner suite's guard test connects to `mcmc_experiments_test` but creates nothing: before and after every item it still had no `runs` table (the empty schema left by the reviewer).

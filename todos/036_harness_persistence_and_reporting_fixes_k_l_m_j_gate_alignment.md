@@ -92,6 +92,8 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
 
 - [2026-09-28 @claude] Fix round 1 (Claude CLI builder, taking over pi's uncommitted draft) for review F1–F11: F1–F7, F9–F11 fixed with tests, F8 documented (no invocation ID in `harness_checks`). Clean pushed SHA `5e70f2a2`: DB 154/154, extension 51/51, scoring 46/46, runner 182/182, strict >1.2 GiB round trip PASS, legacy loads 4/4, W1 screen rehearsal 12/12 + validator PASS on the test DB. Production read-only. Table in `docs/architecture/harness_klm_report.md` § Fix round 1.
 
+- [2026-09-28 @claude] Fix round 2 for re-review 1: F12 (leaderboard takes label-independent metrics from the whole (panel, run_id) group, one row per (label, control); runbook §2 wording, §4 finite Target LL gate) and F13 (control named by its self-pair row) fixed with a scoring test. Clean SHA `c33d942e`: scoring 60/60, runner 182/182, read-only board dry run `KLM_BOARD_DRYRUN_PASS` (26 scored, 7,596 rows replaced in memory, 0 NaN headline rows, 32/32 v1.1 pairs). Report § Fix round 2.
+
 ## Verification & Findings
 
 Initial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Final evidence and exact numbers are in the report linked above.
