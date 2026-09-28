@@ -408,13 +408,26 @@ function _structural_equal(left, right)
                for field in fieldnames(typeof(left)))
 end
 
+"Compare parameters, sampler internals, names, section map and evidence bit-for-bit."
+function _chain_parity(left::MCMCChains.Chains, right::MCMCChains.Chains)
+    isequal(parent(left.value), parent(right.value)) || error("chain draws/internals changed")
+    isequal(names(left), names(right)) || error("chain names changed")
+    isequal(left.name_map, right.name_map) || error("chain name_map changed")
+    isequal(left.logevidence, right.logevidence) || error("chain logevidence changed")
+    return true
+end
+
 "Exact chain, latent, config and diagnostics parity after a database round trip."
 function _fit_parity(original, recovered)
     _structural_equal(original.config, recovered.config) || error("FitConfig changed on reload")
     length(original.folds) == length(recovered.folds) || error("fold count changed on reload")
     for (left, right) in zip(original.folds, recovered.folds)
         left.fold == right.fold || error("fold index changed on reload")
-        Array(left.chain) == Array(right.chain) || error("chain changed on fold $(left.fold)")
+        try
+            _chain_parity(left.chain, right.chain)
+        catch err
+            error("chain changed on fold $(left.fold): $(sprint(showerror, err))")
+        end
     end
     _structural_equal(original.diagnostics, recovered.diagnostics) ||
         error("convergence diagnostics changed on reload")
@@ -440,7 +453,7 @@ function _harness_convergence_value(summary)
     summary.min_ess_bulk < 400 && push!(notes, "bulk ESS $(summary.min_ess_bulk) < 400")
     summary.min_ess_tail < 400 && push!(notes, "tail ESS $(summary.min_ess_tail) < 400")
     summary.min_bfmi <= summary.thresholds.min_bfmi &&
-        push!(notes, "BFMI $(summary.min_bfmi) < $(summary.thresholds.min_bfmi)")
+        push!(notes, "BFMI $(summary.min_bfmi) <= $(summary.thresholds.min_bfmi)")
     summary.treedepth_rate >= summary.thresholds.max_treedepth_rate &&
         push!(notes, "tree-depth cap rate $(summary.treedepth_rate) > $(summary.thresholds.max_treedepth_rate)")
     value = (; passed = isempty(failures), max_rhat = summary.max_rhat,

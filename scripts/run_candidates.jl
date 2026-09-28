@@ -8,6 +8,8 @@ using Printf
 using ThreadPinning
 using UUIDs
 
+Base.include(@__MODULE__, joinpath(@__DIR__, "klm_test_db_guard.jl"))
+
 function parse_args(args)
     candidates_file = nothing
     stage = nothing
@@ -64,6 +66,8 @@ function parse_args(args)
         "Stage must be one of: screen, smoke, grid, portfolio; got $stage")
     container in (:close_option_b, :t25_calibrated) || error(
         "Container must be close_option_b or t25_calibrated; got $container")
+    test_db && stage !== :screen && error(
+        "--test-db is supported only for --stage screen; smoke, grid and portfolio may access production")
 
     return (; candidates_file, stage, only_names, container, log_dir, test_db)
 end
@@ -111,9 +115,7 @@ function main()
         url = get(ENV, "BF_EXPERIMENTS_TEST_DB_URL", "")
         isempty(strip(url)) && error("--test-db requires BF_EXPERIMENTS_TEST_DB_URL")
         target = Training.PostgresStorage(url, experiment)
-        target.dbname == "mcmc_experiments_test" || error(
-            "--test-db refuses non-test database $(target.dbname)")
-        target
+        assert_klm_test_database!(target)
     else
         Training.PostgresStorage(experiment)
     end

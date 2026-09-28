@@ -5,12 +5,14 @@ using BayesianFootball: Training, Harness
 using Serialization
 using UUIDs
 
+include(joinpath(@__DIR__, "klm_test_db_guard.jl"))
+
 const SOURCE_RUN = UUID("ce7ea22f-61d8-40cc-a505-94d101b98604")
 const SOURCE_DB = Training.PostgresStorage("scottish_pyramid_tier_transition_w2")
 const TARGET_URL = get(ENV, "BF_EXPERIMENTS_TEST_DB_URL", "")
 isempty(strip(TARGET_URL)) && error("Set BF_EXPERIMENTS_TEST_DB_URL to the disposable test DB")
 const TARGET_DB = Training.PostgresStorage(TARGET_URL, "klm_large_roundtrip")
-TARGET_DB.dbname == "mcmc_experiments_test" || error("Refusing non-test target $(TARGET_DB.dbname)")
+assert_klm_test_database!(TARGET_DB)
 
 function serial_size(value)
     io = IOBuffer()
@@ -70,7 +72,7 @@ function main()
         length(reloaded.folds) == length(original.folds) || error("fold count changed")
         for (left, right) in zip(original.folds, reloaded.folds)
             left.fold == right.fold || error("fold index changed")
-            Array(left.chain) == Array(right.chain) || error("chain data changed on fold $(left.fold)")
+            Harness._chain_parity(left.chain, right.chain) || error("chain changed on fold $(left.fold)")
             Harness._structural_equal(left.meta, right.meta) || error("fold metadata changed")
         end
         for field in (:config, :diagnostics, :metadata)

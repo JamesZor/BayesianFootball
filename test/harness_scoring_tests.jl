@@ -238,13 +238,16 @@ end
     append!(rows, [H._score_row(arm, "target", "all", "delta_logloss_vs_control",
                                 delta, delta - 0.01, delta + 0.01, 1, 1;
                                 control_run_id = ctl.run_id, panel = panel)
-                   for panel in (panel_a, panel_b), (ctl, delta) in ((ctl_a, -0.01), (ctl_b, 0.02))])
+                   for panel in (panel_a, panel_b), (ctl, base_delta) in ((ctl_a, -0.01), (ctl_b, 0.02))
+                   for delta in (panel == panel_a ? base_delta : ctl.run_id == ctl_a.run_id ? 0.07 : -0.04,)])
     board = H.leaderboard(DataFrame(rows))
     paired = filter(:model => ==("arm"), board)
     @test nrow(paired) == 4
     @test all(g -> Set(g.control_name) == Set(["base_a", "base_b"]),
               groupby(paired, :panel))
-    @test Set(paired.delta_vs_control) == Set([-0.01, 0.02])
+    @test Dict((r.panel, r.control_name) => r.delta_vs_control for r in eachrow(paired)) ==
+          Dict((panel_a, "base_a") => -0.01, (panel_a, "base_b") => 0.02,
+               (panel_b, "base_a") => 0.07, (panel_b, "base_b") => -0.04)
 end
 
 @testset "Harness per-subset score row counts" begin

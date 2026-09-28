@@ -5,10 +5,12 @@ using BayesianFootball: Harness, Training
 using DataFrames
 using JSON3
 
+include(joinpath(@__DIR__, "klm_test_db_guard.jl"))
+
 url = get(ENV, "BF_EXPERIMENTS_TEST_DB_URL", "")
 isempty(strip(url)) && error("BF_EXPERIMENTS_TEST_DB_URL is required")
 db = Training.PostgresStorage(url, "harness")
-db.dbname == "mcmc_experiments_test" || error("Refusing non-test DB")
+assert_klm_test_database!(db)
 scores = Harness.read_scores(db; scorecard_version = "v1.2")
 screen = filter(:stage => ==("screen"), scores)
 ids = unique(screen.run_id)
@@ -38,8 +40,8 @@ for key in (:id, :date, :todo, :question, :dimension, :status, :decision, :readm
         error("W1 register field $key changed on re-screen")
 end
 register.status == "completed" || error("W1 register was downgraded")
-all(in(split(register.run_ids, ',')), split(String(original.run_ids), ',')) ||
-    error("W1 register lost an original run ID")
+String(register.run_ids) == String(original.run_ids) ||
+    error("W1 register run_ids changed on re-screen")
 println("KLM_SCREEN_PASS ids=$(length(ids)) checks=$(length(unique(checks.run_id))) " *
         "score_rows=$(nrow(screen)) panel=$expected_panel register=preserved " *
         "markdown_map_rows=$(count(occursin.(Ref("| `"), split(markdown, '\n'))))")
