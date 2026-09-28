@@ -46,6 +46,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [035](035_sampler_side_allocation_and_grw_multi_thread_contention.md) | Sampler-side allocation and GRW multi-thread contention | BACKLOG | P2 | unassigned | 2026-09-27 |
 | [036](036_harness_persistence_and_reporting_fixes_k_l_m_j_gate_alignment.md) | Harness persistence and reporting fixes (k, l, m, j, gate alignment) | ACTIVE | P1 | pi | 2026-09-28 |
 | [037](037_context_cards_short_linked_docs_for_harness_persistence_w2_components_and_fit_pi.md) | Context cards: short linked docs for harness, persistence, W2 components and fit pipeline | ACTIVE | P2 | pi | 2026-09-28 |
+| [038](038_market_evaluation_layer_typed_recipe_axes_pluggable_evaluators_unified_clv.md) | Market evaluation layer: typed recipe axes, pluggable evaluators, unified CLV | ACTIVE | P1 | claude | 2026-09-28 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files
