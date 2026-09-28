@@ -105,6 +105,17 @@ end
         @test length(initial) == 2
         empty!(initial.config.sampler.sampled_folds)
         run_id = save_fit(initial, db)
+        original_blobs = let conn = LibPQ.Connection(test_url)
+            try
+                DataFrame(LibPQ.execute(conn, """
+                    SELECT fold_idx, md5(fold_blob) AS digest FROM fit_fold_artifacts
+                    WHERE run_id = \$1::uuid ORDER BY fold_idx;
+                """, (string(run_id),)))
+            finally
+                close(conn)
+            end
+        end
+        @test original_blobs.fold_idx == [1, 2]
 
         @testset "preview and selective Fit extension" begin
             io = IOBuffer()
@@ -130,6 +141,12 @@ end
                     FROM fold_results WHERE run_id = \$1::uuid ORDER BY fold_idx;
                 """, (string(run_id),)))
                 @test folds.fold_idx == [1, 2, 3]
+                blobs = DataFrame(LibPQ.execute(conn, """
+                    SELECT fold_idx, md5(fold_blob) AS digest FROM fit_fold_artifacts
+                    WHERE run_id = \$1::uuid ORDER BY fold_idx;
+                """, (string(run_id),)))
+                @test blobs.fold_idx == [1, 2, 3]
+                @test blobs.digest[1:2] == original_blobs.digest
                 @test folds.n_matches[3] == 1
                 @test !ismissing(folds.logloss[3])
                 @test !ismissing(folds.brier[3])

@@ -6,6 +6,17 @@ end
 Base.showerror(io::IO, error::HarnessCheckError) =
     print(io, "harness check `", error.check, "` failed: ", error.detail)
 
+"A diagnostic's expected failure, carrying its computed JSON-safe metrics."
+struct DiagnosticFailure{V} <: Exception
+    value::V
+    detail::String
+end
+Base.showerror(io::IO, error::DiagnosticFailure) = print(io, error.detail)
+
+# Harness review rule agreed with the human on 2026-09-27 (W2 README §7).
+const HARNESS_REVIEW_MAX_RHAT = 1.05
+const HARNESS_REVIEW_MAX_DIVERGENCE_RATE = 0.001
+
 _check_value(value) = value === nothing ? NamedTuple() : value
 
 function _check_record(base, check, severity, status, value, detail)
@@ -52,7 +63,8 @@ function _run_diagnostic!(records::AbstractVector, base, check::AbstractString,
         return value
     catch error
         detail = sprint(showerror, error)
-        push!(records, _check_record(base, check, severity, "fail", NamedTuple(), detail))
+        value = error isa DiagnosticFailure ? error.value : NamedTuple()
+        push!(records, _check_record(base, check, severity, "fail", value, detail))
         return nothing
     end
 end
@@ -267,15 +279,18 @@ function _smoke_sampling_performance!(records, base, candidate, inputs;
     _run_diagnostic!(records, base, "sampling_performance", "review") do
         metrics === nothing && error(
             "the sampling-performance probe failed; see the sampling_performance_metrics row")
-        isempty(flags) || error(join(("$(f.flag) = $(_fmt(f.value)) (threshold " *
-                                      "$(_fmt(f.threshold))): $(f.diagnosis)" for f in flags), " | ") *
-                                (report === nothing ? "" : " — report: $report"))
-        (; report = something(report, "not written"), gc_share = metrics.gc_share,
-           sampler_utilisation = metrics.sampler_utilisation,
-           utilisation_source = metrics.utilisation_source,
-           gc_stall_share = metrics.gc_stall_share,
-           ms_per_leapfrog = metrics.ms_per_leapfrog,
-           efficiency_ratio = metrics.efficiency_ratio)
+        value = (; report = something(report, "not written"), gc_share = metrics.gc_share,
+                   sampler_utilisation = metrics.sampler_utilisation,
+                   utilisation_source = metrics.utilisation_source,
+                   gc_stall_share = metrics.gc_stall_share,
+                   ms_per_leapfrog = metrics.ms_per_leapfrog,
+                   efficiency_ratio = metrics.efficiency_ratio,
+                   flags)
+        isempty(flags) || throw(DiagnosticFailure(value,
+            join(("$(f.flag) = $(_fmt(f.value)) (threshold " *
+                  "$(_fmt(f.threshold))): $(f.diagnosis)" for f in flags), " | ") *
+            (report === nothing ? "" : " — report: $report")))
+        value
     end
     status = metrics === nothing || !isempty(flags) ? "review" : "pass"
     return (; status, metrics, flags, report)
@@ -414,19 +429,34 @@ function _fit_parity(original, recovered)
               draws = Models.n_draws(left))
 end
 
+function _harness_convergence_value(summary)
+    failures = String[]
+    isfinite(summary.max_rhat) && summary.max_rhat > HARNESS_REVIEW_MAX_RHAT &&
+        push!(failures, "max R-hat $(summary.max_rhat) > $(HARNESS_REVIEW_MAX_RHAT)")
+    isfinite(summary.divergence_rate) &&
+        summary.divergence_rate > HARNESS_REVIEW_MAX_DIVERGENCE_RATE &&
+        push!(failures, "divergence rate $(summary.divergence_rate) > $(HARNESS_REVIEW_MAX_DIVERGENCE_RATE)")
+    notes = String[]
+    summary.min_ess_bulk < 400 && push!(notes, "bulk ESS $(summary.min_ess_bulk) < 400")
+    summary.min_ess_tail < 400 && push!(notes, "tail ESS $(summary.min_ess_tail) < 400")
+    summary.min_bfmi < summary.thresholds.min_bfmi &&
+        push!(notes, "BFMI $(summary.min_bfmi) < $(summary.thresholds.min_bfmi)")
+    summary.treedepth_rate > summary.thresholds.max_treedepth_rate &&
+        push!(notes, "tree-depth cap rate $(summary.treedepth_rate) > $(summary.thresholds.max_treedepth_rate)")
+    value = (; passed = isempty(failures), max_rhat = summary.max_rhat,
+              min_ess_bulk = summary.min_ess_bulk, min_ess_tail = summary.min_ess_tail,
+              divergences = summary.n_divergent, divergence_rate = summary.divergence_rate,
+              min_bfmi = summary.min_bfmi, treedepth_rate = summary.treedepth_rate,
+              failures, notes, abstained = summary.abstained)
+    isempty(failures) || throw(DiagnosticFailure(value, join(failures, "; ")))
+    return value
+end
+
 function _convergence_diagnostic(fit)
     summary = Training.audit_convergence(fit;
         thresholds = Training.ConvergenceThresholds(),
         max_depth = hasproperty(fit.config.sampler, :max_depth) ? fit.config.sampler.max_depth : 10)
-    value = (; passed = summary.passed, max_rhat = summary.max_rhat,
-              min_ess_bulk = summary.min_ess_bulk, min_ess_tail = summary.min_ess_tail,
-              divergences = summary.n_divergent, divergence_rate = summary.divergence_rate,
-              min_bfmi = summary.min_bfmi, treedepth_rate = summary.treedepth_rate,
-              failures = summary.failures, abstained = summary.abstained)
-    summary.passed || error(join(summary.failures, "; ") *
-                            (isempty(summary.abstained) ? "" :
-                             "; abstained: " * join(summary.abstained, ", ")))
-    return value
+    return _harness_convergence_value(summary)
 end
 
 function _thin_chain(chain::MCMCChains.Chains, stride::Int)

@@ -2,7 +2,8 @@
 #
 # Splitters remain declarative.  Every call derives boundaries from the supplied current
 # DataStore, compares their stable 1-based positions with fold_results, and samples only missing
-# positions.  The relational rows and exact Fit artefact are replaced in one transaction.
+# positions. Relational rows and the exact Fit shell are updated in one transaction;
+# per-fold runs append only new fold blobs (legacy single-blob runs retain their layout).
 
 "The database identity and display metadata for a model run."
 function _extension_run(db::PostgresStorage, key)
@@ -293,7 +294,8 @@ end
     extend_fit(db, run_id_or_name, ds; execution=nothing, splitter=nothing, quiet=false)
 
 Sample only walk-forward positions absent from `fold_results`, audit and extract their OOS
-posterior, then atomically append relational rows and replace the exact Fit artefact.
+posterior, then atomically append relational rows and update the exact Fit shell.
+Legacy single-blob runs keep the original whole-Fit rewrite on extension.
 """
 function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
                     execution = nothing, splitter = nothing, sampler = nothing, quiet::Bool = false)
@@ -405,15 +407,34 @@ function extend_fit(db::PostgresStorage, key, ds::Data.DataStore;
             isempty(conflict) || error(
                 "extend_fit: folds $(join(conflict, ", ")) were inserted concurrently; retry preview_extension.")
 
+            layout = _db_rows(conn, """
+                SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid FOR UPDATE;
+            """, (string(run.run_id),))
+            nrow(layout) == 1 || error("extend_fit: missing artefact for $(run.run_id)")
             for fold in new_folds
                 _extension_insert_fold!(conn, run.run_id, fold,
                     diagnostics_by_fold[fold.fold], existing.diagnostics.thresholds,
                     scores_by_fold[fold.fold], runtime_per_fold,
                     stats_by_fold[fold.fold], get(per_fold_latents, fold.fold, nothing))
+                if layout.layout[1] == "per_fold"
+                    _db_exec_binary(conn, """
+                        INSERT INTO fit_fold_artifacts (run_id, fold_idx, fold_blob)
+                        VALUES (\$1::uuid, \$2, \$3::bytea);
+                    """, (string(run.run_id), fold.fold), _db_artifact_blob(fold))
+                end
+            end
+            updated_artifact = if layout.layout[1] == "per_fold"
+                shell_folds = FoldFit[FoldFit(f.fold, nothing, f.meta) for f in extended.folds]
+                Fit(extended.config, shell_folds, nothing, extended.diagnostics,
+                    extended.metadata, extended.save_path)
+            elseif layout.layout[1] == "single"
+                extended
+            else
+                error("extend_fit: unknown artefact layout $(layout.layout[1])")
             end
             _db_exec_binary(conn, """
                 UPDATE fit_artifacts SET fit_blob = \$2::bytea WHERE run_id = \$1::uuid;
-            """, (string(run.run_id),), _db_artifact_blob(extended))
+            """, (string(run.run_id),), _db_artifact_blob(updated_artifact))
             _db_exec(conn, """
                 UPDATE configs SET split_config = \$2::jsonb WHERE config_id = \$1::uuid;
             """, (string(run.run_id), _extension_split_json(

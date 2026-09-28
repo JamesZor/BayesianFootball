@@ -114,7 +114,18 @@ CREATE TABLE IF NOT EXISTS config_registry (
 -- PortfolioResult likewise contains daily states and bootstrap details beyond its headline row.
 CREATE TABLE IF NOT EXISTS fit_artifacts (
     run_id UUID PRIMARY KEY REFERENCES runs(run_id) ON DELETE CASCADE,
-    fit_blob BYTEA NOT NULL
+    fit_blob BYTEA NOT NULL,
+    layout TEXT NOT NULL DEFAULT 'single'
+);
+
+ALTER TABLE fit_artifacts ADD COLUMN IF NOT EXISTS layout TEXT NOT NULL DEFAULT 'single';
+
+-- New runs keep the small Fit shell here and write each complete FoldFit separately.
+CREATE TABLE IF NOT EXISTS fit_fold_artifacts (
+    run_id UUID NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
+    fold_idx INT NOT NULL,
+    fold_blob BYTEA NOT NULL,
+    PRIMARY KEY (run_id, fold_idx)
 );
 
 CREATE TABLE IF NOT EXISTS portfolio_artifacts (

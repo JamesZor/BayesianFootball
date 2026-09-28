@@ -576,21 +576,23 @@ function _headline(scores, run_id, subset, market, metric, field = :value;
     return Float64(rows[1, field])
 end
 
-"""Collapse the long score table into the committed Phase-1 headline leaderboard."""
-function leaderboard(scores::AbstractDataFrame; control_run_id = nothing)
+"""Collapse scores into one headline per panel/run/control pairing (including self-controls)."""
+function leaderboard(scores::AbstractDataFrame)
     rows = NamedTuple[]
     :panel in propertynames(scores) || error("leaderboard requires panel-labelled scores")
+    labels = Dict((string(first(g.panel)), string(first(g.run_id))) => String(first(g.model))
+                  for g in groupby(scores, [:panel, :run_id]))
     for group in groupby(scores, [:panel, :run_id, :model])
         run_id = first(group.run_id)
-        base = (;
+        delta_rows = filter(r -> r.subset == "target" && r.market == "all" &&
+                                 r.metric == "delta_logloss_vs_control", group)
+        control_ids = nrow(delta_rows) == 0 ? [missing] : unique(delta_rows.control_run_id)
+        headline = (;
             run_id, panel = first(group.panel), model = first(group.model),
             target_logloss_all = _headline(group, run_id, "target", "all", "logloss"),
             target_logloss_1x2 = _headline(group, run_id, "target", "1X2", "logloss"),
             target_ece_all = _headline(group, run_id, "target", "all", "ece"),
-            compression_slope = _headline(group, run_id, "target", "1X2", "compression_slope"),
-            delta_vs_control = _headline(group, run_id, "target", "all", "delta_logloss_vs_control"; control_run_id),
-            delta_lo = _headline(group, run_id, "target", "all", "delta_logloss_vs_control", :lo; control_run_id),
-            delta_hi = _headline(group, run_id, "target", "all", "delta_logloss_vs_control", :hi; control_run_id))
+            compression_slope = _headline(group, run_id, "target", "1X2", "compression_slope"))
         extra_names = Symbol[]
         extra_values = Float64[]
         for direction in HARNESS_DIRECTIONS, first_n in (10, 20)
@@ -606,7 +608,17 @@ function leaderboard(scores::AbstractDataFrame; control_run_id = nothing)
                   _headline(group, run_id, subset, "1X2", "transition_bias_pp", :n_fixtures))
         end
         extra = NamedTuple{Tuple(extra_names)}(Tuple(extra_values))
-        push!(rows, merge(base, extra))
+        for control_id in control_ids
+            paired = nrow(delta_rows) == 0 ? delta_rows :
+                     filter(r -> isequal(r.control_run_id, control_id), delta_rows)
+            control_name = ismissing(control_id) ? "—" :
+                get(labels, (string(headline.panel), string(control_id)), string(control_id))
+            delta = isempty(paired) ? (NaN, NaN, NaN) :
+                    (Float64(paired.value[1]), Float64(paired.lo[1]), Float64(paired.hi[1]))
+            push!(rows, merge(headline, (;
+                control_run_id = control_id, control_name,
+                delta_vs_control = delta[1], delta_lo = delta[2], delta_hi = delta[3]), extra))
+        end
     end
     return sort!(DataFrame(rows), [:panel, :target_logloss_all])
 end

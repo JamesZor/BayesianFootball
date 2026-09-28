@@ -225,6 +225,28 @@ end
     @test count("| `same` |", md) == 12  # headline + five cohort tables per panel
 end
 
+@testset "Leaderboard retains every within-panel control pairing" begin
+    panel_a = "56+57|24/25,25/26|n=710"
+    panel_b = "56+57|23/24,24/25,25/26|n=1070"
+    ctl_a = H.RunRef("base_a", "synthetic", uuid4(), :control)
+    ctl_b = H.RunRef("base_b", "synthetic", uuid4(), :control)
+    arm = H.RunRef("arm", "synthetic", uuid4(), :candidate)
+    scores = [H._score_row(ref, "target", "all", "logloss", 0.6, NaN, NaN, 1, 1;
+                           panel = panel)
+              for panel in (panel_a, panel_b), ref in (ctl_a, ctl_b, arm)]
+    rows = NamedTuple[vec(scores)...]
+    append!(rows, [H._score_row(arm, "target", "all", "delta_logloss_vs_control",
+                                delta, delta - 0.01, delta + 0.01, 1, 1;
+                                control_run_id = ctl.run_id, panel = panel)
+                   for panel in (panel_a, panel_b), (ctl, delta) in ((ctl_a, -0.01), (ctl_b, 0.02))])
+    board = H.leaderboard(DataFrame(rows))
+    paired = filter(:model => ==("arm"), board)
+    @test nrow(paired) == 4
+    @test all(g -> Set(g.control_name) == Set(["base_a", "base_b"]),
+              groupby(paired, :panel))
+    @test Set(paired.delta_vs_control) == Set([-0.01, 0.02])
+end
+
 @testset "Harness per-subset score row counts" begin
     frame = DataFrame(match_id = repeat([1, 2], inner = 7),
         selection = repeat([:home, :draw, :away, :over_25, :under_25,

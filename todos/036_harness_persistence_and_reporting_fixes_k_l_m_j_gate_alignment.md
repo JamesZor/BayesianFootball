@@ -4,7 +4,7 @@
 |---|---|
 | ID | 036 |
 | Title | Harness persistence and reporting fixes (k, l, m, j, gate alignment) |
-| Status | ACTIVE |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-09-28 |
@@ -85,6 +85,8 @@ test obligations are in the brief `experiments/pi_harness_klm_prompt.md`.
   (grill-me, 2026-09-28), and the build is delegated to pi-solo (`openai-codex/gpt-6-sol`,
   thinking high) on `fix/harness-klm`. Review is by Claude CLI (Opus 5.5) at the end.
 
+- [2026-09-28 @pi] Partial build paused under the work package §6: all 12 v1.1 MAP-screen UUIDs lack a persisted `runs` row, so `scripts/score_runs.jl` cannot re-score them at v1.2 without re-fitting MAP (forbidden by §0). See `docs/architecture/harness_klm_report.md` for the read-only SQL evidence, completed test counts, and decision required. Production untouched.
+
 ## Verification & Findings
 
-Not run yet.
+Partial integration: `test/test_extension.jl` 43/43 (27.0s); `test/test_db_storage.jl` 133/133 (33.5s), both on the separate beast test database. Full acceptance not run; blocked on the MAP-screen decision.

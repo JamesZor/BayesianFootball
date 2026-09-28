@@ -208,6 +208,8 @@ end
             run_id = save_fit(fit, storage)
             @test run_id isa UUID
             @test save_fit(fit, storage) == run_id # config-hash deduplication
+            @test_throws ErrorException save_fit(fit, storage; on_duplicate = :error)
+            @test_throws ErrorException save_fit(fit, storage; on_duplicate = :ignore)
             @test length(config_hash(fit, storage)) == 64
 
             loaded = load_fit(run_id, storage)
@@ -216,6 +218,44 @@ end
             @test loaded.latents.match_ids == fit.latents.match_ids
             @test loaded.latents.λ_home == fit.latents.λ_home
             @test Array(loaded[1].chain) == Array(fit[1].chain)
+            @test BayesianFootball.Harness._structural_equal(loaded.config, fit.config)
+            @test BayesianFootball.Harness._structural_equal(loaded.diagnostics, fit.diagnostics)
+            @test BayesianFootball.Harness._structural_equal(loaded.metadata, fit.metadata)
+            @test length(loaded.folds) == length(fit.folds)
+
+            @testset "Legacy single-blob compatibility and cascade" begin
+                inf = Training.Inference
+                conn = inf._db_connect(storage)
+                try
+                    rows = inf._db_rows(conn, """
+                        SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;
+                    """, (string(run_id),))
+                    @test rows.layout == ["per_fold"]
+                    @test inf._db_rows(conn, """
+                        SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                    """, (string(run_id),)).n[1] == length(fit)
+                    # Simulate a pre-upgrade row, without changing the original test run.
+                    legacy_cfg = FitConfig(name = "legacy_$(uuid4())", model = fit.config.model,
+                        splitter = fit.config.splitter, sampler = fit.config.sampler,
+                        execution = fit.config.execution, save_dir = fit.config.save_dir)
+                    legacy_fit = Fit(legacy_cfg, fit.folds, fit.latents, fit.diagnostics,
+                                     fit.metadata, fit.save_path)
+                    legacy_id = save_fit(legacy_fit, storage)
+                    inf._db_exec_binary(conn, """
+                        UPDATE fit_artifacts SET layout = 'single', fit_blob = \$2::bytea
+                        WHERE run_id = \$1::uuid;
+                    """, (string(legacy_id),), inf._db_artifact_blob(legacy_fit))
+                    inf._db_exec(conn, "DELETE FROM fit_fold_artifacts WHERE run_id = \$1::uuid;",
+                                 (string(legacy_id),))
+                    old = load_fit(storage, legacy_id)
+                    @test Array(old[1].chain) == Array(legacy_fit[1].chain)
+                    @test old.latents.λ_home == legacy_fit.latents.λ_home
+                    inf._db_exec(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
+                                 (string(legacy_id),))
+                finally
+                    close(conn)
+                end
+            end
 
             @testset "Binary bytea parameters carry an over-1GB-hex artifact" begin
                 inference = BayesianFootball.Training.Inference
@@ -351,6 +391,9 @@ end
                 result_set = LibPQ.execute(conn, "DELETE FROM runs WHERE run_id = \$1::uuid;",
                                            (string(run_id),))
                 close(result_set)
+                @test only(DataFrame(LibPQ.execute(conn, """
+                    SELECT count(*)::int AS n FROM fit_fold_artifacts WHERE run_id = \$1::uuid;
+                """, (string(run_id),))).n) == 0
                 config_set = LibPQ.execute(conn,
                     "DELETE FROM config_registry WHERE experiment_name = \$1;", (experiment,))
                 close(config_set)

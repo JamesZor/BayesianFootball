@@ -119,6 +119,39 @@ BayesianFootball.Models.PreGame.Builder.guard_describe(::TapeGateScalarClamp) =
         @test sum(stored_df.status .== "fail") == 2
         @test sum(stored_df.severity .== "hard") == 2
         @test sum(stored_df.severity .== "review") == 1
+        @test isempty(records[2].value)
+
+        # Expected diagnostic failures carry their metrics through the durable store.
+        metrics = (; max_rhat = 1.06, divergences = 12)
+        Harness._run_diagnostic!(records, base, "metrics", "review") do
+            throw(Harness.DiagnosticFailure(metrics, "R-hat exceeded"))
+        end
+        Harness.write_checks!(store, records[end:end])
+        saved = only(eachrow(Harness.read_checks(store; check = "metrics")))
+        @test saved.value == metrics
+        @test saved.status == "fail"
+        @test saved.detail == "R-hat exceeded"
+    end
+
+    @testset "Harness-only convergence rule" begin
+        summary = (; max_rhat = 1.04, min_ess_bulk = 300.0, min_ess_tail = 300.0,
+                    n_divergent = 0, divergence_rate = 0.0, min_bfmi = 0.2,
+                    treedepth_rate = 0.1, thresholds = Training.ConvergenceThresholds(),
+                    abstained = String[])
+        value = Harness._harness_convergence_value(summary)
+        @test value.passed && length(value.notes) == 4
+        @test Harness._harness_convergence_value(merge(summary, (; max_rhat = 1.05))).passed
+        @test Harness._harness_convergence_value(merge(summary, (; divergence_rate = 0.001))).passed
+        for bad in (merge(summary, (; max_rhat = 1.06)),
+                    merge(summary, (; divergence_rate = 0.0011)))
+            records = NamedTuple[]
+            Harness._run_diagnostic!(records, (; run_id = nothing), "convergence", "review") do
+                Harness._harness_convergence_value(bad)
+            end
+            @test only(records).status == "fail"
+            @test only(records).value.max_rhat == bad.max_rhat
+            @test only(records).value.divergence_rate == bad.divergence_rate
+        end
     end
 
     @testset "3. Grid stage refuses without passing smoke" begin
