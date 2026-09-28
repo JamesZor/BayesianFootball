@@ -861,15 +861,22 @@ end
 function load_fit(run_id::UUID, storage::PostgresStorage)
     conn = _db_connect(storage)
     try
-        layout = _db_rows(conn,
-            "SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
-        nrow(layout) == 1 || error("load_fit: no PostgreSQL fit artefact for run $run_id.")
+        # Production may still have the pre-upgrade schema during the read-only build phase.
+        # Absence of the marker unambiguously means every existing row is a legacy full Fit.
+        layout = if _db_has_column(conn, "fit_artifacts", "layout")
+            rows = _db_rows(conn,
+                "SELECT layout FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
+            nrow(rows) == 1 || error("load_fit: no PostgreSQL fit artefact for run $run_id.")
+            String(rows.layout[1])
+        else
+            "single"
+        end
         blob = _db_query_blob(conn,
             "SELECT fit_blob FROM fit_artifacts WHERE run_id = \$1::uuid;", (string(run_id),))
         blob === nothing && error("load_fit: missing shell/blob for run $run_id.")
         fit = _db_artifact_value(blob)
         fit isa Fit || error("load_fit: PostgreSQL artefact for $run_id holds $(typeof(fit)).")
-        if layout.layout[1] == "per_fold"
+        if layout == "per_fold"
             folds = FoldFit[]
             for placeholder in fit.folds
                 fold_blob = _db_query_blob(conn, """
@@ -885,8 +892,8 @@ function load_fit(run_id::UUID, storage::PostgresStorage)
             end
             fit = Fit(fit.config, _inf_narrow(folds), fit.latents, fit.diagnostics,
                       fit.metadata, fit.save_path)
-        elseif layout.layout[1] != "single"
-            error("load_fit: unknown layout $(layout.layout[1]) for run $run_id")
+        elseif layout != "single"
+            error("load_fit: unknown layout $layout for run $run_id")
         end
         latents = _db_load_count_latents(conn, run_id)
         latents === nothing && return fit

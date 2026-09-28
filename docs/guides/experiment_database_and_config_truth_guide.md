@@ -427,7 +427,8 @@ Indexes and constraints: unique `(experiment_name, name)`; unique `idx_config_re
 
 New runs store one small shell (config, diagnostics, metadata, ordered fold metadata) and
 serialize/compress one fold at a time, below PostgreSQL's 1 GiB per-field limit. `load_fit`
-reassembles fold blobs in shell order; legacy `single` rows load unchanged. Both layouts replace
+reassembles fold blobs in shell order; legacy `single` rows load unchanged (even before the
+`layout` column is installed, when its absence denotes the legacy schema). Both layouts replace
 their latent panel with the relational copy when `match_latents` rows exist. `extend_fit`
 appends fold blobs without rewriting existing ones for new runs; a legacy extension retains
 the original whole-fit rewrite and layout.
