@@ -1,0 +1,53 @@
+run,source,instant,family,shape,n_poisson,n_reshaped,dropped,added,d_clv_pp,d_ev2
+m12_td,archive LTP,T−60,1X2,"(b) bivariate λ₃, means held",338,338,0,0,0.0,0.0
+m12_td,archive LTP,T−60,OU2.5,"(b) bivariate λ₃, means held",77,77,0,0,0.0,0.0
+m12_td,archive LTP,T−25,1X2,"(b) bivariate λ₃, means held",530,530,0,0,0.0,0.0
+m12_td,archive LTP,T−25,OU2.5,"(b) bivariate λ₃, means held",133,133,0,0,0.0,0.0
+m12_td,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",338,358,13,33,0.05909015666313633,0.19154339682743737
+m12_td,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",77,79,0,2,0.056055967454746294,0.10773062047952053
+m12_td,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",530,547,30,47,0.05212501484238313,0.19412500083446593
+m12_td,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",133,141,1,9,0.05112918574187847,0.11526060791263126
+m05_joint_td,archive LTP,T−60,1X2,"(b) bivariate λ₃, means held",336,336,0,0,0.0,0.0
+m05_joint_td,archive LTP,T−60,OU2.5,"(b) bivariate λ₃, means held",73,73,0,0,0.0,0.0
+m05_joint_td,archive LTP,T−25,1X2,"(b) bivariate λ₃, means held",528,528,0,0,0.0,0.0
+m05_joint_td,archive LTP,T−25,OU2.5,"(b) bivariate λ₃, means held",133,133,0,0,0.0,0.0
+m05_joint_td,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",336,349,19,32,-0.05621197895377994,-0.14902748111642472
+m05_joint_td,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",73,75,1,3,0.009985296287086415,0.024458740865697992
+m05_joint_td,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",528,542,30,44,0.018216141180861234,0.08866243586002215
+m05_joint_td,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",133,137,4,8,0.01868337736841364,0.0436430554076368
+FLOOR s12_m01_td_poisson,archive LTP,T−60,1X2,"(b) bivariate λ₃, means held",323,323,0,0,0.0,0.0
+FLOOR s12_m01_td_poisson,archive LTP,T−60,OU2.5,"(b) bivariate λ₃, means held",66,66,0,0,0.0,0.0
+FLOOR s12_m01_td_poisson,archive LTP,T−25,1X2,"(b) bivariate λ₃, means held",544,544,0,0,0.0,0.0
+FLOOR s12_m01_td_poisson,archive LTP,T−25,OU2.5,"(b) bivariate λ₃, means held",129,129,0,0,0.0,0.0
+FLOOR s12_m01_td_poisson,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",323,345,13,35,0.003546284475681949,-0.017306536793922245
+FLOOR s12_m01_td_poisson,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",66,70,1,5,0.06408418611850432,0.1441699889207284
+FLOOR s12_m01_td_poisson,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",544,559,18,33,0.01612358729428312,0.07687199256381982
+FLOOR s12_m01_td_poisson,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",129,126,5,2,0.014793500432635984,0.03279744343628921
+grw_spfl_joint,archive LTP,T−60,1X2,"(b) bivariate λ₃, means held",322,322,0,0,0.0,0.0
+grw_spfl_joint,archive LTP,T−60,OU2.5,"(b) bivariate λ₃, means held",92,92,0,0,0.0,0.0
+grw_spfl_joint,archive LTP,T−25,1X2,"(b) bivariate λ₃, means held",528,528,0,0,0.0,0.0
+grw_spfl_joint,archive LTP,T−25,OU2.5,"(b) bivariate λ₃, means held",177,177,0,0,0.0,0.0
+grw_spfl_joint,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",322,348,21,47,-0.02299439676678583,-0.11472754749286673
+grw_spfl_joint,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",92,91,1,0,-0.018926158209791502,-0.034518923456869244
+grw_spfl_joint,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",528,577,33,82,-0.008032073998010703,-0.01405577258233709
+grw_spfl_joint,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",177,178,0,1,-0.006154420504780239,-0.012545404241675273
+td_lower_a2full_carry_jump,archive LTP,T−60,1X2,(a) Dixon–Coles ρ,324,350,31,57,-0.04240930373398588,-0.1315235577618339
+td_lower_a2full_carry_jump,archive LTP,T−60,OU2.5,(a) Dixon–Coles ρ,79,79,0,0,0.0,0.0
+td_lower_a2full_carry_jump,archive LTP,T−25,1X2,(a) Dixon–Coles ρ,533,558,53,78,0.04991998583857593,0.18420716741281035
+td_lower_a2full_carry_jump,archive LTP,T−25,OU2.5,(a) Dixon–Coles ρ,132,132,0,0,0.0,0.0
+td_lower_a2full_carry_jump,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",324,336,27,39,0.025463816780206705,0.07243924484577713
+td_lower_a2full_carry_jump,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",79,81,1,3,-0.0028318406839424326,0.008941969667945582
+td_lower_a2full_carry_jump,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",533,534,46,47,0.0523742936335313,0.1838005191151495
+td_lower_a2full_carry_jump,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",132,136,3,7,-0.0088683302416585,-0.010908804862578725
+grw_step_a2_carry_jump,archive LTP,T−60,1X2,(a) Dixon–Coles ρ,318,342,31,55,-0.01386554237971771,-0.09853241532995671
+grw_step_a2_carry_jump,archive LTP,T−60,OU2.5,(a) Dixon–Coles ρ,101,101,0,0,0.0,0.0
+grw_step_a2_carry_jump,archive LTP,T−25,1X2,(a) Dixon–Coles ρ,516,553,54,91,0.0049987536873851435,0.029081949897365345
+grw_step_a2_carry_jump,archive LTP,T−25,OU2.5,(a) Dixon–Coles ρ,178,178,0,0,0.0,0.0
+grw_step_a2_carry_jump,archive LTP,T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",318,337,22,41,-0.057841872649837145,-0.23714943081500783
+grw_step_a2_carry_jump,archive LTP,T−60,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",101,100,1,0,0.0041421397181271025,0.00906220782261391
+grw_step_a2_carry_jump,archive LTP,T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",516,538,39,61,0.020746161345233216,0.09871379817981041
+grw_step_a2_carry_jump,archive LTP,T−25,OU2.5,"(m) market bivariate + COM (0.08, 1.08), fixed",178,174,4,0,0.022564997210198452,0.04457477782800645
+grw_spfl_joint,26/27 order book (back),T−60,1X2,"(b) bivariate λ₃, means held",62,62,0,0,0.0,0.0
+grw_spfl_joint,26/27 order book (back),T−25,1X2,"(b) bivariate λ₃, means held",70,70,0,0,0.0,0.0
+grw_spfl_joint,26/27 order book (back),T−60,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",62,65,3,6,0.07934378624767091,0.19048674807637567
+grw_spfl_joint,26/27 order book (back),T−25,1X2,"(m) market bivariate + COM (0.08, 1.08), fixed",70,75,4,9,0.01250872207505671,-0.03813306922960624

@@ -54,6 +54,11 @@ Code: `l01_clv_napkin.jl` (loader) and `r01_clv_napkin.jl` (runner). Every numbe
     add nothing detectable on top of the HT score, or on top of the HT market itself. The best
     use of the model is weight 0.13 in a log-pool, which ties the market. Model-guided closing of a
     pre-match back does not beat holding.
+  - **§17 (brief 08), is our score grid mis-weighted?** Only mildly. League One/Two narrow away
+    wins (0-1, 1-2) are over-weighted and 1-1/2-2 under-weighted, in the market's direction, and
+    total goals are less dispersed than our grids imply (variance ratio 0.86–0.91). No one-shape
+    reshape fitted on held-out seasons fixes it out of sample, the market's own §14 shape makes
+    exact scores worse, and none changes the betting picture.
 - **Compression doesn't explain CLV.** On W0/W1 the observation model (joint pxG vs goals-only)
   does. On W2, the ρ = +0.64 comes from the pooled-TD arms, not from the slope.
 
@@ -2158,4 +2163,257 @@ read-only betdb SELECTs and runs no sampling:
 
 ```bash
 julia --project -t 16 current_development/clv_napkin/r07_halftime.jl > /root/BF_runs/logs/clv_napkin/r07_run.log 2>&1
+```
+
+## 17. Is our score grid mis-weighted?
+
+Brief 08. Code: `l08_score_grid.jl` (loader) and `r08_score_grid.jl` (runner). Results are in
+`out/r08_*.csv`, with the full O / E / residual tables in `out/r08_residual_tables.txt`; the run
+log is `out/r08_run.log`. There is no MCMC; the only fits are 1–2 parameter maximum-likelihood
+fits on training seasons.
+
+**Answer.**
+- **Is the grid mis-weighted? Mildly, in League One/Two, and not in the way the headline
+  "Poisson draws" story suggests.** Summed over all held-out folds (710 matches on the W0/W1
+  panels, 1,070 on the W2 panels):
+  - **Narrow away wins are over-weighted:** 0-1 by 1.9–2.7 pp of matches and 1-2 by about 2 pp.
+    Away wins by one goal come out at 101 observed vs 130–133 expected on W0/W1, outside the 95%
+    parametric band.
+  - **1-1 is under-weighted** by 1.2–1.5 pp, and 2-2 by up to 1.5 pp.
+  - **Big away wins are under-weighted:** GD ≤ −4 is 18 observed vs about 10.5 expected.
+  - **Totals are the wrong shape:** 1-goal matches are over-predicted and 2- and 4-goal matches
+    under-predicted. The variance of total goals is only **0.86–0.91×** what the grids imply;
+    observed 2.43 against 2.77–2.82 on W0/W1, just outside the band.
+  - **Draws overall are about right in League One/Two:** 182 observed vs 180–183 expected on
+    W0/W1; 281 vs 267–268 on W2, inside the band. The missing 1-1/2-2 mass is offset by too much
+    0-0 for grw_spfl_joint and the W2 GRW.
+  - **The whole-table χ² is not decisive:** bootstrap p = 0.14–0.15 for the W0 runs and
+    0.02–0.06 for grw_spfl_joint and W2.
+- **Does it match the market's pattern?** Partly.
+  - The sign matches §14's market-minus-Poisson on 1-0, 0-1 (−), 1-1 and 2-2 (+), but ours is
+    about 2× larger on 1-1 and 4–6× larger on 0-1.
+  - 0-0 disagrees: the market adds 0-0 mass and our results say there is too much.
+  - On the Premiership/Championship monitor (both pooled GRW runs), the misfit is the draw:
+    +3.5 to +3.8 pp more draws than predicted (bootstrap p 0.02 / 0.003), with 0-0 +2.2 pp. It
+    comes with a goal level that is too high (2.97–2.98 predicted vs 2.67–2.69 observed), as in
+    §14.
+- **Which shape fixes it? None, out of sample, in League One/Two.** Keeping each posterior draw's
+  goal means and fitting one shape on training seasons:
+  - **Bivariate λ₃ goes to 0** in every League One/Two fit (0.003 at most).
+  - **COM ν flips between training seasons**, 0.86–0.89 on 24/25 vs 1.10–1.15 on 25/26. For the
+    W0/W1 runs it is significantly *worse* out of sample (exact-score log-loss +0.006 to +0.008
+    nats per match).
+  - **Dixon–Coles ρ:** −0.01 fitted on 24/25 and −0.13 on 25/26 for W0/W1, −0.07 for W2. It
+    moves the exact-score log-loss by −0.002 to +0.0025, with every CI spanning 0.
+  - **The market's §14 shape applied as-is** (bivariate + COM, λ₃ 0.08, ν 1.08) makes the exact
+    score **worse** by +0.011 to +0.013 (CIs above 0). The market's ρ = −0.04 is the only
+    near-neutral option (−0.001, CI spans 0).
+  - On the monitor, the market's ρ and the fitted λ₃ ≈ 0.025 give small but real 1X2 and O/U
+    gains (−0.0005 to −0.0025 nats).
+- **Does it change the betting picture? No.**
+  - Where the best out-of-sample shape is effectively "none" (W0/W1), no bet changes.
+  - With DC (W2) or the market's shape, 10–30% of the 1X2 bet list at T−25/T−60 changes
+    (dropped + added). Archive CLV moves by −0.06 to +0.06 pp and EV@close by −0.24 to +0.19
+    points, all far inside the CIs.
+  - O/U 2.5 bets barely move.
+  - On the 26/27 order book, the market shape adds 3–5 bets and back-price CLV stays negative
+    (−0.58 to −0.59 pp reshaped, vs −0.60 to −0.66 pp unreshaped).
+- **What to do instead:** don't bolt on a global shape parameter.
+  - The consistent League One/Two error is **goal difference** (too many narrow away wins, too
+    few big ones, too few 1-1s), with totals under-dispersed. A scoreline-level obs-model change
+    would need to be league- and season-stable to earn its keep, and on two held-out seasons none
+    is.
+  - The larger, stable misfits are the monitor's goal level and draw rate. Those are rate and
+    league-offset problems, not shape.
+
+### 17.1 Data and definitions
+
+- **Grids:** all six runs are `CountLatents{Float64,Nothing}`, i.e. a posterior mixture of
+  independent Poissons. Each match's grid is the src kernel (`Predictions.compute_score_grid!`)
+  averaged over **every** posterior draw (1,000–4,000).
+- **Panels:**
+  - League One/Two held-out targets on each run's own panel: W0 and W1 on 24/25–25/26 (710
+    matches), W2 on 23/24–25/26 (1,070).
+  - The Premiership/Championship monitor for the two pooled GRW runs (751 and 1,129 matches).
+  - Panels are never pooled.
+- **O vs E:**
+  - E is Σ grid over 0–4 and 5+ per side; O is the count.
+  - Residuals are (O − E)/√E.
+  - Pearson χ² pools the cells with E < 5 into one.
+  - The p-value and every "band" come from a **parametric bootstrap**: 2,000 replicate panels,
+    each match's score drawn from its own grid, so cell dependence is handled.
+  - Dispersion compares the observed variance of total goals with the model's (mean per-match
+    variance + variance of per-match means).
+- **Reshaping:**
+  - Each shape is applied **per posterior draw** to 400 evenly thinned draws, holding that
+    draw's (λh, λa):
+    - (a) DC ρ on 0-0/1-0/0-1/1-1, cells clamped at 0;
+    - (b) bivariate: U = λh − λ₃, V = λa − λ₃, with λ₃ capped at 0.95·min(λh, λa);
+    - (c) COM ν, with rates solved per draw so each marginal mean stays λ;
+    - (d) bivariate + COM.
+  - Each shape is fitted by exact-score MLE on training seasons.
+  - W2 trains on 23/24 and tests on 24/25–25/26. The W0/W1 panels have no 23/24, so they use a
+    **two-way season split**: fit 24/25 → score 25/26, fit 25/26 → score 24/25, pooled.
+  - Held-out differences use a paired, match-day-clustered bootstrap against the unreshaped grid
+    built from the same thinned draws.
+- **Betting (§3):**
+  - The best shape per run is the one with the largest out-of-sample exact-score gain. The
+    market's §14 shape is also run as a fixed alternative.
+  - **Archive:** T−25 and T−60 LTP entries, 1X2 and O/U 2.5, edge ≥ 2 pp, on the test matches
+    (l01 method; each match uses the θ fitted on the other season).
+  - **26/27:** §13's back-price order-book view for grw_spfl_joint (θ fitted on its whole
+    24/25–25/26 panel).
+
+### 17.2 Observed vs expected (League One/Two)
+
+Standardised residuals (O − E)/√E for m12_td (710 matches). The other W0 runs are within ±0.1 of
+it, and grw_spfl_joint and the W2 runs are in `r08_residual_tables.txt`:
+
+```
+        a0      a1      a2      a3      a4     a5+
+h0    -0.69   -1.89   +0.23   +1.55   +2.32   +0.77
+h1    -0.43   +1.00   -2.13   -0.01   +0.14   +0.84
+h2    +1.26   +0.84   +0.16   -0.56   +0.72   -0.62
+h3    +0.40   +1.77   -1.49   -1.01   +0.28   -0.93
+h4    +0.34   -0.89   -0.69   -0.52   -0.97   -0.56
+h5+   +1.74   +0.74   -1.05   -1.07   +1.03   -0.35
+```
+
+(grw_spfl_joint: 0-0 −2.05, 0-1 −2.40, 1-2 −1.48, 1-1 +1.17, 3-1 +2.16, 0-4 +2.48.
+td_lower_a2full_carry_jump: 0-1 −2.29, 1-2 −2.03, 2-2 +1.50, 5+-0 +3.12.)
+
+| Run, panel | n | χ² (bootstrap p) | Draws O / E [95% band] | Mean goals O / E | Var(total) O / model [band] (within + between) | Ratio |
+|---|---:|---|---|---|---|---:|
+| m12_td, L1/L2 | 710 | 28.8 (0.14) | 182 / 180.5 [159, 204] | 2.72 / 2.71 | 2.43 / 2.77 [2.47, 3.09] (2.74 + 0.03) | 0.88 |
+| m05_joint_td, L1/L2 | 710 | 28.9 (0.15) | 182 / 180.1 [158, 203] | 2.72 / 2.72 | 2.43 / 2.81 [2.50, 3.14] | 0.86 |
+| FLOOR s12_m01, L1/L2 | 710 | 29.2 (0.15) | 182 / 179.9 [158, 202] | 2.72 / 2.73 | 2.43 / 2.82 [2.51, 3.15] | 0.86 |
+| grw_spfl_joint, L1/L2 | 710 | 36.3 (0.02) | 182 / 183.3 [161, 207] | 2.72 / 2.58 | 2.43 / 2.80 [2.49, 3.15] (2.68 + 0.12) | 0.87 |
+| td_lower_a2full_carry_jump, L1/L2 | 1,070 | 35.4 (0.06) | 281 / 266.9 [239, 296] | 2.77 / 2.74 | 2.63 / 2.89 [2.63, 3.18] | 0.91 |
+| grw_step_a2_carry_jump, L1/L2 | 1,070 | 38.4 (0.04) | 281 / 267.7 [242, 295] | 2.77 / 2.68 | 2.63 / 2.96 [2.68, 3.26] | 0.89 |
+| grw_spfl_joint, Prem/Champ | 751 | 49.6 (0.005) | **199 / 172.4 [150, 194]** | 2.67 / **2.97** | 2.67 / 3.41 [3.04, 3.83] | 0.78 |
+| grw_step_a2_carry_jump, Prem/Champ | 1,129 | 75.7 (< 0.001) | **300 / 257.1 [229, 284]** | 2.69 / **2.98** | 2.67 / 3.39 [3.08, 3.72] | 0.79 |
+
+Total goals, O / E (m12_td, League One/Two; `r08_totals.csv` has every run):
+
+| Total | 0 | 1 | 2 | 3 | 4 | 5+ |
+|---|---|---|---|---|---|---|
+| O / E [band] | 44 / 48.9 | **111 / 129 [109, 149]** | **192 / 172 [151, 195]** | 154 / 155 | **122 / 105 [88, 124]** | 87 / 100 |
+
+Goal difference (home − away), O / E:
+
+| Run, panel | ≤ −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | ≥ +4 |
+|---|---|---|---|---|---|---|---|---|---|
+| m12_td, L1/L2 | **18 / 10.5** | 32 / 25.9 | 70 / 67.7 | **101 / 133** | 182 / 180 | 147 / 151 | 102 / 86 | 35 / 37 | 23 / 18 |
+| td_lower (W2), L1/L2 | **29 / 19.0** | 50 / 41.5 | 102 / 104 | **154 / 199** | 281 / 267 | 224 / 222 | 139 / 129 | 51 / 58 | 40 / 31 |
+| grw_step (W2), Prem/Champ | **19 / 30.9** | 50 / 49 | **79 / 108** | 194 / 194 | **300 / 257** | 229 / 221 | 144 / 140 | 62 / 73 | 52 / 55 |
+
+(Bold = outside the 95% parametric band.)
+
+**Side by side with the market** (pp of matches). Ours is (O − E)/n; the market's is §14's
+market CS − Poisson fitted to its own 1X2 + O/U 2.5:
+
+| Source | 0-0 | 1-0 | 0-1 | 1-1 | 2-2 | Draw |
+|---|---:|---:|---:|---:|---:|---:|
+| m12_td, L1/L2 | −0.68 | −0.50 | −2.07 | +1.30 | +0.14 | +0.22 |
+| grw_spfl_joint, L1/L2 | −2.24 | −1.69 | −2.73 | +1.50 | +0.88 | −0.18 |
+| td_lower (W2), L1/L2 | −0.43 | −0.33 | −2.04 | +1.23 | +1.05 | +1.32 |
+| grw_step (W2), L1/L2 | −1.28 | −1.02 | −2.31 | +1.43 | +1.51 | +1.24 |
+| grw_spfl_joint, Prem/Champ | +2.16 | +0.93 | −0.49 | +0.11 | +0.88 | +3.54 |
+| grw_step (W2), Prem/Champ | +2.23 | +0.47 | −0.06 | +0.21 | +0.96 | +3.80 |
+| **Market − Poisson (§14), L1** | +0.35 | −0.37 | −0.46 | +0.62 | +0.55 | +1.74 |
+| **Market − Poisson (§14), L2** | +0.25 | −0.40 | −0.49 | +0.60 | +0.45 | +1.53 |
+
+A single cell's (O − E)/n has a standard error of about 1–1.5 pp at n = 710. Only the patterns
+repeated across runs (0-1 −, 1-1 +, GD −1 −) and the monitor's draw excess stand out from noise.
+
+### 17.3 Keep the rates, change only the shape
+
+Fitted parameters on training seasons (League One/Two), next to the market's §14 values:
+
+| Run | Split | DC ρ | Bivariate λ₃ | COM ν | Bivariate + COM (λ₃, ν) |
+|---|---|---|---|---|---|
+| m12_td | 24/25 → 25/26 / 25/26 → 24/25 | −0.011 / −0.128 | 0 / 0 | 0.86 / 1.10 | (0, 0.86) / (0, 1.10) |
+| m05_joint_td | same | −0.013 / −0.128 | 0 / 0 | 0.87 / 1.12 | (0, 0.87) / (0, 1.12) |
+| FLOOR s12_m01 | same | −0.008 / −0.125 | 0 / 0 | 0.89 / 1.11 | (0, 0.89) / (0, 1.11) |
+| grw_spfl_joint | same | −0.011 / −0.159 | 0 / 0 | 0.88 / 1.15 | (0, 0.88) / (0, 1.15) |
+| td_lower (W2) | 23/24 → 24/25–25/26 | −0.070 | 0 | 1.01 | (0, 1.01) |
+| grw_step (W2) | 23/24 → 24/25–25/26 | −0.071 | 0.003 | 1.02 | (0, 1.02) |
+| grw_step (W2), Prem/Champ | same | −0.081 | 0.025 | 1.06 | (0.022, 1.06) |
+| **Market, §14** | CS books, 54–57 | **−0.04** | **0.08–0.09** | **1.08** | **(0.08, 1.08)** |
+
+**Held-out change vs the unreshaped grid** (nats per match, paired clustered 95% CI; negative is
+better). League One/Two:
+
+| Run | Shape | Exact score | 1X2 | O/U 2.5 | P(draw) predicted / observed |
+|---|---|---|---|---|---|
+| m12_td | (a) DC | +0.0017 [−0.0027, +0.0061] | +0.0029 [−0.0005, +0.0063] | 0 | 0.271 / 0.256 |
+| m12_td | (c) COM | **+0.0069 [+0.0017, +0.0119]** | +0.0009 | +0.0004 | 0.254 / 0.256 |
+| m12_td | market DC −0.04 (fixed) | −0.0011 [−0.0032, +0.0010] | +0.0001 | 0 | 0.264 / 0.256 |
+| m12_td | market bivariate + COM (fixed) | **+0.0127 [+0.0065, +0.0196]** | −0.0001 | 0 | 0.266 / 0.256 |
+| grw_spfl_joint | (a) DC | +0.0025 [−0.0027, +0.0076] | **+0.0049 [+0.0008, +0.0092]** | 0 | 0.278 / 0.256 |
+| grw_spfl_joint | (c) COM | **+0.0084 [+0.0028, +0.0140]** | +0.0009 | +0.0005 | 0.259 / 0.256 |
+| grw_spfl_joint | market bivariate + COM (fixed) | **+0.0133 [+0.0066, +0.0207]** | +0.0016 | +0.0002 | 0.270 / 0.256 |
+| td_lower (W2) | (a) DC | −0.0015 [−0.0052, +0.0020] | +0.0003 | 0 | 0.270 / 0.256 |
+| td_lower (W2) | market bivariate + COM (fixed) | **+0.0117 [+0.0057, +0.0181]** | −0.0003 | 0 | 0.265 / 0.256 |
+| grw_step (W2) | (a) DC | −0.0019 [−0.0054, +0.0014] | +0.0005 | 0 | 0.268 / 0.256 |
+| grw_step (W2) | market DC −0.04 (fixed) | −0.0014 [−0.0034, +0.0005] | +0.0001 | 0 | 0.261 / 0.256 |
+
+- **Other cells:** bivariate λ₃ (→ 0) changes nothing, to within 1e-6. m05 and the floor match
+  m12 to within ±0.001. The W2 COM fits (ν ≈ 1.01–1.02) change nothing (±0.0001).
+- **Monitor (Premiership/Championship):**
+  - grw_step's fitted λ₃ = 0.025 gives 1X2 −0.0006 [−0.0011, −0.0001] and O/U −0.0005
+    [−0.0008, −0.0002].
+  - The market's DC −0.04 gives 1X2 −0.0017 [−0.0033, −0.0002].
+  - grw_spfl_joint's COM ν ≈ 0.95–0.98 gives O/U −0.0007 [−0.0012, −0.0003].
+  - These are real but tiny (`r08_shape_test.csv`).
+
+### 17.4 Does it change the bets?
+
+Changes are the reshaped grid minus the unreshaped one, edge ≥ 2 pp (`r08_betting_changes.csv`;
+the level of each row is in `r08_betting.csv`):
+
+| Run | Shape | Market, instant | Bets (Poisson → reshaped) | Dropped / added | Δ CLV (pp) | Δ EV@close (pts) |
+|---|---|---|---|---|---:|---:|
+| W0 runs, grw_spfl_joint | best = bivariate (λ₃ → 0) | all | unchanged | 0 / 0 | 0 | 0 |
+| td_lower (W2) | DC ρ −0.07 | 1X2 T−25 | 533 → 558 | 53 / 78 | +0.05 | +0.18 |
+| td_lower (W2) | DC ρ −0.07 | 1X2 T−60 | 324 → 350 | 31 / 57 | −0.04 | −0.13 |
+| grw_step (W2) | DC ρ −0.07 | 1X2 T−25 | 516 → 553 | 54 / 91 | +0.00 | +0.03 |
+| m12_td | market bivariate + COM | 1X2 T−25 | 530 → 547 | 30 / 47 | +0.05 | +0.19 |
+| grw_spfl_joint | market bivariate + COM | 1X2 T−25 | 528 → 577 | 33 / 82 | −0.01 | −0.01 |
+| any run | any | O/U 2.5 | ±0–9 bets | | ≤ ±0.07 | ≤ ±0.15 |
+| grw_spfl_joint, 26/27 book (back) | market bivariate + COM | 1X2 T−60 / T−25 | 62 → 65 / 70 → 75 | 3 / 6, 4 / 9 | +0.08 / +0.01 | +0.19 / −0.04 |
+
+Every Δ is well inside the ±0.15–0.3 pp CLV and ±0.7–1.5 point EV CIs of the rows it compares.
+The 26/27 back-price CLV stays at −0.58 to −0.66 pp either way.
+
+### 17.5 Caveats
+
+- **Power:**
+  - 710 held-out matches per W0/W1 panel is small for 36 cells. Single-cell residuals of ±2 are
+    expected by chance in a table this size.
+  - The reliable signals are the ones repeated across runs, since they share the same matches
+    and outcomes: GD −1 over-predicted, total-goal under-dispersion, 1-1 under-weight. They are
+    correlated evidence from **one** set of outcomes, not independent replications.
+- **Split:**
+  - The W0/W1 shapes use a two-way season split (no 23/24 predictions exist on those panels), so
+    each test season is scored with a θ from the other.
+  - The flip in ν and ρ between 24/25 and 25/26 is itself the main finding: the League One/Two
+    shape isn't season-stable.
+- **Reshape approximations:**
+  - Reshaping uses 400 thinned draws per match; the unreshaped comparison uses the same draws.
+  - Bivariate λ₃ is capped at 0.95·min(λh, λa) per draw, which binds only for tiny λ.
+  - DC cells are clamped at 0.
+- **Monitor:** the monitor rows mix a goal-level bias (the models over-predict Premiership goals)
+  with shape. A shape parameter cannot fix a level error, and the monitor's draw excess is partly
+  that level error.
+- **Market comparison:** the market column is §14's CS books, which are thin in League One/Two
+  (98/60 matches), as noted there.
+- **Betting:** descriptive only, and all the CLV/EV levels are §3/§10/§13's.
+
+**Reproduce** (on `mcmc-beast` in `/root/BF_runs/clv_napkin_dev`; source `.env` without printing
+it). The run needs §13's DataStore and 26/27 extension in `out/` plus r05's `out/r05_residuals.csv`,
+takes about 4 minutes, makes read-only DB reads and loads the persisted fits, with no sampling:
+
+```bash
+julia --project -t 16 current_development/clv_napkin/r08_score_grid.jl > /root/BF_runs/logs/clv_napkin/r08_run.log 2>&1
 ```
