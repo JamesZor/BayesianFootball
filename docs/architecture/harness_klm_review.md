@@ -99,3 +99,58 @@ runtime-credential wrapper, and no credential was printed. All production access
 
 Housekeeping: afterwards the test DB was reset to an empty `public` schema, and the tmux
 session was closed.
+
+## Re-review 1 (Claude CLI, Opus 5.5, 2026-09-28) — head `b04abd02`
+
+**VERDICT: CHANGES_REQUIRED**
+
+F1 and F3–F11 are resolved, and F8's documentation-only disposition is acceptable. The F2 CSV
+fix restores every v1.1 (label, UUID) pairing and its m12_td delta. However, the same fix
+introduces a new **major (F12)**: runbook §2 would overwrite the existing v1.2 metric rows of
+the 12 W1 runs. As a result, six W1 board rows, including the W1 control `td_lower_joint`,
+would lose every headline metric. I found this with a read-only dry run of §2 and §4. The
+runbook's own gate would not catch it.
+
+### Disposition check
+
+| ID | Status | Evidence |
+|---|---|---|
+| F1 | **Resolved** | `parse_args` refuses `--test-db` for smoke, grid and portfolio before any I/O (`scripts/run_candidates.jl:69`). The runner suite tests both `parse_args` and `main()`. Screen was already safe. |
+| F2 | **Resolved as specified, but see F12** | CSV: 26 refs, with the 12 W1 UUIDs under their v1.1 labels in the `m12_td` group. Dry run: **26/26 scored, 0 failures, 250 s**. All **32/32** v1.1 first-table (label, UUID) pairs appear on the in-memory v1.2 board. All 12 W1 UUIDs carry both a `132df5c2` and a `97c7a3d9` delta, and the m12 Δs reproduce v1.1 exactly (e.g. `td_spfl_cups_joint` −0.00046, `s12_m02_td_joint` 0.00038, `g1_grw_all_spfl` 0.00307). |
+| F3 | **Resolved** | `assert_klm_test_database!` checks `current_database()` after connecting and before `ensure_schema!`. The runner suite's `?dbname=postgres` override test really ran: 182 = 165 + 17 new assertions, which includes that branch. |
+| F4 | **Resolved** | The merge splits on `[,;]` and trims. A `preserve_completed` upsert with an empty run list keeps `run_ids` byte-identical (DB test with a seeded `;` list). Production's W1 row is unchanged (`md5(run_ids)` = `4a164c17…`). |
+| F5 | **Resolved** | `save_fit` refuses with a clear error when the `layout` column is absent. `extend_fit` falls back to single-blob. Runbook §1 is marked "immediately after merge". The test simulates the old schema by renaming objects and restores it in `finally`. |
+| F6 | **Resolved** | `_chain_parity` compares values plus internals, names, `name_map` and `logevidence`. The round trip and `_fit_parity` both use it. Unit tests cover a changed internal and a renamed internal. |
+| F7 | **Resolved** | `main()` refusal tests, different per-panel deltas asserted per (panel, control), and exact `run_ids` equality in the rehearsal validator. |
+| F8 | **Accepted as documented** | The rationale holds. A failed smoke writes its rows with `run_id` NULL, and `harness_checks` has no invocation key, so "latest invocation" would be a timestamp heuristic. Doing it properly needs a new column. Production has zero failed hard smoke rows, so nothing is blocked. The guide's manual procedure is scoped, authorised and never automatic. Track it as a follow-up if smoke failures recur. |
+| F9 | **Resolved** | The harness guide states the R̂ > 1.05 / 0.1% rule and cites the constants. |
+| F10 | **Resolved** | The BFMI message says `<=`. `DualStorage` forwards `on_duplicate`, and both `:return` and `:error` are tested. The `g2` self-pair is annotated. |
+| F11 | **Resolved** | After each suite the test DB held `runs`/`config_registry`/`harness_experiments` = 0/0/0. |
+
+### New findings
+
+| ID | Severity | Location | Defect | Failure scenario | Suggested fix |
+|---|---|---|---|---|---|
+| F12 | **major** | `src/harness/store.jl:157` (`write_scores!` replace key); `src/harness/scoring.jl:585` (`leaderboard` groups by `model`); runbook §2 (lines 31, 45) | `write_scores!` replaces all rows sharing `(run_id, scorecard_version, control_run_id, stage, subset)`. The non-delta metrics (LL, ECE, compression, transition cohorts, …) have a **NULL** `control_run_id`. Re-scoring the 12 W1 UUIDs therefore **deletes their existing v1.2 metric rows (7,596 rows) and re-inserts them under the CSV label**. Only the `97c7a3d9` delta rows keep the native W1 label. `leaderboard` builds headline metrics per `(panel, run_id, model)`. | Read-only dry run on `b04abd02`: score the CSV in memory, apply `write_scores!`'s replace-by-key to a copy of production v1.2, then run `leaderboard`. `td_lower_joint`, `td_lower_poisson`, `grw_lower_poisson`, `grw_spfl_poisson`, `grw_spfl_cups_poisson` and `grw_spfl_cups_joint` render with Target LL, 1X2 LL, ECE, Compression and all transition-cohort columns as **"—"** (NaN), next to their Δ vs `td_lower_joint`. So the W1 control's own row loses its numbers. The six same-label W1 rows are fine. Runbook §2 says `write_scores!` "adds the m12 pairing without erasing it" and that only v1.1 rows stay untouched; in fact it rewrites existing production v1.2 rows. The §4 gate (UUID/label presence and delta counts) passes regardless, so the regression would ship to `LEADERBOARD.md`. | Preferred, code only: in `leaderboard`, take the headline and extras from the whole `(panel, run_id)` group, because these metrics do not depend on the label. Then emit one row per (label, control) pairing present, where a label is paired with the controls of its own delta rows. Add a scoring test with a run carrying two labels, one of which owns the NULL-control metrics. Also correct runbook §2: it rewrites the 12 W1 runs' v1.2 non-delta rows, relabelled. Add a §4 gate that every grid board row has a finite Target LL. Alternative: re-score the W1 UUIDs under their native labels. That leaves the metrics intact but drops the six alias labels, which F2 required. |
+| F13 | minor | `src/harness/scoring.jl:583` | `control_name` is `first(g.model)` over the control run's `(panel, run_id)` rows. Once a UUID carries two labels (e.g. `97c7a3d9` = `td_lower_joint` / `s12_m02_td_joint` after §2), the name shown depends on row order. My first dry run, where the row order differed, printed `s12_m02_td_joint` as the control of all 12 W1 rows. The type-normalised run printed `td_lower_joint`. | The board can name the W1 control by its W0 alias. The numbers stay correct. | Prefer the label of the control's self-pair row (`run_id == control_run_id`), and fall back to `first(model)`. Or show the control UUID in a column. |
+
+### Commands run (mcmc-beast, clean `beast_checkout.sh b04abd02`, tmux `claude_klm_review`, logs `/root/BF_runs/logs/klm_review/rr1/`)
+
+The test DB was reset to an empty schema before the runs. Integration suites went through the
+existing runtime-credential wrapper. Production access was SELECT and `load_fit` only; the dry
+run calls no `write_scores!` and no `ensure_harness_schema!`.
+
+| Check | Result | Builder's claim |
+|---|---|---|
+| `test/test_db_storage.jl` | **154/154** | 154/154 |
+| `test/test_extension.jl` | **51/51** | 51/51 |
+| `test/harness_scoring_tests.jl` | **46/46** | 46/46 |
+| `test/harness_runner_tests.jl` | **182/182** | 182/182 |
+| Test-DB debris after each suite | 0/0/0 | 0/0/0 |
+| `scripts/validate_klm_large_roundtrip.jl` (strict `_chain_parity`) | **PASS**: 1,993,184,800 B, 120 folds, largest blob 28,621,776 B, save 11.31 s, load 5.55 s, peak RSS 6.42 GB | same |
+| F2/§2+§4 dry run (`f2_dryrun.jl`, then `f2_dryrun2.jl` with run-ID types normalised) | 26/26 scored in 250 s; 32/32 v1.1 pairs present; W1 deltas 12 × `132df5c2` + 12 × `97c7a3d9`; **6 W1 rows with NaN headline metrics (F12)** | not tested |
+| Production recheck (read-only) | 324 `fit_artifacts`, no `layout` column, no `fit_fold_artifacts` table, 20,262 v1.2 score rows, W1 register `completed` and unchanged | not executed by the builder |
+
+Not re-run in this round: the 12-cell screen rehearsal (563 s of MAP fitting; this round's screen
+path changes are covered by the runner/DB tests and the builder's log), the legacy loads (no
+change to `load_fit`) and the parallel suite. The test DB was reset to an empty schema afterwards.
