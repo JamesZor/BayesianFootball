@@ -39,6 +39,11 @@ Code: `l01_clv_napkin.jl` (loader) and `r01_clv_napkin.jl` (runner). Every numbe
     not +9.5%. The +9.5% was carried by stale early O/U 2.5 prices. EV@close crosses 0 between
     T−45m and T−25m, but coverage, staleness and missing volume data leave that window
     unproven as bettable.
+  - **§11–§12 (brief 03):** the early edge does *not* appear in the Premiership or
+    Championship (EV@close < 0 from T−24h in both), so it is probably a thin-market artefact.
+    Of six pre-registered price-movement hypotheses, only one confirmed: League Two prices
+    partly revert between T−6h and T−60m. Given the close, movement predicts nothing about
+    results, and no market-only rule clears commission.
 - **Compression doesn't explain CLV.** On W0/W1 the observation model (joint pxG vs goals-only)
   does. On W2, the ρ = +0.64 comes from the pooled-TD arms, not from the slope.
 
@@ -867,11 +872,293 @@ The earliest O/U 2.5 EV has a point of about +10% and a CI upper bound of +27% t
 **Reproduce:** on mcmc-beast, after r01 has written `out/probs.jls`, run
 `nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r02_clv_leadtime.jl`. It takes about 5–10 min.
 
+## 11. Lead time on 54/55
+
+Code: `r03_leadtime_monitor.jl`, which reuses the l02 definitions unchanged (loaded through `l03_price_movement.jl`). It reuses r01's `out/probs.jls` (`probs_monitor`), so nothing is re-priced. Output: `out/r03a_*.csv` and `out/r03a_run.log`.
+
+**Answer.** No: the early-entry 1X2 edge does not carry over to the Premiership or the Championship, so the League One/Two early edge of §10 should be read as a thin-market artefact until ladder data says otherwise.
+- **EV@close is negative everywhere after the first day.** Across the four pooled fits' held-out 54/55 latents, EV@close at 2% is negative at every instant from T−24h to T−10m in both leagues: 80 of 80 model × instant cells, ranging from −0.1% to −5.2%. The CI is wholly below 0 in 39 of 40 Premiership cells and 24 of 40 Championship cells.
+- **The only positive points** are the two GRW fits at the Premiership's earliest and T−48h books (+0.1% to +2.3%, CIs spanning 0). Those books are about 75 h out, on ungated LTPs.
+- **The Premiership has already priced what the models know.** From T−12h on, CLV is −0.10 to +0.20 pp and β given placebo is ≈ 0.
+- **The Championship behaves like a thinner lower-league market.** CLV is small and positive from T−3h to T−45m (up to +0.27), and β given placebo is above 0 at T−45m for three fits. But EV@close stays at −0.1% to −1.8%, and only about half as many fixtures are priced.
+- **Liquidity ranks as expected.** Median 1X2 ticks by T−25m are 196 in the Premiership, 51 in the Championship and 38 in League One/Two. The 56/57 early edge sits exactly where the market is thinnest and stalest, and the liquid tier shows none of it.
+
+### 11.1 Coverage and liquidity
+
+Each cell is the median number of 1X2 ticks per fixture (all runners) up to the instant, with the ticks in the 60 min before it in brackets.
+- **Universes:** 54/55 is the W2 monitor panel (23/24–25/26); 56/57 is §10's 710 fixtures.
+- **Championship prices are missing for 25/26:** the Betfair archive for 55 covers 22/23–24/25 only (TODO 033). Of the 535 Championship fixtures in the W2 panel, only 331 (62%) have any 1X2 tick. The Premiership has 98%.
+
+| instant | 54 Premiership | 55 Championship | 56/57 League One/Two (§10 universe) |
+|---|---|---|---|
+| T−48h | 12 (0) | 0 (0) | 0 (0) |
+| T−24h | 29 (1) | 4 (0) | 4 (0) |
+| T−12h | 60 (2) | 12 (0) | 10 (0) |
+| T−6h | 96 (8) | 22 (1) | 16 (1) |
+| T−3h | 133 (14) | 32 (3) | 24 (2) |
+| T−2h | 149 (16) | 37 (3) | 27 (2) |
+| T−90m | 158 (17) | 39 (3) | 29 (2) |
+| T−60m | 171 (21) | 42 (4) | 31 (3) |
+| T−45m | 184 (28) | 44 (5) | 33 (4) |
+| T−25m | 196 (36) | 51 (9) | 38 (8) |
+| T−10m | 210 (45) | 57 (13) | 44 (13) |
+| all pre-off | 224 | 65 | 51 |
+
+### 11.2 The curve per league (1X2, e = 2, view a)
+
+Each cell is **mean clv_pp / EV@close 2% (n bets)**.
+- **Bold** means the EV@close CI is wholly above 0 (no cell qualifies).
+- † means β given placebo has its CI above 0.
+- "Fixtures fresh" is the number of W2-panel fixtures with a fresh, complete 1X2 book, out of the panel.
+- W1 fits are scored on 24/25–25/26 and W2 fits on 23/24–25/26.
+
+**54 Premiership**
+
+| entry | fixtures fresh (W2 panel) | stale med (min) | lead | td_spfl_cups_joint (W1) | grw_spfl_joint (W1) | td_base (W2) | grw_step_a2_cj (W2) | NULL back all (W2 panel) |
+|---|---|---|---|---|---|---|---|---|
+| earliest | 563/594 | — | 75 h | +0.02 / -1.5 (430) | +0.53 / +1.2 (393) † | -0.02 / -1.1 (647) † | +0.57 / +2.3 (579) † | -0.24 / -2.4 (1689) |
+| T−48h | 235/594 | 129 | 48 h | -0.23 / -3.2 (212) | +0.28 / +0.1 (183) † | -0.31 / -3.5 (283) | +0.47 / +1.4 (230) † | -0.06 / -2.6 (705) |
+| T−24h | 363/594 | 69 | 24 h | -0.29 / -5.2 (288) | +0.16 / -3.2 (262) † | -0.26 / -4.8 (426) | +0.15 / -2.5 (384) † | -0.05 / -2.9 (1089) |
+| T−12h | 351/594 | 34 | 12 h | +0.00 / -2.6 (287) | +0.08 / -2.1 (256) | -0.05 / -2.3 (434) | +0.20 / -1.1 (382) | -0.00 / -1.9 (1053) |
+| T−6h | 486/594 | 12 | 6 h | -0.04 / -2.8 (394) | +0.02 / -2.3 (349) | -0.05 / -2.5 (610) | +0.07 / -1.7 (527) | -0.00 / -1.8 (1458) |
+| T−3h | 545/594 | 8 | 3 h | -0.02 / -2.6 (439) | -0.09 / -2.6 (393) | -0.07 / -2.7 (682) | -0.03 / -2.3 (606) | -0.02 / -1.9 (1635) |
+| T−2h | 555/594 | 7 | 2 h | +0.03 / -2.5 (453) | -0.03 / -2.4 (410) | -0.03 / -2.6 (692) | -0.01 / -2.2 (606) | -0.00 / -1.8 (1665) |
+| T−90m | 554/594 | 6 | 90 m | +0.03 / -2.6 (449) | +0.01 / -2.3 (408) | -0.02 / -2.6 (689) | -0.05 / -2.4 (605) | -0.02 / -1.9 (1662) |
+| T−60m | 566/594 | 3 | 60 m | +0.07 / -2.3 (465) | -0.02 / -2.4 (423) | -0.01 / -2.6 (707) | -0.07 / -2.5 (626) | -0.00 / -1.8 (1698) |
+| T−45m | 573/594 | 3 | 45 m | -0.08 / -2.7 (461) | -0.10 / -2.6 (427) | -0.10 / -2.8 (709) | -0.08 / -2.4 (624) | +0.00 / -1.8 (1719) |
+| T−25m | 579/594 | 2 | 25 m | +0.01 / -1.7 (469) | -0.01 / -1.6 (436) | -0.04 / -2.0 (711) | -0.03 / -1.8 (641) | -0.00 / -1.5 (1737) |
+| T−10m | 580/594 | 2 | 10 m | -0.01 / -1.7 (469) | +0.00 / -1.6 (433) | -0.03 / -1.8 (711) | -0.02 / -1.7 (637) | -0.01 / -1.4 (1740) |
+
+**55 Championship**
+
+| entry | fixtures fresh (W2 panel) | stale med (min) | lead | td_spfl_cups_joint (W1) | grw_spfl_joint (W1) | td_base (W2) | grw_step_a2_cj (W2) | NULL back all (W2 panel) |
+|---|---|---|---|---|---|---|---|---|
+| earliest | 321/535 | — | 38 h | -0.78 / -5.7 (148) | -0.40 / -3.8 (136) | -0.24 / -3.2 (344) | +0.35 / -0.8 (308) † | -0.20 / -2.4 (963) |
+| T−48h | 57/535 | 183 | 48 h | -1.75 / -9.4 (26) | -0.86 / -3.8 (19) | -0.68 / -5.5 (61) | +0.06 / -3.1 (59) | -0.12 / -2.9 (171) |
+| T−24h | 131/535 | 104 | 24 h | -0.35 / -3.5 (70) | -0.12 / -2.7 (69) | -0.28 / -3.0 (137) | +0.17 / -1.4 (128) | -0.09 / -1.8 (393) |
+| T−12h | 110/535 | 42 | 12 h | -0.51 / -4.1 (56) | -0.41 / -3.8 (56) | -0.42 / -4.0 (118) | -0.23 / -3.5 (113) | -0.04 / -2.3 (330) |
+| T−6h | 188/535 | 20 | 6 h | -0.30 / -3.6 (100) | -0.44 / -4.1 (89) | -0.28 / -3.3 (211) | -0.11 / -2.5 (189) | -0.05 / -1.9 (564) |
+| T−3h | 220/535 | 18 | 3 h | +0.13 / -0.9 (115) | +0.13 / -0.9 (115) | +0.02 / -1.4 (249) | +0.08 / -1.1 (236) | -0.07 / -1.4 (660) |
+| T−2h | 242/535 | 16 | 2 h | +0.08 / -0.8 (129) | -0.00 / -1.0 (126) | -0.01 / -1.5 (267) | -0.01 / -1.4 (249) | -0.05 / -1.3 (726) |
+| T−90m | 260/535 | 14 | 90 m | +0.03 / -1.3 (141) | -0.00 / -1.4 (133) | -0.03 / -1.8 (295) | +0.02 / -1.5 (273) | -0.05 / -1.4 (780) |
+| T−60m | 265/535 | 12 | 60 m | +0.18 / -0.5 (136) | +0.18 / -0.6 (133) | +0.02 / -1.3 (296) | +0.06 / -1.1 (274) | -0.06 / -1.2 (795) |
+| T−45m | 288/535 | 7 | 45 m | +0.27 / -0.1 (161) † | +0.17 / -0.3 (147) † | +0.13 / -0.8 (332) | +0.15 / -0.6 (299) † | -0.07 / -1.2 (864) |
+| T−25m | 307/535 | 3 | 25 m | +0.03 / -1.1 (160) | +0.10 / -0.8 (155) | -0.03 / -1.3 (345) | +0.02 / -1.1 (318) | -0.06 / -1.3 (921) |
+| T−10m | 315/535 | 3 | 10 m | -0.03 / -1.5 (167) | +0.02 / -1.3 (154) | -0.04 / -1.5 (355) | -0.04 / -1.5 (321) | -0.03 / -1.4 (945) |
+
+- **The Premiership null costs more than the League One/Two null** (EV@close −1.4% to −2.9% against −0.9% to −1.5%).
+  - Commission on a fair back costs c·(1 − p), and the Premiership's Old Firm fixtures carry many long prices.
+  - So compare each model with its own league's null. In 54, from T−3h on, every fit is 0.2–1.0 pp *below* its null. Only at the earliest and T−48h books do the GRW fits beat it (+2.7 to +4.6 pp, on stale LTPs).
+- **β given placebo is above 0 in the Premiership only at ≥ 24 h out, and only for the two GRW fits.** From T−12h the models add nothing the market's own recent prices lack. At T−45m and T−10m, td_base's β given placebo is even slightly *negative* (CI below 0).
+
+### 11.3 Side by side with 56/57 (§10)
+
+The two fits that appear in both studies are compared. Each cell is **clv_pp / EV@close 2%**, and **bold** means the EV CI is above 0. The last column is the null (back-everything) EV@close in each league.
+
+| entry | td_spfl_cups_joint 56/57 (§10) | … 54 | … 55 | grw_step_a2_cj 56/57 (§10) | … 54 | … 55 | null EV 56/57 / 54 / 55 |
+|---|---|---|---|---|---|---|---|
+| earliest | **+0.89 / +2.7** | +0.02 / -1.5 | -0.78 / -5.7 | **+0.93 / +2.7** | +0.57 / +2.3 | +0.35 / -0.8 | -1.4 / -2.4 / -2.4 |
+| T−48h | +0.44 / +1.7 | -0.23 / -3.2 | -1.75 / -9.4 | +0.99 / +3.2 | +0.47 / +1.4 | +0.06 / -3.1 | -1.1 / -2.6 / -2.9 |
+| T−24h | +0.56 / +1.4 | -0.29 / -5.2 | -0.35 / -3.5 | **+0.93 / +2.8** | +0.15 / -2.5 | +0.17 / -1.4 | -1.2 / -2.9 / -1.8 |
+| T−12h | **+1.20 / +2.6** | +0.00 / -2.6 | -0.51 / -4.1 | **+1.29 / +3.2** | +0.20 / -1.1 | -0.23 / -3.5 | -0.9 / -1.9 / -2.3 |
+| T−6h | +0.51 / +0.9 | -0.04 / -2.8 | -0.30 / -3.6 | +0.66 / +1.4 | +0.07 / -1.7 | -0.11 / -2.5 | -1.2 / -1.8 / -1.9 |
+| T−3h | +0.53 / +0.7 | -0.02 / -2.6 | +0.13 / -0.9 | +0.43 / +0.5 | -0.03 / -2.3 | +0.08 / -1.1 | -1.4 / -1.9 / -1.4 |
+| T−2h | +0.59 / +0.7 | +0.03 / -2.5 | +0.08 / -0.8 | +0.44 / +0.3 | -0.01 / -2.2 | -0.01 / -1.4 | -1.3 / -1.8 / -1.3 |
+| T−90m | +0.45 / +0.5 | +0.03 / -2.6 | +0.03 / -1.3 | +0.38 / +0.5 | -0.05 / -2.4 | +0.02 / -1.5 | -1.3 / -1.9 / -1.4 |
+| T−60m | +0.56 / +1.0 | +0.07 / -2.3 | +0.18 / -0.5 | +0.50 / +0.9 | -0.07 / -2.5 | +0.06 / -1.1 | -1.1 / -1.8 / -1.2 |
+| T−45m | +0.53 / +0.6 | -0.08 / -2.7 | +0.27 / -0.1 | +0.42 / +0.2 | -0.08 / -2.4 | +0.15 / -0.6 | -1.1 / -1.8 / -1.2 |
+| T−25m | +0.33 / -0.3 | +0.01 / -1.7 | +0.03 / -1.1 | +0.22 / -0.6 | -0.03 / -1.8 | +0.02 / -1.1 | -1.2 / -1.5 / -1.3 |
+| T−10m | +0.08 / -1.1 | -0.01 / -1.7 | -0.03 / -1.5 | +0.06 / -1.2 | -0.02 / -1.7 | -0.04 / -1.5 | -1.2 / -1.4 / -1.4 |
+
+```
+grw_step_a2_carry_jump, 1X2, e = 2: EV@close at 2% (%) by entry time; one common scale, │ = 0
+         56/57                       54                          55
+earliest          │███████    +2.7            │██████     +2.3          ██│           -0.8
+T−48h             │████████   +3.2            │████       +1.4    ████████│           -3.1
+T−24h             │███████    +2.8     ███████│           -2.5        ████│           -1.4
+T−12h             │████████   +3.2         ███│           -1.1   █████████│           -3.5
+T−6h              │████       +1.4       █████│           -1.7      ██████│           -2.5
+T−3h              │█          +0.5      ██████│           -2.3         ███│           -1.1
+T−2h              │█          +0.3      ██████│           -2.2        ████│           -1.4
+T−90m             │█          +0.5      ██████│           -2.4        ████│           -1.5
+T−60m             │██         +0.9      ██████│           -2.5         ███│           -1.1
+T−45m             │█          +0.2      ██████│           -2.4          ██│           -0.6
+T−25m           ██│           -0.6       █████│           -1.8         ███│           -1.1
+T−10m          ███│           -1.2        ████│           -1.7        ████│           -1.5
+```
+
+- **In League One/Two** the same two fits sit +1.4 to +4.3 pp of EV above their league's null from the earliest book to T−45m.
+- **In the Premiership** they are +0.3 to +4.6 pp above the null only at ≥ 24 h out (thin, stale books), and 0.2–0.6 pp *below* it from T−3h on.
+- **In the Championship** they are within ±0.9 pp of the null from T−3h on, and below it at the stale early instants (to −5.3 pp).
+
+### 11.4 Caveats
+
+- **Different panels.** W1 fits cover 24/25–25/26 and W2 fits 23/24–25/26 (the Championship's 25/26 has no prices). The §10 56/57 rows are 24/25–25/26 only.
+- **The Premiership's "earliest" book is about 75 h out and ungated.** Its +2.3% for grw_step_a2_carry_jump rests on 579 bets at stale opening LTPs, with a CI of [−0.3, +5.1].
+- **Multiple comparisons.** 4 fits × 2 leagues × 12 instants, all on the same fixtures. Nothing positive would survive a correction. What does survive: in the Premiership, EV@close < 0 at every instant from T−24h, with 39 of 40 CIs wholly below 0 (z down to −27).
 
 ## 12. Price movement as a signal
 
-*(Sections 12.1–12.2 and 12.4–12.6 are filled in after the confirmation run. This pre-registration
-was committed before any confirmation-season statistic was computed.)*
+Code: `r03_price_movement.jl` (Part B) and `l03_price_movement.jl` (price-path panel, bounce-free moves, conditional logit).
+- **Discovery** is 21/22–23/24 and **confirmation** is 24/25–25/26.
+- Six confirmatory hypotheses were frozen and committed in §12.3 (commit 7c5e5706) before confirmation was run, once.
+- Output: `out/r03b_{disc,conf}_*.csv` and `out/r03b_{disc,conf}_run.log`.
+- **Phases shown:** tables give both phases, except the B1 path table and the charts (discovery). Their confirmation versions are in the CSVs.
+- **Discovery only (did not replicate):**
+  - the League One late reversion (T−2h→T−25m, H1, and its rule form H6);
+  - the Championship's earliest→T−6h momentum (+0.10);
+  - B3's two Championship g cells;
+  - every discovery-best market-only EV rule (H5 and its neighbours).
+- **Confirmation only (post hoc, untested):**
+  - the mid-window (T−6h→T−60m) reversion in League One, the Championship and pooled;
+  - the size of B4's AGAINST > WITH gap at T−3h and T−2h;
+  - the two nominal AGAINST EV@close > 0 cells for m05_joint_td and m12_td.
+
+**Answer.** Price movement is mostly a *timing* signal. The one piece that survives confirmation is **reversion in the lower leagues, not momentum**.
+- **The shape of the path (B1).** About two-thirds of the earliest→close move has happened by T−6h (61–73% per league) and 88–93% by T−25m (discovery). Trading intensity rises 12–37× from T−6h to the off, and the Premiership trades 2.5–5× more than League One/Two.
+- **Reversion (B2).** With LTP bounce removed (the move is never measured to the tick you would trade), prices that moved between T−6h and T−60m partly revert by the close.
+  - This was pre-registered for League Two: **H2, slope −0.21 [−0.37, −0.06], Holm p 0.02**, the only one of six hypotheses confirmed.
+  - In confirmation the same sign also shows in League One, the Championship and pooled (post hoc).
+  - A third to a half of the raw-LTP reversion is bid/ask bounce.
+- **Momentum (B2).** The Premiership shows a small late momentum (+0.02 to +0.06) that did not clear Holm.
+- **The close is efficient with respect to movement (B3).** Given the close, earlier movement carries no information about *results*: g ≈ 0 in every league and both phases. So any edge is in the timing of entry.
+- **Model plus movement (B4).** In League One/Two, model edge ≥ 2 bets where the price had moved **against** the model beat bets where it moved **with** it.
+  - CLV is +0.6 to +0.9 pp against −0.1 to +0.6 pp from T−6h to T−60m, for all three models in confirmation. This is the *opposite* of "the model agrees with the steam".
+  - The pre-registered difference (H4) missed Holm (p 0.04 → 0.20).
+- **No market-only rule clears commission (B5).** The most replicable rule (back Premiership runners that shortened ≥ 1 pp since T−3h, at T−25m) earns CLV +0.12 pp [+0.06, +0.19] in confirmation but EV@close −0.9%. The discovery-best EV rule (H5) and the League One drift rule (H6) both failed.
+
+### 12.1 B1: the price path (1X2 unless stated)
+
+**Share of the earliest→close squared move resolved by each instant**, computed as 1 − Σ(p_close − p_t)² / Σ(p_close − p_e)². p_t is the de-vigged 45-min TWA, and markets not yet formed carry their opening price.
+
+| market | league | discovery: % by T−24h · T−6h · T−60m · T−25m (markets) | confirmation |
+|---|---|---|---|
+| 1X2 | 54 | 42 · 63 · 81 · 93 (571) | 45 · 68 · 80 · 94 (388) |
+| 1X2 | 55 | 28 · 63 · 84 · 90 (344) | 19 · 61 · 76 · 86 (152) |
+| 1X2 | 56 | 32 · 61 · 82 · 88 (529) | 17 · 45 · 53 · 63 (353) |
+| 1X2 | 57 | 43 · 73 · 88 · 90 (460) | 25 · 48 · 57 · 63 (278) |
+| 1X2 | all | 37 · 66 · 84 · 90 (1904) | 28 · 55 · 65 · 75 (1171) |
+| OU2.5 | 54 | 6 · 47 · 74 · 89 (567) | 31 · 63 · 77 · 91 (392) |
+| OU2.5 | 55 | 3 · 38 · 76 · 83 (333) | 15 · 50 · 79 · 86 (142) |
+| OU2.5 | 56 | 3 · 30 · 65 · 72 (510) | 2 · 32 · 70 · 75 (325) |
+| OU2.5 | 57 | 8 · 38 · 64 · 72 (422) | 1 · 67 · 88 · 91 (249) |
+| OU2.5 | all | 5 · 40 · 71 · 81 (1832) | 15 · 58 · 79 · 88 (1108) |
+
+```
+Share of the earliest→close squared move resolved by each instant (1X2, 45-min TWA, discovery)
+        54                         55                         56                         57
+T−48h   ▏███████               35%  ▏███                   16%  ▏██                    11%  ▏████                  18%
+T−24h   ▏████████              42%  ▏██████                28%  ▏██████                32%  ▏█████████             43%
+T−12h   ▏██████████            50%  ▏█████████             45%  ▏██████████            48%  ▏███████████           57%
+T−6h    ▏█████████████         63%  ▏█████████████         63%  ▏████████████          61%  ▏███████████████       73%
+T−3h    ▏███████████████       73%  ▏████████████████      79%  ▏███████████████       75%  ▏████████████████      81%
+T−60m   ▏████████████████      81%  ▏█████████████████     84%  ▏████████████████      82%  ▏██████████████████    88%
+T−25m   ▏███████████████████   93%  ▏██████████████████    90%  ▏██████████████████    88%  ▏██████████████████    90%
+T−10m   ▏███████████████████   97%  ▏███████████████████   94%  ▏███████████████████   93%  ▏███████████████████   93%
+
+1X2 ticks per hour per market (all runners), by bucket, discovery (log-ish bars: one █ ≈ 4 ticks/h)
+T−24h   ▏                       0.8  ▏                       0.4  ▏                       0.4  ▏                       0.3
+T−12h   ▏█                      3.0  ▏                       1.1  ▏                       0.8  ▏                       0.8
+T−6h    ▏██                     6.1  ▏█                      2.7  ▏                       1.5  ▏                       1.6
+T−3h    ▏███                   13.7  ▏█                      5.8  ▏█                      4.5  ▏█                      4.2
+T−2h    ▏████                  17.8  ▏██                     7.2  ▏█                      5.2  ▏█                      4.6
+T−90m   ▏█████                 21.0  ▏██                     8.9  ▏██                     7.0  ▏██                     6.5
+T−60m   ▏███████               27.0  ▏███                   10.1  ▏██                     6.5  ▏██                     6.4
+T−45m   ▏██████████            40.3  ▏████                  17.0  ▏███                   13.3  ▏███                   11.2
+T−25m   ▏███████████           43.4  ▏██████                24.2  ▏████                  16.9  ▏████                  15.0
+T−10m   ▏█████████████         53.0  ▏████████              32.7  ▏██████                24.9  ▏█████                 21.9
+off     ▏███████████████████   76.4  ▏████████████████      64.7  ▏██████████████        55.7  ▏█████████████         53.0
+```
+
+**Mean |Δp| per bucket (pp, TWA-smoothed) · ticks per hour per market · share of markets formed (discovery).** Confirmation is in `out/r03b_conf_b1_path.csv` and looks the same except in the last half-hour (below).
+
+| bucket | 54: \|Δp\| pp · ticks/h · formed | 55 | 56 | 57 |
+|---|---|---|---|---|
+| open → T−48h | 1.01 · — · 68% | 0.26 · — · 24% | 0.27 · — · 20% | 0.30 · — · 17% |
+| T−48h → T−24h | 0.97 · 0.8 · 97% | 0.88 · 0.4 · 70% | 0.89 · 0.4 · 60% | 0.83 · 0.3 · 59% |
+| T−24h → T−12h | 0.84 · 3.0 · 100% | 1.18 · 1.1 · 93% | 1.16 · 0.8 · 86% | 1.16 · 0.8 · 82% |
+| T−12h → T−6h | 0.86 · 6.1 · 100% | 1.02 · 2.7 · 99% | 1.09 · 1.5 · 94% | 1.12 · 1.6 · 91% |
+| T−6h → T−3h | 0.69 · 13.7 · 100% | 0.93 · 5.8 · 100% | 1.17 · 4.5 · 98% | 1.09 · 4.2 · 98% |
+| T−3h → T−2h | 0.34 · 17.8 · 100% | 0.46 · 7.2 · 100% | 0.57 · 5.2 · 99% | 0.54 · 4.6 · 99% |
+| T−2h → T−90m | 0.21 · 21.0 · 100% | 0.29 · 8.9 · 100% | 0.37 · 7.0 · 99% | 0.40 · 6.5 · 99% |
+| T−90m → T−60m | 0.23 · 27.0 · 100% | 0.30 · 10.1 · 100% | 0.41 · 6.5 · 100% | 0.42 · 6.4 · 99% |
+| T−60m → T−45m | 0.23 · 40.3 · 100% | 0.19 · 17.0 · 100% | 0.21 · 13.3 · 100% | 0.21 · 11.2 · 99% |
+| T−45m → T−25m | 0.38 · 43.4 · 100% | 0.31 · 24.2 · 100% | 0.35 · 16.9 · 100% | 0.32 · 15.0 · 100% |
+| T−25m → T−10m | 0.26 · 53.0 · 100% | 0.27 · 32.7 · 100% | 0.34 · 24.9 · 100% | 0.32 · 21.9 · 100% |
+| T−10m → off | 0.16 · 76.4 · 100% | 0.21 · 64.7 · 100% | 0.27 · 55.7 · 100% | 0.27 · 53.0 · 100% |
+| off → close | 0.28 · — · 100% | 0.42 · — · 100% | 0.64 · — · 100% | 0.71 · — · 100% |
+
+**Favourites, longshots, home, draw and away** (all four leagues). Runners are ranked by the opening de-vigged price; drift is p_close − p_open.
+
+| runner (1X2, all leagues) | discovery: open p · drift open→close pp [CI] · \|move\| · % by T−6h · % by T−60m | confirmation |
+|---|---|---|
+| favourite | 0.51 · +0.11 [-0.13, +0.35] · 3.82 · 65% · 84% | 0.50 · +0.44 [+0.15, +0.72] · 3.79 · 53% · 63% |
+| middle | 0.27 · -0.50 [-0.66, -0.34] · 2.63 · 64% · 83% | 0.27 · -0.71 [-0.88, -0.53] · 2.65 · 58% · 65% |
+| longshot | 0.22 · +0.39 [+0.24, +0.54] · 2.21 · 70% · 87% | 0.22 · +0.27 [+0.07, +0.47] · 2.24 · 55% · 69% |
+| home | 0.43 · -0.14 [-0.35, +0.07] · 3.52 · 63% · 83% | 0.43 · +0.24 [-0.05, +0.52] · 3.54 · 52% · 61% |
+| draw | 0.25 · +0.11 [-0.02, +0.25] · 1.91 · 78% · 89% | 0.25 · -0.16 [-0.35, +0.03] · 1.87 · 63% · 77% |
+| away | 0.32 · +0.03 [-0.16, +0.25] · 3.22 · 64% · 84% | 0.32 · -0.07 [-0.34, +0.21] · 3.28 · 55% · 65% |
+
+- **The middle-priced runner drifts and the longshot firms in both phases** (−0.5 to −0.7 pp and +0.3 to +0.4 pp). Favourites shortened in confirmation only.
+  - This is the market pricing out the second-favourite, not a favourite–longshot pattern in a single direction.
+  - There is no stable home/draw/away drift.
+- **The draw moves least:** |move| is 1.9 pp against 3.2–3.5 pp for home and away, and more of its move is resolved early.
+- **O/U 2.5 forms later** (5% of its move by T−24h in discovery) and moves mostly from T−12h to T−3h.
+- **In confirmation, League One/Two resolve much less of the move by T−25m** (63% against 88–90%). Their last-25-minute |Δp| roughly doubles (T−25m→T−10m 0.53–0.63 pp against 0.32–0.34). Some of this is the close estimator: the close is a TWA over only (−20, 0], and in 24/25–25/26 the off→close gap in 56/57 is 0.9–1.0 pp. In either case the late window in the lower leagues got noisier.
+
+### 12.2 B2: momentum vs reversion, and how much survives de-bouncing
+
+The regression is y = the later move to the close on x = the earlier move, one row per 1X2 selection.
+- **Sample:** markets that had formed by the window start and are fresh (l02 gate) at the boundary t_m. CIs are slate-clustered.
+- **raw:** de-vigged LTP at both ends. The boundary tick sits in x with + and in y with −, so bid/ask bounce shows up as fake reversion.
+- **smooth:** 45-min TWA prices. This variant is **biased toward momentum on short windows**, because first differences of a time-averaged random walk are positively autocorrelated (the Working effect). That is why its slopes are +0.3 to +0.8 for windows ending at T−25m. It is shown only because the brief asked for it; it is not a clean test.
+- **droplast / gap15:** x ends at the tick *before* the boundary tick (droplast) or at the last tick ≤ t_m − 15 min (gap15). It never uses the boundary tick, and if no tick falls inside the window, x = 0. y = p_close − 1/odds_LTP(t_m) is the CLV of a back at that LTP. These are the bounce-free, tradeable-direction tests, on the raw 1/odds scale.
+- **Bold** marks a gap15 CI that excludes 0.
+
+| x window | league | disc raw | smooth | droplast | **gap15** [95% CI] | n | conf raw | smooth | droplast | **gap15** [95% CI] | n |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| earliest → T−6h | 54 | -0.022 | -0.004 | -0.007 | -0.007 [-0.036, +0.022] | 1392 | +0.005 | +0.014 | -0.006 | -0.009 [-0.059, +0.046] | 969 |
+|  | 55 | +0.038 | +0.067 | +0.088 | **+0.097 [+0.008, +0.188]** | 555 | -0.080 | -0.026 | +0.064 | +0.053 [-0.136, +0.267] | 264 |
+|  | 56 | +0.051 | +0.074 | +0.087 | +0.083 [-0.065, +0.259] | 429 | -0.128 | -0.082 | -0.071 | -0.067 [-0.171, +0.048] | 300 |
+|  | 57 | -0.031 | -0.029 | -0.045 | -0.047 [-0.121, +0.010] | 447 | -0.073 | -0.048 | +0.004 | +0.002 [-0.120, +0.095] | 225 |
+|  | all | -0.008 | +0.008 | +0.003 | +0.003 [-0.027, +0.031] | 2823 | -0.047 | -0.021 | -0.009 | -0.011 [-0.052, +0.032] | 1758 |
+| T−6h → T−60m | 54 | +0.065 | +0.099 | +0.077 | +0.040 [-0.028, +0.100] | 1668 | +0.101 | +0.137 | +0.105 | +0.034 [-0.074, +0.151] | 1131 |
+|  | 55 | -0.116 | -0.041 | -0.060 | -0.052 [-0.159, +0.037] | 804 | -0.250 | -0.139 | -0.148 | -0.133 [-0.270, +0.000] | 363 |
+|  | 56 | -0.023 | +0.030 | +0.033 | +0.034 [-0.065, +0.136] | 993 | -0.318 | -0.304 | -0.176 | **-0.185 [-0.312, -0.045]** | 516 |
+|  | 57 | -0.211 | -0.119 | -0.112 | **-0.101 [-0.188, -0.036]** | 798 | -0.318 | -0.304 | -0.236 | **-0.210 [-0.363, -0.056]** | 402 |
+|  | all | -0.068 | -0.010 | -0.019 | -0.026 [-0.070, +0.020] | 4263 | -0.186 | -0.179 | -0.106 | **-0.137 [-0.204, -0.072]** | 2412 |
+| T−3h → T−60m | 54 | +0.091 | +0.176 | +0.110 | +0.043 [-0.063, +0.140] | 1668 | +0.072 | +0.216 | +0.102 | -0.037 [-0.183, +0.108] | 1131 |
+|  | 55 | -0.264 | -0.177 | -0.133 | -0.119 [-0.276, +0.046] | 816 | -0.357 | -0.212 | -0.168 | -0.114 [-0.310, +0.068] | 363 |
+|  | 56 | -0.168 | -0.100 | -0.056 | -0.073 [-0.197, +0.055] | 1044 | -0.390 | -0.447 | -0.202 | **-0.222 [-0.402, -0.021]** | 528 |
+|  | 57 | -0.255 | -0.134 | -0.117 | -0.093 [-0.203, +0.026] | 843 | -0.307 | -0.276 | -0.136 | -0.076 [-0.298, +0.140] | 417 |
+|  | all | -0.142 | -0.076 | -0.047 | **-0.068 [-0.128, -0.001]** | 4371 | -0.201 | -0.219 | -0.071 | **-0.121 [-0.212, -0.031]** | 2439 |
+| T−2h → T−25m | 54 | +0.040 | +0.275 | +0.056 | **+0.054 [+0.022, +0.082]** | 1704 | +0.021 | +0.295 | +0.042 | +0.024 [-0.005, +0.054] | 1158 |
+|  | 55 | -0.056 | +0.082 | +0.017 | -0.018 [-0.069, +0.037] | 966 | -0.023 | +0.163 | +0.029 | -0.027 [-0.119, +0.057] | 420 |
+|  | 56 | -0.179 | +0.040 | -0.123 | **-0.131 [-0.191, -0.070]** | 1314 | -0.039 | +0.053 | +0.002 | -0.024 [-0.131, +0.068] | 834 |
+|  | 57 | -0.100 | -0.064 | -0.070 | -0.078 [-0.163, +0.000] | 1056 | -0.069 | +0.097 | -0.062 | -0.089 [-0.180, +0.022] | 699 |
+|  | all | -0.087 | +0.083 | -0.041 | **-0.047 [-0.079, -0.017]** | 5040 | -0.035 | +0.163 | -0.007 | -0.021 [-0.067, +0.019] | 3111 |
+| T−60m → T−25m | 54 | +0.019 | +0.411 | +0.060 | **+0.057 [+0.024, +0.090]** | 1704 | +0.038 | +0.426 | +0.052 | **+0.033 [+0.002, +0.068]** | 1158 |
+|  | 55 | -0.043 | +0.346 | +0.034 | -0.012 [-0.063, +0.055] | 966 | +0.009 | +0.500 | +0.049 | -0.017 [-0.124, +0.087] | 420 |
+|  | 56 | -0.168 | +0.367 | -0.126 | **-0.137 [-0.217, -0.044]** | 1326 | -0.008 | +0.807 | +0.032 | +0.048 [-0.072, +0.154] | 837 |
+|  | 57 | -0.086 | +0.130 | -0.078 | -0.101 [-0.238, +0.010] | 1062 | -0.060 | +0.585 | -0.058 | -0.113 [-0.251, +0.021] | 702 |
+|  | all | -0.091 | +0.338 | -0.034 | **-0.041 [-0.078, -0.004]** | 5058 | -0.020 | +0.542 | +0.010 | +0.004 [-0.039, +0.043] | 3117 |
+
+**What survives de-bouncing (gap15 as a share of raw).**
+- **League Two, T−6h→T−60m:** 48% of the raw reversion in discovery (−0.10 of −0.21) and 66% in confirmation (−0.21 of −0.32). This is H2, confirmed.
+- **League One, late window (T−2h→T−25m):** 73% survived in discovery (−0.13 of −0.18), but the effect vanished in confirmation, raw included. H1 failed.
+- **League One, T−6h→T−60m:** absent in discovery, then −0.19 [−0.31, −0.05] in confirmation. This is *post hoc* and not tested.
+- **Pooled, T−6h→T−60m:** −0.03 (n.s.) in discovery and −0.14 [−0.20, −0.07] in confirmation. The mid-window reversion is stronger in the later seasons.
+- **Premiership, T−2h→T−25m and T−60m→T−25m:** +0.05 to +0.06 momentum in discovery (bounce *hides* it: raw is +0.02 to +0.04). In confirmation it is +0.02 to +0.03, and H3 failed Holm. The rule form (B5) nevertheless replicates its CLV.
+- **Earliest→T−6h:** nothing consistent. One discovery cell (the Championship, +0.10) did not replicate. Early drift neither continues nor reverts.
+
+**O/U 2.5 (pooled leagues).** There is a weak T−6h→T−60m reversion in discovery (gap15 −0.06 [−0.11, −0.02]) that is not significant in confirmation (−0.04 [−0.11, +0.04]). Late windows show nothing once de-bounced.
+
+| O/U 2.5, all leagues: x window | disc raw | disc gap15 [CI] (n) | conf raw | conf gap15 [CI] (n) |
+|---|---|---|---|---|
+| T−6h → T−60m | -0.078 | -0.064 [-0.112, -0.017] (1742) | -0.049 | -0.040 [-0.111, +0.036] (936) |
+| T−3h → T−60m | -0.110 | -0.055 [-0.138, +0.027] (1904) | -0.076 | -0.060 [-0.153, +0.035] (992) |
+| T−2h → T−25m | -0.040 | +0.020 [-0.024, +0.064] (2448) | -0.032 | +0.021 [-0.021, +0.062] (1306) |
+| T−60m → T−25m | -0.063 | +0.027 [-0.026, +0.085] (2498) | -0.053 | +0.044 [-0.002, +0.090] (1346) |
 
 ### 12.3 Pre-registered confirmatory hypotheses (frozen from discovery)
 
@@ -906,3 +1193,140 @@ was committed before any confirmation-season statistic was computed.)*
 
 **Not tested but reported:** everything else in §12. It is re-run on confirmation with the frozen
 code (B1–B5 tables) as description, not as tests.
+
+**Results (confirmation, run once).** The discovery column is the same frozen statistic on 21/22–23/24.
+
+| id | hypothesis | discovery (n) | confirmation [95% CI] (n) | one-sided p | Holm p | confirmed |
+|---|---|---|---|---|---|---|
+| H1 | 56: slope of T−25m→close on T−2h→T−25m (gap15) < 0 | -0.131 (1314) | -0.024 [-0.129, +0.067] (834) | 0.3182 | 0.722 | no |
+| H2 | 57: slope of T−60m→close on T−6h→T−60m (gap15) < 0 | -0.101 (798) | -0.210 [-0.366, -0.060] (402) | 0.0037 | 0.022 | **yes** |
+| H3 | 54: slope of T−25m→close on T−2h→T−25m (gap15) > 0 | +0.054 (1704) | +0.024 [-0.005, +0.054] (1158) | 0.0473 | 0.201 | no |
+| H4 | 56/57 grw_step edge≥2 at T−60m: CLV(price against model) − CLV(with) > 0 | +0.43 pp (197) | +0.52 pp [-0.06, +1.11] (292) | 0.0403 | 0.201 | no |
+| H5 | 57: back drift ≤ −2 pp since T−6h (droplast) at T−60m: EV@close 2% > 0 | +0.40% (124) | +0.84% [-1.44, +3.14] (65) | 0.2407 | 0.722 | no |
+| H6 | 56: back drift ≤ −2 pp since T−3h (gap15) at T−25m: CLV > 0 | +0.45 pp (132) | +0.11 pp [-0.27, +0.52] (91) | 0.2980 | 0.722 | no |
+
+- **Only H2 is confirmed** (League Two, T−6h→T−60m reversion). Its confirmation estimate is twice its discovery one.
+- **H1** (League One, late reversion) and **H6** (its rule form) failed: the late League One effect was a discovery-period feature.
+- **H3** (Premiership late momentum) and **H4** (model bets where the price went against the model beat those where it went with it) are nominally significant (one-sided p 0.047 and 0.040) with the discovery sign, but not after Holm.
+- **H5,** the discovery-best market-only EV rule (a winner's-curse check), failed, as expected. Its confirmation point estimate is +0.8% on 65 bets with a CI of [−1.4, +3.1].
+
+### 12.4 B3: is the close efficient with respect to movement?
+
+Conditional logit per 1X2 market: P(win_i) = softmax(c·log p_close_i + g·m_i), where m = log p_close − log p_t (the move from t to the close).
+- g = 0 means the close has fully priced the movement.
+- c is a temperature: c > 1 means the close is under-confident.
+- CIs are slate-bootstrap (B = 300).
+- "LL gain" is the in-sample log-likelihood gain of (c, g) over c alone, per market, ×10⁻³. It is ≥ 0 by construction.
+
+| league | disc c | g: move from earliest | g: from T−6h | g: from T−60m | LL gain (T−6h) ×10⁻³ | markets | conf c | g: earliest | g: T−6h | g: T−60m | LL gain | markets |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 54 | 1.07 | -0.08 [-0.87, +0.80] | -0.80 [-2.10, +0.31] | -0.79 [-2.56, +0.79] | +1.24 | 561 | 0.90 | -0.01 [-0.97, +0.91] | -0.60 [-2.23, +0.85] | -1.50 [-3.48, +0.50] | +0.75 | 376 |
+| 55 | 0.92 | +0.55 [-0.48, +1.56] | +1.48 [-0.28, +3.61] | +2.27 [+0.08, +4.93] | +4.34 | 330 | 1.00 | +0.60 [-1.07, +2.09] | +1.55 [-0.75, +4.74] | +0.99 [-2.07, +4.57] | +4.82 | 147 |
+| 56 | 1.03 | -0.46 [-1.04, +0.06] | -1.01 [-2.07, +0.16] | -0.92 [-2.54, +0.80] | +3.25 | 498 | 0.78 | -0.07 [-1.10, +1.05] | -0.49 [-1.86, +0.77] | +0.54 [-0.81, +1.98] | +0.89 | 323 |
+| 57 | 1.05 | -0.23 [-0.77, +0.30] | +0.13 [-1.28, +1.43] | +0.67 [-1.30, +2.62] | +0.04 | 425 | 0.85 | -0.27 [-1.17, +0.71] | -0.17 [-1.71, +1.26] | -0.03 [-1.29, +1.52] | +0.12 | 260 |
+| all | 1.04 | -0.18 [-0.45, +0.10] | -0.31 [-0.85, +0.32] | -0.05 [-0.94, +0.76] | +0.24 | 1814 | 0.88 | -0.04 [-0.54, +0.47] | -0.23 [-0.93, +0.47] | -0.04 [-0.85, +0.75] | +0.16 | 1106 |
+
+- **g is ≈ 0 in every league, move window and phase.** Two discovery cells have CIs clear of 0 (the Championship, moves from T−60m and T−25m); their confirmation CIs span 0.
+- **The close already contains whatever the path knew about results.** Movement is a *timing* signal (take the price before it moves), not information the close misses.
+- **The temperature flipped between phases:** c = 1.03–1.07 in discovery and 0.78–0.90 in confirmation for 54/56/57. The close was slightly under-confident in 21/22–23/24 and over-confident in 24/25–25/26. This is itself a warning against reading EV@close as truth in any single season.
+
+### 12.5 B4: model edge × price direction
+
+- **Bets:** 1X2, model edge ≥ 2 pp at the entry LTP.
+- **Direction:** the gap15 move since the stated instant, on the bet runner. WITH means the move is > +0.1 pp (the runner shortened toward the model); AGAINST means it is < −0.1 pp.
+- **Discovery:** one held-out season (23/24) of grw_step_a2_carry_jump. **Confirmation:** grw_step_a2_carry_jump, plus m05_joint_td and m12_td on the 710 panel as the brief asked.
+- **m12_td** prices with the played XI, so its rows before T−60m are not clean.
+- Each cell is **clv_pp / EV@close 2% (n)**. **Bold** means the CLV CI is above 0. League One/Two (56+57):
+
+| entry (direction since) | phase, model | model edge ≥ 2, all | price moved WITH model | price moved AGAINST model | market only: back what shortened |
+|---|---|---|---|---|---|
+| T−6h (since earliest) | disc grw_step_a2_cj | +0.36 / -0.2 (101) | +0.55 / +0.9 (30) | +0.24 / -1.2 (65) | -0.13 / -1.4 (132) |
+| T−6h (since earliest) | conf grw_step_a2_cj | **+0.66 / +1.4 (174)** | +0.46 / +0.5 (55) | **+0.83 / +1.6 (97)** | -0.30 / -1.7 (205) |
+| T−6h (since earliest) | conf m05_joint_td | **+0.70 / +1.4 (185)** | +0.53 / +0.7 (59) | **+0.83 / +1.6 (102)** |  |
+| T−6h (since earliest) | conf m12_td | **+0.64 / +1.1 (182)** | +0.63 / +1.1 (55) | **+0.73 / +1.2 (102)** |  |
+| T−3h (since T−6h) | disc grw_step_a2_cj | +0.16 / -1.4 (172) | -0.00 / -1.4 (65) | +0.36 / -1.4 (85) | -0.41 / -2.2 (223) |
+| T−3h (since T−6h) | conf grw_step_a2_cj | **+0.48 / +0.7 (250)** | -0.09 / -0.9 (101) | **+0.65 / +1.0 (102)** | -0.47 / -2.3 (342) |
+| T−3h (since T−6h) | conf m05_joint_td | **+0.60 / +0.8 (247)** | +0.13 / -0.4 (99) | **+0.89 / +1.6 (102)** |  |
+| T−3h (since T−6h) | conf m12_td | **+0.50 / +0.5 (260)** | +0.14 / -0.4 (101) | **+0.65 / +0.9 (115)** |  |
+| T−2h (since T−6h) | disc grw_step_a2_cj | +0.28 / -0.3 (176) | +0.13 / -0.1 (64) | +0.41 / -0.4 (90) | -0.36 / -1.9 (223) |
+| T−2h (since T−6h) | conf grw_step_a2_cj | **+0.50 / +0.6 (276)** | +0.23 / -0.0 (106) | **+0.66 / +1.2 (136)** | -0.45 / -2.0 (368) |
+| T−2h (since T−6h) | conf m05_joint_td | **+0.45 / +0.3 (292)** | +0.21 / -0.1 (110) | **+0.66 / +1.0 (139)** |  |
+| T−2h (since T−6h) | conf m12_td | **+0.41 / +0.2 (286)** | +0.14 / -0.3 (113) | **+0.63 / +0.9 (133)** |  |
+| T−60m (since earliest) | disc grw_step_a2_cj | +0.24 / -0.9 (208) | +0.01 / -1.6 (65) | **+0.44 / +0.1 (132)** | -0.26 / -1.8 (266) |
+| T−60m (since earliest) | conf grw_step_a2_cj | **+0.50 / +0.9 (316)** | +0.11 / -0.8 (99) | **+0.63 / +1.4 (193)** | -0.37 / -1.9 (412) |
+| T−60m (since earliest) | conf m05_joint_td | **+0.67 / +1.3 (334)** | +0.54 / +0.4 (109) | **+0.66 / +1.3 (204)** |  |
+| T−60m (since earliest) | conf m12_td | **+0.62 / +1.1 (337)** | +0.39 / +0.0 (115) | **+0.62 / +1.1 (200)** |  |
+| T−60m (since T−3h) | disc grw_step_a2_cj | +0.29 / -0.4 (202) | +0.18 / -1.2 (73) | +0.32 / -0.5 (93) | -0.25 / -2.0 (235) |
+| T−60m (since T−3h) | conf grw_step_a2_cj | **+0.50 / +0.9 (313)** | +0.10 / -0.7 (109) | **+0.78 / +1.9 (146)** | -0.28 / -1.8 (370) |
+| T−60m (since T−3h) | conf m05_joint_td | **+0.66 / +1.3 (330)** | +0.43 / +0.1 (120) | **+0.88 / +2.1 (148)** |  |
+| T−60m (since T−3h) | conf m12_td | **+0.60 / +1.1 (334)** | +0.27 / -0.4 (119) | **+0.90 / +2.1 (155)** |  |
+| T−25m (since T−60m) | disc grw_step_a2_cj | **+0.22 / +0.1 (284)** | +0.15 / +1.8 (101) | **+0.31 / -0.4 (110)** | -0.28 / -0.9 (285) |
+| T−25m (since T−60m) | conf grw_step_a2_cj | **+0.21 / -0.6 (501)** | -0.00 / -1.4 (156) | **+0.29 / -0.4 (183)** | -0.09 / -1.5 (502) |
+| T−25m (since T−60m) | conf m05_joint_td | **+0.25 / -0.6 (519)** | +0.16 / -1.1 (164) | **+0.27 / -0.4 (181)** |  |
+| T−25m (since T−60m) | conf m12_td | **+0.24 / -0.6 (522)** | +0.11 / -1.3 (168) | **+0.27 / -0.4 (183)** |  |
+
+- **In confirmation, AGAINST beats WITH on CLV in all 18 cells shown (3 models × 6 entries).** The smallest gaps are +0.10 to +0.12 pp (m12_td at T−6h and m05_joint_td at T−60m, both since the earliest book). In discovery AGAINST won 5 of 6.
+  - The AGAINST group earns +0.27 to +0.90 pp, with EV@close +0.9% to +2.1% from T−3h to T−60m. The WITH group earns −0.1 to +0.6 pp.
+  - One EV@close CI clears 0 for both m05_joint_td and m12_td: AGAINST at T−60m since T−3h, +2.1% [+0.0, +4.3] and [+0.2, +4.2]. That is nominal, post hoc, and one of a few hundred B4 cells.
+- **"The model agrees with the steam" is not better than either signal alone.** In League One/Two the steam alone (market only: back what shortened) *loses* CLV (−0.1 to −0.6 pp). Model plus steam is roughly the model minus a bit.
+- **Independence:** "model edge ≥ 2, all" in confirmation is on the same 24/25–25/26 fixtures as §10, so it is not independent evidence for the early edge. Only the WITH/AGAINST split is new.
+- **Premiership/Championship (54+55, grw_step_a2_carry_jump):** no split matters. WITH and AGAINST sit at CLV −0.3 to +0.2 pp and EV@close −1.0% to −2.8% at every entry, in both phases. See `out/r03b_*_b4_model_x_direction.csv`.
+
+| phase | entry | 54/55 WITH model: clv / EV (n) | AGAINST model |
+|---|---|---|---|
+| disc | T−6h (since earliest) | -0.03 / -1.5 (94) | -0.09 / -2.0 (170) |
+| disc | T−60m (since earliest) | -0.28 / -2.8 (110) | -0.12 / -2.1 (230) |
+| disc | T−25m (since T−60m) | +0.03 / -1.5 (135) | -0.13 / -1.9 (194) |
+| conf | T−6h (since earliest) | +0.19 / -1.0 (145) | +0.06 / -2.4 (266) |
+| conf | T−60m (since earliest) | -0.01 / -1.8 (136) | +0.03 / -2.0 (379) |
+| conf | T−25m (since T−60m) | +0.02 / -1.2 (206) | -0.01 / -1.7 (317) |
+
+### 12.6 B5: a market-only rule
+
+- **The grid:** 5 league sets × 10 (entry, since) pairs × 2 signals (droplast, gap15) × 2 directions × 4 thresholds (0.5–4 pp), about 800 cells per phase.
+- **Rules:** back every 1X2 runner past the threshold at the entry LTP, flat, 2% commission.
+- **Replication is weak.** Across the 605 cells with n ≥ 80 bets in discovery and ≥ 30 in confirmation, the discovery→confirmation correlation is 0.26 for CLV and 0.14 for EV@close. Selected rules:
+
+| rule | discovery: clv_pp [CI] · EV@close 2% [CI] · ROI 2% (n) | confirmation |
+|---|---|---|
+| 54: back runners whose gap15 move since T−3h is ≥ +1 pp, at the T−25m LTP | +0.14 [+0.06, +0.21] · -1.0 [-1.2, -0.7] · +2 (322) | +0.12 [+0.06, +0.19] · -0.9 [-1.1, -0.7] · -7 (222) |
+| 54: back runners whose gap15 move since T−60m is ≥ +1 pp, at the T−25m LTP | +0.13 [+0.05, +0.21] · -1.0 [-1.3, -0.8] · -2 (228) | +0.11 [+0.05, +0.19] · -1.0 [-1.2, -0.7] · -14 (170) |
+| 56: back runners whose gap15 move since T−3h is ≤ −2 pp, at the T−25m LTP | +0.45 [+0.19, +0.70] · -0.5 [-1.3, +0.3] · +7 (132) | +0.11 [-0.32, +0.54] · -0.9 [-2.1, +0.4] · -7 (91) |
+| 57: back runners whose droplast move since T−6h is ≤ −2 pp, at the T−60m LTP | +0.43 [+0.07, +0.77] · +0.4 [-0.8, +1.6] · +9 (124) | +0.68 [+0.03, +1.36] · +0.8 [-1.4, +3.2] · -2 (65) |
+| 57: back runners whose gap15 move since T−6h is ≤ −2 pp, at the T−60m LTP | +0.34 [-0.03, +0.68] · -0.1 [-1.3, +1.1] · +21 (123) | +0.70 [+0.06, +1.41] · +0.9 [-1.2, +3.4] · -6 (64) |
+| all: back runners whose gap15 move since T−6h is ≤ −2 pp, at the T−60m LTP | +0.02 [-0.15, +0.18] · -1.5 [-2.2, -0.9] · +0 (493) | +0.34 [+0.03, +0.67] · +0.1 [-1.0, +1.3] · +1 (229) |
+| all: back runners whose gap15 move since T−6h is ≥ +1 pp, at the T−3h LTP | -0.13 [-0.27, +0.01] · -1.6 [-2.1, -1.1] · -6 (727) | -0.37 [-0.61, -0.13] · -2.2 [-2.9, -1.6] · -5 (419) |
+
+**The best simple market-only rule, in words:** *in the Premiership, at T−25m, back any 1X2 runner whose price has shortened by at least 1 pp (bounce-free) since T−3h.*
+- It is the one rule whose CLV replicates: +0.14 pp in discovery, +0.12 pp [+0.06, +0.19] in confirmation.
+- Its EV@close is −0.9% [−1.1, −0.7] after 2% commission, and its realised ROI is −7%. The momentum is real and a fraction of the round-trip cost.
+- **The League Two "back what drifted ≥ 2 pp since T−6h, at T−60m" rule** has EV@close > 0 point estimates in both phases (+0.4%, +0.8%), but its CIs span 0 on 65–124 bets. It is H5, which failed.
+- **No market-only rule has an EV@close CI above 0 in confirmation**, except one 36-bet cell out of 659 (the pooled drift ≥ 4 pp since T−6h rule at T−2h), which is noise at that multiplicity.
+
+### 12.7 Caveats and tradability
+
+- **LTP only.** Every price here is a last traded price. The archive has no back/lay ladder, no spread and no volume, so tick counts are the only liquidity proxy.
+  - The bounce-free variants guarantee that the *signal* never shares a tick with the entry. The *entry* is still an LTP, which may have printed on the lay side, where the executable back price is one tick longer.
+- **Tradeability labels:**
+  - *Not tradeable without ladder data:* the raw-LTP reversion that does not survive gap15. That is about half of every raw reversion slope, plus the discovery-only League One late reversion (H1).
+  - *Survives de-bouncing, but not shown to be profitable:* H2's League Two mid-window reversion. It passes droplast, gap15 and (for what it is worth) the smooth variant. Its rule form (H5) did not clear commission.
+- **Which ladder data would confirm it:** snapshots from `betfair_live` of the best 3 back and lay prices with sizes and the total matched volume, for the 1X2 runners of 54–57, at least at T−6h, T−3h, T−60m and T−25m. With these:
+  - the move can be measured on the **mid-price** (bounce-free by construction);
+  - the entry can be priced at the **back price actually available**, not the LTP;
+  - the **size** available at that price can be checked. A 2-unit edge on a £5 queue is not an edge.
+- **Samples.** Discovery has one season with model prices (23/24). The Championship's confirmation is 24/25 only (147–152 markets). League Two's confirmation windows have 225–417 selections.
+- **Multiplicity.** B2 alone is about 200 cells per phase and B5 about 800. Only the six pre-registered hypotheses are tests. Everything else is description, and the post-hoc confirmation patterns (League One and pooled mid-window reversion; the B4 AGAINST split) need their own forward test.
+
+### 12.8 What this means for betting
+
+1. **Is there a candidate rule for a pre-registered forward paper test?** Yes, one, and it is model-based. In League One/Two, back the model's 1X2 edge ≥ 2 pp bets at **T−60m**, and pre-register the split by the bounce-free price direction since T−3h. The claim to test is that AGAINST beats WITH on CLV and that AGAINST has EV@close > 0. That split is H4 plus the reversion of H2. In confirmation the AGAINST group at T−60m (since T−3h) ran +2.1% [0.0, +4.3] for m05_joint_td, but that was post hoc and only nominal. **No market-only rule is worth a test:** none clears 2% commission, and the Premiership steam rule's replicated CLV (+0.12 pp) is about an eighth of the cost.
+2. **Which league, entry time and signal?** League One/Two (56/57), not 54/55, where §11 finds no early edge at all. Entry at T−60m, not earlier: it has the best mix of fresh-book coverage (319/710 against 175 at T−6h), the §10 bump, and clean lineup information for m12. Use the lineup-free m05_joint_td (and m12_td from T−60m) with the market direction as a filter, not a market-only signal.
+3. **What ladder data does it need?** The `betfair_live` best-3 back/lay prices and sizes and matched volume for 1X2 at T−3h and T−60m (plus T−25m as the control), for every 56/57 fixture over one season. That is enough to replace the LTP entry with an executable back price, measure direction on the mid-price, and log the size available. Without it, the +1–2% EV@close is an LTP number that a one-tick spread would erase.
+
+**Reproduce** (mcmc-beast, `/root/BF_runs/clv_napkin_dev`, after r01 has written `out/probs.jls`):
+
+```bash
+nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_leadtime_monitor.jl                   # §11, ~6 min
+C3_PHASE=discovery    nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_price_movement.jl   # §12 discovery, ~4 min
+C3_PHASE=confirmation nice -n 19 /root/.juliaup/bin/julia --project -t 8 current_development/clv_napkin/r03_price_movement.jl   # §12 confirmation (the once-only run is done)
+```

@@ -1,0 +1,20 @@
+PHASE = discovery  seasons ["21/22", "22/23", "23/24"]
+[ Info: Loading DataStore for ScottishPyramid from local cache (Age: 3.4 hours)...
+panel: 9376 selections, 3736 markets (1s)
+B1 done
+B2 done
+B3 done
+B4 done
+B5 done
+6×10 DataFrame
+ Row │ id      text                               n      estimate    lo          hi          z          p_one    p_holm   confirmed
+     │ String  String                             Int64  Float64     Float64     Float64     Float64    Float64  Float64  Bool
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ H1      56: slope of T−25m→close on T−2h…   1314  -0.131436   -0.194304   -0.0673238  -4.09238   0.00025  0.0015        true
+   2 │ H2      57: slope of T−60m→close on T−6h…    798  -0.100744   -0.190193   -0.0353616  -2.52091   0.00175  0.00525       true
+   3 │ H3      54: slope of T−25m→close on T−2h…   1704   0.0537304   0.0232332   0.0847583   3.40594   0.00025  0.0015        true
+   4 │ H4      56/57 grw_step edge≥2 at T−60m: …    197   0.428928   -0.124675    1.01196     1.4512    0.07175  0.1435       false
+   5 │ H5      57: back drift ≤ −2 pp since T−6…    124   0.400086   -0.809151    1.69035     0.628296  0.273    0.273        false
+   6 │ H6      56: back drift ≤ −2 pp since T−3…    132   0.44654     0.201482    0.709137    3.50247   0.00025  0.0015        true
+
+DONE r03_price_movement (discovery)

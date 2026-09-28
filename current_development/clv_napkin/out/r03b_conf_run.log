@@ -1,0 +1,20 @@
+PHASE = confirmation  seasons ["24/25", "25/26"]
+[ Info: Loading DataStore for ScottishPyramid from local cache (Age: 3.5 hours)...
+panel: 5729 selections, 2279 markets (1s)
+B1 done
+B2 done
+B3 done
+B4 done
+B5 done
+6×10 DataFrame
+ Row │ id      text                               n      estimate    lo           hi          z          p_one    p_holm   confirmed
+     │ String  String                             Int64  Float64     Float64      Float64     Float64    Float64  Float64  Bool
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ H1      56: slope of T−25m→close on T−2h…    834  -0.0235778  -0.128934     0.0668355  -0.475135  0.31825  0.72225      false
+   2 │ H2      57: slope of T−60m→close on T−6h…    402  -0.210214   -0.365977    -0.0603504  -2.71167   0.00375  0.0225        true
+   3 │ H3      54: slope of T−25m→close on T−2h…   1158   0.023739   -0.00472428   0.0542428   1.58655   0.04725  0.20125      false
+   4 │ H4      56/57 grw_step edge≥2 at T−60m: …    292   0.518911   -0.0606411    1.10518     1.73287   0.04025  0.20125      false
+   5 │ H5      57: back drift ≤ −2 pp since T−6…     65   0.843053   -1.44043      3.14016     0.712503  0.24075  0.72225      false
+   6 │ H6      56: back drift ≤ −2 pp since T−3…     91   0.109517   -0.274228     0.520587    0.538736  0.298    0.72225      false
+
+DONE r03_price_movement (confirmation)
