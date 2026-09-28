@@ -1,0 +1,117 @@
+[ Info: Loading DataStore for ScottishPyramid from local cache (Age: 2.1 hours)...
+betfair_odds columns: ["match_id", "market_name", "market_line", "selection", "timestamp", "minutes_to_kickoff", "traded_price"]
+┌ Warning: Assignment to `ref` in soft scope is ambiguous because a global variable by the same name exists: `ref` will be treated as a new local. Disambiguate by using `local ref` to suppress this warning or `global ref` to assign to the existing global variable.
+└ @ ~/BF_runs/clv_napkin_dev/current_development/clv_napkin/r02_clv_leadtime.jl:81
+T−48h     gate 720.0 min  refused Dict("incomplete" => 1206, "stale" => 1670, "overround" => 5)
+T−24h     gate 360.0 min  refused Dict("incomplete" => 1845, "stale" => 5099, "overround" => 7)
+T−12h     gate 180.0 min  refused Dict("incomplete" => 1665, "stale" => 10903)
+T−6h      gate 90.0 min  refused Dict("incomplete" => 2141, "stale" => 14137, "overround" => 3)
+T−3h      gate 90.0 min  refused Dict("incomplete" => 2647, "stale" => 15133, "overround" => 2)
+T−2h      gate 90.0 min  refused Dict("incomplete" => 2364, "stale" => 16332)
+T−90m     gate 90.0 min  refused Dict("incomplete" => 2310, "stale" => 16210)
+T−60m     gate 90.0 min  refused Dict("incomplete" => 2355, "stale" => 15545, "overround" => 1)
+T−45m     gate 90.0 min  refused Dict("incomplete" => 2747, "stale" => 14009, "overround" => 2)
+T−25m     gate 90.0 min  refused Dict("incomplete" => 3181, "stale" => 11598, "overround" => 3)
+T−10m     gate 90.0 min  refused Dict("incomplete" => 3520, "stale" => 9487, "overround" => 3)
+earliest  refused Dict("overround" => 86)
+m05_joint_td                 fixtures 710
+td_spfl_cups_joint           fixtures 710
+m12_td (live)                fixtures 710
+td_lower_a2full_carry_jump   fixtures 710
+grw_step_a2_carry_jump       fixtures 710
+FLOOR s12_m01_td_poisson     fixtures 710
+paired 1X2 selections per model: Dict(("b: paired", "FLOOR s12_m01_td_poisson") => 90, ("b: paired", "m05_joint_td") => 90, ("b″: paired T−24h, T−60m, T−25m", "m12_td (live)") => 267, ("b″: paired T−24h, T−60m, T−25m", "grw_step_a2_carry_jump") => 267, ("b″: paired T−24h, T−60m, T−25m", "FLOOR s12_m01_td_poisson") => 267, ("b: paired", "td_spfl_cups_joint") => 90, ("b″: paired T−24h, T−60m, T−25m", "PLACEBO TWA[entry−155, entry]") => 141, ("b″: paired T−24h, T−60m, T−25m", "m05_joint_td") => 267, ("b′: paired T−6h…T−25m", "PLACEBO TWA[entry−155, entry]") => 219, ("b′: paired T−6h…T−25m", "FLOOR s12_m01_td_poisson") => 219, ("b′: paired T−6h…T−25m", "m05_joint_td") => 219, ("b″: paired T−24h, T−60m, T−25m", "td_spfl_cups_joint") => 267, ("b: paired", "td_lower_a2full_carry_jump") => 90, ("b″: paired T−24h, T−60m, T−25m", "td_lower_a2full_carry_jump") => 267, ("b′: paired T−6h…T−25m", "td_spfl_cups_joint") => 219, ("b′: paired T−6h…T−25m", "m12_td (live)") => 219, ("b: paired", "grw_step_a2_carry_jump") => 90, ("b: paired", "PLACEBO TWA[entry−155, entry]") => 57, ("b′: paired T−6h…T−25m", "grw_step_a2_carry_jump") => 219, ("b′: paired T−6h…T−25m", "td_lower_a2full_carry_jump") => 219, ("b: paired", "m12_td (live)") => 90)
+other-market cells with n ≥ 100: 32
+volume column in the odds frame: NONE (tick count used)
+T−24h  tercile 1  markets   66  ticks median      7  volume median —
+T−24h  tercile 2  markets   50  ticks median     12  volume median —
+T−24h  tercile 3  markets   54  ticks median     26  volume median —
+T−6h   tercile 1  markets   64  ticks median     15  volume median —
+T−6h   tercile 2  markets   57  ticks median     25  volume median —
+T−6h   tercile 3  markets   61  ticks median     42  volume median —
+T−25m  tercile 1  markets  183  ticks median     27  volume median —
+T−25m  tercile 2  markets  183  ticks median     42  volume median —
+T−25m  tercile 3  markets  179  ticks median     69  volume median —
+
+m05_joint_td  [b: paired]  (1X2, e = 2; paired selections 90)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███         +0.41              │████        +1.4
+T−24h                │█           +0.08             █│            -0.3
+T−6h                 │███████     +0.80              │████        +1.3
+T−2h                 │████        +0.51              │██          +0.6
+T−60m                │███████████ +1.34              │███████████ +3.6
+T−25m                │██████      +0.68              │████        +1.2
+
+
+grw_step_a2_carry_jump  [b: paired]  (1X2, e = 2; paired selections 90)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │██████      +0.87              │████████    +3.0
+T−24h                │█████       +0.68              │█████       +1.6
+T−6h                 │████████    +1.07              │██████      +2.2
+T−2h                 │█████       +0.72              │████        +1.3
+T−60m                │███████████ +1.49              │███████████ +3.9
+T−25m                │████        +0.58              │██          +0.8
+
+
+FLOOR s12_m01_td_poisson  [b: paired]  (1X2, e = 2; paired selections 90)
+          mean clv_pp                     EV@close 2% (%)
+earliest           ██│            -0.18            ██│            -0.5
+T−24h                │█           +0.07            ██│            -0.5
+T−6h                 │███         +0.24            ██│            -0.4
+T−2h                 │█████       +0.45              │█           +0.3
+T−60m                │███████████ +0.95              │███████████ +2.5
+T−25m                │████        +0.37              │█           +0.3
+
+
+m05_joint_td  [b′: paired T−6h…T−25m]  (1X2, e = 2; paired selections 219)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███████████ +1.76              │███████████ +7.6
+T−6h                 │██████      +0.99              │████        +2.6
+T−2h                 │████        +0.68              │██          +1.1
+T−60m                │███████     +1.14              │████        +2.8
+T−25m                │███         +0.42              │█           +0.4
+
+
+grw_step_a2_carry_jump  [b′: paired T−6h…T−25m]  (1X2, e = 2; paired selections 219)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███████████ +1.47              │███████████ +6.5
+T−6h                 │█████       +0.73              │███         +1.7
+T−2h                 │███         +0.46              │█           +0.6
+T−60m                │███████     +0.94              │███         +2.0
+T−25m                │██          +0.22              │            -0.1
+
+
+FLOOR s12_m01_td_poisson  [b′: paired T−6h…T−25m]  (1X2, e = 2; paired selections 219)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███████████ +1.37              │███████████ +6.3
+T−6h                 │█████       +0.60              │██          +1.4
+T−2h                 │████        +0.56              │█           +0.7
+T−60m                │████████    +0.98              │████        +2.2
+T−25m                │█           +0.18             █│            -0.4
+
+
+m05_joint_td  [b″: paired T−24h, T−60m, T−25m]  (1X2, e = 2; paired selections 267)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███████████ +0.83              │███████████ +2.1
+T−24h                │█████       +0.39              │█████       +0.9
+T−60m                │██████████  +0.78              │███████     +1.4
+T−25m                │██████      +0.43              │█           +0.2
+
+
+grw_step_a2_carry_jump  [b″: paired T−24h, T−60m, T−25m]  (1X2, e = 2; paired selections 267)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │███████████ +1.11              │███████████ +3.2
+T−24h                │█████████   +0.94              │██████████  +3.0
+T−60m                │██████      +0.59              │███         +1.0
+T−25m                │███         +0.27             █│            -0.2
+
+
+FLOOR s12_m01_td_poisson  [b″: paired T−24h, T−60m, T−25m]  (1X2, e = 2; paired selections 267)
+          mean clv_pp                     EV@close 2% (%)
+earliest             │█████       +0.18              │██████      +0.5
+T−24h                │███████████ +0.44              │███████████ +0.9
+T−60m                │██████      +0.24            ██│            -0.2
+T−25m                │███████     +0.29           ███│            -0.2
+
+
+DONE r02_clv_leadtime
