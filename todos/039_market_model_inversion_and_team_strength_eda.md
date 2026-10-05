@@ -4,9 +4,9 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | ACTIVE |
+| Status | IN_PROGRESS |
 | Priority | P1 |
-| Assignee | claude (manager), pi (build) |
+| Assignee | pi |
 | Created | 2026-10-05 |
 | Updated | 2026-10-05 |
 | Related Files / Commits / PRs | `current_development/market_model/DESIGN.md`; TODO 023 (`current_development/market_inverse_dynamics/`); tickets T014, T015; CLV napkin §14 (`proto/clv-napkin`) |
@@ -50,6 +50,11 @@ in `current_development/market_model/DESIGN.md`.
   `/home/james/bet_project/.worktrees/BayesianFootball-market-model`, branch
   `feat/market-model-inversion-eda` off `feat/market-inverse-grw-dynamics`. ID 039 taken as the
   next free number after the experiment-harness index (038). Next: Phase A brief for pi.
+- [2026-10-05 @pi] Phase A loader, runner, and tests implemented locally; 264 tests pass,
+  but the runner fails twice at the residual Plots layout assertion. CSV diagnostics were
+  written before the failure; figure set/runtime are incomplete. See
+  `current_development/market_model/results/A/PHASE_A_REPORT.md`. Phase A blocked,
+  not promoted to Phase B; manager/human review pending.
 
 ## Verification & Findings
 

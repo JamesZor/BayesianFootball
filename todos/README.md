@@ -32,7 +32,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
-| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | ACTIVE | P1 | claude | 2026-10-05 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-05 |
 <!-- TASKS:END -->
 
 ## Commands and Task Files

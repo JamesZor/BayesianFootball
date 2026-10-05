@@ -1,0 +1,10 @@
+gate,refused,remaining
+panel,0,710
+no Betfair book,78,632
+no complete 1X2 market,36,596
+fewer than 3 quoted selections,0,596
+optimiser not converged,0,596
+summed KL > 0.01,0,596
+"lambda outside [0.05, 6]",0,596
+T014 swapped book,1,595
+accepted,0,595

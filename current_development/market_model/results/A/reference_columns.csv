@@ -1,0 +1,11 @@
+column
+match_id
+match_date
+week
+season
+tournament_id
+home_team
+away_team
+lambda_mkt_h
+lambda_mkt_a
+sse
