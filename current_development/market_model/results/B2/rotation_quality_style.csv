@@ -1,0 +1,49 @@
+rung,protocol,scope,season,parameter,median,q05,q95,n_draws,n_teams,n_weeks,method
+R2,10a,innovation,all,variance_quality,0.0005519267096113069,0.00046655159897275713,0.0006477281986825653,12000,22,91,posterior draw transform
+R2,10a,innovation,all,variance_style,0.0005519267096113069,0.00046655159897275713,0.0006477281986825653,12000,22,91,posterior draw transform
+R2,10a,innovation,all,sigma_quality,0.023493120474043797,0.02159980553059793,0.02545050487916212,12000,22,91,posterior draw transform
+R2,10a,innovation,all,sigma_style,0.023493120474043797,0.02159980553059793,0.02545050487916212,12000,22,91,posterior draw transform
+R2,10a,innovation,all,style_quality_ratio,1.0,1.0,1.0,12000,22,91,posterior draw transform
+R2,10a,innovation,all,correlation_quality_style,-0.026082191746536573,-0.20315509097280415,0.15627230379465668,12000,22,91,posterior draw transform
+R2,10a,levels,24/25,correlation_alpha_beta_levels,-0.834790094507127,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R2,10a,levels,25/26,correlation_alpha_beta_levels,-0.8630984129327514,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only
+R6,10a,innovation,all,variance_quality,0.0010165058911363865,0.0008595969499573441,0.0012059655014016587,12000,22,91,posterior draw transform
+R6,10a,innovation,all,variance_style,0.00010101089982314998,7.202026842989843e-5,0.0001399352286060935,12000,22,91,posterior draw transform
+R6,10a,innovation,all,sigma_quality,0.03188268951755056,0.029318883845694504,0.03472701400062392,12000,22,91,posterior draw transform
+R6,10a,innovation,all,sigma_style,0.010050417892826066,0.008486475618491739,0.011829422158149722,12000,22,91,posterior draw transform
+R6,10a,innovation,all,style_quality_ratio,0.3153399879334282,0.26234345756667427,0.37452012202244495,12000,22,91,posterior draw transform
+R6,10a,innovation,all,correlation_quality_style,-0.019479103434475068,-0.2519091801911399,0.21519765499661042,12000,22,91,posterior draw transform
+R6,10a,levels,24/25,correlation_alpha_beta_levels,-0.8196911956533606,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R6,10a,levels,25/26,correlation_alpha_beta_levels,-0.8563675634245145,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only
+R7,10a,innovation,all,variance_quality,0.001023372383904262,0.0008306151701055852,0.0012485961720117443,12000,22,91,posterior draw transform
+R7,10a,innovation,all,variance_style,0.00010096628867626838,7.027928376832555e-5,0.0001403446761026596,12000,22,91,posterior draw transform
+R7,10a,innovation,all,sigma_quality,0.031990191992516515,0.028820395037128545,0.03533548035494168,12000,22,91,posterior draw transform
+R7,10a,innovation,all,sigma_style,0.010048198280034233,0.008383274046758215,0.01184671583500785,12000,22,91,posterior draw transform
+R7,10a,innovation,all,style_quality_ratio,0.3136362791902566,0.2561668419193889,0.3817229440059672,12000,22,91,posterior draw transform
+R7,10a,innovation,all,correlation_quality_style,-0.02225609986728404,-0.25144470707495736,0.21591516185696757,12000,22,91,posterior draw transform
+R7,10a,levels,24/25,correlation_alpha_beta_levels,-0.8195904281398446,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R7,10a,levels,25/26,correlation_alpha_beta_levels,-0.8563178682441892,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only
+R2,10b,innovation,all,variance_quality,0.00036181283438249223,0.00026506951176671916,0.0004897785243445568,12000,22,91,posterior draw transform
+R2,10b,innovation,all,variance_style,0.00036181283438249223,0.00026506951176671916,0.0004897785243445568,12000,22,91,posterior draw transform
+R2,10b,innovation,all,sigma_quality,0.019021378316122634,0.01628095548737612,0.022130940430618567,12000,22,91,posterior draw transform
+R2,10b,innovation,all,sigma_style,0.019021378316122634,0.01628095548737612,0.022130940430618567,12000,22,91,posterior draw transform
+R2,10b,innovation,all,style_quality_ratio,1.0,1.0,1.0,12000,22,91,posterior draw transform
+R2,10b,innovation,all,correlation_quality_style,-0.06655357984834628,-0.3853841968698892,0.26427427061735614,12000,22,91,posterior draw transform
+R2,10b,levels,24/25,correlation_alpha_beta_levels,-0.8368630576452105,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R2,10b,levels,25/26,correlation_alpha_beta_levels,-0.8656575412193797,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only
+R6,10b,innovation,all,variance_quality,0.0007018879569240605,0.0005082765549715288,0.0009514624472857294,12000,22,91,posterior draw transform
+R6,10b,innovation,all,variance_style,5.5872898466593736e-5,2.3969470125046304e-5,0.00010837116042648257,12000,22,91,posterior draw transform
+R6,10b,innovation,all,sigma_quality,0.02649316811790953,0.022544989573613044,0.030845784918848443,12000,22,91,posterior draw transform
+R6,10b,innovation,all,sigma_style,0.007474817620520855,0.0048958625395642925,0.01041014698911294,12000,22,91,posterior draw transform
+R6,10b,innovation,all,style_quality_ratio,0.2824111332469862,0.18609709846977368,0.396349685252396,12000,22,91,posterior draw transform
+R6,10b,innovation,all,correlation_quality_style,-0.1800155915278403,-0.5739798139621318,0.26676352434256784,12000,22,91,posterior draw transform
+R6,10b,levels,24/25,correlation_alpha_beta_levels,-0.8225053381025864,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R6,10b,levels,25/26,correlation_alpha_beta_levels,-0.8594513984235264,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only
+R7,10b,innovation,all,variance_quality,0.0006533558526550659,0.00044334579924308707,0.0009497076151093165,12000,22,91,posterior draw transform
+R7,10b,innovation,all,variance_style,5.854238305508197e-5,2.5283830249871916e-5,0.00011528019557587754,12000,22,91,posterior draw transform
+R7,10b,innovation,all,sigma_quality,0.025560826524898467,0.021055778284359675,0.03081732653391176,12000,22,91,posterior draw transform
+R7,10b,innovation,all,sigma_style,0.00765129943571356,0.005028302919355359,0.010736861532578825,12000,22,91,posterior draw transform
+R7,10b,innovation,all,style_quality_ratio,0.2996470336000193,0.19093738764517876,0.4373461297635094,12000,22,91,posterior draw transform
+R7,10b,innovation,all,correlation_quality_style,-0.17085825539820906,-0.5583088872647108,0.25651254232531423,12000,22,91,posterior draw transform
+R7,10b,levels,24/25,correlation_alpha_beta_levels,-0.8235953968849302,NaN,NaN,0,19,40,season-average RTS means at median theta; active accepted-panel teams; point only
+R7,10b,levels,25/26,correlation_alpha_beta_levels,-0.860114619808541,NaN,NaN,0,19,39,season-average RTS means at median theta; active accepted-panel teams; point only

@@ -1,0 +1,35 @@
+gate,value,tol,pass
+G1 loglik a1_grw1,1.5987211554602254e-13,1.0e-9,true
+G2 smoothed mean a1_grw1,4.7531423241764514e-15,1.0e-8,true
+G4 FFBS mean max |z| (4000 draws),1.4900625446712092,4.5,true
+G4 FFBS cov max rel err,0.04473447127325301,0.1,true
+G1 loglik a2_momentum,9.592326932761353e-14,1.0e-9,true
+G2 smoothed mean a2_momentum,4.746203430272544e-15,1.0e-8,true
+G1 loglik regime (random S),1.0658141036401503e-14,1.0e-9,true
+G2 smoothed mean regime (random S),3.805983306293115e-15,1.0e-8,true
+G5 loglik feature + Student-t ω,7.105427357601002e-15,1.0e-9,true
+G5 smoothed mean feature + Student-t ω,8.425551922819352e-15,1.0e-8,true
+"G3 RBPF(SV, σ_h→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+"G3 RBPF(regime, Δ→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+G3 RBPF(regime) pre-week means vs Kalman,1.1102230246251565e-16,1.0e-10,true
+B loglik R0,2.2026824808563106e-13,1.0e-9,true
+B RTS R0,3.3584246494910985e-15,1.0e-8,true
+B loglik R1,1.5987211554602254e-13,1.0e-9,true
+B RTS R1,4.884981308350689e-15,1.0e-8,true
+B loglik R3,6.394884621840902e-14,1.0e-9,true
+B RTS R3,9.2148511043888e-15,1.0e-8,true
+B R1 zero-break reduction,0.0,1.0e-9,true
+B R3 zero-HA reduction,4.618527782440651e-14,1.0e-9,true
+B RBPF fixed-omega loglik,0.0,1.0e-8,true
+B RBPF fixed-omega pre-week mean,5.551115123125783e-16,1.0e-8,true
+B RBPF fixed-omega pre-week variance,1.3461454173580023e-15,1.0e-8,true
+B2 R5 isotropic reduction,4.618527782440651e-14,1.0e-9,true
+B2 R6 rho-zero reduction,3.552713678800501e-15,1.0e-9,true
+B2 loglik R5,1.6413537196058314e-12,1.0e-9,true
+B2 RTS R5,1.587618925213974e-14,1.0e-8,true
+B2 loglik R6,1.2789769243681803e-13,1.0e-9,true
+B2 RTS R6,4.163336342344337e-15,1.0e-8,true
+B2 R6 FFBS mean max z (4000),1.0458676930563535,4.5,true
+B2 R6 FFBS covariance relative error,0.035611943638638066,0.1,true
+B2 loglik R7,3.090860900556436e-13,1.0e-9,true
+B2 RTS R7,1.0057926713713528e-14,1.0e-8,true

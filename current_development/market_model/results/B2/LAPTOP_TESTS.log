@@ -1,0 +1,114 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 249.2 hours)...
+Phase A outputs: /tmp/jl_N7mpuj/A
+Wall seconds: 36.645148038864136
+R01_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 249.2 hours)...
+34×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+Synthetic persistent: (n_pairs = 4770, n_teams = 30, autocorrelation = 0.4323090305601678, ci_low = 0.4003255632689652, ci_high = 0.4620725054180068, reps = 2000, seed = 3924)
+Synthetic iid fixture: (n_pairs = 4770, n_teams = 30, autocorrelation = -0.012818048115770688, ci_low = -0.03503083165923996, ci_high = 0.009656938860452217, reps = 2000, seed = 3924)
+Synthetic common weekly shock: (icc = 0.44873747771167816, variance_week = 0.8169761097400026, variance_within = 1.0036342700886336, ms_between = 7.539443148008655, ms_within = 1.0036342700886336, n0 = 8.0, n = 1600, n_weeks = 200, n_multi_fixture_weeks = 200, n_pairs = 5600, ci_low = 0.3896948361754303, ci_high = 0.4982498542696015, reps = 2000, seed = 3928, method = "unbalanced one-way ANOVA signed MOM; whole-week percentile bootstrap")
+Synthetic no weekly shock: (icc = 0.005882559113451667, variance_week = 0.005938873697676206, variance_within = 1.0036342700886334, ms_between = 1.051145259670043, ms_within = 1.0036342700886334, n0 = 8.0, n = 1600, n_weeks = 200, n_multi_fixture_weeks = 200, n_pairs = 5600, ci_low = -0.020292643117333514, ci_high = 0.03079024796200639, reps = 2000, seed = 3928, method = "unbalanced one-way ANOVA signed MOM; whole-week percentile bootstrap")
+Test Summary:                 | Pass  Total     Time
+Phase B2 covariance contracts |  131    131  1m06.8s
+T03_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 249.2 hours)...
+24×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 249.2 hours)...
+27×6 DataFrame
+ Row │ family     point  method             value        tol      pass
+     │ String     Int64  String             Float64      Float64  Bool
+─────┼─────────────────────────────────────────────────────────────────
+   1 │ gamma          1  fresh ReverseDiff  0.0           1.0e-8  true
+   2 │ gamma          1  ForwardDiff        4.26411e-16   1.0e-6  true
+   3 │ gamma          1  finite difference  1.74526e-10   1.0e-6  true
+   4 │ gamma          2  fresh ReverseDiff  0.0           1.0e-8  true
+   5 │ gamma          2  ForwardDiff        1.10945e-16   1.0e-6  true
+   6 │ gamma          2  finite difference  3.85863e-10   1.0e-6  true
+   7 │ gamma          3  fresh ReverseDiff  0.0           1.0e-8  true
+   8 │ gamma          3  ForwardDiff        2.16345e-16   1.0e-6  true
+   9 │ gamma          3  finite difference  1.28605e-10   1.0e-6  true
+  10 │ lognormal      1  fresh ReverseDiff  0.0           1.0e-8  true
+  11 │ lognormal      1  ForwardDiff        1.34432e-16   1.0e-6  true
+  12 │ lognormal      1  finite difference  9.74142e-10   1.0e-6  true
+  13 │ lognormal      2  fresh ReverseDiff  0.0           1.0e-8  true
+  14 │ lognormal      2  ForwardDiff        2.24503e-16   1.0e-6  true
+  15 │ lognormal      2  finite difference  1.1008e-9     1.0e-6  true
+  16 │ lognormal      3  fresh ReverseDiff  0.0           1.0e-8  true
+  17 │ lognormal      3  ForwardDiff        2.48828e-16   1.0e-6  true
+  18 │ lognormal      3  finite difference  1.41097e-9    1.0e-6  true
+  19 │ logt           1  fresh ReverseDiff  0.0           1.0e-8  true
+  20 │ logt           1  ForwardDiff        1.46589e-16   1.0e-6  true
+  21 │ logt           1  finite difference  2.61981e-10   1.0e-6  true
+  22 │ logt           2  fresh ReverseDiff  0.0           1.0e-8  true
+  23 │ logt           2  ForwardDiff        2.8509e-16    1.0e-6  true
+  24 │ logt           2  finite difference  1.11034e-10   1.0e-6  true
+  25 │ logt           3  fresh ReverseDiff  0.0           1.0e-8  true
+  26 │ logt           3  ForwardDiff        1.25694e-16   1.0e-6  true
+  27 │ logt           3  finite difference  1.2653e-9     1.0e-6  true
+Test Summary:               | Pass  Total   Time
+Phase B two-stage contracts |  131    131  59.8s
+T02_DONE
