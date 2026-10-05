@@ -23,9 +23,9 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Acceptance Criteria
 
-- [ ] Phase A: KL inversion with the 1X2 gate, synthetic recovery, KL vs SSE, inversion-quality
+- [x] Phase A: KL inversion with the 1X2 gate, synthetic recovery, KL vs SSE, inversion-quality
       EDA including the held-out-line test.
-- [ ] Phase B: two-stage ladder R0–R4 on the Kalman engine (engine gates pass; R̂ ≤ 1.05,
+- [x] Phase B: two-stage ladder R0–R4 on the Kalman engine (engine gates pass; R̂ ≤ 1.05,
       ESS ≥ 200), measures on both axes and both θ protocols; Gamma / log-normal / log-t test;
       rate-distribution and rates-vs-goals EDA.
 - [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
@@ -60,10 +60,31 @@ in `current_development/market_model/DESIGN.md`.
   same-fixture in-sample held-out comparisons. Fresh `pi_julia_mm` tmux Julia REPL:
   `R01_DONE` and `T01_DONE` (269/269). All four figures and runtime CSV present;
   Phase A ready for manager review, not Phase B authorisation.
+- [2026-10-05 @pi] Phase B claimed in `pi/market-model-phase-b`, worktree
+  `BayesianFootball-market-model-pi-b`; only own tmux REPLs. Implementing the 517-fixture
+  ladder, conditional Kalman gates, family comparison and outcome EDA. Human approved
+  seeded R4 RBPF (prior fixture-shared Gamma proposals; exact conditional Kalman states)
+  and family-specific priors for the new static scale/shape parameters. Manager added
+  fixed-omega reduction, per-week ESS/resampling and three-seed stability checks.
+  No Phase C work. Initial deterministic R1 FFBS test exposed ~1.2e-8 round-off noise
+  in zero-process steps; the prototype now copies the mathematically deterministic
+  backward step exactly, rather than loosening the test.
 - [2026-10-05 @claude] Phase A reviewed and merged (`42b09664`). Rerun in a fresh tmux REPL
   (`claude_julia_mm`): 269/269 tests, runner 38.6 s, every CSV and PNG byte-identical to
   `efa71a3c`. Accepted deviations: 12473327 refused at gate 1 (no book in the snapshot); KL gate
   fixed at 0.01 (nothing reaches it). Phase B awaits human sign-off.
+
+- [2026-10-05 @pi] Phase B verified and handed off for manager/human review. Fresh
+  laptop: 131/131, `T02_DONE`. Two fresh beast full runs at `8663544e`:
+  `R02_DONE` in 3291.801 / 3308.673 s; all 37 regenerated scientific CSVs byte-identical.
+  All 30 ladder θ gates and 33 family-fit gates pass; zero retained NUTS divergences.
+  R4 fixed-omega reduction, per-week ESS/resampling, named worst weeks and three-seed
+  diagnostics are published; severe occasional particle collapse is explicitly reported.
+  Log-t leads fixture CV by 21.03 ± 10.35 nats versus Gamma (fixture SE), not a decisive
+  universal winner. Plot-only margins corrected/verified at `9469f327`. Report:
+  `current_development/market_model/results/B/PHASE_B_REPORT.md`; seeded proof:
+  `results/B/REPRODUCIBILITY.md`. No Phase C/D or `src/` changes, DB writes or package
+  changes. TODO remains IN_PROGRESS for unapproved/uncompleted C/D.
 
 ## Verification & Findings
 
@@ -78,3 +99,11 @@ home/away +0.65/+0.68 pp, BTTS-yes −0.79 pp in sample and −1.20 pp held out.
 gives a log-total 0.103 lower than the full book (q05/q50/q95 −0.181/−0.105/−0.014) with
 supremacy almost unchanged (+0.010). The 78 accepted 1X2-only books therefore carry totals biased
 low by about 0.10, the size of the panel's whole log-total sd.
+
+**Phase B (2026-10-05).** 517 fixtures / 1034 observations, excluding the prescribed
+78 1X2-only accepted books. Weekly R2 explains 98.06% supremacy / 92.52% level
+(smoothed R²); honest 25/26 RMSE .19556 / .05049. Per-team HA adds negligible gains;
+heavy tails modestly improve density but worsen supremacy RMSE and do not fix coverage.
+All acceptance evidence and limitations (R4 ESS collapse, static log-t's infinite rate
+moments, weak away-goal calibration flattening) are recorded in the Phase B report.
+Phases C/D require human sign-off; this task is not closed.

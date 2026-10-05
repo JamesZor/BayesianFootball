@@ -1,0 +1,28 @@
+family,point,method,value,tol,pass
+gamma,1,fresh ReverseDiff,0.0,1.0e-8,true
+gamma,1,ForwardDiff,4.852671759140348e-16,1.0e-6,true
+gamma,1,finite difference,2.2375441381796283e-10,1.0e-6,true
+gamma,2,fresh ReverseDiff,0.0,1.0e-8,true
+gamma,2,ForwardDiff,8.4731064779086035e-16,1.0e-6,true
+gamma,2,finite difference,3.269726350696602e-10,1.0e-6,true
+gamma,3,fresh ReverseDiff,0.0,1.0e-8,true
+gamma,3,ForwardDiff,2.1223449715440347e-16,1.0e-6,true
+gamma,3,finite difference,2.39281742586001e-10,1.0e-6,true
+lognormal,1,fresh ReverseDiff,0.0,1.0e-8,true
+lognormal,1,ForwardDiff,2.954632203570864e-16,1.0e-6,true
+lognormal,1,finite difference,1.1164015098073237e-10,1.0e-6,true
+lognormal,2,fresh ReverseDiff,0.0,1.0e-8,true
+lognormal,2,ForwardDiff,2.0332220552066907e-16,1.0e-6,true
+lognormal,2,finite difference,2.684339472663124e-10,1.0e-6,true
+lognormal,3,fresh ReverseDiff,0.0,1.0e-8,true
+lognormal,3,ForwardDiff,1.992121235443878e-16,1.0e-6,true
+lognormal,3,finite difference,7.637117873173304e-11,1.0e-6,true
+logt,1,fresh ReverseDiff,0.0,1.0e-8,true
+logt,1,ForwardDiff,1.4815360681911e-15,1.0e-6,true
+logt,1,finite difference,4.6282277820761365e-11,1.0e-6,true
+logt,2,fresh ReverseDiff,0.0,1.0e-8,true
+logt,2,ForwardDiff,5.856786508951729e-15,1.0e-6,true
+logt,2,finite difference,3.7791422623051146e-11,1.0e-6,true
+logt,3,fresh ReverseDiff,0.0,1.0e-8,true
+logt,3,ForwardDiff,2.1642384807888058e-15,1.0e-6,true
+logt,3,finite difference,3.68118126542447e-11,1.0e-6,true
