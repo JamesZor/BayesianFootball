@@ -121,7 +121,7 @@ end
 
 "Pointwise λ-scale densities; extraction uses the exact model projection and parameter names."
 function family_loglik(chain,data,family)
-    arr = Array(MCMCChains.get_sections(chain,:parameters))
+    arr = Array(MCMCChains.get_sections(chain,:parameters).value)
     arr = permutedims(arr,(2,1,3))
     draws = reshape(arr,size(arr,1),:)
     names = String.(MCMCChains.names(MCMCChains.get_sections(chain,:parameters)))

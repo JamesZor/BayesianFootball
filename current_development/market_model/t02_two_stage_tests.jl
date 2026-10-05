@@ -17,6 +17,11 @@ const TBMID = TB.MID
         byid = Dict(r.match_id => r.kl for r in eachrow(built.rates))
         @test all(r.sse == byid[r.match_id] for r in eachrow(built.panel.matches))
         @test count(==(TB.EXCLUSION), built.panel.refusals.reason) == 78
+        home_panel = TB.home_panel(built.panel)
+        @test all(iszero,home_panel.obs_X[2:2:end,:])
+        @test all(sum(home_panel.obs_X[j,:]) == 1 for j in 1:2:1034)
+        @test all(home_panel.obs_X[j,built.panel.obs_att[j]] == 1 for j in 1:2:1034)
+        @test built.panel.matches.match_id == built.panel.obs_match[1:2:end]
         folds = TB.fixture_folds(built.panel)
         @test sort(unique(folds)) == collect(1:10)
         obs_folds = repeat(folds; inner=2)
@@ -30,6 +35,23 @@ const TBMID = TB.MID
         println()
         for row in eachrow(gates)
             @test row.pass
+        end
+    end
+    @testset "Gaussian pre-week predictive parity" begin
+        p = TB.phase_b_panel(BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower(); max_age_hours=10^6)).panel
+        for level in 0:3
+            a = TB.Rung(level)
+            theta = TBMID.init_centre(a)
+            pp = level >= 3 ? TB.home_panel(p) : p
+            reference = TB.rung_filter(a,pp,theta; predict=true)
+            prediction = TB.preweek_predictions(a,p,theta; mc_draws=100)
+            @test abs(reference.loglik-prediction.loglik) <= 1e-8
+            @test maximum(abs.(reference.pred_mean.-prediction.pred_mean)) <= 1e-8
+            @test maximum(abs.(reference.pred_var.-prediction.pred_var)) <= 1e-8
+            @test nrow(prediction.rows) == 517*5
+            summary = TB.prediction_summary(p,prediction,"10b","R$level")
+            @test nrow(summary) == 20
+            @test Set(summary.axis) == Set(TB.AXES)
         end
     end
     @testset "Zero in-season R1 paths" begin
@@ -65,6 +87,26 @@ const TBMID = TB.MID
         println()
         for row in eachrow(gates)
             @test row.pass
+        end
+    end
+    @testset "Deterministic chain family extraction" begin
+        data = TB.family_data(TBMID.toy_panel(Xoshiro(3913)))
+        for family in (:gamma,:lognormal,:logt)
+            names = vcat(["mu","gamma","sigma_alpha","sigma_beta"],
+                         ["z_alpha[$i]" for i in 1:data.n],["z_beta[$i]" for i in 1:data.n],
+                         family == :gamma ? ["noise.nu"] : family == :lognormal ? ["noise.sigma"] : ["noise.sigma","noise.nu"])
+            values = vcat([0.3,0.2,0.15,0.12],collect(1:data.n).*0.1,collect(1:data.n).*(-0.05),
+                          family == :gamma ? [100.0] : family == :lognormal ? [0.2] : [0.2,5.0])
+            array = repeat(reshape(values,1,length(values),1),3,1,2)
+            chain = TB.MCMCChains.Chains(array,names)
+            result = TB.family_loglik(chain,data,family)
+            @test size(result.ll) == (length(data.y),6)
+            eta = 0.3 .+ 0.2.*data.home .+ (0.15.*(data.C*(collect(1:data.n).*0.1)))[data.att] .+
+                  (0.12.*(data.C*(collect(1:data.n).*(-0.05))))[data.def]
+            noise = family == :gamma ? (; nu=100.0) : family == :lognormal ? (; sigma=0.2) : (; sigma=0.2,nu=5.0)
+            expected = TB.family_ll(Val(family),data.y,data.logy,eta,noise)
+            @test result.ll ≈ repeat(expected,1,6)
+            @test abs(TB.waic_table(result,family).p_waic) <= 1e-20
         end
     end
     @testset "Poisson IRLS" begin
