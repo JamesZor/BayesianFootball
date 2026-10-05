@@ -1,0 +1,194 @@
+match_id,match_date,season,home_team,away_team,n_targets,sse,reason
+12473322,2025-04-26,24/25,alloa-athletic,montrose,3,4.9173980034720176e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12473327,2025-04-26,24/25,dumbarton,annan-athletic,0,NaN,no Betfair book
+12473336,2025-04-26,24/25,cove-rangers,kelty-hearts-fc,3,1.3946554843291508e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476454,2025-04-26,24/25,elgin-city,stranraer,3,2.023870244189127e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476455,2025-04-26,24/25,stirling-albion,clyde-fc,3,-1.8392723103086481e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476457,2025-04-26,24/25,edinburgh-city-fc,forfar-athletic,3,-1.1641941732589537e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476458,2025-04-26,24/25,bonnyrigg-rose,the-spartans-fc,0,NaN,no Betfair book
+12476459,2025-04-26,24/25,peterhead,east-fife,3,-4.4276317271102023e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476460,2025-04-19,24/25,forfar-athletic,bonnyrigg-rose,3,-1.0768109007682717e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476462,2025-04-19,24/25,the-spartans-fc,clyde-fc,0,NaN,no Betfair book
+12476467,2025-04-12,24/25,peterhead,the-spartans-fc,0,NaN,no Betfair book
+12476470,2025-04-05,24/25,the-spartans-fc,stranraer,0,NaN,no Betfair book
+12476471,2025-04-05,24/25,elgin-city,stirling-albion,3,-7.317339882817843e-18,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476474,2025-03-29,24/25,east-fife,the-spartans-fc,0,NaN,no Betfair book
+12476478,2025-03-22,24/25,the-spartans-fc,elgin-city,0,NaN,no Betfair book
+12476480,2025-03-29,24/25,forfar-athletic,peterhead,3,-1.792893871500624e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476485,2025-03-15,24/25,peterhead,edinburgh-city-fc,3,-1.4987020020056884e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476487,2025-03-15,24/25,forfar-athletic,the-spartans-fc,0,NaN,no Betfair book
+12476488,2025-03-15,24/25,east-fife,stranraer,3,-4.7499308166447175e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476489,2025-03-08,24/25,the-spartans-fc,stirling-albion,0,NaN,no Betfair book
+12476490,2025-03-08,24/25,clyde-fc,east-fife,2,NaN,no complete 1X2 market
+12476495,2025-03-01,24/25,the-spartans-fc,bonnyrigg-rose,0,NaN,no Betfair book
+12476504,2025-02-22,24/25,clyde-fc,the-spartans-fc,0,NaN,no Betfair book
+12476510,2025-02-15,24/25,edinburgh-city-fc,the-spartans-fc,0,NaN,no Betfair book
+12476512,2025-02-08,24/25,the-spartans-fc,east-fife,0,NaN,no Betfair book
+12476513,2025-02-08,24/25,bonnyrigg-rose,peterhead,3,1.658515154082267e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476514,2025-02-01,24/25,peterhead,forfar-athletic,3,-6.692534397774723e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476518,2025-02-01,24/25,stranraer,the-spartans-fc,0,NaN,no Betfair book
+12476519,2025-01-25,24/25,the-spartans-fc,peterhead,0,NaN,no Betfair book
+12476524,2025-01-25,24/25,forfar-athletic,stranraer,3,-2.73679304073222e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476525,2025-01-25,24/25,clyde-fc,elgin-city,2,NaN,no complete 1X2 market
+12476526,2025-02-25,24/25,the-spartans-fc,forfar-athletic,0,NaN,no Betfair book
+12476547,2024-12-28,24/25,the-spartans-fc,edinburgh-city-fc,0,NaN,no Betfair book
+12476557,2024-12-21,24/25,east-fife,the-spartans-fc,0,NaN,no Betfair book
+12476558,2024-12-14,24/25,the-spartans-fc,clyde-fc,0,NaN,no Betfair book
+12476560,2024-12-14,24/25,forfar-athletic,bonnyrigg-rose,3,-3.1596412910650277e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476563,2024-12-14,24/25,stranraer,edinburgh-city-fc,4,NaN,no complete 1X2 market
+12476565,2024-12-07,24/25,east-fife,elgin-city,3,-2.480349492575187e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476567,2025-05-03,24/25,stranraer,bonnyrigg-rose,3,3.223894031106594e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476570,2025-05-03,24/25,the-spartans-fc,edinburgh-city-fc,0,NaN,no Betfair book
+12476574,2024-11-16,24/25,stranraer,bonnyrigg-rose,3,1.1078403480807395e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476578,2024-11-16,24/25,the-spartans-fc,stirling-albion,0,NaN,no Betfair book
+12476579,2024-11-09,24/25,forfar-athletic,the-spartans-fc,0,NaN,no Betfair book
+12476585,2024-11-09,24/25,bonnyrigg-rose,elgin-city,3,-3.737242180138795e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476586,2024-11-09,24/25,stirling-albion,peterhead,3,-1.414235598818373e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476587,2024-11-02,24/25,peterhead,the-spartans-fc,0,NaN,no Betfair book
+12476588,2024-11-02,24/25,elgin-city,stranraer,3,1.2822942966739753e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476591,2024-11-02,24/25,clyde-fc,bonnyrigg-rose,3,-8.397215841246088e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476592,2024-10-19,24/25,the-spartans-fc,elgin-city,0,NaN,no Betfair book
+12476595,2024-10-19,24/25,forfar-athletic,east-fife,3,1.0770302933651513e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476599,2024-10-05,24/25,peterhead,elgin-city,4,NaN,no complete 1X2 market
+12476601,2024-09-28,24/25,the-spartans-fc,east-fife,0,NaN,no Betfair book
+12476602,2024-10-05,24/25,clyde-fc,the-spartans-fc,0,NaN,no Betfair book
+12476605,2024-09-28,24/25,bonnyrigg-rose,forfar-athletic,2,NaN,no complete 1X2 market
+12476606,2024-09-21,24/25,stirling-albion,bonnyrigg-rose,3,5.576796256614568e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476610,2024-09-28,24/25,elgin-city,edinburgh-city-fc,4,NaN,no complete 1X2 market
+12476612,2024-09-14,24/25,the-spartans-fc,forfar-athletic,0,NaN,no Betfair book
+12476614,2024-09-14,24/25,peterhead,stirling-albion,3,-2.8328211729417766e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476618,2024-08-31,24/25,stirling-albion,the-spartans-fc,0,NaN,no Betfair book
+12476624,2024-08-24,24/25,the-spartans-fc,peterhead,0,NaN,no Betfair book
+12476629,2024-08-17,24/25,east-fife,forfar-athletic,3,-1.7619846425349882e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476630,2024-08-10,24/25,the-spartans-fc,bonnyrigg-rose,0,NaN,no Betfair book
+12476631,2024-08-17,24/25,edinburgh-city-fc,bonnyrigg-rose,6,NaN,no complete 1X2 market
+12476635,2024-08-10,24/25,peterhead,forfar-athletic,3,-2.6329149943978975e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476639,2025-04-19,24/25,kelty-hearts-fc,queen-of-the-south,3,-8.436686748761291e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476652,2025-03-29,24/25,queen-of-the-south,inverness-caledonian-thistle,3,-1.1148377474014695e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476665,2025-03-15,24/25,arbroath,dumbarton,3,-1.0115145189122797e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476668,2025-03-08,24/25,kelty-hearts-fc,montrose,3,-1.326340220733008e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476698,2025-01-25,24/25,stenhousemuir,cove-rangers,3,1.4443930410653748e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476706,2025-01-04,24/25,stenhousemuir,annan-athletic,2,NaN,no complete 1X2 market
+12476707,2025-01-04,24/25,queen-of-the-south,cove-rangers,3,1.3243091758033592e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476708,2025-01-04,24/25,inverness-caledonian-thistle,dumbarton,3,-1.1780989058096002e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476709,2025-01-04,24/25,montrose,kelty-hearts-fc,2,NaN,no complete 1X2 market
+12476711,2025-01-04,24/25,arbroath,alloa-athletic,3,6.372296613456148e-19,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476723,2024-12-14,24/25,queen-of-the-south,stenhousemuir,3,-2.0534334518071037e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476724,2024-12-07,24/25,stenhousemuir,dumbarton,3,1.562032627069934e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476725,2024-12-14,24/25,dumbarton,annan-athletic,3,2.6471313354495685e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476728,2024-12-07,24/25,kelty-hearts-fc,alloa-athletic,3,-2.0158278726331126e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476739,2024-11-02,24/25,inverness-caledonian-thistle,kelty-hearts-fc,3,-1.2889618529675456e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476741,2024-11-02,24/25,queen-of-the-south,montrose,3,7.630602799351235e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476745,2024-11-09,24/25,queen-of-the-south,alloa-athletic,3,2.788750716289051e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476748,2024-11-02,24/25,arbroath,stenhousemuir,3,2.724601990535062e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476749,2024-11-02,24/25,dumbarton,cove-rangers,3,-1.8059728629875802e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476751,2024-10-26,24/25,stenhousemuir,kelty-hearts-fc,3,-3.460956020998616e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476753,2024-10-26,24/25,dumbarton,inverness-caledonian-thistle,4,NaN,no complete 1X2 market
+12476754,2024-11-02,24/25,alloa-athletic,annan-athletic,4,NaN,no complete 1X2 market
+12476755,2024-10-26,24/25,alloa-athletic,arbroath,3,-7.214120035373727e-18,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476757,2024-10-19,24/25,kelty-hearts-fc,montrose,3,5.804020199675961e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476759,2024-10-05,24/25,dumbarton,stenhousemuir,6,NaN,no complete 1X2 market
+12476765,2024-10-05,24/25,alloa-athletic,cove-rangers,4,NaN,no complete 1X2 market
+12476771,2024-09-21,24/25,dumbarton,montrose,3,1.420925963179462e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476774,2024-09-21,24/25,stenhousemuir,queen-of-the-south,3,1.205166032420468e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476778,2024-09-14,24/25,kelty-hearts-fc,cove-rangers,3,6.624502279515896e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476779,2024-08-31,24/25,stenhousemuir,annan-athletic,3,1.5294513248097025e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476781,2024-08-31,24/25,cove-rangers,montrose,3,-1.6362483829905812e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476783,2024-09-14,24/25,annan-athletic,dumbarton,0,NaN,no Betfair book
+12476784,2024-08-31,24/25,dumbarton,kelty-hearts-fc,3,1.0554653988687985e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476785,2024-08-31,24/25,inverness-caledonian-thistle,queen-of-the-south,3,-2.9951998268190993e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476789,2024-08-24,24/25,montrose,queen-of-the-south,0,NaN,no Betfair book
+12476791,2024-08-24,24/25,dumbarton,arbroath,3,-6.187883572270579e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476793,2024-08-17,24/25,inverness-caledonian-thistle,montrose,0,NaN,no Betfair book
+12476794,2024-08-10,24/25,queen-of-the-south,cove-rangers,3,9.215657148940501e-18,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476799,2024-08-10,24/25,arbroath,montrose,3,-5.728590678021662e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12476800,2024-08-10,24/25,annan-athletic,inverness-caledonian-thistle,3,-7.176407083761829e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12477130,2024-08-03,24/25,stranraer,the-spartans-fc,0,NaN,no Betfair book
+12477133,2024-08-03,24/25,bonnyrigg-rose,peterhead,3,-1.4540158361781952e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+12811090,2024-09-17,24/25,elgin-city,the-spartans-fc,0,NaN,no Betfair book
+12954858,2024-10-12,24/25,edinburgh-city-fc,the-spartans-fc,0,NaN,no Betfair book
+13159980,2024-12-17,24/25,elgin-city,clyde-fc,6,NaN,no complete 1X2 market
+13171688,2024-12-03,24/25,bonnyrigg-rose,stirling-albion,4,NaN,no complete 1X2 market
+13175772,2024-12-10,24/25,the-spartans-fc,stranraer,0,NaN,no Betfair book
+13179032,2024-12-03,24/25,cove-rangers,stenhousemuir,3,-1.070164691784879e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+13233442,2025-01-21,24/25,bonnyrigg-rose,the-spartans-fc,0,NaN,no Betfair book
+13255608,2025-02-04,24/25,elgin-city,bonnyrigg-rose,4,NaN,no complete 1X2 market
+13343735,2025-03-11,24/25,elgin-city,the-spartans-fc,0,NaN,no Betfair book
+13348881,2025-02-04,24/25,stirling-albion,the-spartans-fc,0,NaN,no Betfair book
+14032714,2026-04-25,25/26,the-spartans-fc,elgin-city,0,NaN,no Betfair book
+14032721,2026-04-18,25/26,annan-athletic,the-spartans-fc,0,NaN,no Betfair book
+14035485,2025-08-16,25/26,cove-rangers,montrose,0,NaN,no Betfair book
+14035491,2025-08-23,25/26,stenhousemuir,queen-of-the-south,3,-1.6653677972077748e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035501,2025-08-09,25/26,montrose,kelty-hearts-fc,9,NaN,T014 swapped book
+14035505,2025-08-30,25/26,montrose,peterhead,3,-2.3175921628451383e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035513,2025-09-20,25/26,east-fife,montrose,3,-3.6488263404583176e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035515,2025-09-20,25/26,kelty-hearts-fc,hamilton-academical,4,NaN,no complete 1X2 market
+14035516,2025-09-20,25/26,stenhousemuir,peterhead,3,-1.5006851629683286e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035520,2025-09-27,25/26,montrose,queen-of-the-south,4,NaN,no complete 1X2 market
+14035533,2025-10-25,25/26,kelty-hearts-fc,east-fife,6,NaN,no complete 1X2 market
+14035540,2025-11-01,25/26,inverness-caledonian-thistle,montrose,6,NaN,no complete 1X2 market
+14035558,2025-12-06,25/26,kelty-hearts-fc,montrose,2,NaN,no complete 1X2 market
+14035560,2025-12-06,25/26,alloa-athletic,peterhead,3,-1.5605450069416902e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035564,2025-12-13,25/26,inverness-caledonian-thistle,hamilton-academical,8,NaN,no complete 1X2 market
+14035569,2025-12-20,25/26,kelty-hearts-fc,cove-rangers,3,2.628989810361678e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035591,2026-01-24,25/26,hamilton-academical,cove-rangers,3,-7.398272994940007e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035592,2026-01-31,25/26,alloa-athletic,cove-rangers,4,NaN,no complete 1X2 market
+14035609,2026-02-21,25/26,alloa-athletic,hamilton-academical,4,NaN,no complete 1X2 market
+14035621,2026-03-07,25/26,queen-of-the-south,stenhousemuir,2,NaN,no complete 1X2 market
+14035625,2026-03-21,25/26,cove-rangers,hamilton-academical,3,2.70629652949425e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035627,2026-03-14,25/26,kelty-hearts-fc,east-fife,3,1.655681833817398e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035633,2026-03-28,25/26,hamilton-academical,kelty-hearts-fc,2,NaN,no complete 1X2 market
+14035640,2026-04-11,25/26,hamilton-academical,alloa-athletic,3,1.7701190315041122e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035642,2026-04-11,25/26,east-fife,peterhead,3,-1.8685648327000662e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035646,2026-04-18,25/26,alloa-athletic,east-fife,2,NaN,no complete 1X2 market
+14035651,2026-04-18,25/26,peterhead,queen-of-the-south,4,NaN,no complete 1X2 market
+14035656,2026-04-25,25/26,stenhousemuir,alloa-athletic,2,NaN,no complete 1X2 market
+14035663,2025-08-02,25/26,east-kilbride,the-spartans-fc,0,NaN,no Betfair book
+14035670,2025-08-09,25/26,the-spartans-fc,dumbarton,0,NaN,no Betfair book
+14035673,2025-08-16,25/26,east-kilbride,stranraer,0,NaN,no Betfair book
+14035676,2025-08-16,25/26,clyde-fc,the-spartans-fc,0,NaN,no Betfair book
+14035683,2025-08-23,25/26,the-spartans-fc,forfar-athletic,0,NaN,no Betfair book
+14035686,2025-08-30,25/26,the-spartans-fc,annan-athletic,0,NaN,no Betfair book
+14035688,2025-09-13,25/26,stranraer,the-spartans-fc,0,NaN,no Betfair book
+14035692,2025-09-13,25/26,elgin-city,stirling-albion,3,6.158566377052505e-18,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035693,2025-09-20,25/26,the-spartans-fc,stirling-albion,0,NaN,no Betfair book
+14035695,2025-09-13,25/26,forfar-athletic,dumbarton,0,NaN,no Betfair book
+14035697,2025-09-20,25/26,stranraer,elgin-city,3,8.618885029487555e-18,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035700,2025-09-27,25/26,elgin-city,the-spartans-fc,0,NaN,no Betfair book
+14035706,2025-10-04,25/26,the-spartans-fc,edinburgh-city-fc,0,NaN,no Betfair book
+14035708,2025-10-18,25/26,dumbarton,the-spartans-fc,0,NaN,no Betfair book
+14035709,2025-10-18,25/26,east-kilbride,elgin-city,6,NaN,no complete 1X2 market
+14035715,2025-11-01,25/26,stranraer,forfar-athletic,6,NaN,no complete 1X2 market
+14035716,2025-11-01,25/26,the-spartans-fc,east-kilbride,0,NaN,no Betfair book
+14035717,2025-11-08,25/26,edinburgh-city-fc,elgin-city,2,NaN,no complete 1X2 market
+14035719,2025-11-08,25/26,forfar-athletic,the-spartans-fc,0,NaN,no Betfair book
+14035725,2025-11-15,25/26,the-spartans-fc,clyde-fc,0,NaN,no Betfair book
+14035729,2025-11-22,25/26,east-kilbride,edinburgh-city-fc,4,NaN,no complete 1X2 market
+14035730,2025-11-22,25/26,the-spartans-fc,stranraer,0,NaN,no Betfair book
+14035731,2025-12-06,25/26,annan-athletic,the-spartans-fc,0,NaN,no Betfair book
+14035738,2025-12-13,25/26,stirling-albion,the-spartans-fc,0,NaN,no Betfair book
+14035743,2025-12-20,25/26,clyde-fc,stirling-albion,4,NaN,no complete 1X2 market
+14035747,2025-12-20,25/26,the-spartans-fc,elgin-city,0,NaN,no Betfair book
+14035748,2025-12-27,25/26,dumbarton,stirling-albion,10,NaN,no complete 1X2 market
+14035750,2025-12-27,25/26,edinburgh-city-fc,the-spartans-fc,0,NaN,no Betfair book
+14035755,2026-01-03,25/26,the-spartans-fc,dumbarton,0,NaN,no Betfair book
+14035766,2026-01-24,25/26,clyde-fc,the-spartans-fc,0,NaN,no Betfair book
+14035773,2026-01-31,25/26,elgin-city,the-spartans-fc,0,NaN,no Betfair book
+14035786,2026-02-21,25/26,east-kilbride,dumbarton,3,-1.0892238040045791e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035787,2026-02-14,25/26,the-spartans-fc,edinburgh-city-fc,0,NaN,no Betfair book
+14035792,2026-02-21,25/26,stranraer,the-spartans-fc,0,NaN,no Betfair book
+14035796,2026-02-28,25/26,the-spartans-fc,annan-athletic,0,NaN,no Betfair book
+14035798,2026-03-07,25/26,dumbarton,the-spartans-fc,0,NaN,no Betfair book
+14035800,2026-03-07,25/26,edinburgh-city-fc,stranraer,3,-2.2562741772956774e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035802,2026-03-14,25/26,stirling-albion,forfar-athletic,3,-8.267576017581734e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035806,2026-03-14,25/26,the-spartans-fc,clyde-fc,0,NaN,no Betfair book
+14035807,2026-03-21,25/26,clyde-fc,stranraer,6,NaN,no complete 1X2 market
+14035810,2026-03-21,25/26,forfar-athletic,the-spartans-fc,0,NaN,no Betfair book
+14035816,2026-03-28,25/26,the-spartans-fc,east-kilbride,0,NaN,no Betfair book
+14035817,2026-04-04,25/26,clyde-fc,stirling-albion,3,-2.8836196178780125e-16,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+14035819,2026-04-04,25/26,edinburgh-city-fc,the-spartans-fc,0,NaN,no Betfair book
+14035822,2026-04-11,25/26,the-spartans-fc,stranraer,0,NaN,no Betfair book
+14035824,2026-04-11,25/26,elgin-city,annan-athletic,3,5.869668381349537e-17,1X2-only book (Phase B exclusion: totals biased ~0.10 low)
+15399014,2026-01-27,25/26,east-kilbride,the-spartans-fc,0,NaN,no Betfair book
+15458714,2026-03-03,25/26,the-spartans-fc,stirling-albion,0,NaN,no Betfair book
+15588903,2026-03-17,25/26,the-spartans-fc,forfar-athletic,0,NaN,no Betfair book
