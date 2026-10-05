@@ -237,3 +237,40 @@ Phase B numbers; R3/R4/RBPF.
   say which.
 - Print exactly `PHASEB2_DONE` on its own line and stop. If you are blocked on a human decision,
   write it under "Blocked", print `PHASEB2_BLOCKED`, and stop.
+
+## 7. Addendum (human, 2026-10-05): is there a hierarchy behind the covariance?
+
+Added mid-run. Post-processing only; no new model fits.
+
+**(A) Quality/style rotation of the team states.** Use the posterior draws of R6 and R7, with R2
+as the ρ_αβ = 0 control, and both protocols. Report in `rotation_quality_style.csv` (median and
+90% interval for each):
+
+```
+quality q = (α − β)/2,   style s = (α + β)/2      ⇒   supremacy d = 2(q_h − q_a),  level ℓ = s_h + s_a
+σ_q² = (σ_att² + σ_def² − 2ρ σ_att σ_def)/4
+σ_s² = (σ_att² + σ_def² + 2ρ σ_att σ_def)/4
+corr(Δq, Δs) = (σ_att² − σ_def²) / (4 σ_q σ_s)
+```
+
+- The headline number is σ_s/σ_q. A one-dimensional "team quality" hierarchy means that ratio is
+  near 0.
+- Also report the cross-sectional correlation of the smoothed α and β **levels** across teams,
+  per season (levels, not innovations).
+
+**(B) League-wide shock test.** Per rung and protocol, report the within-week correlation of the
+one-step **level** residuals across different fixtures in the same week. Use the intraclass
+correlation from a one-way random-effects decomposition by week, with a week-cluster bootstrap CI.
+Write it to `league_shock_test.csv`. A positive value means a league-wide weekly component that
+the static μ misses.
+
+**Tests:** on simulated data, a planted common weekly shock gives ICC > 0, and none gives ICC ≈ 0.
+
+**Literature these tests address** (cite in the README and the report):
+- `koopman2013-dynamic-bivariate-poisson-model-analysing` p. 7, eq. 4: attack and defence
+  disturbances independent;
+- `baio2010-bayesian-hierarchical-model-prediction-football` p. 4 (exchangeable team effects),
+  p. 6–7 (over-shrinkage; a three-group mixture).
+
+**Acceptance adds:** both CSVs, the two simulation tests, and the numbers copied into the
+plain-words section. Group/tier hierarchies stay for Phase C.
