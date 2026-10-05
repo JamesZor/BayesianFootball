@@ -1,7 +1,7 @@
 # Included inside TwoStageMarket; definitions only.
 
 function phase_b_figures(P,panel,distribution,calibration,variance,out,fig)
-    p = P.plot(layout=(1,3),size=(1200,400))
+    p = P.plot(layout=(1,3),size=(1200,400),bottom_margin=8*P.mm)
     for (k,axis) in enumerate(("home","away","total"))
         g = DF.filter(:axis=>==(axis),calibration)
         P.scatter!(p[k],g.mean_lambda,g.mean_goals; yerror=(g.mean_goals.-g.ci_low,g.ci_high.-g.mean_goals),
@@ -10,12 +10,12 @@ function phase_b_figures(P,panel,distribution,calibration,variance,out,fig)
         P.plot!(p[k],collect(limits),collect(limits); label="calibrated",color=:black)
     end
     P.savefig(p,joinpath(fig,"B_goal_calibration.png"))
-    p = P.plot(layout=(1,2),size=(1000,400))
+    p = P.plot(layout=(1,2),size=(1000,400),bottom_margin=8*P.mm)
     P.scatter!(p[1],variance.fitted_mean,variance.variance; label="",xlabel="R2 fitted exp(eta)",ylabel="var(inverted rate)")
     P.scatter!(p[2],variance.fitted_mean,variance.cv; label="",xlabel="R2 fitted exp(eta)",ylabel="CV(inverted rate)")
     P.savefig(p,joinpath(fig,"B_mean_variance.png"))
     qq = CSV.read(joinpath(out,"family_qq.csv"),DF.DataFrame)
-    p = P.plot(layout=(1,3),size=(1200,400))
+    p = P.plot(layout=(1,3),size=(1200,400),bottom_margin=8*P.mm)
     for (k,family) in enumerate(("gamma","lognormal","logt"))
         g = DF.filter(:family=>==(family),qq)
         P.scatter!(p[k],g.theoretical,g.standardised_residual; label="",markersize=2,xlabel="family quantile",ylabel="standardised residual",title=family)
@@ -23,7 +23,7 @@ function phase_b_figures(P,panel,distribution,calibration,variance,out,fig)
         P.plot!(p[k],collect(limits),collect(limits); label="reference",color=:black)
     end
     P.savefig(p,joinpath(fig,"B_family_qq.png"))
-    p = P.plot(layout=(2,2),size=(1000,700))
+    p = P.plot(layout=(2,2),size=(1000,700),bottom_margin=8*P.mm)
     h = panel.matches.lambda_mkt_h
     a = panel.matches.lambda_mkt_a
     for (k,(axis,values)) in enumerate((("lambda_h",h),("lambda_a",a),("lambda_total",h.+a),("log supremacy",log.(h).-log.(a))))
