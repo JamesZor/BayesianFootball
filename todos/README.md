@@ -35,6 +35,9 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-05 |
 <!-- TASKS:END -->
 
+**039:** Phase B2 and its post-processing hierarchy addendum are verified for
+manager review (2026-10-05); the task remains IN_PROGRESS for Phases C/D.
+
 ## Commands and Task Files
 
 Use `NNN_lowercase_slug.md` task names. The CLI is implemented:

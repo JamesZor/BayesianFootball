@@ -19,9 +19,51 @@ const DF = DataFrames
 const LINES = CAL.L2_INVERSION_LINES
 const STARTS = ([log(1.5), log(1.0)], [log(0.4), log(3.2)], [log(3.2), log(0.4)])
 
-"Return a complete, overround-gated TWA(−20,0] close and one refusal per market group."
-function gated_close(ds)
-    close = MID.closing_book(ds)
+"League facts and optional snapshot assertions; seasons and split vectors are chronological."
+Base.@kwdef struct MarketModelConfig{S}
+    name::String
+    segment::S
+    tournaments::Vector{Int}
+    seasons::Vector{String}
+    honest_train::Vector{String}
+    honest_test::Vector{String}
+    price_window::Tuple{Float64,Float64} = (-20.0, 0.0)
+    min_selections_ladder::Int = 5
+    excluded_matches::Dict{Int,String} = Dict{Int,String}()
+    expected::NamedTuple = (;)
+end
+
+"The reviewed Scottish snapshot; these counts are not universal league assumptions."
+scottish_lower_2425_2526() = MarketModelConfig(
+    name="scottish_lower_2425_2526", segment=BayesianFootball.Data.ScottishLower(),
+    tournaments=[56,57], seasons=["24/25","25/26"],
+    honest_train=["24/25"], honest_test=["25/26"],
+    excluded_matches=Dict(14035501=>"T014 swapped book"),
+    expected=(panel=710,accepted=595,ladder=517,one_x2_only=78,obs=1034))
+
+function check_expected(config, key, value)
+    if haskey(config.expected, key)
+        expected = getproperty(config.expected, key)
+        value == expected || error("$(config.name): $key = $value, expected $expected")
+    end
+    return nothing
+end
+
+"Configurable TWA close, preserving TODO 023's ordering and arithmetic exactly."
+function closing_book(ds, config::MarketModelConfig)
+    raw = BayesianFootball.Data.summarize_odds(ds.betfair_odds, BayesianFootball.Data.TWAEstimator(); window=config.price_window)
+    odds = DF.DataFrame(match_id=Int.(raw.match_id), market_name=String.(raw.market_name),
+        market_line=Float64.(raw.market_line), selection=Symbol.(raw.selection), odds_close=Float64.(raw.odds))
+    DF.filter!(r -> isfinite(r.odds_close) && r.odds_close > 1.0, odds)
+    odds.prob_implied_close = 1.0 ./ odds.odds_close
+    DF.transform!(DF.groupby(odds, [:match_id,:market_name,:market_line]),
+        :prob_implied_close => (p -> p ./ sum(p)) => :prob_fair_close)
+    return odds
+end
+
+"Return a complete, overround-gated configured close and one refusal per market group."
+function gated_close(ds, config::MarketModelConfig=scottish_lower_2425_2526())
+    close = closing_book(ds, config)
     return gate_book(close)
 end
 
@@ -101,7 +143,8 @@ function solve_kl(book::DF.AbstractDataFrame; starts=STARTS)
 end
 
 "One row per fixture, ordered gates (T014 is a separate explicit exclusion)."
-function invert_panel(ds, book::DF.AbstractDataFrame; seasons=["24/25", "25/26"], tournaments=[56, 57])
+function invert_panel(ds, book::DF.AbstractDataFrame; config=scottish_lower_2425_2526(),
+                      seasons=config.seasons, tournaments=config.tournaments)
     matches = DF.filter(r -> !ismissing(r.season) && r.season in seasons &&
                        !ismissing(r.tournament_id) && Int(r.tournament_id) in tournaments, ds.matches)
     rows = NamedTuple[]
@@ -111,7 +154,7 @@ function invert_panel(ds, book::DF.AbstractDataFrame; seasons=["24/25", "25/26"]
         b = get(bymatch, id, book[1:0, :])
         nm = DF.nrow(DF.unique(b, [:market_name, :market_line]))
         has1 = any(b.market_name .== "1X2")
-        reason = id == 14035501 ? "T014 swapped book" :
+        reason = haskey(config.excluded_matches, id) ? config.excluded_matches[id] :
                  DF.nrow(b) == 0 ? "no Betfair book" :
                  !has1 ? "no complete 1X2 market" :
                  DF.nrow(b) < 3 ? "fewer than 3 quoted selections" : ""
@@ -139,7 +182,8 @@ end
 
 "Bridge an external rate frame into TODO 023's *exact* weekly observation contract."
 function MID.build_market_panel(ds, frame::DF.AbstractDataFrame;
-                                seasons=["24/25", "25/26"], tournaments=[56, 57], step_days::Int=7)
+                                config=scottish_lower_2425_2526(),
+                                seasons=config.seasons, tournaments=config.tournaments, step_days::Int=7)
     m = DF.filter(r -> !ismissing(r.season) && r.season in seasons && Int(r.tournament_id) in tournaments, ds.matches)
     meta = DF.DataFrame(match_id=Int.(m.match_id), match_date=Dates.Date.(m.match_date),
                         season=String.(m.season), tournament_id=Int.(m.tournament_id),
@@ -176,9 +220,10 @@ function MID.build_market_panel(ds, frame::DF.AbstractDataFrame;
 end
 
 "Summarise gate attrition, including the explicit swapped-book exclusion."
-function coverage(rates)
-    order = ["no Betfair book", "no complete 1X2 market", "fewer than 3 quoted selections",
-             "optimiser not converged", "summed KL > 0.01", "lambda outside [0.05, 6]", "T014 swapped book"]
+function coverage(rates, config::MarketModelConfig=scottish_lower_2425_2526())
+    order = vcat(["no Betfair book", "no complete 1X2 market", "fewer than 3 quoted selections",
+             "optimiser not converged", "summed KL > 0.01", "lambda outside [0.05, 6]"],
+             sort!(unique(collect(values(config.excluded_matches)))))
     remaining = DF.nrow(rates)
     rows = [(; gate="panel", refused=0, remaining)]
     for gate in order

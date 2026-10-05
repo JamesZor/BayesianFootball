@@ -5,8 +5,9 @@ using BayesianFootball, LinearAlgebra, ThreadPinning, CSV, DataFrames, Serializa
 pinthreads(:cores)
 BLAS.set_num_threads(1)
 include(joinpath(@__DIR__,"l02_two_stage.jl"))
-mb_pf_ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower(); max_age_hours=10^6)
-mb_pf_panel = TwoStageMarket.phase_b_panel(mb_pf_ds).panel
+const MB_PF_CONFIG = TwoStageMarket.MM.scottish_lower_2425_2526()
+mb_pf_ds = BayesianFootball.Data.load_datastore_cached(MB_PF_CONFIG.segment; max_age_hours=10^6)
+mb_pf_panel = TwoStageMarket.phase_b_panel(mb_pf_ds; config=MB_PF_CONFIG).panel
 mb_pf_data = TwoStageMarket.family_data(mb_pf_panel)
 mb_pf_chain,mb_pf_seconds = TwoStageMarket.fit_family(mb_pf_data,:gamma,trues(length(mb_pf_data.y)); seed=4009)
 mb_pf_diag,mb_pf_nuts = TwoStageMarket.family_diagnostics(mb_pf_chain,:gamma,0)

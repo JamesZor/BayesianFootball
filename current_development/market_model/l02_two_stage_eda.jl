@@ -115,7 +115,7 @@ end
 function rates_goals(ds,panel,book,out)
     matches = DF.select(ds.matches,:match_id,:home_score,:away_score)
     m = DF.leftjoin(panel.matches,matches; on=:match_id,order=:left)
-    DF.nrow(m) == 517 || error("goals join lost/duplicated fixtures")
+    DF.nrow(m) == MID.n_fixtures(panel) || error("goals join lost/duplicated fixtures")
     any(ismissing,m.home_score) && error("missing full-time home_score")
     any(ismissing,m.away_score) && error("missing full-time away_score")
     glm_rows = NamedTuple[]
@@ -204,7 +204,7 @@ function residual_tables(panel,smooth,predictions,out)
     end
 end
 
-function ladder_evaluation(panel,fits,out; particles=20000,seeds=(3906,3907,3908))
+function ladder_evaluation(panel,fits,out; particles=20000,seeds=(3906,3907,3908), config=MM.scottish_lower_2425_2526())
     smooth = DF.DataFrame[]
     metrics = DF.DataFrame[]
     predictions = DF.DataFrame[]
@@ -219,7 +219,7 @@ function ladder_evaluation(panel,fits,out; particles=20000,seeds=(3906,3907,3908
             θ = MID.median_theta(fit)
             for seed in (level == 4 ? seeds : seeds[1:1])
                 pred = preweek_predictions(Rung(level),panel,θ; particles,seed)
-                summary = prediction_summary(panel,pred,protocol,"R$level"; seed)
+                summary = prediction_summary(panel,pred,protocol,"R$level"; seed, config)
                 push!(metrics,summary)
                 if level == 4
                     pred.weeks.protocol .= protocol
@@ -233,7 +233,7 @@ function ladder_evaluation(panel,fits,out; particles=20000,seeds=(3906,3907,3908
                     pred.rows.protocol .= protocol
                     scored_rows = pred.rows
                     if protocol == "10b"
-                        allowed = Set(panel.matches.match_id[panel.matches.season.=="25/26"])
+                        allowed = Set(panel.matches.match_id[in.(panel.matches.season,Ref(config.honest_test))])
                         scored_rows = DF.filter(r->r.match_id in allowed,pred.rows)
                     end
                     push!(predictions,scored_rows)

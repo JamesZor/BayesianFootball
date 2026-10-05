@@ -1,0 +1,19 @@
+- 2026-10-05T21:36:27.165: R2 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4122; 59.377593994140625 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:37:53.227: R5 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4422; 86.00693392753601 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:39:19.080: R6 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4522; 85.76978206634521 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:41:04.168: R7 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4622; 104.99601221084595 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:41:32.681: R2 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4123; 28.422563076019287 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:42:17.541: R5 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4423; 44.77261686325073 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:43:02.348: R6 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4523; 44.72374701499939 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:43:57.219: R7 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4623; 54.78720211982727 seconds; 4 × (2000+3000), thin 1.
+- Full runner SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; wall time 566.8761510848999 seconds; R03_DONE.
+- 2026-10-05T21:47:24.816: R2 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4122; 60.36733818054199 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:48:49.597: R5 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4422; 84.7098331451416 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:50:13.287: R6 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4522; 83.60983896255493 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:51:57.810: R7 10a; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4622; 104.42440390586853 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:52:26.701: R2 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4123; 28.80128002166748 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:53:11.640: R5 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4423; 44.85495400428772 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:53:56.465: R6 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4523; 44.74357986450195 seconds; 4 × (2000+3000), thin 1.
+- 2026-10-05T21:54:52.486: R7 10b; SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; seed 4623; 55.935266971588135 seconds; 4 × (2000+3000), thin 1.
+- Full runner SHA `25a408e2eb031f53d5cac2478a48ed277f4a3fc9`; wall time 565.3235380649567 seconds; R03_DONE.
+- Human addendum only, source SHA `fd8b23a9f9b82fc75ebc7056282588bbe834bca5`: fresh owned panes `%252` and `%253`, Julia 1.12.4, 8 threads, BLAS=1; each included `r03_hierarchy_postprocess.jl` and reached `R03_HIERARCHY_DONE`. Existing binary fits from the statistical runs were read; no new sampling. Both additional CSVs byte-identical; all 10 original CSVs and both PNGs unchanged. Logs: `/root/BF_runs/logs/market_model_b2/fd8b23a9_post{1,2}.log`.

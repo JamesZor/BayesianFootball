@@ -28,6 +28,9 @@ in `current_development/market_model/DESIGN.md`.
 - [x] Phase B: two-stage ladder R0–R4 on the Kalman engine (engine gates pass; R̂ ≤ 1.05,
       ESS ≥ 200), measures on both axes and both θ protocols; Gamma / log-normal / log-t test;
       rate-distribution and rates-vs-goals EDA.
+- [x] Phase B2: config regression, covariance rungs R2/R5–R7 in both protocols,
+      batch/FFBS gates, convergence and byte-reproducible results; stream process README;
+      quality/style rotation, season-average RTS levels correlation and weekly level ICC.
 - [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
       P1 and P2 converged (divergences ≤ 0.1%), one-step MAP refits at 40 fold cutoffs.
 - [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
@@ -45,6 +48,21 @@ in `current_development/market_model/DESIGN.md`.
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
 ## Work Log & Progress
+
+- [2026-10-05 @pi] Phase B2 claimed on `pi/market-model-phase-b2` in the dedicated
+  `BayesianFootball-market-model-pi-b2` worktree. Config-driven pipeline and R5–R7 only;
+  no C/D or `src/` changes. Human approved excluding only nondeterministic `runtime.csv`
+  from Phase A's byte regression; all other CSVs and published A/B files stay unchanged.
+  Laptop REPL `%27` is owned; beast uses `root@mcmc-beast` (the default local username
+  is not a beast account). Initial load 3.84. Reused engine already derives season breaks
+  from observed season dates; no literal boundary exists there to replace.
+- [2026-10-05 @pi] Human/manager addendum accepted mid-run, post-processing only:
+  posterior quality/style rotation and level-residual weekly ICC, simulations and
+  Koopman/Baio citations. Copied manager brief §7 verbatim into this branch's brief.
+  Human clarified levels: season-average RTS means across active teams, point correlation
+  at median theta; posterior intervals apply to innovation rotation. Implementation
+  defines active teams as those observed in accepted-panel fixtures for the season.
+  Both completed full B2 runs are preserved; no additional model fits for the addendum.
 
 - [2026-10-05 @claude] Design agreed with the human over four rounds of questions. Worktree
   `/home/james/bet_project/.worktrees/BayesianFootball-market-model`, branch
@@ -85,6 +103,20 @@ in `current_development/market_model/DESIGN.md`.
   `current_development/market_model/results/B/PHASE_B_REPORT.md`; seeded proof:
   `results/B/REPRODUCIBILITY.md`. No Phase C/D or `src/` changes, DB writes or package
   changes. TODO remains IN_PROGRESS for unapproved/uncompleted C/D.
+
+- [2026-10-05 @pi] Phase B2 and the human hierarchy addendum verified for manager review.
+  Fresh laptop `%31`: t03 131/131, t02 131/131, `R01_DONE`/`T03_DONE`/`T02_DONE`.
+  Two fresh beast full runs at `25a408e2`: `R03_DONE` in 566.876 / 565.324 s;
+  all 10 core CSVs and both PNGs byte-identical; 34 engine gates and 32 theta gates pass.
+  Addendum-only fresh runs at `fd8b23a9`: `R03_HIERARCHY_DONE` twice, both additional
+  CSVs byte-identical, no new fits. R6 leads honest point density and brings
+  supremacy/level coverage to 90.11% / 91.21%; style/quality innovation SD ratio
+  0.315 (10a) / 0.282 (10b), not an exactly one-dimensional hierarchy. Honest weekly
+  level ICC is consistent with zero. Full evidence/citations/limitations in
+  `current_development/market_model/results/B2/PHASE_B2_REPORT.md`; process in the
+  stream README. Published A/B artifacts untouched; owned REPLs closed, other
+  sessions not operated. No Phase C/D, group/tier fits, `src/` or DB/package changes.
+  TODO remains IN_PROGRESS pending unapproved/unimplemented C/D.
 
 ## Verification & Findings
 
