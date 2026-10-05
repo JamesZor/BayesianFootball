@@ -183,7 +183,34 @@ this list, and a human sign-off before the next brief is released.
 - [ ] Gamma / log-normal / log-t comparison of §4.3 (Turing; R̂, ESS and divergences ≤ 0.1%).
 - [ ] Rate-distribution and rates-vs-goals strands of §4.5.
 
+### Phase B2 — covariance structure on the Kalman engine (added 2026-10-05, after Phase B)
+
+Phase B's largest misfit: honest (10b) 90% coverage of 82% on supremacy and 98% on level,
+with one-step residual corr(e_h, e_a) = −0.59 under R2. Two explanations, testable on the exact
+engine because one persists week to week and the other does not:
+
+| Rung (on R2) | Explanation | Maths |
+|---|---|---|
+| R5 fixture shocks | the market reprices one fixture's supremacy; no carry-over | observe d = y_h − y_a and ℓ = (y_h + y_a)/2 with separate noise σ_d, σ_ℓ (≡ correlated ε_h, ε_a; d and ℓ are uncorrelated under equal side variances, so scalar Kalman updates stay exact) |
+| R6 team quality | a team's attack and concessions move together, persistently | per-team 2×2 innovation covariance with correlation ρ_αβ (expected < 0: β is "concedes more") |
+| R7 both | | R5 + R6 |
+
+Decision metrics: 10b coverage on d and ℓ (target 90%), honest mean log predictive density,
+smoothed R², and the posteriors of σ_d/σ_ℓ and ρ_αβ. R3/R4 (per-team HA, Student-t/RBPF) are not
+carried forward: σ_γ = 0.013, and the t gain was small once bad books were removed.
+
+B2 also makes the pipeline **config-driven** (segment, tournaments, seasons, price window,
+expected counts) and writes the stream `README.md` documenting the process, so later runs on
+other leagues (§8) need a config, not code edits.
+
 ### Phase C — pooled fit
+
+**Revisions from Phase B** (to confirm at Phase C sign-off): drop per-team HA; drop the
+Student-t/RBPF route; P1 static is a smoke test only; keep the double Poisson; carry the B2
+winner's covariance into the GRW and u_m. Alternative engine to weigh: a Laplace
+(Gaussian) approximation of each book's likelihood around its isolated inversion, scaled by n,
+which keeps the pooled model on the exact Kalman engine; a totals-only book then informs only the
+total, and thin books get wide noise automatically.
 
 - [ ] `l02_pooled_market_model.jl`: the Turing model of §4.4.
 - [ ] Synthetic recovery: books simulated from known α, β, u, n are recovered within their
@@ -225,7 +252,22 @@ Runners follow `docs/prototype_runner_style_guide.md`.
   was not reachable on 2026-10-05.
 * `Distributions` stays pinned at 0.25.126.
 
-## 8. Out of scope
+## 8. Other leagues (human, 2026-10-05)
+
+This first run is Scottish League One/Two (tournaments 56/57), a thin market. The human intends to
+rerun the stream on leagues in betdb with sharper odds: the English Premier League, Championship,
+League One and League Two. Consequences for every phase:
+
+* No league facts in code: tournaments, seasons, price window and expected counts come from a
+  config; Scottish expected counts (710 / 595 / 517 / 78) are assertions of the Scottish config only.
+* As of 2026-10-05 no branch defines English `DataTournemantSegment`s (the laptop holds a
+  2026-09-12 `datastore_EnglishLower.jls` whose segment code is on no branch). Porting starts by
+  adding segments with their betdb tournament IDs, which is a `src/` change and its own task.
+* The first step on a new league is Phase A's coverage table: Betfair close coverage, line mix,
+  1X2-only and totals-only shares. Findings that may not transfer: the 1X2-only totals bias
+  (depends on the draw misfit), the size of the fixture noise, and which covariance rung wins.
+
+## 9. Out of scope
 
 Scoring the market model as a forecaster of match outcomes and bets; the Dixon–Coles ρ and
 other score grids (bivariate, COM); a builder-native observation type; fixing T015 in `src`.
