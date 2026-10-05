@@ -55,6 +55,11 @@ in `current_development/market_model/DESIGN.md`.
   written before the failure; figure set/runtime are incomplete. See
   `current_development/market_model/results/A/PHASE_A_REPORT.md`. Phase A blocked,
   not promoted to Phase B; manager/human review pending.
+- [2026-10-05 @pi] Phase A follow-up: diagnosed the Plots/GR failure as state left by
+  the log-x KL histogram, repaired the empty histogram and figure ordering, added
+  same-fixture in-sample held-out comparisons. Fresh `pi_julia_mm` tmux Julia REPL:
+  `R01_DONE` and `T01_DONE` (269/269). All four figures and runtime CSV present;
+  Phase A ready for manager review, not Phase B authorisation.
 
 ## Verification & Findings
 
