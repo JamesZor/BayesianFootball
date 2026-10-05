@@ -155,7 +155,7 @@ style model or Bayes factor was fitted; a positive lower quantile under a contin
 prior is not a formal test of that nested null. This is not proof of an exactly
 one-dimensional hierarchy or a three-group population.
 
-The human clarified that **levels** means season-average RTS alpha/beta across
+The manager (answering pi's question on the human's behalf; the ambiguity was in the manager's addendum) set **levels** to mean season-average RTS alpha/beta across
 active teams, as a point correlation at median theta; posterior intervals apply
 only to the innovation rotations. Active here means present in accepted fixtures
 that season: 19 teams in each season. Average all grid weeks between first and

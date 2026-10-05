@@ -117,6 +117,18 @@ in `current_development/market_model/DESIGN.md`.
   stream README. Published A/B artifacts untouched; owned REPLs closed, other
   sessions not operated. No Phase C/D, group/tier fits, `src/` or DB/package changes.
   TODO remains IN_PROGRESS pending unapproved/unimplemented C/D.
+- [2026-10-05 @claude] **Phase B reviewed and merged** (`ea242b20`).
+  - Laptop: fresh REPL, t02 131/131.
+  - Gates: engine 24/24, convergence 30/30; 0 divergences in 33 family fits.
+  - Independent beast rerun at `8663544e` (3,374 s): all 37 runner CSVs byte-identical to
+    pi's (the two preflight CSVs are not runner outputs).
+- [2026-10-05 @claude] **Phase B2 reviewed and merged.**
+  - Laptop: fresh REPL, t03 131/131 and t02 131/131.
+  - Gates: engine 34/34, convergence 32/32.
+  - Independent beast rerun at `25a408e2` (601 s), then the addendum at `fd8b23a9`: all 12
+    CSVs and both PNGs byte-identical to `SCIENTIFIC_SHA256SUMS.txt`.
+  - Attribution corrected in the README and report: the manager, not the human, answered
+    pi's question on the per-season levels definition.
 
 ## Verification & Findings
 

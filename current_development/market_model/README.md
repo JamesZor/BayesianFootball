@@ -112,8 +112,9 @@ MC/KDE convention. High smoothed R² is not evidence of honest interval calibrat
   covariance directly addresses the supremacy/level coverage mismatch. Phase C's
   GRW/fixture covariance remains subject to human sign-off.
 - **Human mid-run addendum:** inspect quality/style innovation scales and a common
-  weekly level-error component without new fits. The human clarified that the
-  per-season levels correlation uses season-average RTS means across active teams,
+  weekly level-error component without new fits. The manager answered pi's question on
+  the definition for the human (the ambiguity was in the manager's addendum wording):
+  the per-season levels correlation uses season-average RTS means across active teams,
   as a point statistic; only the innovation rotations require posterior intervals.
   Group/tier mixture hierarchies remain for Phase C.
 - **Human: Phase A runtime exception.** Reproduce every non-runtime CSV byte-for-byte;
