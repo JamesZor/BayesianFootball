@@ -29,6 +29,7 @@ const MB = TwoStageMarket
 # ===================================================================
 # 2. Fixed configuration and outputs
 # ===================================================================
+const MB_CONFIG = MB.MM.scottish_lower_2425_2526()
 const MB_SEED = 3902
 const MB_PARTICLES = 20_000
 const MB_RBPF_SEEDS = (3906,3907,3908)
@@ -44,15 +45,16 @@ println("threads = ",Threads.nthreads(),"; R4 particles = ",MB_PARTICLES,"; prio
 # ===================================================================
 # 3. Pinned panel; exclusions and data-only EDA
 # ===================================================================
-mb_ds = BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower(); max_age_hours=10^6)
-mb_built = MB.phase_b_panel(mb_ds)
+mb_ds = BayesianFootball.Data.load_datastore_cached(MB_CONFIG.segment; max_age_hours=10^6)
+mb_built = MB.phase_b_panel(mb_ds; config=MB_CONFIG)
 mb_panel = mb_built.panel
 CSV.write(joinpath(MB_OUT,"market_targets.csv"),mb_panel.matches)
 CSV.write(joinpath(MB_OUT,"refusals.csv"),mb_panel.refusals)
-mb_book,mb_market_refusals = MB.MM.gated_close(mb_ds)
+mb_book,mb_market_refusals = MB.MM.gated_close(mb_ds, MB_CONFIG)
 mb_distribution = MB.rate_eda(mb_panel,mb_built.exclusions,MB_OUT)
 mb_goal_calibration = MB.rates_goals(mb_ds,mb_panel,mb_book,MB_OUT)
-println("517 fixtures / 1,034 observations; 78 1X2-only books excluded")
+println(MB.MID.n_fixtures(mb_panel), " fixtures / ", MB.MID.n_obs(mb_panel),
+    " observations; ", nrow(mb_built.exclusions), " thin books excluded")
 
 # %%
 # ===================================================================
@@ -72,13 +74,13 @@ all(mb_ad.pass) || error("Phase B family compiled AD gates failed")
 # R0 no team states; R1 zero-step GRW1Break; R2 GRW1; R3 static home-only HA;
 # R4 same + shared Student-t mixture. Gaussian: 4×(2000+3000), thin 1.
 # R4: 4×(1000+2000×4). Same budgets for honest 24/25-only fits.
-mb_fits = MB.train_ladder(mb_panel,MB_OUT; seed=MB_SEED)
+mb_fits = MB.train_ladder(mb_panel,MB_OUT; seed=MB_SEED, config=MB_CONFIG)
 
 # %%
 # ===================================================================
 # 6. Smoothed fit; pre-week 10a/10b; residuals; R4 seed/ESS diagnostics
 # ===================================================================
-mb_smoothed = MB.ladder_evaluation(mb_panel,mb_fits,MB_OUT; particles=MB_PARTICLES,seeds=MB_RBPF_SEEDS)
+mb_smoothed = MB.ladder_evaluation(mb_panel,mb_fits,MB_OUT; particles=MB_PARTICLES,seeds=MB_RBPF_SEEDS, config=MB_CONFIG)
 mb_variance = MB.mean_variance(mb_panel,mb_smoothed,MB_OUT)
 
 # %%

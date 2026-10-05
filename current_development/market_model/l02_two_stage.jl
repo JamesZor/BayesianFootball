@@ -33,19 +33,22 @@ Build the 517-fixture, 1,034-observation Phase B panel from Phase A's pinned CSV
 Only accepted books with ≥5 selections survive; no inversion is changed.
 The bridge's legacy `sse` column holds KL, NOT squared error.
 """
-function phase_b_panel(ds; rates_path=joinpath(@__DIR__, "results", "A", "rates.csv"))
+function phase_b_panel(ds; config=MM.scottish_lower_2425_2526(),
+                       rates_path=joinpath(@__DIR__, "results", "A", "rates.csv"))
     rates = CSV.read(rates_path, DF.DataFrame)
-    excluded = rates.accepted .& (rates.n_selections .< 5)
-    count(excluded) == 78 || error("expected 78 accepted 1X2-only exclusions")
-    all(rates.n_selections[excluded] .== 3) || error("unexpected thin-book composition")
+    rates = DF.filter(r -> r.season in config.seasons && r.tournament in config.tournaments, rates)
+    MM.check_expected(config, :panel, DF.nrow(rates))
+    MM.check_expected(config, :accepted, count(rates.accepted))
+    excluded = rates.accepted .& (rates.n_selections .< config.min_selections_ladder)
+    MM.check_expected(config, :one_x2_only, count(excluded))
     # The bridge's legacy sse column holds KL here, not squared error.
     frame = DF.DataFrame(match_id=Int.(rates.match_id), accepted=rates.accepted .& .!excluded,
                          lambda_mkt_h=rates.lambda_h, lambda_mkt_a=rates.lambda_a,
                          sse=rates.kl, n_targets=rates.n_selections,
                          reason=[excluded[i] ? EXCLUSION : coalesce(rates.reason[i], "") for i in 1:DF.nrow(rates)])
-    panel = MID.build_market_panel(ds, frame; step_days=7)
-    MID.n_fixtures(panel) == 517 || error("expected 517 Phase B fixtures")
-    MID.n_obs(panel) == 1034 || error("expected 1,034 observations")
+    panel = MID.build_market_panel(ds, frame; config, step_days=7)
+    MM.check_expected(config, :ladder, MID.n_fixtures(panel))
+    MM.check_expected(config, :obs, MID.n_obs(panel))
     return (; panel, rates, frame, exclusions=rates[excluded, :])
 end
 
@@ -118,13 +121,20 @@ function home_panel(p::MID.MarketPanel)
         p.obs_season, p.week_ptr, X, ["ha_" * t for t in p.teams])
 end
 layout(a::Rung, p, θ) = a.level >= 3 ? HomeRung(Rung(a.level, exp(θ[4])), MID.n_teams(p)) : a
-function rung_schedule(a::Rung, p, θ)
+"First dated observed week of each configured later season; no calendar literal."
+function season_break_weeks(p, config=nothing)
+    seasons = config === nothing ? sort(unique(p.obs_season); by=s->minimum(p.obs_week[p.obs_season .== s])) : config.seasons
+    present = [s for s in seasons if s in p.obs_season]
+    return [minimum(p.obs_week[p.obs_season .== s]) for s in present[2:end]]
+end
+
+function rung_schedule(a::Rung, p, θ; config=nothing)
     N = MID.n_teams(p)
     T = p.n_weeks
     if a.level == 0
         return MID.schedule(MID.StaticArm(), θ, N, T)
     elseif a.level == 1
-        return MID.schedule(MID.GRW1Break(), [θ[1], -Inf, -Inf, θ[2]], N, T, MID.season_break_weeks(p))
+        return MID.schedule(MID.GRW1Break(), [θ[1], -Inf, -Inf, θ[2]], N, T, season_break_weeks(p, config))
     end
     return MID.schedule(MID.GRW1(), θ, N, T)
 end
@@ -224,7 +234,7 @@ function engine_gates()
     rows = DF.DataFrame(MID.mid_gates())
     rng = Random.Xoshiro(3902)
     p0 = MID.toy_panel(rng)
-    seasons = [w < 5 ? "24/25" : "25/26" for w in p0.obs_week]
+    seasons = [w < 5 ? "toy-first" : "toy-second" for w in p0.obs_week]
     p = MID.MarketPanel(p0.matches, p0.refusals, p0.teams, p0.n_weeks, p0.week_start,
         p0.obs_week, p0.obs_home, p0.obs_att, p0.obs_def, p0.obs_y, p0.obs_match,
         seasons, p0.week_ptr, p0.obs_X, p0.feature_names)
@@ -277,12 +287,12 @@ function fixture_folds(p; k=10, seed=3903)
 end
 
 "Train both full-panel and honest 24/25-only θ fits at the prescribed budgets."
-function train_ladder(panel, out; seed=3902)
+function train_ladder(panel, out; seed=3902, config=MM.scottish_lower_2425_2526())
     convergence = DF.DataFrame[]
     fits = Dict{Tuple{Int,String},MID.ArmFit}()
     sha = strip(read(`git rev-parse HEAD`,String))
     for protocol in ("10a","10b"), level in 0:4
-        p = protocol == "10a" ? panel : MID.restrict_panel(panel,panel.obs_season .== "24/25")
+        p = protocol == "10a" ? panel : MID.restrict_panel(panel,in.(panel.obs_season,Ref(config.honest_train)))
         fit = fit_rung(Rung(level),p; seed=seed+100level+(protocol == "10b" ? 1 : 0))
         fits[(level,protocol)] = fit
         Serialization.serialize(joinpath(out,"R$(level)_$(protocol).jls"),fit)

@@ -28,6 +28,8 @@ in `current_development/market_model/DESIGN.md`.
 - [x] Phase B: two-stage ladder R0–R4 on the Kalman engine (engine gates pass; R̂ ≤ 1.05,
       ESS ≥ 200), measures on both axes and both θ protocols; Gamma / log-normal / log-t test;
       rate-distribution and rates-vs-goals EDA.
+- [ ] Phase B2: config regression, covariance rungs R2/R5–R7 in both protocols,
+      batch/FFBS gates, convergence and byte-reproducible results; stream process README.
 - [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
       P1 and P2 converged (divergences ≤ 0.1%), one-step MAP refits at 40 fold cutoffs.
 - [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
@@ -45,6 +47,14 @@ in `current_development/market_model/DESIGN.md`.
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
 ## Work Log & Progress
+
+- [2026-10-05 @pi] Phase B2 claimed on `pi/market-model-phase-b2` in the dedicated
+  `BayesianFootball-market-model-pi-b2` worktree. Config-driven pipeline and R5–R7 only;
+  no C/D or `src/` changes. Human approved excluding only nondeterministic `runtime.csv`
+  from Phase A's byte regression; all other CSVs and published A/B files stay unchanged.
+  Laptop REPL `%27` is owned; beast uses `root@mcmc-beast` (the default local username
+  is not a beast account). Initial load 3.84. Reused engine already derives season breaks
+  from observed season dates; no literal boundary exists there to replace.
 
 - [2026-10-05 @claude] Design agreed with the human over four rounds of questions. Worktree
   `/home/james/bet_project/.worktrees/BayesianFootball-market-model`, branch

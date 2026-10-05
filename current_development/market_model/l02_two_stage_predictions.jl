@@ -155,13 +155,13 @@ function rbpf_gate()
     return rows
 end
 
-function prediction_summary(p, pred, protocol, rung; seed=3906)
+function prediction_summary(p, pred, protocol, rung; seed=3906, config=MM.scottish_lower_2425_2526())
     meta = Dict(r.match_id=>r for r in eachrow(p.matches))
     open_week = Dict(s=>minimum(p.obs_week[p.obs_season.==s]) for s in unique(p.obs_season))
     first_week = minimum(p.obs_week)
     rows = NamedTuple[]
     for axis in AXES, subset in ("all","warm","season-open","in-season")
-        g = DF.filter(r -> r.axis == axis && (protocol == "10a" || meta[r.match_id].season == "25/26") &&
+        g = DF.filter(r -> r.axis == axis && (protocol == "10a" || meta[r.match_id].season in config.honest_test) &&
             (subset == "all" || (subset == "warm" && r.week >= first_week+3) ||
              (subset == "season-open" && r.week < open_week[meta[r.match_id].season]+3) ||
              (subset == "in-season" && r.week >= open_week[meta[r.match_id].season]+3)),pred.rows)

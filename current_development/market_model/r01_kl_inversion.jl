@@ -1,14 +1,16 @@
 # Phase A: does an isolated KL fit reproduce the coherent close across lines?
 # Control: SSE on the same complete, overround-gated book. This is NOT a forecast.
 # Snapshot: pinned ScottishLower cache; outputs in results/A and results/figures/A_*.png.
-# Usage: julia --project -t 8 current_development/market_model/r01_kl_inversion.jl
+# Usage: own tmux Julia REPL (-t 8), include this file; never one-shot Julia.
 
 # %%
 # ===================================================================
 # 1. Packages and implementation
 # ===================================================================
 using BayesianFootball, DataFrames, CSV, Statistics, Dates, Plots
-include("l01_market_model.jl")
+if !isdefined(@__MODULE__, :MarketModel)
+    include("l01_market_model.jl")
+end
 const MM = MarketModel
 const MD = MarketInverseDynamics
 const AC = BayesianFootball.Calibration
@@ -17,9 +19,8 @@ const AC = BayesianFootball.Calibration
 # ===================================================================
 # 2. Configuration and output: deterministic, replaceable diagnostics
 # ===================================================================
-const A_SEASONS = ["24/25", "25/26"]
-const A_TOURNAMENTS = [56, 57]
-const A_ROOT = joinpath(@__DIR__, "results")
+const A_CONFIG = MM.scottish_lower_2425_2526()
+const A_ROOT = get(ENV, "MM_A_ROOT", joinpath(@__DIR__, "results"))
 const A_OUT = joinpath(A_ROOT, "A")
 const A_FIG = joinpath(A_ROOT, "figures")
 mkpath(A_OUT)
@@ -30,8 +31,8 @@ a_start = time()
 # ===================================================================
 # 3. Pinned data; no SQL refresh or database writes
 # ===================================================================
-a_ds = Data.load_datastore_cached(Data.ScottishLower(); max_age_hours = 10^6)
-a_cache = stat(joinpath(pwd(), ".cache", "datastore_ScottishLower.jls"))
+a_ds = Data.load_datastore_cached(A_CONFIG.segment; max_age_hours = 10^6)
+a_cache = stat(joinpath(pwd(), ".cache", "datastore_$(nameof(typeof(A_CONFIG.segment))).jls"))
 CSV.write(joinpath(A_OUT, "snapshot.csv"), DataFrame(cache_mtime=[string(unix2datetime(a_cache.mtime))],
                                                     cache_bytes=[a_cache.size]))
 
@@ -39,18 +40,19 @@ CSV.write(joinpath(A_OUT, "snapshot.csv"), DataFrame(cache_mtime=[string(unix2da
 # ===================================================================
 # 4. Close: completeness and overround BEFORE de-vig
 # ===================================================================
-a_raw = MD.closing_book(a_ds)
+a_raw = MM.closing_book(a_ds, A_CONFIG)
 a_book, a_ref = MM.gate_book(a_raw)
-a_rates = MM.invert_panel(a_ds, a_book; seasons=A_SEASONS, tournaments=A_TOURNAMENTS)
+a_rates = MM.invert_panel(a_ds, a_book; config=A_CONFIG)
 CSV.write(joinpath(A_OUT, "rates.csv"), a_rates)
-CSV.write(joinpath(A_OUT, "coverage.csv"), MM.coverage(a_rates))
+CSV.write(joinpath(A_OUT, "coverage.csv"), MM.coverage(a_rates, A_CONFIG))
 CSV.write(joinpath(A_OUT, "market_refusals.csv"), combine(groupby(a_ref, [:market_name,:reason]), nrow => :n))
 CSV.write(joinpath(A_OUT, "market_refusal_details.csv"), a_ref)
 a_old_groups = unique(select(a_raw, [:match_id,:market_name,:market_line]))
 a_ref_panel = filter(:match_id => in(Set(a_rates.match_id)), a_ref)
 CSV.write(joinpath(A_OUT, "book_effect.csv"), DataFrame(metric=["raw_panel_groups", "refused_panel_groups"],
     n=[nrow(filter(:match_id => in(Set(a_rates.match_id)), a_old_groups)), nrow(a_ref_panel)]))
-@assert nrow(a_rates)==710
+MM.check_expected(A_CONFIG, :panel, nrow(a_rates))
+MM.check_expected(A_CONFIG, :accepted, count(a_rates.accepted))
 
 # %%
 # ===================================================================
@@ -147,7 +149,8 @@ savefig(a_plot,joinpath(A_FIG,"A_kl_distribution.png"))
 # 8. Final checks and elapsed time (all published values stored in CSV)
 # ===================================================================
 @assert maximum(a_rates.start_spread[isfinite.(a_rates.start_spread)]) <= 1e-6
-@assert count(==(14035501),filter(:reason => ==("T014 swapped book"),a_rates).match_id)==1
+@assert all(count(==(id), filter(:reason => ==(reason), a_rates).match_id) == 1
+            for (id,reason) in A_CONFIG.excluded_matches)
 CSV.write(joinpath(A_OUT,"runtime.csv"),DataFrame(wall_seconds=[time()-a_start]))
 println("Phase A outputs: ",A_OUT)
 println("Wall seconds: ",time()-a_start)
