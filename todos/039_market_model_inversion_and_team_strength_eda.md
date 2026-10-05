@@ -60,6 +60,15 @@ in `current_development/market_model/DESIGN.md`.
   same-fixture in-sample held-out comparisons. Fresh `pi_julia_mm` tmux Julia REPL:
   `R01_DONE` and `T01_DONE` (269/269). All four figures and runtime CSV present;
   Phase A ready for manager review, not Phase B authorisation.
+- [2026-10-05 @pi] Phase B claimed in `pi/market-model-phase-b`, worktree
+  `BayesianFootball-market-model-pi-b`; only own tmux REPLs. Implementing the 517-fixture
+  ladder, conditional Kalman gates, family comparison and outcome EDA. Human approved
+  seeded R4 RBPF (prior fixture-shared Gamma proposals; exact conditional Kalman states)
+  and family-specific priors for the new static scale/shape parameters. Manager added
+  fixed-omega reduction, per-week ESS/resampling and three-seed stability checks.
+  No Phase C work. Initial deterministic R1 FFBS test exposed ~1.2e-8 round-off noise
+  in zero-process steps; the prototype now copies the mathematically deterministic
+  backward step exactly, rather than loosening the test.
 - [2026-10-05 @claude] Phase A reviewed and merged (`42b09664`). Rerun in a fresh tmux REPL
   (`claude_julia_mm`): 269/269 tests, runner 38.6 s, every CSV and PNG byte-identical to
   `efa71a3c`. Accepted deviations: 12473327 refused at gate 1 (no book in the snapshot); KL gate
