@@ -37,6 +37,17 @@ the human's behalf.
 | Time | Event |
 |---|---|
 | 2026-10-06 start | Stream branch at `19b83990` (A, B, B2 merged and reviewed). |
+| B3 launched | Brief `97a2b201`; worktree `BayesianFootball-market-model-pi-b3`, branch `pi/market-model-phase-b3`; pi pane `%33` (session `agent_pi_market_model_b3`), gpt-6.1-sol; codex quota 30% (5h) / 18% (7d) at launch. Watcher: `scratchpad/watch_pi_night.sh %33 B3`. |
+
+## Human requests during the night
+
+- **2026-10-06, mid-setup:** "can the home advantage be correlated with the attack defense of
+  the team". Added to the Phase C brief as §2.4 side rungs, two-stage on isolated rates against
+  C0:
+  - H1 split HA (γ_att on the home rate, γ_def off the away rate);
+  - H2 quality-linked HA (κ·q_home).
+
+  Added unless the human objects. It doesn't change C1/C2.
 
 ## Answers given on the human's behalf
 
@@ -44,5 +55,8 @@ None yet.
 
 ## Next action
 
-Write the B3 brief, create worktree `BayesianFootball-market-model-pi-b3`, launch pi, start the
-watcher.
+1. While B3 runs, draft the Phase C brief.
+2. When the watcher fires:
+   - on QUESTION, LIMIT or IDLE, handle it;
+   - on the sentinel, review B3: fresh laptop tests, beast rerun plus hash check, then merge.
+3. After B3 is merged, launch Phase C.
