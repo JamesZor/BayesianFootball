@@ -215,8 +215,14 @@ Runners follow `docs/prototype_runner_style_guide.md`.
 
 ## 7. Environment
 
-* Long fits run on mcmc-beast with `-t 16` (not 32). The kaimon REPL was not reachable on
-  2026-10-05; fall back to ssh + tmux.
+* **Julia runs go through a persistent REPL in tmux**, never one-shot `julia file.jl` or
+  `julia -e` (human rule, 2026-10-05). Start `julia --project -t <n>` once in its own tmux
+  session, then `tmux send-keys -t <session> 'include("…")' Enter` and read the output with
+  `tmux capture-pane`. Each agent gets its own REPL session. Runners print an anchored end
+  marker (e.g. `R01_DONE`). A newly started REPL counts as a fresh session for acceptance runs.
+  Restart the REPL after any `src/` edit.
+* Long fits run on mcmc-beast with `-t 16` (not 32), in the same tmux-REPL style. The kaimon REPL
+  was not reachable on 2026-10-05.
 * `Distributions` stays pinned at 0.25.126.
 
 ## 8. Out of scope
