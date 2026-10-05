@@ -109,6 +109,24 @@ const TBMID = TB.MID
             @test abs(TB.waic_table(result,family).p_waic) <= 1e-20
         end
     end
+    @testset "Family initialisation is complete and training-only" begin
+        data = TB.family_data(TBMID.toy_panel(Xoshiro(3915)))
+        mask = repeat([true,false,true,true,false,true,true,true,true,true,true]; inner=2)
+        changed_logy = copy(data.logy)
+        changed_logy[.!mask] .+= 2.0
+        changed_data = (; data...,logy=changed_logy,y=exp.(changed_logy))
+        for family in (:gamma,:lognormal,:logt)
+            initial = TB.family_initialisations(data,family,mask)
+            changed = TB.family_initialisations(changed_data,family,mask)
+            @test length(initial) == 4
+            @test all(initial[c].params == changed[c].params for c in 1:4)
+            model = TB.static_family(Val(family),data,Float64.(mask))
+            _,vi = TB.DynamicPPL.init!!(Xoshiro(3915),model,TB.DynamicPPL.VarInfo(model),initial[1])
+            linked = TB.DynamicPPL.link!!(vi,model)
+            lf = TB.DynamicPPL.LogDensityFunction(model,TB.DynamicPPL.getlogjoint_internal,linked)
+            @test isfinite(TB.LogDensityProblems.logdensity(lf,TB.DynamicPPL.getparams(lf)))
+        end
+    end
     @testset "Divergences must include internal section" begin
         array = zeros(1000,2,4)
         array[:,1,:] .= randn(Xoshiro(3914),1000,4)

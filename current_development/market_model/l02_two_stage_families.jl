@@ -1,5 +1,12 @@
 # Included inside TwoStageMarket; definitions only.
 
+"Numerical guard only; every retained full/CV draw is checked not to bind it."
+struct FamilyLogRateGuard
+    lo::Float64
+    hi::Float64
+end
+apply_guard(g::FamilyLogRateGuard,eta) = clamp.(eta,g.lo,g.hi)
+
 """
 Static per-team-season families with non-centred season-zero-sum α/β.
 μ ~ Normal(log(1.35),0.5), γ ~ Normal(0.15,0.25) (TODO 023).
@@ -21,7 +28,7 @@ function family_data(p)
     att = [index[(p.teams[p.obs_att[j]],p.obs_season[j])] for j in eachindex(p.obs_y)]
     def = [index[(p.teams[p.obs_def[j]],p.obs_season[j])] for j in eachindex(p.obs_y)]
     return (; y=exp.(p.obs_y),logy=copy(p.obs_y),home=copy(p.obs_home),att,def,C,n,
-              fixtures=copy(p.obs_match),pairs)
+              fixtures=copy(p.obs_match),pairs,guard=FamilyLogRateGuard(-10.0,10.0))
 end
 
 Turing.@model function family_noise(::Val{:gamma})
@@ -53,7 +60,8 @@ Turing.@model function static_family(family, data, mask)
     noise ~ DynamicPPL.to_submodel(family_noise(family))
     alpha = sigma_alpha .* (data.C*z_alpha)
     beta = sigma_beta .* (data.C*z_beta)
-    eta = mu .+ gamma.*data.home .+ alpha[data.att] .+ beta[data.def]
+    eta_raw = mu .+ gamma.*data.home .+ alpha[data.att] .+ beta[data.def]
+    eta = apply_guard(data.guard,eta_raw)
     ll = family_ll(family,data.y,data.logy,eta,noise)
     Turing.@addlogprob! sum(ll.*mask)
     return (; eta,noise)
@@ -70,7 +78,7 @@ function family_gradient_gates(data)
         theta = DynamicPPL.getparams(lf)
         f = x -> LogDensityProblems.logdensity(lf,x)
         tape = ReverseDiff.compile(ReverseDiff.GradientTape(f,theta))
-        for (point,delta) in enumerate((0.0,0.1,-0.2))
+        for (point,delta) in enumerate((0.0,0.8,-0.8))
             x = theta .+ delta.*sin.(eachindex(theta))
             compiled = similar(x)
             ReverseDiff.gradient!(compiled,tape,x)
@@ -113,13 +121,46 @@ function family_diagnostics(chain, family, fold)
                 gate_pass=all(ss.gate_pass) && divergence_rate<=0.001)
 end
 
+"""
+Training-only ridge log-rate initialisation, not an estimator used for scoring.
+Avoids Turing's uniform log-shape starts (~0.1–7) for a Gamma shape of order 50–100,
+which underflowed to zero during step-size search. All priors/budgets unchanged.
+Seeded jitter disperses four chains; no held-out responses enter the ridge solve.
+"""
+function family_initialisations(data,family,mask; seed=3909,chains=4)
+    X = hcat(ones(length(data.y)),data.home,data.C[data.att,:],data.C[data.def,:])
+    weights = Float64.(mask)./0.15^2
+    penalty = vcat([4.0,16.0],fill(25.0,2data.n))
+    prior_mean = vcat([log(1.35),0.15],zeros(2data.n))
+    b = (X'*(X.*weights)+LA.Diagonal(penalty)) \ (X'*(weights.*data.logy)+penalty.*prior_mean)
+    alpha = data.C*b[3:(2+data.n)]
+    beta = data.C*b[(3+data.n):end]
+    sigma_alpha = max(ST.std(alpha),0.05)
+    sigma_beta = max(ST.std(beta),0.05)
+    residual = (data.logy.-X*b)[Bool.(mask)]
+    sigma = max(sqrt(ST.mean(residual.^2)),0.02)
+    shape = clamp(1/sigma^2,2.0,300.0)
+    rng = Random.Xoshiro(seed+999)
+    strategies = DynamicPPL.InitFromParams[]
+    for chain in 1:chains
+        noise = family == :gamma ? (; nu=shape*exp(0.1randn(rng))) : family == :lognormal ?
+            (; sigma=sigma*exp(0.05randn(rng))) : (; sigma=0.8sigma*exp(0.05randn(rng)),nu=5.0*exp(0.1randn(rng)))
+        parameters = (; mu=b[1]+0.02randn(rng),gamma=b[2]+0.02randn(rng),
+            sigma_alpha=sigma_alpha*exp(0.05randn(rng)),sigma_beta=sigma_beta*exp(0.05randn(rng)),
+            z_alpha=alpha./sigma_alpha.+0.1randn(rng,data.n),z_beta=beta./sigma_beta.+0.1randn(rng,data.n),noise)
+        push!(strategies,DynamicPPL.InitFromParams(parameters,nothing))
+    end
+    return strategies
+end
+
 function fit_family(data,family,mask; seed=3909,warmup=1000,samples=1000,chains=4)
     model = static_family(Val(family),data,Float64.(mask))
+    initialisations = family_initialisations(data,family,mask; seed,chains)
     algorithm = Turing.NUTS(warmup,0.8; adtype=Turing.AutoReverseDiff(compile=true))
     # Explicit RNG, stable chain seeds, native Turing MCMCThreads execution.
     started = time()
     chain = Turing.sample(Random.Xoshiro(seed),model,algorithm,Turing.MCMCThreads(),samples,chains;
-                          progress=false)
+                          progress=false,initial_params=initialisations)
     return chain,time()-started
 end
 
@@ -140,20 +181,21 @@ function family_loglik(chain,data,family)
         alpha = value("sigma_alpha",d).*(data.C*za)
         beta = value("sigma_beta",d).*(data.C*zb)
         eta = value("mu",d) .+ value("gamma",d).*data.home .+ alpha[data.att] .+ beta[data.def]
+        all(x -> data.guard.lo < x < data.guard.hi,eta) || error("$family posterior draw $d binds log-rate guard")
         noise = family == :gamma ? (; nu=value("noise.nu",d)) : family == :lognormal ?
             (; sigma=value("noise.sigma",d)) : (; sigma=value("noise.sigma",d),nu=value("noise.nu",d))
         ll[:,d] .= family_ll(Val(family),data.y,data.logy,eta,noise)
         locations[:,d] .= eta
         push!(noises,noise)
     end
-    return (; ll,locations,noises)
+    return (; ll,locations,noises,max_abs_eta=maximum(abs,locations))
 end
 
 function waic_table(output,family)
     ll = output.ll
     lppd = sum(logsumexp(vec(ll[i,:]))-log(size(ll,2)) for i in axes(ll,1))
     effective = sum(ST.var(ll; dims=2))
-    return (; family=String(family),n_obs=size(ll,1),lppd,p_waic=effective,
+    return (; family=String(family),n_obs=size(ll,1),lppd,p_waic=effective,max_abs_eta=output.max_abs_eta,
               elpd_waic=lppd-effective,waic=-2(lppd-effective))
 end
 
@@ -167,6 +209,7 @@ function family_comparison(p,out; seed=3909)
     diagnostics = DF.DataFrame[]
     nuts = NamedTuple[]
     qq = NamedTuple[]
+    guard_rows = NamedTuple[]
     for (fi,family) in enumerate((:gamma,:lognormal,:logt))
         for fold in 0:10
             mask = fold == 0 ? trues(length(data.y)) : obs_folds .!= fold
@@ -183,6 +226,9 @@ function family_comparison(p,out; seed=3909)
             CSV.write(joinpath(out,"nuts_diagnostics.csv"),DF.DataFrame(nuts))
             nut.gate_pass || error("$family fold $fold fails NUTS convergence/divergence gate")
             output = family_loglik(chain,data,family)
+            push!(guard_rows,(; family=String(family),fold,max_abs_eta=output.max_abs_eta,
+                              lower_bound=data.guard.lo,upper_bound=data.guard.hi,gate_pass=true))
+            CSV.write(joinpath(out,"family_guard_gates.csv"),DF.DataFrame(guard_rows))
             if fold == 0
                 push!(waic,waic_table(output,family))
                 eta = vec(ST.median(output.locations; dims=2))
