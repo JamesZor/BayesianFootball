@@ -40,6 +40,8 @@ function preweek_predictions(a::Rung, panel, θ; particles=20000, seed=3906,
         covs = zeros(np,nf,3) # home variance, away variance, cross covariance
         increments = zeros(np)
         weights = exp.(logw)
+        cumulative_weights = cumsum(weights)
+        cumulative_weights[end] = 1.0
         # Static chunks avoid task migration races and make RNG independent of scheduling.
         Threads.@threads for q in 1:np
             m = ms[q]
@@ -102,10 +104,9 @@ function preweek_predictions(a::Rung, panel, θ; particles=20000, seed=3906,
                 end
             end
             # MC is necessary only for the nonlinear log-sum-exp axis.
-            index = MID.systematic_resample(weights,rng)
             draws = zeros(mc_draws)
             for d in eachindex(draws)
-                q = index[rand(rng,1:np)]
+                q = searchsortedfirst(cumulative_weights,rand(rng))
                 z1,z2 = randn(rng,2)
                 sh = sqrt(vh[q])
                 yh = h[q]+sh*z1

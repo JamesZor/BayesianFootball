@@ -97,13 +97,17 @@ end
 
 function family_diagnostics(chain, family, fold)
     ch = MCMCChains.get_sections(chain,:parameters)
-    ss = DF.DataFrame(MCMCChains.summarystats(ch))
+    stats = DF.DataFrame(MCMCChains.summarystats(ch))
+    quantiles = DF.DataFrame(MCMCChains.quantile(ch; q=[0.05,0.5,0.95]))
+    # Exclude wall-clock-dependent ess_per_sec from seeded scientific CSVs.
+    ss = DF.innerjoin(DF.select(stats,:parameters,:mean,:std,:ess_bulk,:ess_tail,:rhat),quantiles; on=:parameters)
     ss.family .= String(family)
     ss.fold .= fold
     ss.gate_pass = (ss.rhat .<= 1.05) .& (ss.ess_bulk .>= 200) .& (ss.ess_tail .>= 200)
     names = String.(MCMCChains.names(chain))
     "numerical_error" in names || error("NUTS divergence diagnostic unavailable")
-    divergences = sum(Array(chain[:,["numerical_error"],:]))
+    # Array(Chains) defaults to :parameters and can silently omit :internals.
+    divergences = sum(Array(chain[:,["numerical_error"],:].value))
     divergence_rate = divergences/(size(chain,1)*size(chain,3))
     return ss,(; family=String(family),fold,divergences,divergence_rate,
                 gate_pass=all(ss.gate_pass) && divergence_rate<=0.001)
@@ -170,7 +174,11 @@ function family_comparison(p,out; seed=3909)
             Serialization.serialize(joinpath(out,"family_$(family)_$(fold).jls"),chain)
             diag,nut = family_diagnostics(chain,family,fold)
             push!(diagnostics,diag)
-            push!(nuts,(; nut...,seconds,sha=strip(read(`git rev-parse HEAD`,String))))
+            sha = strip(read(`git rev-parse HEAD`,String))
+            push!(nuts,(; nut...,sha))
+            open(joinpath(out,"RUN_PROVENANCE.md"),"a") do io
+                println(io,"- $(Dates.now(Dates.UTC)): family $family fold $fold; SHA `$sha`; $seconds seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.")
+            end
             CSV.write(joinpath(out,"family_diagnostics.csv"),vcat(diagnostics...))
             CSV.write(joinpath(out,"nuts_diagnostics.csv"),DF.DataFrame(nuts))
             nut.gate_pass || error("$family fold $fold fails NUTS convergence/divergence gate")

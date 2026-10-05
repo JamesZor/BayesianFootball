@@ -109,6 +109,16 @@ const TBMID = TB.MID
             @test abs(TB.waic_table(result,family).p_waic) <= 1e-20
         end
     end
+    @testset "Divergences must include internal section" begin
+        array = zeros(1000,2,4)
+        array[:,1,:] .= randn(Xoshiro(3914),1000,4)
+        array[1:5,2,1] .= 1
+        chain = TB.MCMCChains.Chains(array,["mu","numerical_error"],Dict(:internals=>["numerical_error"]))
+        _,diagnostic = TB.family_diagnostics(chain,:gamma,0)
+        @test diagnostic.divergences == 5
+        @test diagnostic.divergence_rate == 5/4000
+        @test !diagnostic.gate_pass
+    end
     @testset "Poisson IRLS" begin
         rng = Xoshiro(3905)
         x = randn(rng, 10000)

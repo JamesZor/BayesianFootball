@@ -38,6 +38,7 @@ function phase_b_panel(ds; rates_path=joinpath(@__DIR__, "results", "A", "rates.
     excluded = rates.accepted .& (rates.n_selections .< 5)
     count(excluded) == 78 || error("expected 78 accepted 1X2-only exclusions")
     all(rates.n_selections[excluded] .== 3) || error("unexpected thin-book composition")
+    # The bridge's legacy sse column holds KL here, not squared error.
     frame = DF.DataFrame(match_id=Int.(rates.match_id), accepted=rates.accepted .& .!excluded,
                          lambda_mkt_h=rates.lambda_h, lambda_mkt_a=rates.lambda_a,
                          sse=rates.kl, n_targets=rates.n_selections,
