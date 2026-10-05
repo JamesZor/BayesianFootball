@@ -60,7 +60,21 @@ in `current_development/market_model/DESIGN.md`.
   same-fixture in-sample held-out comparisons. Fresh `pi_julia_mm` tmux Julia REPL:
   `R01_DONE` and `T01_DONE` (269/269). All four figures and runtime CSV present;
   Phase A ready for manager review, not Phase B authorisation.
+- [2026-10-05 @claude] Phase A reviewed and merged (`42b09664`). Rerun in a fresh tmux REPL
+  (`claude_julia_mm`): 269/269 tests, runner 38.6 s, every CSV and PNG byte-identical to
+  `efa71a3c`. Accepted deviations: 12473327 refused at gate 1 (no book in the snapshot); KL gate
+  fixed at 0.01 (nothing reaches it). Phase B awaits human sign-off.
 
 ## Verification & Findings
 
-Not run yet.
+**Phase A (2026-10-05).** 595 of 710 fixtures accepted (78 no book, 36 no complete 1X2, 1 T014).
+The 239 panel market groups removed by the completeness gate are all one-runner O/U 0.5 groups;
+TODO 023's target builder already skipped them, and an ungated rerun reproduces its 623 SSE rates
+exactly. KL vs SSE: median |Δ log λ| ≈ 0.0002–0.002, max 0.039. Multi-start spread 4e-8.
+
+The double-Poisson grid misprices the close systematically: draw −1.34 pp [−1.41, −1.26],
+home/away +0.65/+0.68 pp, BTTS-yes −0.79 pp in sample and −1.20 pp held out. **Consequence
+(manager check):** on the 517 accepted books with ≥ 5 selections, inverting from the 1X2 alone
+gives a log-total 0.103 lower than the full book (q05/q50/q95 −0.181/−0.105/−0.014) with
+supremacy almost unchanged (+0.010). The 78 accepted 1X2-only books therefore carry totals biased
+low by about 0.10, the size of the panel's whole log-total sd.
