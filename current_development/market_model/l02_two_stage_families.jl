@@ -9,6 +9,8 @@ apply_guard(g::FamilyLogRateGuard,eta) = clamp.(eta,g.lo,g.hi)
 
 """
 Static per-team-season families with non-centred season-zero-sum α/β.
+Human-approved projection population: observed team-seasons in the retained panel
+(38 pairs on the pinned panel), not the 22-club × 2-season cross-product with prior-only absent states.
 μ ~ Normal(log(1.35),0.5), γ ~ Normal(0.15,0.25) (TODO 023).
 Human-approved 2026-10-05: σ_α,σ_β ~ HalfNormal(0.5);
 log-normal/log-t σ ~ HalfNormal(0.20); Gamma shape ν ~ Gamma(2,scale 100);

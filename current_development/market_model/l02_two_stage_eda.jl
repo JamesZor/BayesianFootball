@@ -266,7 +266,11 @@ function ladder_evaluation(panel,fits,out; particles=20000,seeds=(3906,3907,3908
     ladder = NamedTuple[]
     for level in 0:4
         fit = fits[(level,"10a")]
-        row = Dict{Symbol,Any}(:rung=>"R$level",:collapsed_loglik=>loglik[level])
+        marginal = level == 4 ? only(DF.filter(r->r.rung == "R4" && r.protocol == "10a" && r.subset == "all" &&
+            r.axis == "log_lambda_h" && r.seed == first(seeds),met).collapsed_loglik) : loglik[level]
+        row = Dict{Symbol,Any}(:rung=>"R$level",:collapsed_loglik=>marginal,
+            :conditional_smoothed_loglik=>loglik[level],
+            :loglik_method=>level == 4 ? "RBPF scales/states integrated at median theta" : "exact Kalman at median theta")
         for name in ("sigma_obs","sigma_att","sigma_def","sigma_break","sigma_gamma","nu")
             j = findfirst(==(name),fit.names)
             q = j === nothing ? fill(NaN,3) : ST.quantile(vec(fit.draws[:,j,:]),[0.05,0.5,0.95])
