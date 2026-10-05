@@ -66,6 +66,24 @@ end
         rates=M.invert_panel(ds,book)
         @test rates.reason == ["no Betfair book","","no complete 1X2 market","T014 swapped book"]
     end
+    @testset "held-out comparison uses only the same fixtures" begin
+        held=DataFrame(match_id=[1,2],scope=fill("heldout",2),tournament=fill(56,2),
+                       n_markets=fill(3,2),line=fill("BTTS",2),selection=fill("btts_yes",2),
+                       residual=[0.2,0.4])
+        insample=DataFrame(match_id=[1,2,3],scope=fill("insample",3),tournament=fill(56,3),
+                           n_markets=fill(3,3),line=fill("BTTS",3),selection=fill("btts_yes",3),
+                           residual=[0.1,0.3,0.9])
+        overall=copy(held)
+        overall.tournament .= 0
+        overall.n_markets .= 0
+        summary=M.residual_summary(overall;reps=20)
+        result=M.heldout_comparison(held,insample,summary;reps=20)
+        @test nrow(result)==1
+        @test result.n[1]==result.insample_n[1]==2
+        @test isapprox(result.insample_mean[1],0.2;atol=1e-14)
+        @test result.insample_ci_low[1] <= result.insample_mean[1] <= result.insample_ci_high[1]
+        @test_throws ErrorException M.heldout_comparison(held,insample[2:3,:],summary;reps=20)
+    end
     @testset "real panel bridge and T015" begin
         ds=BayesianFootball.Data.load_datastore_cached(BayesianFootball.Data.ScottishLower();max_age_hours=10^6)
         original,_,frame=M.MID.build_market_panel(ds)
@@ -81,3 +99,4 @@ end
         @test maximum(r.start_spread[isfinite.(r.start_spread)])<=1e-6
     end
 end
+println("T01_DONE")

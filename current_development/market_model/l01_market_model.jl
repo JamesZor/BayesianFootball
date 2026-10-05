@@ -236,4 +236,29 @@ function residual_rows(rates, book; heldout=false)
     return DF.DataFrame(rows)
 end
 
+"Add full-book residuals on precisely the held-out fixtures to each held-out summary row."
+function heldout_comparison(held::DF.AbstractDataFrame, insample::DF.AbstractDataFrame,
+                            summaries::DF.AbstractDataFrame; reps=2000, seed=3901)
+    key = [:match_id, :tournament, :n_markets, :line, :selection]
+    same = DF.semijoin(insample, DF.unique(held, key); on=key)
+    DF.nrow(same) == DF.nrow(held) || error("held-out selections lack a full-book residual on the same fixture")
+    comparable = DF.DataFrame[]
+    for split in (:overall, :tournament, :n_markets)
+        rows = copy(same)
+        split == :tournament || (rows.tournament .= 0)
+        split == :n_markets || (rows.n_markets .= 0)
+        push!(comparable, residual_summary(rows; reps, seed))
+    end
+    full = DF.select(vcat(comparable...), :tournament, :n_markets, :line, :selection,
+                     :n => :insample_n, :mean => :insample_mean,
+                     :ci_low => :insample_ci_low, :ci_high => :insample_ci_high,
+                     :mean_abs => :insample_mean_abs)
+    held_summary = DF.filter(:scope => ==("heldout"), summaries)
+    joined = DF.leftjoin(held_summary, full; on=[:tournament, :n_markets, :line, :selection])
+    DF.nrow(joined) == DF.nrow(held_summary) || error("held-out comparison duplicated a summary row")
+    (any(ismissing, joined.insample_n) || !all(joined.n .== joined.insample_n)) &&
+        error("held-out comparison is not on identical fixtures")
+    return joined
+end
+
 end # module

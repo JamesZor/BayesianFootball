@@ -110,7 +110,7 @@ for scope in ("insample","heldout")
 end
 a_res = vcat(a_summaries...)
 CSV.write(joinpath(A_OUT,"line_residuals.csv"),filter(:scope => ==("insample"),a_res))
-CSV.write(joinpath(A_OUT,"heldout_line_test.csv"),filter(:scope => ==("heldout"),a_res))
+CSV.write(joinpath(A_OUT,"heldout_line_test.csv"),MM.heldout_comparison(a_held,a_in,a_res))
 CSV.write(joinpath(A_OUT,"selection_residuals.csv"),a_all)
 
 # %%
@@ -118,9 +118,8 @@ CSV.write(joinpath(A_OUT,"selection_residuals.csv"),a_all)
 # 7. Diagnostic figures; no outcome-based interpretation
 # ===================================================================
 a_acc=filter(:accepted => identity,a_rates)
-a_plot=histogram(max.(a_acc.kl,1e-16),xscale=:log10,group=a_acc.n_selections,
-                 xlabel="summed KL (floor 1e-16)",ylabel="fixtures",title="KL by book size")
-savefig(a_plot,joinpath(A_FIG,"A_kl_distribution.png"))
+# Saving the original log-x histogram first poisoned GR's tick/layout state in
+# this headless session. Keep diagnostics ahead of the histogram for isolation.
 a_figres=filter(r -> r.tournament==0 && r.n_markets==0,a_res)
 a_labels=string.(a_figres.line," / ",a_figres.selection," / ",a_figres.scope)
 a_plot=scatter(a_figres.mean,1:nrow(a_figres),xerror=(a_figres.mean.-a_figres.ci_low,a_figres.ci_high.-a_figres.mean),
@@ -137,6 +136,11 @@ savefig(a_plot,joinpath(A_FIG,"A_kl_sse.png"))
 a_plot=scatter(a_acc.lambda_h,a_acc.lambda_a,group=a_acc.tournament,
                xlabel="lambda home",ylabel="lambda away",title="KL rates by tournament")
 savefig(a_plot,joinpath(A_FIG,"A_rates.png"))
+# Bin in log10 space (equivalent to a log x axis), including KL values at zero.
+# GR's histogram(xscale=:log10) produced an EMPTY picture and "No strict ticks".
+a_plot=histogram(log10.(max.(a_acc.kl,1e-16)),group=a_acc.n_selections,
+                 xlabel="log10 summed KL (floor 1e-16)",ylabel="fixtures",title="KL by book size")
+savefig(a_plot,joinpath(A_FIG,"A_kl_distribution.png"))
 
 # %%
 # ===================================================================
@@ -147,3 +151,4 @@ savefig(a_plot,joinpath(A_FIG,"A_rates.png"))
 CSV.write(joinpath(A_OUT,"runtime.csv"),DataFrame(wall_seconds=[time()-a_start]))
 println("Phase A outputs: ",A_OUT)
 println("Wall seconds: ",time()-a_start)
+println("R01_DONE")
