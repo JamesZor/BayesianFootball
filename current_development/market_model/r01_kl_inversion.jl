@@ -81,8 +81,8 @@ a_repro = innerjoin(select(a_ungated,:match_id,:lambda_mkt_h => :new_h,:lambda_m
                     select(a_reference,:match_id,:lambda_mkt_h => :old_h,:lambda_mkt_a => :old_a);on=:match_id)
 a_repro = filter(r -> isfinite(r.old_h) && isfinite(r.old_a) && isfinite(r.new_h) && isfinite(r.new_a),a_repro)
 CSV.write(joinpath(A_OUT,"ungated_reproduction.csv"), DataFrame(n_common=[nrow(a_repro)],
-    max_abs_lambda_h=[maximum(abs.(a_repro.new_h.-a_repro.old_h))],
-    max_abs_lambda_a=[maximum(abs.(a_repro.new_a.-a_repro.old_a))]))
+    max_abs_lambda_h=[isempty(a_repro.new_h) ? NaN : maximum(abs.(a_repro.new_h.-a_repro.old_h))],
+    max_abs_lambda_a=[isempty(a_repro.new_a) ? NaN : maximum(abs.(a_repro.new_a.-a_repro.old_a))]))
 a_prior = CSV.read(joinpath(@__DIR__,"..","market_inverse_dynamics","results","production","market_targets.csv"),DataFrame)
 a_prior_ids=Set(a_prior.match_id)
 CSV.write(joinpath(A_OUT,"previously_accepted_refused.csv"),select(filter(r -> r.match_id in a_prior_ids && !r.accepted,a_rates),:match_id,:reason))
