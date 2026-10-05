@@ -297,4 +297,5 @@ function train_covariance(panel,config,out; seed=3922)
 end
 
 include("l03_covariance_diagnostics.jl")
+include("l03_covariance_hierarchy.jl")
 end # module

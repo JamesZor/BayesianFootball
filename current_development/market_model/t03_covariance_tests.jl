@@ -135,5 +135,39 @@ end
         @test pairs.previous == [1.0,3.0]
         @test pairs.current == [2.0,4.0]
     end
+    @testset "Human addendum: quality/style rotation and common weekly shocks" begin
+        A = [0.5 -0.5; 0.5 0.5]
+        for rho in (-0.8,0.0,0.8)
+            sa,sb = 0.04,0.03
+            Q = [sa^2 rho*sa*sb; rho*sa*sb sb^2]
+            rotated = A*Q*A'
+            vq = (sa^2+sb^2-2rho*sa*sb)/4
+            vs = (sa^2+sb^2+2rho*sa*sb)/4
+            @test diag(rotated) ≈ [vq,vs]
+            @test rotated[1,2]/sqrt(vq*vs) ≈ (sa^2-sb^2)/(4sqrt(vq*vs))
+        end
+        # Balanced synthetic panels with 200 weeks and 8 independent fixtures per week.
+        weeks = repeat(collect(1:200); inner=8)
+        rng = Xoshiro(3929)
+        common = randn(rng,200)
+        fixture_noise = randn(rng,length(weeks))
+        planted = TC.league_shock_statistic(weeks,common[weeks]+fixture_noise)
+        none = TC.league_shock_statistic(weeks,fixture_noise)
+        println("Synthetic common weekly shock: ",planted)
+        println("Synthetic no weekly shock: ",none)
+        @test planted.icc > 0
+        @test planted.ci_low > 0
+        @test abs(none.icc) < 0.05
+        @test none.ci_low <= 0 <= none.ci_high
+        # Do not truncate negative MOM components; repeated bootstrap weeks remain distinct.
+        signed = TC.week_icc([[-1.0,1.0],[-1.0,1.0]])
+        @test signed.icc == -1.0
+        @test signed.variance_week == -1.0
+        unbalanced = TC.week_icc([[1.0],[2.0,3.0],[4.0,5.0,6.0]])
+        @test unbalanced.n == 6
+        @test unbalanced.n_weeks == 3
+        @test unbalanced.n_multi_fixture_weeks == 2
+        @test unbalanced.n_pairs == 4
+    end
 end
 println("T03_DONE")

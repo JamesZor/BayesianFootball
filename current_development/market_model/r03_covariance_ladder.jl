@@ -67,6 +67,8 @@ mc_fits = MC.train_covariance(mc_panel,MC_CONFIG,MC_OUT; seed=MC_SEED)
 # Linear axes exact Gaussian. Nonlinear log-total: 4000 seeded draws / KDE.
 # Team persistence CI: 2000 whole-team bootstrap replicates, seed 3924.
 mc_evaluation = MC.evaluate_covariance(mc_panel,MC_CONFIG,mc_fits,MC_OUT)
+# Human addendum: existing draws/RTS levels only; no hierarchy model or new fit.
+mc_hierarchy = MC.hierarchy_postprocess(mc_panel,mc_fits,MC_OUT)
 
 # %%
 # ===================================================================
