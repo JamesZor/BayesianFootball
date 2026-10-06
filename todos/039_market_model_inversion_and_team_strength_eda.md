@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -52,11 +52,15 @@ in `current_development/market_model/DESIGN.md`.
 - Literature: Egidi, Pauli & Torelli (2018) invert per match from 1X2 only; Wunderlich &
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
-## Deferred / Blocked C2
+## Blocked recovery / deferred C2
 
-Revision 4 explicitly authorises full-book C0/C1/H1/H2 continuation; those rungs
-are not blocked by C2. Deterministic state engines pass; sampling, recovery,
-evaluation and production reproduction remain unimplemented at this handover.
+Revision 4 explicitly authorises full-book C0/C1/H1/H2; scope approval is not
+missing and C2 is not their blocker. The sampler and synthetic generator now
+exist, but **C1 recovery is separately BLOCKED on joint-mode solver robustness**:
+two prescribed beast attempts fail the same line search, with FD then AD.
+No third numerical variation; a reviewed remedy at the frozen supported
+coordinate is required before recovery/production promotion. No completed
+fit/retained intervals, convergence, evaluation or production reproduction.
 
 Revision 3 fixes full-book means but fails thin-book Gate 1: at n=250,
 SD=.20, BTTS+O/U median marginal error .020609 nats (limit .01) and
@@ -69,6 +73,23 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision 4 BLOCKED on repeated C1 recovery joint-mode failure,
+  statistical source 9de98548. Synthetic-only AD retry: seed4964, warmup8,
+  theta[-3.549527585137839,-4.460929121755582,-2.821549571263347,
+  7.9567722491577495], gradient[-1.5699131339808048e-5,3.249019587192592e-5].
+  Same line-search failure as c2547742 FD attempt: stop without third variation.
+  Peers cooperatively cancelled at warmup7/8; no retained fit/intervals or
+  production promotion. Both generated panels byte-identical (de6a986b...8da0d1),
+  not production reproduction. Final fresh %52 t05 270/270, t04 92/92, t03
+  131/131, t02 131/131; separate C2-pending unchanged 29pass/10fail. Six real
+  preflight CSVs regenerate byte-identically, full Gate1 12/12, state53/53.
+  Sampler/generator/frozen seeds committed; recovery/evaluation/HA/u smoothing,
+  figures and complete production workflow/reproduction unfinished. Report,
+  repro and handover updated; engine-only notes archived. All owned laptop
+  %49–%52 and beast %261–%263 closed; logs/checkout/binaries preserved. No
+  seed/prior/data/grid/threshold/package/src/DB or unrelated pane changes.
+  Dependency: reviewed joint-mode robustness remedy, not scope reapproval.
 
 - [2026-10-06 @pi] Recovery at c2547742 generated all 517 synthetic full books
   with unchanged seed 3962, then slice sampling aborted on joint-mode line

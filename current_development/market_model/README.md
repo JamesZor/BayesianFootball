@@ -24,10 +24,11 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision 4 in progress, full books only):** fit the structure directly to
-  full books, sharing information and learning concentration/fixture deviations.
-  C0/C1/H1/H2 continuation is authorised; C2 thin pooling remains blocked.
-  Deterministic state engines exist; no pooled posterior fits yet.
+- **C (revision 4 recovery blocked, full books only):** fit the structure directly
+  to full books, sharing information and learning concentration/fixture deviations.
+  C0/C1/H1/H2 remains authorised; C2 thin pooling remains separately deferred.
+  Engines, sampler and generator exist; recovery failed twice at the joint-mode
+  line search. No completed pooled posterior fits or production conclusions.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -396,16 +397,32 @@ these filters. New priors are on sigma_q/sigma_s, not R6's attack/defence/rho pr
 H1 prior clarified by the manager: independent gamma_att N(.15,.25²) and
 new gamma_def N(0,.25²). Pinning gamma_def=0 recovers C0.
 
-`l05_fullbook_engine.jl` is included inside PooledMarket and defines the state
-engines, conditional theta-to-state identities, Gaussian/frozen-factor batch
-checks and smoothing. `r05_pooled.jl` is **still a deterministic preflight, not
-production**: new artifacts go to `results/C/v4_preflight/`, preserving v3.
-Its marker is `C05_C4_ENGINE_PREFLIGHT_DONE`, not `R05_DONE`.
-`t05` separates accepted full-book deterministic checks from a `C2-pending`
-testset that runs/reports the unchanged integrated derivative and archived
-thin Gate 1 checks. Pending failures are caught only outside the acceptance
-suite and explicitly reported, never labelled passed. Synthetic recovery,
-training, convergence, measures/figures and two-run reproduction are unfinished.
+`l05_fullbook_engine.jl` defines the state engines, conditional identities,
+Gaussian/frozen-factor batch checks and smoothing. The included
+`l05_fullbook_sampling.jl` adds dedicated slice chains (no R6 prior/±12 box),
+ID-joined honest restriction, full-book synthetic generation and exact log-space
+Dirichlet storage. Seeds are frozen in `fullbook_seeds.toml`.
+`r05_fullbook_recovery.jl` is the beast-only prerequisite, not production.
+
+**Recovery is BLOCKED at statistical source `9de98548`.** Same frozen generation
+seed 3962 and full population: the FD attempt failed a joint-mode line search;
+synthetic-only AD failed the same check, chain seed4964 at warmup8. Root gradient
+[-1.5699131339808048e-5, 3.249019587192592e-5]; peers cancelled. Stop without a
+third variation or threshold/seed/prior/data change. No fit/intervals retained.
+The preceding probability-underflow issue was resolved by exact log-Gamma/logp
+storage, not clipping or selection; the latter two generated panels are
+byte-identical. Passing real-book Gate1 does not establish robust recovery.
+
+Final fresh accepted deterministic t05 **270/270**, t04 **92/92**, t03 **131/131**,
+t02 **131/131**. C2-pending separately reports **29 pass/10 fail**, excluded by
+scope, never labelled passed. `r05_pooled.jl` remains a deterministic preflight:
+Gate1 **12/12**, engines **53/53**, all four fixed filters; its six v4_preflight
+CSVs regenerate byte-identically to the engine checkpoint. Marker
+`C05_C4_ENGINE_PREFLIGHT_DONE`, **not R05_DONE/T05_DONE**. These identities are
+not two production runs. Recovery, training, convergence, measures/figures and
+production reproduction remain unfinished. Evidence and stop boundary:
+`results/C/PHASE_C_REPORT.md`, `REPRODUCIBILITY.md`, `HANDOVER.md`.
+Engine-only checkpoint documents are preserved with `_ENGINE_CHECKPOINT` names.
 
 ### C2 deferred to the human
 

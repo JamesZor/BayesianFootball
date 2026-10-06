@@ -1,179 +1,138 @@
-# Phase C revision 4 — implementation checkpoint handover (2026-10-06)
+# Phase C revision 4 — sampler/recovery BLOCKED (2026-10-06)
 
-## State: full-book continuation authorised, still incomplete
+## State and scope
 
 Worktree `/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`,
-branch `pi/market-model-phase-c`. **Manager revision 4 already authorises
-C0/C1/H1/H2 on full books only. Do not ask again for that scope approval.**
-C2 thin pooling is deferred; no thresholds, spreads, grid or data are changed.
-The prior v3 handover is preserved in HANDOVER_V3.md, not current instructions.
+branch `pi/market-model-phase-c`. **Full-book C0/C1/H1/H2 remains authorised.
+Do not ask again for scope approval.** C2 remains separately deferred.
+Statistical implementation **9de98548**; subsequent docs/results commit does not
+change it. All owned laptop %49/%50/%51/%52 and beast %261/%262/%263 are CLOSED.
+No running recovery/session to resume. Do not operate unrelated panes.
 
-**No C0/C1/H1/H2 posterior fit, sampler, sampling, synthetic parameter recovery,
-forecast evaluation, learned n/sigma_u, shrinkage, ratings/HA posterior figures
-or production reproduction exists.** Deterministic state engines now exist
-and pass their necessary gates. r05 is still a preflight, not production.
-TODO 039 is IN_PROGRESS; all owned Julia panes `%45`, `%46`, `%47` are closed.
-No beast checkout/session was created. Do not operate unrelated panes.
+**STOP: the C1 synthetic recovery joint-mode line search failed twice**, first
+with FD then with synthetic-only AD. Per the working agreement, no third
+numerical variation/retry was attempted. TODO039 is BLOCKED on solver robustness
+at supported parameters. Do not silently return -Inf for mode/PSD failures,
+change seeds/prior/data/grid/thresholds or select synthetic fixtures to pass.
 
-Read AGENTS and Julia/runner guides, manager revisions 1–4, stream README/DESIGN,
-PHASE_C_REPORT.md and REPRODUCIBILITY.md. Previous scientific reports were read
-in this session; reports and outputs A/B/B2/B3 remain untouched. Sentinels are
-PHASEC4_DONE / PHASEC4_BLOCKED / PHASEC4_HANDOVER, alone on their line.
-Definition of done remains all authorised rungs, gates, recovery, converged
-beast fits, measures/figures and two-run byte identity; **not met yet**.
+No completed C0/C1/H1/H2 posterior fit, retained recovery draws/intervals,
+convergence, forecast evaluation, learned n/sigma_u, shrinkage, HA/ratings
+posterior figures or production reproduction exists. Definition of done remains
+all authorised rungs/gates/recovery/converged fits/measures/figures and two fresh
+byte-identical full beast runs; **not met**. r05_pooled remains a preflight.
 
-## What was implemented and proved
+Read AGENTS, Julia/runner guides, manager revisions1–4, stream README/DESIGN,
+PHASE_C_REPORT.md and REPRODUCIBILITY.md before changes. Engine-only prior
+handover/report/repro preserved as *_ENGINE_CHECKPOINT*. V1/V2/V3 evidence and
+A/B/B2/B3 remain unchanged. Sentinels PHASEC4_DONE/BLOCKED/HANDOVER alone on a line.
 
-`l05_fullbook_engine.jl` is included INSIDE `PooledMarket` by l05_pooled.jl.
-It adds:
+## Added implementation
 
-- `FullBookRung(:C0/:C1/:H1/:H2) <: MID.AbstractArm`, correct physical names,
-  init centres and new `MID.log_prior` methods. C0/H1/H2 coordinates are
-  log(sigma_obs), log(sigma_q), log(sigma_s), plus raw kappa for H2.
-  C1 coordinates are log(sigma_q), log(sigma_s), log(sigma_u), log(n).
-  HalfNormal priors have full normalisers/Jacobians. Log n is exactly
-  Normal(log(1000),1.5); **do not apply MID.THETA_BOUND to it**.
-- `fullbook_initial`, `fullbook_process`, `fullbook_design`: same raw
-  alpha/beta initial prior and zero-sum design as B2, static mu/gamma,
-  ordinary weekly q/s innovations. Q's same-team diagonals are q²+s²,
-  off-diagonal s²−q²; no summer jump or common mu shock.
-- H1 adds one static state gamma_def, negative on away scoring. **Manager
-  explicitly clarified its prior in this session:** gamma_att N(.15,.25²),
-  gamma_def N(0,.25²), independent. `gamma_def_sd=0.0` pins the latter for
-  its C0 reduction gate. This pin is a gate only, not the fitted prior.
-- H2 adds kappa times the centred HOME team's q to its own scoring row,
-  with kappa N(0,.5²). kappa=0 reduces exactly to C0.
-- `fullbook_markets(ds,p,config)` asserts fixture/target order, unique IDs,
-  full-book type and config exclusions, returns markets in PANEL order.
-- `fullbook_filter(a,p,theta; markets,store,predict)` exact joint Gaussian
-  C0/H1/H2; approximate C1. Forecast all fixtures pre-week, THEN update
-  in inherited week/date/ID order. C1 adds ONLY the returned marginal from
-  existing `laplace_update`; no additional Kalman likelihood or lost peak.
-  It uses production density for raw marginal/FD derivatives and identical
-  AD algebra for the third tensor, unchanged from passing v3 full-book code.
-- `conditional_state_update`: a=H m, S=H P H'+sigma_u²I,
-  K=P H'/S, m+=K(b−a), P+=K(V−S)K'. Integrates u once, no inverse of P.
-  Singular-state, information/moment identity, PSD/symmetry tests pass.
-- Stored `f.factors` retain fixture IDs, weeks, H, z/R/constant, a/S,
-  theta posterior moments and raw/clipped curvature diagnostics.
-  `frozen_book_factor` defines exp(constant)*Normal(z;theta,R), choosing
-  the constant to match the original returned marginal at its prediction.
-  R+sigma_u²I observes H*x. This frozen surrogate is Gaussian; the original
-  nonlinear model is not. Do NOT remove constants from batch/sampling checks.
-- `fullbook_smoothing(f)` RTS on stored Gaussian moments, approximate C1.
-  `fullbook_batch` independently assembles original-side joint Gaussian
-  covariance over weeks; C1 accepts the FROZEN factors. No globally exact
-  Dirichlet batch claim.
-- `fullbook_engine_gates()` includes all 34 B2/B/TODO 023 gates plus 19 new
-  reductions, independent batch/RTS and scalar-eigen/full-2D checks.
+`l05_fullbook_sampling.jl`, included inside PooledMarket after the engine:
 
-`laplace_gate` now defaults `kinds=("full",)`; it no longer constructs thin
-prediction centres in that scope. Explicit kinds are diagnostic-only C2.
-**No change to laplace_update/marginal/third tensor/integrator algebra.**
+- Dedicated full-book slice target/wrapper, correct normalised rung priors,
+  4 explicit Xoshiro seeds, widths adapt during warmup only, 2000+3000, thin1.
+  Physical positive coordinates exp; H2 kappa unchanged. No R6 prior/chains or
+  inherited whole-target ±12 guard. Explicit numerical representability support.
+- Failed mode/PSD errors propagate; @sync + cooperative cancellation stops peers,
+  logs seed/iteration/last supported theta, never promotes incomplete chains.
+- `restrict_fullbook` restricts fixture pairs AND metadata and joins books by ID.
+  MID.restrict_panel keeps its original full metadata; do not rely on that for
+  fullbook_markets/order or reuse full-panel markets positionally for 10b.
+- `synthetic_fullbook_latents` / `synthetic_fullbook`: inherited initial raw
+  alpha/beta prior, zero-sum design, static mu/gamma, ordinary independent q/s,
+  fixture u and exact Dirichlet(n*q) full books on unchanged cutoff10 grid.
+  Real full fixture/week/market schedule is preserved. Synthetic obs_y stores
+  latent theta TRUTH, not isolated scoring targets. No thin books or gate-based
+  selection. Gaussian generation paths exist but no recovery fits were run.
+- `FullBookLogMarket` stores finite logp for Dirichlet draws whose display p can
+  underflow. Exact log-Gamma(a)=log-Gamma(a+1)+log(U)/a for a<1, normalise log
+  draws. No clipping/redraw; density normalisers unchanged. PF.book_logdensity
+  has methods on this owned type, primal production grid / dual existing AD
+  algebra. `fullbook_market_logp` leaves real-book log(p) algebra unchanged.
+- `fullbook_derivative_rule`: real books keep existing FD, synthetic log books
+  use AD. Joint-mode tolerances, clipping, Laplace marginal/correction and
+  quadrature remain unchanged. AD did NOT resolve the actual recovery blocker.
+- `fullbook_seeds.toml` freezes all recovery/production/inference seeds.
+  Recovery generation3962, chain4961/4962/4963/4964. No seed selection was made.
+- `recover_fullbook` serialises generated data, fits prescribed chains, would
+  write convergence/90%-interval gates BEFORE promotion; it never got that far.
+  `r05_fullbook_recovery.jl` is the readable beast-only prerequisite runner;
+  not a production workflow. Load l05 before binary deserialization.
 
-## Verified artifacts and exact marker meanings
+## Verified and failed evidence
 
-Fresh final-source laptop `%47`: t05 **209/209** necessary assertions,
-`T05_C4_DETERMINISTIC_DONE`, then separate **C2-pending 29 pass/10 fail/39**,
-`C2_PENDING_REPORTED`. The unchanged integrated derivative discrepancy remains
-5.405838441375254e-5 (limit 1e-6); nine archived thin Gate 1 setting flags fail.
-The pending tests execute/report, excluded by manager scope. No new numerical
-variation or thin quadrature rerun was made. **Not T05_DONE**: parameter recovery
-is unbuilt. `t05_fullbook_engine_tests.jl` is included inside acceptance;
-`t05_c2_pending_tests.jl` is included AFTER it, with its own labelled exception
-reporting. Do not move non-C2 failures into that exception boundary.
+Final laptop %52: **t05 270/270**, T05_C4_DETERMINISTIC_DONE, not T05_DONE.
+Separate C2-pending unchanged **29pass/10fail/39**, C2_PENDING_REPORTED.
+Fresh regressions t04 **92/92**, t03 **131/131**, t02 **131/131**, all markers.
+Final r05 preflight passes full Gate1 **12/12** (360 rows), state gates **53/53**,
+all four fixed 517-fixture filters/smoothers. All **six** v4_preflight CSVs are
+byte-identical to the engine-only checkpoint, verified with diff -rq after both
+log-space and synthetic AD changes. This is not production reproduction.
+Logs: LAPTOP_C4_AD_TESTS.txt and LAPTOP_C4_FINAL_SAMPLING_REGRESSIONS_PREFLIGHT.txt.
+Earlier local indexing and test-population errors are retained in development
+logs; no non-C2 check was moved into the pending boundary or loosened.
 
-Fresh `%46` regressions t04 **92/92**, t03 **131/131**, t02 **131/131**, all
-markers. t03 uses temporary A outputs. Logs are in results/C:
-LAPTOP_C4_FIRST_TESTS.txt, LAPTOP_C4_REGRESSIONS.txt,
-LAPTOP_C4_FINAL_PREFLIGHT.txt. First development t05 failed its log-prior identity
-once: MID's HalfNormal helper omits constants. New priors now include those
-constants, fixing discrepancy 5.53723404048801 with unchanged priors/thresholds.
+Beast `/root/BF_runs/market_model_c`, detached at9de98548, existing Manifest
+symlink, pinned metadata-preserving cache, Julia1.12.4, -t16, core pinning/BLAS1,
+no DB writes. Three historical attempts:
 
-`r05_pooled.jl` fresh-source preflight completes:
+1. 19ad4b99, %261: generator p underflow, fixture15336943, before sampling.
+   Generating log rates [-.2925837158254979,2.7903082673178803]; OU0.5 under
+   probability5.881035960900128e-7 (shape.0005881035960900128). Fixed by exact
+   log-space storage, NOT another seed, clipping, narrower prior or exclusion.
+2. c2547742, %262: generated all books, FD recovery sampler stopped on
+   joint-mode line search; gradient[-2.533547593941421e-5,2.8639610683001138e-5].
+3. 9de98548, %263: synthetic-only AD still fails same line search. Root chain
+   seed4964, warmup8, last theta[-3.549527585137839,-4.460929121755582,
+   -2.821549571263347,7.9567722491577495], gradient
+   [-1.5699131339808048e-5,3.249019587192592e-5]. Other three chains cancelled
+   at warmup7/8. Expanded CompositeException confirms root, not merely peers.
 
-1. Pinned cache check/load.
-2. Full Gate 1, **12/12 settings / 360 fixture-setting rows**, same first 30,
-   same n/spreads/offsets. Max median .003980333011027959 nats, max p95
-   .0051705855019272395, max mean/SD .0009284497092163062, max SD relative
-   .010184310576972222. All unchanged thresholds pass.
-3. **53/53** state gates. C0 matched R6 error 3.552713678800501e-14;
-   H1/H2 reductions 0.0; scalar eigen errors <=6.661338147750939e-16.
-4. All four FIXED-parameter filters/smoothers run on 517 fixtures.
-   C0/H1 theta=log([.07,.03,.01]); H2 also kappa=0;
-   C1 theta=log([.03,.01,.06,1000]). All finite and positive smoothed
-   minimum eigenvalues. **These are not fits.** C1 warmed single filter
-   .320236339 s locally; use this as a warning of slice runtime, not a
-   posterior/sampling timing claim.
-5. `C05_C4_ENGINE_PREFLIGHT_DONE`, **NOT R05_DONE**.
+The last two synthetic_panel.jls binaries are BYTE-IDENTICAL:
+SHA256 de6a986b1caebc2a2ad1386308c7f4613bf69ea2f71440778783476c348da0d1.
+This is generated-data identity, NOT fits or two production runs. No fit binary
+or recovered parameter interval exists; no retained iterations reached.
+Local evidence BEAST_C4_RECOVERY_FIRST_ATTEMPT.txt,
+BEAST_C4_RECOVERY_LOGSPACE_ATTEMPT.txt, BEAST_C4_RECOVERY_AD_ATTEMPT.txt;
+CSV directories v4_recovery_first_attempt/, v4_recovery_logspace/, v4_recovery_ad/
+contain only passing deterministic engine gates, NOT recovery results.
 
-New outputs only `results/C/v4_preflight/` (six CSVs). Historical root C CSVs
-remain v3 partial/all-types failures, copied to v3_gate/. Earlier reports,
-reproduction notes and handover have V3 archives; v1/v2 preserved too.
-Current source/scientific hashes identify a checkpoint, not two production runs.
-An auxiliary DuckDB historical-row join failed twice on reserved identifiers
-and was stopped; no new cross-version row/byte-identity comparison is claimed.
+Remote logs `/root/BF_runs/logs/market_model_c/`:
+19ad4b99_recovery1.log, c2547742_recovery2.log, 9de98548_recovery3.log.
+The c254 original output directory was moved (preserving its binary) to
+`/root/BF_runs/logs/market_model_c/c2547742_recovery_outputs/` to avoid an
+untracked-file checkout collision. Last binary remains in the dedicated
+checkout's results/C/v4_recovery_ad/. Nothing was deleted or reset to bypass
+that collision. No session currently runs on this checkout.
 
-## Exact next work, in order
+## Next dependency / work after review
 
-1. Implement a dedicated full-book slice chain/fit wrapper, using `FullBookRung`
-   names/priors and `fullbook_filter` likelihood. `MID.slice_sweep` and CM chain
-   adaptation mechanics are references. Physical draws: exp positive coordinates,
-   H2 kappa unchanged. ArmFit can carry this arm. **Do not reuse fitted R6 chains,
-   its rho/scale prior, or its whole-target ±12 guard.** Support/overflow handling
-   must be explicit; mode/PSD failures must not be silently converted to posterior
-   rejections. Adapt widths during warmup only, prescribed 4×(2000+3000), thin 1.
-   Freeze a fresh seed manifest; prototype fit serialisation requires loaders.
-2. Add full-book synthetic panel generation with known q/s/u/n and
-   Dirichlet(n*q) market draws on the same grid, then full parameter recovery
-   within each 90% interval. Run sampling ONLY on beast. Mixed-type recovery is
-   C2 deferred; do not sneak thin books into this recovery. Deterministic tests
-   of the generator/population/normalisers first. Complete t05's recovery evidence
-   and engine gates before production promotion; current necessary tests aren't
-   full acceptance.
-3. Before beast work read remote guide (already read in this session), check
-   connectivity/load, unused session/checkout names and existing Manifest/cache.
-   Use `/root/BF_runs/market_model_c`, session `pi_mm_c`, returned pane ID only,
-   `-t 16`, core pinning/BLAS=1, logs `/root/BF_runs/logs/market_model_c/`.
-   Copy pinned cache preserving metadata, no refresh. No DB writes. All existing
-   remote panes belong to others; do not operate them. No session to resume.
-4. Train each C0/C1/H1/H2 in 10a full and 10b config.honest_train only. For 10b
-   restrict panel and its markets together by fixture ID, never positional reuse
-   of full-panel market vectors. Convergence every parameter/rung/protocol:
-   Rhat<=1.05, bulk/tail ESS>=200. Failed gates block inference promotion.
-5. Evaluation on SAME full-book isolated targets, B2 schema/axes/subsets. 10a is
-   retrospective; 10b only scores honest_test, with all forecasts pre-week.
-   C0/H1/H2 predictive noise=sigma_obs; C1 theta prediction=H P H'+sigma_u²I.
-   Own fixture book must not set its forecast mean or add an evaluation-book
-   variance. Paired sum of supremacy+level marginal logpd versus C0 + fixture SE.
-   Report measured gap to R6: matched likelihood does not make priors/fits equal.
-6. Add descriptive smoothing, fixture theta=structure+u shrinkage and noise/n
-   summaries, q/s paths/ratios for named transition clubs. C1 approximate RTS
-   and frozen factors are ready, but theta/u smoothing extraction is NOT done.
-   Do not mistake H*smoothed_state for theta including u. Derive joint Gaussian
-   conditional u moments for frozen factors, with independent toy checks.
-7. H1 gamma_att/gamma_def are STATIC STATES, not sampled theta columns. Report
-   their posterior with state uncertainty (and hyperparameter mixing as required),
-   not merely a median-theta RTS point. H2 kappa is sampled. Reference the requested
-   Ridall p.1/3 convention only after checking the library source. No new HA
-   posterior was estimated here.
-8. Runner needs actual model/seed/config, recovery/training, convergence,
-   inference/evaluation/output sections. Gate 1 must be regenerated in the full
-   production run too. Root production tables should be distinct from historical
-   v3 diagnostics; preserve evidence before replacing anything. Final R05_DONE
-   only after all tables/figures and gates. Two fresh beast runs at frozen source
-   and seeds must give byte-identical scientific CSVs. Existing hashes do NOT
-   satisfy reproduction.
-9. Update report/README and tracker honestly. C2 remains deferred, with four
-   human options already included unselected. No Phase D or later score-grid
-   Phase C2. TODO 039 is not closable while later authorised work is unfinished.
+**First review the repeated solver failure, not rerun it a third way.** The
+first30 real Gate1 settings do not certify robustness throughout the frozen
+synthetic panel/parameter support. FD roundoff was plausible but AD still
+fails; the sole cause is not established. Remedy/revised diagnostic work needs
+explicit review at this stop boundary. Full-book scope itself already authorised.
 
-## Commands / guardrails
+After a reviewed remedy: finish full-book recovery and t05 acceptance before
+production; implement actual C0/C1/H1/H2 training in both protocols, convergence
+Rhat<=1.05 and bulk/tailESS>=200 every parameter. Implement pre-week B2-compatible
+scoring, no own-book forecast mean or extra evaluation-book variance; paired sum
+of supremacy+level marginal logpd against C0 with fixtureSE, report measuredR6gap.
+Then conditional theta=structure+u smoothing (not just H*RTS), independent toy
+checks, full-book shrinkage/noise/n and transition-club q/s paths/ratios.
+H1 gamma_att/gamma_def are static states requiring state uncertainty plus theta
+mixing, not sampled parameter columns; H2 kappa is sampled. Check Ridall library
+source before citing p1/3 (not done in this session). Production r05 needs actual
+training/diagnostic/inference/evaluation/output sections; regenerate Gate1 there,
+then two fresh frozen-source/seed beast runs with byte-identical scientificCSVs.
+Keep root production artifacts distinct from v3 diagnostics; C2 stays deferred.
 
-Use REPRODUCIBILITY.md for fresh REPL commands and current hash checks.
+## Guardrails
+
 Pinned cache SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4,
-load max_age_hours=10^6. No one-shot Julia, package/data/grid/threshold changes,
-`src/` changes or DB writes. Never force-push, merge/rebase or touch stash.
-Only push origin pi/market-model-phase-c. Preserve historical evidence and
-close only owned panes. Before commit/handoff: git diff --check, todo.sh check,
-current source/scientific hashes. Keep work log and matching index in sync.
+max_age_hours10^6. No one-shot Julia, package/data/grid/threshold/src/DB changes,
+no PhaseD/later score-grid C2, no force-push/merge/rebase/stash. Only push origin
+pi/market-model-phase-c. Own pane IDs only; all listed are closed. Before any
+handoff/commit: diff --check, todo.sh check, source/scientific hashes; tracker
+and README row together. Hashes identify blocked evidence, NOT completed fits.

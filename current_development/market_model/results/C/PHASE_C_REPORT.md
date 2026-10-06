@@ -1,154 +1,188 @@
-# TODO 039 — Phase C revision 4 implementation checkpoint (2026-10-06)
+# TODO 039 — Phase C revision 4: recovery solver BLOCKED (2026-10-06)
 
-**HANDOVER, not Phase C completion.** Full-book-only C0/C1/H1/H2 continuation
-is authorised by `experiments/pi_market_model_phaseC_v4_scope.md`. C2 is deferred.
-Deterministic state engines and preflight pass; **no posterior fit, sampling,
-synthetic recovery, forecast evaluation, learned concentration, shrinkage,
-ratings figures or production reproduction has been run**. TODO 039 remains
-IN_PROGRESS. No beast checkout/session was created.
+**Not complete.** C0/C1/H1/H2 full-book scope remains authorised; C2 remains
+separately deferred. A dedicated sampler and full-book synthetic generator now
+exist, but C1 recovery aborted twice on the same joint-mode line-search failure.
+Stop under the two-failure rule; no third numerical variation was attempted.
+**No completed posterior fit, retained recovery draws/intervals, convergence,
+production forecasts, learned n/u, shrinkage/HA/path posterior figures or two-run
+production reproduction exists.** Definition of done is not met. TODO 039 is
+BLOCKED on solver robustness at supported parameters, not awaiting scope approval.
 
-## 1. Scope and implementation
+Statistical source: `9de98548` (final sampler/engine/tests). Previous source
+`c2547742` used finite differences for synthetic books; `19ad4b99` was the
+first generator attempt. Engine-only checkpoint documentation is archived as
+`PHASE_C_ENGINE_CHECKPOINT_REPORT.md`, `REPRODUCIBILITY_ENGINE_CHECKPOINT.md`
+and `HANDOVER_ENGINE_CHECKPOINT.md`. Earlier revision evidence remains untouched.
 
-- Double Poisson, cutoff 10, unchanged density normalisers and grid.
-- Same 517 full fixtures / 1034 isolated scoring targets, from `phase_b_panel`.
-  `fullbook_markets` asserts IDs/order, full-book type and explicit exclusions.
-- `l05_fullbook_engine.jl`, included inside PooledMarket, implements C0/C1/H1/H2.
-  C0/H1/H2 use exact joint Gaussian observations. Independent q/s weekly GRWs
-  are expressed in raw alpha/beta coordinates; initial independent alpha/beta,
-  static mu/gamma and zero-sum observation projection remain those of B2.
-- C0 parameters are sigma_obs/sigma_q/sigma_s; C1 sigma_q/sigma_s/sigma_u/n;
-  H2 additionally samples kappa directly. The log-coordinate priors include
-  Jacobians and normalisers. C1 log n has exactly Normal(log(1000),1.5), with
-  **no inherited ±12 bound**. No sampler exists yet.
-- H1's missing prior was clarified by the manager via a question: independent
-  gamma_att N(.15,.25²) and gamma_def N(0,.25²). Gamma_def is a static state
-  with a negative loading on the away rate. Pinning it to zero recovers C0.
-  H2 adds kappa times the centred home team's q to its own scoring predictor.
-- C1 calls the existing exact book density / joint-mode Laplace update with
-  revision-3 mean correction. Its **only** collapsed contribution is the returned
-  marginal. Theta moments map back with K=P H'/S, m+=K(b−a), P+=K(V−S)K',
-  S=H P H'+sigma_u² I. No full-state precision inverse or extra Gaussian
-  likelihood is appended. Raw and clipped curvature remain distinct.
-- All forecasts in a week precede every update in that week. Update order is
-  the inherited deterministic week/date/ID panel order.
-- Stored C1 Gaussian factors match the local marginal and moments. Frozen-factor
-  batch checks verify that Gaussian surrogate only, **not an exact globally
-  Gaussian representation of the nonlinear Dirichlet model**. RTS is approximate
-  for C1 and exact for the two-stage rungs.
+## 1. Implementation added
 
-`r05_pooled.jl` remains a **preflight runner**, now writing only to
-`results/C/v4_preflight/`. It is not a production pipeline or training runner.
-Historical v3 tables at the root remain untouched; copies are in `v3_gate/`.
-Historical notes are `PHASE_C_V3_REPORT.md`, `REPRODUCIBILITY_V3.md` and
-`HANDOVER_V3.md`. DESIGN §5 remains unchanged; the manager's revisions select
-these rungs and the Laplace/slice route instead of its old MAP/NUTS formulation.
+`l05_fullbook_sampling.jl` is included inside PooledMarket after the state engine.
 
-## 2. Verified evidence
+- Dedicated coordinate slice chains using the FullBookRung names and normalised
+  priors, not R6 fits/priors. Positive physical draws are exponentiated; H2 kappa
+  stays untransformed. Four chain-local Xoshiro seeds; 2000 warmup + 3000 retained,
+  thin 1. Width adaptation ends at warmup. Frozen seeds: `fullbook_seeds.toml`.
+- Explicit representability checks for positive variances and concentration,
+  **no inherited whole-target ±12 bound**, especially not on log n. Supported
+  mode/PSD failures propagate as errors, never posterior rejections. Failed
+  chains log their last evaluated coordinate and cancel peers cooperatively;
+  `@sync` waits for every task before returning an error.
+- `restrict_fullbook` restricts both fixture pairs and metadata, then joins
+  markets by fixture ID. It avoids MID.restrict_panel's retained full metadata
+  and any positional reuse of a full-panel market vector in honest training.
+- Synthetic state/deviation population on the original 517-fixture / 91-week
+  schedule, independent initial raw alpha/beta prior, ordinary q/s innovations,
+  static mu/gamma and same zero-sum design. C1 books are independent market
+  Dirichlet(n*q) draws on the unchanged production cutoff-10 grid; no thin books,
+  inversion gate, seed selection, clipping or redraw. Synthetic `obs_y` holds
+  latent generating theta, **not isolated scoring targets**.
+- Synthetic probabilities are retained as logp using the exact identity
+  Gamma(a)=Gamma(a+1)*U^(1/a) when a<1. This prevents probability underflow from
+  becoming an artificial zero-probability observation. Display p can underflow;
+  the likelihood consumes logp. Density normalisers and model remain unchanged.
+- Primal synthetic density/marginal uses the production probability grid.
+  Dual synthetic evaluation uses the existing parity-tested AD grid algebra.
+  Synthetic derivative dispatch is AD; real books keep their existing FD
+  gradient/Hessian and AD third tensor. **No change** to joint_mode tolerances,
+  clipping, Laplace marginal, skewness formula, real-book density or quadrature.
 
-Fresh owned laptop REPL `%47`, Julia 1.12.1, 8 threads, BLAS=1, pinned cache,
-existing Manifest. Full output: `LAPTOP_C4_FINAL_PREFLIGHT.txt`.
+`r05_fullbook_recovery.jl` exposes configuration, model/truth, frozen seeds,
+beast-only runtime, pinned population, engine gates, prescribed recovery fit,
+convergence/interval gates and evidence in numbered sections. It refuses an
+existing completed binary fit and requires loaders before deserialization.
+`r05_pooled.jl` is still the deterministic preflight, **not production**.
+Production training/evaluation/figures remain unimplemented.
 
-### Full-book Gate 1
+## 2. Verification which passes
 
-Source: `v4_preflight/laplace_gate.csv` and `laplace_gate_fixture.csv`.
-First 30 full books in ID order, n=250/1000/4000, side SD=.05/.20, offsets
-0/+.10; 360 fixture-setting rows, **12/12 settings pass**, 48/48 scalar checks.
-No type/setting/tolerance was tuned.
+### Fresh laptop final-source tests
 
-| Maximum across the 12 settings | Observed | Limit |
-|---|---:|---:|
-| Median absolute marginal error | 0.003980333011027959 nats | .01 |
-| p95 absolute marginal error | 0.0051705855019272395 nats | .05 |
-| Corrected mean error / exact SD | 0.0009284497092163062 | .05 |
-| Relative SD error | 0.010184310576972222 | .05 |
+Owned `%52`, Julia 1.12.1, 8 threads, BLAS=1:
 
-The saved order-stability diagnostics remain in the fixture/summary CSVs.
-No current full-row join against the v3 archive was certified: the auxiliary
-DuckDB comparison command failed twice on unquoted reserved SQL identifiers
-(`rows`, then `offset`) and was not retried a third time. This is not a scientific
-gate failure or a reason to change numbers; no new byte-identity claim is made.
+| Check | Result |
+|---|---|
+| Accepted deterministic t05 | **270/270**, T05_C4_DETERMINISTIC_DONE |
+| Separate C2-pending | **29 pass / 10 fail / 39**, explicitly excluded |
+| t04 | **92/92**, T04_DONE |
+| t03 | **131/131**, T03_DONE; temporary A outputs |
+| t02 | **131/131**, T02_DONE |
 
-### State-engine gates and necessary tests
+Logs: `LAPTOP_C4_AD_TESTS.txt`,
+`LAPTOP_C4_FINAL_SAMPLING_REGRESSIONS_PREFLIGHT.txt`.
+Tests cover deterministic generation, covariance/normalisers, seed repeatability,
+synthetic raw/AD derivative parity, underflow-safe logp, exact Beta equivalence,
+physical transforms, numerical support without the ±12 bound, error propagation,
+ID-safe restriction, and all inherited engine checks. **Not T05_DONE**:
+parameter recovery is incomplete. Earlier development attempts are preserved in
+`LAPTOP_C4_SAMPLING_DEVELOPMENT.txt` (Float32 indexing typo, then an overbroad
+interior-book requirement in a state-covariance ensemble). No gate was weakened.
 
-Source: `v4_preflight/state_engine_gates_c.csv`: **53/53** checks pass, including
-all 34 inherited B2/B/TODO 023 gates. New checks include:
+### Real full-book preflight regenerated without change
 
-- C0 matched R6 likelihood error **3.552713678800501e-14**, limit 1e-9;
-- H1 pinned gamma_def=0 and H2 kappa=0 likelihood errors **0.0**, limit 1e-9;
-- scalar eigen/full-2D mean/covariance/loglik errors at most
-  **6.661338147750939e-16**, limit 1e-10;
-- independent C0/H1/H2 batch likelihood and RTS means/covariances;
-- Gaussian C1 frozen-batch likelihood, RTS means/covariances and exact
-  Gaussian observation reduction. These are not posterior convergence gates.
+Final `%52` reaches `C05_C4_ENGINE_PREFLIGHT_DONE`. All **six** CSVs in
+`v4_preflight/` are byte-identical to the preceding engine-only checkpoint;
+`diff -rq` found no differences. This checks the synthetic-only dispatch did not
+change real-book outputs. It is **not** production reproduction.
 
-Final t05 necessary suite: **209/209**, `T05_C4_DETERMINISTIC_DONE`, including
-first-20 full-book production parity/Hessian/third tensors, conditional-state
-identities with singular P, PSD/symmetry, real full-book population/order and
-three-real-book nonlinear frozen-factor batch/RTS checks. **Not T05_DONE**:
-synthetic parameter recovery is still missing.
+- Full Gate 1: **12/12 settings**, 360 fixture-setting rows, same first 30 books,
+  n=250/1000/4000, SD=.05/.20, offsets 0/+.10. Maximum median absolute marginal
+  error **.003980333011027959** nats (limit .01), maximum p95
+  **.0051705855019272395** (limit .05), maximum mean error/SD
+  **.0009284497092163062** (limit .05), maximum SD relative error
+  **.010184310576972222** (limit .05).
+- State gates **53/53**, including 34 inherited B2/B/TODO 023 gates. C0 matched
+  R6 likelihood error **3.552713678800501e-14** (limit 1e-9); H1/H2 pinned
+  reductions **0.0**; eigen-scalar/full errors <=**6.661338147750939e-16**.
+- All four fixed-parameter 517-fixture filters/smoothers remain finite/PSD.
+  These are not fitted parameters, posterior comparisons or convergence.
 
-Fresh `%46` regressions: t04 **92/92**, t03 **131/131**, t02 **131/131**;
-`T04_DONE`, `T03_DONE`, `T02_DONE`. t03's A rerun uses temporary outputs.
-Log: `LAPTOP_C4_REGRESSIONS.txt`. An earlier t05 development attempt had
-204 passes / one failure: the inherited HalfNormal helper omits constants;
-new priors now include their normalisers, fixing the log-prior identity error
-5.53723404048801 without changing the specified priors, support or threshold.
-That failure is retained in `LAPTOP_C4_FIRST_TESTS.txt`.
+Sources: `v4_preflight/laplace_gate.csv`, `state_engine_gates_c.csv`,
+`fixed_parameter_filters.csv`. Frozen-factor C1 batch gates check a Gaussian
+surrogate, not globally exact Dirichlet collapse. C1 RTS remains approximate.
 
-### Fixed-parameter full-panel preflight, not fits
+## 3. Beast recovery attempts and blocker
 
-Source: `v4_preflight/fixed_parameter_filters.csv`. C0/H1 use
-(sigma_obs,sigma_q,sigma_s)=(.07,.03,.01); H2 also kappa=0. C1 uses
-(sigma_q,sigma_s,sigma_u,n)=(.03,.01,.06,1000). All 517 fixtures filter and
-smooth with finite likelihood and positive smoothed minimum eigenvalue.
-These likelihoods have **different observation measures** and are not a model
-comparison or evidence that C1 is superior.
+Dedicated checkout `/root/BF_runs/market_model_c`, no unrelated pane operated.
+Julia 1.12.4, 16 threads, core pinning, BLAS=1, existing Manifest, pinned cache
+SHA256 `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`,
+metadata-preserving copy, max_age_hours=10^6. Initial load .02; no DB writes.
+Truth: (sigma_q,sigma_s,sigma_u,n)=(.03,.01,.06,1000); generation seed **3962**,
+chain seeds **4961–4964**, unchanged across attempts.
 
-| Rung | Fixed collapsed loglik | Minimum smoothed state eigenvalue |
-|---|---:|---:|
-| C0 | 875.2756941832286 | 1.0707614495298391e-5 |
-| C1 (approximate) | 4871.443574381916 | 1.0007842901553005e-5 |
-| H1 | 874.8793665077119 | 9.933027762598213e-6 |
-| H2 | 875.2756941832286 | 1.0707614495298391e-5 |
+1. **19ad4b99 / %261:** generation stopped at fixture **15336943**, before
+   sampling: ordinary Dirichlet probability storage underflowed. Generating
+   log rates **[-.2925837158254979, 2.7903082673178803]**; production-grid
+   OU0.5 under probability **5.881035960900128e-7**, concentration shape
+   **.0005881035960900128**. Exact log-space Gamma/Dirichlet representation
+   fixes this without narrowing the prior or selecting another seed/fixture.
+   `BEAST_C4_RECOVERY_FIRST_ATTEMPT.txt`, `v4_recovery_first_attempt/`.
+2. **c2547742 / %262:** all synthetic books generated; slice sampling stopped
+   on **joint-mode line search stalled**, gradient
+   **[-2.533547593941421e-5, 2.8639610683001138e-5]**. No fit was serialized.
+   Synthetic FD roundoff was a plausible diagnosis, not established as the sole
+   cause. `BEAST_C4_RECOVERY_LOGSPACE_ATTEMPT.txt`, `v4_recovery_logspace/`.
+3. **9de98548 / %263:** synthetic-only AD derivatives still fail the **same
+   joint-mode line search**. Actual failing chain seed **4964**, warmup
+   iteration **8**, last supported coordinate
+   **[-3.549527585137839, -4.460929121755582, -2.821549571263347,
+   7.9567722491577495]**. Gradient
+   **[-1.5699131339808048e-5, 3.249019587192592e-5]**. Seeds 4961/4963 cancel
+   at iteration 7, seed 4962 at 8. Full CompositeException expansion confirms
+   the root failure, not just the three peer-cancellation exceptions.
+   `BEAST_C4_RECOVERY_AD_ATTEMPT.txt`, `v4_recovery_ad/`.
 
-Runner reaches `C05_C4_ENGINE_PREFLIGHT_DONE`, **not R05_DONE**. Single warmed
-C1 filter took .320236339 s on this laptop (execution metadata in the log,
-not a scientific CSV or a sampling benchmark).
+The latter two binary synthetic panels are **byte-identical**, SHA256
+`de6a986b1caebc2a2ad1386308c7f4613bf69ea2f71440778783476c348da0d1`.
+This proves no synthetic seed/population redraw between derivative attempts;
+**it is not two-run fit/production reproduction**. Binaries remain on beast,
+loaders required. Every attempt's 53 deterministic engine gates passes.
 
-## 3. Acceptance status — incomplete
+**Stop:** the same solver check failed twice. Do not try a third numerical
+variation, turn supported failures into -Inf, change seeds, narrow priors,
+exclude extreme fixtures, adjust grid/data/settings or loosen thresholds.
+The remaining dependency is a reviewed robustness diagnosis/remedy for the
+joint-mode solver at the frozen supported coordinate. Passing the first 30
+real-book Gate 1 settings does not establish robust recovery/sampler support.
+No scientific recovery failure/interval is inferred from an aborted solver.
+
+## 4. Acceptance status
 
 | Requirement | Status |
 |---|---|
-| Full-book Gate 1, deterministic reductions/batch/projections | Pass at this checkpoint |
-| t05 necessary checks and t02–t04 | Pass, excluding explicitly reported C2-pending; full recovery acceptance unbuilt |
-| Full-book synthetic parameter recovery | Not implemented/run |
-| Four chains, 2000 warmup + 3000 retained, thin 1, all rungs/protocols | No sampler or fits yet |
-| Every-parameter convergence | Not run; no posterior promotion |
-| Measures, HA posteriors, figures, paired honest forecasts | Not implemented/run |
-| Fresh production R05_DONE, byte-identical second beast run | Not implemented/run |
-| README, historical preservation, TODO log | Updated; task stays open |
+| Full-book Gate 1, deterministic reductions/batch/projections | Pass |
+| t05 deterministic checks and t02–t04 | Pass; recovery acceptance incomplete |
+| Dedicated sampler/generator/frozen seeds | Implemented, sampling aborted |
+| Full-book synthetic parameter recovery | **BLOCKED by repeated mode failure** |
+| Prescribed production C0/C1/H1/H2, 10a/10b | Not run/implemented as workflow |
+| Every-parameter convergence | Not available; no inference promotion |
+| Measures, shrinkage/u smoothing, HA posterior mixing, figures | Unimplemented |
+| Fresh production R05_DONE, second-run byte identity | Not available |
 
-The definition of done is **not met**. This checkpoint establishes the engines,
-not that pooling changes rates, improves honest forecasts, learns a useful n,
-or answers the human's HA question. No such conclusion is available yet.
-All owned panes `%45`/`%46`/`%47` are closed. No `src/`, package/data/grid,
-threshold, database, Phase D, later score-grid C2 or unrelated pane changes.
+No inference answers are available: pooling's forecast benefit, learned book
+concentration, retained full-book deviation, ratings and split/quality-linked
+HA remain unanswered. H1 states must be reported with state uncertainty and
+hyperparameter mixing, not sampled theta columns; conditional u smoothing is
+still required. Ridall's source pages have not been checked in this continuation,
+so no new citation claim is made. R05_DONE/T05_DONE/PHASEC4_DONE are not printed.
+All owned panes %49–%52 and beast %261–%263 are closed; none is running.
 
-## 4. C2 deferred to the human
+## 5. C2 deferred to the human
 
 **C2 (thin-book pooling) is blocked: Laplace accuracy fails on thin books at realistic-to-wide prediction spreads.**
-The integrated 1X2 derivative remains unvalidated. `t05_c2_pending_tests.jl`
-runs the unchanged derivative once and reports archived thin Gate 1 checks,
-explicitly excluded from C4 acceptance. In `%47`: **29 pass / 10 fail / 39**;
-one derivative failure (5.405838441375254e-5, limit 1e-6), nine failed archived
-thin settings. It does not regenerate thin quadrature or certify incomplete
-1X2 batches. No integrator variation or tolerance change was made.
-
+Unchanged C2-pending derivative discrepancy **5.405838441375254e-5**, limit 1e-6;
+nine archived thin Gate 1 settings fail. Pending checks execute/report separately,
+not accepted or newly regenerated. No C2 numerical investigation was made.
 Options requested by the manager, **none selected**:
 
 | Option | What | Cost | Caveat |
 |---|---|---|---|
-| (i) exact moment matching (assumed-density filtering) | per-book quadrature of the exact likelihood × prediction: mean, covariance and normaliser, for the ~114 thin books only | slower sampling; feasible on the beast with parallel chains | exact up to quadrature order; needs its own order-stability gate |
-| (ii) NUTS on the exact Dirichlet likelihood | the original DESIGN §4.4 route: all books, no approximation | hours of sampling; harder geometry (σ, n, u funnels) | exact; no Kalman collapse |
-| (iii) gate at the realistic spread only | re-specify Gate 1 at the C1 posterior's actual prediction spreads | cheap | a threshold or setting change: the human's call |
-| (iv) restrict thin-book types | e.g. O/U-only books only (they nearly pass), dropping the ~11 BTTS + O/U books | cheap | changes which data are used: the human's call |
+| (i) exact moment matching (assumed-density filtering) | exact-likelihood quadrature mean/covariance/normaliser for ~114 thin books | slower sampling; feasible with parallel chains | needs order-stability gate |
+| (ii) NUTS on exact Dirichlet likelihood | original DESIGN route, all books | hours; harder funnels | exact; no Kalman collapse |
+| (iii) gate at realistic spread only | C1 posterior's actual spreads | cheap | setting/threshold change, human decision |
+| (iv) restrict thin types | e.g. O/U-only, drop ~11 BTTS+O/U | cheap | changes data, human decision |
+
+No Phase D/later score-grid C2, src/package/data/grid/threshold changes,
+database writes, merge/rebase/force-push or stash operations. Published A/B/B2/B3
+artifacts remain untouched. Source/scientific hashes identify this blocked
+checkpoint only. See REPRODUCIBILITY.md and HANDOVER.md for exact evidence paths.
