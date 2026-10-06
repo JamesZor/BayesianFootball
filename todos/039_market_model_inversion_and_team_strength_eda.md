@@ -100,6 +100,14 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
+- [2026-10-06 @pi] Revision8 claimed: leave frozen recovery6335316f pane%265
+  untouched (all chains250 at06:44 checkpoint, load4.73). Separate new beast
+  checkout/panes for exact C0/H1/H2 both protocols/two-run verification and
+  unpromoted C1 10a/10b production. Priors/seeds/budgets/thresholds unchanged.
+  Adding fast-stage HA state+hyperdraw mixture reports, measured published-R6
+  comparison and dedicated runners. C1 must not be interpreted before recovery.
+  Laptop deterministic preparation pane%63 owned; no unrelated panes operated.
+
 - [2026-10-06 @pi] Revision7 HANDOVER, not complete or newly blocked. Source6335316f
   accepted-step stalls (<1e-14 motion OR equal Float64 target) reuse revision6
   polish/error gates and separate zero_motion_polished accounting. Fixture12476686
