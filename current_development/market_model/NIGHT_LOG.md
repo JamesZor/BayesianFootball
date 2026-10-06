@@ -180,3 +180,8 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   **Answered: permit (option 1).** It is an implementation optimisation with an equivalence gate;
   no priors, budgets, seeds, data or thresholds change. Beast load was 13.2: recovery, C1 10a/10b
   and the fast runs.
+- **~06:25, pi question (rev 8):** "All six fast fits (C0/H1/H2 × 10a/10b) and 107 engine gates
+  pass, but the path figure stopped: Ross County and Airdrie are not in the 56/57 panel's 22 teams
+  (Kelty's key is kelty-hearts-fc). Annotate them as unavailable and keep the data unchanged?"
+  **Answered: yes (option 1).** The manager's brief named clubs from the CLV §14 list; they were
+  Championship clubs in 24/25–25/26.
