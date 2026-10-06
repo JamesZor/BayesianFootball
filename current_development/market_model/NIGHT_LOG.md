@@ -102,3 +102,12 @@ Times are laptop local; earlier entries were first written in the beast clock (+
    - on QUESTION, LIMIT or IDLE, handle it;
    - on the sentinel, review B3: fresh laptop tests, beast rerun plus hash check, then merge.
 3. When the C watcher fires: handle QUESTION / LIMIT / IDLE, or review C (fresh laptop tests, beast rerun + hash check), merge, then write MORNING_SUMMARY.md. Do not start D or C2.
+- **~02:05: Phase C revision 2 blocked at the posterior-mean gate.** Laplace marginal passes
+  everywhere (median ≤ 0.004 nats) and SD error ≤ 1%. The mean is off by up to 9.17% of SD at
+  n = 250, spread 0.20 (12/30 full books).
+  - Diagnosis: the Laplace mode ≠ mean under posterior skew.
+  - The 5% mean gate was the manager's own revision-2 addition. It was **not** loosened, because
+    a threshold change waits for the human.
+  - Remedy, in scope as a better method: revision 3, a second-order (skewness-corrected) mean
+    from the third derivatives at the mode, then the full Gate 1 on all book types.
+  - Sent to the same pi session (pane `%40`, context 52%); sentinels `PHASEC3_*`.
