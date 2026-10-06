@@ -133,3 +133,10 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     (2) a different joint prior.
   - **Answered (1).** It keeps C0's γ prior for the home-scoring boost, with a neutral prior
     centred at 0 for the away suppression, so H1 nests C0 exactly at γ_def = 0.
+- **~02:42: Codex usage limit reached** (5h window at 100%; 7d at 29%) during Phase C rev 4.
+  - pi stopped mid-way, while rerunning t02 after t03 passed, with uncommitted work in its
+    worktree (pane `%44`, context 54%).
+  - Reset at **03:20:07 BST** (`~/.pi/agent/usage-cache.json` → `resetsAt`).
+  - Waiting, per the human's rule. **2 banked resets** are shown as available on the plan;
+    **not used**, because that's the human's resource and the rule says wait.
+  - At ~03:21: tell the same pi session to continue.
