@@ -42,6 +42,9 @@ the human's behalf.
 | 01:28 | B3 `PHASEB3_DONE` after 33 min (pi context 78%, codex quota 53%). Six commits, pushed; statistical SHA `2e02a785`. |
 | 02:30 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
 
+| 02:45 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
+| 02:47 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+
 **B3 headline** (from `results/B3`):
 - **Tails:** Gaussian team-step dependence is adequate; no PPC p-value is extreme (all
   0.28–0.63), so no copula or heavy-tailed step model is needed.
@@ -65,12 +68,32 @@ the human's behalf.
 
 ## Answers given on the human's behalf
 
-None yet.
+- **Phase C revision 1 blocked at preflight** (`614a2676`, about 7 min in, laptop only, no
+  sampling). pi correctly found three errors in the **manager's** brief:
+  1. the Dirichlet large-n expansion is −n·KL(q‖p), so Phase A's KL(p‖q) centre and Hessian
+     are not the Dirichlet's;
+  2. projecting a 1X2 likelihood to supremacy must fail a gate against the unprojected book
+     likelihood;
+  3. over/under constrains the curved λ_h + λ_a, and BTTS + O/U books identify both rates.
+
+  Manager fix (revision 2, `pi_market_model_phaseC_v2_prompt.md`): the exact Dirichlet
+  likelihood, a Laplace/iterated-EKF update at the joint mode of likelihood × state prediction,
+  and a gate against exact quadrature, with **thresholds unchanged**. 1X2-only books use the
+  level-integrated likelihood ∫L(d, ℓ)dℓ, the exact form of "supremacy only".
+- **Decision taken for the human (please review):** totals/BTTS-only books now enter with their
+  **exact** likelihood instead of a "total-only" linear projection.
+  - O/U-only books still carry no supremacy information, because the likelihood is flat along
+    the constant-total curve.
+  - BTTS + O/U books contribute the weak supremacy information their prices contain.
+  - Reason: "informs the total only" was the manager's linear approximation of the intent
+    (stop T015's optimiser-guess supremacy), and it is mathematically ill-posed. The exact
+    likelihood meets that intent.
+  - If the human wants BTTS + O/U books held to totals only, that is a small change in C2.
 
 ## Next action
 
-1. While B3 runs, draft the Phase C brief.
+1. (done) B3 reviewed and merged; Phase C running in pane %38.
 2. When the watcher fires:
    - on QUESTION, LIMIT or IDLE, handle it;
    - on the sentinel, review B3: fresh laptop tests, beast rerun plus hash check, then merge.
-3. After B3 is merged, launch Phase C.
+3. When the C watcher fires: handle QUESTION / LIMIT / IDLE, or review C (fresh laptop tests, beast rerun + hash check), merge, then write MORNING_SUMMARY.md. Do not start D or C2.
