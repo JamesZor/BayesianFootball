@@ -68,7 +68,7 @@ function differentiable_logdensity(theta,markets,n)
     for market in markets
         alpha = [n*q[s] for s in market.selections]
         value += SpecialFunctions.loggamma(sum(alpha))-sum(SpecialFunctions.loggamma,alpha)
-        value += sum((alpha.-1).*log.(market.p))
+        value += sum((alpha.-1).*fullbook_market_logp(market))
     end
     return value
 end

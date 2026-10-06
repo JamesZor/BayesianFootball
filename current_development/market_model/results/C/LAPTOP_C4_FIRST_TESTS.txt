@@ -30,8 +30,8 @@ Stacktrace:
  [4] macro expansion
    @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
 49×4 DataFrame
- Row │ gate                               value        tol      pass 
-     │ String                             Float64      Float64  Bool 
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
 ─────┼───────────────────────────────────────────────────────────────
    1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
    2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
@@ -99,4 +99,4 @@ RNG of the outermost testset: Xoshiro(0xb5ecf0ff1ecc3afd, 0xb7409731c1830bca, 0x
 ERROR: LoadError: Some tests did not pass: 204 passed, 1 failed, 0 errored, 0 broken.
 in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
 
-julia> 
+julia>

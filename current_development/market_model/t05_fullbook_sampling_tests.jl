@@ -14,7 +14,8 @@
     generated = PC05.synthetic_fullbook(a,p,markets,theta; seed=3961)
     again = PC05.synthetic_fullbook(a,p,markets,theta; seed=3961)
     @test generated.panel.obs_y == again.panel.obs_y
-    @test generated.markets == again.markets
+    @test [[(m.selections,m.logp) for m in b] for b in generated.markets] ==
+        [[(m.selections,m.logp) for m in b] for b in again.markets]
     @test generated.states == again.states
     @test generated.truth ≈ [0.03,0.01,0.06,1000.0]
     @test generated.panel.obs_match == p.obs_match
@@ -23,8 +24,22 @@
     @test generated.panel.week_ptr == p.week_ptr
     @test generated.panel.matches.match_id == p.matches.match_id
     @test all(length(book) == 3 for book in generated.markets)
-    @test all(abs(sum(m.p)-1) <= 1e-14 && all(>(0),m.p)
+    @test all(abs(sum(m.p)-1) <= 1e-14 && all(isfinite,m.logp)
         for book in generated.markets for m in book)
+    tiny = PC05.fullbook_logdirichlet(Xoshiro(3966),[1e-8,1000.0])
+    @test all(isfinite,tiny)
+    @test exp(tiny[1]) == 0.0 # no probability clipping: log likelihood stays finite
+    tinybook = [PC05.FullBookLogMarket([:over_25,:under_25],exp.(tiny),tiny)]
+    @test isfinite(PC05.PF.book_logdensity(log.([1.5,1.0]),tinybook,1000.0))
+    @test abs(PC05.PF.book_logdensity(log.([1.5,1.0]),tinybook,1000.0)-
+        PC05.differentiable_logdensity(log.([1.5,1.0]),tinybook,1000.0)) <= 1e-3
+    # Moderate concentrations: Dirichlet mean/variance under exact log-Gamma identity.
+    alpha = [0.5,0.75,1.25]
+    draws = reduce(hcat,[exp.(PC05.fullbook_logdirichlet(Xoshiro(seed),alpha))
+        for seed in 6001:16000])
+    @test maximum(abs.(vec(PC05.ST.mean(draws; dims=2))-alpha/sum(alpha))) <= 0.01
+    @test maximum(abs.(diag(PC05.ST.cov(draws; dims=2))-
+        (alpha.*(sum(alpha).-alpha))/(sum(alpha)^2*(sum(alpha)+1)))) <= 0.002
     H = PC05.fullbook_design(a,p,theta)
     @test maximum(maximum(abs.(generated.panel.obs_y[j:j+1]-
         H[j:j+1,:]*generated.states[:,p.obs_week[j]]-generated.fixture_u[cld(j,2),:]))
@@ -64,10 +79,9 @@
     @test books == generated.markets[[findfirst(==(id),pp.obs_match[1:2:end]) for id in ids]]
     @test PC05.MID.n_obs(restricted) == 2length(books)
     @test all(==("toy"),restricted.obs_season)
-    # State/deviation population covariance needs no market draws. Some broad-prior
-    # Dirichlet replicates underflow p to zero; the book generator fails loudly,
-    # without clipping or resampling. Do not impose an interior-book requirement
-    # on this independent state-only ensemble.
+    # State/deviation population covariance needs no market draws. Broad-prior
+    # Dirichlet replicates can underflow p to zero; logp storage preserves them.
+    # This independent state-only ensemble imposes no interior-p requirement.
     steps_q,steps_s = Float64[],Float64[]
     noise = Float64[]
     for seed in 4001:4200

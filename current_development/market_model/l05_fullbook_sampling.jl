@@ -1,6 +1,40 @@
 # Included inside PooledMarket. No execution or database access.
 import Serialization
 
+"Synthetic probabilities carried in log-space, including draws below Float64's positive range."
+struct FullBookLogMarket
+    selections::Vector{Symbol}
+    p::Vector{Float64} # display/diagnostic projection only; may underflow to zero
+    logp::Vector{Float64} # the likelihood consumes this, never log(p)
+end
+fullbook_market_logp(market) = log.(market.p)
+fullbook_market_logp(market::FullBookLogMarket) = market.logp
+
+"""
+Exact Gamma(a)=Gamma(a+1)*U^(1/a) identity for a<1, evaluated in log-space.
+Normalising independent Gamma draws gives Dirichlet(n*q) with no clipping,
+rejection/resampling or changed concentration. Only storage/arithmetic changes.
+"""
+function fullbook_logdirichlet(rng,alpha)
+    all(x -> x > 0 && isfinite(x),alpha) || error("invalid synthetic Dirichlet shape")
+    logg = [a < 1 ? log(rand(rng,DS.Gamma(a+1,1)))+log1p(-rand(rng))/a :
+        log(rand(rng,DS.Gamma(a,1))) for a in alpha]
+    all(isfinite,logg) || error("synthetic log-Gamma is nonfinite")
+    return logg.-logsumexp(logg)
+end
+
+"Production density algebra with synthetic log-probabilities; all normalisers retained."
+function PF.book_logdensity(theta,markets::Vector{FullBookLogMarket},n)
+    probabilities = MM.selection_probabilities(Vector{Float64}(theta))
+    value = 0.0
+    for market in markets
+        alpha = n.*[probabilities[s] for s in market.selections]
+        value += SpecialFunctions.loggamma(sum(alpha))-sum(SpecialFunctions.loggamma,alpha)
+        value += sum((alpha.-1).*market.logp)
+    end
+    return value
+end
+
 "Physical scales are exponentiated; H2 kappa is already on its physical scale."
 function fullbook_physical_draws(a,U)
     return cat([a.name == :H2 && j == 4 ? U[:,j:j,:] : exp.(U[:,j:j,:])
@@ -155,7 +189,8 @@ come from the inherited prior. Independent raw q/s steps imply alpha=q+s,
 beta=s-q; the design applies zero-sum centring. Static mu/gamma (and H1 def)
 are generated from their stated priors. Each fixture theta=H*x+u is independent
 conditional on its week. C1 draws each market p ~ Dirichlet(n*q(theta)),
-including the two-way Beta equivalent, WITHOUT post-draw renormalisation,
+including the two-way Beta equivalent, using log-normalised Gamma draws.
+Log probabilities remain finite even when their display p underflows; no
 clipping, inversion gates or retries. Its obs_y stores the latent theta as
 recovery truth, not an isolated inversion/scoring target. Gaussian rungs draw
 obs_y with sigma_obs and do not use the supplied markets in fitting.
@@ -169,16 +204,18 @@ function synthetic_fullbook(a,p,templates,theta; seed)
     fullbook_supported(a,theta) || error("unsupported generating parameters")
     rng = Random.Xoshiro(seed)
     states,y,fixture_u = synthetic_fullbook_latents(a,p,theta,rng)
-    markets_out = Vector{typeof(first(templates))}(undef,length(templates))
+    markets_out = Vector{Vector{FullBookLogMarket}}(undef,length(templates))
     for f in eachindex(templates)
         j = 2*f-1
         probabilities = MM.selection_probabilities(y[j:j+1])
-        markets_out[f] = [(selections=copy(m.selections),
-            p=a.name == :C1 ? rand(rng,DS.Dirichlet(exp(theta[4])*
-                [probabilities[s] for s in m.selections])) :
-                [probabilities[s] for s in m.selections]) for m in templates[f]]
-        all(m -> all(>(0),m.p) && all(isfinite,m.p),markets_out[f]) ||
-            error("synthetic market outside numerical interior: seed=$seed fixture=$(p.obs_match[j])")
+        markets_out[f] = FullBookLogMarket[]
+        for m in templates[f]
+            q = [probabilities[s] for s in m.selections]
+            logp = a.name == :C1 ? fullbook_logdirichlet(rng,exp(theta[4])*q) : log.(q)
+            push!(markets_out[f],FullBookLogMarket(copy(m.selections),exp.(logp),logp))
+        end
+        all(m -> all(isfinite,m.logp),markets_out[f]) ||
+            error("synthetic log market nonfinite: seed=$seed fixture=$(p.obs_match[j])")
     end
     return (; panel=fullbook_panel_values(p,y),markets=markets_out,states,
         fixture_u,truth=fullbook_physical_draws(a,reshape(theta,1,:,1))[1,:,1],seed)

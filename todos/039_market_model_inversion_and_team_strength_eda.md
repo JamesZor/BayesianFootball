@@ -70,6 +70,16 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
+- [2026-10-06 @pi] Recovery prerequisite at source 19ad4b99 stopped before
+  sampling: frozen seed 3962, fixture 15336943 Dirichlet p underflowed to zero
+  (generating log rates -0.292584 / 2.790308; OU0.5 small shape 0.000588104).
+  No seed was changed, book clipped, fixture dropped or prior narrowed.
+  Added exact log-Gamma/Dirichlet storage and density dispatch for synthetic
+  books; real-book density/marginal algebra remains unchanged. Fresh %51 t05
+  deterministic 256/256, separate C2-pending 29 pass/10 fail. Original %50
+  t04 92/92, t03 131/131, t02 131/131. First-attempt remote log/engine CSV
+  preserved; no recovery interval or posterior fit exists yet.
+
 - [2026-10-06 @pi] Revision 4 continued from engine checkpoint. Implementing a
   dedicated full-book slice wrapper (no R6 prior/coordinate bound), ID-joined
   honest restriction, full-book synthetic generator and frozen seed manifest.
