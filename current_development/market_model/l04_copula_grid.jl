@@ -42,9 +42,9 @@ function frank_cdf(u, v, kappa)
 end
 
 "Poisson probabilities by recurrence (also differentiable in rate)."
-function poisson_vector(rate, cutoff)
+function poisson_vector(rate, cutoff; scaled=false)
     p = fill(zero(rate), cutoff+1)
-    p[1] = exp(-rate)
+    p[1] = scaled ? one(rate) : exp(-rate)
     for x in 1:cutoff
         p[x+1] = p[x]*rate/x
     end
@@ -60,7 +60,10 @@ function score_grid(g::ScoreGrid, theta; cutoff=10)
         return MM.FEAT.build_probability_matrix(MM.FEAT.DoublePoissonMarketFeature(), Float64.(theta), cutoff)
     end
     a, b = exp.(theta)
-    ph, pa = poisson_vector(a,cutoff), poisson_vector(b,cutoff)
+    # Common exponential factors cancel on renormalisation in G1/G2; omit them
+    # to avoid underflow during line-search excursions (no rate-gate change).
+    scaled = g.kind in (1,2)
+    ph, pa = poisson_vector(a,cutoff; scaled), poisson_vector(b,cutoff; scaled)
     P = ph*pa'
     if g.kind == 1
         rho = g.parameter
@@ -70,7 +73,7 @@ function score_grid(g::ScoreGrid, theta; cutoff=10)
         P[2,1] *= 1+b*rho
         P[2,2] *= 1-rho
     elseif g.kind == 2
-        shared = poisson_vector(g.parameter,cutoff)
+        shared = poisson_vector(g.parameter,cutoff; scaled=true)
         for y in 0:cutoff, x in 0:cutoff
             P[x+1,y+1] = sum(ph[x-k+1]*pa[y-k+1]*shared[k+1] for k in 0:min(x,y))
         end
@@ -81,10 +84,12 @@ function score_grid(g::ScoreGrid, theta; cutoff=10)
             P[x+1,y+1] = C[x+2,y+2]-C[x+1,y+2]-C[x+2,y+1]+C[x+1,y+1]
         end
         # CDF subtraction may lose a few ulps in cells with mass below machine epsilon.
-        minimum(P) >= -2e-14 || error("Frank grid has materially negative mass: $(minimum(P))")
+        minimum(ForwardDiff.value.(P)) >= -2e-14 || error("Frank grid has materially negative mass: $(minimum(P))")
         P = max.(P,zero(a))
     end
-    minimum(P) >= 0 || error("invalid DC parameter/rates: negative mass")
+    # ForwardDiff orders equal primals by their derivatives; probability validity
+    # is a statement about primal mass only, never about the sign of a derivative.
+    minimum(ForwardDiff.value.(P)) >= 0 || error("invalid grid mass: grid=$(g.kind), theta=$theta, min=$(minimum(P)), sum=$(sum(P))")
     return P/sum(P)
 end
 
