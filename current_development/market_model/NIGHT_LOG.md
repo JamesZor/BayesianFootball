@@ -40,10 +40,15 @@ the human's behalf.
 | B3 launched | Brief `97a2b201`; worktree `BayesianFootball-market-model-pi-b3`, branch `pi/market-model-phase-b3`; pi pane `%33` (session `agent_pi_market_model_b3`), gpt-6.1-sol; codex quota 30% (5h) / 18% (7d) at launch. Watcher: `scratchpad/watch_pi_night.sh %33 B3`. |
 
 | 01:28 | B3 `PHASEB3_DONE` after 33 min (pi context 78%, codex quota 53%). Six commits, pushed; statistical SHA `2e02a785`. |
-| 02:30 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
+| ~01:32 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
 
-| 02:45 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
-| 02:47 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+| ~01:42 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
+| ~01:44 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+
+| ~01:48 | Phase C revision 1 `PHASEC_BLOCKED` at preflight (see answers below). |
+| ~01:58 | **Phase C revision 2 launched**: fresh pi, pane `%40` (session `agent_pi_market_model_c2`), same branch and worktree; codex quota 62% (5h) / 23% (7d). Watcher: `watch_pi_night.sh %40 C`. |
+
+Times are laptop local; earlier entries were first written in the beast clock (+1 h) and corrected.
 
 **B3 headline** (from `results/B3`):
 - **Tails:** Gaussian team-step dependence is adequate; no PPC p-value is extreme (all
