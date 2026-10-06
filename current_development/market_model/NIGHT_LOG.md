@@ -68,7 +68,27 @@ the human's behalf.
 
 ## Answers given on the human's behalf
 
-None yet.
+- **Phase C revision 1 blocked at preflight** (`614a2676`, about 7 min in, laptop only, no
+  sampling). pi correctly found three errors in the **manager's** brief:
+  1. the Dirichlet large-n expansion is −n·KL(q‖p), so Phase A's KL(p‖q) centre and Hessian
+     are not the Dirichlet's;
+  2. projecting a 1X2 likelihood to supremacy must fail a gate against the unprojected book
+     likelihood;
+  3. over/under constrains the curved λ_h + λ_a, and BTTS + O/U books identify both rates.
+
+  Manager fix (revision 2, `pi_market_model_phaseC_v2_prompt.md`): the exact Dirichlet
+  likelihood, a Laplace/iterated-EKF update at the joint mode of likelihood × state prediction,
+  and a gate against exact quadrature, with **thresholds unchanged**. 1X2-only books use the
+  level-integrated likelihood ∫L(d, ℓ)dℓ, the exact form of "supremacy only".
+- **Decision taken for the human (please review):** totals/BTTS-only books now enter with their
+  **exact** likelihood instead of a "total-only" linear projection.
+  - O/U-only books still carry no supremacy information, because the likelihood is flat along
+    the constant-total curve.
+  - BTTS + O/U books contribute the weak supremacy information their prices contain.
+  - Reason: "informs the total only" was the manager's linear approximation of the intent
+    (stop T015's optimiser-guess supremacy), and it is mathematically ill-posed. The exact
+    likelihood meets that intent.
+  - If the human wants BTTS + O/U books held to totals only, that is a small change in C2.
 
 ## Next action
 
