@@ -481,5 +481,6 @@ function gate_summary(fixture)
 end
 
 include("l05_fullbook_engine.jl")
+include("l05_fullbook_sampling.jl")
 
 end # module

@@ -110,6 +110,7 @@ const PC05 = PooledMarket
         @test abs(scalar.loglik-batch.loglik) <= 1e-9
     end
     include(joinpath(@__DIR__, "t05_fullbook_engine_tests.jl"))
+    include(joinpath(@__DIR__, "t05_fullbook_sampling_tests.jl"))
 end
 println("T05_C4_DETERMINISTIC_DONE")
 include(joinpath(@__DIR__, "t05_c2_pending_tests.jl"))

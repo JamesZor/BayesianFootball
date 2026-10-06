@@ -70,6 +70,15 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
+- [2026-10-06 @pi] Revision 4 continued from engine checkpoint. Implementing a
+  dedicated full-book slice wrapper (no R6 prior/coordinate bound), ID-joined
+  honest restriction, full-book synthetic generator and frozen seed manifest.
+  Beast connectivity/load checked (load 0.00); reserved checkout/session unused.
+  Owned laptop %49 deterministic tests only; sampling remains beast-only.
+  One new test indexing error (`2f-1` is Julia Float32 syntax) corrected to
+  explicit `2*f-1`, with the failed run retained. Recovery/convergence must pass
+  before any production promotion; C2 remains deferred with unchanged gates.
+
 - [2026-10-06 @pi] Revision 4 verified engine checkpoint HANDOVER, not completion.
   Full-book C0/C1/H1/H2 state filters, conditional moments, frozen C1 factors,
   RTS and independent batch gates implemented. Fresh %47 necessary t05 209/209,

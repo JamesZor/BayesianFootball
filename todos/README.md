@@ -37,9 +37,11 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 
 **039:** Phase B3 remains verified. Phase C revision 4 is IN_PROGRESS (2026-10-06):
 manager authorises full-book-only C0/C1/H1/H2, with C2 deferred. Verified
-engine checkpoint handed over: t05 209/209 necessary assertions, 53/53 state
-gates, full-book Gate 1 12/12; t02–t04 pass. No sampler or posterior fits yet;
-recovery/evaluation/production reproduction remain unfinished. Thin-book
+engine checkpoint: t05 209/209 necessary assertions, 53/53 state gates,
+full-book Gate 1 12/12; t02–t04 pass. Continuation is implementing the sampler,
+ID-joined training restriction, synthetic generator and frozen seeds. New local
+deterministic checks precede beast recovery; no posterior promotion yet.
+Recovery/evaluation/production reproduction remain unfinished. Thin-book
 blockers and v3 evidence preserved; thresholds unchanged.
 Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
 Double Poisson stays for C; later score-grid C2 and Phase D remain unauthorised.
