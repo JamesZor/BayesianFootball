@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -52,12 +52,28 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked
 
-Revision 2 supersedes the first attempt's likelihood/projection contract.
-The revised joint-mode Laplace update must pass the unchanged accuracy gates
-before pooled sampling is authorised for promotion. First-attempt evidence is
-preserved; do not change thresholds, data or the score grid.
+Phase C revision 2 fails its posterior-mean gate on the first 30 full books:
+maximum mean error / exact SD = 0.091744 at n=250, prediction SD=0.20
+(limit 0.05); marginal accuracy passes. The joint-mode Gaussian returns a mode,
+not the exact slightly skewed posterior's mean. A manager-approved amended
+approximation is needed; no sampling or threshold/data/grid change is allowed.
+Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
+First-attempt report/code/CSVs are preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Phase C revision 2 BLOCKED, statistical source `7b6c7659`.
+  Fresh owned laptop pane `%42`: necessary t05 update checks 24/24
+  (`T05_UPDATE_DONE`, not full recovery acceptance); t04 92/92, t03 131/131,
+  t02 131/131. Fresh revised runner stops at `C05_LIKELIHOOD_BLOCKED`.
+  First 30 full books, all 12 n/spread/offset settings: marginal gates pass,
+  posterior-mean gates fail in four settings (12/30 books at n=250, SD=.20,
+  no offset; maximum error/SD .091744). Orders 32/64 agree to 2.70e-12 nats;
+  clipping is inactive. Thin-book gates stop before promotion; no C0/C1/C2,
+  H1/H2 or synthetic fits, beast session, forecasts/shrinkage/ratings or figures.
+  Source/report/CSV evidence under results/C; v1 files preserved verbatim.
+  All owned panes closed; no src/DB/package/data/prior-phase changes, Phase D
+  or later grid C2. Full acceptance unmet; tracker/diff checks pass at handoff.
 
 - [2026-10-06 @pi] Phase C revision 2 claimed on the same authorised branch/worktree.
   Read the blocked first-attempt report first; preserve preflight artifacts.

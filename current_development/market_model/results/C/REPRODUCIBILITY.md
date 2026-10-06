@@ -1,59 +1,74 @@
-# Phase C blocker preflight — reproduction, not production acceptance
+# Phase C revision 2 — reproducible blocker, not production acceptance
 
-This is a **single fresh laptop diagnostic execution**, not two fresh beast
-production runs. No `R05_DONE`, posterior, converged rung, synthetic recovery or
-byte-identical production rerun is claimed. `SCIENTIFIC_SHA256SUMS.txt` covers
-only the three diagnostic CSVs. `SOURCE_SHA256SUMS.txt` identifies the diagnostic
-code independently of later documentation commits.
+Statistical implementation: `7b6c7659`. Branch `pi/market-model-phase-c`, worktree
+`/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`.
+No pooled sampling or beast run occurred. **No R05_DONE, T05_DONE, convergence,
+synthetic parameter recovery or byte-identical production rerun is claimed.**
 
-## Inputs and environment
+The revision-1 notes are preserved verbatim in `REPRODUCIBILITY_V1.md`; its
+report is `PHASE_C_V1_REPORT.md`, and its preflight code/CSV hashes are unchanged.
 
-- Base reviewed B3 commit: `d287c7454f78a48b8567401c41aa6c913c455d2e`.
-- Branch: `pi/market-model-phase-c`, dedicated task worktree.
-- Pinned cache: `.cache/datastore_ScottishLower.jls`, SHA256
+## Inputs and numerical choices
+
+- Existing Manifest, Julia 1.12.1, Distributions 0.25.126; no package changes.
+- Pinned cache `.cache/datastore_ScottishLower.jls`, SHA256
   `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`.
-- `MarketModelConfig`: `scottish_lower_2425_2526()`. Phase A rates and book gates
-  unchanged; cache loaded with `max_age_hours=10^6`. No new book/fixture exclusion.
-- Julia 1.12.1, Distributions 0.25.126, 8 threads, BLAS=1; existing Manifest.
-  No package installation/update. Initial package precompilation is not an update.
-- Owned fresh laptop session `pi_julia_mm_c`, pane `%39`; no beast session.
-  Only that owned pane was operated, then closed after evidence capture.
+  Load with `max_age_hours=10^6`, no refresh or database writes.
+- Existing `MarketModelConfig.scottish_lower_2425_2526()` supplies panel, seasons,
+  tournaments, close window, exclusions and population assertions.
+- Exact density via the unchanged production DoublePoisson grid (cutoff 10).
+- First 30 full books in match-ID order. Prediction centres are their Phase A
+  isolated rates; additional offsets are +0.10 on both log-rate sides.
+- n=250/1000/4000, equal-side prediction SD=0.05/0.20, all combinations retained.
+- Mode starts at the prediction. Central derivatives use step 2e-4; Newton with
+  line search ends on score or <=2e-7 Newton displacement. The displacement
+  criterion resolves finite-difference/density roundoff, not the gate threshold.
+- Exact quadrature orders 32/64 independently evaluate the integrand and posterior
+  moments in Gaussian importance coordinates. All densities include normalisers.
+- The likelihood eigenvalue clip is 1e-8 as prescribed; it is inactive on all
+  tested full books. Marginal uses the actual bracket Hessian; update moments
+  use clipped information. Raw SD errors are saved as a diagnostic.
+- Stop after the first failed book type. Availability for untested types is
+  retained in `book_inventory_c.csv`, with tested=0, not fabricated pass rows.
 
 ## Fresh owned laptop REPL
 
-From the task worktree root, after verifying that the chosen session name is
-unused (never operate a similarly named human/manager session):
+Verify the session name is unused; never operate unrelated human/manager panes.
+From the task worktree root:
 
 ```bash
 PANE=$(tmux new-session -d -P -F '#{pane_id}' -s pi_julia_mm_c -c "$PWD" \
   'env JULIA_PKG_PRECOMPILE_AUTO=0 GKSwstype=100 julia --project -t 8')
 printf 'owned pane: %s\n' "$PANE"
 tmux send-keys -t "$PANE" -l -- \
-  'include("current_development/market_model/t05_laplace_preflight_tests.jl"); include("current_development/market_model/r05_laplace_preflight.jl")'
+  'include("current_development/market_model/t05_pooled_tests.jl"); include("current_development/market_model/t04_copula_grid_tests.jl"); include("current_development/market_model/t03_covariance_tests.jl"); include("current_development/market_model/t02_two_stage_tests.jl"); include("current_development/market_model/r05_pooled.jl")'
 sleep 0.15
 tmux send-keys -t "$PANE" Enter
 # Wait for the anchored markers before capture/cleanup.
-tmux capture-pane -t "$PANE" -p -J -S -200
-# After output is saved and verified:
-tmux kill-pane -t "$PANE"
+tmux capture-pane -t "$PANE" -p -J -S -2000
 ```
 
-Recorded outcomes in `LAPTOP_PREFLIGHT.txt`:
+Fresh pane **%42** produced `LAPTOP_REVISION2.txt`:
 
-- 11/11 **diagnostic** mathematical tests, 3.2 s: `T05_PREFLIGHT_DONE`.
-- Preflight runner: `C_PREFLIGHT05_BLOCKED`.
-- Explicit environment line: Julia/Distributions/thread/BLAS versions above.
-- No retry, subset change or tolerance adjustment. The two quadrature orders are
-  part of the original diagnostic, not attempts to make a failed model pass.
+- 24/24 necessary update unit tests, `T05_UPDATE_DONE`;
+- 92/92 t04, 131/131 t03, 131/131 t02, corresponding DONE markers;
+- `R01_DONE` from t03's temporary Phase A byte regression;
+- `C05_LIKELIHOOD_BLOCKED`: marginal checks pass, posterior-mean gate fails.
 
-These are not `t05_pooled_tests.jl` or `r05_pooled.jl`. All missing production
-acceptance items and the required contract corrections are in `PHASE_C_REPORT.md`.
-The n grid is fixed at the prior centre and its quarter/fourfold values, not a
-fabricated posterior. Predictions are centred at the isolated rates with
-specified side spreads. Totals diagnostics retain every gate-2 refused book;
-the first approved Phase A optimisation start is used without selecting on fit.
+No `T05_DONE` or `R05_DONE` is printed. Do not interpret the unit-test count or
+successful runner execution as a passing scientific gate. The source revision
+contains only the likelihood gate stage, not a completed production pipeline.
+The mean failure also appeared during development in owned pane %41; no further
+model variations or sampling were tried after fresh confirmation. Both owned
+panes were closed after capture. No beast sessions/checkouts were created.
 
-## Hash and repository checks
+## Hashes and checks
+
+`SCIENTIFIC_SHA256SUMS.txt` covers the three unchanged revision-1 CSVs plus the
+four new revision-2 gate/inventory CSVs. It identifies committed evidence; it
+is **not evidence of two fresh production executions**. `SOURCE_SHA256SUMS.txt`
+adds the three new production-named (but incomplete) source files to the old
+preflight source hashes.
 
 ```bash
 cd current_development/market_model
@@ -62,7 +77,7 @@ cd results/C
 sha256sum -c SCIENTIFIC_SHA256SUMS.txt
 ```
 
-Before handoff: `./scripts/todo.sh check` passes (24 tasks; AGENTS.md under its
-size budget), and `git diff --check` passes. TODO 039/index say BLOCKED, not
-completed. Existing A/B/B2/B3 artifacts and all `src/` files remain untouched.
-This evidence justifies stopping, not promoting Phase C.
+At handoff `./scripts/todo.sh check` and `git diff --check` pass. Existing
+A/B/B2/B3 outputs, original preflight CSVs and all `src/` files remain untouched.
+TODO 039/index say BLOCKED, not complete. See `PHASE_C_REPORT.md` for the
+failed setting distributions, concrete mean witness and missing acceptance.

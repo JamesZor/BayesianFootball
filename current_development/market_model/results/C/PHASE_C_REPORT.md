@@ -1,170 +1,215 @@
-# TODO 039 — Phase C BLOCKED at mathematical preflight (2026-10-06)
+# TODO 039 — Phase C revision 2 BLOCKED at posterior-mean gate (2026-10-06)
 
-**No pooled fit was promoted or launched.** The brief's likelihood/projection
-contract needs correction or clarification by the manager. This is a blocker
-handoff, not Phase C completion. Double Poisson stays for C; the later score-grid
-Phase C2 and Phase D were not attempted. The authorised pooled rung called C2
-is distinct from that later phase.
+**No pooled fit was launched or promoted.** The corrected joint-mode expansion
+passes the log-marginal gate on the first 30 full books, but fails revision 2's
+posterior-mean accuracy requirement. This is a blocker report, not Phase C
+completion. Statistical implementation: `7b6c7659`.
 
-## 1. Evidence and interpretation
+**Double Poisson for C; C2 later.** The authorised pooled rung C2 is distinct
+from the later score-grid Phase C2. Neither that later phase nor Phase D was
+attempted. No thresholds, data, packages, `src/` files or databases were changed.
+The first-attempt report is preserved verbatim in `PHASE_C_V1_REPORT.md`; its
+preflight source and CSVs remain unchanged.
 
-Source: `laplace_preflight_summary.csv`. The first 30 accepted books of each
-kind in Phase A's match-ID ordering were used, without selection on errors.
-Predictions are Gaussian in the two log-rates, centred at the isolated inversion,
-with equal-side SD shown below. **n is the PRIOR median times 0.25/1/4, not an
-estimated posterior median.** There has been no posterior fit. Consequently
-these are necessary-condition diagnostics, not the complete §3 production gate
-(which also requires totals-only quadrature at posterior-dependent settings).
+## 1. Revision 2 and what was implemented
 
-Every integration evaluates the **exact** Dirichlet/Beta density with all
-normalisers on the unchanged production double-Poisson grid. Gaussian importance
-coordinates around the integrand mode improve quadrature resolution; they do
-not replace the integrand by a Gaussian. Orders 16 and 32 are independently
-evaluated. `laplace_preflight_fixture.csv` preserves both integrals, the literal
-prescribed approximation, and the unprojected approximation on every fixture.
+Revision 1 used the wrong KL orientation for the Dirichlet large-n limit,
+compared a projected 1X2 kernel with an unprojected exact likelihood, and assumed
+a fixed totals direction/rank. Revision 2 corrects these choices:
 
-| Book | n | Prediction SD | Median absolute error, nats | p95, nats | Fixed 0.01/0.05 limits met? |
-|---|---:|---:|---:|---:|---|
-| full | 250 | 0.05 | 0.006335 | 0.011610 | yes |
-| full | 250 | 0.20 | 0.014120 | 0.024257 | no |
-| full | 1000 | 0.05 | 0.010268 | 0.017672 | no |
-| full | 1000 | 0.20 | 0.013041 | 0.025335 | no |
-| full | 4000 | 0.05 | 0.011706 | 0.021557 | no |
-| full | 4000 | 0.20 | 0.012568 | 0.023353 | no |
-| 1X2-only, supremacy-only | 250 | 0.05 | 0.047207 | 0.113871 | no |
-| 1X2-only, supremacy-only | 250 | 0.20 | 0.333277 | 0.528748 | no |
-| 1X2-only, supremacy-only | 1000 | 0.05 | 0.130108 | 0.276218 | no |
-| 1X2-only, supremacy-only | 1000 | 0.20 | 0.755114 | 0.933657 | no |
-| 1X2-only, supremacy-only | 4000 | 0.05 | 0.331083 | 0.526141 | no |
-| 1X2-only, supremacy-only | 4000 | 0.20 | 1.341687 | 1.508102 | no |
+- Exact Dirichlet/Beta density, all normalisers, unchanged production grid.
+- Newton joint mode of likelihood times Gaussian prediction; likelihood score
+  and observed Hessian at that mode. Phase A's KL(p||q) inversion stays the
+  **scoring target**, not the expansion point.
+- Joint-mode Laplace integral, including its density peak and determinant;
+  information-form posterior update with the prescribed eigenvalue clipping.
+- The manager's logged totals/BTTS-only decision: retain the likelihood exactly.
+  O/U constrains a curved total contour; BTTS+O/U retains its actual weak
+  supremacy information rather than being forced to rank one.
+- A flat-measure level-integrated 1X2 likelihood is implemented, but **not
+  validated or promoted**. Thin-book production checks were not reached.
 
-Largest quadrature-order difference across the entire table is
-**1.0012257689595572e-10 nats**. At n=1000, SD=0.20, retaining both 1X2
-directions gives median absolute error **0.0004892284282393966**, versus
-**0.7551135925625077** under the prescribed projection. This isolates a
-likelihood change from a quadrature-resolution problem. It is NOT a proposal
-to retain the biased 1X2 totals in the pooled model.
+`../../l05_pooled.jl` documents the integral derivation and implements the
+update and exact-density quadrature. `../../r05_pooled.jl` exposes configuration,
+pinned data, revised Gate 1 and the fail-fast promotion decision.
+`../../t05_pooled_tests.jl` contains necessary deterministic unit checks only;
+it is **not the complete synthetic-recovery/acceptance suite**. No sampling,
+RTS production smoother, forecast metrics, HA fits or production recovery
+pipeline was built after the accuracy blocker became clear.
 
-Source: `totals_projection_preflight.csv`. All **36** no-complete-1X2 books
-are retained. Only **7** satisfy the literal rank-one/10-degree requirement.
-For example:
+## 2. Fixed gate evidence
 
-- OU2.5-only fixture **12476490** has one retained eigen-direction, at
-  **11.21831698761122 degrees** from the equal-weight log-rate direction.
-- BTTS+OU2.5 fixture **12476754** has eigenvalues
-  **0.034234457618670444 / 1.4021838762587322**, both above the specified
-  relative retention threshold. It keeps **two**, not one, directions.
-- Some multiple-O/U-only optimisations drift to nearly zero away rates. These
-  are diagnostic inversion artefacts, NOT accepted new rate estimates or data
-  repairs. They remain visible and were not dropped to obtain a favourable gate.
+Sources: `laplace_gate.csv`, `laplace_gate_fixture.csv`, `engine_gates_c.csv`.
+The first **30 full books in match-ID order**, with no selection on errors,
+were evaluated at all **12** prescribed settings: n=250/1000/4000, equal-side
+prediction SD=0.05/0.20, and offsets 0/+0.10 to both log-rate means. Centres
+are their Phase A isolated rates, explicitly permitted by revision 2. There
+are **360** fixture-setting rows. These are fixed n values, not a posterior.
 
-Single-start totals inversion uses Phase A's first approved start; it is only
-an expansion-point diagnostic for books that Phase A refused. No new acceptance
-of those isolated rates is claimed. A symmetric start could change a flat
-inversion's coordinates; it cannot make a rank-two BTTS+totals likelihood
-rank-one or make a curved likelihood globally linear.
+Thresholds: median absolute marginal error <=0.01 nats; p95 <=0.05 nats;
+each posterior mean within 0.05 of its exact posterior SD, and each SD within
+5% relative error. The mean statistic is max over the two original log-rate
+coordinates of |approximate mean - exact mean| / exact SD. No averaging across
+fixtures conceals a failing book.
 
-## 2. What is wrong with the mathematical contract
+| n | Prediction SD | Offset | Median absolute marginal error | p95 | Maximum mean error / SD | Mean failures / 30 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 250 | 0.05 | 0 | 0.000356 | 0.000446 | 0.016751 | 0 |
+| 250 | 0.05 | 0.10 | 0.000403 | 0.000472 | 0.015890 | 0 |
+| 250 | 0.20 | 0 | 0.003980 | 0.004940 | **0.091744** | **12** |
+| 250 | 0.20 | 0.10 | 0.003881 | 0.005171 | **0.089202** | **11** |
+| 1000 | 0.05 | 0 | 0.000461 | 0.000542 | 0.026054 | 0 |
+| 1000 | 0.05 | 0.10 | 0.000453 | 0.000533 | 0.024996 | 0 |
+| 1000 | 0.20 | 0 | 0.001262 | 0.002044 | **0.055696** | **2** |
+| 1000 | 0.20 | 0.10 | 0.001256 | 0.002041 | **0.055150** | **2** |
+| 4000 | 0.05 | 0 | 0.000251 | 0.000321 | 0.023112 | 0 |
+| 4000 | 0.05 | 0.10 | 0.000244 | 0.000339 | 0.022466 | 0 |
+| 4000 | 0.20 | 0 | 0.000334 | 0.000573 | 0.029351 | 0 |
+| 4000 | 0.20 | 0.10 | 0.000333 | 0.000573 | 0.029271 | 0 |
 
-### Dirichlet large-n loss has the opposite KL orientation
+All marginal and SD checks pass on this tested type; **four settings fail the
+mean gate**. Maximum relative SD error is **0.010184310576972222** (about 1.02%).
+The 48 scalar Gate 1 entries in `engine_gates_c.csv` have **44 passes / 4 failures**.
+This file contains **only Gate 1**, not unexecuted pooled-engine gates 2–5.
 
-For a market with S selections, positive p and normalised q,
+### Quadrature resolution and a concrete witness
 
-```
-log Dirichlet(p; n q)
- = -n KL(q || p) + (S-1)/2 log n + 1/2 sum_s log q_s
-   - sum_s log p_s - (S-1)/2 log(2pi) + O(1/n).
-```
+Every integrand evaluation uses the exact Dirichlet/Beta density times the
+Gaussian prediction, divided by the mode-centred Gaussian proposal. The
+proposal changes coordinates; it does not approximate the integrand.
+Independent Gauss–Hermite orders **32/64** give maximum differences:
 
-Thus Phase A's minimiser of KL(p||q) is **not in general its large-n maximiser**.
-The Hessian of the forward cross-entropy is likewise not generally the exact
-Dirichlet likelihood curvature. They agree locally when q=p, but full books
-have measured grid misfit. The diagnostic tests verify the reverse-KL limit
-against the exact density. An exact maximiser is explicitly allowed by the
-brief, but changing the centre alone does not correct the stipulated H or
-resolve the projection problems below.
+- log marginal: **2.6929569685307797e-12 nats**;
+- posterior mean / exact SD: **3.069430883859357e-12**;
+- relative posterior SD: **1.0662581928500003e-12**.
 
-### Projecting a 1X2 likelihood changes the density tested by quadrature
+The largest mean error is fixture **12476452**, n=250, SD=0.20, no offset:
 
-For R=(nH)^-1 the full quadratic kernel integrates against N(mean,P) as
+| Coordinate | Laplace mean | Exact quadrature mean | Exact posterior SD |
+|---|---:|---:|---:|
+| log lambda_h | 0.6542372458730691 | 0.6525518797137508 | 0.04871981120155758 |
+| log lambda_a | -0.08086135763246184 | -0.08831025597956597 | 0.08119227881292301 |
 
-```
-exp(log L(hat)) (2pi)^(k/2) det(R)^(1/2)
-    * Normal(hat; mean, P+R),       k=2.
-```
+Its away-side normalised mean error is **0.09174392511223031**, versus the
+fixed limit 0.05. The mean-mode difference is only
+**2.2982440950336525e-10**. Its likelihood precision minimum eigenvalue is
+**129.6217272253511**; the minimum across all tested rows is
+**51.10001386984887**. Thus clipping is inactive on these books, and the
+marginal's raw-curvature versus clipped-update distinction cannot explain
+this failure.
 
-The preflight implements the brief's matching one-direction formula literally:
-k=1, observation d' hat, variance d'R d, with the stated peak and determinant
-factor. That projected kernel no longer penalises the total direction. The
-exact Dirichlet likelihood *does*. Its integral against a Gaussian prediction
-therefore differs, even if the unprojected Laplace approximation is excellent.
+**Diagnosis:** a Gaussian expanded at the joint mode approximates the total
+integral very well, yet its mean is the mode rather than the mean of the
+slightly skewed exact posterior. Accurate normalising constants do not imply
+accurate first moments. No second relinearisation was used: the update already
+returns the converged joint mode (maximum mean-mode displacement across this
+panel is **1.879189764110445e-7**). Re-expanding at that same mean is a fixed
+point; it does not integrate the higher-order skewness that shifts the exact
+mean. No posterior-moment correction or alternate likelihood was silently added.
 
-Integrating the discarded direction against a flat Lebesgue measure is not
-integrating it against the Gaussian prediction. The latter depends on the
-prediction's total mean/variance and can feed totals information to the state,
-contrary to the fixed supremacy-only decision. A projected/powered likelihood
-can be a modelling choice, but its appropriate exact reference must be defined
-before claiming the requested exact-Dirichlet marginal gate.
+### Scope of the stopped gate
 
-### Totals do not define a fixed equal-weight log-rate direction
+`book_inventory_c.csv` retains availability, not an invented passing subset:
 
-An O/U market primarily constrains exp(theta_h)+exp(theta_a). Its local normal
-in log-rate coordinates is proportional to (lambda_h,lambda_a), not (1,1).
-The constant-total contour is curved; a linear projection v' theta is not
-invariant along it. A synthetic O/U book with unequal rates already violates
-the fixed 10-degree direction requirement, as the diagnostic tests demonstrate
-on the unchanged grid. Small cutoff effects do not rescue that requirement.
-BTTS plus totals can identify both rates (up to swapping), as the real Hessian
-witness above shows. Merely retaining every non-negligible eigen-direction is
-therefore incompatible with the instruction that these books inform total only.
+| Type | Available | Tested |
+|---|---:|---:|
+| Full | 517 | 30 |
+| 1X2-only | 78 | 0 |
+| O/U-only | 25 | 0 |
+| BTTS+O/U | 10 | 0 |
+| BTTS-only | 1 | 0 |
 
-## 3. Acceptance evidence — explicitly incomplete
+The clean runner stops after the failed full-book type as the brief instructs.
+No claims are made about the thin-book marginal, moment or level-truncation
+gates. Those remain prerequisites even if the full-book blocker is addressed.
+
+## 3. Verification and acceptance status
+
+Fresh owned laptop pane **%42**, Julia **1.12.1**, Distributions **0.25.126**,
+8 threads, BLAS=1; pinned cache SHA matches the brief. Source `7b6c7659`.
+`LAPTOP_REVISION2.txt` records:
+
+- necessary revision-2 update tests **24/24**, **8.8 s**, `T05_UPDATE_DONE`;
+- t04 **92/92**, **32.4 s**, `T04_DONE`;
+- t03 **131/131**, **40.0 s**, `T03_DONE` (also `R01_DONE` in temporary output);
+- t02 **131/131**, **58.8 s**, `T02_DONE`;
+- fresh gate runner ends at **C05_LIKELIHOOD_BLOCKED**, not `R05_DONE`.
+
+The unit checks cover independently known Gaussian integrals/moments in 1-D
+and 2-D, exact Beta identity, the reversed leading large-n KL limit, a synthetic
+narrow-spread total book, quality/style covariance algebra and an existing R6
+batch likelihood. The prior-phase tests retain their existing gates/counts.
+They do **not** prove a complete pooled engine or posterior parameter recovery.
 
 | Brief acceptance item | Status |
 |---|---|
-| t05 pooled tests and t02–t04 in fresh REPL | **Not met.** Only the new mathematical diagnostic suite ran: 11/11, `T05_PREFLIGHT_DONE`, 3.2 s in fresh owned laptop pane `%39`. No pooled t05/recovery suite exists; prior suites were not rerun. Their code/artifacts were not modified. |
-| All §3 gates | **Not met.** Necessary likelihood/projection checks fail as above. C0/R6, scalar/full update and batch-engine gates were not implemented. |
-| Convergence everywhere | **Not run.** No C0/C1/C2/H1/H2 or synthetic sampling; no posterior n or sigma_u. |
-| Every table and figure | **Not met.** Only the three diagnostic CSVs listed above and this report/reproduction notes exist. No ladder, forecast, shrinkage, convergence, home-advantage or team-path tables/figures are claimed. |
-| Fresh beast R05_DONE and second byte-identical production run | **Not run.** No beast checkout/session or production r05 was created. Scientific hashes cover only the diagnostic CSVs; no production reproducibility claim. |
-| README and DESIGN mapping | **Met for blocker documentation.** README has Phase C evidence and the human's double-Poisson/C2-later decision. DESIGN §5 is unchanged. |
-| TODO 039 dated @pi line and tracker check | Updated to **BLOCKED**, with matching index row and this dependency. Check result is recorded in `REPRODUCIBILITY.md`. |
+| Full t05 and t02–t04 in fresh laptop REPL | **Incomplete.** Necessary t05 checks and prior suites pass; 20-book Hessian, thin-book checks and synthetic parameter recovery are not completed. |
+| All revised gates | **Not met.** Full-book posterior mean gate fails. Thin-book accuracy/projection/pooled-engine gates not promoted. Prior B2/B/TODO 023 gates pass in regression tests. |
+| Convergence everywhere | **Not run.** No C0/C1/C2/H1/H2 or synthetic fits. |
+| Every table and figure | **Not met.** Four new gate/inventory CSVs exist. No ladder/one-step/paired/shrinkage/convergence/team-path/HA tables or C figures. |
+| Fresh beast R05_DONE, second byte-identical production run | **Not run.** No beast checkout/session; no production reproducibility claim. |
+| README and DESIGN mapping | README updated for revision 2 and the blocker. DESIGN §5 unchanged; the briefs replace its old Turing/static smoke/MAP-fold route with quality/style GRW and approximate collapsed slice inference. |
+| TODO 039 and tracker check | Dated @pi claim/blocker entries; status BLOCKED, not closed. `todo.sh check` and `git diff --check` pass at handoff. |
 
-The preflight loader is `../../l05_laplace_preflight.jl`, runner
-`../../r05_laplace_preflight.jl`, mathematical tests
-`../../t05_laplace_preflight_tests.jl`. They intentionally do not masquerade as
-the requested `r05_pooled.jl` or `t05_pooled_tests.jl`. The loader docstring
-contains the likelihood normalisation derivation and its limits.
+## 4. Plain words: what can and cannot be concluded
 
-## 4. Plain words and choices
+- **Isolated versus pooled:** not fitted; no evidence yet about changes to full
+  or thin-book rates or the share of deviations retained.
+- **Honest forecasts:** no C0/C1/C2 forecast comparison exists. No pooling gain
+  or loss can be claimed from this local accuracy diagnostic.
+- **Book worth:** n is not estimated. Its posterior, implied book noise and
+  ratio to sigma_u remain unknown.
+- **1X2-only totals:** no pooled totals exist; the expected approximately +0.10
+  change cannot be checked.
+- **T015 supremacy:** no pooled supremacy exists; no correction of its
+  isolated-inversion artefact has been demonstrated.
+- **Ratings and HA:** no transition-club paths or H1/H2 posterior evidence.
 
-There is **no evidence yet** about whether pooling changes the rates, improves
-honest forecasts, raises thin-book totals by about 0.10, or corrects T015
-supremacy. There is no posterior concentration to interpret as book worth, and
-no estimate of its ratio to fixture noise. No ratings or HA inference is
-available. Fabricating those requested conclusions would hide a failed model
-contract.
+Choices were in scope: mathematical gate before expensive inference; exact
+existing book/grid calls; deterministic first-ID selection; independent
+quadrature orders; fixed required n/spreads/offsets; clipping retained and
+reported separately; fail fast by book type. No failing fixtures/settings were
+removed and no threshold or prior was tuned to turn a red gate green.
 
-In-scope choices: test mathematical necessary conditions before expensive fits;
-use the pinned close and unchanged grid; deterministic first-in-ID-order books;
-explicit prior-centre n and Gaussian prediction spreads; independently increase
-quadrature order; retain all totals-book failures. No packages, data, `src/`,
-database writes, thresholds or prior-phase artifacts were changed.
+## 5. Brief/design issues and development record
 
-The brief supersedes DESIGN's old Turing/static smoke/MAP-fold route with
-quality/style GRW and collapsed slice sampling. That mapping is documented,
-not silently implemented as the old design. The new likelihood/projection
-issues block either inference route; no out-of-scope alternative was fitted.
+DESIGN §4.4 still incorrectly calls KL(p||q) the large-n Dirichlet limit; the
+correct orientation is KL(q||p). Its old “totals only” statement is superseded
+by the manager's explicit revision-2 decision. Its Turing/MAP/NUTS engine and
+fold-refit checklist are not the new brief's collapsed-slice route. These
+contradictions are documented, not edited outside the authorised contract.
+
+Revision 2's O/U Hessian test at the **joint mode** also needs care. Even for
+an untruncated grid, log L=f(T), T=exp(h)+exp(a), implies
+Hessian(log L)=f''(T) grad(T)grad(T)' + f'(T) diag(exp(theta)).
+A tangent vector annihilates the first term, not necessarily the second.
+At the likelihood's own maximum f'=0, but at a prior-regularised joint mode
+f' generally is not zero. A curved flat contour therefore does not require
+a near-zero *observed Hessian* tangent eigenvalue at that joint mode. This
+additional test-contract concern was not used to excuse the full-book failure.
+
+Development pane %41 first passed the 24 unit checks. An initial runner call
+exposed an incorrect assumption about B2 CSV column names (corrected after
+reading the schema). A finite-difference Newton termination check was then
+made displacement-aware to avoid iterations at density roundoff resolution.
+The full-book rows already demonstrated the moment failure. Before fail-fast
+was added, attempting the level-integrated 1X2 step exposed a noisy nested
+quadrature/finite-difference line search; that code is unvalidated and must not
+be treated as a passed 1X2 implementation. No further optimisation variations
+were tried. The fresh fail-fast run reproduces the full-book blocker without
+entering that stage. These development errors did not change any scientific
+threshold, book, centre, n value or spread.
 
 ## Blocked / next action
 
-The manager must reconcile **total/supremacy-only information restrictions**
-with the **exact raw-book likelihood used as the gate reference**, and specify
-a valid totals-coordinate approximation. For full books, authorise/clarify the
-finite-n maximiser and exact curvature instead of the erroneous forward-KL
-expansion. Keep the double-Poisson grid and fixed error thresholds.
+The manager must decide how to meet the **unchanged posterior-mean accuracy
+requirement** beyond a Gaussian at the joint mode. A higher-order moment
+correction or quadrature-moment update would change the approximation and needs
+an amended brief; no such substitute is authorised or implemented here.
+A second relinearisation at the current Gaussian mean does not address this
+mode-versus-mean discrepancy. Thin-book quadrature/moment tests and the rest
+of Phase C remain unfinished. No claims transfer to production until those
+gates and full acceptance checks pass.
 
-Then issue a corrected Phase C brief. No attempt was made to tune n, prediction
-spreads, starts, fixtures or thresholds until a red gate became green. This
-handoff stops before pooled implementation/sampling, with the fixed decisions
-and failures intact.
+All owned REPL panes (%41/%42) are closed. No other sessions were operated.
+The work is committed and pushed only to `pi/market-model-phase-c` for review.

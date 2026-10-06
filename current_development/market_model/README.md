@@ -24,9 +24,10 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (blocked at preflight):** fit the structure directly to books, sharing
-  information and learning book concentration and fixture deviations. The literal
-  Laplace/projection contract fails necessary checks; no pooled fits were launched.
+- **C (blocked at revision-2 accuracy gate):** fit the structure directly to books,
+  sharing information and learning book concentration and fixture deviations.
+  The corrected joint-mode Laplace marginal is accurate on the tested full books,
+  but its posterior means fail the fixed 5%-of-SD gate; no pooled fits were launched.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -322,6 +323,36 @@ Rerun only the diagnostic preflight through an owned laptop tmux REPL:
 then `include("current_development/market_model/r05_laplace_preflight.jl")`.
 Expect `T05_PREFLIGHT_DONE` and `C_PREFLIGHT05_BLOCKED`, **not** `T05_DONE` or
 `R05_DONE`. No Phase C production or posterior claims are available.
+
+## Phase C revision 2: corrected likelihood, failed posterior-mean gate
+
+**Human decision: double Poisson for C; C2 later.** The pooled rung C2 is not
+that later score-grid phase. No Phase D, grid change or pooled sampling was run.
+
+Revision 1 incorrectly used KL(p||q) as the Dirichlet large-n loss, tested a
+supremacy projection against an unprojected likelihood, and treated a curved
+constant-total contour as a fixed direction. Revision 2 uses the exact density,
+including normalisers, and a Newton joint mode of likelihood × Gaussian prediction.
+Phase A's KL(p||q) inversions remain **scoring targets**, not expansion points.
+The manager's logged decision is to retain totals/BTTS-only likelihoods exactly:
+O/U constrains the total along a curved contour, while BTTS+O/U may carry weak
+supremacy information. 1X2-only books use a flat-measure level-integrated likelihood.
+
+`l05_pooled.jl`, `r05_pooled.jl` and `t05_pooled_tests.jl` now contain the revised
+update, fail-fast accuracy runner and deterministic unit checks. They are **not a
+completed production or recovery pipeline**. `results/C/laplace_gate.csv` and
+`laplace_gate_fixture.csv` preserve the first 30 full books, all prescribed n,
+spreads and offsets. Marginal accuracy passes; the moment gate fails. The report
+records exact numbers and missing acceptance items; no forecast, shrinkage,
+concentration, team-path or HA posterior conclusions can yet be made.
+
+The revision-1 report and reproduction notes are retained as
+`results/C/PHASE_C_V1_REPORT.md` / `REPRODUCIBILITY_V1.md`; its preflight source and
+CSVs remain unchanged. Current evidence and commands:
+[`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md),
+[`results/C/REPRODUCIBILITY.md`](results/C/REPRODUCIBILITY.md).
+A fresh `r05_pooled.jl` execution stops at `C05_LIKELIHOOD_BLOCKED`, **not**
+`R05_DONE`. `T05_UPDATE_DONE` denotes only the deterministic update tests.
 
 ## How to run
 
