@@ -128,3 +128,8 @@ Times are laptop local; earlier entries were first written in the beast clock (+
 
   pi wrote `results/C/HANDOVER.md` (`31ec8520`, context 81%, codex 90%), and a fresh session
   was started.
+- **~02:33, pi question (Phase C rev 4):** "What Gaussian prior should H1 use for γ_def?"
+  - Options: (1) γ_att ~ N(0.15, 0.25²), γ_def ~ N(0, 0.25²), independent (pi recommended);
+    (2) a different joint prior.
+  - **Answered (1).** It keeps C0's γ prior for the home-scoring boost, with a neutral prior
+    centred at 0 for the away suppression, so H1 nests C0 exactly at γ_def = 0.
