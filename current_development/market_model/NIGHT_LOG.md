@@ -152,3 +152,10 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - BigFloat re-solve verification on the failing case.
   - No change to any scientific gate.
   - Priority order if time runs short: recovery → C0/C1 + 10b → H1/H2 → second reproduction run.
+- **04:31: Phase C rev 5 blocked** on the manager's own verification tolerances: mode gap 4.0e-7
+  (limit 1e-8) and marginal gap 6.7e-7 nats (limit 1e-9); t05 282/284.
+  - Cause: the manager's rev 5 was inconsistent. Accepting δ ≤ 1e-9 allows a ~1e-6 mode error.
+  - Not loosened. **Revision 6** (`pi_market_model_phaseC_v6_polish.md`): up to 3 undamped,
+    gradient-only Newton polishing steps when the line search stalls; tolerances unchanged.
+  - Sent to the same session `%53` (context 57%).
+  - If it still fails, the tolerance question goes to the human.
