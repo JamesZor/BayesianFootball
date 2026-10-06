@@ -100,6 +100,18 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
+- [2026-10-06 @pi] Revision8 Gaussian-only speed correction explicitly approved
+  by manager via ask_user_question after measured original C0 throughput ~170
+  iterations/minute/chain implied hours. Original41e28736 attempt%266 preserved
+  in beast logs/c8/dense_attempt_preserved and original checkout, stopped solely
+  for computation at05:02:12Z, not convergence/selection. No completed fit existed.
+  New scalar Gaussian likelihood callback uses the SAME native slice sampler;
+  priors/seeds/adaptation/budgets/thresholds unchanged, default C1 path unchanged.
+  Fresh laptop%65:17/17 arithmetic/sampler checks,54 toy/full-real parity gates
+  (likelihood1e-9, filtered mean/cov1e-8), report16/16. New frozen5ab9980b
+  checkout market_model_c_fast_scalar, own%269, first full fast run launched
+ 05:02:13Z. C1%267/%268 remain at41e28736; recovery%265 at6335316f untouched.
+
 - [2026-10-06 @pi] Revision8 claimed: leave frozen recovery6335316f pane%265
   untouched (all chains250 at06:44 checkpoint, load4.73). Separate new beast
   checkout/panes for exact C0/H1/H2 both protocols/two-run verification and

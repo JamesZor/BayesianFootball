@@ -173,12 +173,24 @@ function figures(out)
     Plots.savefig(fig,joinpath(out,"C_fast_home_advantage.png"))
     paths = CSV.read(joinpath(out,"team_paths_c.csv"),DF.DataFrame)
     panels = []
-    for team in ("ross-county","airdrieonians","east-kilbride","kelty-hearts"), axis in ("quality","style")
+    requested = ("ross-county","airdrieonians","east-kilbride","kelty-hearts-fc")
+    inventory = DF.DataFrame(team=collect(requested),
+        present=[team in paths.team for team in requested],
+        reason=[team in paths.team ? "present in fixed panel" : "absent from fixed 56/57 population" for team in requested])
+    CSV.write(joinpath(out,"path_club_inventory.csv"),inventory)
+    for team in requested, axis in ("quality","style")
+        present = team in paths.team
         fig = Plots.plot(; title="$team $axis",legend=:topleft)
-        for rung in ("C0","H1","H2")
-            g = DF.filter(r -> r.team == team && r.axis == axis && r.protocol == "10a" && r.rung == rung,paths)
-            isempty(g) && error("missing requested transition-club path $team")
-            Plots.plot!(fig,g.week_start,g.mean; label=rung)
+        if present
+            for rung in ("C0","H1","H2")
+                g = DF.filter(r -> r.team == team && r.axis == axis && r.protocol == "10a" && r.rung == rung,paths)
+                isempty(g) && error("missing accepted path axis/rung for present club $team")
+                Plots.plot!(fig,g.week_start,g.mean; label=rung)
+            end
+        else
+            # Manager-approved reporting: never add data or invent a prior-only path.
+            Plots.plot!(fig; xlims=(0,1),ylims=(0,1),showaxis=false,grid=false,legend=false)
+            Plots.annotate!(fig,0.5,0.5,Plots.text("Not in fixed 56/57 panel\nNo fitted path",10))
         end
         push!(panels,fig)
     end

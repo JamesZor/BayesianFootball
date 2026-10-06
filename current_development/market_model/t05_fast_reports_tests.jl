@@ -18,6 +18,7 @@ const FP08 = PooledMarket
     @test_throws ErrorException FR08.normal_mixture_quantiles([0.0],[0.0])
     p = FP08.MID.toy_panel(Random.Xoshiro(3951))
     p.matches.season .= "toy"
+    p.teams[1] = "east-kilbride" # mock name exercises present and absent figure branches
     fits = Dict{Tuple{Symbol,String},FP08.MID.ArmFit}()
     rng = Random.Xoshiro(3965)
     for rung in (:C0,:H1,:H2), protocol in ("10a","10b")
@@ -47,6 +48,15 @@ const FP08 = PooledMarket
         sm = CSV.read(joinpath(out,"smoothed_fit_c.csv"),DataFrame)
         @test nrow(sm) == 6*5*FP08.MID.n_fixtures(p)
         @test all(isfinite,sm.predicted)
+        CSV.write(joinpath(out,"home_advantage_rungs.csv"),ha)
+        FR08.figures(out)
+        inventory = CSV.read(joinpath(out,"path_club_inventory.csv"),DataFrame)
+        @test nrow(inventory) == 4
+        @test count(inventory.present) == 1
+        @test inventory.team[inventory.present] == ["east-kilbride"]
+        for file in ("C_fast_coverage.png","C_fast_home_advantage.png","C_fast_paths.png")
+            @test filesize(joinpath(out,file)) > 1000
+        end
         ref = copy(raw[raw.rung .== "C0",:])
         ref.rung .= "R6"
         CSV.write(joinpath(out,"mock_r6.csv"),ref)

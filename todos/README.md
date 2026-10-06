@@ -38,6 +38,9 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 **039:** Revision8 IN_PROGRESS (2026-10-06): independent fast C0/H1/H2 pipeline
 and unpromoted C1 10a/10b production preparation; recovery%265 left untouched,
 all chains250 checkpoint, no acceptance yet. All scientific settings frozen.
+Manager-approved scalar Gaussian callback verified17/17 +54 parity gates;
+new5ab9980b fast%269, dense attempt preserved/stopped for speed only.
+C1%267/%268 at41e28736; recovery%265 untouched at6335316f.
 Revision7 HANDOVER / IN_PROGRESS (2026-10-06): both exact regressions PASS,
 new fixture12476686 mode/marginal gaps0.0/0.0; unchanged tolerances. Fresh t05
 305/305, t04 92/92,t03/t02 131/131, full Gate1 12/12,state53/53. Prepared workflow

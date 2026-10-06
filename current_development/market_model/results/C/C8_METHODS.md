@@ -82,6 +82,19 @@ checks compare callback/default behaviour without changing adaptation or RNG.
 Reporting uses the same exact scalar engine for static HA mixtures; pre-week
 predictions and RTS paths still use the original accepted engine.
 
+## Requested club paths: manager-approved absence annotation
+
+The fixed panel has22 teams. Ross County and Airdrie are not among them;
+East Kilbride is present and Kelty's canonical key is `kelty-hearts-fc`.
+The first scalar-source pipeline passed107 engine gates and20 convergence rows,
+then stopped in a report-only assertion for the absent Ross County path.
+Its complete sampled fits/accepted tables/log remain preserved; it is NOT counted
+as a clean full production reproduction. The manager explicitly approved
+annotating missing clubs instead of inventing paths or changing data.
+`path_club_inventory.csv` records availability, and the path figure marks the
+absent panels plainly. All22 teams remain in `team_paths_c.csv`. Two NEW full
+runs at the corrected reporting source are required for clean byte reproduction.
+
 ## Artifacts and reproduction
 
 Each run writes a fresh separate directory. Scientific CSVs and figures must
