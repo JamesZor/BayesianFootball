@@ -140,3 +140,4 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - Waiting, per the human's rule. **2 banked resets** are shown as available on the plan;
     **not used**, because that's the human's resource and the rule says wait.
   - At ~03:21: tell the same pi session to continue.
+- **03:27: pi resumed** after the quota reset (first retry), in the same session, pane `%44`.
