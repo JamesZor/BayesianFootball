@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -82,6 +82,16 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision6 recovery at frozen d9e6c003 fails a NEW check:
+  seed4961 initial target (iteration0), joint_mode exhaustion100 iterations;
+  peers cancelled at warmup1. Root theta[-4.3667389598945885,-4.699137880221636,
+  -3.0309405303003616,7.090705824646739]. Stop before retained samples, no solver
+  remedy/retry or threshold change. Exact-case gate remains passed. Deterministic
+  observer-only trace will capture the failing fixture/g/delta, not restart fitting.
+  Beast owned %264; original generated binary still byte-identicalde6a986b...8da0d1.
+  Historical v4_ad output moved preserving binary to logs/9de98548_recovery_outputs
+  before checkout, no deletion/reset. Accounting written on failure as prescribed.
 
 - [2026-10-06 @pi] Revision6 exact-case gate PASSES unchanged tolerances: mode
   gap2.0039525594484076e-13, marginal gap1.1574741165532032e-11 nats;

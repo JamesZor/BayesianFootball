@@ -1,10 +1,20 @@
-# Phase C revision6 — exact-case PASS, recovery continuation (2026-10-06)
+# Phase C revision6 — exact-case PASS, recovery iteration-limit BLOCKED (2026-10-06)
 
 **Not complete.** Manager revision6 explicitly remedies revision5's inconsistent
 acceptance rule. Brief is copied unchanged into experiments/. All verification
 and scientific tolerances/settings/seeds remain unchanged. Full-book C0/C1/H1/H2
 remains authorised, C2 separately deferred. Revision5 report/repro/handover and
 source hashes are preserved with `_V5` names; all earlier evidence is unchanged.
+
+## Recovery stop boundary
+
+At frozen source d9e6c003, owned beast %264, prescribed recovery fails its
+initial chain4961 target: joint mode did not converge in100 iterations.
+Peers cancelled at warmup1; no retained fit or interval exists. Root coordinate
+[-4.3667389598945885,-4.699137880221636,-3.0309405303003616,7.090705824646739].
+Stop without another solver variation or changed tolerances. An observer-only
+trace of this exact supported coordinate will report fixture/g/decrement; it is
+not a sampler restart or remedy. Generation binary is byte-identical to revision4.
 
 ## Implementation
 
