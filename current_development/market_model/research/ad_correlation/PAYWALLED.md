@@ -1,0 +1,10 @@
+# Paywalled papers worth obtaining
+
+| Citation | DOI | Why |
+|---|---|---|
+| Crowder, Dixon, Ledford & Robinson (2002). Dynamic modelling and prediction of English Football League matches for betting. *JRSS D* 51(2), 157–168. | 10.1111/1467-9884.00308 | Abstract says attack and defence follow "some unobserved bivariate stochastic process" over all 92 League teams (four divisions). It is the only multi-division dynamic attack/defence paper found; need to check whether that process has a non-zero attack–defence correlation and how divisions are linked. **Highest priority.** |
+| Rue & Salvesen (2000). Prediction and retrospective analysis of soccer matches in a league. *JRSS D* 49(3), 399–418. | 10.1111/1467-9884.00243 | Seed dynamic attack/defence model (Brownian motion, no constraints); known only through Owen (2011, p. 12). Check its prior on (attack, defence) and whether it uses a joint covariance. |
+| Maher (1982). Modelling association football scores. *Statistica Neerlandica* 36(3), 109–118. | 10.1111/j.1467-9574.1982.tb00782.x | Origin of the attack/defence parameterisation; reportedly tests reduced models (e.g. a single strength per team) by likelihood ratio — **unverified recollection**, worth checking for RQ4. |
+| Ruiz & Pérez-Cruz (2015). A generative model for predicting outcomes in college basketball. *JQAS* 11(1). | 10.1515/jqas-2014-0055 | Conference-specific attack/defence structure: a multilevel-by-tier example (RQ2.4). |
+| Basini, Tsouli, Ntzoufras & Friel (2023). Assessing competitive balance in the English Premier League … stochastic block model. *JRSS A* 186(3). | 10.1093/jrsssa/qnad007 | Marked OA by OpenAlex, but the publisher PDF link returned HTML to a script; fetch manually. Tier/block structure of teams (RQ2.3). |
+| Górecki, Grzelak & Dyczkowski (2026). Predicting football outcomes and quantifying team strengths with Bayesian modeling. *Expert Systems with Applications*. | 10.1016/j.eswa.2026.131862 | No abstract available; the same group's 2024–25 conference papers evaluate offensive/defensive strength across leagues (Polish Ekstraklasa). Low priority. |
