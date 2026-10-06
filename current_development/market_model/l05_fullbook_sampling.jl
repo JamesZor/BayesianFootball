@@ -69,11 +69,12 @@ function fullbook_supported(a,theta)
 end
 
 "Collapsed likelihood plus normalised rung prior; no R6 fitted draws or prior."
-function fullbook_logtarget(a,p,theta; markets=nothing,likelihoods=nothing)
+function fullbook_logtarget(a,p,theta; markets=nothing,likelihoods=nothing,
+                            filter_fn=fullbook_filter)
     fullbook_supported(a,theta) || return -Inf
     lp = MID.log_prior(a,theta)
     isfinite(lp) || return -Inf
-    ll = fullbook_filter(a,p,theta; markets,likelihoods).loglik
+    ll = filter_fn(a,p,theta; markets,likelihoods).loglik
     isfinite(ll) || error("$(a.name) supported filter returned nonfinite likelihood at $theta")
     return lp+ll
 end
@@ -85,7 +86,7 @@ and freeze exactly at warmup. All retained iterations are saved (thin=1).
 The MID slice kernel is reused, not its bounded target or R6 fit/prior.
 """
 function fullbook_chain(a,p,seed; markets=nothing,warmup=2000,samples=3000,
-                        progress=nothing,cancellation=nothing)
+                        progress=nothing,cancellation=nothing,filter_fn=fullbook_filter)
     warmup >= 0 && samples > 0 || error("invalid chain budget")
     rng = Random.Xoshiro(seed)
     theta = MID.init_centre(a)+0.35randn(rng,length(MID.param_names(a)))
@@ -95,7 +96,7 @@ function fullbook_chain(a,p,seed; markets=nothing,warmup=2000,samples=3000,
     function target(z)
         cancellation !== nothing && cancellation[] && error("peer full-book chain failed")
         last_evaluation .= z
-        return fullbook_logtarget(a,p,z; markets)
+        return fullbook_logtarget(a,p,z; markets,filter_fn)
     end
     U = zeros(samples,length(theta))
     history = zeros(warmup,length(theta))
@@ -133,7 +134,7 @@ end
 
 "Four independent chain tasks, indexed seed vector; scheduling does not affect RNG."
 function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progress=true,
-                      accounting_out=nothing,accounting_run=String(a.name))
+                      accounting_out=nothing,accounting_run=String(a.name),filter_fn=fullbook_filter)
     length(seeds) == 4 && length(unique(seeds)) == 4 || error("exactly four unique chain seeds required")
     start = time()
     cancellation = Threads.Atomic{Bool}(false)
@@ -146,7 +147,7 @@ function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progre
                 flush(stdout)
             end : nothing
             push!(tasks,Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,
-                progress=callback,cancellation))
+                progress=callback,cancellation,filter_fn))
         end
     finally
         # @sync waits for cancelled peers too; record ALL evaluated books even

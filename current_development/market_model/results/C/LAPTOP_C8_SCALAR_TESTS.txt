@@ -3,7 +3,7 @@ The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. 
   juliaup update
 
 in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
-  🦋 include("current_development/market_model/t05_fast_reports_tests.jl")Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
   host REPL mirroring enabled
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
@@ -14,8 +14,15 @@ in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `r
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
 |__/                   |
 
-
-julia> include("current_development/market_model/t05_fast_reports_tests.jl")
+include("current_development/market_model/t05_fast_gaussian_tests.jl"); include("current_development/market_model/t05_fast_reports_tests.jl")
+julia> include("current_development/market_model/t05_fast_gaussian_tests.jl"); include("current_development/market_model/t05_fast_reports_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+C8 Gaussian benchmark C0: dense=0.085172221 scalar=0.007409505 for10 fixed-target calls (not fits)
+C8 Gaussian benchmark H1: dense=0.094122827 scalar=0.007965016 for10 fixed-target calls (not fits)
+C8 Gaussian benchmark H2: dense=0.092991416 scalar=0.007741986 for10 fixed-target calls (not fits)
+Test Summary:                                                     | Pass  Total   Time
+C8 scalar Gaussian arithmetic, unchanged model and native sampler |   17     17  19.0s
+T05_FAST_GAUSSIAN_DONE
 HA mixture complete: C0 10a, 4000 hyperdraws
 HA mixture complete: C0 10b, 4000 hyperdraws
 HA mixture complete: H1 10a, 4000 hyperdraws
@@ -23,7 +30,7 @@ HA mixture complete: H1 10b, 4000 hyperdraws
 HA mixture complete: H2 10a, 4000 hyperdraws
 HA mixture complete: H2 10b, 4000 hyperdraws
 Test Summary:                                 | Pass  Total   Time
-C8 fast-stage reports, NOT sampled acceptance |   16     16  33.2s
+C8 fast-stage reports, NOT sampled acceptance |   16     16  23.2s
 T05_FAST_REPORTS_DONE
 
 julia>

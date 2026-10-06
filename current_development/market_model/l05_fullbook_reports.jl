@@ -23,11 +23,11 @@ function require_recovery(out; truth=[0.03,0.01,0.06,1000.0],generation_seed=396
 end
 
 "One rung/protocol at frozen 4x(2000+3000) budget; persist diagnostics before promotion."
-function train_rung(a,p,markets,out; protocol,seeds)
+function train_rung(a,p,markets,out; protocol,seeds,filter_fn=PM.fullbook_filter)
     path = joinpath(out,"$(a.name)_$(protocol).jls")
     isfile(path) && error("immutable fit exists: $path; use a fresh production directory")
     result = PM.fit_fullbook(a,p; markets=a.name == :C1 ? markets : nothing,seeds,
-        accounting_out=out,accounting_run="$(a.name)_$(protocol)")
+        accounting_out=out,accounting_run="$(a.name)_$(protocol)",filter_fn)
     Serialization.serialize(path,result)
     diag = PM.fullbook_diagnostics(result.fit; protocol,seed=first(seeds))
     diag.sha .= strip(read(`git rev-parse HEAD`,String))

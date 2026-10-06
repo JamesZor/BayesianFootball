@@ -8,7 +8,8 @@ revision8 uses separate runners, not a silent removal of that guard.
 
 ## Fast-rung reporting
 
-`r05_fast_rungs.jl` runs 53 inherited/state gates (2–4), the six prescribed
+`r05_fast_rungs.jl` runs 53 inherited/state gates (2–4) plus 54 Gaussian
+scalar/dense parity gates on toy/full-real panels, the six prescribed
 4×(2000 warmup +3000 retained), thin1 fits, and every-parameter Gate5. Failed
 convergence stops before inference. The accepted workflow scores identical
 Phase-A isolated targets, with 10a retrospective median hyperparameters, and
@@ -60,6 +61,26 @@ home advantage to be dynamic). These rungs test split and quality-linked
 alternatives on **market-derived log rates**, with **static** league HA; they
 are not that paper's dynamic Gamma-state goal model. The required p.1/3 citation
 is therefore a convention/context comparison, not an equation implemented here.
+
+## Manager-authorised Gaussian-only speed correction
+
+The first attempt at41e28736 used the original dense pair-update likelihood.
+Observed progress on the244-fixture C0 fit was roughly170 iterations/minute per
+chain, implying hours for two six-fit pipelines rather than the brief's minutes.
+The manager explicitly approved a verified scalar Gaussian fast path through
+`ask_user_question`. The original attempt/evidence is preserved, not cited as a
+completed or numerically failed run. No seed/budget was changed and no posterior
+result was used to choose the implementation.
+
+`l05_fast_gaussian.jl` reuses B2's scalar Kalman/BLAS rank-one update arithmetic.
+The same native slice sampler accepts an optional filter callback; the default
+is still the unchanged dense/Laplace filter. C1 forbids the scalar callback and
+all live C1/recovery checkouts remain untouched. Toy and full-real parity gates
+compare likelihood <=1e-9 and every filtered mean/covariance <=1e-8, at three
+fixed parameter points per Gaussian rung. Small deterministic native-chain
+checks compare callback/default behaviour without changing adaptation or RNG.
+Reporting uses the same exact scalar engine for static HA mixtures; pre-week
+predictions and RTS paths still use the original accepted engine.
 
 ## Artifacts and reproduction
 

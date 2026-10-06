@@ -40,4 +40,4 @@ RNG of the outermost testset: Xoshiro(0x50825d7331ad9e24, 0xa7c0f4a522a5f688, 0x
 ERROR: LoadError: Some tests did not pass: 4 passed, 0 failed, 1 errored, 0 broken.
 in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fast_reports_tests.jl:15
 
-julia> 
+julia>

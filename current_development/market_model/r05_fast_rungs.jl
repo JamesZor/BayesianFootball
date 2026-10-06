@@ -23,6 +23,10 @@ end
 if !isdefined(@__MODULE__, :FastFullBookReports)
     include(joinpath(@__DIR__,"l05_fast_reports.jl"))
 end
+if !isdefined(@__MODULE__, :FastGaussianBook)
+    include(joinpath(@__DIR__,"l05_fast_gaussian.jl"))
+end
+const C08G = FastGaussianBook
 const C08F = FullBookWorkflow
 const C08P = PooledMarket
 const C08R = FastFullBookReports
@@ -63,7 +67,9 @@ println("C8 fast: full=$(length(c08_markets)), train=$(length(c08_train_markets)
 # ===================================================================
 # 4. Gates 2–4 including all inherited B/B2/TODO023 gates
 # ===================================================================
-c08_gates = C08P.fullbook_engine_gates()
+c08_gates = vcat(C08P.fullbook_engine_gates(),
+    C08G.parity_gates(C08P.MID.toy_panel(C08P.Random.Xoshiro(3951)); scope="toy"),
+    C08G.parity_gates(c08_panel; scope="full real"))
 CSV.write(joinpath(C08_OUT,"engine_gates_c.csv"),c08_gates)
 all(c08_gates.pass) || error("engine gates failed; no sampling")
 
@@ -76,7 +82,8 @@ c08_diag = DataFrame[]
 for protocol in C08_PROTOCOLS, rung in C08_RUNGS
     panel = protocol == "10a" ? c08_panel : c08_train
     fit = C08F.train_rung(C08P.FullBookRung(rung),panel,nothing,C08_OUT;
-        protocol,seeds=C08_SEEDS[String(rung)][protocol])
+        protocol,seeds=C08_SEEDS[String(rung)][protocol],
+        filter_fn=C08G.evaluator(C08P.FullBookRung(rung),panel))
     c08_fits[(rung,protocol)] = fit
     push!(c08_diag,CSV.read(joinpath(C08_OUT,"convergence_$(rung)_$(protocol).csv"),DataFrame))
     CSV.write(joinpath(C08_OUT,"convergence_c.csv"),vcat(c08_diag...))
@@ -95,6 +102,6 @@ C08R.smoothed_total(c08_fits,c08_panel,C08_OUT; seed=C08_SEEDS["inference"]["smo
 # ===================================================================
 # 7. Static HA posterior mixture; learned H2 kappa; figures
 # ===================================================================
-CSV.write(joinpath(C08_OUT,"home_advantage_rungs.csv"),C08R.home_advantage(c08_fits,c08_panel,c08_train))
+CSV.write(joinpath(C08_OUT,"home_advantage_rungs.csv"),C08R.home_advantage(c08_fits,c08_panel,c08_train; filter_builder=C08G.evaluator))
 C08R.figures(C08_OUT)
 println("R05_FAST_RUNGS_DONE")

@@ -46,7 +46,7 @@ intervals therefore depend on the frozen proper priors. gamma_att+gamma_def is
 the identified supremacy lift; (gamma_att-gamma_def)/2 is the level shift under
 that prior-dependent decomposition. H2 kappa uses all retained physical draws.
 """
-function home_advantage(fits,p,train)
+function home_advantage(fits,p,train; filter_builder=nothing)
     rows = NamedTuple[]
     for (rung,protocol) in sort(collect(keys(fits)); by=x->(String(x[1]),x[2]))
         fit = fits[(rung,protocol)]
@@ -59,9 +59,10 @@ function home_advantage(fits,p,train)
         axes = rung == :H1 ? ("gamma_att","gamma_def","supremacy_lift","level_shift") : ("gamma",)
         U = reshape(permutedims(fit.udraws,(2,1,3)),length(fit.names),:)
         means,sds = zeros(size(U,2),length(axes)),zeros(size(U,2),length(axes))
+        static_filter = filter_builder === nothing ? PM.fullbook_filter : filter_builder(fit.arm,panel)
         # Indexed storage: no shared RNG or reduction depends on task scheduling.
         Threads.@threads for d in axes_of_draws(U)
-            f = PM.fullbook_filter(fit.arm,panel,U[:,d]; store=true)
+            f = static_filter(fit.arm,panel,U[:,d]; store=true)
             m,V = f.m_filt[:,end],f.P_filt[:,:,end]
             loadings = rung == :H1 ? ((2=>1.0,),(length(m)=>1.0,),
                 (2=>1.0,length(m)=>1.0),(2=>0.5,length(m)=>-0.5)) : ((2=>1.0,),)
