@@ -1,4 +1,4 @@
-# Phase C revision 4 full-book deterministic preflight, NOT a production pipeline.
+# Phase C revision 5 full-book deterministic preflight, NOT a production pipeline.
 # Does the authorised full-book update pass the unchanged likelihood/moment gates?
 # Can C0/C1/H1/H2 filter the panel with independent Gaussian engine reductions?
 # The revision-2 marginal/covariance and revision-3 corrected mean are unchanged.
@@ -26,8 +26,10 @@ const C05 = PooledMarket
 # 2. Configuration and output
 # ===================================================================
 const C05_CONFIG = C05.MM.scottish_lower_2425_2526()
-const C05_OUT = joinpath(@__DIR__, "results", "C", "v4_preflight")
+const C05_OUT = get(ENV,"C05_PREFLIGHT_OUT",joinpath(@__DIR__, "results", "C", "v5_preflight"))
 mkpath(C05_OUT)
+C05.reset_newton_accounting!()
+try
 
 # %%
 # ===================================================================
@@ -85,6 +87,10 @@ for (name,theta) in ((:C0,log.([0.07,0.03,0.01])),
     isfinite(c05_fixed.loglik) && min_eigenvalue >= -1e-10 ||
         error("$name fixed-parameter preflight failed")
 end
-println("C05_C4_ENGINE_PREFLIGHT_DONE")
+println("C05_C5_ENGINE_PREFLIGHT_DONE")
+finally
+    C05.write_newton_accounting(C05_OUT; run="real_preflight")
+    C05.write_newton_accounting(joinpath(@__DIR__,"results","C"); run="real_preflight")
+end
 # Sampling, recovery, convergence, evaluation and production reproduction still
 # require implementation. Neither R05_DONE nor PHASEC4_DONE is claimed here.

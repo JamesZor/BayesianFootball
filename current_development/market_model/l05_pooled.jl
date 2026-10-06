@@ -120,19 +120,63 @@ function derivatives(f, x; step=2e-4)
     return gradient, hessian
 end
 
-"Newton ascent with backtracking from the prediction, not from Phase A's inversion."
-function joint_mode(f, start; tolerance=2e-6, iterations=100, derivative=derivatives)
+# Run-local accounting, shared safely by independent chains. Reset before a runner;
+# integer counts and max commute, so thread scheduling cannot change the CSV.
+const NEWTON_LOCK = ReentrantLock()
+const NEWTON_COUNTS = Dict(:decrement=>0, :step=>0, :stalled_converged=>0)
+const NEWTON_MAX_DECREMENT = Ref(0.0)
+
+function reset_newton_accounting!()
+    lock(NEWTON_LOCK) do
+        for kind in keys(NEWTON_COUNTS)
+            NEWTON_COUNTS[kind] = 0
+        end
+        NEWTON_MAX_DECREMENT[] = 0.0
+    end
+    return nothing
+end
+
+function accept_newton_mode(x,gradient,hessian,iteration,termination,decrement)
+    isfinite(decrement) && 0 <= decrement <= 1e-9 ||
+        error("joint-mode acceptance decrement outside gate: $decrement ($termination)")
+    lock(NEWTON_LOCK) do
+        NEWTON_COUNTS[termination] += 1
+        NEWTON_MAX_DECREMENT[] = max(NEWTON_MAX_DECREMENT[],decrement)
+    end
+    return (; mode=x,gradient,precision=-hessian,iteration,termination,decrement)
+end
+
+"Write accounting even for aborted runs; counts do not imply completed chains."
+function write_newton_accounting(out; run)
+    frame = lock(NEWTON_LOCK) do
+        DF.DataFrame(run=fill(run,3),termination=String.([:decrement,:step,:stalled_converged]),
+            count=[NEWTON_COUNTS[k] for k in (:decrement,:step,:stalled_converged)],
+            max_decrement=fill(NEWTON_MAX_DECREMENT[],3),
+            gate_pass=fill(NEWTON_MAX_DECREMENT[] <= 1e-9,3))
+    end
+    CSV.write(joinpath(out,"newton_termination.csv"),frame)
+    return frame
+end
+
+"""
+Newton ascent from the prediction. Revision 5 termination: predicted gain
+δ=g' H^-1 g/2 <= 1e-12 nats, or unscaled Newton step infinity norm <= 1e-10.
+H uses the EXISTING 1e-6 eigenvalue floor for the search direction only.
+On Armijo stalling accept only δ <= 1e-9, otherwise propagate an error.
+The returned raw precision, marginal, likelihood clipping and mean stay unchanged.
+"""
+function joint_mode(f, start; iterations=100, derivative=derivatives)
     x = copy(start)
     for iteration in 1:iterations
         gradient, hessian = derivative(f, x)
-        if maximum(abs, gradient) <= tolerance
-            return (; mode=x, gradient, precision=-hessian, iteration)
-        end
         eigen = LA.eigen(LA.Symmetric(-hessian))
         precision = eigen.vectors*LA.Diagonal(max.(eigen.values, 1e-6))*eigen.vectors'
         direction = precision\gradient
-        if LA.norm(direction) <= 2e-7
-            return (; mode=x, gradient, precision=-hessian, iteration)
+        decrement = LA.dot(gradient,direction)/2
+        if decrement <= 1e-12
+            return accept_newton_mode(x,gradient,hessian,iteration,:decrement,decrement)
+        elseif maximum(abs,direction) <= 1e-10
+            return accept_newton_mode(x,gradient,hessian,iteration,:step,decrement)
         end
         direction ./= max(1.0, LA.norm(direction))
         value = f(x)
@@ -147,10 +191,8 @@ function joint_mode(f, start; tolerance=2e-6, iterations=100, derivative=derivat
             scale /= 2
         end
         if scale < 2.0^-30
-            # At floating-point density resolution, the Newton displacement is
-            # a stronger stopping diagnostic than an unresolvable Armijo gain.
-            LA.norm(direction) <= 2e-7 || error("joint-mode line search stalled: $gradient")
-            return (; mode=x, gradient, precision=-hessian, iteration)
+            decrement <= 1e-9 || error("joint-mode line search stalled: gradient=$gradient decrement=$decrement mode=$x")
+            return accept_newton_mode(x,gradient,hessian,iteration,:stalled_converged,decrement)
         end
     end
     error("joint mode did not converge in $iterations iterations")
@@ -203,10 +245,11 @@ as before. No second relinearisation or quadrature-moment replacement is used.
 The raw mode-based mean is returned for comparison. RTS would be approximate.
 """
 function laplace_update(loglikelihood, a, S; third_likelihood=loglikelihood,
-                        derivative=derivatives)
+                        derivative=derivatives,mode_audit=nothing,mode_solver=joint_mode)
     prior = DS.MvNormal(a, LA.Symmetric(S))
     target = x -> loglikelihood(x)+DS.logpdf(prior,x)
-    optimum = joint_mode(target,a; derivative)
+    optimum = mode_solver(target,a; derivative)
+    mode_audit !== nothing && mode_audit(optimum,loglikelihood,a,S)
     x = optimum.mode
     gradient, hessian = derivative(loglikelihood,x)
     J = -hessian

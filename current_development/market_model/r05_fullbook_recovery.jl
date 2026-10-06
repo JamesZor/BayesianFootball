@@ -1,4 +1,4 @@
-# Phase C revision 4 full-book synthetic recovery prerequisite, NOT production.
+# Phase C revision 5 full-book synthetic recovery prerequisite, NOT production.
 # Question: does the approximate C1 collapsed fit recover known q/s/u/n?
 # Use the pinned full-book fixture schedule and market line mix, with independently
 # generated states, deviations and Dirichlet probabilities on the unchanged grid.
@@ -25,7 +25,7 @@ const C05R = PooledMarket
 # ===================================================================
 const C05R_CONFIG = C05R.MM.scottish_lower_2425_2526()
 const C05R_SEEDS = TOML.parsefile(joinpath(@__DIR__, "fullbook_seeds.toml"))
-const C05R_OUT = get(ENV,"C05_RECOVERY_OUT",joinpath(@__DIR__,"results","C","v4_recovery"))
+const C05R_OUT = get(ENV,"C05_RECOVERY_OUT",joinpath(@__DIR__,"results","C","v5_recovery"))
 const C05R_TRUTH = log.([0.03,0.01,0.06,1000.0])
 const C05R_ARM = C05R.FullBookRung(:C1)
 isfile(joinpath(C05R_OUT,"C1_recovery.jls")) && error("immutable recovery fit exists; use a fresh output directory")
@@ -64,9 +64,15 @@ all(c05r_gates.pass) || error("engine gates failed; no recovery sampling")
 # ===================================================================
 # 6. Synthetic generation, prescribed chains, convergence and recovery
 # ===================================================================
-c05r_result = C05R.recover_fullbook(c05r_panel,c05r_markets,C05R_OUT;
-    generation_seed=C05R_SEEDS["recovery"]["generation"],
-    chain_seeds=C05R_SEEDS["recovery"]["chains"],truth=C05R_TRUTH)
+try
+    global c05r_result = C05R.recover_fullbook(c05r_panel,c05r_markets,C05R_OUT;
+        generation_seed=C05R_SEEDS["recovery"]["generation"],
+        chain_seeds=C05R_SEEDS["recovery"]["chains"],truth=C05R_TRUTH)
+finally
+    # Canonical latest-run accounting plus the immutable run-local copy written
+    # by fit_fullbook, including when any supported numerical failure propagates.
+    C05R.write_newton_accounting(joinpath(@__DIR__,"results","C"); run="C1_synthetic")
+end
 
 # %%
 # ===================================================================

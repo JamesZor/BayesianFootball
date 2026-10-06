@@ -111,7 +111,26 @@ const PC05 = PooledMarket
     end
     include(joinpath(@__DIR__, "t05_fullbook_engine_tests.jl"))
     include(joinpath(@__DIR__, "t05_fullbook_sampling_tests.jl"))
+    @testset "Revision 5 stopping rule and fail-loud accounting" begin
+        PC05.reset_newton_accounting!()
+        flat = x -> 0.0
+        tiny = (f,x) -> ([1e-7],reshape([-1.0],1,1))
+        stalled = (f,x) -> ([1e-5],reshape([-1.0],1,1))
+        small_step = (f,x) -> ([1.0],reshape([-1e10],1,1))
+        failed = (f,x) -> ([1e-3],reshape([-1.0],1,1))
+        @test PC05.joint_mode(flat,[0.0]; derivative=tiny).termination == :decrement
+        @test PC05.joint_mode(flat,[0.0]; derivative=stalled).termination == :stalled_converged
+        @test PC05.joint_mode(flat,[0.0]; derivative=small_step).termination == :step
+        @test_throws ErrorException PC05.joint_mode(flat,[0.0]; derivative=failed)
+        mktempdir() do out
+            counts = PC05.write_newton_accounting(out; run="unit")
+            @test counts.count == [1,1,1]
+            @test maximum(counts.max_decrement) <= 1e-9
+        end
+    end
+    PC05.reset_newton_accounting!() # isolate actual regression from mock unit accounting
+    include(joinpath(@__DIR__, "t05_newton_regression_tests.jl"))
 end
-println("T05_C4_DETERMINISTIC_DONE")
+println("T05_C5_DETERMINISTIC_DONE")
 include(joinpath(@__DIR__, "t05_c2_pending_tests.jl"))
 # T05_DONE remains reserved for the complete full-book recovery/acceptance suite.

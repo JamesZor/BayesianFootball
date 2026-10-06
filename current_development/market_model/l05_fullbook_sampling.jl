@@ -132,18 +132,26 @@ function fullbook_chain(a,p,seed; markets=nothing,warmup=2000,samples=3000,
 end
 
 "Four independent chain tasks, indexed seed vector; scheduling does not affect RNG."
-function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progress=true)
+function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progress=true,
+                      accounting_out=nothing,accounting_run=String(a.name))
     length(seeds) == 4 && length(unique(seeds)) == 4 || error("exactly four unique chain seeds required")
     start = time()
     cancellation = Threads.Atomic{Bool}(false)
     tasks = Task[]
-    @sync for c in eachindex(seeds)
-        callback = progress ? (it,lf) -> begin
-            println("C4 $(a.name) chain=$c iteration=$it target=$lf")
-            flush(stdout)
-        end : nothing
-        push!(tasks,Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,
-            progress=callback,cancellation))
+    reset_newton_accounting!()
+    try
+        @sync for c in eachindex(seeds)
+            callback = progress ? (it,lf) -> begin
+                println("C5 $(a.name) chain=$c iteration=$it target=$lf")
+                flush(stdout)
+            end : nothing
+            push!(tasks,Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,
+                progress=callback,cancellation))
+        end
+    finally
+        # @sync waits for cancelled peers too; record ALL evaluated books even
+        # when the solver fails. Incomplete chains are still never promoted.
+        accounting_out !== nothing && write_newton_accounting(accounting_out; run=accounting_run)
     end
     results = fetch.(tasks)
     U = cat([r.U for r in results]...; dims=3)
@@ -266,7 +274,8 @@ function recover_fullbook(p,markets,out; generation_seed,chain_seeds,
     a = FullBookRung(:C1)
     generated = synthetic_fullbook(a,p,markets,truth; seed=generation_seed)
     Serialization.serialize(joinpath(out,"synthetic_panel.jls"),generated)
-    result = fit_fullbook(a,generated.panel; markets=generated.markets,seeds=chain_seeds)
+    result = fit_fullbook(a,generated.panel; markets=generated.markets,seeds=chain_seeds,
+        accounting_out=out,accounting_run="C1_synthetic")
     Serialization.serialize(joinpath(out,"C1_recovery.jls"),result)
     diag = fullbook_diagnostics(result.fit; protocol="synthetic",seed=generation_seed)
     CSV.write(joinpath(out,"recovery_convergence_c.csv"),diag)

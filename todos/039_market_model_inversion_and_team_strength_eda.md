@@ -54,6 +54,15 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked recovery / deferred C2
 
+Revision 5 termination implemented, but its required exact-stall regression fails
+at fixture12476625: accepted decrement3.382117013018548e-12 nats passes1e-9,
+mode difference4.0159674463691175e-7 exceeds1e-8 and marginal difference
+6.658597637709818e-7 exceeds1e-9. Tighter damped AD Newton residual7.67031e-12;
+legacy replay exactly matches the seed4964 gradient. Same two numerical failures
+in focused and fresh aggregate t05 (282pass/2fail/284): stop, no third variation
+or beast recovery launch. Review of termination/accuracy compatibility is required.
+C0/C1/H1/H2 remains authorised; C2 is separately deferred.
+
 Revision 4 explicitly authorises full-book C0/C1/H1/H2; scope approval is not
 missing and C2 is not their blocker. The sampler and synthetic generator now
 exist, but **C1 recovery is separately BLOCKED on joint-mode solver robustness**:
@@ -73,6 +82,30 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision 5 BLOCKED before sampling. Implemented exactly the
+  decrement/step/stalled-converged rules, fail-loud1e-9 acceptance gate, thread-safe
+  accounting and finally-write hooks. Test-only original-termination forward replay
+  identifies fixture12476625 at the frozen seed4964 warmup8 coordinate and exactly
+  reproduces the reported gradient. Accepted δ3.382117013018548e-12; mode error
+  4.0159674463691175e-7 (limit1e-8), Laplace marginal error6.658597637709818e-7
+  (limit1e-9). Tighter diagnostic Newton residual7.670308832530282e-12; logdet
+  shift1.3317370690657526e-6 dominates tiny density change8.773426429797837e-12.
+  Focused and fresh aggregate checks fail identically: no third numerical variation.
+  Fresh %55 t05 282pass/2fail/284 (all inherited270 and new rule6 checks pass);
+  accounting root/v5_newton records two actual stalled-converged solves, maxδ above.
+  Initial same-expression accounting command hit Julia world age; separate command
+  writes both CSVs correctly. No beast run, fits or promotion; source/settings frozen.
+  Reports/handover preserve revision4. Review the required accuracy versus termination
+  rule before any further recovery. Fresh %55 t04 92/92, t03/t02 131/131,
+  separate C2-pending unchanged29pass/10fail; all markers. Both owned %54/%55
+  closed; no remote pane created. Source/scientific hashes and tracker checks
+  identify blocked evidence, not production reproduction.
+
+- [2026-10-06 @pi] Revision 5 claimed: manager explicitly authorises Newton-decrement
+  termination only, accounting and exact seed4964-coordinate regression, then recovery
+  and full-book rungs in priority order. C2 remains deferred; all scientific settings
+  frozen. Owned laptop pane %54; no recovery active. Previous blocked evidence preserved.
 
 - [2026-10-06 @pi] Revision 4 BLOCKED on repeated C1 recovery joint-mode failure,
   statistical source 9de98548. Synthetic-only AD retry: seed4964, warmup8,

@@ -24,11 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision 4 recovery blocked, full books only):** fit the structure directly
-  to full books, sharing information and learning concentration/fixture deviations.
+- **C (revision 5 exact-mode regression blocked, full books only):** fit the structure
+  directly to full books, sharing information and learning concentration/deviations.
   C0/C1/H1/H2 remains authorised; C2 thin pooling remains separately deferred.
-  Engines, sampler and generator exist; recovery failed twice at the joint-mode
-  line search. No completed pooled posterior fits or production conclusions.
+  Engines, sampler, generator and authorised Newton termination/accounting exist.
+  The exact-stall regression fails its mode/marginal accuracy requirements, so no
+  recovery restart or completed pooled posterior fits/production conclusions.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -423,6 +424,35 @@ not two production runs. Recovery, training, convergence, measures/figures and
 production reproduction remain unfinished. Evidence and stop boundary:
 `results/C/PHASE_C_REPORT.md`, `REPRODUCIBILITY.md`, `HANDOVER.md`.
 Engine-only checkpoint documents are preserved with `_ENGINE_CHECKPOINT` names.
+
+## Phase C revision 5: termination implemented, exact-stall regression fails
+
+The manager's `pi_market_model_phaseC_v5_solver.md` authorises termination only:
+Newton decrement <=1e-12 or step infinity norm <=1e-10; on Armijo stall accept
+only decrement <=1e-9. The solver now records all three termination counts and
+maximum accepted decrement, with a fail-loud <=1e-9 gate. Density, derivatives,
+clipping, marginal/correction formulas, scientific settings and seeds are unchanged.
+
+**BLOCKED before recovery sampling.** A test-only replay of the original solver
+on the frozen generated panel and seed4964 warmup8 coordinate finds fixture
+**12476625**, reproducing the exact handover gradient. The authorised rule accepts
+`stalled_converged`, decrement **3.382117013018548e-12** nats, but tighter damped
+AD Newton differs by **4.0159674463691175e-7** in mode (limit1e-8) and
+**6.658597637709818e-7** nats in Laplace marginal (limit1e-9).
+Reference residual **7.670308832530282e-12**; log-determinant shift
+**1.3317370690657526e-6** dominates the tiny objective change. A decrement
+bounds local objective gain, not first-order Hessian/logdet displacement.
+Sources: `results/C/v5_newton/newton_regression.csv`, `newton_regression_book.csv`.
+
+Fresh accepted-boundary t05 is **282 pass / 2 fail / 284**, not T05_DONE.
+The same two required checks failed in focused and aggregate runs; no third
+numerical variation, threshold change or beast sampling was attempted.
+`results/C/newton_termination.csv` labels its two solves `exact_regression`,
+not recovery/production. Review of termination/accuracy compatibility is the
+next dependency. Full-book scope needs no renewed approval. Historical revision4
+reports are preserved as `PHASE_C_V4_REPORT.md`, `REPRODUCIBILITY_V4.md`,
+`HANDOVER_V4.md`; v4 and prior-phase scientific artifacts are unchanged.
+See current `results/C/PHASE_C_REPORT.md` and `HANDOVER.md` for checks and next steps.
 
 ### C2 deferred to the human
 

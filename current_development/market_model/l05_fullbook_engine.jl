@@ -149,7 +149,7 @@ Store the local factors for approximate RTS, frozen-factor gates and u smoothing
 `likelihoods` is only a deterministic toy-Gaussian test injection.
 """
 function fullbook_filter(a,p,theta; markets=nothing,store=false,predict=false,
-                         gamma_def_sd=0.25,likelihoods=nothing)
+                         gamma_def_sd=0.25,likelihoods=nothing,mode_audit=nothing,mode_solver=joint_mode)
     m,P = fullbook_initial(a,MID.n_teams(p); gamma_def_sd)
     H = fullbook_design(a,p,theta)
     Q = fullbook_process(a,MID.n_teams(p),theta)
@@ -186,8 +186,10 @@ function fullbook_filter(a,p,theta; markets=nothing,store=false,predict=false,
                 if likelihoods === nothing
                     raw = x -> PF.book_logdensity(x,markets[f],exp(theta[4]))
                     adf = x -> differentiable_logdensity(x,markets[f],exp(theta[4]))
+                    audit = mode_audit === nothing ? nothing :
+                        (optimum,raw,a,S) -> mode_audit(p.obs_match[j],optimum,raw,a,S,adf)
                     update = laplace_update(raw,pred,S; third_likelihood=adf,
-                        derivative=fullbook_derivative_rule(markets[f]))
+                        derivative=fullbook_derivative_rule(markets[f]),mode_audit=audit,mode_solver)
                 else
                     raw = likelihoods[f]
                     update = laplace_update(raw,pred,S; derivative=ad_derivatives)
