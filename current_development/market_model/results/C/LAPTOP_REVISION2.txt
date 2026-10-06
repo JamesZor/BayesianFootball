@@ -27,8 +27,8 @@ Synthetic G1 dependence recovery: -0.0799999700813346
 Synthetic G2 dependence recovery: 0.11999996060015418
 Synthetic G3 dependence recovery: 0.6000000072485645
 34×12 DataFrame
- Row │ protocol              statistic                          draws  n_steps  ppp      extreme  obs_q05       obs_q50      obs_q95      rep_q05       rep_q50       rep_q95     
-     │ String                String                             Int64  Int64    Float64  Bool     Float64       Float64      Float64      Float64       Float64       Float64     
+ Row │ protocol              statistic                          draws  n_steps  ppp      extreme  obs_q05       obs_q50      obs_q95      rep_q05       rep_q50       rep_q95
+     │ String                String                             Int64  Int64    Float64  Bool     Float64       Float64      Float64      Float64       Float64       Float64
 ─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
    1 │ synthetic Gaussian    joint_collapse_95                    200     1188    0.595    false   0.020202      0.0239899    0.0277778    0.020202      0.0244108     0.0286616
    2 │ synthetic Gaussian    joint_direction_asymmetry            200     1188    0.39     false  -0.00425084    0.00252525   0.00761785  -0.00589226    0.0           0.00673401
@@ -74,8 +74,8 @@ Wall seconds: 18.763273000717163
 R01_DONE
 [ Info: Loading DataStore for ScottishLower from local cache (Age: 252.0 hours)...
 34×4 DataFrame
- Row │ gate                               value        tol      pass 
-     │ String                             Float64      Float64  Bool 
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
 ─────┼───────────────────────────────────────────────────────────────
    1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
    2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
@@ -120,8 +120,8 @@ Phase B2 covariance contracts |  131    131  40.0s
 T03_DONE
 [ Info: Loading DataStore for ScottishLower from local cache (Age: 252.1 hours)...
 24×4 DataFrame
- Row │ gate                               value        tol      pass 
-     │ String                             Float64      Float64  Bool 
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
 ─────┼───────────────────────────────────────────────────────────────
    1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
    2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
@@ -149,8 +149,8 @@ T03_DONE
   24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
 [ Info: Loading DataStore for ScottishLower from local cache (Age: 252.1 hours)...
 27×6 DataFrame
- Row │ family     point  method             value        tol      pass 
-     │ String     Int64  String             Float64      Float64  Bool 
+ Row │ family     point  method             value        tol      pass
+     │ String     Int64  String             Float64      Float64  Bool
 ─────┼─────────────────────────────────────────────────────────────────
    1 │ gamma          1  fresh ReverseDiff  0.0           1.0e-8  true
    2 │ gamma          1  ForwardDiff        4.26411e-16   1.0e-6  true
@@ -185,8 +185,8 @@ T02_DONE
 [ Info: Loading DataStore for ScottishLower from local cache (Age: 252.1 hours)...
 Revised Laplace gate: full, 30/517 books
 12×19 DataFrame
- Row │ book_type  n        spread   offset   books  median_abs_error  p95_abs_error  max_quadrature_delta  max_moment_quadrature_delta  max_sd_quadrature_delta  max_mean_error  max_sd_error  max_raw_sd_error  mean_failures  sd_failures  max_mean_mode_delta  moment_pass  marginal_pass  gate_pass 
-     │ String     Float64  Float64  Float64  Int64  Float64           Float64        Float64               Float64                      Float64                  Float64         Float64       Float64           Int64          Int64        Float64              Bool         Bool           Bool      
+ Row │ book_type  n        spread   offset   books  median_abs_error  p95_abs_error  max_quadrature_delta  max_moment_quadrature_delta  max_sd_quadrature_delta  max_mean_error  max_sd_error  max_raw_sd_error  mean_failures  sd_failures  max_mean_mode_delta  moment_pass  marginal_pass  gate_pass
+     │ String     Float64  Float64  Float64  Int64  Float64           Float64        Float64               Float64                      Float64                  Float64         Float64       Float64           Int64          Int64        Float64              Bool         Bool           Bool
 ─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
    1 │ full         250.0     0.05      0.0     30       0.000355965    0.000445717           9.76996e-14                  8.11046e-14              6.77236e-14       0.0167511   0.000760736       0.000760736              0            0           1.56853e-7         true           true       true
    2 │ full         250.0     0.05      0.1     30       0.000402563    0.000472052           1.08358e-13                  7.62185e-14              5.34017e-14       0.0158904   0.000762437       0.000762437              0            0           1.15061e-7         true           true       true
@@ -206,4 +206,4 @@ julia> println("C05_ENV: Julia ", VERSION, "; Distributions ", Base.pkgversion(P
 C05_ENV: Julia 1.12.1; Distributions 0.25.126; threads 8; BLAS 1
 C05_ENV_DONE
 
-julia> 
+julia>
