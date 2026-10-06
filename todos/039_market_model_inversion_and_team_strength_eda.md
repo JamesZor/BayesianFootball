@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -52,13 +52,18 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked
 
-Phase C requires a manager-approved correction of the likelihood/projection
-contract. The literal book likelihood fails necessary Laplace marginal and
-projection requirements; no pooled sampling was launched. Evidence and next
-choices: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
-Do not change thresholds, the data or the score grid to unblock it.
+Revision 2 supersedes the first attempt's likelihood/projection contract.
+The revised joint-mode Laplace update must pass the unchanged accuracy gates
+before pooled sampling is authorised for promotion. First-attempt evidence is
+preserved; do not change thresholds, data or the score grid.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Phase C revision 2 claimed on the same authorised branch/worktree.
+  Read the blocked first-attempt report first; preserve preflight artifacts.
+  Owned laptop persistent Julia pane `%41`, cache SHA verified, 8 threads/BLAS=1.
+  Implement the exact-density joint-mode update and revised quadrature/moment gates
+  before production sampling; no Phase D or later score-grid Phase C2.
 
 - [2026-10-06 @pi] Phase C claimed and blocked on `pi/market-model-phase-c`.
   Owned laptop persistent Julia pane `%39`, pinned cache verified, BLAS=1.
