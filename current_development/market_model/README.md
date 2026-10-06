@@ -24,12 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision6 recovery iteration-limit blocked, full books only):** fit the
-  structure directly to full books, learning concentration/deviations.
-  C0/C1/H1/H2 remains authorised; C2 thin pooling remains separately deferred.
-  Authorised polish passes the exact-stall regression at unchanged tolerances;
-  recovery then fails a new100-iteration limit on zero-motion Armijo updates.
-  No completed pooled posterior fits or production conclusions.
+- **C (revision7 recovery IN PROGRESS, full books only):** fit the structure
+  directly to full books, learning concentration/deviations. C0/C1/H1/H2 remains
+  authorised; C2 thin pooling remains separately deferred. Reviewed zero-motion
+  stall polish passes both exact regressions at unchanged tolerances. Frozen
+  recovery is running in beast %265; do not restart it. No completed recovery or
+  pooled posterior fits/production conclusions yet; see results/C/HANDOVER.md.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -486,6 +486,38 @@ Root `newton_termination.csv` now labels aborted recovery:1696decrement,1polishe
 max acceptedδ9.743716301157053e-13; these counts do not imply accepted chains.
 Generated binary remains byte-identical to revision4. No further priorities or
 production claims were promoted. Revision5 evidence is archived with `_V5` names.
+
+## Phase C revision7: exact zero-motion case passes; recovery ACTIVE
+
+Manager brief `experiments/pi_market_model_phaseC_v7_stall.md` authorises
+accepted-step stall recognition (<1e-14 movement OR equal Float64 density),
+reusing the unchanged <=3-step polish/error rules. Statistical source6335316f.
+Exact fixture12476686: mode/marginal gaps **0.0/0.0**, both from its recorded
+mode and original prediction;1 `zero_motion_polished` step,
+delta2.287082719929954e-26. Old fixture12476625 still passes unchanged limits.
+Sources: `results/C/v7_newton/`; fresh t05 **305/305**, C2-pending29pass/10fail
+separately excluded; t04 **92/92**,t03/t02 **131/131**. Full real Gate1 **12/12**,
+state gates **53/53** and four fixed full-panel filters/smoothers pass.
+
+**Recovery is ACTIVE, not passed/blocked:** owned beast **%265**, dedicated
+`/root/BF_runs/market_model_c`, detached6335316f,16 threads/core pinning/BLAS1.
+Frozen seeds/budgets/truth/population unchanged; all four chains reported warmup200
+at checkpoint. Generated binary remains byte-identical to v4/v6. DO NOT restart,
+kill/check out/edit running code or launch production before recovery acceptance.
+Original log `logs/market_model_c/6335316f_recovery1.log` on the beast.
+See current HANDOVER/REPRODUCIBILITY for exact monitor commands and preservation.
+
+Prepared `l05_fullbook_workflow.jl` / `l05_fullbook_reports.jl` add conditional
+structure+u smoothing and B2-compatible pre-week scoring/paired C0 measures;
+fresh workflow tests **85/85** (independent augmented-Gaussian theta/u gates,
+whole-week filtration, schema/input guards). Mock IID hyperdraws are NOT fits.
+New `r05_fullbook_core.jl` C0/C1 STAGE is parsed, not executed; it rechecks
+recovery draws/intervals/hash before any sampling and prioritises10b. Its marker
+is R05_FULLBOOK_CORE_DONE only. H1/H2 posterior uncertainty/figures, remaining
+measures, full production workflow and two-run reproduction remain unfinished.
+No learned parameter or forecast-benefit conclusion exists. r05_pooled remains
+preflight. Local panes close; active beast recovery is transferred at handover.
+Revision6 report/repro/handover/source evidence preserved with `_V6` names.
 
 ### C2 deferred to the human
 

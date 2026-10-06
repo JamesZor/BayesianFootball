@@ -35,8 +35,14 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Revision7 IN_PROGRESS (2026-10-06): reviewed zero-motion stall recognition,
-unchanged tolerances; exact regression before recovery and full-book priorities.
+**039:** Revision7 HANDOVER / IN_PROGRESS (2026-10-06): both exact regressions PASS,
+new fixture12476686 mode/marginal gaps0.0/0.0; unchanged tolerances. Fresh t05
+305/305, t04 92/92,t03/t02 131/131, full Gate1 12/12,state53/53. Prepared workflow
+85/85, core C0/C1 runner parsed NOT executed. Frozen6335316f recovery ACTIVE in
+beast%265, all chains warmup200 checkpoint; no completed fit/interval/convergence
+or production promotion. Do not restart/kill/check out code while it runs. Local
+panes closed; active recovery ownership transferred in results/C/HANDOVER.md.
+Recovery then C0/C1/10b and measuredR6gap, H1/H2, figures/full reproduction remain.
 C2 remains deferred. Historical revision6 BLOCKED (2026-10-06): exact-case polish now passes
 (mode2.00e-13/marginal1.16e-11), fresh t05 289/289, full Gate1 12/12,
 engines53/53. Prescribed recovery at d9e6c003 hits NEW Newton100-iteration

@@ -1,0 +1,43 @@
+           7.69054e-8              0            0          0.000653178         true           true       true
+   3 │ full         250.0     0.2       0.0     30       0.00398033     0.00493952            1.15463e-13                  1.1595e-13               3.75255e-14     0.00092845    0.0100526         0.0100526                     0.0917439                7.37338e-8              0            0          0.00741304          true           true       true
+   4 │ full         250.0     0.2       0.1     30       0.00388132     0.00517059            1.72307e-13                  9.84861e-14              5.9841e-14      0.000874932   0.0101843         0.0101843                     0.0892023                7.36438e-8              0            0          0.00710899          true           true       true
+   5 │ full        1000.0     0.05      0.0     30       0.00046093     0.000542287           7.0699e-13                   2.66002e-13              2.34368e-13     1.39235e-5    0.000775025       0.000775025                   0.0260539                7.44883e-8              0            0          0.000862495         true           true       true
+   6 │ full        1000.0     0.05      0.1     30       0.000453406    0.000532727           5.06262e-13                  4.19769e-13              3.07865e-13     1.82099e-5    0.000743765       0.000743765                   0.0249958                7.47597e-8              0            0          0.000804806         true           true       true
+   7 │ full        1000.0     0.2       0.0     30       0.00126206     0.00204387            4.54747e-13                  4.66801e-13              3.23297e-13     0.000431837   0.00467795        0.00467795                    0.0556958                7.4463e-8               0            0          0.00252326          true           true       true
+   8 │ full        1000.0     0.2       0.1     30       0.00125557     0.0020413             4.84945e-13                  3.64049e-13              2.47358e-13     0.000476517   0.00494983        0.00494983                    0.0551498                7.44333e-8              0            0          0.00248423          true           true       true
+   9 │ full        4000.0     0.05      0.0     30       0.000250609    0.00032095            3.09264e-12                  3.06943e-12              1.11688e-12     1.46851e-5    0.000634358       0.000634358                   0.0231122                7.46657e-8              0            0          0.000469645         true           true       true
+  10 │ full        4000.0     0.05      0.1     30       0.000244393    0.000339204           2.21734e-12                  1.63938e-12              8.22564e-13     1.81484e-5    0.000685622       0.000685622                   0.0224664                7.45863e-8              0            0          0.000450173         true           true       true
+  11 │ full        4000.0     0.2       0.0     30       0.000333897    0.000573118           2.23288e-12                  2.04791e-12              1.26987e-12     8.12309e-5    0.00144029        0.00144029                    0.0293505                7.46749e-8              0            0          0.000687443         true           true       true
+  12 │ full        4000.0     0.2       0.1     30       0.000333482    0.000572973           2.69296e-12                  1.60607e-12              8.04468e-13     8.35509e-5    0.00146442        0.00146442                    0.0292714                7.4658e-8               0            0          0.000684456         true           true       true
+C4 fixed C0: 875.2756941832286, min smoothed eigenvalue=1.0707614495298391e-5; 0.015859971 seconds
+C4 fixed C1: 4871.443576238904, min smoothed eigenvalue=1.0007842903507659e-5; 0.373377547 seconds
+C4 fixed H1: 874.8793665077119, min smoothed eigenvalue=9.933027762598213e-6; 0.008233086 seconds
+C4 fixed H2: 875.2756941832286, min smoothed eigenvalue=1.0707614495298391e-5; 0.007955065 seconds
+C05_C7_ENGINE_PREFLIGHT_DONE
+
+julia> include("current_development/market_model/t05_fullbook_workflow_tests.jl")
+C0 forecasts equal matched R6, all B2 axes and RNG convention: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_workflow_tests.jl:37
+  Expression: WF05.paired_scores(vcat(raw, candidate[2:end, :]))
+    Expected: ErrorException
+  No exception thrown
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_workflow_tests.jl:14
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_workflow_tests.jl:16 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_workflow_tests.jl:37 [inlined]
+Test Summary:                                                           | Pass  Fail  Total   Time
+Full-book workflow preparation (not posterior acceptance)               |   70     1     71  11.2s
+  C0 forecasts equal matched R6, all B2 axes and RNG convention         |   10     1     11   2.2s
+  Conditional theta/u smoothing vs independent augmented joint Gaussian |   60           60   9.0s
+RNG of the outermost testset: Xoshiro(0x6f3e48f06e53ed6f, 0xf797092555918807, 0x57da6a5a95d06413, 0x1be2a5c3ee83b0b3, 0xd07a0080e1b44ec8)
+ERROR: LoadError: Some tests did not pass: 70 passed, 1 failed, 0 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_workflow_tests.jl:13
+
+julia>

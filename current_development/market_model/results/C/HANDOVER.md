@@ -1,145 +1,144 @@
-# Phase C revision6 — exact-case PASS, recovery zero-motion BLOCKED (2026-10-06)
+# Phase C revision7 — exact-case PASS; live recovery HANDOVER (2026-10-06)
 
-## State / definition of done
+## Definition of done / scope / PRIMARY ACTION
 
 Same worktree `/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`,
-branch `pi/market-model-phase-c`. **C0/C1/H1/H2 full books remains authorised;
-do not ask for scope approval. C2 remains separately deferred.**
+branch `pi/market-model-phase-c`. C0/C1/H1/H2 full books remains AUTHORISED;
+no renewed scope approval is needed. C2 remains separately deferred.
 
-Primary statistical source **d9e6c0030d6c56e2325a2448b0e2525971b121a0**;
-observer-only diagnostic **04e67fa85b50d4793c33d7c8e5c1a0782786d1db**.
-Subsequent results/docs changes do not change solver/sampler equations.
-Revision6 brief copied unchanged into experiments/. Previous revision5 evidence
-preserved as PHASE_C_REPORT_V5.md, REPRODUCIBILITY_V5.md, HANDOVER_V5.md and
-SOURCE_V5_SHA256SUMS.txt. Earlier checkpoints and A/B/B2/B3 remain unchanged.
+Done = all authorised gates/regressions/recovery/converged fits, measures/figures
+and two fresh byte-identical beast production runs. **NOT MET.** No completed
+recovery fit/interval/convergence or production fit/conclusion yet. This is
+HANDOVER, not DONE or a new numerical BLOCKED checkpoint.
 
-Definition of done: all authorised gates/regression/recovery/converged fits,
-measures/figures and two fresh byte-identical beast production runs. **Not met**.
-No completed recovery/production fit, retained interval/convergence, forecast
-measure, learned n/sigma_u, shrinkage/HA/ratings posterior figure or reproduction.
-r05_pooled remains a deterministic preflight, not the complete production workflow.
+**FIRST: monitor the EXISTING recovery in beast pane %265. DO NOT relaunch it,
+kill it, checkout/edit running code, change seeds/budgets or start another grid.**
+This session deliberately transfers ownership of that active pane rather than
+killing the only prescribed attempt. All laptop panes %58–%61 are CLOSED.
+No unrelated session/pane was operated. No other owned recovery process exists.
 
-**STOP:** prescribed recovery hits a NEW100-iteration Newton failure on a rounded
-zero-motion Armijo step. The same algorithm's observer trace identifies it; no
-solver remedy/sampler retry was attempted. Do not raise iterations/changeδ or
-verification thresholds, return-Inf, change seeds/prior/grid/data or select fixtures.
-Review zero-motion stall recognition before further numerical work.
+Frozen solver/recovery source **6335316f4e93ec91495341fa2f6960a64ce772a9**.
+New workflow preparation is committed later but has NOT been loaded into that
+running REPL. Previous revision6 report/repro/handover/source hashes preserved
+with `_V6` names. Prior-phase/scientific checkpoints remain unchanged.
 
-Owned laptop `%56` and beast `%264` CLOSED, all previous owned panes closed.
-No running recovery/session to resume. Do not operate unrelated panes.
+Read AGENTS, Julia/runner guides, manager revisions1–7 under experiments/,
+stream README/DESIGN, current PHASE_C_REPORT.md and REPRODUCIBILITY.md before
+changes. Revision7 explicitly supersedes revision6's zero-motion review STOP.
+No scientific setting or verification threshold changed.
 
-Read AGENTS, Julia/runner guides, manager revisions1–6, stream README/DESIGN,
-PHASE_C_REPORT.md and REPRODUCIBILITY.md before changes.
+## Revision7 implementation / exact and fresh gates PASS
 
-## Implemented and passing
+Armijo-accepted step is a stall iff actual movement infinity norm<1e-14 OR
+Float64 target equals current target. With pre-polishdelta<=1e-9, reuse existing
+<=3 undamped derivative-only polish from current x. Same stop/gradient/decrement
+acceptance/error rules. Count `zero_motion_polished`, with separate step totals.
+No iteration/line-search floor/eigenvalue/derivative dispatch/density/normaliser/
+clipping/marginal/mean-correction/quadrature/prior/seed/grid/population changes.
 
-Revision6 polish only on Armijo exhaustion atδ<=1e-9: <=3 undamped Newton steps
-from derivatives, no density comparisons. Stop at step infinity norm<=1e-12 or
-nondecreasing gradient norm. Final norm cannot exceed pre-polish; acceptedδ
-must still pass1e-9. Fail loudly otherwise. Counts `polished`, step totals/max.
-Existing search floor/raw precision/density/normalisers/derivative dispatch,
-likelihood clipping, marginal/skewness/quadrature, priors and population unchanged.
+New regression captures fixture12476686's exact prediction through the FROZEN
+revision6 forward prefix at seed4961 initial coordinate. Recorded mode
+[0.11192915227756556,2.14396416446582], gradient
+[1.8404678883143788e-6,4.9462900923558095e-5] matches exactly.
+From BOTH recorded mode and original prediction: mode gap0.0 (limit1e-8),
+marginal gap0.0 nats (limit1e-9);1 zero-motion polish step,delta2.287082719929954e-26,
+reference residual7.286615755219827e-12. Inputs/results in v7_newton/.
+Old fixture12476625 still passes unchanged limits:2.0039525594484076e-13 mode,
+1.1574741165532032e-11 marginal,1 polished step,delta1.50342686280365e-24.
+Reference method/tolerances unchanged; no selected replacement seed/fixture.
 
-Exact old fixture12476625 at frozen seed4964 warmup8 coordinate now passes:
-mode difference **2.0039525594484076e-13** (limit1e-8), marginal difference
-**1.1574741165532032e-11** nats (limit1e-9), one polish step,
-δ **1.50342686280365e-24**. Original gradient matches exactly; tighter reference
-method/tolerances unchanged. v6_newton/ inputs/results/accounting preserve proof.
+Fresh %58/final fresh %61 t05 **305/305**,T05_C7_DETERMINISTIC_DONE, NOT T05_DONE.
+C2-pending remains29pass/10fail/39, executed/reported separately and excluded.
+%58 t04 **92/92**,t03/t02 **131/131**,all markers; A uses temporary outputs.
+Real full Gate1 **12/12**,360 rows,state53/53,four fixed517-fixture filters/smoothers.
+`v7_preflight/` accounting1597decrement,11zero-motion polished,27steps/max3,
+max accepteddelta9.96108898035961e-13. These are NOT posterior fits or complete
+production runs. Exact-regression accounting2polished+2zero-motion,4steps/max1.
+Logs named LAPTOP_C7_*; no old-output identity claim under changed termination.
 
-Fresh owned %56: t05 **289/289**, T05_C6_DETERMINISTIC_DONE, NOT T05_DONE;
-C2-pending unchanged **29pass/10fail/39** separately excluded/reported.
-t04 **92/92**, t03/t02 **131/131**, all markers; A uses temporary outputs.
-Real Gate1 **12/12**,360 rows, state gates **53/53**, four517-fixture fixed
-filters/smoothers complete in v6_preflight/, not fits. Preflight accounting:
-1597decrement,11polished,25 total steps/max3, maxδ9.827548787014079e-13.
-Historical v4/v5 preflight evidence is preserved, not declared byte-identical.
+## ACTIVE recovery — ownership and precise monitoring
 
-## New recovery blocker: numbers and location
-
-Beast at d9e6c003, Julia1.12.4,16 threads, core pinning/BLAS1, existing Manifest,
-pinned cache/max_age_hours10^6, no DB writes. Four frozen chains2000+3000,
-generation3962, chains4961–4964, truth(.03,.01,.06,1000),517 fixtures/91 weeks.
-
-Root **seed4961 INITIAL target**, iteration0, supported coordinate:
-`[-4.3667389598945885,-4.699137880221636,-3.0309405303003616,7.090705824646739]`.
-Error `joint mode did not converge in 100 iterations`. Other three chains cancel
-at warmup1. Expanded CompositeException confirms root plus3 cancellations;
-@sync waits for all tasks. No retained draws, C1_recovery.jls or recovery intervals.
-
-Observer-only l05_newton_diagnostics/r05_newton_diagnostic then traces ONE filter
-on the exact same serialized panel/coordinate with unchanged joint_mode. It
-returns exactly original derivatives and logs x/g/H/δ/f(x); no fitting restart,
-rule/budget/tolerance/seed change or failed-mode promotion. Source04e67fa8.
-
-Failure is full **fixture12476686**:
-- **100** derivative calls; calls7–100 (**94**) have zero actual movement;
-- last mode `[0.11192915227756556,2.14396416446582]`;
-- gradient `[1.8404678883143788e-6,4.9462900923558095e-5]`, norm
-  **4.9497130117024364e-5**;
-- δ **1.035864027765691e-12**, just above1e-12 decrement stopping rule;
-- unscaled Newton step infinity norm **4.189252610998754e-8**, above1e-10;
-- actual accepted-step movement **0.0**; raw min precision eigenvalue
-  **965.3501213272148**, not PSD/clipping failure.
-
-Calls6–100 repeat x/g/H/value. Armijo accepts a rounded unchanged candidate, so
-scale never reaches the failure condition that enters revision6 polishing.
-Iteration limit errors instead. Do not patch zero-motion recognition or widen
-any threshold without review. Exact old-case PASS does not certify all support.
-
-Artifacts: v6_diagnostic/newton_mode_trace.csv (all prefix/failed-book calls),
-newton_mode_trace_summary.csv, newton_trace_activity.csv (auditable aggregation),
-newton_termination.csv. Diagnostic prefix146decrement accepted, failed mode excluded.
-Recovery/root newton_termination.csv are identical:1696decrement,1polished,
-maxδ **9.743716301157053e-13**,1 total/max polish step. They count evaluated
-accepted BOOK modes in an aborted run, not accepted chains; partial cancellation
-counts can depend on scheduling, not production byte-reproduction evidence.
-
-Logs: LAPTOP_C6_T05.txt, LAPTOP_C6_REGRESSIONS_PREFLIGHT.txt,
-BEAST_C6_RECOVERY_ATTEMPT.txt (expanded exceptions),
-BEAST_C6_RECOVERY_AND_DIAGNOSTIC.txt. Source/scientific hashes identify blocked
-evidence only; no source or scientific gate was changed to force a pass.
-
-## Remote preservation / exact paths
-
-Dedicated checkout `/root/BF_runs/market_model_c`, now detached04e67fa8.
-Only diagnostic-only code loaded after recovery stopped; primary solver unchanged.
-Root newton_termination.csv is a preserved tracked output modification; untracked
-v6_recovery/ and v6_diagnostic/ outputs remain. No reset/delete/stash performed.
-
-Before d9e6 checkout, old v4_ad directory moved INTACT to
-`/root/BF_runs/logs/market_model_c/9de98548_recovery_outputs/`, retaining binary/hash,
-so tracked CSV checkout could not overwrite untracked historical evidence.
-Original v4_recovery/ first attempt remains in checkout. c254 preserved directory
-and historical logs remain as earlier handovers record them.
-
-New generated binary is results/C/v6_recovery/synthetic_panel.jls; SHA256
-**de6a986b1caebc2a2ad1386308c7f4613bf69ea2f71440778783476c348da0d1**, BYTE-IDENTICAL
-with both revision4 panels. This is data identity, not successful recovery/fits.
-Original log `/root/BF_runs/logs/market_model_c/d9e6c003_recovery1.log` includes
-recovery/error expansion/diagnostic. Only CSVs/terminal captures copied to laptop;
-no .env/Manifest/cache/data sync. Both new owned panes closed after verification.
-
-## Next dependency / priorities and guardrails
-
-**Review zero-motion Armijo acceptance as a stall first.** No new numerical
-remedy or production retry is authorised by this blocked checkpoint. Tolerances
-stay unchanged; supported failures must remain loud. Full-book scope is approved.
-
-After reviewed remedy: finish C1 recovery/t05 acceptance; C0/C1 both protocols
-and honest10b measures; H1/H2; measures/figures and second reproduction. Remaining
-requirements unchanged: all-parameter Rhat<=1.05, bulk/tailESS>=200;
-B2-compatible pre-week scoring without own-book mean or extra evaluation-book
-variance; supremacy+level marginal logpd sum paired vsC0/fixtureSE/measuredR6gap;
-conditional theta=structure+u smoothing and independent toy gates; shrinkage/noise/n
-and transition-club q/s paths/ratios; H1 static gamma-state uncertainty and theta
-mixing, H2 sampled kappa; source-check Ridall before citation; real production
-workflow sections/full Gate1 regeneration/two byte-identical complete beast runs.
-C2 remains deferred; no thin books enter these fits, no PhaseD/later score-grid C2.
-
+Checkout `/root/BF_runs/market_model_c`, detached6335316f; own session pi_mm_c,
+**pane %265**, Julia1.12.4,16 threads/core pinning/BLAS1, existing Manifest.
 Pinned cache c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4,
-max_age_hours10^6. No one-shot Julia, package/data/grid/scientific-threshold/src/DB
-changes, force-push/merge/rebase/stash or unrelated panes. Only push origin
-pi/market-model-phase-c. Before handoff/commit: diff --check, todo.sh check,
-source/scientific hash verification; tracker and README row together.
+max_age_hours10^6; no DB writes/package/cache changes. Generation3962,
+chains4961–4964,truth(.03,.01,.06,1000),517 fixtures/91 weeks/full line mix,
+2000warmup+3000retained per chain,thin1. ALL FOUR reported warmup200 at the
+recorded checkpoint; no numerical abort yet. Progress is slow: monitor coarse
+intervals, not tight loops. It has NOT passed recovery/convergence.
 
-PHASEC6_BLOCKED
+```bash
+ssh root@mcmc-beast 'tmux capture-pane -t %265 -p -J -S -100'
+```
+
+Original log `/root/BF_runs/logs/market_model_c/6335316f_recovery1.log`.
+Latest saved checkpoint `results/C/BEAST_C7_RECOVERY_IN_PROGRESS.txt`.
+Historical launch include(r05_fullbook_recovery.jl) — **do not send again**.
+Sampler progress still says `C6`; this is unchanged logging text, not old solver.
+Expected success marker R05_FULLBOOK_RECOVERY_DONE, not R05_DONE.
+
+Outputs `results/C/v7_recovery/`:53 passing engine gates and generated binary
+exist. NO C1_recovery.jls/interval/convergence table was present at checkpoint.
+Accounting writes in finally on completion/error after @sync waits for peers;
+no partial accepted-mode counts were invented/copied. Binary SHA256
+**de6a986b1caebc2a2ad1386308c7f4613bf69ea2f71440778783476c348da0d1**, byte-identical
+with v4/v6 panels, data identity only. Only engine CSV/captures copied to laptop.
+
+On failure: wait for all cancellations; expand `Base.current_exceptions()` /
+CompositeException to retain ROOT error and coordinate; preserve accounting,
+panel/log/CSV; STOP without another numerical variation or sampler retry.
+On success: recheck ALL parameters Rhat<=1.05,bulk/tailESS>=200 and all four
+truths within their90% intervals. File existence/progress alone is not acceptance.
+
+Remote historical preservation: v6_recovery/v6_diagnostic moved INTACT to
+`/root/BF_runs/logs/market_model_c/04e67fa8_outputs_preserved/` before checkout,
+including binary (hash verified). Root aborted-run accounting copied/compared to
+`04e67fa8_accounting_preserved/newton_termination.csv` before tracked-baseline
+restoration. Original v4/c254 preservation paths remain as HANDOVER_V6 records.
+No reset/delete/stash; do not overwrite/delete those evidence directories.
+
+## Prepared C0/C1 next stage (not launched)
+
+New `l05_fullbook_workflow.jl` / `l05_fullbook_reports.jl` and
+`t05_fullbook_workflow_tests.jl`: final fresh %60/%61 **85/85**,
+T05_WORKFLOW_PREPARATION_DONE. Independent augmented joint-Gaussian theta/u
+mean/cov gates, forecast parity with matchedR6 and whole-week perturbation
+filtration, fixture-pair guards, schema smoke/recovery-input refusal pass.
+Mock IID hyperdraws are not sampled recovery/production posteriors.
+One early harness failure removed an unscored home axis rather than supremacy;
+corrected index, not a numerical threshold. First log preserved.
+
+`r05_fullbook_core.jl` parsed but NOT executed. It is a readable C0/C1 STAGE,
+not complete C0/C1/H1/H2 production: regenerated Gate1/state gates, frozen
+recovery panel hash plus retained-draw convergence/interval checks before any
+fit, frozen seeds/budgets,10b first then10a, accepted B2-compatible forecasts,
+paired-vs-C0/fixtureSE, conditional theta smoothing and shrinkage/local noise/
+parameter ratios/conditional q/s paths. C1 forecast variance is structure+u,
+without own-book posterior mean or extra evaluation-book variance.
+
+Only AFTER recovery/tasks stop: safely fetch/check out the latest permitted
+branch source, preserving newly untracked recovery outputs before checkout.
+Start a fresh own beast16-thread persistent REPL, then include core runner.
+Defaults C05_RECOVERY_INPUT=v7_recovery/, C05_CORE_OUT=v7_core_1/; output must be
+fresh. Do not accidentally re-run recovery or interpret R05_FULLBOOK_CORE_DONE
+as complete acceptance. r05_pooled.jl remains a deterministic preflight.
+
+Remaining priority: C0/C1 both protocols/honest10b measures and MEASURED paired
+R6 gap, then H1/H2 (static H1 gamma-state uncertainty + hyperparameter mixing;
+H2 sampledkappa), then figures/full production workflow/second reproduction.
+Helpers' conditional q/s bands exclude hyperparameter mixing and local book
+noise is plug-in, not posterior quantiles. Nonlinear smoothed total, all required
+shrinkage/noise/n/HA/ratings figures, source-checked Ridall citation, and complete
+r05 production workflow/reproduction still need finishing. No learned parameter
+or forecast-benefit conclusion exists. C2/later score-grid phase/PhaseD deferred.
+
+## Guardrails / finish checks
+
+No one-shot Julia,src/package/data/grid/scientific-threshold/DB changes,
+force-push/merge/rebase/stash or unrelated panes. Only push origin
+pi/market-model-phase-c. Before commit/handoff:diff--check,todo.sh check and
+source/scientific hashes. Tracker and matching README row together.
+Current manifests cover deterministic/preparation/in-progress evidence only,
+NOT two successful byte-identical complete production runs.
+
+PHASEC7_HANDOVER

@@ -52,7 +52,15 @@ in `current_development/market_model/DESIGN.md`.
 - Literature: Egidi, Pauli & Torelli (2018) invert per match from 1X2 only; Wunderlich &
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
-## Blocked recovery / deferred C2
+## Recovery in progress / historical blockers / deferred C2
+
+Revision7 explicitly reviews/lifts the old zero-motion blocker. Both exact cases
+pass unchanged limits; frozen source6335316f recovery is ACTIVE in owned beast
+pane%265, all four chains at warmup200 checkpoint, no abort or retained fit yet.
+Do not relaunch/kill/change checkout during this run. Definition of done unmet;
+production fits, measures/figures and reproduction still pending. C2 deferred.
+The blocked paragraphs below are HISTORICAL evidence, not a current scope or
+numerical stop. Current handover transfers ownership of that one live attempt.
 
 Revision6 exact-stall regression now passes unchanged limits, but prescribed C1
 recovery is BLOCKED on a NEW100-iteration Newton exhaustion at seed4961's initial
@@ -91,6 +99,27 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision7 HANDOVER, not complete or newly blocked. Source6335316f
+  accepted-step stalls (<1e-14 motion OR equal Float64 target) reuse revision6
+  polish/error gates and separate zero_motion_polished accounting. Fixture12476686
+  mode/marginal gaps0.0/0.0 from recorded point and original prediction,1step,
+  delta2.287082719929954e-26; old12476625 unchanged PASS. Fresh %58/final %61
+  t05 305/305; C2-pending29pass/10fail excluded. %58 t04 92/92,t03/t02 131/131,
+  full real Gate1 12/12,state53/53,four517-fixture fixed filters/smoothers;
+  preflight1597decrement+11zero-motion,27steps/max3,maxdelta9.96108898035961e-13.
+  Owned beast%265 recovery remains ACTIVE at frozen6335316f, all chains warmup200
+  checkpoint; no retained fit/convergence/interval/promotion. Data binary unchanged
+  de6a986b...8da0d1. Remote v6 outputs/root accounting preserved intact before
+  checkout, no reset/delete/stash. Ancillary workflow/core-stage preparation has
+  fresh85/85 gates (independent conditional theta/u batch/filtration/schema checks),
+  core runner parsed NOT run. One early negative pairing test selected wrong axis;
+  corrected index, no numerical threshold change, original failure retained.
+  Local %58–%61 closed; active%265 explicitly transferred, do not restart/kill it.
+  Priority remains recovery, C0/C1 both protocols/10b and measuredR6gap, H1/H2,
+  figures/full workflow/reproduction. C2 deferred; no src/package/data/grid/DB
+  changes or unrelated panes. Report/repro/handover and source/scientific checks
+  record in-progress evidence only. No posterior conclusion or production DONE.
 
 - [2026-10-06 @pi] Revision7 claimed: explicit manager authorisation treats accepted
   zero-motion (<1e-14 infinity movement) or equal-Float64-density steps as stalls;
