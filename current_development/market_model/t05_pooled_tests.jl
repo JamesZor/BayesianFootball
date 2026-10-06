@@ -111,7 +111,7 @@ const PC05 = PooledMarket
     end
     include(joinpath(@__DIR__, "t05_fullbook_engine_tests.jl"))
     include(joinpath(@__DIR__, "t05_fullbook_sampling_tests.jl"))
-    @testset "Revision 6 stopping, polish and fail-loud accounting" begin
+    @testset "Revision 7 stopping, polish and fail-loud accounting" begin
         PC05.reset_newton_accounting!()
         flat = x -> 0.0
         tiny = (f,x) -> ([1e-7],reshape([-1.0],1,1))
@@ -122,19 +122,25 @@ const PC05 = PooledMarket
         @test PC05.joint_mode(flat,[0.0]; derivative=tiny).termination == :decrement
         @test PC05.joint_mode(flat,[0.0]; derivative=stalled).termination == :polished
         @test PC05.joint_mode(flat,[0.0]; derivative=small_step).termination == :step
+        rounded = x -> 1e10
+        zero_motion = PC05.joint_mode(rounded,[0.0]; derivative=stalled)
+        @test zero_motion.termination == :zero_motion_polished
+        @test zero_motion.polish_steps <= 3
+        @test_throws ErrorException PC05.joint_mode(rounded,[0.0]; derivative=failed)
+        @test_throws ErrorException PC05.joint_mode(rounded,[0.0]; derivative=increasing)
         @test_throws ErrorException PC05.joint_mode(flat,[0.0]; derivative=failed)
         @test_throws ErrorException PC05.joint_mode(flat,[0.0]; derivative=increasing)
         mktempdir() do out
             counts = PC05.write_newton_accounting(out; run="unit")
-            @test counts.count == [1,1,0,1]
+            @test counts.count == [1,1,0,1,1]
             @test maximum(counts.max_decrement) <= 1e-9
-            @test counts.polish_steps == [0,0,0,1]
+            @test counts.polish_steps == [0,0,0,1,1]
             @test maximum(counts.max_polish_steps) <= 3
         end
     end
     PC05.reset_newton_accounting!() # isolate actual regression from mock unit accounting
     include(joinpath(@__DIR__, "t05_newton_regression_tests.jl"))
 end
-println("T05_C6_DETERMINISTIC_DONE")
+println("T05_C7_DETERMINISTIC_DONE")
 include(joinpath(@__DIR__, "t05_c2_pending_tests.jl"))
 # T05_DONE remains reserved for the complete full-book recovery/acceptance suite.

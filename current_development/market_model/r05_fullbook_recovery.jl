@@ -1,10 +1,10 @@
-# Phase C revision 6 full-book synthetic recovery prerequisite, NOT production.
+# Phase C revision 7 full-book synthetic recovery prerequisite, NOT production.
 # Question: does the approximate C1 collapsed fit recover known q/s/u/n?
 # Use the pinned full-book fixture schedule and market line mix, with independently
 # generated states, deviations and Dirichlet probabilities on the unchanged grid.
 # No thin books, thresholds, cache refresh, database writes or package changes.
 # All chains: 2000 warmup + 3000 retained, thin 1. No seed selection after recovery.
-# Results: results/C/v6_recovery/ (or a fresh C05_RECOVERY_OUT directory).
+# Results: results/C/v7_recovery/ (or a fresh C05_RECOVERY_OUT directory).
 # Binary serialization requires l05_pooled.jl BEFORE deserializing prototype types.
 # This runner refuses non-beast hosts; include in an owned persistent Julia REPL.
 # A failed recovery/convergence gate stops before any production fit/promotion.
@@ -25,7 +25,7 @@ const C05R = PooledMarket
 # ===================================================================
 const C05R_CONFIG = C05R.MM.scottish_lower_2425_2526()
 const C05R_SEEDS = TOML.parsefile(joinpath(@__DIR__, "fullbook_seeds.toml"))
-const C05R_OUT = get(ENV,"C05_RECOVERY_OUT",joinpath(@__DIR__,"results","C","v6_recovery"))
+const C05R_OUT = get(ENV,"C05_RECOVERY_OUT",joinpath(@__DIR__,"results","C","v7_recovery"))
 const C05R_TRUTH = log.([0.03,0.01,0.06,1000.0])
 const C05R_ARM = C05R.FullBookRung(:C1)
 isfile(joinpath(C05R_OUT,"C1_recovery.jls")) && error("immutable recovery fit exists; use a fresh output directory")

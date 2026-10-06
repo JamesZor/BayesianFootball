@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -91,6 +91,12 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision7 claimed: explicit manager authorisation treats accepted
+  zero-motion (<1e-14 infinity movement) or equal-Float64-density steps as stalls;
+  reuse revision6 polish and unchanged acceptance/error rules, separate accounting.
+  Add exact fixture12476686 regression at seed4961 recorded coordinate, then follow
+  revision5 priorities. Prior source/scientific hashes verified; C2 deferred.
 
 - [2026-10-06 @pi] Revision6 BLOCKED final evidence: primary statistical source
   d9e6c003, observer-only diagnostic04e67fa8. Frozen seed4961 initial target fails

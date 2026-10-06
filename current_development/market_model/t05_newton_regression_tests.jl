@@ -94,7 +94,7 @@ end
         @test optimum.polish_steps <= 3
         @test tighter_residual <= 1e-10
         println("C05_EXACT_STALL fixture=$(c.id) legacy_gradient=$(c.optimum.gradient) mode_delta=$mode_delta marginal_delta=$marginal_delta termination=$(optimum.termination) decrement=$(optimum.decrement) tighter_residual=$tighter_residual")
-        out = get(ENV,"C05_NEWTON_TEST_OUT",joinpath(@__DIR__,"results","C","v6_newton"))
+        out = get(ENV,"C05_NEWTON_TEST_OUT",joinpath(@__DIR__,"results","C","v7_newton"))
         mkpath(out)
         CSV.write(joinpath(out,"newton_regression.csv"),DataFrame(match_id=[c.id],seed=[4964],
             generation_seed=[3962],mode_delta=[mode_delta],marginal_delta=[marginal_delta],
@@ -112,5 +112,120 @@ end
         rows = [(; market=k,selection=String(s),logp=lp) for (k,m) in enumerate(generated.markets[f])
             for (s,lp) in zip(m.selections,m.logp)]
         CSV.write(joinpath(out,"newton_regression_book.csv"),DataFrame(rows))
+    end
+end
+
+# Frozen revision6 solver from d9e6c003, used ONLY to reconstruct the exact
+# prediction before fixture12476686. No revision7 decision affects that prefix.
+function c05_revision6_mode(f,start; derivative,iterations=100)
+    x = copy(start)
+    for iteration in 1:iterations
+        gradient,hessian = derivative(f,x)
+        e = eigen(Symmetric(-hessian))
+        precision = e.vectors*Diagonal(max.(e.values,1e-6))*e.vectors'
+        direction = precision\gradient
+        decrement = dot(gradient,direction)/2
+        if decrement <= 1e-12
+            return (; mode=x,gradient,precision=-hessian,iteration)
+        elseif maximum(abs,direction) <= 1e-10
+            return (; mode=x,gradient,precision=-hessian,iteration)
+        end
+        direction ./= max(1.0,norm(direction))
+        value = f(x)
+        scale = 1.0
+        while scale >= 2.0^-30
+            candidate = x+scale*direction
+            next = f(candidate)
+            if isfinite(next) && next >= value+1e-4scale*dot(gradient,direction)
+                x = candidate
+                break
+            end
+            scale /= 2
+        end
+        if scale < 2.0^-30
+            decrement <= 1e-9 || error("revision6 prefix line search stalled")
+            return PC05.polish_newton_mode(f,x,gradient,hessian,iteration; derivative)
+        end
+    end
+    error("revision6 prefix exhausted iterations")
+end
+
+@testset "Revision 7 exact zero-motion synthetic book 12476686" begin
+    config = PC05.MM.scottish_lower_2425_2526()
+    ds = BayesianFootball.Data.load_datastore_cached(config.segment; max_age_hours=10^6)
+    panel = PC05.CM.TB.phase_b_panel(ds; config).panel
+    templates = PC05.fullbook_markets(ds,panel,config)
+    generated = PC05.synthetic_fullbook(PC05.FullBookRung(:C1),panel,templates,
+        log.([0.03,0.01,0.06,1000.0]); seed=3962)
+    theta = [-4.3667389598945885,-4.699137880221636,-3.0309405303003616,7.090705824646739]
+    ids = generated.panel.obs_match[1:2:end]
+    captured = Ref{Any}(nothing)
+    calls = Ref(0)
+    # The MvNormal retained in laplace_update's target closure contains the
+    # exact prediction covariance before the recorded failing book is solved.
+    function capture_prediction(f,a; derivative,iterations=100)
+        calls[] += 1
+        if ids[calls[]] == 12476686
+            captured[] = (; a=copy(a),S=Matrix(f.prior.Σ),target=f)
+            error("C05_ZERO_MOTION_CAPTURED")
+        end
+        return c05_revision6_mode(f,a; derivative,iterations)
+    end
+    failure = try
+        PC05.fullbook_filter(PC05.FullBookRung(:C1),generated.panel,theta;
+            markets=generated.markets,mode_solver=capture_prediction)
+        nothing
+    catch e
+        e
+    end
+    @test failure isa ErrorException
+    @test failure !== nothing && failure.msg == "C05_ZERO_MOTION_CAPTURED"
+    @test captured[] !== nothing
+    if captured[] !== nothing
+        c = captured[]
+        fixture = findfirst(==(12476686),ids)
+        markets = generated.markets[fixture]
+        raw = x -> PC05.PF.book_logdensity(x,markets,exp(theta[4]))
+        adf = x -> PC05.differentiable_logdensity(x,markets,exp(theta[4]))
+        recorded = [0.11192915227756556,2.14396416446582]
+        g,h = PC05.ad_derivatives(c.target,recorded)
+        @test maximum(abs.(g-[1.8404678883143788e-6,4.9462900923558095e-5])) <= 1e-10
+        optimum = PC05.joint_mode(c.target,recorded; derivative=PC05.ad_derivatives)
+        @test optimum.termination == :zero_motion_polished
+        @test optimum.polish_steps <= 3
+        @test optimum.decrement <= 1e-9
+        # Also re-solve from the original prediction, as the recovery does.
+        accepted = PC05.laplace_update(raw,c.a,c.S;
+            third_likelihood=adf,derivative=PC05.ad_derivatives)
+        tighter = c05_tighter_mode(adf,c.a,c.S,optimum.mode)
+        prior = MvNormal(c.a,Symmetric(c.S))
+        marginal(x) = raw(x)+logpdf(prior,x)+log(2pi)-
+            logdet(Symmetric(inv(c.S)-last(PC05.ad_derivatives(raw,x))))/2
+        mode_delta = maximum(abs.(optimum.mode-tighter))
+        marginal_delta = abs(marginal(optimum.mode)-marginal(tighter))
+        from_prediction_mode_delta = maximum(abs.(accepted.mode-tighter))
+        from_prediction_marginal_delta = abs(accepted.marginal-marginal(tighter))
+        residual = maximum(abs,first(PC05.ad_derivatives(adf,tighter))-c.S\(tighter-c.a))
+        @test mode_delta <= 1e-8
+        @test marginal_delta <= 1e-9
+        @test from_prediction_mode_delta <= 1e-8
+        @test from_prediction_marginal_delta <= 1e-9
+        @test residual <= 1e-10
+        println("C05_EXACT_ZERO_MOTION fixture=12476686 mode_delta=$mode_delta marginal_delta=$marginal_delta from_prediction_mode_delta=$from_prediction_mode_delta from_prediction_marginal_delta=$from_prediction_marginal_delta termination=$(optimum.termination) decrement=$(optimum.decrement) tighter_residual=$residual")
+        out = get(ENV,"C05_NEWTON_TEST_OUT",joinpath(@__DIR__,"results","C","v7_newton"))
+        mkpath(out)
+        CSV.write(joinpath(out,"zero_motion_regression.csv"),DataFrame(match_id=[12476686],seed=[4961],
+            generation_seed=[3962],mode_delta=[mode_delta],marginal_delta=[marginal_delta],
+            from_prediction_mode_delta=[from_prediction_mode_delta],
+            from_prediction_marginal_delta=[from_prediction_marginal_delta],
+            termination=[String(optimum.termination)],polish_steps=[optimum.polish_steps],
+            decrement=[optimum.decrement],recorded_gradient_1=[g[1]],recorded_gradient_2=[g[2]],
+            tighter_residual=[residual],accepted_1=[optimum.mode[1]],accepted_2=[optimum.mode[2]],
+            tighter_1=[tighter[1]],tighter_2=[tighter[2]],
+            prediction_1=[c.a[1]],prediction_2=[c.a[2]],S11=[c.S[1,1]],S12=[c.S[1,2]],S22=[c.S[2,2]],
+            n=[exp(theta[4])],mode_gate_pass=[mode_delta <= 1e-8],marginal_gate_pass=[marginal_delta <= 1e-9]))
+        rows = [(; market=k,selection=String(s),logp=lp) for (k,m) in enumerate(markets)
+            for (s,lp) in zip(m.selections,m.logp)]
+        CSV.write(joinpath(out,"zero_motion_regression_book.csv"),DataFrame(rows))
     end
 end
