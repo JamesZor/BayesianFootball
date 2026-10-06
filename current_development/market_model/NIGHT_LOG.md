@@ -39,6 +39,20 @@ the human's behalf.
 | 2026-10-06 start | Stream branch at `19b83990` (A, B, B2 merged and reviewed). |
 | B3 launched | Brief `97a2b201`; worktree `BayesianFootball-market-model-pi-b3`, branch `pi/market-model-phase-b3`; pi pane `%33` (session `agent_pi_market_model_b3`), gpt-6.1-sol; codex quota 30% (5h) / 18% (7d) at launch. Watcher: `scratchpad/watch_pi_night.sh %33 B3`. |
 
+| 01:28 | B3 `PHASEB3_DONE` after 33 min (pi context 78%, codex quota 53%). Six commits, pushed; statistical SHA `2e02a785`. |
+| 02:30 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
+
+**B3 headline** (from `results/B3`):
+- **Tails:** Gaussian team-step dependence is adequate; no PPC p-value is extreme (all
+  0.28–0.63), so no copula or heavy-tailed step model is needed.
+- **Grids:** **Dixon–Coles global ρ = −0.064** is the best:
+  - draw residual −1.34 pp → −0.14 pp; held-out MAE is the best of the four;
+  - the 1X2-only totals bias shrinks from −0.103 to −0.009;
+  - outcome log loss is unchanged (all CIs include 0).
+
+  This is the candidate for C2. Phase C stays double Poisson, as the human decided.
+- **R6 on G1 rates:** structurally the same (ρ_αβ −0.83).
+
 ## Human requests during the night
 
 - **2026-10-06, mid-setup:** "can the home advantage be correlated with the attack defense of
