@@ -31,6 +31,9 @@ in `current_development/market_model/DESIGN.md`.
 - [x] Phase B2: config regression, covariance rungs R2/R5–R7 in both protocols,
       batch/FFBS gates, convergence and byte-reproducible results; stream process README;
       quality/style rotation, season-average RTS levels correlation and weekly level ICC.
+- [x] Phase B3: refiltered FFBS Gaussian-step tail/dependence PPCs; four global-parameter
+      score grids with book/heldout/bias/outcome comparisons; converged informational R6
+      refits, fresh tests and byte-identical scientific artifacts. Phase C stays double Poisson.
 - [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
       P1 and P2 converged (divergences ≤ 0.1%), one-step MAP refits at 40 fold cutoffs.
 - [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
@@ -134,6 +137,22 @@ in `current_development/market_model/DESIGN.md`.
     CSVs and both PNGs byte-identical to `SCIENTIFIC_SHA256SUMS.txt`.
   - Attribution corrected in the README and report: the manager, not the human, answered
     pi's question on the per-season levels definition.
+
+- [2026-10-06 @pi] Phase B3 verified for manager/human review on
+  `pi/market-model-phase-b3`. Fresh laptop `%36`: t04 92/92, t03 131/131,
+  t02 131/131, all markers. Two fresh beast runs at `2e02a785`: `R04_DONE`
+  in 501.581 / 508.821 s; all 32 CSVs and three PNGs byte-identical. All 24
+  R6 theta gates pass. No Gaussian PPC p-value is extreme: no alternative step
+  model fitted. G1 Dixon–Coles has lowest heldout point MAE (0.008648 vs G0
+  0.008846); mean 1X2-only log-total bias shrinks from -0.102716 to -0.008941.
+  Paired outcome-loss CIs include zero. R6 covariance remains strongly negative;
+  G1 including the 78 thin books is informational, with a changed evaluation set.
+  Only 353 structural fixtures quote OU2.5: grid/G0 outcome losses cover all 517,
+  close-paired losses explicitly cover available quotes. Report, methods,
+  scientific hashes and reproduction commands in `results/B3/` under the stream.
+  All owned REPLs closed; published A/B/B2 untouched. No `src/`, DB, package/data,
+  outside-data or Phase C changes. Human decision: double Poisson for C; C2 later.
+  TODO remains IN_PROGRESS for C/D; `todo.sh check` and `git diff --check` pass.
 
 ## Verification & Findings
 

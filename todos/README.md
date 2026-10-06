@@ -35,8 +35,9 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Phase B2 is reviewed; Phase B3 copula/tail and score-grid checks are
-in progress (2026-10-06). The task remains IN_PROGRESS for Phases C/D.
+**039:** Phase B3 copula/tail and score-grid checks are verified for manager
+review (2026-10-06): fresh tests and byte-identical artifacts. Double Poisson
+stays for Phase C; C2 later. The task remains IN_PROGRESS for Phases C/D.
 
 ## Commands and Task Files
 

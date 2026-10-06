@@ -46,10 +46,15 @@ No outside managerial-change data are fetched.
   refinement points, are saved. Global dependence is fitted on full books, then
   held fixed for heldout-line inversion. Consequently the heldout-line check has
   shared-parameter information from heldout lines; it is **not** fixture CV.
+  Similarly, G1's R6 10b limits team-model theta fitting to honest_train, but its
+  global grid parameter was estimated from both seasons. That informational
+  row is not a fully honest end-to-end forecast comparison.
 - Heldout winner is the lowest pooled mean absolute **selection** residual
   across all heldout OU0.5/1.5/3.5 and BTTS lines (including their complements).
   A fixture with more heldout lines contributes more terms, as in Phase A's
   per-line design. Bootstrap replicates resample fixtures with all their terms.
+  CIs condition on the fitted grid parameter/rates (no re-estimation within a
+  bootstrap), and do not account for additional team/temporal dependence.
 - All grids are renormalised on 0:10 x 0:10, exactly Phase A support. Reported
   rates are the untruncated expected goals, so finite-support means have a
   truncation error. The t04 small-rate examples measure this explicitly; the
