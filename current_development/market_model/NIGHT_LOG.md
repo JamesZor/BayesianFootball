@@ -40,10 +40,15 @@ the human's behalf.
 | B3 launched | Brief `97a2b201`; worktree `BayesianFootball-market-model-pi-b3`, branch `pi/market-model-phase-b3`; pi pane `%33` (session `agent_pi_market_model_b3`), gpt-6.1-sol; codex quota 30% (5h) / 18% (7d) at launch. Watcher: `scratchpad/watch_pi_night.sh %33 B3`. |
 
 | 01:28 | B3 `PHASEB3_DONE` after 33 min (pi context 78%, codex quota 53%). Six commits, pushed; statistical SHA `2e02a785`. |
-| 02:30 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
+| ~01:32 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
 
-| 02:45 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
-| 02:47 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+| ~01:42 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
+| ~01:44 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+
+| ~01:48 | Phase C revision 1 `PHASEC_BLOCKED` at preflight (see answers below). |
+| ~01:58 | **Phase C revision 2 launched**: fresh pi, pane `%40` (session `agent_pi_market_model_c2`), same branch and worktree; codex quota 62% (5h) / 23% (7d). Watcher: `watch_pi_night.sh %40 C`. |
+
+Times are laptop local; earlier entries were first written in the beast clock (+1 h) and corrected.
 
 **B3 headline** (from `results/B3`):
 - **Tails:** Gaussian team-step dependence is adequate; no PPC p-value is extreme (all
@@ -97,3 +102,29 @@ the human's behalf.
    - on QUESTION, LIMIT or IDLE, handle it;
    - on the sentinel, review B3: fresh laptop tests, beast rerun plus hash check, then merge.
 3. When the C watcher fires: handle QUESTION / LIMIT / IDLE, or review C (fresh laptop tests, beast rerun + hash check), merge, then write MORNING_SUMMARY.md. Do not start D or C2.
+- **~02:05: Phase C revision 2 blocked at the posterior-mean gate.** Laplace marginal passes
+  everywhere (median ≤ 0.004 nats) and SD error ≤ 1%. The mean is off by up to 9.17% of SD at
+  n = 250, spread 0.20 (12/30 full books).
+  - Diagnosis: the Laplace mode ≠ mean under posterior skew.
+  - The 5% mean gate was the manager's own revision-2 addition. It was **not** loosened, because
+    a threshold change waits for the human.
+  - Remedy, in scope as a better method: revision 3, a second-order (skewness-corrected) mean
+    from the third derivatives at the mode, then the full Gate 1 on all book types.
+  - Sent to the same pi session (pane `%40`, context 52%); sentinels `PHASEC3_*`.
+- **~02:24: Phase C revision 3 blocked.** The skewness correction makes full books pass
+  Gate 1 at all 12 settings. Thin books fail only at prediction spread 0.20:
+  - BTTS+O/U median 0.02–0.07 nats, SD error up to 49%;
+  - O/U-only SD error 5.9–6.8%;
+  - the 1X2-integrated derivative check is incomplete.
+
+  At spread 0.05 every type passes. Diagnosis: Laplace on curved likelihood ridges.
+- **~02:35, manager decision (scope reduction, no threshold change):** revision 4 runs C0, C1
+  (full books only), H1 and H2. **C2 (thin-book pooling) is deferred to the human** with four
+  options in `pi_market_model_phaseC_v4_scope.md`:
+  - (i) exact moment matching;
+  - (ii) NUTS on the exact Dirichlet;
+  - (iii) gating at the realistic spread (a setting change: the human's call);
+  - (iv) restricting thin-book types (a data change: the human's call).
+
+  pi wrote `results/C/HANDOVER.md` (`31ec8520`, context 81%, codex 90%), and a fresh session
+  was started.
