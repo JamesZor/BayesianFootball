@@ -163,3 +163,13 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   zero-motion Armijo edge at fixture 12476686: 94 accepted no-op steps, δ = 1.04e-12.
   **Revision 7:** zero-motion steps count as stalls and are polished; tolerances unchanged. pi's
   context is 79%, so a fresh session starts from HANDOVER.md.
+- **05:42: rev 7 passes** (t05 305/305). The C1 synthetic recovery is live on the beast (pane
+  `%265`). pi handed over at 88% context.
+  - **Measured rate: about 5 iterations per minute per chain**, so the prescribed 4×(2000+3000)
+    takes about 17 h, and each C1 production fit as long again.
+  - **Revision 8** (no budget or setting change):
+    - run C0, H1 and H2 (minutes) fully now, including the reproduction runs;
+    - launch C1 10a and 10b production at the prescribed budget in parallel;
+    - leave the recovery untouched;
+    - write a progress report and hand over.
+  - **Morning decision for the human:** wait for C1 (finishing this evening) or cut its budget.
