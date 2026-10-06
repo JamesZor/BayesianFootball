@@ -8,6 +8,7 @@ import ForwardDiff
 import SpecialFunctions
 import LinearAlgebra
 import Optim
+import Random
 import Statistics
 
 if !isdefined(parentmodule(@__MODULE__), :LaplaceBookPreflight)
@@ -355,17 +356,17 @@ Realistic centres are Phase A isolated rates where finite, fixed-parameter C0
 pre-week predictions otherwise. Offset adds +0.10 to each side. Moments use
 max_i |mean_L-mean_Q|/SD_Q and max_i |SD_L/SD_Q-1| <= .05 per fixture.
 Raw (unclipped) covariance errors are also retained to isolate clipping effects.
-Revision 3 evaluates ALL available types before its promotion decision, even
-if one type fails, as the manager's addendum requires.
+Revision 4 defaults to full books ONLY. Explicit `kinds` is available for
+C2-pending diagnostics, excluded from full-book acceptance.
 """
-function laplace_gate(ds,config,out)
+function laplace_gate(ds,config,out; kinds=("full",))
     rates = CSV.read(joinpath(@__DIR__,"results","A","rates.csv"),DF.DataFrame)
     rates = DF.sort(DF.filter(r->r.season in config.seasons && r.tournament in config.tournaments,rates),:match_id)
     book,_ = MM.gated_close(ds,config)
     books = Dict(Int(first(g.match_id))=>DF.DataFrame(g) for g in DF.groupby(book,:match_id))
-    predictions = c0_gate_predictions(ds,config,rates)
+    # Revision 4 production scope never constructs thin-book prediction centres.
+    predictions = any(!=("full"),kinds) ? c0_gate_predictions(ds,config,rates) : nothing
     rows = NamedTuple[]
-    kinds = ("full","OU-only","BTTS+OU","BTTS-only","1X2-only")
     availability = Dict(kind => [r for r in eachrow(rates) if
         !haskey(config.excluded_matches,r.match_id) && haskey(books,r.match_id) &&
         book_type(books[r.match_id]) == kind] for kind in kinds)
@@ -478,5 +479,7 @@ function gate_summary(fixture)
     end
     return DF.DataFrame(summaries)
 end
+
+include("l05_fullbook_engine.jl")
 
 end # module

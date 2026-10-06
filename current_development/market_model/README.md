@@ -24,10 +24,10 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (blocked at revision-3 thin-book gates):** fit the structure directly to books,
-  sharing information and learning book concentration and fixture deviations.
-  Cubic mean correction fixes the full-book gap, but O/U-only covariance and
-  BTTS+O/U accuracy fail; integrated 1X2 remains unvalidated. No pooled fits.
+- **C (revision 4 in progress, full books only):** fit the structure directly to
+  full books, sharing information and learning concentration/fixture deviations.
+  C0/C1/H1/H2 continuation is authorised; C2 thin pooling remains blocked.
+  Deterministic state engines exist; no pooled posterior fits yet.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -383,6 +383,44 @@ Evidence, numerical failures, missing acceptance and stop rationale:
 [`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md),
 [`results/C/REPRODUCIBILITY.md`](results/C/REPRODUCIBILITY.md).
 The current source must not be promoted just because the full-book mean is fixed.
+
+## Phase C revision 4: authorised full-book continuation
+
+Manager scope: `../../experiments/pi_market_model_phaseC_v4_scope.md`.
+**Double Poisson for C; later score-grid C2 and Phase D remain unauthorised.**
+C0/C1/H1/H2 use only the same 517 full books and isolated scoring targets.
+C0/H1/H2 are exact Gaussian filters; C1 uses the exact Dirichlet/Beta density
+with an approximate sequential Laplace collapse, revision-3 mean correction,
+unchanged revision-2 marginal/clipping and approximate RTS. No thin book enters
+these filters. New priors are on sigma_q/sigma_s, not R6's attack/defence/rho prior.
+H1 prior clarified by the manager: independent gamma_att N(.15,.25²) and
+new gamma_def N(0,.25²). Pinning gamma_def=0 recovers C0.
+
+`l05_fullbook_engine.jl` is included inside PooledMarket and defines the state
+engines, conditional theta-to-state identities, Gaussian/frozen-factor batch
+checks and smoothing. `r05_pooled.jl` is **still a deterministic preflight, not
+production**: new artifacts go to `results/C/v4_preflight/`, preserving v3.
+Its marker is `C05_C4_ENGINE_PREFLIGHT_DONE`, not `R05_DONE`.
+`t05` separates accepted full-book deterministic checks from a `C2-pending`
+testset that runs/reports the unchanged integrated derivative and archived
+thin Gate 1 checks. Pending failures are caught only outside the acceptance
+suite and explicitly reported, never labelled passed. Synthetic recovery,
+training, convergence, measures/figures and two-run reproduction are unfinished.
+
+### C2 deferred to the human
+
+**C2 (thin-book pooling) is blocked: Laplace accuracy fails on thin books at realistic-to-wide prediction spreads.**
+The integrated 1X2 third derivative also remains unvalidated. Historical
+measurements remain under `results/C/v3_gate/` and `PHASE_C_V3_REPORT.md`;
+no C2 solver change or tolerance relaxation is made. Options below are for the
+human; none is selected:
+
+| Option | What | Cost | Caveat |
+|---|---|---|---|
+| (i) exact moment matching (assumed-density filtering) | per-book quadrature of the exact likelihood × prediction: mean, covariance and normaliser, for the ~114 thin books only | slower sampling; feasible on the beast with parallel chains | exact up to quadrature order; needs its own order-stability gate |
+| (ii) NUTS on the exact Dirichlet likelihood | the original DESIGN §4.4 route: all books, no approximation | hours of sampling; harder geometry (σ, n, u funnels) | exact; no Kalman collapse |
+| (iii) gate at the realistic spread only | re-specify Gate 1 at the C1 posterior's actual prediction spreads | cheap | a threshold or setting change: the human's call |
+| (iv) restrict thin-book types | e.g. O/U-only books only (they nearly pass), dropping the ~11 BTTS + O/U books | cheap | changes which data are used: the human's call |
 
 ## How to run
 

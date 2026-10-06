@@ -1,356 +1,179 @@
-# Phase C revision 3 — fresh-session handover (2026-10-06)
+# Phase C revision 4 — implementation checkpoint handover (2026-10-06)
 
-## 0. State and scope — read this first
+## State: full-book continuation authorised, still incomplete
 
-Worktree: `/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`.
-Branch: `pi/market-model-phase-c`. Implementation commit **8591099b**;
-blocker report/artifacts commit **ce9b727d**. This handover is documentation only.
+Worktree `/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`,
+branch `pi/market-model-phase-c`. **Manager revision 4 already authorises
+C0/C1/H1/H2 on full books only. Do not ask again for that scope approval.**
+C2 thin pooling is deferred; no thresholds, spreads, grid or data are changed.
+The prior v3 handover is preserved in HANDOVER_V3.md, not current instructions.
 
-**No C0/C1/C2/H1/H2 fit exists. No sampling, production smoothing, forecast
-metrics, shrinkage, ratings, figures or recovery fit has been run for Phase C.**
-The l05/r05/t05 production-named files currently implement only the likelihood
-update, numerical diagnostics and necessary tests—not a production pipeline.
-TODO 039 is BLOCKED. All owned Julia panes are closed; there is no beast session
-or checkout to resume. Do not operate unrelated existing sessions.
+**No C0/C1/H1/H2 posterior fit, sampler, sampling, synthetic parameter recovery,
+forecast evaluation, learned n/sigma_u, shrinkage, ratings/HA posterior figures
+or production reproduction exists.** Deterministic state engines now exist
+and pass their necessary gates. r05 is still a preflight, not production.
+TODO 039 is IN_PROGRESS; all owned Julia panes `%45`, `%46`, `%47` are closed.
+No beast checkout/session was created. Do not operate unrelated panes.
 
-Full-book local accuracy now passes. Thin-book accuracy and the integrated
-1X2 derivative check remain red. The complete all-types Gate 1 did not finish.
-The revision-3 addendum says stop on any failure. **Before a fresh session
-launches fits, the manager must explicitly confirm a full-books-only C0/C1
-continuation despite the blocked C2/all-types requirements, or issue a revised
-method and clear those gates.** This request to write a handover did not launch
-or certify fits. Do not silently delete the failing test or call partial work
-Phase C completion.
+Read AGENTS and Julia/runner guides, manager revisions 1–4, stream README/DESIGN,
+PHASE_C_REPORT.md and REPRODUCIBILITY.md. Previous scientific reports were read
+in this session; reports and outputs A/B/B2/B3 remain untouched. Sentinels are
+PHASEC4_DONE / PHASEC4_BLOCKED / PHASEC4_HANDOVER, alone on their line.
+Definition of done remains all authorised rungs, gates, recovery, converged
+beast fits, measures/figures and two-run byte identity; **not met yet**.
 
-Read, in order:
+## What was implemented and proved
 
-1. `AGENTS.md`, Julia coding guide and prototype runner style guide.
-2. `experiments/pi_market_model_phaseC_prompt.md` (revision 1),
-   `pi_market_model_phaseC_v2_prompt.md`, and
-   `pi_market_model_phaseC_v3_addendum.md` (copied verbatim from manager).
-3. This file, `results/C/PHASE_C_REPORT.md` and `REPRODUCIBILITY.md`.
-4. Stream README/DESIGN and the A/B2/B3 reports as required by the original brief.
+`l05_fullbook_engine.jl` is included INSIDE `PooledMarket` by l05_pooled.jl.
+It adds:
 
-All paths below are relative to `current_development/market_model/` unless
-explicitly repository-root or absolute.
+- `FullBookRung(:C0/:C1/:H1/:H2) <: MID.AbstractArm`, correct physical names,
+  init centres and new `MID.log_prior` methods. C0/H1/H2 coordinates are
+  log(sigma_obs), log(sigma_q), log(sigma_s), plus raw kappa for H2.
+  C1 coordinates are log(sigma_q), log(sigma_s), log(sigma_u), log(n).
+  HalfNormal priors have full normalisers/Jacobians. Log n is exactly
+  Normal(log(1000),1.5); **do not apply MID.THETA_BOUND to it**.
+- `fullbook_initial`, `fullbook_process`, `fullbook_design`: same raw
+  alpha/beta initial prior and zero-sum design as B2, static mu/gamma,
+  ordinary weekly q/s innovations. Q's same-team diagonals are q²+s²,
+  off-diagonal s²−q²; no summer jump or common mu shock.
+- H1 adds one static state gamma_def, negative on away scoring. **Manager
+  explicitly clarified its prior in this session:** gamma_att N(.15,.25²),
+  gamma_def N(0,.25²), independent. `gamma_def_sd=0.0` pins the latter for
+  its C0 reduction gate. This pin is a gate only, not the fitted prior.
+- H2 adds kappa times the centred HOME team's q to its own scoring row,
+  with kappa N(0,.5²). kappa=0 reduces exactly to C0.
+- `fullbook_markets(ds,p,config)` asserts fixture/target order, unique IDs,
+  full-book type and config exclusions, returns markets in PANEL order.
+- `fullbook_filter(a,p,theta; markets,store,predict)` exact joint Gaussian
+  C0/H1/H2; approximate C1. Forecast all fixtures pre-week, THEN update
+  in inherited week/date/ID order. C1 adds ONLY the returned marginal from
+  existing `laplace_update`; no additional Kalman likelihood or lost peak.
+  It uses production density for raw marginal/FD derivatives and identical
+  AD algebra for the third tensor, unchanged from passing v3 full-book code.
+- `conditional_state_update`: a=H m, S=H P H'+sigma_u²I,
+  K=P H'/S, m+=K(b−a), P+=K(V−S)K'. Integrates u once, no inverse of P.
+  Singular-state, information/moment identity, PSD/symmetry tests pass.
+- Stored `f.factors` retain fixture IDs, weeks, H, z/R/constant, a/S,
+  theta posterior moments and raw/clipped curvature diagnostics.
+  `frozen_book_factor` defines exp(constant)*Normal(z;theta,R), choosing
+  the constant to match the original returned marginal at its prediction.
+  R+sigma_u²I observes H*x. This frozen surrogate is Gaussian; the original
+  nonlinear model is not. Do NOT remove constants from batch/sampling checks.
+- `fullbook_smoothing(f)` RTS on stored Gaussian moments, approximate C1.
+  `fullbook_batch` independently assembles original-side joint Gaussian
+  covariance over weeks; C1 accepts the FROZEN factors. No globally exact
+  Dirichlet batch claim.
+- `fullbook_engine_gates()` includes all 34 B2/B/TODO 023 gates plus 19 new
+  reductions, independent batch/RTS and scalar-eigen/full-2D checks.
 
-## 1. File map
+`laplace_gate` now defaults `kinds=("full",)`; it no longer constructs thin
+prediction centres in that scope. Explicit kinds are diagnostic-only C2.
+**No change to laplace_update/marginal/third tensor/integrator algebra.**
 
-| File | What it contains / current status |
-|---|---|
-| `l05_pooled.jl`, module `PooledMarket` | Production-grid-compatible AD probability/density algebra; finite-difference and AD derivatives; third tensor and Wick contraction; Newton joint mode; revision-2 marginal with revision-3 corrected mean; exact quadrature; level integral; C0 parameter mapping and fixed-parameter gate centres; all-types gate and summary. **No state-space training engine or sampler yet.** |
-| `r05_pooled.jl` | Numbered config/data/gate runner. Loads pinned cache, calls `laplace_gate`, prints gate decision if it completes. No training/evaluation. It overwrites current gate CSVs; preserve evidence before diagnostic reruns. |
-| `t05_pooled_tests.jl` | **130 necessary assertions**, currently **129 pass / 1 fail**. Gaussian integrals, Beta identity, leading reversed-KL limit, synthetic total book, cubic contraction, first-20-real-full-book grid/Hessian/third-tensor checks, integrated-likelihood check, quality/style algebra and existing R6 batch parity. Not full pooled/recovery acceptance. |
-| `l05_laplace_preflight.jl`, module `LaplaceBookPreflight` | Revision-1 diagnostic implementation. Reused `market_vectors`, production `book_logdensity`, normal quadrature. Also contains literal old brief/projection tests. **Do not promote its old approximation.** |
-| `r05_laplace_preflight.jl` | Original revision-1 diagnostic runner; would overwrite original preflight CSVs. Preserve these as historical blocker evidence. |
-| `t05_laplace_preflight_tests.jl` | Original 11-test mathematical diagnostic, not pooled acceptance. |
-| `l01_market_model.jl`, module `MarketModel` | `MarketModelConfig`, reviewed Scottish config, gated close, unchanged production probability calls, Phase A KL inversion and MarketPanel bridge. |
-| `l02_two_stage.jl`, module `TwoStageMarket` | `phase_b_panel` gives the same 517 full-book fixture panel; prior conventions, B Gaussian engine/slice patterns and TODO 023 reuse. |
-| `l03_covariance.jl`, module `CovarianceMarket` | R6 covariance engine, exact scalar Gaussian filtering, original-side independent batch check, schedule and slice-chain patterns. Reuse mechanics, **not its R6 priors or chains** as a C0 fit. |
-| `l03_covariance_diagnostics.jl` | `covariance_predictions`, `smoothing_moments`, `covariance_smoothed`, `evaluate_covariance`; useful schemas/RTS/prediction conventions. |
-| `results/A/rates.csv` | Untouched isolated KL(p||q) targets. Books are not expanded at these rates in the revised likelihood. |
-| `results/C/laplace_gate*.csv` | Current partial all-types evidence: 792 completed fixture-setting rows, four 2-D types. |
-| `results/C/engine_gates_c.csv` | 192 scalar checks for completed settings, 167 pass / 25 fail; **Gate 1 only**. Re-exported from emitted summary after the runner abort; `GATE_EXPORT.sql` records that export. |
-| `results/C/integrated_derivative_check_c3.csv` | Both repeated integrated third-derivative discrepancies. |
-| `results/C/LAPTOP_REVISION3_DEVELOPMENT.txt` | Development log, including failures and an earlier 130/130 version. **That passing earlier version is not the current implementation.** |
-| `results/C/PHASE_C_V1_REPORT.md`, `REPRODUCIBILITY_V1.md` | Original blocker record; original preflight CSVs/source remain unchanged. |
-| `results/C/PHASE_C_V2_REPORT.md`, `REPRODUCIBILITY_V2.md`, `v2_gate/` | Archived revision-2 mean-gap evidence. Archived hash manifests retain historical paths; current root manifest checks archived CSVs. |
-| `results/C/{SOURCE,SCIENTIFIC}_SHA256SUMS.txt` | Current code/evidence hashes. These are **not** two-run production reproduction evidence. |
+## Verified artifacts and exact marker meanings
 
-Module aliases in `PooledMarket`: `PF` = preflight, `CM` = covariance,
-`MM` = MarketModel, `MID` = TODO 023 engine, `DF`, `LA`, `ST`, `DS`.
+Fresh final-source laptop `%47`: t05 **209/209** necessary assertions,
+`T05_C4_DETERMINISTIC_DONE`, then separate **C2-pending 29 pass/10 fail/39**,
+`C2_PENDING_REPORTED`. The unchanged integrated derivative discrepancy remains
+5.405838441375254e-5 (limit 1e-6); nine archived thin Gate 1 setting flags fail.
+The pending tests execute/report, excluded by manager scope. No new numerical
+variation or thin quadrature rerun was made. **Not T05_DONE**: parameter recovery
+is unbuilt. `t05_fullbook_engine_tests.jl` is included inside acceptance;
+`t05_c2_pending_tests.jl` is included AFTER it, with its own labelled exception
+reporting. Do not move non-C2 failures into that exception boundary.
 
-## 2. What passes: full books, all 12 settings
+Fresh `%46` regressions t04 **92/92**, t03 **131/131**, t02 **131/131**, all
+markers. t03 uses temporary A outputs. Logs are in results/C:
+LAPTOP_C4_FIRST_TESTS.txt, LAPTOP_C4_REGRESSIONS.txt,
+LAPTOP_C4_FINAL_PREFLIGHT.txt. First development t05 failed its log-prior identity
+once: MID's HalfNormal helper omits constants. New priors now include those
+constants, fixing discrepancy 5.53723404048801 with unchanged priors/thresholds.
 
-The first **30 full books in match-ID order**, not all 517, were checked at:
+`r05_pooled.jl` fresh-source preflight completes:
 
-- n in **250, 1000, 4000**;
-- equal-side Gaussian prediction SD in **0.05, 0.20**;
-- offsets **0 and +0.10 to both log-rate sides**, centres at Phase A isolated rates.
+1. Pinned cache check/load.
+2. Full Gate 1, **12/12 settings / 360 fixture-setting rows**, same first 30,
+   same n/spreads/offsets. Max median .003980333011027959 nats, max p95
+   .0051705855019272395, max mean/SD .0009284497092163062, max SD relative
+   .010184310576972222. All unchanged thresholds pass.
+3. **53/53** state gates. C0 matched R6 error 3.552713678800501e-14;
+   H1/H2 reductions 0.0; scalar eigen errors <=6.661338147750939e-16.
+4. All four FIXED-parameter filters/smoothers run on 517 fixtures.
+   C0/H1 theta=log([.07,.03,.01]); H2 also kappa=0;
+   C1 theta=log([.03,.01,.06,1000]). All finite and positive smoothed
+   minimum eigenvalues. **These are not fits.** C1 warmed single filter
+   .320236339 s locally; use this as a warning of slice runtime, not a
+   posterior/sampling timing claim.
+5. `C05_C4_ENGINE_PREFLIGHT_DONE`, **NOT R05_DONE**.
 
-All 12 full-book settings pass unchanged marginal and posterior-moment gates.
-Sources: `laplace_gate.csv` and `laplace_gate_fixture.csv`.
+New outputs only `results/C/v4_preflight/` (six CSVs). Historical root C CSVs
+remain v3 partial/all-types failures, copied to v3_gate/. Earlier reports,
+reproduction notes and handover have V3 archives; v1/v2 preserved too.
+Current source/scientific hashes identify a checkpoint, not two production runs.
+An auxiliary DuckDB historical-row join failed twice on reserved identifiers
+and was stopped; no new cross-version row/byte-identity comparison is claimed.
 
-- Largest median absolute marginal error: **0.003980333011027959 nats**, limit .01.
-- Largest p95: **0.0051705855019272395**, limit .05.
-- Largest corrected mean error / exact posterior SD:
-  **0.0009284497092163062** (0.093%), limit .05.
-- Largest relative SD error: **0.010184310576972222**, limit .05.
-- All **360** saved full-book log marginals match the revision-2 archive exactly:
-  maximum difference **0.0**. Covariance treatment is unchanged.
-- AD third tensors versus central differences pass on all completed 2-D rows;
-  first-20-full-book grid/density/Hessian parity tests also pass.
+## Exact next work, in order
 
-Implementation detail that must not be lost:
+1. Implement a dedicated full-book slice chain/fit wrapper, using `FullBookRung`
+   names/priors and `fullbook_filter` likelihood. `MID.slice_sweep` and CM chain
+   adaptation mechanics are references. Physical draws: exp positive coordinates,
+   H2 kappa unchanged. ArmFit can carry this arm. **Do not reuse fitted R6 chains,
+   its rho/scale prior, or its whole-target ±12 guard.** Support/overflow handling
+   must be explicit; mode/PSD failures must not be silently converted to posterior
+   rejections. Adapt widths during warmup only, prescribed 4×(2000+3000), thin 1.
+   Freeze a fresh seed manifest; prototype fit serialisation requires loaders.
+2. Add full-book synthetic panel generation with known q/s/u/n and
+   Dirichlet(n*q) market draws on the same grid, then full parameter recovery
+   within each 90% interval. Run sampling ONLY on beast. Mixed-type recovery is
+   C2 deferred; do not sneak thin books into this recovery. Deterministic tests
+   of the generator/population/normalisers first. Complete t05's recovery evidence
+   and engine gates before production promotion; current necessary tests aren't
+   full acceptance.
+3. Before beast work read remote guide (already read in this session), check
+   connectivity/load, unused session/checkout names and existing Manifest/cache.
+   Use `/root/BF_runs/market_model_c`, session `pi_mm_c`, returned pane ID only,
+   `-t 16`, core pinning/BLAS=1, logs `/root/BF_runs/logs/market_model_c/`.
+   Copy pinned cache preserving metadata, no refresh. No DB writes. All existing
+   remote panes belong to others; do not operate them. No session to resume.
+4. Train each C0/C1/H1/H2 in 10a full and 10b config.honest_train only. For 10b
+   restrict panel and its markets together by fixture ID, never positional reuse
+   of full-panel market vectors. Convergence every parameter/rung/protocol:
+   Rhat<=1.05, bulk/tail ESS>=200. Failed gates block inference promotion.
+5. Evaluation on SAME full-book isolated targets, B2 schema/axes/subsets. 10a is
+   retrospective; 10b only scores honest_test, with all forecasts pre-week.
+   C0/H1/H2 predictive noise=sigma_obs; C1 theta prediction=H P H'+sigma_u²I.
+   Own fixture book must not set its forecast mean or add an evaluation-book
+   variance. Paired sum of supremacy+level marginal logpd versus C0 + fixture SE.
+   Report measured gap to R6: matched likelihood does not make priors/fits equal.
+6. Add descriptive smoothing, fixture theta=structure+u shrinkage and noise/n
+   summaries, q/s paths/ratios for named transition clubs. C1 approximate RTS
+   and frozen factors are ready, but theta/u smoothing extraction is NOT done.
+   Do not mistake H*smoothed_state for theta including u. Derive joint Gaussian
+   conditional u moments for frozen factors, with independent toy checks.
+7. H1 gamma_att/gamma_def are STATIC STATES, not sampled theta columns. Report
+   their posterior with state uncertainty (and hyperparameter mixing as required),
+   not merely a median-theta RTS point. H2 kappa is sampled. Reference the requested
+   Ridall p.1/3 convention only after checking the library source. No new HA
+   posterior was estimated here.
+8. Runner needs actual model/seed/config, recovery/training, convergence,
+   inference/evaluation/output sections. Gate 1 must be regenerated in the full
+   production run too. Root production tables should be distinct from historical
+   v3 diagnostics; preserve evidence before replacing anything. Final R05_DONE
+   only after all tables/figures and gates. Two fresh beast runs at frozen source
+   and seeds must give byte-identical scientific CSVs. Existing hashes do NOT
+   satisfy reproduction.
+9. Update report/README and tracker honestly. C2 remains deferred, with four
+   human options already included unselected. No Phase D or later score-grid
+   Phase C2. TODO 039 is not closable while later authorised work is unfinished.
 
-```
-f = log L + log N(theta; a,S)
-mode = argmax f
-Sigma = (-Hessian(f) at mode)^-1
-T = third derivative of log L at mode
-mean_i = mode_i + 0.5 sum_jkl Sigma_ij T_jkl Sigma_kl
-```
+## Commands / guardrails
 
-The Gaussian contributes no third derivatives. Wick's fourth-moment identity
-is derived in the loader docstring. **Keep the revision-2 peak/determinant
-log-marginal, including all n-dependent Dirichlet normalisers.** The Gaussian
-book information is `covariance\corrected_mean - S\a`; do not shift a likelihood
-centre and accidentally shrink the correction a second time.
-`raw_covariance` is inverse bracket precision for the contraction;
-`covariance` retains the prescribed clipping treatment. Those differ when J
-has negative eigenvalues.
-
-## 3. What fails, where, and why
-
-### Thin books: prediction SD 0.20
-
-All 25 O/U-only, all 10 BTTS+O/U and the single BTTS-only book were tested at
-all 12 settings. The BTTS-only book passes its completed settings. O/U-only
-has three failed settings; BTTS+O/U has six. The failures are not confined to
-an unresolved high-n integration case: the **n=250, no-offset** settings are
-independently resolved by orders 32/64.
-
-| Type, n=250 / SD=.20 / offset=0 | Observed | Limit |
-|---|---:|---:|
-| O/U-only, maximum SD relative error | **0.058978186176263714** | .05 |
-| BTTS+O/U, median absolute marginal error | **0.02060874306987226 nats** | .01 |
-| BTTS+O/U, maximum mean error / SD | **0.05836204173970596** | .05 |
-| BTTS+O/U, maximum relative SD error | **0.14878198870219494** | .05 |
-
-O/U witness **14035540**: minimum likelihood J eigenvalue **-1.2364093919265855**;
-clipping is active. Raw SD error is **0.03898563692037171**, versus clipped
-**0.058978186176263714**. Curved total contours can give nonzero/negative
-observed tangent curvature at a prior-regularised joint mode. A mean-only
-correction cannot fix that covariance change. Do not silently remove clipping.
-
-BTTS+O/U witness **14035709**: minimum J eigenvalue **40.28420140644717**, so
-clipping is inactive. Its marginal error is **-0.048158097212724016 nats** and
-SD error **0.14878198870219494**. Sum/product information is symmetric under
-swapping rates; weak/curved and potentially multimodal supremacy geometry is
-not accurately represented by one local Gaussian plus one cubic mean shift.
-Do not force these books rank one or change their likelihood.
-
-Order-32/64 marginal differences at n=250, SD=.20, no offset are at most
-**2.2578857006294584e-8** (O/U-only) and **1.7352243730783812e-7** (BTTS+O/U).
-Moment-order differences are also far smaller than the failures; see report.
-High-n thin-book quadrature is less stable, explicitly unresolved in some
-settings (O/U n=4000 maximum marginal order difference **0.0029324648804998077**).
-Do not cite high-n numbers as fully resolved or discard them to obtain a pass.
-
-### 1X2 level-integrated likelihood: current t05 check 1/130 fails
-
-Exact location: `t05_pooled_tests.jl:104`, inside
-`"Production-grid derivative parity: first 20 full books"`, **after** the loop
-of full-book checks. It uses only the 1X2 market from fixture **12473328**, at
-n=1000 and its isolated-rate d. It is not a failing full-book tensor check.
-
-```
-f(x) = level_integral(x[1], markets, 1000; order=64).marginal
-T = third_ad(f,[d])
-norm(T-third_fd(f,[d])) / norm(T) <= 1e-6
-```
-
-Failures recorded twice:
-**5.405790669565064e-5**, then **5.405838441375254e-5** after including all
-nested dual components in quadrature error control. Both exceed 1e-6.
-Thus current necessary tests are **129 pass / 1 fail / 130**, not complete
-acceptance. `T05_C3_UPDATE_DONE` is not reached by the failing current suite.
-
-The initial moving-Gaussian level integral passed a preliminary test version,
-then stalled in the real all-types Newton line search (reported score
-**-0.06441733688240525**). It was replaced once by adaptive Gauss-Kronrod,
-using the already-installed `Distributions.quadgk`. Current bounds [-8,4],
-rtol=2e-12, atol=1e-14, inner rules 7/15; labels 32/64 select those rules.
-The endpoint-density and integrated-value convergence assertions pass, but
-agreement of the **third derivative** does not. A converged integral value
-alone does not validate its derivative jet. **The precise discrepancy cause
-remains unresolved**: do not claim AD is correct, FD is wrong, or that an
-inflection/near-zero tensor is the explanation without measuring it.
-The discrepancy is not the old full-book mode/mean gap. Two identical failing
-checks caused the mandated stop; no third variation or further gate run followed.
-
-No complete 1X2 type batch was written. Inventory tested=0 means no completed
-batch persisted, not no attempted evaluations. The full all-types gate remains
-incomplete. A future numerical investigation should separately measure T_AD,
-T_FD, absolute error, step sensitivity and integrated Hessian convergence,
-under an explicit new manager direction—not resume the old retry loop or
-weaken the tolerance.
-
-## 4. REPL-only commands: tests and gate
-
-From the worktree root, verify the session name is unused. Never send/capture
-by session/window name; use the returned **pane ID only**. No one-shot Julia.
-No package updates. Fresh Julia avoids stale module/constant bindings.
-
-```bash
-PANE=$(tmux new-session -d -P -F '#{pane_id}' -s pi_julia_mm_c -c "$PWD" \
-  'env JULIA_PKG_PRECOMPILE_AUTO=0 GKSwstype=100 julia --project -t 8')
-printf 'owned laptop pane: %s\n' "$PANE"
-tmux send-keys -t "$PANE" -l -- \
-  'using LinearAlgebra; BLAS.set_num_threads(1); include("current_development/market_model/t05_pooled_tests.jl")'
-sleep 0.15
-tmux send-keys -t "$PANE" Enter
-# Wait for result, then capture:
-tmux capture-pane -t "$PANE" -p -J -S -2000
-```
-
-Expect the failing integrated derivative assertion, **not T05_DONE**. Do not
-put tests and fitting in a semicolon chain and assume the tests succeeded.
-For prior regressions, send separate includes of t04/t03/t02 in an owned fresh
-REPL and wait for T04_DONE/T03_DONE/T02_DONE. Revision-3 did not rerun them;
-revision-2 counts were 92/131/131. The t03 A regression uses temporary outputs.
-
-For a **separate diagnostic gate run**, first preserve current result CSVs,
-then in an owned pane:
-
-```bash
-tmux send-keys -t "$PANE" -l -- \
-  'include("current_development/market_model/r05_pooled.jl")'
-sleep 0.15
-tmux send-keys -t "$PANE" Enter
-tmux capture-pane -t "$PANE" -p -J -S -2000
-```
-
-Current r05 attempts every type; no completed current-source all-types run has
-been established. It may abort before its decision marker. If it completes,
-its stage markers are C05_C3_LIKELIHOOD_BLOCKED / C05_C3_LIKELIHOOD_GATE_DONE,
-**not R05_DONE**. It has no training stage. CSVs are replaced after each
-completed type; the end-only engine export can remain stale after an abort.
-GATE_EXPORT.sql was used to make the saved engine table match the emitted
-partial summary. An earlier 130/130 message in the development log refers to
-an earlier integrator, not passing current-source tests.
-
-After evidence capture, close only your owned pane:
-`tmux kill-pane -t "$PANE"`.
-Pinned cache `.cache/datastore_ScottishLower.jls` SHA256:
-`c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`;
-load `max_age_hours=10^6`, no cache refresh. Verify current hashes from the
-stream directory with the commands in REPRODUCIBILITY.md.
-
-## 5. Exact next implementation steps for C0/C1 on full books
-
-**Conditional on explicit full-books-only continuation approval.** This does
-not clear C2, mixed-book synthetic recovery, H1/H2, or whole-Phase-C acceptance.
-Do not alter full t05 to conceal its integrated-likelihood failure; if a scoped
-entry point is authorised, label it full-book-only and retain the failing check.
-
-### A. Freeze population, parameterisation and priors
-
-1. Use `TwoStageMarket.phase_b_panel(ds; config)` for exactly **517 fixtures /
-   1034 isolated observations**. Obtain the same fixtures' gated books with
-   `MarketModel.gated_close`. Keep IDs/team/week ordering and evaluation target
-   joins asserted. No thin books, swapped T014 book or new data repairs.
-2. Zero-sum team effects as B2, static mu/gamma and ordinary weekly summer steps.
-   q=(alpha-beta)/2, s=(alpha+beta)/2. Existing alpha/beta-state engine can be
-   reused without changing the initial prior or observation design:
-   `scale=sqrt(sigma_q^2+sigma_s^2)` and
-   `rho=(sigma_s^2-sigma_q^2)/(sigma_s^2+sigma_q^2)`.
-   `PooledMarket.c0_parameters` already maps this to an R6 parameter vector.
-3. C0 sampled parameters: sigma_obs, sigma_q, sigma_s. sigma_obs HN(.20);
-   sigma_q/sigma_s independently HN(.10). C1: sigma_q, sigma_s, sigma_u, n;
-   sigma_u HN(.20), n LogNormal(log(1000),1.5), q/s HN(.10).
-   Mu N(log(1.35),.5), gamma N(.15,.25), initial unconstrained alpha/beta
-   N(0,.5) independently; integrate these Gaussian states as B2 does.
-   Implement new log-coordinate priors and Jacobians. **Do not reuse R6's
-   independent sigma_att/sigma_def and Uniform-rho prior**, or treat its
-   saved draws/rotation medians as fitted C0. Do not blindly apply an existing
-   linked-coordinate bound to n and silently truncate its specified prior.
-
-### B. Build and prove C0 first
-
-4. Define a C0 arm/fit wrapper with the correct three physical parameter names.
-   Its Gaussian filter can call `CM.covariance_filter(CovarianceRung(6), panel,
-   c0_parameters(...))`. Prepared H/y can be cached like B2. The likelihood is
-   exact Gaussian; only the prior differs from unconstrained R6 fitting.
-5. Add an explicit C0-to-R6 matched-parameter likelihood reduction <=1e-9,
-   independent batch Gaussian likelihood/RTS gates, and retain the B2/B/TODO 023
-   gates. Current t05 proves covariance rotation and one existing R6 batch
-   equality, **not a new C0 prior/sampler/reduction pipeline**.
-6. Add C0 slice-chain training and physical-draw/convergence tables. Reuse
-   `CM.covariance_chain`/`fit_covariance` mechanics, not its hard-coded prior,
-   parameter names or a saved R6 fit. Run deterministic gates on laptop;
-   posterior sampling only on the beast after approved preflight.
-
-### C. Implement the C1 collapsed approximate state-space filter
-
-7. For each chronological full-book fixture, construct its original-side
-   2-by-state observation design H, preserving zero-sum projection. Let prior
-   state be m,P and set `a=H*m`, `S=H*P*H' + sigma_u^2*I`. u is independent,
-   equal-side per-match Gaussian; no per-team HA, weekly mu shock or t noise.
-8. Call `laplace_update(raw_book_density,a,S; third_likelihood=AD_book_density)`
-   with full markets and n. Add **only its returned marginal** to the collapsed
-   likelihood: it already integrates the book times the state prediction.
-   Do not append another Kalman Gaussian term, lose the density peak/normalisers,
-   or use the old isolated-KL Hessian. Preserve the passing revision-2 marginal.
-9. Propagate returned theta moments back into state moments. With
-   `K=P*H'/S`, `b=update.mean`, `V=update.covariance`, Gaussian conditional
-   identities give
-   `m_new=m+K*(b-a)` and `P_new=P+K*(V-S)*K'`.
-   This incorporates sigma_u through S; do not treat theta as H*x without u
-   or add sigma_u twice. Independent tests must verify moment/information-form
-   equivalence and PSD/symmetry. Avoid inverting the full latent-state P when
-   static/centred directions can be singular. Keep raw versus clipped book
-   curvature explicit, never substitute a covariance to obtain a gate pass.
-10. Fix deterministic within-week fixture order. **All scored predictions for a
-    week precede every update in that week**, as B2. Sequential nonlinear book
-    approximations can be order-dependent even though Gaussian scalar updates
-    are exact. Store pre-week moments and the forward pseudo-factors/moments
-    needed for approximate RTS and fixture-u shrinkage.
-11. Test a toy Gaussian likelihood against independent batch calculations,
-    scalar/eigen versus full-2-D update <=1e-10, and conditional-state identities.
-    For nonlinear books, freeze the local Gaussian factors and their constants
-    for a batch check; do not pretend the original Dirichlet state model is
-    globally linear-Gaussian. Label C1 filter/collapsed likelihood/RTS approximate.
-    Add full-book synthetic parameter recovery as approved; the original mixed-
-    type recovery requirement remains unmet while thin-book code is blocked.
-
-### D. Fit and evaluate only after these gates
-
-12. Implement the prescribed four chains, **2000 warmup + 3000 retained, thin 1**,
-    slice adaptation ending at warmup, deterministic new seed manifest. C0/C1
-    each need 10a full-panel and 10b honest_train-only hyperparameter fits.
-    Convergence: every parameter/protocol Rhat<=1.05, bulk/tail ESS>=200.
-    No sampling on laptop; beast checkout `/root/BF_runs/market_model_c`, owned
-    session `pi_mm_c`, `-t 16`, core pinning and BLAS=1; logs under
-    `/root/BF_runs/logs/market_model_c/`. These do not exist from this session.
-    Read the remote execution guide before creating them, verify load and copy
-    the pinned cache preserving metadata. Never operate unrelated panes.
-13. Freeze source SHA before sampling, serialize prototype fits with loaders
-    included for reloading, refuse inference promotion after failed convergence.
-    No database writes. All segment/split/population choices flow from config.
-14. Reuse B2 schema and filtration for one-step metrics on the **same 517 full
-    isolated targets**, with 10b scoring only honest_test. C0 predictive noise
-    is sigma_obs; C1 theta prediction is structure+u (`H*P*H'+sigma_u^2*I`).
-    Make this target/noise convention explicit; do not condition a forecast's
-    mean on its own book or silently introduce an evaluation-book variance.
-    Add paired per-fixture supremacy+level marginal logpd differences versus
-    C0 and SE, coverage, RMSE/MAE; retain all requested subsets/axes. Report
-    C0's measured gap to B2 R6, not forced agreement: the matched-parameter
-    likelihood identity does not make their differently constrained priors and
-    posterior fits identical.
-15. Implement approximate RTS, full-book theta=structure+u shrinkage, n/sigma_u
-    and implied book-noise summaries, q/s paths and scale ratios, including the
-    named transition clubs Ross County, Airdrie, East Kilbride and Kelty.
-    No smoothed
-    result should be described as an honest forecast. Use B2 diagnostics as
-    schema references, not results to copy into new output tables.
-16. Runner needs real engine/training/convergence/evaluation/output sections,
-    not just a gate include. A second fresh beast run must reproduce scientific
-    CSVs byte-for-byte at the frozen source/seeds. Existing hashes certify
-    diagnostic evidence only. The authorised output set/report must clearly
-    say **C0/C1 full-books only** if that scope is approved; C2 and H1/H2 remain
-    separate pending work, not silently satisfied or removed.
-
-## 6. Guardrails and final checks for the next session
-
-No `src/`, package/data/grid/threshold changes; no DB writes; no Phase D or
-later score-grid Phase C2. Never force-push, merge/rebase or touch the stash.
-Only push `origin pi/market-model-phase-c`. Preserve historical artifacts.
-Do not retry the integrated derivative failure a third time without a new
-manager-directed diagnostic plan. No numerical cause was proved for that check.
-
-Before handoff/commit: `git diff --check`, `./scripts/todo.sh check`, current
-source/scientific hashes. Record dated @pi work log and status/index together
-when claiming/changing task state. Stop with the appropriate sentinel and
-close only owned panes. This session hands off **blocked, incomplete work**,
-not a fit or acceptance success.
+Use REPRODUCIBILITY.md for fresh REPL commands and current hash checks.
+Pinned cache SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4,
+load max_age_hours=10^6. No one-shot Julia, package/data/grid/threshold changes,
+`src/` changes or DB writes. Never force-push, merge/rebase or touch stash.
+Only push origin pi/market-model-phase-c. Preserve historical evidence and
+close only owned panes. Before commit/handoff: git diff --check, todo.sh check,
+current source/scientific hashes. Keep work log and matching index in sync.

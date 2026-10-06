@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -34,8 +34,10 @@ in `current_development/market_model/DESIGN.md`.
 - [x] Phase B3: refiltered FFBS Gaussian-step tail/dependence PPCs; four global-parameter
       score grids with book/heldout/bias/outcome comparisons; converged informational R6
       refits, fresh tests and byte-identical scientific artifacts. Phase C stays double Poisson.
-- [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
-      P1 and P2 converged (divergences ≤ 0.1%), one-step MAP refits at 40 fold cutoffs.
+- [ ] Phase C revision 4 (manager supersedes old Turing/MAP route): full-book C0/C1/H1/H2,
+      learned n/u_m under exact-density Laplace C1, full-book synthetic recovery, four-chain
+      convergence, prescribed 10a/10b measures/figures and two-run byte reproduction.
+- [ ] C2 thin-book pooling: deferred to the human; scientific/numerical blockers retained.
 - [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
       traceable to `results/`.
 
@@ -50,7 +52,11 @@ in `current_development/market_model/DESIGN.md`.
 - Literature: Egidi, Pauli & Torelli (2018) invert per match from 1X2 only; Wunderlich &
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
-## Blocked
+## Deferred / Blocked C2
+
+Revision 4 explicitly authorises full-book C0/C1/H1/H2 continuation; those rungs
+are not blocked by C2. Deterministic state engines pass; sampling, recovery,
+evaluation and production reproduction remain unimplemented at this handover.
 
 Revision 3 fixes full-book means but fails thin-book Gate 1: at n=250,
 SD=.20, BTTS+O/U median marginal error .020609 nats (limit .01) and
@@ -63,6 +69,25 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision 4 verified engine checkpoint HANDOVER, not completion.
+  Full-book C0/C1/H1/H2 state filters, conditional moments, frozen C1 factors,
+  RTS and independent batch gates implemented. Fresh %47 necessary t05 209/209,
+  53/53 state gates; full-book Gate 1 12/12 settings. Fixed-parameter filters
+  and smoothers complete for all 517 fixtures in every authorised rung, NOT fits.
+  Fresh %46 regressions t04 92/92, t03 131/131, t02 131/131. C2-pending separately
+  reports 29 pass/10 fail, excluded by manager scope; no numerical waiver.
+  No sampler/sampling/recovery, beast checkout/session, forecast/HA posterior,
+  shrinkage/ratings figures or production reproduction. V3 source/report/CSV
+  evidence preserved, new CSVs in results/C/v4_preflight/. All owned %45/%46/%47
+  closed; no src/package/data/DB/grid/threshold or unrelated pane changes.
+  Report/repro/handover list exact remaining work; TODO remains IN_PROGRESS.
+
+- [2026-10-06 @pi] Revision 4 claimed: manager authorises full-book-only C0/C1/H1/H2;
+  C2 remains deferred. Preserve revision-3 evidence and separate pending thin-book
+  diagnostics from acceptance, with unchanged thresholds. H1 prior clarified by
+  manager: independent gamma_att N(.15,.25^2), gamma_def N(0,.25^2);
+  pinning gamma_def=0 recovers C0. No sampling until deterministic engine gates pass.
 
 - [2026-10-06 @pi] Revision 3 BLOCKED, implementation `8591099b`.
   Cubic mean correction preserves all 360 full-book log marginals exactly;

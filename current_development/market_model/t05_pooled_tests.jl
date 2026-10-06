@@ -1,5 +1,6 @@
-# Deterministic revision-3 update tests. These are necessary checks, not a
+# Revision-4 full-book deterministic tests. These are necessary checks, not a
 # claim to synthetic-panel recovery or completed Phase C acceptance.
+# C2-pending checks execute separately and report failures, excluded by manager scope.
 using Test, LinearAlgebra, Distributions, DataFrames, Random, CSV, BayesianFootball
 BLAS.set_num_threads(1)
 if !isdefined(@__MODULE__, :PooledMarket)
@@ -7,7 +8,7 @@ if !isdefined(@__MODULE__, :PooledMarket)
 end
 const PC05 = PooledMarket
 
-@testset "Phase C revision 3 deterministic likelihood update" begin
+@testset "Phase C revision 4 full-book deterministic engines" begin
     @testset "Gaussian likelihood: integral and moments independently known" begin
         for k in (1,2)
             a = fill(0.15,k)
@@ -91,17 +92,6 @@ const PC05 = PooledMarket
             @test norm(T-PC05.third_fd(adf,L.mode))/norm(T) <= 1e-6
             @test norm(L.covariance*(L.information+theta/(0.20^2))-L.mean) <= 1e-12
         end
-        firstbook = books[first(full.match_id)]
-        one = filter(:market_name=>==("1X2"),firstbook)
-        markets = PC05.PF.market_vectors(one)
-        d = log(first(full.lambda_h)/first(full.lambda_a))
-        L32 = PC05.level_integral(d,markets,1000.0; order=32)
-        L64 = PC05.level_integral(d,markets,1000.0; order=64)
-        @test abs(L32.marginal-L64.marginal) <= 1e-8
-        @test max(L64.lower_relative_logdensity,L64.upper_relative_logdensity) <= -30
-        f = x -> PC05.level_integral(x[1],markets,1000.0; order=64).marginal
-        T = PC05.third_ad(f,[d])
-        @test norm(T-PC05.third_fd(f,[d]))/norm(T) <= 1e-6
     end
     @testset "Quality/style rotation equals matched R6" begin
         p = PC05.MID.toy_panel(Random.Xoshiro(3950))
@@ -119,6 +109,8 @@ const PC05 = PooledMarket
         batch = PC05.CM.batch_gaussian(PC05.CM.CovarianceRung(6),p,theta)
         @test abs(scalar.loglik-batch.loglik) <= 1e-9
     end
+    include(joinpath(@__DIR__, "t05_fullbook_engine_tests.jl"))
 end
-println("T05_C3_UPDATE_DONE")
-# T05_DONE is reserved for the complete pooled/recovery suite after gate promotion.
+println("T05_C4_DETERMINISTIC_DONE")
+include(joinpath(@__DIR__, "t05_c2_pending_tests.jl"))
+# T05_DONE remains reserved for the complete full-book recovery/acceptance suite.

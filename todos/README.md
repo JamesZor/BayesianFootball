@@ -32,13 +32,15 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
-| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | BLOCKED | P1 | pi | 2026-10-06 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Phase B3 remains verified. Phase C revision 3 is BLOCKED (2026-10-06):
-full-book means fixed, but O/U covariance and BTTS+O/U marginal/moments fail;
-integrated 1X2 derivative test fails twice. All-types gate incomplete, no
-sampling. Unchanged thresholds; prior blocker evidence retained.
+**039:** Phase B3 remains verified. Phase C revision 4 is IN_PROGRESS (2026-10-06):
+manager authorises full-book-only C0/C1/H1/H2, with C2 deferred. Verified
+engine checkpoint handed over: t05 209/209 necessary assertions, 53/53 state
+gates, full-book Gate 1 12/12; t02–t04 pass. No sampler or posterior fits yet;
+recovery/evaluation/production reproduction remain unfinished. Thin-book
+blockers and v3 evidence preserved; thresholds unchanged.
 Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
 Double Poisson stays for C; later score-grid C2 and Phase D remain unauthorised.
 
