@@ -202,3 +202,4 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     busy threads on 32 cores.
   - **Resumed C1-10a with `kill -CONT 3516292`** (beast 07:38:35). It was paused about 10 min,
     with no state lost. Lesson: read the progress cadence before calling a stall.
+- **08:31: pi resumed** after the quota reset (same session, pane `%62`, context 80%).
