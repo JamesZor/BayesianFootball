@@ -159,3 +159,7 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     gradient-only Newton polishing steps when the line search stalls; tolerances unchanged.
   - Sent to the same session `%53` (context 57%).
   - If it still fails, the tolerance question goes to the human.
+- **04:53: rev 6 blocked.** The exact-case regression passes (t05 289/289), but recovery hits a
+  zero-motion Armijo edge at fixture 12476686: 94 accepted no-op steps, δ = 1.04e-12.
+  **Revision 7:** zero-motion steps count as stalls and are polished; tolerances unchanged. pi's
+  context is 79%, so a fresh session starts from HANDOVER.md.
