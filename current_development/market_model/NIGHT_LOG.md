@@ -185,3 +185,13 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   (Kelty's key is kelty-hearts-fc). Annotate them as unavailable and keep the data unchanged?"
   **Answered: yes (option 1).** The manager's brief named clubs from the CLV §14 list; they were
   Championship clubs in 24/25–25/26.
+- **06:29: Codex limit again** (5h window 100%). Resets at **08:24 BST**. pi was at C8 with the
+  fast-rung final run 1 in beast pane `%270`.
+- **06:33, beast contention (manager action, reversible):**
+  - The C1 recovery (`%265`, pid 3497268) has printed nothing past iteration 250 for about 45 min,
+    against about 25 iterations per 5 min before.
+  - The slowdown began when C1 production 10a (`%268`, pid 3516292) and 10b (`%267`,
+    pid 3516204) started: three `-t 16` processes on 32 cores; fork–join threading oversubscribed.
+  - **Paused C1-10a with `kill -STOP 3516292`** (beast 07:28:11). Resume with `kill -CONT 3516292`;
+    no state is lost.
+  - Watching whether the recovery speeds back up.
