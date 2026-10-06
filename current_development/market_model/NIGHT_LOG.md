@@ -128,3 +128,27 @@ Times are laptop local; earlier entries were first written in the beast clock (+
 
   pi wrote `results/C/HANDOVER.md` (`31ec8520`, context 81%, codex 90%), and a fresh session
   was started.
+- **~02:33, pi question (Phase C rev 4):** "What Gaussian prior should H1 use for γ_def?"
+  - Options: (1) γ_att ~ N(0.15, 0.25²), γ_def ~ N(0, 0.25²), independent (pi recommended);
+    (2) a different joint prior.
+  - **Answered (1).** It keeps C0's γ prior for the home-scoring boost, with a neutral prior
+    centred at 0 for the away suppression, so H1 nests C0 exactly at γ_def = 0.
+- **~02:42: Codex usage limit reached** (5h window at 100%; 7d at 29%) during Phase C rev 4.
+  - pi stopped mid-way, while rerunning t02 after t03 passed, with uncommitted work in its
+    worktree (pane `%44`, context 54%).
+  - Reset at **03:20:07 BST** (`~/.pi/agent/usage-cache.json` → `resetsAt`).
+  - Waiting, per the human's rule. **2 banked resets** are shown as available on the plan;
+    **not used**, because that's the human's resource and the rule says wait.
+  - At ~03:21: tell the same pi session to continue.
+- **03:27: pi resumed** after the quota reset (first retry), in the same session, pane `%44`.
+- **03:36: pi C4 handover** at `622f9a55`: 209/209 deterministic tests, 53/53 state gates, full-book Gate 1 12/12; no fits yet. **03:38:** fresh pi from the handover, pane `%48` (session `agent_pi_market_model_c5`), new codex window at 4%.
+- **04:15: Phase C rev 4 blocked again (a numerical blocker, not a scientific one).** Sampler and
+  synthetic generator implemented (t05 270/270; t02–t04 pass). The C1 synthetic recovery failed
+  the per-book joint-mode Newton line search twice, with ‖∇f‖ ≈ 3e-5, i.e. roundoff at the
+  optimum. pi stopped rather than try a third numerical variation.
+- **~04:20, manager: revision 5** (`pi_market_model_phaseC_v5_solver.md`): the Newton-decrement
+  stopping rule.
+  - Accept δ ≤ 1e-12; a stalled line search is accepted only if δ ≤ 1e-9, and is counted.
+  - BigFloat re-solve verification on the failing case.
+  - No change to any scientific gate.
+  - Priority order if time runs short: recovery → C0/C1 + 10b → H1/H2 → second reproduction run.
