@@ -173,3 +173,10 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     - leave the recovery untouched;
     - write a progress report and hand over.
   - **Morning decision for the human:** wait for C1 (finishing this evening) or cut its budget.
+- **~06:00, pi question (rev 8):** the dense Gaussian engine runs at about 170 iterations per
+  minute per chain on C0, so the six fast fits ×2 runs would take hours. pi asked to add a
+  scalar-Kalman likelihood fast path, verified against the existing engine at unchanged
+  tolerances, in a separate checkout. Recovery and the C1 processes stay untouched.
+  **Answered: permit (option 1).** It is an implementation optimisation with an equivalence gate;
+  no priors, budgets, seeds, data or thresholds change. Beast load was 13.2: recovery, C1 10a/10b
+  and the fast runs.
