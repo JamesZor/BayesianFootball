@@ -51,7 +51,14 @@
         reference = sum(logpdf(Dirichlet(1000*[prob[s] for s in m.selections]),m.p)
             for m in generated.markets[f])
         @test abs(PC05.PF.book_logdensity(x,generated.markets[f],1000)-reference) <= 1e-9
+        raw = z -> PC05.PF.book_logdensity(z,generated.markets[f],1000.0)
+        _,Had = PC05.ad_derivatives(raw,x)
+        _,Hfd = PC05.derivatives(raw,x)
+        @test norm(Had-Hfd)/norm(Had) <= 1e-6
     end
+    @test PC05.fullbook_derivative_rule(markets[1]) === PC05.derivatives
+    @test PC05.fullbook_derivative_rule(generated.markets[1]) === PC05.ad_derivatives
+    @test isfinite(PC05.fullbook_filter(a,generated.panel,theta; markets=generated.markets).loglik)
     @test_throws ErrorException PC05.synthetic_fullbook(a,p,
         [[first(template)] for _ in markets],theta; seed=3961)
     @test PC05.fullbook_supported(a,[theta[1:3];13.0]) # no inherited ±12 on log n

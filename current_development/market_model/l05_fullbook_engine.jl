@@ -186,7 +186,8 @@ function fullbook_filter(a,p,theta; markets=nothing,store=false,predict=false,
                 if likelihoods === nothing
                     raw = x -> PF.book_logdensity(x,markets[f],exp(theta[4]))
                     adf = x -> differentiable_logdensity(x,markets[f],exp(theta[4]))
-                    update = laplace_update(raw,pred,S; third_likelihood=adf)
+                    update = laplace_update(raw,pred,S; third_likelihood=adf,
+                        derivative=fullbook_derivative_rule(markets[f]))
                 else
                     raw = likelihoods[f]
                     update = laplace_update(raw,pred,S; derivative=ad_derivatives)

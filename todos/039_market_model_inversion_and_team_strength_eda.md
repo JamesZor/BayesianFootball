@@ -70,6 +70,16 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
+- [2026-10-06 @pi] Recovery at c2547742 generated all 517 synthetic full books
+  with unchanged seed 3962, then slice sampling aborted on joint-mode line
+  search (gradient [-2.53355e-5, 2.86396e-5]); no completed fit or intervals.
+  Added synthetic-only AD derivative dispatch (real books keep FD), fail-fast
+  cooperative chain cancellation and failing coordinate logs, not rejection.
+  Fresh %52 accepted t05 270/270; C2-pending unchanged. %51 regenerated all
+  six real preflight CSVs byte-identically to the engine checkpoint. One
+  further recovery attempt will stop if the same solver failure recurs; no
+  tolerance, seed, prior, data, score-grid or C2 change is authorised.
+
 - [2026-10-06 @pi] Recovery prerequisite at source 19ad4b99 stopped before
   sampling: frozen seed 3962, fixture 15336943 Dirichlet p underflowed to zero
   (generating log rates -0.292584 / 2.790308; OU0.5 small shape 0.000588104).

@@ -35,6 +35,14 @@ function PF.book_logdensity(theta,markets::Vector{FullBookLogMarket},n)
     return value
 end
 
+# Synthetic logp can be enormous: finite differences then lose the last digits
+# at the joint mode. Dual evaluation uses the already parity-tested grid algebra,
+# while primal likelihood/marginal evaluation stays on the production grid.
+PF.book_logdensity(theta::AbstractVector{<:ForwardDiff.Dual},
+    markets::Vector{FullBookLogMarket},n) = differentiable_logdensity(theta,markets,n)
+fullbook_derivative_rule(markets) = derivatives
+fullbook_derivative_rule(markets::Vector{FullBookLogMarket}) = ad_derivatives
+
 "Physical scales are exponentiated; H2 kappa is already on its physical scale."
 function fullbook_physical_draws(a,U)
     return cat([a.name == :H2 && j == 4 ? U[:,j:j,:] : exp.(U[:,j:j,:])
@@ -77,28 +85,47 @@ and freeze exactly at warmup. All retained iterations are saved (thin=1).
 The MID slice kernel is reused, not its bounded target or R6 fit/prior.
 """
 function fullbook_chain(a,p,seed; markets=nothing,warmup=2000,samples=3000,
-                        progress=nothing)
+                        progress=nothing,cancellation=nothing)
     warmup >= 0 && samples > 0 || error("invalid chain budget")
     rng = Random.Xoshiro(seed)
     theta = MID.init_centre(a)+0.35randn(rng,length(MID.param_names(a)))
-    target = z -> fullbook_logtarget(a,p,z; markets)
-    lf = target(theta)
-    isfinite(lf) || error("nonfinite initial full-book target")
+    last_evaluation = copy(theta)
+    iteration = 0
+    completed = false
+    function target(z)
+        cancellation !== nothing && cancellation[] && error("peer full-book chain failed")
+        last_evaluation .= z
+        return fullbook_logtarget(a,p,z; markets)
+    end
     U = zeros(samples,length(theta))
     history = zeros(warmup,length(theta))
     widths = ones(length(theta))
-    for it in 1:(warmup+samples)
-        theta,lf = MID.slice_sweep(target,theta,lf,widths,rng)
-        if it <= warmup
-            history[it,:] .= theta
-            if it >= 50 && it % 25 == 0
-                widths .= clamp.(3vec(ST.std(history[max(1,it-199):it,:]; dims=1)),0.02,3.0)
+    try
+        lf = target(theta)
+        isfinite(lf) || error("nonfinite initial full-book target")
+        for it in 1:(warmup+samples)
+            iteration = it
+            theta,lf = MID.slice_sweep(target,theta,lf,widths,rng)
+            if it <= warmup
+                history[it,:] .= theta
+                if it >= 50 && it % 25 == 0
+                    widths .= clamp.(3vec(ST.std(history[max(1,it-199):it,:]; dims=1)),0.02,3.0)
+                end
+            else
+                U[it-warmup,:] .= theta
             end
-        else
-            U[it-warmup,:] .= theta
+            if progress !== nothing && (it % 250 == 0 || (it <= 250 && it % 25 == 0))
+                progress(it,lf)
+            end
         end
-        if progress !== nothing && it % 250 == 0
-            progress(it,lf)
+        completed = true
+    finally
+        # No catch/rejection: the original error propagates. Cancel peers and
+        # retain the exact failing coordinate for a deterministic diagnosis.
+        if !completed
+            cancellation !== nothing && (cancellation[] = true)
+            println(stderr,"C4_CHAIN_ABORT rung=$(a.name) seed=$seed iteration=$iteration theta=$last_evaluation")
+            flush(stderr)
         end
     end
     return (; U,widths)
@@ -108,12 +135,15 @@ end
 function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progress=true)
     length(seeds) == 4 && length(unique(seeds)) == 4 || error("exactly four unique chain seeds required")
     start = time()
-    tasks = map(eachindex(seeds)) do c
+    cancellation = Threads.Atomic{Bool}(false)
+    tasks = Task[]
+    @sync for c in eachindex(seeds)
         callback = progress ? (it,lf) -> begin
             println("C4 $(a.name) chain=$c iteration=$it target=$lf")
             flush(stdout)
         end : nothing
-        Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,progress=callback)
+        push!(tasks,Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,
+            progress=callback,cancellation))
     end
     results = fetch.(tasks)
     U = cat([r.U for r in results]...; dims=3)
