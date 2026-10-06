@@ -42,6 +42,9 @@ the human's behalf.
 | 01:28 | B3 `PHASEB3_DONE` after 33 min (pi context 78%, codex quota 53%). Six commits, pushed; statistical SHA `2e02a785`. |
 | 02:30 | B3 review: fresh laptop REPL t04 92/92, t03 131/131, t02 131/131; manager beast rerun at `2e02a785` running (pane %260). |
 
+| 02:45 | B3 manager beast rerun at `2e02a785`: 35/35 hashes OK (533 s). **B3 merged** (`d287c745`). |
+| 02:47 | **Phase C launched.** Worktree `BayesianFootball-market-model-pi-c`, branch `pi/market-model-phase-c` from `d287c745`; pi pane `%38` (session `agent_pi_market_model_c`); codex quota 54% (5h) / 21% (7d) at launch. Watcher: `watch_pi_night.sh %38 C`. |
+
 **B3 headline** (from `results/B3`):
 - **Tails:** Gaussian team-step dependence is adequate; no PPC p-value is extreme (all
   0.28–0.63), so no copula or heavy-tailed step model is needed.
@@ -69,8 +72,8 @@ None yet.
 
 ## Next action
 
-1. While B3 runs, draft the Phase C brief.
+1. (done) B3 reviewed and merged; Phase C running in pane %38.
 2. When the watcher fires:
    - on QUESTION, LIMIT or IDLE, handle it;
    - on the sentinel, review B3: fresh laptop tests, beast rerun plus hash check, then merge.
-3. After B3 is merged, launch Phase C.
+3. When the C watcher fires: handle QUESTION / LIMIT / IDLE, or review C (fresh laptop tests, beast rerun + hash check), merge, then write MORNING_SUMMARY.md. Do not start D or C2.
