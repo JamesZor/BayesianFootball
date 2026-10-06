@@ -8,7 +8,7 @@
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
-| Updated | 2026-10-05 |
+| Updated | 2026-10-06 |
 | Related Files / Commits / PRs | `current_development/market_model/DESIGN.md`; TODO 023 (`current_development/market_inverse_dynamics/`); tickets T014, T015; CLV napkin §14 (`proto/clv-napkin`) |
 
 ## Context & Problem Statement
@@ -48,6 +48,11 @@ in `current_development/market_model/DESIGN.md`.
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Phase B3 claimed on `pi/market-model-phase-b3`, dedicated worktree.
+  Local pane `%34`; pinned cache SHA matches locally and on beast, initial load 0.06.
+  Building local score-grid profiles and refiltered FFBS posterior predictive tail checks;
+  same R6 priors/budgets, no Phase C, `src/`, package/data changes or database writes.
 
 - [2026-10-05 @pi] Phase B2 claimed on `pi/market-model-phase-b2` in the dedicated
   `BayesianFootball-market-model-pi-b2` worktree. Config-driven pipeline and R5–R7 only;
