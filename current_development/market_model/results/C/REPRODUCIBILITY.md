@@ -1,7 +1,8 @@
 # Phase C revision 5 — blocked exact-mode verification, not production reproduction
 
-Branch `pi/market-model-phase-c`; source commit is recorded in `HANDOVER.md`.
-Source file identity: `SOURCE_SHA256SUMS.txt`. Read `PHASE_C_REPORT.md` before
+Branch `pi/market-model-phase-c`; statistical source
+**120ac906922e7be7ea175ba9763920be4b875085** (later documentation-only commit
+changes no statistical code). Source file identity: `SOURCE_SHA256SUMS.txt`. Read `PHASE_C_REPORT.md` before
 executing anything. **No recovery or production run was launched at revision5.**
 No third numerical variation is authorised at this new stop boundary.
 

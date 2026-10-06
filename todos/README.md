@@ -35,7 +35,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | BLOCKED | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Revision 5 BLOCKED (2026-10-06): authorised stopping rule/accounting
+**039:** Revision 5 BLOCKED (2026-10-06), source120ac906: authorised stopping rule/accounting
 implemented, but exact seed4964-coordinate regression fails twice identically.
 Fixture12476625: δ3.3821e-12 passes; mode gap4.0160e-7 exceeds1e-8,
 Laplace marginal gap6.6586e-7 exceeds1e-9. Tighter Newton residual7.67e-12;

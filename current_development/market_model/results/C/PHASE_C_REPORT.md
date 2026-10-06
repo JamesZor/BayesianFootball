@@ -5,8 +5,8 @@ but its mandatory exact-stall mode and Laplace-marginal verification fails.
 No recovery sampler was restarted and no posterior fit was promoted. Full-book
 C0/C1/H1/H2 remains authorised; C2 remains separately deferred.
 
-Statistical source is identified by `SOURCE_SHA256SUMS.txt` and the implementation
-commit recorded in `HANDOVER.md`. Base was `cd1a3a3f` (revision5 brief merged).
+Statistical source **120ac906922e7be7ea175ba9763920be4b875085**, identified by
+`SOURCE_SHA256SUMS.txt`. Base was `cd1a3a3f` (revision5 brief merged).
 Revision4 report/repro/handover and hashes are preserved as
 `PHASE_C_V4_REPORT.md`, `REPRODUCIBILITY_V4.md`, `HANDOVER_V4.md`,
 `SOURCE_V4_SHA256SUMS.txt`. Earlier checkpoints and A/B/B2/B3 are unchanged.

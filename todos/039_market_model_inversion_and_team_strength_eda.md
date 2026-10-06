@@ -83,7 +83,8 @@ earlier revisions preserved.
 
 ## Work Log & Progress
 
-- [2026-10-06 @pi] Revision 5 BLOCKED before sampling. Implemented exactly the
+- [2026-10-06 @pi] Revision 5 BLOCKED before sampling, statistical source120ac906.
+  Implemented exactly the
   decrement/step/stalled-converged rules, fail-loud1e-9 acceptance gate, thread-safe
   accounting and finally-write hooks. Test-only original-termination forward replay
   identifies fixture12476625 at the frozen seed4964 warmup8 coordinate and exactly

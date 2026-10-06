@@ -6,8 +6,9 @@ Worktree `/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`
 branch `pi/market-model-phase-c`. **Full-book C0/C1/H1/H2 remains authorised;
 do not ask again for scope approval. C2 remains separately deferred.**
 
-Revision5 Newton termination/accounting is implemented and frozen in the source
-manifest. Implementation commit is recorded after final source checks below.
+Revision5 Newton termination/accounting is implemented at statistical source
+**120ac906922e7be7ea175ba9763920be4b875085**, frozen in SOURCE_SHA256SUMS.txt.
+Subsequent docs-only commit does not change that implementation.
 **The required exact-failure regression fails twice identically. No third
 numerical variation or recovery launch was attempted.** TODO039 is BLOCKED on
 termination/accuracy compatibility, not scope approval. Read the numbers before
