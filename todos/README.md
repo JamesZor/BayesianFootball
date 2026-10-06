@@ -32,12 +32,14 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
-| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | BLOCKED | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Phase B3 copula/tail and score-grid checks are verified for manager
-review (2026-10-06): fresh tests and byte-identical artifacts. Double Poisson
-stays for Phase C; C2 later. The task remains IN_PROGRESS for Phases C/D.
+**039:** Phase B3 remains verified. Phase C is BLOCKED (2026-10-06):
+necessary Laplace marginal/projection checks fail under the literal brief;
+manager-approved mathematical contract correction is required before sampling.
+Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
+Double Poisson stays for C; later score-grid C2 and Phase D remain unauthorised.
 
 ## Commands and Task Files
 

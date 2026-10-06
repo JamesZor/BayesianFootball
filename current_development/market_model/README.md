@@ -24,8 +24,9 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (not implemented here):** fit the structure directly to books, sharing
-  information and learning book concentration and fixture deviations.
+- **C (blocked at preflight):** fit the structure directly to books, sharing
+  information and learning book concentration and fixture deviations. The literal
+  Laplace/projection contract fails necessary checks; no pooled fits were launched.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -289,6 +290,38 @@ Phase C's grid nor its implementation. Run the new runner in a fresh owned
 beast persistent REPL and wait for `R04_DONE`; run t04/t03/t02 in a fresh owned
 laptop REPL. Exact source, pinned cache, pane-ID commands and CSV hash procedure
 are in [`results/B3/REPRODUCIBILITY.md`](results/B3/REPRODUCIBILITY.md).
+
+## Phase C: blocked likelihood/projection preflight (2026-10-06)
+
+**Human decision: double Poisson for C; C2 later.** The authorised pooled rung
+named C2 is distinct from a later score-grid Phase C2; neither a grid change nor
+Phase D was attempted. DESIGN §5 remains unchanged; the new brief selects a
+quality/style GRW and collapsed slice sampler instead of its old Turing route.
+
+Before implementing that sampler, `l05_laplace_preflight.jl` and
+`r05_laplace_preflight.jl` tested necessary mathematical conditions on the pinned
+close. These are **not** the requested pooled loader/runner or acceptance suite.
+`results/C/laplace_preflight_summary.csv` records, at the **prior** median
+n=1000 and side prediction SD=0.20, full-book median absolute marginal error
+**0.013040970693098508** (limit 0.01); supremacy-only 1X2 median
+**0.7551135925625077**, p95 **0.9336569033260274** (limits 0.01/0.05).
+The unprojected 1X2 median error is only **0.0004892284282393966**.
+`totals_projection_preflight.csv` records **7/36** books satisfying the specified
+rank-one/10-degree condition; BTTS plus O/U can identify two directions.
+
+Two issues precede sampling: Dirichlet(p; n q)'s large-n loss is KL(q||p), not
+Phase A's KL(p||q); discarding identified book information cannot reproduce its
+exact likelihood integral against an arbitrary Gaussian prediction. Totals
+identify a curved constant-rate-sum contour, not a fixed equal-weight direction
+in log-rate coordinates. No threshold was loosened and no corrective model was
+silently substituted. See [`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md)
+for evidence, caveats, missing acceptance items and the required manager decision.
+
+Rerun only the diagnostic preflight through an owned laptop tmux REPL:
+`include("current_development/market_model/t05_laplace_preflight_tests.jl")`
+then `include("current_development/market_model/r05_laplace_preflight.jl")`.
+Expect `T05_PREFLIGHT_DONE` and `C_PREFLIGHT05_BLOCKED`, **not** `T05_DONE` or
+`R05_DONE`. No Phase C production or posterior claims are available.
 
 ## How to run
 

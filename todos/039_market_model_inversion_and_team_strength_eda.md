@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -50,7 +50,30 @@ in `current_development/market_model/DESIGN.md`.
 - Literature: Egidi, Pauli & Torelli (2018) invert per match from 1X2 only; Wunderlich &
   Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
 
+## Blocked
+
+Phase C requires a manager-approved correction of the likelihood/projection
+contract. The literal book likelihood fails necessary Laplace marginal and
+projection requirements; no pooled sampling was launched. Evidence and next
+choices: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
+Do not change thresholds, the data or the score grid to unblock it.
+
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Phase C claimed and blocked on `pi/market-model-phase-c`.
+  Owned laptop persistent Julia pane `%39`, pinned cache verified, BLAS=1.
+  Deterministic mathematical tests 11/11 (`T05_PREFLIGHT_DONE`), then necessary
+  preflight checks (`C_PREFLIGHT05_BLOCKED`): at prior-median n=1000 and side
+  prediction SD=0.20, full-book median absolute marginal error 0.013041;
+  supremacy-only 1X2 median/p95 0.755114/0.933657 nats. Only 7/36
+  no-complete-1X2 books meet the rank-one/10-degree projection condition.
+  Exact quadrature at orders 16/32 agrees within 1.01e-10 nats across the checks.
+  Dirichlet large-n loss has reverse, not Phase A's forward KL orientation;
+  dropping the total likelihood cannot reproduce its full exact marginal.
+  No production sampler, C0/C1/C2/H1/H2 fits, beast session, Phase D/later
+  score-grid C2, src/package/data changes or DB writes. Prior phases untouched.
+  Full acceptance remains unmet; see results/C report and reproduction notes.
+
 
 - [2026-10-06 @pi] Phase B3 claimed on `pi/market-model-phase-b3`, dedicated worktree.
   Local pane `%34`; pinned cache SHA matches locally and on beast, initial load 0.06.
