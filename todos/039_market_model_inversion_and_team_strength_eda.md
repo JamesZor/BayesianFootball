@@ -54,13 +54,16 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Recovery in progress / historical blockers / deferred C2
 
-Revision7 explicitly reviews/lifts the old zero-motion blocker. Both exact cases
-pass unchanged limits; frozen source6335316f recovery is ACTIVE in owned beast
-pane%265, all four chains at warmup200 checkpoint, no abort or retained fit yet.
-Do not relaunch/kill/change checkout during this run. Definition of done unmet;
-production fits, measures/figures and reproduction still pending. C2 deferred.
-The blocked paragraphs below are HISTORICAL evidence, not a current scope or
-numerical stop. Current handover transfers ownership of that one live attempt.
+Revision8 HANDOVER: C0/H1/H2 both protocols accepted at70336b07;107/107 engine
+and20/20 convergence gates. TWO fresh full fast runs match26 CSVs+3 PNGs bytewise.
+C1 recovery%265 at6335316f and production10b%267/10a%268 at41e28736 remain live,
+frozen and UNPROMOTED. At07:46:59Z progress is1000/750/500/750 recovery,
+1500/750/1000/1000 10b,250/750/500/250 10a. Do not relaunch/kill/check out code.
+Recovery truth/convergence and accepted C1 inference/reproduction remain; overall
+Phase C acceptance above is UNMET, C2/PhaseD deferred. Current report:
+results/C/PHASE_C_PROGRESS_REPORT.md; ownership/logs/uncertain measured ETAs:
+results/C/HANDOVER.md. The blocked paragraphs below are HISTORICAL evidence,
+not a current numerical stop. Revision7 lifted the reviewed zero-motion blocker.
 
 Revision6 exact-stall regression now passes unchanged limits, but prescribed C1
 recovery is BLOCKED on a NEW100-iteration Newton exhaustion at seed4961's initial
@@ -99,6 +102,26 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision8 HANDOVER at statistical/reporting source70336b07:
+  clean%270/%271 pipelines BOTH R05_FAST_RUNGS_DONE,107/107 engine/state/scalar
+  gates and20/20 convergence rows (maxRhat1.000985775031962,minbulk/tailESS
+  6074.903633053705/6129.2431286740775). Exact full26CSV/3PNG file sets and bytes
+  match; BYTE_COMPARISON.txt + both manifests checked remotely/on laptop.
+  Manager approved explicit absent Ross County/Airdrie plot panels (no data
+  expansion); correctKelty key. Scalar5ab plot-failed attempt fully preserved,
+  not a clean reproduction. Fresh final-source reports22/22,scalar/native17/17,
+  t05 305/305,workflow85/85,t04 92/92,t03/t02 each131/131;C2 29pass/10fail excluded.
+  C0 vsR6 honest pairedscore+.001285(SE.004312); H1away suppression unidentified
+  under mu/HA gauge; H2kappa90% spanszero,no supported gain. Static HA mixesALL
+  12000draws,10btrainingonly. PHASE_C_PROGRESS_REPORT/README/HANDOVER updated;
+  oldV7/failed evidence retained. C1%267/%268 launched04:50:29/32Z at41e28736
+  (eachGate1 12/12,engine53/53), recovery%2656335316f ONLYread, all left live.
+  07:46:59Z conservative ETAs:10b15.6h,10a36.1h,recovery54.6h(censored16.2–54.6h).
+  NoC1posterior/acceptance/accounting fabricated. Ownidle%270/%271/%66closed.
+  Source/scientific hashes,diffcheck/todocheck recorded before commit/push;
+  fullPhaseC acceptance staysunchecked, remaining recovery+C1promotion/inference/
+  reproduction. No duplicate sampler/core include or C2/PhaseD scope expansion.
 
 - [2026-10-06 @pi] Revision8 Gaussian-only speed correction explicitly approved
   by manager via ask_user_question after measured original C0 throughput ~170

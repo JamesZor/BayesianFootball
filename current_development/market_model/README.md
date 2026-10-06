@@ -24,12 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision7 recovery IN PROGRESS, full books only):** fit the structure
-  directly to full books, learning concentration/deviations. C0/C1/H1/H2 remains
-  authorised; C2 thin pooling remains separately deferred. Reviewed zero-motion
-  stall polish passes both exact regressions at unchanged tolerances. Frozen
-  recovery is running in beast %265; do not restart it. No completed recovery or
-  pooled posterior fits/production conclusions yet; see results/C/HANDOVER.md.
+- **C (revision8 fast rungs accepted; C1 IN PROGRESS, full books only):** C0/H1/H2
+  have converged both protocols; two fresh fast runs match29/29 CSVs/PNGs.
+  Frozen recovery%265 and unpromoted C1 production%267/%268 remain running;
+  do not restart, kill, check out or reload their source. No C1 posterior/recovery
+  conclusion yet. C2 remains deferred. Current evidence:
+  `results/C/PHASE_C_PROGRESS_REPORT.md` and `results/C/HANDOVER.md`.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -518,6 +518,47 @@ measures, full production workflow and two-run reproduction remain unfinished.
 No learned parameter or forecast-benefit conclusion exists. r05_pooled remains
 preflight. Local panes close; active beast recovery is transferred at handover.
 Revision6 report/repro/handover/source evidence preserved with `_V6` names.
+
+## Phase C revision8: fast rungs now, C1 separately unpromoted
+
+Revision8 supersedes revision7's ordering restriction, **not** its scientific
+settings or C1 promotion gates. Source70336b07: full-book C0/H1/H2, both protocols,
+4×(2000+3000), thin1;107/107 inherited/state/scalar-parity gates and20/20 theta
+convergence rows pass. Both fresh beast%270/%271 reach R05_FAST_RUNGS_DONE; **26 CSVs +3 PNGs are
+byte-identical** (`results/C/BYTE_COMPARISON.txt` and both scientific manifests).
+
+**C0 tracks published R6 closely:** 10b paired C0−R6 score
+**+0.001285 ±0.004312 fixture SE**. Its supremacy/level coverage is
+**90.476%/91.209%** (`results/C/v8_fast_1/onestep_metrics_c.csv`);
+`paired_c0_vs_r6.csv` measures the fitted gap, separate from likelihood parity.
+**Away suppression is not established:** H1 gamma_def is
+**0.026292 [−0.248135,0.300720]**, with gamma_att/def confounded with mu.
+Only their supremacy sum is sharply identified. **Quality-linked HA is not
+supported:** H2 kappa10b **0.033860 [−0.048858,0.125508]**; honest paired H2−C0
+**−0.002457 ±0.003596** (`home_advantage_rungs.csv`, `paired_vs_c0.csv`).
+Static HA intervals mix conditional state uncertainty over ALL12,000 retained
+hyperdraws; 10b HA uses training only. Forecasts/path bands remain conditional
+at median theta as in B2; full-panel smoothing is descriptive.
+
+The manager approved a verified Gaussian-only scalar Kalman callback after
+measured dense throughput implied hours; native sampling/adaptation, all priors,
+seeds and thresholds stay unchanged. C1's default path and live checkouts were
+not edited. Dense-attempt and scalar plot-assertion evidence are preserved.
+Ross County/Airdrie are absent from the fixed22-team56/57 population. Manager
+approved labelled missing panels, not new data/fake paths; Kelty's actual key
+is `kelty-hearts-fc`. Both available clubs and all22 teams' CSV paths remain.
+Figures, formulas, source-checked Ridall2024 p.1/3 and limitations:
+`results/C/C8_METHODS.md`, `results/C/v8_fast_1/C_fast_*.png`.
+
+**Live, unpromoted:** recovery%265 at frozen6335316f in `/root/BF_runs/market_model_c`;
+C1 10b%267 /10a%268 at41e28736 in `/root/BF_runs/market_model_c_fast`, started
+04:50:29Z/04:50:32Z. All16 threads/core pinning/BLAS1, prescribed seeds/budgets.
+At07:46:59Z, C1 10b/10a measured slowest-chain ETAs are15.6h/36.1h;
+recovery's censored conservative ETA is54.6h (chain estimates16.2–54.6h).
+These estimates are uncertain during adaptation/contention. Checkpoints, logs, proof and
+remaining C1 work are in `results/C/PHASE_C_PROGRESS_REPORT.md` and HANDOVER.
+No C1 interpretation until synthetic recovery AND production convergence pass.
+No complete Phase C reproduction or pooled forecast/shrinkage/n conclusion yet.
 
 ### C2 deferred to the human
 

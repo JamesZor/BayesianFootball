@@ -1,16 +1,4 @@
-# Phase C — revision8 current status (2026-10-06)
-
-Current evidence and plain-language results:
-[PHASE_C_PROGRESS_REPORT.md](PHASE_C_PROGRESS_REPORT.md).
-C0/H1/H2 both protocols pass107 engine and20 convergence gates; two fresh
-clean runs match all26 CSVs and3 PNGs byte-for-byte. Recovery%265 and C1%267/%268 remain live,
-frozen and unpromoted. Full Phase C is NOT complete; C2 remains deferred.
-Revision8 supersedes the old production ordering below, not any threshold.
-The exact revision7 report is preserved as `PHASE_C_REPORT_V7.md`.
-
----
-
-## Historical revision7 checkpoint — exact-case PASS; recovery IN PROGRESS
+# Phase C revision 7 — exact-case PASS; recovery IN PROGRESS (2026-10-06)
 
 **Not complete; not numerically blocked at this checkpoint.** The prescribed
 C1 recovery is still running at frozen statistical source

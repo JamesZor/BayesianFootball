@@ -35,12 +35,18 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Revision8 IN_PROGRESS (2026-10-06): independent fast C0/H1/H2 pipeline
-and unpromoted C1 10a/10b production preparation; recovery%265 left untouched,
-all chains250 checkpoint, no acceptance yet. All scientific settings frozen.
-Manager-approved scalar Gaussian callback verified17/17 +54 parity gates;
-new5ab9980b fast%269, dense attempt preserved/stopped for speed only.
-C1%267/%268 at41e28736; recovery%265 untouched at6335316f.
+**039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast
+C0/H1/H2 BOTH protocols accepted,107/107 gates,20/20 convergence; TWO fresh
+full pipelines26CSV+3PNG byte-identical. Final reports22/22,scalar/native17/17,
+t05 305/305,workflow85/85,t04 92/92,t03/t02 each131/131. Manager-approved scalar
+callback and explicitly absent club panels; dense/plot-failed attempts preserved.
+C0≈R6; H1 away suppression unidentified,H2kappa spanszero/no gain. Static HA
+mixesall12000draws; honesttrainingonly. PHASE_C_PROGRESS_REPORT/HANDOVER current.
+Recovery%265 at6335316f, C1 10b%267/10a%268 at41e28736 LIVE/frozen/unpromoted.
+At07:46:59Z uncertain conservative remaining15.6h/36.1h forC1,54.6h recovery
+(censored16.2–54.6h). No fullPhaseC DONE: recovery+C1inference/reproduction remain;
+C2/PhaseD deferred, settings unchanged, no duplicate sampling. Ownidlepanesclosed.
+Historical revision7:
 Revision7 HANDOVER / IN_PROGRESS (2026-10-06): both exact regressions PASS,
 new fixture12476686 mode/marginal gaps0.0/0.0; unchanged tolerances. Fresh t05
 305/305, t04 92/92,t03/t02 131/131, full Gate1 12/12,state53/53. Prepared workflow

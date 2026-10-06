@@ -1,0 +1,3 @@
+rung,protocol,baseline,n,mean_delta,se,sum_delta,score
+C0,10a,R6,517,-0.00016700790791735544,0.0003807844951884971,-0.08634308839327276,sum of supremacy and level marginal logpd
+C0,10b,R6,273,0.0012848341489238605,0.004312339119000687,0.3507597226562139,sum of supremacy and level marginal logpd

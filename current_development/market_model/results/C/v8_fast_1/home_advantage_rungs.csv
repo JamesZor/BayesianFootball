@@ -1,0 +1,15 @@
+rung,protocol,parameter,lo,median,hi,hyperdraws,method
+C0,10a,gamma,0.17078505144957357,0.17871346910426938,0.18664080881046774,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+C0,10b,gamma,0.17046145833503473,0.18260946648844872,0.1947506972220308,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10a,gamma_att,-0.11758379677890146,0.1566559043740149,0.4308956052284104,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10a,gamma_def,-0.25217144596928054,0.0220682282326327,0.2963079027936655,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10a,supremacy_lift,0.17079324318560174,0.17872427761459836,0.18665452627318968,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10a,level_shift,-0.20691717426452172,0.06729383788982227,0.3415048506940427,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10b,gamma_att,-0.1180912363517333,0.1563365232374369,0.4307642676929847,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10b,gamma_def,-0.24813479658036197,0.026292376588556626,0.3007195624213207,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10b,supremacy_lift,0.17047275419733454,0.1826301762116001,0.19478068072317395,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H1,10b,level_shift,-0.20933807155626277,0.06502207029999924,0.339382214623035,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H2,10a,kappa,-0.03592230963417327,0.00787636150053353,0.05011682580234992,12000,all retained hyperparameter draws
+H2,10a,gamma,0.17074010792984312,0.17872061568546022,0.18670082625302964,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
+H2,10b,kappa,-0.04885783643417283,0.0338603485789371,0.1255083757995527,12000,all retained hyperparameter draws
+H2,10b,gamma,0.16995006298718546,0.182542467152028,0.195117395754081,12000,conditional static-state Gaussian mixture over ALL retained hyperdraws
