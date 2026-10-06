@@ -141,3 +141,4 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     **not used**, because that's the human's resource and the rule says wait.
   - At ~03:21: tell the same pi session to continue.
 - **03:27: pi resumed** after the quota reset (first retry), in the same session, pane `%44`.
+- **03:36: pi C4 handover** at `622f9a55`: 209/209 deterministic tests, 53/53 state gates, full-book Gate 1 12/12; no fits yet. **03:38:** fresh pi from the handover, pane `%48` (session `agent_pi_market_model_c5`), new codex window at 4%.
