@@ -54,6 +54,15 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked recovery / deferred C2
 
+Revision6 exact-stall regression now passes unchanged limits, but prescribed C1
+recovery is BLOCKED on a NEW100-iteration Newton exhaustion at seed4961's initial
+target. Observer-only trace identifies fixture12476686: calls7–100 have zero
+actual movement, δ1.035864027765691e-12 (>1e-12), Newton step4.189252610998754e-8.
+Armijo accepts rounded zero-motion candidates, never reaching the exhaustion
+branch that triggers polishing. No rule/tolerance/iteration/seed change or fit
+retry was made. Need explicit review of zero-motion stall recognition before
+recovery; C0/C1/H1/H2 scope remains authorised and C2 separately deferred.
+
 Revision 5 termination implemented, but its required exact-stall regression fails
 at fixture12476625: accepted decrement3.382117013018548e-12 nats passes1e-9,
 mode difference4.0159674463691175e-7 exceeds1e-8 and marginal difference
@@ -82,6 +91,22 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision6 BLOCKED final evidence: primary statistical source
+  d9e6c003, observer-only diagnostic04e67fa8. Frozen seed4961 initial target fails
+  at full fixture12476686:100 calls, gradient norm4.9497130117024364e-5,
+  δ1.035864027765691e-12, step4.189252610998754e-8. Calls7–100 (94 calls) show
+  zero actual movement: Armijo rounds to accepting unchanged x, so polish branch
+  is never entered. Raw bracket min eigenvalue965.3501213272148, not PSD failure.
+  No new solver fix/retry, raised limit, changed threshold/seed/prior/population.
+  Original recovery accounting1696decrement+1polished, maxδ9.743716301157053e-13;
+  deterministic observer prefix146decrement, failed fixture excluded from accepted
+  counts. Root matches run-local recovery CSV; scientific evidence not promotion.
+  Generated binary unchangedde6a986b...8da0d1. No completed recovery fit/intervals,
+  production fits/measures/figures/reproduction. Owned %56/%264 closed, no running
+  session. Exact-case gate stays PASS, fresh t05 289/289, t02–t04 and real Gate1/
+  state checks pass; C2 unchanged/deferred. Hash/diff/todo checks recorded at handoff.
+  Review zero-motion Armijo stall recognition before any further numerical remedy.
 
 - [2026-10-06 @pi] Revision6 recovery at frozen d9e6c003 fails a NEW check:
   seed4961 initial target (iteration0), joint_mode exhaustion100 iterations;

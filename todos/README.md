@@ -39,8 +39,10 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 (mode2.00e-13/marginal1.16e-11), fresh t05 289/289, full Gate1 12/12,
 engines53/53. Prescribed recovery at d9e6c003 hits NEW Newton100-iteration
 exhaustion, root seed4961 initial target; peers cancelled warmup1. No retained
-fit or promotion; stop, observer-only trace for numbers, no solver retry/fix.
-C0/C1/H1/H2 remains authorised; C2 deferred.
+fit or promotion. Observer-only trace: fixture12476686, calls7–100 zero movement,
+δ1.035864e-12 (>1e-12), step4.189253e-8; Armijo accepts unchanged x and never
+triggers polishing. Review zero-motion stall recognition; no solver retry/fix or
+tolerance change. Owned %56/%264 closed. C0/C1/H1/H2 authorised; C2 deferred.
 Historical revision5 BLOCKED checkpoint, source120ac906: authorised stopping rule/accounting
 implemented, but exact seed4964-coordinate regression fails twice identically.
 Fixture12476625: δ3.3821e-12 passes; mode gap4.0160e-7 exceeds1e-8,

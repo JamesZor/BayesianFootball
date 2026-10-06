@@ -24,12 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision6 continuation, full books only):** fit the structure directly to
-  full books, sharing information and learning concentration/deviations.
+- **C (revision6 recovery iteration-limit blocked, full books only):** fit the
+  structure directly to full books, learning concentration/deviations.
   C0/C1/H1/H2 remains authorised; C2 thin pooling remains separately deferred.
-  Authorised Newton polishing now passes the exact-stall mode/marginal regression
-  at unchanged tolerances; recovery is the next prerequisite. No completed pooled
-  posterior fits or production conclusions yet.
+  Authorised polish passes the exact-stall regression at unchanged tolerances;
+  recovery then fails a new100-iteration limit on zero-motion Armijo updates.
+  No completed pooled posterior fits or production conclusions.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -454,7 +454,7 @@ reports are preserved as `PHASE_C_V4_REPORT.md`, `REPRODUCIBILITY_V4.md`,
 `HANDOVER_V4.md`; v4 and prior-phase scientific artifacts are unchanged.
 See current `results/C/PHASE_C_REPORT.md` and `HANDOVER.md` for checks and next steps.
 
-## Phase C revision6: exact-case polishing passes; recovery next
+## Phase C revision6: exact-case polish passes, recovery iteration-limit blocked
 
 Manager brief copied unchanged to `experiments/pi_market_model_phaseC_v6_polish.md`
 at the repository root. Tolerances and scientific settings remain unchanged.
@@ -470,8 +470,22 @@ Fresh owned %56 t05 **289/289**, T05_C6_DETERMINISTIC_DONE (not T05_DONE);
 C2-pending unchanged29pass/10fail, excluded. t04 **92/92**, t03/t02 **131/131**.
 Full real Gate1 **12/12**, state gates **53/53** and all four517-fixture fixed
 filters/smoothers regenerate in `v6_preflight/`. These are prerequisite checks,
-not posterior fits or production reproduction. C1 recovery resumes next.
-Revision5 report/repro/handover/source hashes are archived with `_V5` names.
+not posterior fits or production reproduction.
+
+**Recovery BLOCKED at source d9e6c003:** seed4961 initial target exhausts100 Newton
+iterations; other chains cancel at warmup1, no retained fit/intervals. An observer-
+only trace (04e67fa8) identifies fixture12476686: calls7–100 have zero movement,
+δ **1.035864027765691e-12** (>1e-12) and step **4.189252610998754e-8** (>1e-10).
+Armijo accepts unchanged candidates after roundoff, so its exhaustion/polish branch
+never runs. Gradient norm **4.9497130117024364e-5**; raw min precision eigenvalue
+**965.3501213272148**. Sources: `v6_diagnostic/newton_mode_trace_summary.csv`,
+`newton_mode_trace.csv`, `newton_trace_activity.csv`.
+Stop without a solver variation, iteration/tolerance/seed/prior change or recovery
+retry. Review zero-motion stall recognition first. Both owned %56/%264 closed.
+Root `newton_termination.csv` now labels aborted recovery:1696decrement,1polished,
+max acceptedδ9.743716301157053e-13; these counts do not imply accepted chains.
+Generated binary remains byte-identical to revision4. No further priorities or
+production claims were promoted. Revision5 evidence is archived with `_V5` names.
 
 ### C2 deferred to the human
 
