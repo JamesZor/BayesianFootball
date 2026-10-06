@@ -43,7 +43,23 @@ Four revisions, each blocked or narrowed for a stated reason. **No threshold was
 4. **Revision 4:** C0, C1 (full books) plus your home-advantage rungs H1/H2. **C2 (thin-book
    pooling) is deferred to you.**
 
-*Results: pending.*
+**Preliminary results (first fast-rung attempt, unreviewed; final runs pending):** your
+home-advantage question. Source: beast
+`market_model_c_fast_final/.../results/C/v8_scalar_plot_attempt/home_advantage_rungs.csv` and
+`paired_vs_c0.csv`.
+
+- **The market prices home advantage at about 0.18 on supremacy, tightly:** C0's γ = 0.179
+  [0.171, 0.187] (10a), 0.183 [0.170, 0.195] (10b).
+- **No sign it scales with team quality (H2):** κ = 0.008 [−0.036, 0.050] (10a), 0.034
+  [−0.049, 0.126] (10b). Paired honest log density against C0 is +0.0001 ± 0.0005 (10a) and
+  −0.002 ± 0.004 (10b).
+- **H1, home scoring vs away suppression, is not identifiable, and that's my design error.**
+  Every league match has exactly one home team, so the split is aliased with the league mean μ.
+  Only the sum (supremacy lift 0.179 [0.171, 0.187]) is identified; the level part is prior-only
+  (0.07 [−0.21, 0.34]). Telling them apart needs neutral-venue matches.
+- **C1 (the pooled book model):** the synthetic recovery and both production fits are running on
+  the beast at the prescribed budget; ETAs are in pi's progress report. Expect this evening
+  (about 17 h each); the budget decision is yours.
 
 ## Decisions waiting for you
 
