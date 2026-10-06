@@ -142,3 +142,13 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - At ~03:21: tell the same pi session to continue.
 - **03:27: pi resumed** after the quota reset (first retry), in the same session, pane `%44`.
 - **03:36: pi C4 handover** at `622f9a55`: 209/209 deterministic tests, 53/53 state gates, full-book Gate 1 12/12; no fits yet. **03:38:** fresh pi from the handover, pane `%48` (session `agent_pi_market_model_c5`), new codex window at 4%.
+- **04:15: Phase C rev 4 blocked again (a numerical blocker, not a scientific one).** Sampler and
+  synthetic generator implemented (t05 270/270; t02–t04 pass). The C1 synthetic recovery failed
+  the per-book joint-mode Newton line search twice, with ‖∇f‖ ≈ 3e-5, i.e. roundoff at the
+  optimum. pi stopped rather than try a third numerical variation.
+- **~04:20, manager: revision 5** (`pi_market_model_phaseC_v5_solver.md`): the Newton-decrement
+  stopping rule.
+  - Accept δ ≤ 1e-12; a stalled line search is accepted only if δ ≤ 1e-9, and is counted.
+  - BigFloat re-solve verification on the failing case.
+  - No change to any scientific gate.
+  - Priority order if time runs short: recovery → C0/C1 + 10b → H1/H2 → second reproduction run.
