@@ -111,3 +111,20 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - Remedy, in scope as a better method: revision 3, a second-order (skewness-corrected) mean
     from the third derivatives at the mode, then the full Gate 1 on all book types.
   - Sent to the same pi session (pane `%40`, context 52%); sentinels `PHASEC3_*`.
+- **~02:24: Phase C revision 3 blocked.** The skewness correction makes full books pass
+  Gate 1 at all 12 settings. Thin books fail only at prediction spread 0.20:
+  - BTTS+O/U median 0.02–0.07 nats, SD error up to 49%;
+  - O/U-only SD error 5.9–6.8%;
+  - the 1X2-integrated derivative check is incomplete.
+
+  At spread 0.05 every type passes. Diagnosis: Laplace on curved likelihood ridges.
+- **~02:35, manager decision (scope reduction, no threshold change):** revision 4 runs C0, C1
+  (full books only), H1 and H2. **C2 (thin-book pooling) is deferred to the human** with four
+  options in `pi_market_model_phaseC_v4_scope.md`:
+  - (i) exact moment matching;
+  - (ii) NUTS on the exact Dirichlet;
+  - (iii) gating at the realistic spread (a setting change: the human's call);
+  - (iv) restricting thin-book types (a data change: the human's call).
+
+  pi wrote `results/C/HANDOVER.md` (`31ec8520`, context 81%, codex 90%), and a fresh session
+  was started.
