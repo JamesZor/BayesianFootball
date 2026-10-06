@@ -21,6 +21,9 @@ remaining phases are authorised and reviewed.
   config-driven without changing the published A/B results. The human's mid-run
   addendum also asks whether innovations are quality-dominated, whether team
   levels have the same correlation, and whether level errors share a weekly shock.
+- **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
+  Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
+  These are diagnostic evidence only; Phase C remains double Poisson.
 - **C (not implemented here):** fit the structure directly to books, sharing
   information and learning book concentration and fixture deviations.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
@@ -35,6 +38,7 @@ pinned DataStore.betfair_odds
   -> weekly Kalman ladder R0–R4 (B)
   -> refitted R2 / covariance rungs R5–R7 (B2)
   -> convergence gates -> smoothing + pre-week 10a/10b -> diagnostics/figures
+  -> B3 grid profiles/book checks + R6 rate refits + refiltered FFBS tail PPCs
 ```
 
 All paths below are relative to this directory. Loaders define mathematics;
@@ -93,8 +97,10 @@ MC/KDE convention. High smoothed R² is not evidence of honest interval calibrat
 
 - **Human: isolated then pooled ladder.** Keep the measurement step observable before
   introducing team-structure borrowing. A pooled book likelihood is Phase C, not B2.
-- **Human: double Poisson.** “Dixon–Coles” here refers to the attack/concessions/home
-  parameterisation, not a low-score rho correction. Other score grids are out of scope.
+- **Human: double Poisson.** “Dixon–Coles” in the original A/B model refers to
+  the attack/concessions/home parameterisation, not a low-score rho correction.
+  B3 authorises a local diagnostic grid comparison only (including the low-score
+  correction). **Double Poisson stays for Phase C; C2 is a later human decision.**
 - **Human: KL(market || model).** Fit all quoted selections once per complete market;
   SSE is a same-book control, not the principal inversion.
 - **Bad books:** require complete 1X2 locally; refuse the explicitly identified T014
@@ -231,6 +237,58 @@ not causally identify a dynamic league intercept.
   does not establish structural correctness.
 - Thin-book exclusion restricts the population; no claim transfers automatically
   to a different league, price window or line mix.
+
+## Phase B3: team-step tails and score-grid evidence
+
+B3 uses new artifacts only (`results/B3/`), preserving A/B/B2. Its local loader,
+runner and tests are `l04_copula_grid.jl`, `r04_copula_grid.jl` and
+`t04_copula_grid_tests.jl`; supporting definitions remain in local l04 helpers.
+
+- **Gaussian dependence:** `results/B3/tail_ppc.csv` compares observed FFBS
+  statistics with newly simulated, **refiltered** FFBS replicates at every theta
+  draw. Quality-kurtosis p-values are **0.295 / 0.365** (10a/10b), directional
+  asymmetry **0.535 / 0.540**, squared-quality lag-1 correlation **0.280 / 0.325**.
+  No saved p-value is extreme; no alternative was fitted. This supports adequacy
+  for these observable checks, not proof of no tails in a prior-dominated panel.
+  `tail_ppc_draws.csv` preserves both distributions; `largest_quality_steps.csv`
+  gives the largest posterior-median quality moves for the human's outside check.
+- **Book reproduction:** `results/B3/grid_fit.csv` records total KL
+  **0.600179 / 0.228247 / 0.327800 / 0.339442** for G0/G1/G2/G3, with final
+  inversion gates passing on every accepted book. `grid_profile.csv` preserves
+  coarse/refined profiles, including failed distant candidates. G1's global
+  Dixon–Coles rho is **−0.064462526**.
+- **Heldout lines:** `results/B3/grid_heldout.csv`, ALL/ALL rows, records pooled
+  mean absolute error **0.008846 / 0.008648 / 0.010631 / 0.010946**. G1 is best
+  by the predeclared point criterion, but its advantage over G0 is modest.
+  `grid_line_residuals.csv` shows the draw deficit shrinking from **−0.013354**
+  to **−0.001370**. The shared global parameter uses full books, so this is a
+  heldout-line shape check, not independent fixture CV.
+- **Thin-book bias:** `results/B3/grid_1x2only_bias.csv` reproduces G0's mean
+  Delta log total **−0.102716**; G1 reduces it to **−0.008941**, with CI
+  [−0.013462, −0.004813]. The mean is small, not exactly zero; G1's mean absolute
+  bias remains **0.040676**. `grid_rate_shift.csv` and raw fixture tables record
+  how the grids move rates; `grid_marginals.csv` documents finite-support error.
+- **Outcomes:** `results/B3/grid_outcome_logloss.csv` gives paired fixture CIs,
+  all crossing zero versus G0 and the quoted close. Grid/G0 losses use the whole
+  structural set; OU2.5 close pairs use only its available quoted closes, not
+  invented prices. Better book shape is not established outcome superiority.
+- **R6 refits:** `results/B3/r6_on_best_grid.csv` retains all axes/protocols on
+  G0, G1 and G1 including thin books. On the same population, 10b supremacy RMSE
+  is **0.190775 / 0.191056** (G0/G1), level RMSE **0.053156 / 0.051795**. The
+  covariance story remains; the extra thin-book row changes the evaluation set.
+  G1 10b restricts team-theta fitting but its global grid parameter uses both
+  seasons, so it is informational, not fully honest end-to-end evaluation.
+
+Figures: `results/figures/B3_tail_ppc.png`, `B3_grid_profile.png`,
+`B3_grid_residuals.png`. Definitions, literature/page corrections and limitations:
+[`results/B3/METHODS.md`](results/B3/METHODS.md). Full acceptance evidence:
+[`results/B3/PHASE_B3_REPORT.md`](results/B3/PHASE_B3_REPORT.md).
+
+**Human decision: double Poisson for Phase C; C2 later.** B3 changes neither
+Phase C's grid nor its implementation. Run the new runner in a fresh owned
+beast persistent REPL and wait for `R04_DONE`; run t04/t03/t02 in a fresh owned
+laptop REPL. Exact source, pinned cache, pane-ID commands and CSV hash procedure
+are in [`results/B3/REPRODUCIBILITY.md`](results/B3/REPRODUCIBILITY.md).
 
 ## How to run
 
