@@ -47,7 +47,7 @@ function c05_tighter_mode(adf,a,S,start)
     error("tighter diagnostic Newton failed: step=$step")
 end
 
-@testset "Revision 5 exact legacy-stalled synthetic book" begin
+@testset "Revision 6 exact legacy-stalled synthetic book" begin
     config = PC05.MM.scottish_lower_2425_2526()
     ds = BayesianFootball.Data.load_datastore_cached(config.segment; max_age_hours=10^6)
     panel = PC05.CM.TB.phase_b_panel(ds; config).panel
@@ -90,13 +90,16 @@ end
         @test mode_delta <= 1e-8
         @test marginal_delta <= 1e-9
         @test optimum.decrement <= 1e-9
+        @test optimum.termination == :polished
+        @test optimum.polish_steps <= 3
         @test tighter_residual <= 1e-10
         println("C05_EXACT_STALL fixture=$(c.id) legacy_gradient=$(c.optimum.gradient) mode_delta=$mode_delta marginal_delta=$marginal_delta termination=$(optimum.termination) decrement=$(optimum.decrement) tighter_residual=$tighter_residual")
-        out = get(ENV,"C05_NEWTON_TEST_OUT",joinpath(@__DIR__,"results","C","v5_newton"))
+        out = get(ENV,"C05_NEWTON_TEST_OUT",joinpath(@__DIR__,"results","C","v6_newton"))
         mkpath(out)
         CSV.write(joinpath(out,"newton_regression.csv"),DataFrame(match_id=[c.id],seed=[4964],
             generation_seed=[3962],mode_delta=[mode_delta],marginal_delta=[marginal_delta],
             decrement=[optimum.decrement],termination=[String(optimum.termination)],
+            polish_steps=[optimum.polish_steps],
             legacy_gradient_1=[c.optimum.gradient[1]],legacy_gradient_2=[c.optimum.gradient[2]],
             tighter_residual=[tighter_residual],accepted_1=[accepted.mode[1]],accepted_2=[accepted.mode[2]],
             tighter_1=[tighter[1]],tighter_2=[tighter[2]],

@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -82,6 +82,21 @@ Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
 earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision6 exact-case gate PASSES unchanged tolerances: mode
+  gap2.0039525594484076e-13, marginal gap1.1574741165532032e-11 nats;
+  fixture12476625 polished in1 undamped step, δ1.50342686280365e-24.
+  Owned %56 fresh t05 289/289 (T05_C6_DETERMINISTIC_DONE), C2-pending29pass/10fail,
+  t04 92/92, t03/t02 131/131 and full real Gate1 12/12, state53/53, four517-fixture
+  filters/smoothers. Core real preflight0.345s C1 fixed filter; not production.
+  Frozen source to be pushed before prescribed beast C1 recovery; no prior/seed/
+  data/grid/threshold changes. Revision5 evidence archived unchanged.
+
+- [2026-10-06 @pi] Revision6 claimed after explicit manager review of revision5's
+  inconsistent acceptance rule. Brief copied unchanged into experiments/.
+  Implement up to3 undamped derivative-only Newton steps on qualifying stalls,
+  keep every tolerance/seed/setting; exact-case regression before any sampling.
+  Previous v5 blocked evidence preserved; full-book scope authorised, C2 deferred.
 
 - [2026-10-06 @pi] Revision 5 BLOCKED before sampling, statistical source120ac906.
   Implemented exactly the

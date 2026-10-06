@@ -142,7 +142,7 @@ function fit_fullbook(a,p; markets=nothing,seeds,warmup=2000,samples=3000,progre
     try
         @sync for c in eachindex(seeds)
             callback = progress ? (it,lf) -> begin
-                println("C5 $(a.name) chain=$c iteration=$it target=$lf")
+                println("C6 $(a.name) chain=$c iteration=$it target=$lf")
                 flush(stdout)
             end : nothing
             push!(tasks,Threads.@spawn fullbook_chain(a,p,seeds[c]; markets,warmup,samples,

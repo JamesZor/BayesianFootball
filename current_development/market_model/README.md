@@ -24,12 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (revision 5 exact-mode regression blocked, full books only):** fit the structure
-  directly to full books, sharing information and learning concentration/deviations.
+- **C (revision6 continuation, full books only):** fit the structure directly to
+  full books, sharing information and learning concentration/deviations.
   C0/C1/H1/H2 remains authorised; C2 thin pooling remains separately deferred.
-  Engines, sampler, generator and authorised Newton termination/accounting exist.
-  The exact-stall regression fails its mode/marginal accuracy requirements, so no
-  recovery restart or completed pooled posterior fits/production conclusions.
+  Authorised Newton polishing now passes the exact-stall mode/marginal regression
+  at unchanged tolerances; recovery is the next prerequisite. No completed pooled
+  posterior fits or production conclusions yet.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -453,6 +453,25 @@ next dependency. Full-book scope needs no renewed approval. Historical revision4
 reports are preserved as `PHASE_C_V4_REPORT.md`, `REPRODUCIBILITY_V4.md`,
 `HANDOVER_V4.md`; v4 and prior-phase scientific artifacts are unchanged.
 See current `results/C/PHASE_C_REPORT.md` and `HANDOVER.md` for checks and next steps.
+
+## Phase C revision6: exact-case polishing passes; recovery next
+
+Manager brief copied unchanged to `experiments/pi_market_model_phaseC_v6_polish.md`
+at the repository root. Tolerances and scientific settings remain unchanged.
+On qualifying Armijo stalls, at most3 undamped Newton steps use derivatives only;
+stop on step infinity-norm<=1e-12 or nondecreasing gradient norm, and fail if final
+norm exceeds its pre-polish value or finalδ exceeds1e-9. Counts are `polished`.
+
+Fixture12476625 at the frozen seed4964-coordinate now needs **1** polish step:
+mode gap **2.0039525594484076e-13** (limit1e-8), marginal gap
+**1.1574741165532032e-11** nats (limit1e-9), acceptedδ
+**1.50342686280365e-24**. Source: `results/C/v6_newton/newton_regression.csv`.
+Fresh owned %56 t05 **289/289**, T05_C6_DETERMINISTIC_DONE (not T05_DONE);
+C2-pending unchanged29pass/10fail, excluded. t04 **92/92**, t03/t02 **131/131**.
+Full real Gate1 **12/12**, state gates **53/53** and all four517-fixture fixed
+filters/smoothers regenerate in `v6_preflight/`. These are prerequisite checks,
+not posterior fits or production reproduction. C1 recovery resumes next.
+Revision5 report/repro/handover/source hashes are archived with `_V5` names.
 
 ### C2 deferred to the human
 

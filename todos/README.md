@@ -32,10 +32,15 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
-| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | BLOCKED | P1 | pi | 2026-10-06 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Revision 5 BLOCKED (2026-10-06), source120ac906: authorised stopping rule/accounting
+**039:** Revision6 IN_PROGRESS (2026-10-06): manager authorises <=3 undamped
+Newton polishing steps at qualifying stalls, unchanged tolerances; exact-case
+exact regression now passes (mode2.00e-13/marginal1.16e-11), fresh t05 289/289,
+full Gate1 12/12 and engines53/53. Proceed to recovery/full-book priorities.
+C2 remains deferred.
+Historical revision5 BLOCKED checkpoint, source120ac906: authorised stopping rule/accounting
 implemented, but exact seed4964-coordinate regression fails twice identically.
 Fixture12476625: δ3.3821e-12 passes; mode gap4.0160e-7 exceeds1e-8,
 Laplace marginal gap6.6586e-7 exceeds1e-9. Tighter Newton residual7.67e-12;

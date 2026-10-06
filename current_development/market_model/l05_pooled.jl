@@ -123,8 +123,11 @@ end
 # Run-local accounting, shared safely by independent chains. Reset before a runner;
 # integer counts and max commute, so thread scheduling cannot change the CSV.
 const NEWTON_LOCK = ReentrantLock()
-const NEWTON_COUNTS = Dict(:decrement=>0, :step=>0, :stalled_converged=>0)
+const NEWTON_TERMINATIONS = (:decrement,:step,:stalled_converged,:polished)
+const NEWTON_COUNTS = Dict(k=>0 for k in NEWTON_TERMINATIONS)
 const NEWTON_MAX_DECREMENT = Ref(0.0)
+const NEWTON_POLISH_STEPS = Ref(0)
+const NEWTON_MAX_POLISH_STEPS = Ref(0)
 
 function reset_newton_accounting!()
     lock(NEWTON_LOCK) do
@@ -132,37 +135,72 @@ function reset_newton_accounting!()
             NEWTON_COUNTS[kind] = 0
         end
         NEWTON_MAX_DECREMENT[] = 0.0
+        NEWTON_POLISH_STEPS[] = 0
+        NEWTON_MAX_POLISH_STEPS[] = 0
     end
     return nothing
 end
 
-function accept_newton_mode(x,gradient,hessian,iteration,termination,decrement)
+function accept_newton_mode(x,gradient,hessian,iteration,termination,decrement;
+                            polish_steps=0)
     isfinite(decrement) && 0 <= decrement <= 1e-9 ||
         error("joint-mode acceptance decrement outside gate: $decrement ($termination)")
     lock(NEWTON_LOCK) do
         NEWTON_COUNTS[termination] += 1
         NEWTON_MAX_DECREMENT[] = max(NEWTON_MAX_DECREMENT[],decrement)
+        NEWTON_POLISH_STEPS[] += polish_steps
+        NEWTON_MAX_POLISH_STEPS[] = max(NEWTON_MAX_POLISH_STEPS[],polish_steps)
     end
-    return (; mode=x,gradient,precision=-hessian,iteration,termination,decrement)
+    return (; mode=x,gradient,precision=-hessian,iteration,termination,decrement,polish_steps)
 end
 
 "Write accounting even for aborted runs; counts do not imply completed chains."
 function write_newton_accounting(out; run)
     frame = lock(NEWTON_LOCK) do
-        DF.DataFrame(run=fill(run,3),termination=String.([:decrement,:step,:stalled_converged]),
-            count=[NEWTON_COUNTS[k] for k in (:decrement,:step,:stalled_converged)],
-            max_decrement=fill(NEWTON_MAX_DECREMENT[],3),
-            gate_pass=fill(NEWTON_MAX_DECREMENT[] <= 1e-9,3))
+        DF.DataFrame(run=fill(run,4),termination=String.(collect(NEWTON_TERMINATIONS)),
+            count=[NEWTON_COUNTS[k] for k in NEWTON_TERMINATIONS],
+            max_decrement=fill(NEWTON_MAX_DECREMENT[],4),
+            polish_steps=[k == :polished ? NEWTON_POLISH_STEPS[] : 0 for k in NEWTON_TERMINATIONS],
+            max_polish_steps=fill(NEWTON_MAX_POLISH_STEPS[],4),
+            gate_pass=fill(NEWTON_MAX_DECREMENT[] <= 1e-9,4))
     end
     CSV.write(joinpath(out,"newton_termination.csv"),frame)
     return frame
 end
 
 """
+Revision 6: only after an Armijo stall with δ<=1e-9, take at most three
+UNDAMPED Newton steps using derivatives only (no f comparisons). Stop on
+step infinity norm<=1e-12 or nondecreasing gradient norm. Final gradient must
+not exceed the pre-polish norm, and final δ must still pass the1e-9 gate.
+The existing search eigenvalue floor is unchanged; return raw Hessian precision.
+"""
+function polish_newton_mode(f,x,gradient,hessian,iteration; derivative)
+    pre_norm = LA.norm(gradient)
+    steps = 0
+    for polish_iteration in 1:3
+        eigen = LA.eigen(LA.Symmetric(-hessian))
+        precision = eigen.vectors*LA.Diagonal(max.(eigen.values,1e-6))*eigen.vectors'
+        direction = precision\gradient
+        maximum(abs,direction) <= 1e-12 && break
+        previous_norm = LA.norm(gradient)
+        x = x+direction
+        gradient,hessian = derivative(f,x)
+        steps += 1
+        LA.norm(gradient) >= previous_norm && break
+    end
+    eigen = LA.eigen(LA.Symmetric(-hessian))
+    precision = eigen.vectors*LA.Diagonal(max.(eigen.values,1e-6))*eigen.vectors'
+    decrement = LA.dot(gradient,precision\gradient)/2
+    LA.norm(gradient) <= pre_norm || error("joint-mode polish increased gradient: before=$pre_norm after=$(LA.norm(gradient)) mode=$x")
+    return accept_newton_mode(x,gradient,hessian,iteration,:polished,decrement; polish_steps=steps)
+end
+
+"""
 Newton ascent from the prediction. Revision 5 termination: predicted gain
 δ=g' H^-1 g/2 <= 1e-12 nats, or unscaled Newton step infinity norm <= 1e-10.
 H uses the EXISTING 1e-6 eigenvalue floor for the search direction only.
-On Armijo stalling accept only δ <= 1e-9, otherwise propagate an error.
+On Armijo stalling polish only if δ <= 1e-9 (revision6), otherwise propagate an error.
 The returned raw precision, marginal, likelihood clipping and mean stay unchanged.
 """
 function joint_mode(f, start; iterations=100, derivative=derivatives)
@@ -192,7 +230,7 @@ function joint_mode(f, start; iterations=100, derivative=derivatives)
         end
         if scale < 2.0^-30
             decrement <= 1e-9 || error("joint-mode line search stalled: gradient=$gradient decrement=$decrement mode=$x")
-            return accept_newton_mode(x,gradient,hessian,iteration,:stalled_converged,decrement)
+            return polish_newton_mode(f,x,gradient,hessian,iteration; derivative)
         end
     end
     error("joint mode did not converge in $iterations iterations")
