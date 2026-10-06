@@ -32,13 +32,12 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [021](021_prototype_fast_slow_grw_rate_pooling_and_decompression.md) | Prototype fast-slow GRW rate pooling and decompression | COMPLETED | P1 | claude | 2026-09-21 |
 | [022](022_prototype_momentum_multiscale_grw_dynamics.md) | Prototype momentum multiscale GRW dynamics | IN_PROGRESS | P1 | pi | 2026-09-21 |
 | [023](023_prototype_market_inverse_grw_dynamics.md) | Prototype market-inverse state-space and dynamic GRW volatility models | IN_PROGRESS | P1 | claude | 2026-09-22 |
-| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | BLOCKED | P1 | pi | 2026-10-06 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-06 |
 <!-- TASKS:END -->
 
-**039:** Phase B3 remains verified. Phase C revision 2 is BLOCKED (2026-10-06):
-corrected joint-mode marginal passes, but full-book posterior means fail the
-fixed 5%-of-SD gate (max 9.17%). No pooled sampling; revised approximation
-requires manager approval. First-attempt blocker evidence remains.
+**039:** Phase B3 remains verified. Phase C revision 3 is IN_PROGRESS (2026-10-06):
+authorised skewness correction to the mean, unchanged marginal/covariance and
+thresholds; all book types checked before sampling. Prior blocker evidence retained.
 Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
 Double Poisson stays for C; later score-grid C2 and Phase D remain unauthorised.
 

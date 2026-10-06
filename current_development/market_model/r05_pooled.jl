@@ -1,9 +1,11 @@
-# Phase C revision 2: can the exact-density joint-mode Laplace update pass
-# the unchanged marginal AND posterior-moment gates before pooled sampling?
+# Phase C revision 3: can the skewness-corrected posterior mean pass all
+# unchanged marginal AND posterior-moment gates before pooled sampling?
+# The revision-2 log-marginal and covariance are unchanged; ALL available
+# book types are checked before deciding promotion.
 # Phase A's isolated KL rates remain the scoring targets, not expansion points.
 # Double Poisson for C; later score-grid Phase C2 and Phase D are not authorised.
 # Gate artifacts under results/C are deterministic and replaceable. Revision-1
-# preflight artifacts remain untouched. No package updates or database writes.
+# preflight artifacts remain untouched; revision-2 gate evidence is in v2_gate/. No package updates or database writes.
 # At this stage no posterior fits are promoted; a failed gate stops the runner.
 # Use include through a fresh owned persistent tmux Julia REPL, pane IDs only.
 
@@ -54,8 +56,8 @@ println()
 # 5. Promotion gate: no sampling after a failed likelihood approximation
 # ===================================================================
 if !all(c05_gate.summary.gate_pass)
-    println("C05_LIKELIHOOD_BLOCKED")
+    println("C05_C3_LIKELIHOOD_BLOCKED")
 else
-    println("C05_LIKELIHOOD_GATE_DONE")
+    println("C05_C3_LIKELIHOOD_GATE_DONE")
 end
 # R05_DONE is reserved for the completed production pipeline, not this gate stage.

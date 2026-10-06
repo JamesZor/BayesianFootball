@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -52,15 +52,18 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked
 
-Phase C revision 2 fails its posterior-mean gate on the first 30 full books:
-maximum mean error / exact SD = 0.091744 at n=250, prediction SD=0.20
-(limit 0.05); marginal accuracy passes. The joint-mode Gaussian returns a mode,
-not the exact slightly skewed posterior's mean. A manager-approved amended
-approximation is needed; no sampling or threshold/data/grid change is allowed.
-Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
-First-attempt report/code/CSVs are preserved.
+Revision 3 authorises the cubic skewness correction to the mean only.
+All book types must pass the unchanged marginal and moment thresholds before
+sampling. Revision-2 blocker evidence is retained in `results/C/v2_gate/` and
+`results/C/PHASE_C_V2_REPORT.md`; no data, grid or threshold change is allowed.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision 3 claimed. Copied the manager's addendum into
+  experiments/ unchanged. Owned laptop Julia pane `%43`, 8 threads/BLAS=1.
+  Implementing cubic third-derivative mean correction with AD/finite-difference
+  checks, keeping the revision-2 marginal and covariance; evaluate all book
+  types before promotion. Previous blocker evidence preserved; no sampling yet.
 
 - [2026-10-06 @pi] Phase C revision 2 BLOCKED, statistical source `7b6c7659`.
   Fresh owned laptop pane `%42`: necessary t05 update checks 24/24

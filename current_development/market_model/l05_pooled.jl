@@ -4,6 +4,8 @@ import CSV
 import DataFrames
 import Dates
 import Distributions
+import ForwardDiff
+import SpecialFunctions
 import LinearAlgebra
 import Optim
 import Statistics
@@ -22,6 +24,78 @@ const DF = DataFrames
 const LA = LinearAlgebra
 const ST = Statistics
 const DS = Distributions
+const NORMAL_32 = PF.normal_quadrature(32)
+const NORMAL_64 = PF.normal_quadrature(64)
+normal_rule(order) = order == 32 ? NORMAL_32 : order == 64 ? NORMAL_64 : PF.normal_quadrature(order)
+primal(x) = x
+primal(x::ForwardDiff.Dual) = primal(ForwardDiff.value(x))
+jet_norm(x) = abs(x)
+jet_norm(x::ForwardDiff.Dual) = max(jet_norm(ForwardDiff.value(x)),
+    maximum(jet_norm,ForwardDiff.partials(x)))
+
+"""
+AD-compatible evaluation of the SAME renormalised cutoff-10 double-Poisson
+probabilities. Common exp(-lambda_h-lambda_a) factors cancel on normalisation;
+recurrence gives the same cells as production Poisson pdfs. This is derivative
+algebra only, not a different grid. Real-book tests require probability/density
+parity with MM.selection_probabilities and PF.book_logdensity.
+"""
+function differentiable_probabilities(theta)
+    h,a = exp.(theta)
+    ph,pa = [one(h)],[one(a)]
+    for k in 1:10
+        push!(ph,ph[end]*h/k)
+        push!(pa,pa[end]*a/k)
+    end
+    P = ph*pa'
+    P /= sum(P)
+    q = Dict(:home=>sum(LA.tril(P,-1)),:draw=>sum(LA.diag(P)),
+        :away=>sum(LA.triu(P,1)),:btts_yes=>sum(P[2:end,2:end]))
+    q[:btts_no] = 1-q[:btts_yes]
+    for k in 0:3
+        under = sum(P[i+1,j+1] for i in 0:k for j in 0:(k-i))
+        q[Symbol("under_$(k)5")] = under
+        q[Symbol("over_$(k)5")] = 1-under
+    end
+    return q
+end
+
+"Exact Dirichlet normalisers, generic in theta to permit nested ForwardDiff."
+function differentiable_logdensity(theta,markets,n)
+    q = differentiable_probabilities(theta)
+    value = zero(theta[1])
+    for market in markets
+        alpha = [n*q[s] for s in market.selections]
+        value += SpecialFunctions.loggamma(sum(alpha))-sum(SpecialFunctions.loggamma,alpha)
+        value += sum((alpha.-1).*log.(market.p))
+    end
+    return value
+end
+
+ad_derivatives(f,x) = (ForwardDiff.gradient(f,x),ForwardDiff.hessian(f,x))
+
+"Third tensor T[j,k,l], AD over the exact likelihood Hessian."
+third_ad(f,x) = reshape(ForwardDiff.jacobian(z->vec(ForwardDiff.hessian(f,z)),x),
+    length(x),length(x),length(x))
+
+"Independent central differences of the exact AD Hessian; compared with third_ad."
+function third_fd(f,x; step=2e-4)
+    k = length(x)
+    T = zeros(k,k,k)
+    for j in 1:k
+        e = zeros(k)
+        e[j] = step
+        T[:,:,j] .= (ForwardDiff.hessian(f,x+e)-ForwardDiff.hessian(f,x-e))/(2step)
+    end
+    return T
+end
+
+"Wick contraction of the cubic log-density term with Gaussian covariance."
+function skewness_shift(Sigma,T)
+    k = size(Sigma,1)
+    return [0.5sum(Sigma[i,j]*T[j,l,m]*Sigma[l,m]
+        for j in 1:k for l in 1:k for m in 1:k) for i in 1:k]
+end
 
 "Central derivatives of the exact density on the unchanged production grid."
 function derivatives(f, x; step=2e-4)
@@ -46,10 +120,10 @@ function derivatives(f, x; step=2e-4)
 end
 
 "Newton ascent with backtracking from the prediction, not from Phase A's inversion."
-function joint_mode(f, start; tolerance=2e-6, iterations=100)
+function joint_mode(f, start; tolerance=2e-6, iterations=100, derivative=derivatives)
     x = copy(start)
     for iteration in 1:iterations
-        gradient, hessian = derivatives(f, x)
+        gradient, hessian = derivative(f, x)
         if maximum(abs, gradient) <= tolerance
             return (; mode=x, gradient, precision=-hessian, iteration)
         end
@@ -89,7 +163,7 @@ function logsumexp(terms)
 end
 
 """
-Revision 2 joint-mode Laplace integral and information-form book update.
+Revision 2 joint-mode Laplace integral, with revision 3 corrected mean.
 Let f(x)=log L(x)+log N(x;a,S), x*=argmax f, and B=-f''(x*).
 Taylor expansion gives exp(f(x)) ≈ exp(f(x*)) exp(-δ'Bδ/2).
 Thus log integral ≈ f(x*) + k/2 log(2π) - 1/2 log det B.
@@ -108,16 +182,32 @@ observed curvature in its tangent direction. Both covariances are returned.
 For 1X2-only books x=d=theta_h-theta_a, L means the level-integrated likelihood
 with flat dℓ, ℓ=(theta_h+theta_a)/2. That likelihood is independent of the
 state's ℓ by definition. k=1 and S=c'S_side*c, c=(1,-1).
-This is an approximate update, not an exact nonlinear Kalman filter. No second
-relinearisation is used: a second Newton expansion at the same joint mode
-would not restore higher-order mass or moments. RTS would be approximate.
+This is an approximate update, not an exact nonlinear Kalman filter.
+
+Revision 3: f(x*+delta)=f(x*)-delta'B delta/2+T[j,k,l]delta_j delta_k delta_l/6+...
+Expanding the cubic exponential once, the Gaussian mean numerator is
+T[j,k,l] E[delta_i delta_j delta_k delta_l]/6. Wick's identity gives three
+identical contractions because T is symmetric, hence
+E[x_i] = x*_i + Sigma[i,j] T[j,k,l] Sigma[k,l]/2 + higher-order terms,
+Sigma=B^-1. The Gaussian prediction has zero third derivatives, so T comes
+only from log L (the level-integrated log likelihood for 1X2-only books).
+The odd cubic term contributes zero to the normaliser at this order. Thus
+revision 2's joint-mode marginal and its covariance are UNCHANGED.
+
+The corrected posterior location is mode+shift. Its Gaussian information is
+covariance^-1*(mode+shift); subtracting the prior's S^-1*a defines the book's
+pseudo-observation information vector. This avoids shrinking the correction a
+second time by merely shifting the likelihood mode. The precision J remains
+as before. No second relinearisation or quadrature-moment replacement is used.
+The raw mode-based mean is returned for comparison. RTS would be approximate.
 """
-function laplace_update(loglikelihood, a, S)
+function laplace_update(loglikelihood, a, S; third_likelihood=loglikelihood,
+                        derivative=derivatives)
     prior = DS.MvNormal(a, LA.Symmetric(S))
     target = x -> loglikelihood(x)+DS.logpdf(prior,x)
-    optimum = joint_mode(target,a)
+    optimum = joint_mode(target,a; derivative)
     x = optimum.mode
-    gradient, hessian = derivatives(loglikelihood,x)
+    gradient, hessian = derivative(loglikelihood,x)
     J = -hessian
     B = LA.Symmetric(J+inv(S))
     LA.isposdef(B) || error("joint mode has nonpositive bracket precision")
@@ -125,8 +215,13 @@ function laplace_update(loglikelihood, a, S)
     eigen = LA.eigen(LA.Symmetric(J))
     clipped = eigen.vectors*LA.Diagonal(max.(eigen.values,1e-8))*eigen.vectors'
     covariance = inv(LA.Symmetric(inv(S)+clipped))
-    mean = covariance*(S\a+clipped*x+gradient)
-    return (; marginal,mean,covariance,mode=x,raw_covariance=inv(B),J,
+    mode_mean = covariance*(S\a+clipped*x+gradient)
+    raw_covariance = inv(B)
+    T = third_ad(third_likelihood,x)
+    shift = skewness_shift(raw_covariance,T)
+    mean = x+shift
+    information = covariance\mean-S\a
+    return (; marginal,mean,covariance,mode=x,raw_covariance,J,mode_mean,shift,information,
         mode_gradient=maximum(abs,optimum.gradient),iteration=optimum.iteration)
 end
 
@@ -137,14 +232,14 @@ EVERY node uses the original exact integrand/proposal ratio. Increase order
 independently to check mass and moment resolution, including non-Gaussian tails.
 Supports 1-D and 2-D; uses the unclipped bracket Hessian for the proposal.
 """
-function quadrature_moments(loglikelihood,a,S; order=32)
+function quadrature_moments(loglikelihood,a,S; order=32,derivative=derivatives)
     prior = DS.MvNormal(a,LA.Symmetric(S))
     target = x -> loglikelihood(x)+DS.logpdf(prior,x)
-    optimum = joint_mode(target,a)
+    optimum = joint_mode(target,a; derivative)
     covariance = inv(LA.Symmetric(optimum.precision))
     proposal = DS.MvNormal(optimum.mode,LA.Symmetric(covariance))
     factor = LA.cholesky(LA.Symmetric(covariance)).L
-    nodes,weights = PF.normal_quadrature(order)
+    nodes,weights = normal_rule(order)
     k = length(a)
     coordinates = k == 1 ? [[x] for x in nodes] : [[x,y] for y in nodes for x in nodes]
     logweights = k == 1 ? log.(weights) : [log(x)+log(y) for y in weights for x in weights]
@@ -159,31 +254,31 @@ end
 
 """
 Level integral for a 1X2-only book: integrate the EXACT Dirichlet density over
-flat Lebesgue dℓ. Locate its level mode, then Gaussian importance quadrature.
-The omitted tails are checked at explicit endpoints; no Gaussian state-level
-prior is introduced. The mode/proposal changes coordinates, not the integrand.
-The grid is evaluated only at representable rates; underflow excursions carry
-zero density, never an invented probability or repaired book.
+flat Lebesgue dℓ, with endpoint tail diagnostics. Use adaptive Gauss-Kronrod
+quadrature, exposed by the EXISTING Distributions.quadgk dependency; no package
+is added or updated. Locate the level mode solely to scale the integrand and
+split the domain. This is exact-density integration, not a Gaussian level prior.
+For AD in d, hold the scale/domain fixed at primal(d) and differentiate the
+original integrand under the integral. The adaptive tolerance is 2e-12; level
+order labels 32/64 select independent Kronrod rules with Gauss orders 7/15.
+This avoids differentiating an under-resolved, moving Gaussian node mesh.
 """
-function level_integral(d,markets,n; order=32, bounds=(-8.0,2.5))
-    f = ell -> begin
-        theta = [ell+d/2,ell-d/2]
-        value = PF.book_logdensity(theta,markets,n)
-        isfinite(value) ? value : -Inf
-    end
-    optimum = Optim.optimize(ell->-f(ell),bounds[1],bounds[2],Optim.Brent(); abs_tol=1e-9)
+function level_integral(d,markets,n; order=32, bounds=(-8.0,4.0))
+    d0 = primal(d)
+    reference = ell -> differentiable_logdensity([ell+d0/2,ell-d0/2],markets,n)
+    optimum = Optim.optimize(ell->-reference(ell),bounds[1],bounds[2],Optim.Brent(); abs_tol=1e-9)
     mode = Optim.minimizer(optimum)
-    step = 2e-4
-    precision = -(f(mode+step)-2f(mode)+f(mode-step))/step^2
+    precision = -ForwardDiff.derivative(ell->ForwardDiff.derivative(reference,ell),mode)
     precision > 0 || error("nonpositive level-integral mode curvature")
     sd = 1/sqrt(precision)
-    proposal = DS.Normal(mode,sd)
-    nodes,weights = PF.normal_quadrature(order)
-    terms = [log(w)+f(mode+sd*x)-DS.logpdf(proposal,mode+sd*x) for (x,w) in zip(nodes,weights)]
-    marginal = logsumexp(terms)
-    return (; marginal,mode,sd,
-        lower_relative_logdensity=f(bounds[1])-f(mode),
-        upper_relative_logdensity=f(bounds[2])-f(mode))
+    f = ell -> differentiable_logdensity([ell+d/2,ell-d/2],markets,n)
+    peak = reference(mode)
+    integral,error = DS.quadgk(ell->exp(f(ell)-peak),bounds[1],mode,bounds[2];
+        rtol=2e-12,atol=1e-14,order=order==32 ? 7 : 15,norm=jet_norm)
+    marginal = peak+log(integral)
+    return (; marginal,mode,sd,relative_error=primal(error/integral),
+        lower_relative_logdensity=reference(bounds[1])-reference(mode),
+        upper_relative_logdensity=reference(bounds[2])-reference(mode))
 end
 
 "Type is determined by complete gated markets, not the rank of a Hessian."
@@ -260,7 +355,8 @@ Realistic centres are Phase A isolated rates where finite, fixed-parameter C0
 pre-week predictions otherwise. Offset adds +0.10 to each side. Moments use
 max_i |mean_L-mean_Q|/SD_Q and max_i |SD_L/SD_Q-1| <= .05 per fixture.
 Raw (unclipped) covariance errors are also retained to isolate clipping effects.
-Fail fast after the first book type with a failed fixed gate, as the brief requires.
+Revision 3 evaluates ALL available types before its promotion decision, even
+if one type fails, as the manager's addendum requires.
 """
 function laplace_gate(ds,config,out)
     rates = CSV.read(joinpath(@__DIR__,"results","A","rates.csv"),DF.DataFrame)
@@ -269,7 +365,7 @@ function laplace_gate(ds,config,out)
     books = Dict(Int(first(g.match_id))=>DF.DataFrame(g) for g in DF.groupby(book,:match_id))
     predictions = c0_gate_predictions(ds,config,rates)
     rows = NamedTuple[]
-    kinds = ("full","1X2-only","OU-only","BTTS+OU","BTTS-only")
+    kinds = ("full","OU-only","BTTS+OU","BTTS-only","1X2-only")
     availability = Dict(kind => [r for r in eachrow(rates) if
         !haskey(config.excluded_matches,r.match_id) && haskey(books,r.match_id) &&
         book_type(books[r.match_id]) == kind] for kind in kinds)
@@ -295,17 +391,21 @@ function laplace_gate(ds,config,out)
                     f64 = x -> level_integral(x[1],markets,n; order=64).marginal
                     a = [d]
                     S = reshape([2spread^2],1,1)
-                    approximate = laplace_update(f64,a,S)
-                    exact32 = quadrature_moments(f32,a,S; order=32)
-                    exact64 = quadrature_moments(f64,a,S; order=64)
+                    approximate = laplace_update(f64,a,S; derivative=ad_derivatives)
+                    exact32 = quadrature_moments(f32,a,S; order=32,derivative=ad_derivatives)
+                    exact64 = quadrature_moments(f64,a,S; order=64,derivative=ad_derivatives)
+                    adf = f64
                 else
                     f = x -> PF.book_logdensity(x,markets,n)
                     S = spread^2*Matrix(LA.I,2,2)
-                    approximate = laplace_update(f,a,S)
+                    adf = x -> differentiable_logdensity(x,markets,n)
+                    approximate = laplace_update(f,a,S; third_likelihood=adf)
                     exact32 = quadrature_moments(f,a,S; order=32)
                     exact64 = quadrature_moments(f,a,S; order=64)
                 end
                 sd = sqrt.(LA.diag(exact64.covariance))
+                third_relative_error = LA.norm(third_ad(adf,approximate.mode)-
+                    third_fd(adf,approximate.mode))/max(LA.norm(third_ad(adf,approximate.mode)),1e-12)
                 mean_error = maximum(abs.(approximate.mean-exact64.mean)./sd)
                 sd_error = maximum(abs.(sqrt.(LA.diag(approximate.covariance))./sd.-1))
                 raw_sd_error = maximum(abs.(sqrt.(LA.diag(approximate.raw_covariance))./sd.-1))
@@ -317,6 +417,9 @@ function laplace_gate(ds,config,out)
                     moment_quadrature_delta=maximum(abs.(exact64.mean-exact32.mean)./sd),
                     sd_quadrature_delta=maximum(abs.(sqrt.(LA.diag(exact32.covariance))./sd.-1)),
                     mean_error,sd_error,raw_sd_error,moment_pass=max(mean_error,sd_error)<=0.05,
+                    uncorrected_mean_error=maximum(abs.(approximate.mode_mean-exact64.mean)./sd),
+                    third_relative_error,correction_1=approximate.shift[1],
+                    correction_2=length(a)==2 ? approximate.shift[2] : NaN,
                     prediction_1=a[1],prediction_2=length(a)==2 ? a[2] : NaN,
                     mode_1=approximate.mode[1],mode_2=length(a)==2 ? approximate.mode[2] : NaN,
                     laplace_mean_1=approximate.mean[1],
@@ -336,7 +439,6 @@ function laplace_gate(ds,config,out)
         CSV.write(joinpath(out,"book_inventory_c.csv"),inventory)
         println("Revised Laplace gate: $kind, $(length(selected))/$(length(available)) books")
         flush(stdout)
-        all(summary.gate_pass) || break
     end
     fixture = DF.DataFrame(rows)
     summary = gate_summary(fixture)
@@ -367,6 +469,8 @@ function gate_summary(fixture)
             max_sd_quadrature_delta=maximum(g.sd_quadrature_delta),
             max_mean_error=maximum(g.mean_error),max_sd_error=maximum(g.sd_error),
             max_raw_sd_error=maximum(g.raw_sd_error),
+            max_uncorrected_mean_error=maximum(g.uncorrected_mean_error),
+            max_third_relative_error=maximum(g.third_relative_error),
             mean_failures=count(g.mean_error .> 0.05),sd_failures=count(g.sd_error .> 0.05),
             max_mean_mode_delta=maximum(g.mean_mode_delta),moment_pass=all(g.moment_pass),
             marginal_pass=median<=0.01 && p95<=0.05,
