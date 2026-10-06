@@ -1,0 +1,143 @@
+The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 252.2 hours)...
+Production-grid derivative parity: first 20 full books: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:101
+  Expression: max(L64.lower_relative_logdensity, L64.upper_relative_logdensity) <= -30
+   Evaluated: -17.880215454939844 <= -30
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:71 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:101 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+Test Summary:                                                   | Pass  Fail  Total   Time
+Phase C revision 3 deterministic likelihood update              |  129     1    130  41.1s
+  Gaussian likelihood: integral and moments independently known |   12           12   6.6s
+  Exact Beta normalisers and reversed large-n KL                |    2            2   1.8s
+  Synthetic total book narrow prediction quadrature             |    4            4   2.3s
+  Cubic skewness contraction and information-centre identity    |    3            3   2.5s
+  Production-grid derivative parity: first 20 full books        |  102     1    103  25.1s
+  Quality/style rotation equals matched R6                      |    6            6   2.7s
+RNG of the outermost testset: Xoshiro(0x2585ef2772fc8a33, 0xaeef75ee88b98c6b, 0xb7fc605e905f3f46, 0x60048ce9c05614e0, 0x6a620d30215ffdf2)
+ERROR: LoadError: Some tests did not pass: 129 passed, 1 failed, 0 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:10
+
+julia> include("current_development/market_model/l05_pooled.jl"); include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 252.3 hours)...
+Test Summary:                                      | Pass  Total   Time
+Phase C revision 3 deterministic likelihood update |  130    130  16.2s
+T05_C3_UPDATE_DONE
+
+julia> include("current_development/market_model/r05_pooled.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 252.3 hours)...
+Revised Laplace gate: full, 30/517 books
+Revised Laplace gate: OU-only, 25/25 books
+Revised Laplace gate: BTTS+OU, 10/10 books
+Revised Laplace gate: BTTS-only, 1/1 books
+ERROR: LoadError: joint-mode line search stalled: [-0.06441733688240525]
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:44
+ [2] joint_mode(f::Main.PooledMarket.var"#14#15"{…}, start::Vector{…}; tolerance::Float64, iterations::Int64, derivative::typeof(Main.PooledMarket.ad_derivatives))
+   @ Main.PooledMarket ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_pooled.jl:148
+ [3] joint_mode
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_pooled.jl:120 [inlined]
+ [4] laplace_update(loglikelihood::Main.PooledMarket.var"#laplace_gate##12#laplace_gate##13"{…}, a::Vector{…}, S::Matrix{…}; third_likelihood::Function, derivative::typeof(Main.PooledMarket.ad_derivatives))
+   @ Main.PooledMarket ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_pooled.jl:205
+ [5] laplace_gate(ds::BayesianFootball.Data.DataStore, config::Main.MarketModel.MarketModelConfig{…}, out::String)
+   @ Main.PooledMarket ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_pooled.jl:392
+ [6] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/r05_pooled.jl:50
+ [7] include(mapexpr::Function, mod::Module, _path::String)
+   @ Base ./Base.jl:307
+ [8] top-level scope
+   @ REPL[3]:1
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/r05_pooled.jl:50
+Some type information was truncated. Use `show(err)` to see complete types.
+
+julia> include("current_development/market_model/l05_pooled.jl"); include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 252.3 hours)...
+Production-grid derivative parity: first 20 full books: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:104
+  Expression: norm(T - PC05.third_fd(f, [d])) / norm(T) <= 1.0e-6
+   Evaluated: 5.405790669565064e-5 <= 1.0e-6
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:71 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:104 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+Test Summary:                                                   | Pass  Fail  Total   Time
+Phase C revision 3 deterministic likelihood update              |  129     1    130  17.6s
+  Gaussian likelihood: integral and moments independently known |   12           12   4.4s
+  Exact Beta normalisers and reversed large-n KL                |    2            2   0.0s
+  Synthetic total book narrow prediction quadrature             |    4            4   2.0s
+  Cubic skewness contraction and information-centre identity    |    3            3   1.5s
+  Production-grid derivative parity: first 20 full books        |  102     1    103   9.7s
+  Quality/style rotation equals matched R6                      |    6            6   0.0s
+RNG of the outermost testset: Xoshiro(0x2585ef2772fc8a33, 0xaeef75ee88b98c6b, 0xb7fc605e905f3f46, 0x60048ce9c05614e0, 0x6a620d30215ffdf2)
+ERROR: LoadError: Some tests did not pass: 129 passed, 1 failed, 0 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:10
+
+julia> include("current_development/market_model/l05_pooled.jl"); include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 252.3 hours)...
+Production-grid derivative parity: first 20 full books: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:104
+  Expression: norm(T - PC05.third_fd(f, [d])) / norm(T) <= 1.0e-6
+   Evaluated: 5.405838441375254e-5 <= 1.0e-6
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:71 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:104 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+Test Summary:                                                   | Pass  Fail  Total   Time
+Phase C revision 3 deterministic likelihood update              |  129     1    130  16.5s
+  Gaussian likelihood: integral and moments independently known |   12           12   4.1s
+  Exact Beta normalisers and reversed large-n KL                |    2            2   0.0s
+  Synthetic total book narrow prediction quadrature             |    4            4   2.1s
+  Cubic skewness contraction and information-centre identity    |    3            3   1.5s
+  Production-grid derivative parity: first 20 full books        |  102     1    103   8.8s
+  Quality/style rotation equals matched R6                      |    6            6   0.0s
+RNG of the outermost testset: Xoshiro(0x2585ef2772fc8a33, 0xaeef75ee88b98c6b, 0xb7fc605e905f3f46, 0x60048ce9c05614e0, 0x6a620d30215ffdf2)
+ERROR: LoadError: Some tests did not pass: 129 passed, 1 failed, 0 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:10
+
+julia>

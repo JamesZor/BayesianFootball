@@ -1,6 +1,6 @@
 book_type,available,tested
 full,517,30
-OU-only,25,25
-BTTS+OU,10,10
-BTTS-only,1,1
 1X2-only,78,0
+OU-only,25,0
+BTTS+OU,10,0
+BTTS-only,1,0

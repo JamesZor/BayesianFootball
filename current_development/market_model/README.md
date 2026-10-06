@@ -24,10 +24,10 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (blocked at revision-2 accuracy gate):** fit the structure directly to books,
+- **C (blocked at revision-3 thin-book gates):** fit the structure directly to books,
   sharing information and learning book concentration and fixture deviations.
-  The corrected joint-mode Laplace marginal is accurate on the tested full books,
-  but its posterior means fail the fixed 5%-of-SD gate; no pooled fits were launched.
+  Cubic mean correction fixes the full-book gap, but O/U-only covariance and
+  BTTS+O/U accuracy fail; integrated 1X2 remains unvalidated. No pooled fits.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -338,21 +338,51 @@ The manager's logged decision is to retain totals/BTTS-only likelihoods exactly:
 O/U constrains the total along a curved contour, while BTTS+O/U may carry weak
 supremacy information. 1X2-only books use a flat-measure level-integrated likelihood.
 
-`l05_pooled.jl`, `r05_pooled.jl` and `t05_pooled_tests.jl` now contain the revised
-update, fail-fast accuracy runner and deterministic unit checks. They are **not a
-completed production or recovery pipeline**. `results/C/laplace_gate.csv` and
-`laplace_gate_fixture.csv` preserve the first 30 full books, all prescribed n,
+At source `7b6c7659`, `l05_pooled.jl`, `r05_pooled.jl` and `t05_pooled_tests.jl`
+contained the revised update, fail-fast accuracy runner and necessary unit checks,
+not a completed production or recovery pipeline. `results/C/v2_gate/laplace_gate.csv`
+and `v2_gate/laplace_gate_fixture.csv` preserve the first 30 full books, all prescribed n,
 spreads and offsets. Marginal accuracy passes; the moment gate fails. The report
 records exact numbers and missing acceptance items; no forecast, shrinkage,
 concentration, team-path or HA posterior conclusions can yet be made.
 
 The revision-1 report and reproduction notes are retained as
 `results/C/PHASE_C_V1_REPORT.md` / `REPRODUCIBILITY_V1.md`; its preflight source and
-CSVs remain unchanged. Current evidence and commands:
+CSVs remain unchanged. Revision-2 evidence and commands:
+[`results/C/PHASE_C_V2_REPORT.md`](results/C/PHASE_C_V2_REPORT.md),
+[`results/C/REPRODUCIBILITY_V2.md`](results/C/REPRODUCIBILITY_V2.md).
+At that source, a fresh runner stopped at `C05_LIKELIHOOD_BLOCKED`, not
+`R05_DONE`; `T05_UPDATE_DONE` denoted only necessary deterministic checks.
+
+## Phase C revision 3: mean fixed, thin-book gates blocked
+
+The manager's addendum is copied unchanged to
+`../../experiments/pi_market_model_phaseC_v3_addendum.md`. The loader derives
+and implements the cubic skewness mean correction using third derivatives of
+the likelihood alone. The revision-2 log-marginal and covariance are unchanged:
+all 360 full-book marginals compare identically with their saved revision-2
+values. Full-book mean error now has maximum **0.0009284497092163062** of SD,
+within the unchanged 0.05 threshold (`results/C/laplace_gate.csv`).
+
+All book types were attempted, but **the complete all-types gate did not finish**.
+At n=250, prediction SD=.20 and no offset, O/U-only SD error reaches
+**0.058978186176263714** (limit .05); BTTS+O/U median absolute marginal error
+is **0.02060874306987226 nats** (limit .01). Independent orders 32/64 resolve
+these failures. High-n thin-book quadrature is less stable and is labelled,
+not used to dismiss the well-resolved low-n failures. BTTS-only has one available
+book and passes its completed settings. The 1X2-only integrated solver stalled;
+its revised adaptive-integral third-derivative check then failed twice.
+
+Current necessary tests: **129 pass / 1 fail / 130 assertions**, not pooled
+acceptance or synthetic recovery. The current adaptive level-integrated code
+is unvalidated. No sampling, convergence, forecast/shrinkage/ratings/HA posterior
+or production reproducibility claims exist. Human decision remains **double
+Poisson for C; C2 later**; no Phase D or later score-grid phase was attempted.
+
+Evidence, numerical failures, missing acceptance and stop rationale:
 [`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md),
 [`results/C/REPRODUCIBILITY.md`](results/C/REPRODUCIBILITY.md).
-A fresh `r05_pooled.jl` execution stops at `C05_LIKELIHOOD_BLOCKED`, **not**
-`R05_DONE`. `T05_UPDATE_DONE` denotes only the deterministic update tests.
+The current source must not be promoted just because the full-book mean is fixed.
 
 ## How to run
 

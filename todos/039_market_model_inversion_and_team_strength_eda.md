@@ -4,7 +4,7 @@
 |---|---|
 | ID | 039 |
 | Title | Market model: inversion and team-strength EDA |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
@@ -52,12 +52,30 @@ in `current_development/market_model/DESIGN.md`.
 
 ## Blocked
 
-Revision 3 authorises the cubic skewness correction to the mean only.
-All book types must pass the unchanged marginal and moment thresholds before
-sampling. Revision-2 blocker evidence is retained in `results/C/v2_gate/` and
-`results/C/PHASE_C_V2_REPORT.md`; no data, grid or threshold change is allowed.
+Revision 3 fixes full-book means but fails thin-book Gate 1: at n=250,
+SD=.20, BTTS+O/U median marginal error .020609 nats (limit .01) and
+O/U-only SD error .058978 (limit .05), with independently stable quadrature.
+The integrated 1X2 third-derivative test fails twice at 5.41e-5 relative error
+(limit 1e-6); stop without a third variation. Four 2-D types completed;
+all-types Gate 1 remains incomplete, not passed. No sampling. An amended
+thin-book approximation and resolved integration derivatives are dependencies.
+Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
+earlier revisions preserved.
 
 ## Work Log & Progress
+
+- [2026-10-06 @pi] Revision 3 BLOCKED, implementation `8591099b`.
+  Cubic mean correction preserves all 360 full-book log marginals exactly;
+  worst corrected full mean error/SD .00092845 (limit .05). All 2-D types
+  completed: full 30, OU-only 25, BTTS+OU 10, BTTS-only 1, all 12 settings.
+  Thin-book scientific gates fail; n=250 failures are quadrature-resolved.
+  1X2 integrated solver stalled; adaptive derivative check then failed twice,
+  current necessary tests 129 pass/1 fail/130 assertions. Stop per two-failure
+  rule, no third variation. All-types gate incomplete; no production fits,
+  convergence, forecasts/shrinkage/ratings/HA or figures. Owned pane `%43`
+  closed; no beast session, src/package/data/DB changes, Phase D or later
+  score-grid C2. Addendum copied unchanged; prior evidence archived. Tracker
+  and diff checks pass; report explicitly lists incomplete acceptance.
 
 - [2026-10-06 @pi] Revision 3 claimed. Copied the manager's addendum into
   experiments/ unchanged. Owned laptop Julia pane `%43`, 8 threads/BLAS=1.

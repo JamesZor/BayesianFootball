@@ -1,83 +1,122 @@
-# Phase C revision 2 — reproducible blocker, not production acceptance
+# Phase C revision 3 — blocker evidence, not complete gate or production reproduction
 
-Statistical implementation: `7b6c7659`. Branch `pi/market-model-phase-c`, worktree
-`/home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c`.
-No pooled sampling or beast run occurred. **No R05_DONE, T05_DONE, convergence,
-synthetic parameter recovery or byte-identical production rerun is claimed.**
+Implementation commit: `8591099b`, permitted branch `pi/market-model-phase-c`.
+The manager's addendum is copied unchanged in experiments/. This continuation
+stops on thin-book scientific failures and a repeated integrated-derivative
+unit failure. **No fresh complete Gate 1, T05_DONE, R05_DONE, pooled sampling,
+convergence, synthetic recovery or production byte-reproducibility is claimed.**
 
-The revision-1 notes are preserved verbatim in `REPRODUCIBILITY_V1.md`; its
-report is `PHASE_C_V1_REPORT.md`, and its preflight code/CSV hashes are unchanged.
+## Preserved evidence
 
-## Inputs and numerical choices
+- Revision-1 preflight source and three CSVs remain unchanged.
+- `PHASE_C_V2_REPORT.md` / `REPRODUCIBILITY_V2.md` preserve revision-2 notes.
+- `v2_gate/` contains its original four gate/inventory CSVs and historical hash
+  manifests. Those manifests retain their original relative paths; use the
+  current root scientific manifest to check archived CSVs, and git source
+  `7b6c7659` for original source reproduction.
+- Current `laplace_gate_fixture.csv` has 792 completed fixture-setting rows
+  from four 2-D types. The attempted 1X2 batch aborted before completion.
+- `engine_gates_c.csv` was regenerated from the emitted summary after that
+  abort, to avoid leaving the stale revision-2 engine table in place.
+  `GATE_EXPORT.sql` records the exact DuckDB export (run from repository root).
+- `integrated_derivative_check_c3.csv` copies both repeated discrepancies from
+  `LAPTOP_REVISION3_DEVELOPMENT.txt`. The second failure triggers the stop rule.
 
-- Existing Manifest, Julia 1.12.1, Distributions 0.25.126; no package changes.
-- Pinned cache `.cache/datastore_ScottishLower.jls`, SHA256
-  `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`.
-  Load with `max_age_hours=10^6`, no refresh or database writes.
-- Existing `MarketModelConfig.scottish_lower_2425_2526()` supplies panel, seasons,
-  tournaments, close window, exclusions and population assertions.
-- Exact density via the unchanged production DoublePoisson grid (cutoff 10).
-- First 30 full books in match-ID order. Prediction centres are their Phase A
-  isolated rates; additional offsets are +0.10 on both log-rate sides.
-- n=250/1000/4000, equal-side prediction SD=0.05/0.20, all combinations retained.
-- Mode starts at the prediction. Central derivatives use step 2e-4; Newton with
-  line search ends on score or <=2e-7 Newton displacement. The displacement
-  criterion resolves finite-difference/density roundoff, not the gate threshold.
-- Exact quadrature orders 32/64 independently evaluate the integrand and posterior
-  moments in Gaussian importance coordinates. All densities include normalisers.
-- The likelihood eigenvalue clip is 1e-8 as prescribed; it is inactive on all
-  tested full books. Marginal uses the actual bracket Hessian; update moments
-  use clipped information. Raw SD errors are saved as a diagnostic.
-- Stop after the first failed book type. Availability for untested types is
-  retained in `book_inventory_c.csv`, with tested=0, not fabricated pass rows.
+## Input and methods
 
-## Fresh owned laptop REPL
+Existing Manifest/packages; Julia 1.12.1, 8 threads, BLAS=1. No package addition
+or update: the adaptive level integral calls `Distributions.quadgk`, already
+imported by the installed Distributions package. No database writes or `src/`
+changes. Pinned cache SHA256:
 
-Verify the session name is unused; never operate unrelated human/manager panes.
-From the task worktree root:
+```
+c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+```
+
+Load `MarketModelConfig.scottish_lower_2425_2526()` with `max_age_hours=10^6`.
+The unchanged production renormalised cutoff-10 double-Poisson grid supplies
+2-D exact quadrature and the revision-2 marginal. Generic recurrence of the
+same probabilities supplies AD third tensors, with first-20-full-book parity
+checks. Gaussian prediction centres and all n/spread/offset settings remain
+those specified in revision 2. No selection on errors.
+
+Revision 3 uses Sigma=(-joint Hessian)^-1 to contract the likelihood third
+tensor, returns mode+shift for the mean, and retains revision-2 J/covariance
+clipping and the log-marginal. Full-book saved log marginals join identically
+with all 360 revision-2 rows. AD third tensors agree with central differences
+of the AD Hessian on all completed 2-D rows (see saved relative discrepancies).
+
+The current 1X2 integral uses [-8,4] in log-level, with tails diagnosed; the
+upper endpoint was widened from 2.5 after its test was not negligible enough,
+not after changing a scientific gate. Adaptive level tolerances are rtol=2e-12,
+atol=1e-14. Order labels 32/64 select Gauss-Kronrod Gauss rules 7/15 inside the
+level integral; the outer expectation uses normal Gauss-Hermite orders 32/64.
+Nested dual components are included in the adaptive error norm. This current
+integrated implementation **fails its third-derivative consistency test** and
+must not be promoted.
+
+## Owned laptop development run
+
+Only pane **%43** (`pi_julia_mm_c`) was operated; it is closed. No beast session
+or checkout was created. The log retains development failures and the passing
+preliminary version instead of presenting it as current acceptance evidence.
+
+Sequence:
+
+1. Initial mean-correction unit tests: 129 pass/1 fail; endpoint-density check
+   detected the old level upper endpoint 2.5 was insufficient.
+2. Widen only that integration range to 4.0: preliminary Gaussian-level version
+   passes 130/130 necessary checks, `T05_C3_UPDATE_DONE`.
+3. All-types gate attempt completes full, O/U-only, BTTS+O/U and BTTS-only;
+   the first three types' saved measurements include thin-book failures.
+   Level-integrated 1X2 Newton line search stalls. This attempt does not reach
+   either final gate marker or R05_DONE.
+4. Replace the moving Gaussian level mesh once with adaptive Gauss-Kronrod.
+   Integrated AD-vs-FD third-tensor test fails at 5.405790669565064e-5.
+5. Include all nested derivative components in quadrature error control.
+   The same test fails at 5.405838441375254e-5, unchanged test limit 1e-6.
+   **Stop; no third variation, further gate attempt or sampling.**
+
+The saved 2-D gate calculations were completed before the adaptive level
+changes; those changes affect only 1X2 and do not alter the completed 2-D
+arithmetic. Their thin-book failures are independent of the integrated solver
+failure. Low-n quadrature stability is documented; high-n thin-book resolution
+is explicitly incomplete. No claim of a fresh full current-source runner is
+made. The final source's necessary suite has 129 passes / 1 failure, not 130
+passing acceptance checks. t02–t04 were not rerun for this continuation.
+
+## Manager reproduction commands
+
+Create only an unused owned persistent tmux session; target its returned pane ID:
 
 ```bash
 PANE=$(tmux new-session -d -P -F '#{pane_id}' -s pi_julia_mm_c -c "$PWD" \
   'env JULIA_PKG_PRECOMPILE_AUTO=0 GKSwstype=100 julia --project -t 8')
 printf 'owned pane: %s\n' "$PANE"
 tmux send-keys -t "$PANE" -l -- \
-  'include("current_development/market_model/t05_pooled_tests.jl"); include("current_development/market_model/t04_copula_grid_tests.jl"); include("current_development/market_model/t03_covariance_tests.jl"); include("current_development/market_model/t02_two_stage_tests.jl"); include("current_development/market_model/r05_pooled.jl")'
+  'include("current_development/market_model/t05_pooled_tests.jl")'
 sleep 0.15
 tmux send-keys -t "$PANE" Enter
-# Wait for the anchored markers before capture/cleanup.
+# Capture after the test result; current source has an expected failing test.
 tmux capture-pane -t "$PANE" -p -J -S -2000
 ```
 
-Fresh pane **%42** produced `LAPTOP_REVISION2.txt`:
+Do not interpret an earlier `T05_C3_UPDATE_DONE` in the development log as a
+passing current-source test. Do not start sampling after that failure. A
+separate manual gate diagnostic can include r05_pooled.jl, but its current
+all-types completion has not been established by this handoff.
 
-- 24/24 necessary update unit tests, `T05_UPDATE_DONE`;
-- 92/92 t04, 131/131 t03, 131/131 t02, corresponding DONE markers;
-- `R01_DONE` from t03's temporary Phase A byte regression;
-- `C05_LIKELIHOOD_BLOCKED`: marginal checks pass, posterior-mean gate fails.
+## Hash and scope checks
 
-No `T05_DONE` or `R05_DONE` is printed. Do not interpret the unit-test count or
-successful runner execution as a passing scientific gate. The source revision
-contains only the likelihood gate stage, not a completed production pipeline.
-The mean failure also appeared during development in owned pane %41; no further
-model variations or sampling were tried after fresh confirmation. Both owned
-panes were closed after capture. No beast sessions/checkouts were created.
-
-## Hashes and checks
-
-`SCIENTIFIC_SHA256SUMS.txt` covers the three unchanged revision-1 CSVs plus the
-four new revision-2 gate/inventory CSVs. It identifies committed evidence; it
-is **not evidence of two fresh production executions**. `SOURCE_SHA256SUMS.txt`
-adds the three new production-named (but incomplete) source files to the old
-preflight source hashes.
+From the stream directory:
 
 ```bash
-cd current_development/market_model
 sha256sum -c results/C/SOURCE_SHA256SUMS.txt
-cd results/C
-sha256sum -c SCIENTIFIC_SHA256SUMS.txt
+(cd results/C && sha256sum -c SCIENTIFIC_SHA256SUMS.txt)
 ```
 
-At handoff `./scripts/todo.sh check` and `git diff --check` pass. Existing
-A/B/B2/B3 outputs, original preflight CSVs and all `src/` files remain untouched.
-TODO 039/index say BLOCKED, not complete. See `PHASE_C_REPORT.md` for the
-failed setting distributions, concrete mean witness and missing acceptance.
+These hashes identify evidence/code, not two successful production executions.
+The addendum copy compares byte-identically with the manager's source file.
+`todo.sh check` and `git diff --check` pass at handoff. TODO 039 stays BLOCKED;
+all owned sessions are closed. See PHASE_C_REPORT.md for numbers, diagnosis and
+all missing acceptance items.
