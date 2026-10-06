@@ -3,6 +3,7 @@
 function compare_grids(ds,rates,books,grids,frames,out)
     fitrows = NamedTuple[]
     residuals,heldout,bias,losses,shifts = DF.DataFrame[],DF.DataFrame[],NamedTuple[],DF.DataFrame[],DF.DataFrame[]
+    marginals = NamedTuple[]
     baseline = Dict(r.match_id=>r for r in eachrow(frames[0]))
     for kind in 0:3
         g,frame = grids[kind],frames[kind]
@@ -20,6 +21,14 @@ function compare_grids(ds,rates,books,grids,frames,out)
         push!(losses,loss)
         shift,shiftraw = rate_shift(g,frame,baseline)
         push!(shifts,shift)
+        for r in eachrow(frame)
+            P = score_grid(g,rate_theta(g,r.lambda_h,r.lambda_a))
+            mh = sum((x-1)*P[x,y] for x in 1:11,y in 1:11)
+            ma = sum((y-1)*P[x,y] for x in 1:11,y in 1:11)
+            push!(marginals,(; grid=grid_name(g),match_id=r.match_id,lambda_h=r.lambda_h,
+                lambda_a=r.lambda_a,truncated_mean_h=mh,truncated_mean_a=ma,
+                error_h=mh-r.lambda_h,error_a=ma-r.lambda_a))
+        end
         CSV.write(joinpath(out,"rates_$(grid_name(g)).csv"),frame)
         CSV.write(joinpath(out,"outcome_fixture_$(grid_name(g)).csv"),lossraw)
         CSV.write(joinpath(out,"rate_shift_fixture_$(grid_name(g)).csv"),shiftraw)
@@ -28,6 +37,7 @@ function compare_grids(ds,rates,books,grids,frames,out)
     held = line_summaries(vcat(heldout...); heldout=true)
     b = DF.DataFrame(bias)
     CSV.write(joinpath(out,"grid_fit.csv"),DF.DataFrame(fitrows))
+    CSV.write(joinpath(out,"grid_marginals.csv"),DF.DataFrame(marginals))
     CSV.write(joinpath(out,"grid_selection_residuals.csv"),vcat(residuals...))
     CSV.write(joinpath(out,"grid_heldout_selections.csv"),vcat(heldout...))
     CSV.write(joinpath(out,"grid_line_residuals.csv"),residual)

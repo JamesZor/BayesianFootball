@@ -295,18 +295,25 @@ function outcome_loss(g,frame,rates,books,ds,baseline)
         ref = baseline[r.match_id]
         q0 = grid_probabilities(ScoreGrid(0),log.([ref.lambda_h,ref.lambda_a]))
         for (axis,s) in (("1X2",win),("OU2.5",total))
-            haskey(market,s) || error("outcome set lacks $axis close $(r.match_id)")
-            push!(rows,(; grid=grid_name(g),match_id=r.match_id,axis,
-                logloss=-log(q[s]),g0_logloss=-log(q0[s]),close_logloss=-log(market[s])))
+            has_close = haskey(market,s)
+            push!(rows,(; grid=grid_name(g),match_id=r.match_id,axis,has_close,
+                logloss=-log(q[s]),g0_logloss=-log(q0[s]),
+                close_logloss=has_close ? -log(market[s]) : NaN))
         end
     end
     raw = DF.DataFrame(rows)
     summaries = NamedTuple[]
-    for data in DF.groupby(raw,:axis), (comparison,values) in
-        (("absolute",data.logloss),("minus_G0",data.logloss-data.g0_logloss),
-         ("minus_close",data.logloss-data.close_logloss))
-        push!(summaries,(; grid=grid_name(g),axis=first(data.axis),comparison,
-            error_summary(data.match_id,values)...))
+    for data in DF.groupby(raw,:axis)
+        for (comparison,values) in (("absolute",data.logloss),("minus_G0",data.logloss-data.g0_logloss))
+            push!(summaries,(; grid=grid_name(g),axis=first(data.axis),comparison,
+                error_summary(data.match_id,values)...))
+        end
+        quoted = DF.filter(:has_close=>identity,data)
+        for (comparison,values) in (("minus_close",quoted.logloss-quoted.close_logloss),
+            ("close_absolute",quoted.close_logloss))
+            push!(summaries,(; grid=grid_name(g),axis=first(data.axis),comparison,
+                error_summary(quoted.match_id,values)...))
+        end
     end
     return DF.DataFrame(summaries),raw
 end

@@ -57,6 +57,12 @@ No outside managerial-change data are fetched.
   Frank CDF rectangle differences clamp only negative roundoff no larger than
   2e-14; material negative mass is an error. Near-zero kappa (<=1e-7) is exactly
   independence. No probability floor is added to materially positive cells.
+- Outcome grid/G0 comparisons use all 517 Phase B fixtures for both 1X2 and
+  OU2.5. Paired close comparisons use only **quoted** closes: Phase B's published
+  `rates_vs_goals.csv` has 517 1X2 closes but only 353 OU2.5 closes. No missing
+  OU2.5 quote is imputed or silently assigned a different line. Every output row
+  reports its n; raw fixture rows flag has_close. This is quote availability,
+  not an outcome- or fit-selected subset.
 - The largest-step table ranks **absolute posterior median signed Delta q**,
   with posterior 5/95% intervals, separately for both theta protocols. This is
   a stable ranking of estimated changes, not a search for the largest random
@@ -94,3 +100,6 @@ score-grid decision is changed. DESIGN's historical r04 Phase D filename is not
 this B3 r04. The two page-reference inaccuracies above are documented rather
 than copying an unsupported citation. Truncated-support means need not equal
 untruncated lambda to 1e-6; the brief explicitly permits documented truncation.
+The brief's wording could imply 517 paired OU2.5 close comparisons; only 353
+such closes are present in the pinned Phase B population. Grid/G0 losses still
+cover all 517 fixtures; quote-paired comparisons are explicitly labelled.
