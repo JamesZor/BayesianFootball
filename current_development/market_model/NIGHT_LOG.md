@@ -195,3 +195,10 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - **Paused C1-10a with `kill -STOP 3516292`** (beast 07:28:11). Resume with `kill -CONT 3516292`;
     no state is lost.
   - Watching whether the recovery speeds back up.
+- **06:42, correction (manager error):** the recovery never stalled. The sampler prints progress
+  every 25 iterations only up to 250, then every 250 (`l05_fullbook_sampling.jl:118`), so the next
+  print is at iteration 500.
+  - CPU shows no oversubscription either: about 3.6 cores per process, one per chain, about 12
+    busy threads on 32 cores.
+  - **Resumed C1-10a with `kill -CONT 3516292`** (beast 07:38:35). It was paused about 10 min,
+    with no state lost. Lesson: read the progress cadence before calling a stall.
