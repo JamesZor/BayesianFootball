@@ -103,17 +103,19 @@ end
 function coverage_and_rates(ds, config, raw, book, refusals)
     rates = MM.invert_panel(ds,book; config)
     rows = NamedTuple[]
-    bymatch = Dict(Int(first(g.match_id))=>DF.DataFrame(g) for g in DF.groupby(book,:match_id))
-    valid = DF.filter(r -> r.match_id in Set(rates.match_id),book)
+    panel_ids = Set(rates.match_id)
+    valid = DF.filter(r -> r.match_id in panel_ids,book)
     draws = MM.residual_rows(rates,valid)
     draws = DF.filter(r -> r.line == "1X2" && r.selection == "draw",draws)
     draw_map = Dict(r.match_id=>r.residual for r in eachrow(draws))
-    refusal_ids = Set(rates.match_id)
     for season in config.seasons
         g = DF.filter(:season=>==(season),rates)
         ids = Set(g.match_id)
         season_book = DF.filter(r -> r.match_id in ids,book)
         season_ref = DF.filter(r -> r.match_id in ids,refusals)
+        season_raw = DF.filter(r -> r.match_id in ids,raw)
+        refused = DF.combine(DF.groupby(season_ref,:reason),DF.nrow=>:n)
+        refusal_reasons = join(sort(["$(r.reason)=$(r.n)" for r in eachrow(refused)]),";")
         groups = DF.groupby(season_book,:match_id)
         only1x2 = count(x -> all(==("1X2"),x.market_name),groups)
         totalsonly = count(x -> !any(==("1X2"),x.market_name) &&
@@ -122,7 +124,7 @@ function coverage_and_rates(ds, config, raw, book, refusals)
             :match_id=>(x->length(unique(x)))=>:fixtures)
         mix_text = join(["$(r.market_name):$(r.market_line)=$(r.fixtures)" for r in eachrow(mix)],";")
         overround = [sum(1 ./ Float64.(m.odds_close)) for m in
-            DF.groupby(DF.filter(r -> r.match_id in ids,raw),[:match_id,:market_name,:market_line])]
+            DF.groupby(season_raw,[:match_id,:market_name,:market_line])]
         isempty(overround) && error("$(config.name) $season has no quoted closes")
         residuals = [draw_map[id] for id in g.match_id if haskey(draw_map,id)]
         reasons = sort(unique(String.(g.reason)))
@@ -130,8 +132,10 @@ function coverage_and_rates(ds, config, raw, book, refusals)
             n = count(==(reason),g.reason)
             push!(rows,(; league=config.name,tournament=only(config.tournaments),season,
                 snapshot_sha256=snapshot_hash(config.segment),n_fixtures=DF.nrow(g),
+                n_raw_quoted=length(unique(season_raw.match_id)),
                 n_quoted=length(groups),n_accepted=count(g.accepted),
-                n_refused_markets=DF.nrow(season_ref),n_1x2_only=only1x2,
+                n_refused_markets=DF.nrow(season_ref),market_refusal_reasons=refusal_reasons,
+                n_1x2_only=only1x2,
                 n_totals_only=totalsonly,share_1x2_only=only1x2/length(groups),
                 share_totals_only=totalsonly/length(groups),line_mix=mix_text,
                 overround_q05=ST.quantile(overround,0.05),
