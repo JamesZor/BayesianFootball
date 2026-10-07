@@ -238,3 +238,11 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - The 10b training-only values are reported alongside.
   - A league whose verdict would flip under 10b keeps its 10a verdict but is flagged
     protocol-sensitive, naming the criterion that flips. No threshold changed.
+- **2026-10-07 ~11:14: human request.** Free the laptop's RAM. pi closed its laptop REPL `%77`;
+  all remaining Julia work runs on the beast, and the manager does the laptop test run at review.
+- **2026-10-07 ~11:15: answered pi on the human's behalf (reproduction gate).**
+  - If all 66 fits take ≤ 3 h of beast wall time, refit them all from the frozen seeds in a fresh
+    REPL and require byte identity.
+  - Otherwise, refit eng_premier and sco_league_two (all rungs, both protocols) from the frozen
+    seeds, and regenerate every CSV from the saved draws, both byte-identical.
+  - The path taken is recorded in REPRODUCIBILITY.md.
