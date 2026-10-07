@@ -1,0 +1,25 @@
+league,rung,protocol,season,n_teams,n_weeks,corr_alpha_beta,implied_r,corr_q_s,measured_r,method
+eng_league_two,R2,10a,22/23,24,42,-0.8025346699219438,0.3309814196553939,-0.23459696609129785,0.3385466258115414,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10a,23/24,24,39,-0.6928021055560838,0.42599649129915784,0.03851734583774515,0.42621559418842264,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10a,24/25,24,39,-0.7558315113293088,0.37290944914450513,-0.0418222731633009,0.3731561984145365,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10a,25/26,24,40,-0.8123293324449982,0.321795257720977,0.09205097140280341,0.32290857879395024,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10a,22/23,24,42,-0.8003380989028631,0.33302019049683523,-0.23130132116691585,0.3403915695419758,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10a,23/24,24,39,-0.6937132031087746,0.42524988175446554,0.03754090353217179,0.42545791683540657,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10a,24/25,24,39,-0.7555584817931513,0.37314689787783123,-0.04083451329797414,0.3733821828203564,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10a,25/26,24,40,-0.8138339903748147,0.3203696943784336,0.09420458282929199,0.3215330043271929,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10a,22/23,24,42,-0.8003164086964617,0.33304028499225413,-0.23166146065707333,0.3404356613319439,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10a,23/24,24,39,-0.6937539538400579,0.42521647624739145,0.03756927408609235,0.4254248220012643,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10a,24/25,24,39,-0.7555551766503023,0.37314977182606596,-0.04097800404405588,0.373386715643835,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10a,25/26,24,40,-0.8138354926134572,0.3203682691219134,0.09431125499492155,0.32153422669116327,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10b,22/23,24,42,-0.8025054739875835,0.3310085678362939,-0.23362519844225643,0.3385093836916377,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10b,23/24,24,39,-0.6927254127973733,0.42605931501362315,0.03838593029932948,0.4262769321480707,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10b,24/25,24,39,-0.755794049648031,0.37294203345167226,-0.04130220203451589,0.37318268712098446,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R2,10b,25/26,24,40,-0.8123191518535989,0.3218048896898088,0.09171041129410622,0.32290996425449386,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10b,22/23,24,42,-0.8005281575040905,0.3328440830093909,-0.23029053788764406,0.34014692852577266,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10b,23/24,24,39,-0.6935265470121397,0.4254028805376239,0.037446954505812216,0.42560989360545975,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10b,24/25,24,39,-0.7555954544883476,0.37311474793274907,-0.040454349581414285,0.3733456595834805,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,R6,10b,25/26,24,40,-0.8137746467144087,0.3204259937934845,0.09379479304132306,0.3215792677337697,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10b,22/23,24,42,-0.8004742803156938,0.3328940110671269,-0.2319137674134659,0.34030430532582345,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10b,23/24,24,39,-0.6936857004447887,0.42527242655283154,0.03757717873998674,0.42548086696097187,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10b,24/25,24,39,-0.7555948860426155,0.37311524224064996,-0.041124126706005744,0.37335387103351586,season-average RTS point means; implied r assumes zero q/s correlation
+eng_league_two,C0,10b,25/26,24,40,-0.8137665719610785,0.3204336538436318,0.09427747454065658,0.3215989103195045,season-average RTS point means; implied r assumes zero q/s correlation
