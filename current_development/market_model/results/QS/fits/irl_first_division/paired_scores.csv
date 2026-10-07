@@ -1,0 +1,4 @@
+league,candidate,control,n,mean_delta,se,score
+irl_first_division,C0,R2,128,0.10656283569558503,0.03380371111649465,sum of supremacy and level marginal log densities; fixture SE
+irl_first_division,R6,R2,128,0.10773522316577581,0.034127064498832925,sum of supremacy and level marginal log densities; fixture SE
+irl_first_division,C0,R6,128,-0.0011723874701907895,0.0015422393636086104,sum of supremacy and level marginal log densities; fixture SE
