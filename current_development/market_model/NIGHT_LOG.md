@@ -224,3 +224,11 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - Brief: `experiments/pi_market_model_qs_eda_prompt.md` (`205cf4e2`).
   - Scope (human): all 11 Betfair leagues fitted separately, no cups; market fits plus a goal
     check. Verdict criteria were fixed in the brief before any result.
+- **2026-10-07 ~10:50: answered pi on the human's behalf (season scope).**
+  - **Keep** Scottish 56/57 25/26: 175/180 matches; only the final round is absent, and the
+    published B2 panel (710 = 360 + 350) used exactly these.
+  - **Exclude** Championship 55 25/26: 7/175 Betfair matches; Betfair ends 2025-09-13.
+  - **Keep** every Premiership 54 season: rounds 1–33 only, which is structural.
+  - **Exclude** every in-progress 26/27 or 2026 season.
+  - **Rule:** exclude a season if it is in progress, or if its Betfair-covered matches end before
+    the last quarter of its schedule.
