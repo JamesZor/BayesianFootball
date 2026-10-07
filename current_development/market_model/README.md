@@ -717,4 +717,11 @@ inspect convergence rows, paired fixture scores and goal checks **before**
 interpreting a league. Fits use 4×(2000 warmup+3000 retained), unchanged
 B2/C seeds/priors and pre-week 10b filtration. `results/QS/` holds scientific
 CSVs and notes; immutable `.jls` fits stay in beast-only output directories.
-Do not run C1 or thin-book pooling as part of QS.
+Do not run C1 or thin-book pooling as part of QS. The completed 11-league
+classification, protocol sensitivity, synthetic recovery miss and exploratory
+goal results are in [`results/QS/QUALITY_STYLE_REPORT.md`](results/QS/QUALITY_STYLE_REPORT.md),
+with exact machine-readable verdicts in `results/QS/verdict.csv`. The measured
+66-fit wall exceeded three hours, so reproducibility used independent fixed-seed
+English Premier and Scottish League Two refits (`r06_qs_refit.jl`), followed by
+byte-for-byte regeneration of all 11 leagues from saved beast-only draws
+(`r06_qs_regenerate.jl`); see `results/QS/HANDOVER.md` for the final test status.

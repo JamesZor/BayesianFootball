@@ -79,6 +79,16 @@ end
     @test lookup("sco_league_one").verdict == "inconclusive"
     @test lookup("eng_premier").verdict == "suitable"
     @test lookup("eng_premier").flipped_criteria == "alignment"
-    @test lookup("sco_league_two").flipped_criteria == "quality dominance"
+    @test lookup("sco_league_two").flipped_criteria ==
+        "quality dominance;quality non-dominance"
+    shifted = Q06.DF.DataFrame(parameters)
+    mask = (shifted.league .== "eng_league_one") .& (shifted.rung .== "C0")
+    shifted[mask .& (shifted.protocol .== "10a"),:q05] .= 0.55
+    shifted[mask .& (shifted.protocol .== "10a"),:q95] .= 0.7
+    shifted[mask .& (shifted.protocol .== "10b"),:q05] .= 0.65
+    shifted[mask .& (shifted.protocol .== "10b"),:q95] .= 0.8
+    sensitivity = Q06R.verdicts(shifted,Q06.DF.DataFrame(paired))
+    @test only(Q06.DF.filter(:league=>==("eng_league_one"),sensitivity).flipped_criteria) ==
+        "quality non-dominance"
 end
 println("T06_DONE")

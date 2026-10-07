@@ -75,6 +75,8 @@ function verdicts(parameters,paired)
         flips = String[]
         full.aligned != train.aligned && push!(flips,"alignment")
         full.dominated != train.dominated && push!(flips,"quality dominance")
+        full.clearly_not_dominated != train.clearly_not_dominated &&
+            push!(flips,"quality non-dominance")
         push!(rows,(; league,verdict,reason,alignment_pass=full.aligned,
             quality_dominance_pass=full.dominated,prediction_pass=predictive,
             r6_corr_qs_10a=full.r6.median,r6_corr_qs_10a_q05=full.r6.q05,
