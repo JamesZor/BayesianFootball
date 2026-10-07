@@ -1,0 +1,64 @@
+The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/t05_laplace_preflight_tests.jl"); include("current_development/market_model/r05_laplace_preflight.jl")
+Info Given BayesianFootball was explicitly requested, output will be shown live
+WARNING: Imported binding Portfolio.TurnoverCommission was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.IndependentKelly was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.StaticFamilyTrust was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.ShrinkToMarketTrust was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.MatchDrawdown was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.FixedFraction was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.PerMatchCap was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.WeeklySlate was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.MatchSlate was undeclared at import time during import to BayesianFootball.
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 19 seconds. 573 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└
+Synthetic total-book angle (brief limit 10 degrees): 18.433300161763512
+Exact log-density difference / n: -0.04117386218721466; reverse-KL limit: -0.04117388804334658; brief forward-KL limit: -0.04070864899220996
+Test Summary:                                         | Pass  Total  Time
+Phase C preflight mathematics (not pooled acceptance) |   11     11  3.2s
+T05_PREFLIGHT_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 251.8 hours)...
+C preflight quadrature completed: full
+C preflight quadrature completed: 1X2-only
+12×9 DataFrame
+ Row │ book_type  n        spread   books  median_abs_error  p95_abs_error  max_quadrature_delta  median_full_abs_error  gate_pass
+     │ String     Float64  Float64  Int64  Float64           Float64        Float64               Float64                Bool
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ full         250.0     0.05     30        0.00633536      0.0116097           9.9476e-14             0.00633536        true
+   2 │ full         250.0     0.2      30        0.0141201       0.0242566           8.65175e-11            0.0141201        false
+   3 │ full        1000.0     0.05     30        0.0102684       0.0176724           7.15872e-13            0.0102684        false
+   4 │ full        1000.0     0.2      30        0.013041        0.0253349           6.80345e-13            0.013041         false
+   5 │ full        4000.0     0.05     30        0.0117061       0.0215569           2.65032e-12            0.0117061        false
+   6 │ full        4000.0     0.2      30        0.012568        0.0233527           2.80309e-12            0.012568         false
+   7 │ 1X2-only     250.0     0.05     30        0.0472067       0.113871            9.41469e-14            0.00103581       false
+   8 │ 1X2-only     250.0     0.2      30        0.333277        0.528748            1.00123e-10            0.0024996        false
+   9 │ 1X2-only    1000.0     0.05     30        0.130108        0.276218            5.11591e-13            0.000451627      false
+  10 │ 1X2-only    1000.0     0.2      30        0.755114        0.933657            4.36238e-11            0.000489228      false
+  11 │ 1X2-only    4000.0     0.05     30        0.331083        0.526141            1.62093e-12            0.00015552       false
+  12 │ 1X2-only    4000.0     0.2      30        1.34169         1.5081              1.40243e-12            4.71094e-5       false
+Totals projection requirements: 7/36 pass
+C_PREFLIGHT05_BLOCKED
+
+julia> println("C_ENV: Julia ", VERSION, "; Distributions ", pkgversion(Distributions), "; threads=", Threads.nthreads(), "; BLAS=", BLAS.get_num_threads())
+C_ENV: Julia 1.12.1; Distributions 0.25.126; threads=8; BLAS=1
+
+julia>

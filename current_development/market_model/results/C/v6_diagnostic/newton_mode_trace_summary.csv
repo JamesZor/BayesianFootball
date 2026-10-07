@@ -1,0 +1,2 @@
+status,error,fixture,derivative_calls,theta_q,theta_s,theta_u,theta_n,final_gradient_norm,final_decrement,final_newton_step_inf,final_actual_movement_inf
+failed filter,joint mode did not converge in 100 iterations,12476686,100,-4.3667389598945885,-4.699137880221636,-3.0309405303003616,7.090705824646739,4.9497130117024364e-5,1.035864027765691e-12,4.189252610998754e-8,0.0

@@ -1,0 +1,228 @@
+include("current_development/market_model/t05_pooled_tests.jl")The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.7 hours)...
+53×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+  35 │ C0 matched R6 loglik               3.55271e-14  1.0e-9   true
+  36 │ H1 gamma_def pinned zero reducti…  0.0          1.0e-9   true
+  37 │ H2 kappa zero reduction            0.0          1.0e-9   true
+  38 │ C0 batch loglik                    1.49214e-13  1.0e-9   true
+  39 │ C0 batch RTS mean                  8.45157e-15  1.0e-8   true
+  40 │ C0 batch RTS covariance            1.11022e-16  1.0e-8   true
+  41 │ H1 batch loglik                    5.11591e-13  1.0e-9   true
+  42 │ H1 batch RTS mean                  6.34215e-15  1.0e-8   true
+  43 │ H1 batch RTS covariance            1.04083e-16  1.0e-8   true
+  44 │ H2 batch loglik                    5.00933e-13  1.0e-9   true
+  45 │ H2 batch RTS mean                  4.02109e-15  1.0e-8   true
+  46 │ H2 batch RTS covariance            1.66533e-16  1.0e-8   true
+  47 │ C1 toy Gaussian frozen batch log…  9.76996e-13  1.0e-9   true
+  48 │ C1 toy Gaussian frozen batch RTS   9.24781e-15  1.0e-8   true
+  49 │ C1 toy Gaussian frozen batch RTS…  1.38778e-16  1.0e-8   true
+  50 │ C Gate2 scalar eigen mean          1.73472e-17  1.0e-10  true
+  51 │ C Gate2 scalar eigen covariance    5.55112e-17  1.0e-10  true
+  52 │ C Gate2 scalar eigen loglik        6.66134e-16  1.0e-10  true
+  53 │ C1 Gaussian exact observation re…  9.23706e-14  1.0e-9   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.7 hours)...
+Full-book sampler contract and synthetic population: Error During Test at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:3
+  Got exception outside of a @test
+  BoundsError: attempt to access 22-element Vector{Float64} at index [0.2f0:1.0f0:1.2f0]
+  Stacktrace:
+    [1] throw_boundserror(A::Vector{Float64}, I::Tuple{StepRangeLen{Float32, Float64, Float64, Int64}})
+      @ Base ./essentials.jl:15
+    [2] checkbounds
+      @ ./abstractarray.jl:699 [inlined]
+    [3] _getindex
+      @ ./multidimensional.jl:955 [inlined]
+    [4] getindex(A::Vector{Float64}, I::StepRangeLen{Float32, Float64, Float64, Int64})
+      @ Base ./abstractarray.jl:1342
+    [5] top-level scope
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:4
+    [6] macro expansion
+      @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+    [7] macro expansion
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:34 [inlined]
+    [8] include(mapexpr::Function, mod::Module, _path::String)
+      @ Base ./Base.jl:307
+    [9] top-level scope
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:12
+   [10] macro expansion
+      @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+   [11] macro expansion
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:113 [inlined]
+   [12] include(mapexpr::Function, mod::Module, _path::String)
+      @ Base ./Base.jl:307
+   [13] top-level scope
+      @ REPL[1]:1
+Test Summary:                                                            | Pass  Error  Total     Time
+Phase C revision 4 full-book deterministic engines                       |  222      1    223  1m12.3s
+  Gaussian likelihood: integral and moments independently known          |   12            12     6.6s
+  Exact Beta normalisers and reversed large-n KL                         |    2             2     1.9s
+  Synthetic total book narrow prediction quadrature                      |    4             4     2.3s
+  Cubic skewness contraction and information-centre identity             |    3             3     2.5s
+  Production-grid derivative parity: first 20 full books                 |  100           100    20.0s
+  Quality/style rotation equals matched R6                               |    6             6     2.7s
+  Full-book prior and parameter layout                                   |   10            10     0.2s
+  Conditional moments, information form and scalar eigen projections     |    7             7     1.0s
+  C0/H1/H2 and Gaussian C1 independent batch gates                       |   53            53     7.6s
+  Full-book population, frozen nonlinear factors and pre-week filtration |   12            12     7.2s
+  Full-book sampler contract and synthetic population                    |   13      1     14     2.9s
+RNG of the outermost testset: Xoshiro(0xe51f9475b5b3462e, 0x0e28b1029a52d899, 0xd46946da60ee06c3, 0xf1099a40150ed6ec, 0xcceb4181fcb9d23c)
+ERROR: LoadError: Some tests did not pass: 222 passed, 0 failed, 1 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
+
+julia> include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.7 hours)...
+53×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+  35 │ C0 matched R6 loglik               3.55271e-14  1.0e-9   true
+  36 │ H1 gamma_def pinned zero reducti…  0.0          1.0e-9   true
+  37 │ H2 kappa zero reduction            0.0          1.0e-9   true
+  38 │ C0 batch loglik                    1.49214e-13  1.0e-9   true
+  39 │ C0 batch RTS mean                  8.45157e-15  1.0e-8   true
+  40 │ C0 batch RTS covariance            1.11022e-16  1.0e-8   true
+  41 │ H1 batch loglik                    5.11591e-13  1.0e-9   true
+  42 │ H1 batch RTS mean                  6.34215e-15  1.0e-8   true
+  43 │ H1 batch RTS covariance            1.04083e-16  1.0e-8   true
+  44 │ H2 batch loglik                    5.00933e-13  1.0e-9   true
+  45 │ H2 batch RTS mean                  4.02109e-15  1.0e-8   true
+  46 │ H2 batch RTS covariance            1.66533e-16  1.0e-8   true
+  47 │ C1 toy Gaussian frozen batch log…  9.76996e-13  1.0e-9   true
+  48 │ C1 toy Gaussian frozen batch RTS   9.24781e-15  1.0e-8   true
+  49 │ C1 toy Gaussian frozen batch RTS…  1.38778e-16  1.0e-8   true
+  50 │ C Gate2 scalar eigen mean          1.73472e-17  1.0e-10  true
+  51 │ C Gate2 scalar eigen covariance    5.55112e-17  1.0e-10  true
+  52 │ C Gate2 scalar eigen loglik        6.66134e-16  1.0e-10  true
+  53 │ C1 Gaussian exact observation re…  9.23706e-14  1.0e-9   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.7 hours)...
+Full-book sampler contract and synthetic population: Error During Test at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:3
+  Got exception outside of a @test
+  synthetic market outside numerical interior
+  Stacktrace:
+    [1] error(s::String)
+      @ Base ./error.jl:44
+    [2] synthetic_fullbook(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, templates::Vector{Vector{@NamedTuple{selections::Vector{Symbol}, p::Vector{Float64}}}}, theta::Vector{Float64}; seed::Int64)
+      @ Main.PooledMarket ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_fullbook_sampling.jl:170
+    [3] top-level scope
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:4
+    [4] macro expansion
+      @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+    [5] macro expansion
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fullbook_sampling_tests.jl:71 [inlined]
+    [6] include(mapexpr::Function, mod::Module, _path::String)
+      @ Base ./Base.jl:307
+    [7] top-level scope
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:12
+    [8] macro expansion
+      @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+    [9] macro expansion
+      @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:113 [inlined]
+   [10] include(mapexpr::Function, mod::Module, _path::String)
+      @ Base ./Base.jl:307
+   [11] top-level scope
+      @ REPL[1]:1
+Test Summary:                                                            | Pass  Error  Total   Time
+Phase C revision 4 full-book deterministic engines                       |  246      1    247  15.2s
+  Gaussian likelihood: integral and moments independently known          |   12            12   4.0s
+  Exact Beta normalisers and reversed large-n KL                         |    2             2   0.0s
+  Synthetic total book narrow prediction quadrature                      |    4             4   2.0s
+  Cubic skewness contraction and information-centre identity             |    3             3   1.4s
+  Production-grid derivative parity: first 20 full books                 |  100           100   4.3s
+  Quality/style rotation equals matched R6                               |    6             6   0.0s
+  Full-book prior and parameter layout                                   |   10            10   0.0s
+  Conditional moments, information form and scalar eigen projections     |    7             7   0.0s
+  C0/H1/H2 and Gaussian C1 independent batch gates                       |   53            53   0.4s
+  Full-book population, frozen nonlinear factors and pre-week filtration |   12            12   0.9s
+  Full-book sampler contract and synthetic population                    |   37      1     38   2.0s
+RNG of the outermost testset: Xoshiro(0xe51f9475b5b3462e, 0x0e28b1029a52d899, 0xd46946da60ee06c3, 0xf1099a40150ed6ec, 0xcceb4181fcb9d23c)
+ERROR: LoadError: Some tests did not pass: 246 passed, 0 failed, 1 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_pooled_tests.jl:11
+
+julia>

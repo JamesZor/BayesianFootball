@@ -24,8 +24,12 @@ remaining phases are authorised and reviewed.
 - **B3:** refiltered FFBS tail/dependence PPCs for R6, and global-dependence
   Dixon–Coles, bivariate Poisson and Frank/Poisson score-grid comparisons.
   These are diagnostic evidence only; Phase C remains double Poisson.
-- **C (not implemented here):** fit the structure directly to books, sharing
-  information and learning book concentration and fixture deviations.
+- **C (revision8 fast rungs accepted; C1 IN PROGRESS, full books only):** C0/H1/H2
+  have converged both protocols; two fresh fast runs match29/29 CSVs/PNGs.
+  Frozen recovery%265 and unpromoted C1 production%267/%268 remain running;
+  do not restart, kill, check out or reload their source. No C1 posterior/recovery
+  conclusion yet. C2 remains deferred. Current evidence:
+  `results/C/PHASE_C_PROGRESS_REPORT.md` and `results/C/HANDOVER.md`.
 - **D (not implemented here):** compare isolated/pooled fits and team paths/ratings.
 
 ## Pipeline as executed
@@ -289,6 +293,287 @@ Phase C's grid nor its implementation. Run the new runner in a fresh owned
 beast persistent REPL and wait for `R04_DONE`; run t04/t03/t02 in a fresh owned
 laptop REPL. Exact source, pinned cache, pane-ID commands and CSV hash procedure
 are in [`results/B3/REPRODUCIBILITY.md`](results/B3/REPRODUCIBILITY.md).
+
+## Phase C: blocked likelihood/projection preflight (2026-10-06)
+
+**Human decision: double Poisson for C; C2 later.** The authorised pooled rung
+named C2 is distinct from a later score-grid Phase C2; neither a grid change nor
+Phase D was attempted. DESIGN §5 remains unchanged; the new brief selects a
+quality/style GRW and collapsed slice sampler instead of its old Turing route.
+
+Before implementing that sampler, `l05_laplace_preflight.jl` and
+`r05_laplace_preflight.jl` tested necessary mathematical conditions on the pinned
+close. These are **not** the requested pooled loader/runner or acceptance suite.
+`results/C/laplace_preflight_summary.csv` records, at the **prior** median
+n=1000 and side prediction SD=0.20, full-book median absolute marginal error
+**0.013040970693098508** (limit 0.01); supremacy-only 1X2 median
+**0.7551135925625077**, p95 **0.9336569033260274** (limits 0.01/0.05).
+The unprojected 1X2 median error is only **0.0004892284282393966**.
+`totals_projection_preflight.csv` records **7/36** books satisfying the specified
+rank-one/10-degree condition; BTTS plus O/U can identify two directions.
+
+Two issues precede sampling: Dirichlet(p; n q)'s large-n loss is KL(q||p), not
+Phase A's KL(p||q); discarding identified book information cannot reproduce its
+exact likelihood integral against an arbitrary Gaussian prediction. Totals
+identify a curved constant-rate-sum contour, not a fixed equal-weight direction
+in log-rate coordinates. No threshold was loosened and no corrective model was
+silently substituted. See [`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md)
+for evidence, caveats, missing acceptance items and the required manager decision.
+
+Rerun only the diagnostic preflight through an owned laptop tmux REPL:
+`include("current_development/market_model/t05_laplace_preflight_tests.jl")`
+then `include("current_development/market_model/r05_laplace_preflight.jl")`.
+Expect `T05_PREFLIGHT_DONE` and `C_PREFLIGHT05_BLOCKED`, **not** `T05_DONE` or
+`R05_DONE`. No Phase C production or posterior claims are available.
+
+## Phase C revision 2: corrected likelihood, failed posterior-mean gate
+
+**Human decision: double Poisson for C; C2 later.** The pooled rung C2 is not
+that later score-grid phase. No Phase D, grid change or pooled sampling was run.
+
+Revision 1 incorrectly used KL(p||q) as the Dirichlet large-n loss, tested a
+supremacy projection against an unprojected likelihood, and treated a curved
+constant-total contour as a fixed direction. Revision 2 uses the exact density,
+including normalisers, and a Newton joint mode of likelihood × Gaussian prediction.
+Phase A's KL(p||q) inversions remain **scoring targets**, not expansion points.
+The manager's logged decision is to retain totals/BTTS-only likelihoods exactly:
+O/U constrains the total along a curved contour, while BTTS+O/U may carry weak
+supremacy information. 1X2-only books use a flat-measure level-integrated likelihood.
+
+At source `7b6c7659`, `l05_pooled.jl`, `r05_pooled.jl` and `t05_pooled_tests.jl`
+contained the revised update, fail-fast accuracy runner and necessary unit checks,
+not a completed production or recovery pipeline. `results/C/v2_gate/laplace_gate.csv`
+and `v2_gate/laplace_gate_fixture.csv` preserve the first 30 full books, all prescribed n,
+spreads and offsets. Marginal accuracy passes; the moment gate fails. The report
+records exact numbers and missing acceptance items; no forecast, shrinkage,
+concentration, team-path or HA posterior conclusions can yet be made.
+
+The revision-1 report and reproduction notes are retained as
+`results/C/PHASE_C_V1_REPORT.md` / `REPRODUCIBILITY_V1.md`; its preflight source and
+CSVs remain unchanged. Revision-2 evidence and commands:
+[`results/C/PHASE_C_V2_REPORT.md`](results/C/PHASE_C_V2_REPORT.md),
+[`results/C/REPRODUCIBILITY_V2.md`](results/C/REPRODUCIBILITY_V2.md).
+At that source, a fresh runner stopped at `C05_LIKELIHOOD_BLOCKED`, not
+`R05_DONE`; `T05_UPDATE_DONE` denoted only necessary deterministic checks.
+
+## Phase C revision 3: mean fixed, thin-book gates blocked
+
+The manager's addendum is copied unchanged to
+`../../experiments/pi_market_model_phaseC_v3_addendum.md`. The loader derives
+and implements the cubic skewness mean correction using third derivatives of
+the likelihood alone. The revision-2 log-marginal and covariance are unchanged:
+all 360 full-book marginals compare identically with their saved revision-2
+values. Full-book mean error now has maximum **0.0009284497092163062** of SD,
+within the unchanged 0.05 threshold (`results/C/laplace_gate.csv`).
+
+All book types were attempted, but **the complete all-types gate did not finish**.
+At n=250, prediction SD=.20 and no offset, O/U-only SD error reaches
+**0.058978186176263714** (limit .05); BTTS+O/U median absolute marginal error
+is **0.02060874306987226 nats** (limit .01). Independent orders 32/64 resolve
+these failures. High-n thin-book quadrature is less stable and is labelled,
+not used to dismiss the well-resolved low-n failures. BTTS-only has one available
+book and passes its completed settings. The 1X2-only integrated solver stalled;
+its revised adaptive-integral third-derivative check then failed twice.
+
+Current necessary tests: **129 pass / 1 fail / 130 assertions**, not pooled
+acceptance or synthetic recovery. The current adaptive level-integrated code
+is unvalidated. No sampling, convergence, forecast/shrinkage/ratings/HA posterior
+or production reproducibility claims exist. Human decision remains **double
+Poisson for C; C2 later**; no Phase D or later score-grid phase was attempted.
+
+Evidence, numerical failures, missing acceptance and stop rationale:
+[`results/C/PHASE_C_REPORT.md`](results/C/PHASE_C_REPORT.md),
+[`results/C/REPRODUCIBILITY.md`](results/C/REPRODUCIBILITY.md).
+The current source must not be promoted just because the full-book mean is fixed.
+
+## Phase C revision 4: authorised full-book continuation
+
+Manager scope: `../../experiments/pi_market_model_phaseC_v4_scope.md`.
+**Double Poisson for C; later score-grid C2 and Phase D remain unauthorised.**
+C0/C1/H1/H2 use only the same 517 full books and isolated scoring targets.
+C0/H1/H2 are exact Gaussian filters; C1 uses the exact Dirichlet/Beta density
+with an approximate sequential Laplace collapse, revision-3 mean correction,
+unchanged revision-2 marginal/clipping and approximate RTS. No thin book enters
+these filters. New priors are on sigma_q/sigma_s, not R6's attack/defence/rho prior.
+H1 prior clarified by the manager: independent gamma_att N(.15,.25²) and
+new gamma_def N(0,.25²). Pinning gamma_def=0 recovers C0.
+
+`l05_fullbook_engine.jl` defines the state engines, conditional identities,
+Gaussian/frozen-factor batch checks and smoothing. The included
+`l05_fullbook_sampling.jl` adds dedicated slice chains (no R6 prior/±12 box),
+ID-joined honest restriction, full-book synthetic generation and exact log-space
+Dirichlet storage. Seeds are frozen in `fullbook_seeds.toml`.
+`r05_fullbook_recovery.jl` is the beast-only prerequisite, not production.
+
+**Recovery is BLOCKED at statistical source `9de98548`.** Same frozen generation
+seed 3962 and full population: the FD attempt failed a joint-mode line search;
+synthetic-only AD failed the same check, chain seed4964 at warmup8. Root gradient
+[-1.5699131339808048e-5, 3.249019587192592e-5]; peers cancelled. Stop without a
+third variation or threshold/seed/prior/data change. No fit/intervals retained.
+The preceding probability-underflow issue was resolved by exact log-Gamma/logp
+storage, not clipping or selection; the latter two generated panels are
+byte-identical. Passing real-book Gate1 does not establish robust recovery.
+
+Final fresh accepted deterministic t05 **270/270**, t04 **92/92**, t03 **131/131**,
+t02 **131/131**. C2-pending separately reports **29 pass/10 fail**, excluded by
+scope, never labelled passed. `r05_pooled.jl` remains a deterministic preflight:
+Gate1 **12/12**, engines **53/53**, all four fixed filters; its six v4_preflight
+CSVs regenerate byte-identically to the engine checkpoint. Marker
+`C05_C4_ENGINE_PREFLIGHT_DONE`, **not R05_DONE/T05_DONE**. These identities are
+not two production runs. Recovery, training, convergence, measures/figures and
+production reproduction remain unfinished. Evidence and stop boundary:
+`results/C/PHASE_C_REPORT.md`, `REPRODUCIBILITY.md`, `HANDOVER.md`.
+Engine-only checkpoint documents are preserved with `_ENGINE_CHECKPOINT` names.
+
+## Phase C revision 5: termination implemented, exact-stall regression fails
+
+The manager's `pi_market_model_phaseC_v5_solver.md` authorises termination only:
+Newton decrement <=1e-12 or step infinity norm <=1e-10; on Armijo stall accept
+only decrement <=1e-9. The solver now records all three termination counts and
+maximum accepted decrement, with a fail-loud <=1e-9 gate. Density, derivatives,
+clipping, marginal/correction formulas, scientific settings and seeds are unchanged.
+
+**BLOCKED before recovery sampling.** A test-only replay of the original solver
+on the frozen generated panel and seed4964 warmup8 coordinate finds fixture
+**12476625**, reproducing the exact handover gradient. The authorised rule accepts
+`stalled_converged`, decrement **3.382117013018548e-12** nats, but tighter damped
+AD Newton differs by **4.0159674463691175e-7** in mode (limit1e-8) and
+**6.658597637709818e-7** nats in Laplace marginal (limit1e-9).
+Reference residual **7.670308832530282e-12**; log-determinant shift
+**1.3317370690657526e-6** dominates the tiny objective change. A decrement
+bounds local objective gain, not first-order Hessian/logdet displacement.
+Sources: `results/C/v5_newton/newton_regression.csv`, `newton_regression_book.csv`.
+
+Fresh accepted-boundary t05 is **282 pass / 2 fail / 284**, not T05_DONE.
+The same two required checks failed in focused and aggregate runs; no third
+numerical variation, threshold change or beast sampling was attempted.
+`results/C/newton_termination.csv` labels its two solves `exact_regression`,
+not recovery/production. Review of termination/accuracy compatibility is the
+next dependency. Full-book scope needs no renewed approval. Historical revision4
+reports are preserved as `PHASE_C_V4_REPORT.md`, `REPRODUCIBILITY_V4.md`,
+`HANDOVER_V4.md`; v4 and prior-phase scientific artifacts are unchanged.
+See current `results/C/PHASE_C_REPORT.md` and `HANDOVER.md` for checks and next steps.
+
+## Phase C revision6: exact-case polish passes, recovery iteration-limit blocked
+
+Manager brief copied unchanged to `experiments/pi_market_model_phaseC_v6_polish.md`
+at the repository root. Tolerances and scientific settings remain unchanged.
+On qualifying Armijo stalls, at most3 undamped Newton steps use derivatives only;
+stop on step infinity-norm<=1e-12 or nondecreasing gradient norm, and fail if final
+norm exceeds its pre-polish value or finalδ exceeds1e-9. Counts are `polished`.
+
+Fixture12476625 at the frozen seed4964-coordinate now needs **1** polish step:
+mode gap **2.0039525594484076e-13** (limit1e-8), marginal gap
+**1.1574741165532032e-11** nats (limit1e-9), acceptedδ
+**1.50342686280365e-24**. Source: `results/C/v6_newton/newton_regression.csv`.
+Fresh owned %56 t05 **289/289**, T05_C6_DETERMINISTIC_DONE (not T05_DONE);
+C2-pending unchanged29pass/10fail, excluded. t04 **92/92**, t03/t02 **131/131**.
+Full real Gate1 **12/12**, state gates **53/53** and all four517-fixture fixed
+filters/smoothers regenerate in `v6_preflight/`. These are prerequisite checks,
+not posterior fits or production reproduction.
+
+**Recovery BLOCKED at source d9e6c003:** seed4961 initial target exhausts100 Newton
+iterations; other chains cancel at warmup1, no retained fit/intervals. An observer-
+only trace (04e67fa8) identifies fixture12476686: calls7–100 have zero movement,
+δ **1.035864027765691e-12** (>1e-12) and step **4.189252610998754e-8** (>1e-10).
+Armijo accepts unchanged candidates after roundoff, so its exhaustion/polish branch
+never runs. Gradient norm **4.9497130117024364e-5**; raw min precision eigenvalue
+**965.3501213272148**. Sources: `v6_diagnostic/newton_mode_trace_summary.csv`,
+`newton_mode_trace.csv`, `newton_trace_activity.csv`.
+Stop without a solver variation, iteration/tolerance/seed/prior change or recovery
+retry. Review zero-motion stall recognition first. Both owned %56/%264 closed.
+Root `newton_termination.csv` now labels aborted recovery:1696decrement,1polished,
+max acceptedδ9.743716301157053e-13; these counts do not imply accepted chains.
+Generated binary remains byte-identical to revision4. No further priorities or
+production claims were promoted. Revision5 evidence is archived with `_V5` names.
+
+## Phase C revision7: exact zero-motion case passes; recovery ACTIVE
+
+Manager brief `experiments/pi_market_model_phaseC_v7_stall.md` authorises
+accepted-step stall recognition (<1e-14 movement OR equal Float64 density),
+reusing the unchanged <=3-step polish/error rules. Statistical source6335316f.
+Exact fixture12476686: mode/marginal gaps **0.0/0.0**, both from its recorded
+mode and original prediction;1 `zero_motion_polished` step,
+delta2.287082719929954e-26. Old fixture12476625 still passes unchanged limits.
+Sources: `results/C/v7_newton/`; fresh t05 **305/305**, C2-pending29pass/10fail
+separately excluded; t04 **92/92**,t03/t02 **131/131**. Full real Gate1 **12/12**,
+state gates **53/53** and four fixed full-panel filters/smoothers pass.
+
+**Recovery is ACTIVE, not passed/blocked:** owned beast **%265**, dedicated
+`/root/BF_runs/market_model_c`, detached6335316f,16 threads/core pinning/BLAS1.
+Frozen seeds/budgets/truth/population unchanged; all four chains reported warmup200
+at checkpoint. Generated binary remains byte-identical to v4/v6. DO NOT restart,
+kill/check out/edit running code or launch production before recovery acceptance.
+Original log `logs/market_model_c/6335316f_recovery1.log` on the beast.
+See current HANDOVER/REPRODUCIBILITY for exact monitor commands and preservation.
+
+Prepared `l05_fullbook_workflow.jl` / `l05_fullbook_reports.jl` add conditional
+structure+u smoothing and B2-compatible pre-week scoring/paired C0 measures;
+fresh workflow tests **85/85** (independent augmented-Gaussian theta/u gates,
+whole-week filtration, schema/input guards). Mock IID hyperdraws are NOT fits.
+New `r05_fullbook_core.jl` C0/C1 STAGE is parsed, not executed; it rechecks
+recovery draws/intervals/hash before any sampling and prioritises10b. Its marker
+is R05_FULLBOOK_CORE_DONE only. H1/H2 posterior uncertainty/figures, remaining
+measures, full production workflow and two-run reproduction remain unfinished.
+No learned parameter or forecast-benefit conclusion exists. r05_pooled remains
+preflight. Local panes close; active beast recovery is transferred at handover.
+Revision6 report/repro/handover/source evidence preserved with `_V6` names.
+
+## Phase C revision8: fast rungs now, C1 separately unpromoted
+
+Revision8 supersedes revision7's ordering restriction, **not** its scientific
+settings or C1 promotion gates. Source70336b07: full-book C0/H1/H2, both protocols,
+4×(2000+3000), thin1;107/107 inherited/state/scalar-parity gates and20/20 theta
+convergence rows pass. Both fresh beast%270/%271 reach R05_FAST_RUNGS_DONE; **26 CSVs +3 PNGs are
+byte-identical** (`results/C/BYTE_COMPARISON.txt` and both scientific manifests).
+
+**C0 tracks published R6 closely:** 10b paired C0−R6 score
+**+0.001285 ±0.004312 fixture SE**. Its supremacy/level coverage is
+**90.476%/91.209%** (`results/C/v8_fast_1/onestep_metrics_c.csv`);
+`paired_c0_vs_r6.csv` measures the fitted gap, separate from likelihood parity.
+**Away suppression is not established:** H1 gamma_def is
+**0.026292 [−0.248135,0.300720]**, with gamma_att/def confounded with mu.
+Only their supremacy sum is sharply identified. **Quality-linked HA is not
+supported:** H2 kappa10b **0.033860 [−0.048858,0.125508]**; honest paired H2−C0
+**−0.002457 ±0.003596** (`home_advantage_rungs.csv`, `paired_vs_c0.csv`).
+Static HA intervals mix conditional state uncertainty over ALL12,000 retained
+hyperdraws; 10b HA uses training only. Forecasts/path bands remain conditional
+at median theta as in B2; full-panel smoothing is descriptive.
+
+The manager approved a verified Gaussian-only scalar Kalman callback after
+measured dense throughput implied hours; native sampling/adaptation, all priors,
+seeds and thresholds stay unchanged. C1's default path and live checkouts were
+not edited. Dense-attempt and scalar plot-assertion evidence are preserved.
+Ross County/Airdrie are absent from the fixed22-team56/57 population. Manager
+approved labelled missing panels, not new data/fake paths; Kelty's actual key
+is `kelty-hearts-fc`. Both available clubs and all22 teams' CSV paths remain.
+Figures, formulas, source-checked Ridall2024 p.1/3 and limitations:
+`results/C/C8_METHODS.md`, `results/C/v8_fast_1/C_fast_*.png`.
+
+**Live, unpromoted:** recovery%265 at frozen6335316f in `/root/BF_runs/market_model_c`;
+C1 10b%267 /10a%268 at41e28736 in `/root/BF_runs/market_model_c_fast`, started
+04:50:29Z/04:50:32Z. All16 threads/core pinning/BLAS1, prescribed seeds/budgets.
+At07:46:59Z, C1 10b/10a measured slowest-chain ETAs are15.6h/36.1h;
+recovery's censored conservative ETA is54.6h (chain estimates16.2–54.6h).
+These estimates are uncertain during adaptation/contention. Checkpoints, logs, proof and
+remaining C1 work are in `results/C/PHASE_C_PROGRESS_REPORT.md` and HANDOVER.
+No C1 interpretation until synthetic recovery AND production convergence pass.
+No complete Phase C reproduction or pooled forecast/shrinkage/n conclusion yet.
+
+### C2 deferred to the human
+
+**C2 (thin-book pooling) is blocked: Laplace accuracy fails on thin books at realistic-to-wide prediction spreads.**
+The integrated 1X2 third derivative also remains unvalidated. Historical
+measurements remain under `results/C/v3_gate/` and `PHASE_C_V3_REPORT.md`;
+no C2 solver change or tolerance relaxation is made. Options below are for the
+human; none is selected:
+
+| Option | What | Cost | Caveat |
+|---|---|---|---|
+| (i) exact moment matching (assumed-density filtering) | per-book quadrature of the exact likelihood × prediction: mean, covariance and normaliser, for the ~114 thin books only | slower sampling; feasible on the beast with parallel chains | exact up to quadrature order; needs its own order-stability gate |
+| (ii) NUTS on the exact Dirichlet likelihood | the original DESIGN §4.4 route: all books, no approximation | hours of sampling; harder geometry (σ, n, u funnels) | exact; no Kalman collapse |
+| (iii) gate at the realistic spread only | re-specify Gate 1 at the C1 posterior's actual prediction spreads | cheap | a threshold or setting change: the human's call |
+| (iv) restrict thin-book types | e.g. O/U-only books only (they nearly pass), dropping the ~11 BTTS + O/U books | cheap | changes which data are used: the human's call |
 
 ## How to run
 

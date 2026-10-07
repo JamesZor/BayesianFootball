@@ -1,0 +1,6 @@
+run,termination,count,max_decrement,polish_steps,max_polish_steps,gate_pass
+H1_10b,decrement,0,0.0,0,0,true
+H1_10b,step,0,0.0,0,0,true
+H1_10b,stalled_converged,0,0.0,0,0,true
+H1_10b,polished,0,0.0,0,0,true
+H1_10b,zero_motion_polished,0,0.0,0,0,true

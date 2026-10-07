@@ -1,0 +1,4 @@
+run,termination,count,max_decrement,gate_pass
+exact_regression,decrement,0,3.382117013018548e-12,true
+exact_regression,step,0,3.382117013018548e-12,true
+exact_regression,stalled_converged,2,3.382117013018548e-12,true

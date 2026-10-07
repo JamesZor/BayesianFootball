@@ -1,0 +1,27 @@
+# Phase C revision 4 seed manifest. Frozen before the first posterior run.
+# Chain seeds are used directly by Xoshiro; no implicit chain/rung offsets.
+# Recovery is full books only. Do not pick another seed after observing recovery.
+[recovery]
+generation = 3962
+chains = [4961, 4962, 4963, 4964]
+
+[C0]
+"10a" = [5101, 5102, 5103, 5104]
+"10b" = [5111, 5112, 5113, 5114]
+
+[C1]
+"10a" = [5201, 5202, 5203, 5204]
+"10b" = [5211, 5212, 5213, 5214]
+
+[H1]
+"10a" = [5301, 5302, 5303, 5304]
+"10b" = [5311, 5312, 5313, 5314]
+
+[H2]
+"10a" = [5401, 5402, 5403, 5404]
+"10b" = [5411, 5412, 5413, 5414]
+
+[inference]
+prediction = 3963
+smoothing = 3964
+home_advantage = 3965

@@ -1,0 +1,5 @@
+rung,fixtures,loglik,min_smoothed_eigenvalue,approximate,parameters
+C0,517,875.2756941832286,1.0707614495298391e-5,false,"fixed preflight, not posterior"
+C1,517,4871.443575659266,1.0007842901102798e-5,true,"fixed preflight, not posterior"
+H1,517,874.8793665077119,9.933027762598213e-6,false,"fixed preflight, not posterior"
+H2,517,875.2756941832286,1.0707614495298391e-5,false,"fixed preflight, not posterior"

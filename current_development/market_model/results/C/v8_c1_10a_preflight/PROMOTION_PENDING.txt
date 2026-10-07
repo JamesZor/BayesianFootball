@@ -1,0 +1,1 @@
+C1 production is NOT promoted. Require accepted frozen synthetic recovery plus all production convergence gates before inference.
