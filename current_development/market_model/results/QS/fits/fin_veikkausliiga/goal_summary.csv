@@ -1,0 +1,4 @@
+league,comparison,n,estimate,se,method
+fin_veikkausliiga,full_minus_no_style,129,0.05024612043109614,0.017687805137855447,paired Poisson goal log score; fixture SE
+fin_veikkausliiga,full_minus_no_quality,129,0.20296382805911006,0.048858063380526895,paired Poisson goal log score; fixture SE
+fin_veikkausliiga,total_goal_calibration_slope,129,1.4769627101647615,0.4871998953698385,Poisson log-link GLM on log predicted expected total; ideal slope 1; model-based SE
