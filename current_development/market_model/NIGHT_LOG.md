@@ -246,3 +246,8 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - Otherwise, refit eng_premier and sco_league_two (all rungs, both protocols) from the frozen
     seeds, and regenerate every CSV from the saved draws, both byte-identical.
   - The path taken is recorded in REPRODUCIBILITY.md.
+- **2026-10-07 12:25: pi hit the Codex 5h limit** (100%; weekly 16%). The window resets at 15:28.
+  2 banked resets are available, expiring 2026-10-22: the human's to use.
+  - The eng_championship fit kept running on the beast.
+  - Done so far: eng_premier (pilot) and sco_league_two (`R06_FIT_DONE`).
+  - Auto-resume is scheduled for 15:30 (`resume_pi_at_reset.sh`).
