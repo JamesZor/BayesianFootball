@@ -1,0 +1,25 @@
+league,rung,protocol,season,n_teams,n_weeks,corr_alpha_beta,implied_r,corr_q_s,measured_r,method
+eng_premier,R2,10a,22/23,20,43,-0.9292899966848344,0.19144396154854376,0.5746971715942453,0.22998964780178321,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10a,23/24,20,41,-0.8728108430885106,0.26060220540393003,0.41584639863510303,0.28283888870138674,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10a,24/25,20,41,-0.847434627996736,0.28737133551860267,0.27772610122807845,0.2972552462727908,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10a,25/26,20,41,-0.8553025730187507,0.27926919350070956,0.4604882533597852,0.3087050179870085,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10a,22/23,20,43,-0.9291912209503828,0.19158253456034294,0.5772445395529346,0.23060561303356827,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10a,23/24,20,41,-0.8726244528436772,0.2608060647627185,0.41607853595369376,0.28308297359513684,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10a,24/25,20,41,-0.8473681133496855,0.28743914650855024,0.2794783175652221,0.29745639380233924,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10a,25/26,20,41,-0.8555323591537238,0.27903008034363813,0.461095896350172,0.3085403545212721,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10a,22/23,20,43,-0.9292105643230449,0.1915554044145599,0.5753708447214003,0.23023904942935983,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10a,23/24,20,41,-0.8723433898952667,0.26111324554076026,0.41579076323105907,0.2833734358714509,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10a,24/25,20,41,-0.8475934581615763,0.28720936482110704,0.28030471009536856,0.29728387771005244,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10a,25/26,20,41,-0.8556797197301109,0.2788766616983539,0.4622976882659162,0.30855625766538464,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10b,22/23,20,43,-0.9292799944958927,0.1914579975914749,0.5741527009500582,0.22990941283374713,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10b,23/24,20,41,-0.8727114137484027,0.26071096837942637,0.4157658707542509,0.28294433998677004,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10b,24/25,20,41,-0.8475345781424435,0.2872694164724627,0.2780572613195043,0.2971758676651034,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R2,10b,25/26,20,41,-0.8553315237870638,0.279239075633696,0.4608922227377976,0.3087331052902524,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10b,22/23,20,43,-0.929201798010992,0.19156770005880747,0.5761145229507169,0.2303860036474946,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10b,23/24,20,41,-0.8725471910246003,0.2608905330053514,0.415945097434678,0.2831562620653361,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10b,24/25,20,41,-0.8474509715931169,0.287354671690665,0.27942652014396474,0.29736609016438237,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,R6,10b,25/26,20,41,-0.8555404111982025,0.2790216988250188,0.46137548146823515,0.3085731591619195,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10b,22/23,20,43,-0.9292105738064685,0.19155539111272693,0.5749218618551287,0.23015914616046473,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10b,23/24,20,41,-0.8723771611741156,0.2610763502913127,0.4157861984944664,0.2833338057597425,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10b,24/25,20,41,-0.8475933457806488,0.28720947944657543,0.27995469812712065,0.2972575021389613,season-average RTS point means; implied r assumes zero q/s correlation
+eng_premier,C0,10b,25/26,20,41,-0.8556342985179877,0.278923956598342,0.46212038682245943,0.3085802117100687,season-average RTS point means; implied r assumes zero q/s correlation
