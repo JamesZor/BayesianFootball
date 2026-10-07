@@ -698,9 +698,11 @@ cache. The **published** Scottish baseline was rerun first against its earlier
 snapshot: `results/QS/REGRESSION_GATE.md` records the byte-identical B2/C8 gate.
 
 Run only by `include` in an **owned persistent** tmux Julia REPL, targeting the
-pane ID (never the session name). On the laptop, `include("current_development/market_model/t06_qs_eda_tests.jl")`
-ends with `T06_DONE`, and `include("current_development/market_model/r06_qs_coverage.jl")`
-ends with `R06_COVERAGE_DONE`. Coverage writes the season inventory, eligible
+pane ID (never the session name). The original laptop coverage run reached
+`R06_COVERAGE_DONE`. The manager subsequently reserved laptop RAM: **all
+remaining Julia (including final t01–t06 tests and figures) runs on mcmc-beast**.
+`include("current_development/market_model/t06_qs_eda_tests.jl")` there must end
+with `T06_DONE`. Coverage writes the season inventory, eligible
 configs, per-season coverage and one `rates_<league>.csv` per tournament under
 `results/QS/`. It uses the unchanged TWA(−20,0] close, full-market/overround
 and KL inversion gates. Scotland League One/Two 25/26 remain eligible; Championship
