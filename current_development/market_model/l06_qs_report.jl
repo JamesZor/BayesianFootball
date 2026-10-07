@@ -3,6 +3,7 @@ module QualityStyleReport
 import CSV
 import DataFrames
 import Statistics
+import LinearAlgebra
 
 const DF = DataFrames
 const ST = Statistics
@@ -28,6 +29,14 @@ function collect_results(root)
             push!(rows,frame)
         end
         tables[filename] = vcat(rows...)
+    end
+    for league in LEAGUES, protocol in ("10b","10a"), rung in ("R2","R6","C0")
+        path = joinpath(root,"fits",league,"convergence_$(rung)_$(protocol).csv")
+        isfile(path) || error("missing convergence gate: $path")
+        diag = CSV.read(path,DF.DataFrame)
+        DF.nrow(diag) > 0 || error("empty convergence gate: $path")
+        all((diag.rhat .<= 1.05) .& (diag.ess_bulk .>= 200) .&
+            (diag.ess_tail .>= 200)) || error("failed convergence gate: $path")
     end
     return tables
 end
@@ -113,7 +122,7 @@ function goal_summary(fixtures)
         end
         converged || error("pooled Poisson calibration IRLS failed for $league")
         mu = exp.(X*beta)
-        se = sqrt(inv(X'*(X.*mu))[2,2])
+        se = sqrt(LinearAlgebra.inv(X'*(X.*mu))[2,2])
         push!(rows,(; league,comparison="total_goal_calibration_slope",n,
             estimate=beta[2],se,method="Poisson GLM log-link on log predicted total; ideal 1; model-based SE"))
     end

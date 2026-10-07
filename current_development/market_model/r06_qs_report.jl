@@ -57,7 +57,7 @@ function q06r_parameter(league,rung,name)
     nrow(rows)==1 || error("missing plot parameter $league $rung $name")
     return only(eachrow(rows))
 end
-q06r_plot = plot(layout=(1,2),size=(1450,690),left_margin=24Plots.mm,bottom_margin=9Plots.mm)
+q06r_plot = plot(layout=(1,2),size=(1450,690),left_margin=24 * Plots.mm,bottom_margin=9 * Plots.mm)
 for (axis,rung,parameter,label,baseline) in ((1,"C0","r","style/quality innovation SD ratio",0.3153399879334282),
     (2,"R6","rho_ab","attack/concessions step correlation",-0.8219351600992229))
     stats = [q06r_parameter(name,rung,parameter) for name in q06r_names]
@@ -77,7 +77,7 @@ savefig(q06r_plot,joinpath(Q06R_FIG,"QS_forest_r_rho.png"))
 # 4. RTS quality/style season-level scatter; paired predictive forest
 # ===================================================================
 q06r_team = filter(r -> r.rung=="C0" && r.protocol=="10a",q06r_tables["level_teams"])
-q06r_scatter = plot(layout=(3,4),size=(1650,1150),margin=6Plots.mm)
+q06r_scatter = plot(layout=(3,4),size=(1650,1150),margin=6 * Plots.mm)
 for (i,league) in enumerate(q06r_names)
     rows = filter(:league=>==(league),q06r_team)
     scatter!(q06r_scatter[i],rows.q,rows.s,group=rows.season,
@@ -87,7 +87,7 @@ for (i,league) in enumerate(q06r_names)
 end
 savefig(q06r_scatter,joinpath(Q06R_FIG,"QS_levels_q_s.png"))
 q06r_pairs = q06r_tables["paired_scores"]
-q06r_pairplot = plot(layout=(1,3),size=(1900,650),left_margin=20Plots.mm)
+q06r_pairplot = plot(layout=(1,3),size=(1900,650),left_margin=20 * Plots.mm)
 for (axis,(candidate,control)) in enumerate((("C0","R2"),("R6","R2"),("C0","R6")))
     rows = filter(r -> r.candidate==candidate && r.control==control,q06r_pairs)
     sort!(rows,:league)
@@ -102,7 +102,7 @@ savefig(q06r_pairplot,joinpath(Q06R_FIG,"QS_paired_scores.png"))
 # ===================================================================
 # 5. Goal-score forest (including pooled row), post-processing marker
 # ===================================================================
-q06r_goalplot = plot(layout=(1,2),size=(1500,680),left_margin=24Plots.mm)
+q06r_goalplot = plot(layout=(1,2),size=(1500,680),left_margin=24 * Plots.mm)
 for (axis,comparison) in enumerate(("full_minus_no_style","full_minus_no_quality"))
     rows = filter(:comparison=>==(comparison),q06r_goals)
     scatter!(q06r_goalplot[axis],rows.estimate,1:nrow(rows),
