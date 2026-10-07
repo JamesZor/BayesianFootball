@@ -191,8 +191,20 @@ function linear_forecasts(panel,config,fits)
     for protocol in ("10b","10a"), rung in ("R2","R6","C0")
         fit = fits[(rung,protocol)]
         theta = MID.median_theta(fit)
-        f = rung == "R2" ? TB.rung_filter(fit.arm,panel,theta; predict=true) :
-            rung == "R6" ? CM.covariance_filter(fit.arm,panel,theta; predict=true) :
+        if rung == "R2"
+            # TODO 023's filter stores only marginal side variances; B2's own
+            # pre-week predictor retains the cross-covariance needed by d and ell.
+            pred = TB.preweek_predictions(fit.arm,panel,theta)
+            for r in eachrow(pred.rows)
+                r.axis in ("supremacy","level") || continue
+                protocol == "10b" && !(r.match_id in test) && continue
+                push!(rows,(; league=config.name,rung,protocol,match_id=r.match_id,
+                    axis=r.axis,observed=r.observed,predicted=r.predicted,
+                    variance=r.variance,logpd=r.logpd,cover90=r.cover90))
+            end
+            continue
+        end
+        f = rung == "R6" ? CM.covariance_filter(fit.arm,panel,theta; predict=true) :
             PM.fullbook_filter(fit.arm,panel,theta; predict=true)
         for fixture in 1:MID.n_fixtures(panel)
             j = 2fixture-1

@@ -691,9 +691,9 @@ prerequisite; QS supplies a **stream-local** `MarketModelEnglish <: DataTournema
 in `l06_qs_eda.jl` (IDs `[1,2,3,84]`) rather than changing `src/`.
 
 `results/QS/DATA_SNAPSHOTS.md` lists the five **fresh** cache SHA256s and season
-policy. On a laptop with `BF_DB_URL` in the environment, build each cache once with
-`Data.load_datastore_cached(segment; force=true)`; the QS caches were already
-built, copied and hash-verified on the beast. Never use the old EnglishLower
+policy. The five QS caches were built once on the laptop with `BF_DB_URL` set and
+`Data.load_datastore_cached(segment; force=true)`, then copied and hash-verified
+on the beast. Do not launch another laptop Julia process under the current RAM hold. Never use the old EnglishLower
 cache. The **published** Scottish baseline was rerun first against its earlier
 snapshot: `results/QS/REGRESSION_GATE.md` records the byte-identical B2/C8 gate.
 
