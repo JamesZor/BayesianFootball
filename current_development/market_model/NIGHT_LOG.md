@@ -232,3 +232,9 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - **Exclude** every in-progress 26/27 or 2026 season.
   - **Rule:** exclude a season if it is in progress, or if its Betfair-covered matches end before
     the last quarter of its schedule.
+- **2026-10-07 ~11:07: answered pi on the human's behalf (verdict protocol).**
+  - Criteria 1–2 (alignment, quality dominance) use the 10a full-panel posterior: they are
+    structural estimates, not forecasts. Criterion 3 stays on 10b.
+  - The 10b training-only values are reported alongside.
+  - A league whose verdict would flip under 10b keeps its 10a verdict but is flagged
+    protocol-sensitive, naming the criterion that flips. No threshold changed.
