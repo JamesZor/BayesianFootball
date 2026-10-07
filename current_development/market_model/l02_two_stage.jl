@@ -35,7 +35,7 @@ The bridge's legacy `sse` column holds KL, NOT squared error.
 """
 function phase_b_panel(ds; config=MM.scottish_lower_2425_2526(),
                        rates_path=joinpath(@__DIR__, "results", "A", "rates.csv"))
-    rates = CSV.read(rates_path, DF.DataFrame)
+    rates = CSV.read(rates_path, DF.DataFrame; types=Dict(:season=>String))
     rates = DF.filter(r -> r.season in config.seasons && r.tournament in config.tournaments, rates)
     MM.check_expected(config, :panel, DF.nrow(rates))
     MM.check_expected(config, :accepted, count(rates.accepted))
