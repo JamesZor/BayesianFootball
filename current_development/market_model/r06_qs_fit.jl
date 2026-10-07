@@ -52,7 +52,9 @@ q06f_panel = Q06F.TB.phase_b_panel(q06f_ds; config=Q06F_CONFIG,rates_path=q06f_r
 q06f_train = Q06F.MID.restrict_panel(q06f_panel,
     in.(q06f_panel.obs_season,Ref(Q06F_CONFIG.honest_train)))
 q06f_test = filter(:season=>in(Q06F_CONFIG.honest_test),q06f_panel.matches)
-maximum(q06f_train.matches.match_date) < minimum(q06f_test.match_date) ||
+q06f_train_ids = Set(q06f_train.obs_match)
+q06f_train_dates = filter(:match_id=>in(q06f_train_ids),q06f_panel.matches).match_date
+maximum(q06f_train_dates) < minimum(q06f_test.match_date) ||
     error("honest split is not chronological")
 println("QS $Q06F_NAME: full=",Q06F.MID.n_fixtures(q06f_panel),
     " train=",Q06F.MID.n_fixtures(q06f_train)," test=",nrow(q06f_test),
