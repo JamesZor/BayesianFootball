@@ -203,3 +203,24 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - **Resumed C1-10a with `kill -CONT 3516292`** (beast 07:38:35). It was paused about 10 min,
     with no state lost. Lesson: read the progress cadence before calling a stall.
 - **08:31: pi resumed** after the quota reset (same session, pane `%62`, context 80%).
+
+## 2026-10-06 day / 2026-10-07
+
+- **2026-10-06 ~12:00: literature research** on attack/defence correlation (Claude CLI agent, Opus 5.5).
+  Reviewed and committed `39bcd094`; nine citations spot-checked against the sources.
+  Specification page for Spec A (quality/style GRW) published as a private artifact.
+- **C1 runs finished overnight.**
+  - Production 10a and 10b reached `R05_C1_PENDING_DRAWS_DONE`.
+  - **The synthetic recovery failed its gate** (`results/C/v7_recovery/synthetic_recovery_c.csv`,
+    beast). Convergence passed (R̂ ≤ 1.001, ESS > 7000).
+  - σ_s: truth 0.010, 90% interval [0.0101, 0.0136]. σ_u: truth 0.060, 90% interval
+    [0.048, 0.059]. σ_q and n were recovered.
+  - The two misses go in opposite directions, consistent with a trade-off between style steps
+    and fixture noise.
+- **Human decision 2026-10-07: park C1, keep C0.** C1 is not promoted.
+- **2026-10-07 ~10:35: cross-league quality/style EDA launched.**
+  - pi `openai-codex/gpt-6-sol` (human's choice), pane `%71`.
+  - Branch `pi/market-model-qs-eda` = stream + Phase C code (merge `7c093bf4`).
+  - Brief: `experiments/pi_market_model_qs_eda_prompt.md` (`205cf4e2`).
+  - Scope (human): all 11 Betfair leagues fitted separately, no cups; market fits plus a goal
+    check. Verdict criteria were fixed in the brief before any result.
