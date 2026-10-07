@@ -218,7 +218,7 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - The two misses go in opposite directions, consistent with a trade-off between style steps
     and fixture noise.
 - **Human decision 2026-10-07: park C1, keep C0.** C1 is not promoted.
-- **2026-10-07 ~10:35: cross-league quality/style EDA launched.**
+- **2026-10-07 ~10:25: cross-league quality/style EDA launched.**
   - pi `openai-codex/gpt-6-sol` (human's choice), pane `%71`.
   - Branch `pi/market-model-qs-eda` = stream + Phase C code (merge `7c093bf4`).
   - Brief: `experiments/pi_market_model_qs_eda_prompt.md` (`205cf4e2`).
