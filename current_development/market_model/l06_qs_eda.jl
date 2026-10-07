@@ -401,7 +401,9 @@ end
 "Paired goal differences and Poisson calibration slope; pooled row is exploratory too."
 function goal_summary(fixtures)
     rows = NamedTuple[]
-    for league in vcat(sort(unique(fixtures.league)),["all_leagues_pooled"])
+    leagues = sort(unique(fixtures.league))
+    length(leagues) > 1 && push!(leagues,"all_leagues_pooled")
+    for league in leagues
         g = league == "all_leagues_pooled" ? fixtures : DF.filter(:league=>==(league),fixtures)
         n = DF.nrow(g)
         n > 1 || error("goal check needs multiple fixtures for $league")
