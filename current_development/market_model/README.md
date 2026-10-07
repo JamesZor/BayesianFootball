@@ -679,3 +679,40 @@ or the beast's `julia` session. A human may open additional windows in an agent 
    covariance winner may change; the 10b train/test split must be redesigned for
    available seasons and the intended temporal question. A sharper market can change
    all four, even if the implementation and gates are identical.
+
+## Cross-league quality/style EDA (TODO 039, Phase QS)
+
+The 2026-10-07 cross-league work package compares independent attack/concessions R2,
+correlated R6, and C0's independent quality/style weekly walks across **11
+individual tournaments**. This is an observational market-fit study, with a
+separate exploratory goal check. No league shares fitted team states or learns
+league-specific priors. The older paragraph above describes the historical B2
+prerequisite; QS supplies a **stream-local** `MarketModelEnglish <: DataTournemantSegment`
+in `l06_qs_eda.jl` (IDs `[1,2,3,84]`) rather than changing `src/`.
+
+`results/QS/DATA_SNAPSHOTS.md` lists the five **fresh** cache SHA256s and season
+policy. On a laptop with `BF_DB_URL` in the environment, build each cache once with
+`Data.load_datastore_cached(segment; force=true)`; the QS caches were already
+built, copied and hash-verified on the beast. Never use the old EnglishLower
+cache. The **published** Scottish baseline was rerun first against its earlier
+snapshot: `results/QS/REGRESSION_GATE.md` records the byte-identical B2/C8 gate.
+
+Run only by `include` in an **owned persistent** tmux Julia REPL, targeting the
+pane ID (never the session name). On the laptop, `include("current_development/market_model/t06_qs_eda_tests.jl")`
+ends with `T06_DONE`, and `include("current_development/market_model/r06_qs_coverage.jl")`
+ends with `R06_COVERAGE_DONE`. Coverage writes the season inventory, eligible
+configs, per-season coverage and one `rates_<league>.csv` per tournament under
+`results/QS/`. It uses the unchanged TWA(−20,0] close, full-market/overround
+and KL inversion gates. Scotland League One/Two 25/26 remain eligible; Championship
+25/26's Betfair closes stop before the last quarter, so it is excluded.
+
+After copying only the QS CSVs to the detached beast checkout (not `.env` or
+`Manifest.toml`), set `QS_LEAGUE=eng_premier` or another name from
+`l06_qs_eda.jl:LEAGUES`, choose a fresh `QS_FIT_OUT`, start a 16-thread owned
+beast REPL, set `BLAS.set_num_threads(1)` and include
+`current_development/market_model/r06_qs_fit.jl`. The marker is `R06_FIT_DONE`;
+inspect convergence rows, paired fixture scores and goal checks **before**
+interpreting a league. Fits use 4×(2000 warmup+3000 retained), unchanged
+B2/C seeds/priors and pre-week 10b filtration. `results/QS/` holds scientific
+CSVs and notes; immutable `.jls` fits stay in beast-only output directories.
+Do not run C1 or thin-book pooling as part of QS.
