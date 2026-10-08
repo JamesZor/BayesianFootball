@@ -25,3 +25,6 @@ PASS C0 suffix statistics reuse99 shared conditional panels; full-season FFBS ke
 
 ## R07
 PASS published fixture intersection3053 and every plug-in joint score ≤1e−8; joint=total+allocation ≤1e−10; same whole-week joint current-state samples across variants, same128 indices as R03; first2/all4 MC check retained. Runtime=63.224801778793335s; invocation Q07.r07().
+
+## R08
+PASS all12000 theta draws retained per fit; fixed independent league permutations preserve matched r/σ_obs; available field units/limits documented, no network or SQL. Movers explicitly NOT_AVAILABLE. Runtime=9.50099492073059s; invocation Q07.r08().
