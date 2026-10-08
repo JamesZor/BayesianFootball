@@ -91,3 +91,57 @@
   requests/batch_02.md changed; all are in qs_forms. R09–R12 each specify inputs,
   formulas, CSVs, ≤10 summary lines and decision rules. No computer code/results
   were edited, no new computation was run, and no final REPORT.md is claimed.
+
+## 2026-10-08 — Batch 02 interpreted; final report, no third batch
+
+- **Relay and definition of done:** manager supplied `4a6d0cd2`; read its SUMMARY
+  first, then only the needed tier/projection rows and our edit targets. Finish
+  REPORT.md with ≤12 summary lines, evidence-ranked formulations, explicit C0
+  comparisons and decisive future tests; correct THEORY.md, log decisions, verify
+  scoped changes and commit. No further computer request is necessary.
+- **Correct our common-style hypothesis explicitly:** R09 verifies common-mode
+  loading ≤1.10e−15 and filtered mean change ≤5.70e−15. C0 zero-sum projects raw
+  states before pricing. The proposed raw-state partition was inapplicable, not a
+  negative score result. Its checks were NOT_RUN. Active-season cohort mean energy
+  is relative to other roster teams, not an observed global scoring factor. A real
+  league scoring state requires a future dynamic mu_t fit.
+- **Retain 45° on robust predictive evidence:** R11's pooled joint C0−R6 interval
+  stays inside ±0.005 for all examined block lengths, methods and pooling weights.
+  Circular L8 gives +0.000314 [−0.000590,+0.001185]. No every-league or goal-model
+  equivalence is inferred from this pooled market result.
+- **Retain style, with league-sensitive shrinkage:** pooled integrated style goal
+  gain remains +0.006708 [0.003469,0.009792], mostly totals; Scottish Premiership
+  total gain stays negative and Finland positive. Full−frozen-style remains positive
+  only as a plug-in deletion comparison, not a refitted/integrated model contest.
+- **Bootstrap audit was informative, not a model discovery:** ordinary allocation
+  bias −9.27e−5 falls to −1.20e−6 with circular blocks; the old percentile mismatch
+  was boundary underweighting. Large score conclusions survive. Do not advertise
+  the tiny allocation effect as a new mechanism beyond its Monte Carlo precision.
+- **Do not add OU by default:** matched h13 pairs rise to 978 in EPL and 268 in
+  Scottish League Two. The latter's normalized style shape now has null rank 0.26,
+  undoing the original long-horizon screen; EPL retains rank 0.01, Finland 0.04.
+  Low raw style energy and changed time-scale shape are distinct. These local
+  nominations require a forward OU/noise-model comparison, not another slope fit.
+- **Local tiers are supported, permanent tiers are not:** the named Celtic/Rangers
+  upper pair appears in all 128 C0 and R6 paths for 21/22–24/25 but none for 25/26.
+  Group-size-aware persistence confirms the earlier pattern and its later change.
+  All five seasons share rounds 1–33; do not blame uniquely missing post-split data.
+  Conditional-null rank 1 for the multi-season count is post-selected descriptive
+  evidence, not a fitted-mixture victory over heavy tails or a universal league law.
+- **Final ranking:** projected 45° C0 is the baseline; league log-r pooling and
+  separate level/step priors are the strongest design candidates; local quality
+  heavy tails/tiers and targeted style-clock/noise fits follow. Stable team-volatility
+  types, global nonlinear style and arbitrary coordinate changes are not justified
+  as automatic additions. Microstructure and verified division bridges remain open.
+- **Stop after two batches:** the remaining decisive work requires new model fits,
+  executable quote histories or verified IDs. Batch 03 could not establish those
+  within this brief. Partial outputs remain partial; the completed report is a
+  bounded research conclusion, not a claim to have completed every proposed test.
+- **Final definition of done checked:** REPORT.md has a ten-line summary answering
+  all three questions, eight evidence-ranked formulation groups with C0 comparison
+  status and decisive future tests, hidden-dynamics findings, Spec A recommendations
+  and a partial-work audit. THEORY.md explicitly corrects the R09 hypothesis and
+  records the final R10–R12 interpretation. Staged changes are exactly these three
+  documentation files in qs_forms; source code, fits and answer artifacts are
+  untouched. `git diff --cached --check` and `./scripts/todo.sh check` passed
+  (24 tasks; AGENTS.md 19,673 bytes). No third batch or new model fit was launched.
