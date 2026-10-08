@@ -1,0 +1,171 @@
+include("current_development/market_model/r05_fullbook_recovery.jl")
+  🦋 Kaimon gate connected (market_model_c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_fullbook_recovery.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 10.9 hours)...
+C1 synthetic population: 517 full fixtures, 91 weeks
+C4_CHAIN_ABORT rung=C1 seed=4961 iteration=0 theta=[-4.3667389598945885, -4.699137880221636, -3.0309405303003616, 7.090705824646739]
+C4_CHAIN_ABORT rung=C1 seed=4962 iteration=1 theta=[-4.043923394717975, -4.393509307113452, -3.1912339773031446, 7.085804974589622]
+C4_CHAIN_ABORT rung=C1 seed=4963 iteration=1 theta=[-3.3876264040058888, -4.6248360561760355, -3.514191667786983, 6.81996902464692]
+C4_CHAIN_ABORT rung=C1 seed=4964 iteration=1 theta=[-3.187646798453291, -4.475295830468447, -2.778091029073804, 7.5205891100983475]
+ERROR: LoadError: TaskFailedException
+
+    nested task error: joint mode did not converge in 100 iterations
+    Stacktrace:
+      [1] error(s::String)
+        @ Base ./error.jl:44
+      [2] joint_mode(f::Main.PooledMarket.var"#33#34"{…}, start::Vector{…}; iterations::Int64, derivative::typeof(Main.PooledMarket.ad_derivatives))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:236
+      [3] joint_mode
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:206 [inlined]
+      [4] laplace_update(loglikelihood::Main.PooledMarket.var"#126#127"{…}, a::Vector{…}, S::Matrix{…}; third_likelihood::Function, derivative::typeof(Main.PooledMarket.ad_derivatives), mode_audit::Nothing, mode_solver::typeof(Main.PooledMarket.joint_mode))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:289
+      [5] fullbook_filter(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{…}; markets::Vector{…}, store::Bool, predict::Bool, gamma_def_sd::Float64, likelihoods::Nothing, mode_audit::Nothing, mode_solver::Function)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:191
+      [6] fullbook_filter
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:151 [inlined]
+      [7] fullbook_logtarget(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{…}; markets::Vector{…}, likelihoods::Nothing)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:76
+      [8] fullbook_logtarget
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:72 [inlined]
+      [9] (::Main.PooledMarket.var"#target#147"{…})(z::Vector{…})
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:98
+     [10] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{…}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#153#154"{…}, cancellation::Base.Threads.Atomic{…})
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:104
+     [11] fullbook_chain
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:87 [inlined]
+     [12] (::Main.PooledMarket.var"#155#156"{…})()
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:148
+
+...and 3 more exceptions.
+
+Stacktrace:
+ [1] sync_end(c::Channel{Any})
+   @ Base ./task.jl:630
+ [2] macro expansion
+   @ ./task.jl:663 [inlined]
+ [3] fit_fullbook(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel; markets::Vector{…}, seeds::Vector{…}, warmup::Int64, samples::Int64, progress::Bool, accounting_out::String, accounting_run::String)
+   @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:143
+ [4] fit_fullbook
+   @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:135 [inlined]
+ [5] recover_fullbook(p::Main.MarketInverseDynamics.MarketPanel, markets::Vector{…}, out::String; generation_seed::Int64, chain_seeds::Vector{…}, truth::Vector{…})
+   @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:277
+ [6] top-level scope
+   @ ~/BF_runs/market_model_c/current_development/market_model/r05_fullbook_recovery.jl:68
+ [7] include(mapexpr::Function, mod::Module, _path::String)
+   @ Base ./Base.jl:307
+ [8] top-level scope
+   @ REPL[1]:1
+in expression starting at /root/BF_runs/market_model_c/current_development/market_model/r05_fullbook_recovery.jl:67
+Some type information was truncated. Use `show(err)` to see complete types.
+
+julia> let e=err[1].exception; while e isa LoadError; e=e.error; end; println(typeof(e)); for x in e.exceptions; showerror(stdout,x); println(); end; end; println("C06_ALL_CHAIN_ERRORS_REPORTED")
+CompositeException
+TaskFailedException
+
+    nested task error: joint mode did not converge in 100 iterations
+    Stacktrace:
+      [1] error(s::String)
+        @ Base ./error.jl:44
+      [2] joint_mode(f::Main.PooledMarket.var"#33#34"{Main.PooledMarket.var"#126#127"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Float64}, Int64}, Distributions.MvNormal{Float64, PDMats.PDMat{Float64, Symmetric{Float64, Matrix{Float64}}, Cholesky{Float64, Matrix{Float64}}}, Vector{Float64}}}, start::Vector{Float64}; iterations::Int64, derivative::typeof(Main.PooledMarket.ad_derivatives))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:236
+      [3] joint_mode
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:206 [inlined]
+      [4] laplace_update(loglikelihood::Main.PooledMarket.var"#126#127"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Float64}, Int64}, a::Vector{Float64}, S::Matrix{Float64}; third_likelihood::Function, derivative::typeof(Main.PooledMarket.ad_derivatives), mode_audit::Nothing, mode_solver::typeof(Main.PooledMarket.joint_mode))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:289
+      [5] fullbook_filter(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{Float64}; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, store::Bool, predict::Bool, gamma_def_sd::Float64, likelihoods::Nothing, mode_audit::Nothing, mode_solver::Function)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:191
+      [6] fullbook_filter
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:151 [inlined]
+      [7] fullbook_logtarget(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{Float64}; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, likelihoods::Nothing)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:76
+      [8] fullbook_logtarget
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:72 [inlined]
+      [9] (::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}})(z::Vector{Float64})
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:98
+     [10] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}, cancellation::Base.Threads.Atomic{Bool})
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:104
+     [11] fullbook_chain
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:87 [inlined]
+     [12] (::Main.PooledMarket.var"#155#156"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Int64}, Int64, Int64, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Base.Threads.Atomic{Bool}, Int64, Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}})()
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:148
+TaskFailedException
+
+    nested task error: peer full-book chain failed
+    Stacktrace:
+     [1] error(s::String)
+       @ Base ./error.jl:44
+     [2] (::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}})(z::Vector{Float64})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:96
+     [3] slice_coordinate(logf::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}}, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro; max_steps::Int64)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:748
+     [4] slice_coordinate(logf::Function, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:741
+     [5] slice_sweep(logf::Function, θ::Vector{Float64}, lf::Float64, widths::Vector{Float64}, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:773
+     [6] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}, cancellation::Base.Threads.Atomic{Bool})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:108
+     [7] fullbook_chain
+       @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:87 [inlined]
+     [8] (::Main.PooledMarket.var"#155#156"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Int64}, Int64, Int64, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Base.Threads.Atomic{Bool}, Int64, Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}})()
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:148
+TaskFailedException
+
+    nested task error: peer full-book chain failed
+    Stacktrace:
+     [1] error(s::String)
+       @ Base ./error.jl:44
+     [2] (::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}})(z::Vector{Float64})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:96
+     [3] slice_coordinate(logf::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}}, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro; max_steps::Int64)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:748
+     [4] slice_coordinate(logf::Function, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:741
+     [5] slice_sweep(logf::Function, θ::Vector{Float64}, lf::Float64, widths::Vector{Float64}, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:773
+     [6] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}, cancellation::Base.Threads.Atomic{Bool})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:108
+     [7] fullbook_chain
+       @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:87 [inlined]
+     [8] (::Main.PooledMarket.var"#155#156"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Int64}, Int64, Int64, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Base.Threads.Atomic{Bool}, Int64, Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}})()
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:148
+TaskFailedException
+
+    nested task error: peer full-book chain failed
+    Stacktrace:
+     [1] error(s::String)
+       @ Base ./error.jl:44
+     [2] (::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}})(z::Vector{Float64})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:96
+     [3] slice_coordinate(logf::Main.PooledMarket.var"#target#147"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Base.Threads.Atomic{Bool}, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Vector{Float64}}, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro; max_steps::Int64)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:748
+     [4] slice_coordinate(logf::Function, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:741
+     [5] slice_sweep(logf::Function, θ::Vector{Float64}, lf::Float64, widths::Vector{Float64}, rng::Random.Xoshiro)
+       @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:773
+     [6] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}, cancellation::Base.Threads.Atomic{Bool})
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:108
+     [7] fullbook_chain
+       @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:87 [inlined]
+     [8] (::Main.PooledMarket.var"#155#156"{Vector{Vector{Main.PooledMarket.FullBookLogMarket}}, Vector{Int64}, Int64, Int64, Main.PooledMarket.FullBookRung, Main.MarketInverseDynamics.MarketPanel, Base.Threads.Atomic{Bool}, Int64, Main.PooledMarket.var"#153#154"{Main.PooledMarket.FullBookRung, Int64}})()
+       @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:148
+C06_ALL_CHAIN_ERRORS_REPORTED
+
+julia> include("current_development/market_model/r05_newton_diagnostic.jl")
+1×12 DataFrame
+ Row │ status         error                              fixture   derivative_calls  theta_q   theta_s   theta_u   theta_n  final_gradient_norm  final_decrement  final_newton_step_inf  final_actual_movement_inf
+     │ String         String                             Int64     Int64             Float64   Float64   Float64   Float64  Float64              Float64          Float64                Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ failed filter  joint mode did not converge in 1…  12476686               100  -4.36674  -4.69914  -3.03094  7.09071           4.94971e-5      1.03586e-12             4.18925e-8                        0.0
+C06_NEWTON_DIAGNOSTIC_REPORTED
+
+julia>

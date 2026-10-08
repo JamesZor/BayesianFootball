@@ -1,0 +1,241 @@
+rung,season,window,team,prob_upper_group,prob_named_pair_only,n_draws,status
+C0,21/22,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,aberdeen,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,celtic,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,dundee-fc,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,dundee-united,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,heart-of-midlothian,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,hibernian,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,livingston,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,motherwell,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,rangers,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,ross-county,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,st-johnstone,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,21/22,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,21/22,null_suffix,st-mirren,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+C0,22/23,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,dundee-united,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,livingston,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,22/23,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,22/23,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,dundee-fc,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,livingston,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,23/24,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,23/24,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,dundee-fc,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,dundee-united,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,24/25,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,24/25,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,aberdeen,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,aberdeen,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,celtic,1.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,celtic,1.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,dundee-fc,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,dundee-fc,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,dundee-united,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,dundee-united,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,falkirk-fc,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,falkirk-fc,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,heart-of-midlothian,0.203125,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,heart-of-midlothian,0.203125,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,hibernian,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,hibernian,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,kilmarnock,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,kilmarnock,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,livingston,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,livingston,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,motherwell,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,motherwell,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,rangers,0.203125,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,rangers,0.203125,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+C0,25/26,full_season,st-mirren,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+C0,25/26,null_suffix,st-mirren,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,21/22,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,aberdeen,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,celtic,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,dundee-fc,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,dundee-united,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,heart-of-midlothian,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,hibernian,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,livingston,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,motherwell,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,rangers,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,ross-county,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,st-johnstone,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,21/22,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,21/22,null_suffix,st-mirren,,,0,NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation
+R6,22/23,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,dundee-united,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,livingston,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,22/23,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,22/23,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,dundee-fc,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,livingston,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,livingston,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,23/24,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,23/24,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,aberdeen,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,aberdeen,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,celtic,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,celtic,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,dundee-fc,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,dundee-fc,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,dundee-united,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,dundee-united,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,heart-of-midlothian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,heart-of-midlothian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,hibernian,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,hibernian,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,kilmarnock,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,kilmarnock,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,motherwell,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,motherwell,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,rangers,1.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,rangers,1.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,ross-county,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,ross-county,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,st-johnstone,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,st-johnstone,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,24/25,full_season,st-mirren,0.0,1.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,24/25,null_suffix,st-mirren,0.0,1.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,aberdeen,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,aberdeen,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,celtic,1.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,celtic,1.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,dundee-fc,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,dundee-fc,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,dundee-united,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,dundee-united,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,falkirk-fc,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,falkirk-fc,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,heart-of-midlothian,0.1875,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,heart-of-midlothian,0.1875,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,hibernian,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,hibernian,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,kilmarnock,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,kilmarnock,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,livingston,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,livingston,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,motherwell,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,motherwell,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,rangers,0.1875,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,rangers,0.1875,0.0,128,OK; exact suffix=full-season window; existing128 path means reused
+R6,25/26,full_season,st-mirren,0.0,0.0,128,OK; named Celtic/Rangers contrast post-selected from R06
+R6,25/26,null_suffix,st-mirren,0.0,0.0,128,OK; exact suffix=full-season window; existing128 path means reused

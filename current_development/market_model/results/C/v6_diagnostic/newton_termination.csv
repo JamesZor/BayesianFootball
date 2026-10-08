@@ -1,0 +1,5 @@
+run,termination,count,max_decrement,polish_steps,max_polish_steps,gate_pass
+initial_target_diagnostic,decrement,146,6.335426361650836e-13,0,0,true
+initial_target_diagnostic,step,0,6.335426361650836e-13,0,0,true
+initial_target_diagnostic,stalled_converged,0,6.335426361650836e-13,0,0,true
+initial_target_diagnostic,polished,0,6.335426361650836e-13,0,0,true

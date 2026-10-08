@@ -1,0 +1,108 @@
+gate,value,tol,pass
+G1 loglik a1_grw1,1.5987211554602254e-13,1.0e-9,true
+G2 smoothed mean a1_grw1,4.7531423241764514e-15,1.0e-8,true
+G4 FFBS mean max |z| (4000 draws),1.4900625446712092,4.5,true
+G4 FFBS cov max rel err,0.04473447127325301,0.1,true
+G1 loglik a2_momentum,9.592326932761353e-14,1.0e-9,true
+G2 smoothed mean a2_momentum,4.746203430272544e-15,1.0e-8,true
+G1 loglik regime (random S),1.0658141036401503e-14,1.0e-9,true
+G2 smoothed mean regime (random S),3.805983306293115e-15,1.0e-8,true
+G5 loglik feature + Student-t ω,7.105427357601002e-15,1.0e-9,true
+G5 smoothed mean feature + Student-t ω,8.425551922819352e-15,1.0e-8,true
+"G3 RBPF(SV, σ_h→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+"G3 RBPF(regime, Δ→0) vs Kalman",3.552713678800501e-15,1.0e-8,true
+G3 RBPF(regime) pre-week means vs Kalman,1.1102230246251565e-16,1.0e-10,true
+B loglik R0,2.2026824808563106e-13,1.0e-9,true
+B RTS R0,3.3584246494910985e-15,1.0e-8,true
+B loglik R1,1.5987211554602254e-13,1.0e-9,true
+B RTS R1,4.884981308350689e-15,1.0e-8,true
+B loglik R3,6.394884621840902e-14,1.0e-9,true
+B RTS R3,9.2148511043888e-15,1.0e-8,true
+B R1 zero-break reduction,0.0,1.0e-9,true
+B R3 zero-HA reduction,4.618527782440651e-14,1.0e-9,true
+B RBPF fixed-omega loglik,0.0,1.0e-8,true
+B RBPF fixed-omega pre-week mean,5.551115123125783e-16,1.0e-8,true
+B RBPF fixed-omega pre-week variance,1.3461454173580023e-15,1.0e-8,true
+B2 R5 isotropic reduction,4.618527782440651e-14,1.0e-9,true
+B2 R6 rho-zero reduction,3.552713678800501e-15,1.0e-9,true
+B2 loglik R5,1.6413537196058314e-12,1.0e-9,true
+B2 RTS R5,1.587618925213974e-14,1.0e-8,true
+B2 loglik R6,1.2789769243681803e-13,1.0e-9,true
+B2 RTS R6,4.163336342344337e-15,1.0e-8,true
+B2 R6 FFBS mean max z (4000),1.0458676930563535,4.5,true
+B2 R6 FFBS covariance relative error,0.035611943638638066,0.1,true
+B2 loglik R7,3.090860900556436e-13,1.0e-9,true
+B2 RTS R7,1.0057926713713528e-14,1.0e-8,true
+C0 matched R6 loglik,3.552713678800501e-14,1.0e-9,true
+H1 gamma_def pinned zero reduction,0.0,1.0e-9,true
+H2 kappa zero reduction,0.0,1.0e-9,true
+C0 batch loglik,1.4921397450962104e-13,1.0e-9,true
+C0 batch RTS mean,8.451572774959004e-15,1.0e-8,true
+C0 batch RTS covariance,1.1102230246251565e-16,1.0e-8,true
+H1 batch loglik,5.115907697472721e-13,1.0e-9,true
+H1 batch RTS mean,6.342149028171207e-15,1.0e-8,true
+H1 batch RTS covariance,1.0408340855860843e-16,1.0e-8,true
+H2 batch loglik,5.009326287108706e-13,1.0e-9,true
+H2 batch RTS mean,4.021089017314239e-15,1.0e-8,true
+H2 batch RTS covariance,1.6653345369377348e-16,1.0e-8,true
+C1 toy Gaussian frozen batch loglik,9.769962616701378e-13,1.0e-9,true
+C1 toy Gaussian frozen batch RTS,9.247810850432359e-15,1.0e-8,true
+C1 toy Gaussian frozen batch RTS covariance,1.3877787807814457e-16,1.0e-8,true
+C Gate2 scalar eigen mean,1.734723475976807e-17,1.0e-10,true
+C Gate2 scalar eigen covariance,5.551115123125783e-17,1.0e-10,true
+C Gate2 scalar eigen loglik,6.661338147750939e-16,1.0e-10,true
+C1 Gaussian exact observation reduction,9.237055564881302e-14,1.0e-9,true
+toy C0 scalar/dense 1 loglik,3.197442310920451e-14,1.0e-9,true
+toy C0 scalar/dense 1 filtered mean,1.8318679906315083e-15,1.0e-8,true
+toy C0 scalar/dense 1 filtered covariance,9.71445146547012e-17,1.0e-8,true
+toy C0 scalar/dense 2 loglik,8.881784197001252e-16,1.0e-9,true
+toy C0 scalar/dense 2 filtered mean,6.661338147750939e-16,1.0e-8,true
+toy C0 scalar/dense 2 filtered covariance,5.551115123125783e-17,1.0e-8,true
+toy C0 scalar/dense 3 loglik,4.263256414560601e-13,1.0e-9,true
+toy C0 scalar/dense 3 filtered mean,2.706168622523819e-15,1.0e-8,true
+toy C0 scalar/dense 3 filtered covariance,8.326672684688674e-17,1.0e-8,true
+toy H1 scalar/dense 1 loglik,2.2026824808563106e-13,1.0e-9,true
+toy H1 scalar/dense 1 filtered mean,2.712240154689738e-15,1.0e-8,true
+toy H1 scalar/dense 1 filtered covariance,9.71445146547012e-17,1.0e-8,true
+toy H1 scalar/dense 2 loglik,3.552713678800501e-15,1.0e-9,true
+toy H1 scalar/dense 2 filtered mean,8.049116928532385e-16,1.0e-8,true
+toy H1 scalar/dense 2 filtered covariance,6.938893903907228e-17,1.0e-8,true
+toy H1 scalar/dense 3 loglik,8.952838470577262e-13,1.0e-9,true
+toy H1 scalar/dense 3 filtered mean,6.217248937900877e-15,1.0e-8,true
+toy H1 scalar/dense 3 filtered covariance,5.551115123125783e-17,1.0e-8,true
+toy H2 scalar/dense 1 loglik,9.947598300641403e-14,1.0e-9,true
+toy H2 scalar/dense 1 filtered mean,1.2836953722228372e-15,1.0e-8,true
+toy H2 scalar/dense 1 filtered covariance,5.551115123125783e-17,1.0e-8,true
+toy H2 scalar/dense 2 loglik,8.881784197001252e-16,1.0e-9,true
+toy H2 scalar/dense 2 filtered mean,6.661338147750939e-16,1.0e-8,true
+toy H2 scalar/dense 2 filtered covariance,5.551115123125783e-17,1.0e-8,true
+toy H2 scalar/dense 3 loglik,2.4158453015843406e-13,1.0e-9,true
+toy H2 scalar/dense 3 filtered mean,3.774758283725532e-15,1.0e-8,true
+toy H2 scalar/dense 3 filtered covariance,7.28583859910259e-17,1.0e-8,true
+full real C0 scalar/dense 1 loglik,2.2737367544323206e-13,1.0e-9,true
+full real C0 scalar/dense 1 filtered mean,8.23646706393788e-15,1.0e-8,true
+full real C0 scalar/dense 1 filtered covariance,7.771561172376096e-16,1.0e-8,true
+full real C0 scalar/dense 2 loglik,5.684341886080802e-14,1.0e-9,true
+full real C0 scalar/dense 2 filtered mean,5.329070518200751e-15,1.0e-8,true
+full real C0 scalar/dense 2 filtered covariance,7.216449660063518e-16,1.0e-8,true
+full real C0 scalar/dense 3 loglik,9.094947017729282e-13,1.0e-9,true
+full real C0 scalar/dense 3 filtered mean,1.4765966227514582e-14,1.0e-8,true
+full real C0 scalar/dense 3 filtered covariance,8.881784197001252e-16,1.0e-8,true
+full real H1 scalar/dense 1 loglik,0.0,1.0e-9,true
+full real H1 scalar/dense 1 filtered mean,1.9761969838327786e-14,1.0e-8,true
+full real H1 scalar/dense 1 filtered covariance,1.1102230246251565e-15,1.0e-8,true
+full real H1 scalar/dense 2 loglik,5.684341886080802e-14,1.0e-9,true
+full real H1 scalar/dense 2 filtered mean,6.13398221105399e-15,1.0e-8,true
+full real H1 scalar/dense 2 filtered covariance,1.6375789613221059e-15,1.0e-8,true
+full real H1 scalar/dense 3 loglik,1.2505552149377763e-12,1.0e-9,true
+full real H1 scalar/dense 3 filtered mean,3.502753642692369e-14,1.0e-8,true
+full real H1 scalar/dense 3 filtered covariance,1.2212453270876722e-15,1.0e-8,true
+full real H2 scalar/dense 1 loglik,3.410605131648481e-13,1.0e-9,true
+full real H2 scalar/dense 1 filtered mean,6.9111383282915995e-15,1.0e-8,true
+full real H2 scalar/dense 1 filtered covariance,9.43689570931383e-16,1.0e-8,true
+full real H2 scalar/dense 2 loglik,5.684341886080802e-14,1.0e-9,true
+full real H2 scalar/dense 2 filtered mean,5.329070518200751e-15,1.0e-8,true
+full real H2 scalar/dense 2 filtered covariance,7.216449660063518e-16,1.0e-8,true
+full real H2 scalar/dense 3 loglik,2.5011104298755527e-12,1.0e-9,true
+full real H2 scalar/dense 3 filtered mean,1.4925560787304448e-14,1.0e-8,true
+full real H2 scalar/dense 3 filtered covariance,1.4432899320127035e-15,1.0e-8,true

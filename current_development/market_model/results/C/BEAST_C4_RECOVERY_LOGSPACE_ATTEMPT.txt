@@ -1,0 +1,84 @@
+include("current_development/market_model/r05_fullbook_recovery.jl")
+  🦋 Kaimon gate connected (market_model_c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_fullbook_recovery.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 10.1 hours)...
+C1 synthetic population: 517 full fixtures, 91 weeks
+ERROR: LoadError: TaskFailedException
+Stacktrace:
+  [1] #wait#582
+    @ ./task.jl:363 [inlined]
+  [2] wait
+    @ ./task.jl:360 [inlined]
+  [3] fetch
+    @ ./task.jl:554 [inlined]
+  [4] _broadcast_getindex_evalf
+    @ ./broadcast.jl:699 [inlined]
+  [5] _broadcast_getindex
+    @ ./broadcast.jl:672 [inlined]
+  [6] _getindex
+    @ ./broadcast.jl:620 [inlined]
+  [7] getindex
+    @ ./broadcast.jl:616 [inlined]
+  [8] copy
+    @ ./broadcast.jl:933 [inlined]
+  [9] materialize
+    @ ./broadcast.jl:894 [inlined]
+ [10] fit_fullbook(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel; markets::Vector{…}, seeds::Vector{…}, warmup::Int64, samples::Int64, progress::Bool)
+    @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:118
+ [11] fit_fullbook
+    @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:108 [inlined]
+ [12] recover_fullbook(p::Main.MarketInverseDynamics.MarketPanel, markets::Vector{…}, out::String; generation_seed::Int64, chain_seeds::Vector{…}, truth::Vector{…})
+    @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:239
+ [13] top-level scope
+    @ ~/BF_runs/market_model_c/current_development/market_model/r05_fullbook_recovery.jl:67
+ [14] include(mapexpr::Function, mod::Module, _path::String)
+    @ Base ./Base.jl:307
+ [15] top-level scope
+    @ REPL[1]:1
+
+    nested task error: joint-mode line search stalled: [-2.533547593941421e-5, 2.8639610683001138e-5]
+    Stacktrace:
+      [1] error(s::String)
+        @ Base ./error.jl:44
+      [2] joint_mode(f::Main.PooledMarket.var"#14#15"{…}, start::Vector{…}; tolerance::Float64, iterations::Int64, derivative::typeof(Main.PooledMarket.derivatives))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:152
+      [3] joint_mode
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:124 [inlined]
+      [4] laplace_update(loglikelihood::Main.PooledMarket.var"#106#107"{…}, a::Vector{…}, S::Matrix{…}; third_likelihood::Function, derivative::typeof(Main.PooledMarket.derivatives))
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_pooled.jl:209
+      [5] fullbook_filter(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{…}; markets::Vector{…}, store::Bool, predict::Bool, gamma_def_sd::Float64, likelihoods::Nothing)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:189
+      [6] fullbook_filter
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_engine.jl:151 [inlined]
+      [7] fullbook_logtarget(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, theta::Vector{…}; markets::Vector{…}, likelihoods::Nothing)
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:68
+      [8] fullbook_logtarget
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:64 [inlined]
+      [9] #126
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:84 [inlined]
+     [10] slice_coordinate(logf::Main.PooledMarket.var"#126#127"{…}, θ::Vector{…}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro; max_steps::Int64)
+        @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:753
+     [11] slice_coordinate(logf::Function, θ::Vector{Float64}, lf0::Float64, j::Int64, w::Float64, rng::Random.Xoshiro)
+        @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:741
+     [12] slice_sweep(logf::Function, θ::Vector{Float64}, lf::Float64, widths::Vector{Float64}, rng::Random.Xoshiro)
+        @ Main.MarketInverseDynamics ~/BF_runs/market_model_c/current_development/market_inverse_dynamics/l01_market_inverse_loader.jl:773
+     [13] fullbook_chain(a::Main.PooledMarket.FullBookRung, p::Main.MarketInverseDynamics.MarketPanel, seed::Int64; markets::Vector{…}, warmup::Int64, samples::Int64, progress::Main.PooledMarket.var"#136#137"{…})
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:91
+     [14] fullbook_chain
+        @ ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:79 [inlined]
+     [15] (::Main.PooledMarket.var"#138#139"{…})()
+        @ Main.PooledMarket ~/BF_runs/market_model_c/current_development/market_model/l05_fullbook_sampling.jl:116
+in expression starting at /root/BF_runs/market_model_c/current_development/market_model/r05_fullbook_recovery.jl:67
+Some type information was truncated. Use `show(err)` to see complete types.
+
+julia>

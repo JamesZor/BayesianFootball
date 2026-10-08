@@ -1,0 +1,476 @@
+The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+include("current_development/market_model/t05_fast_gaussian_tests.jl"); include("current_development/market_model/t05_fast_reports_tests.jl")
+julia> include("current_development/market_model/t05_fast_gaussian_tests.jl"); include("current_development/market_model/t05_fast_reports_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+C8 Gaussian benchmark C0: dense=0.085172221 scalar=0.007409505 for10 fixed-target calls (not fits)
+C8 Gaussian benchmark H1: dense=0.094122827 scalar=0.007965016 for10 fixed-target calls (not fits)
+C8 Gaussian benchmark H2: dense=0.092991416 scalar=0.007741986 for10 fixed-target calls (not fits)
+Test Summary:                                                     | Pass  Total   Time
+C8 scalar Gaussian arithmetic, unchanged model and native sampler |   17     17  19.0s
+T05_FAST_GAUSSIAN_DONE
+HA mixture complete: C0 10a, 4000 hyperdraws
+HA mixture complete: C0 10b, 4000 hyperdraws
+HA mixture complete: H1 10a, 4000 hyperdraws
+HA mixture complete: H1 10b, 4000 hyperdraws
+HA mixture complete: H2 10a, 4000 hyperdraws
+HA mixture complete: H2 10b, 4000 hyperdraws
+Test Summary:                                 | Pass  Total   Time
+C8 fast-stage reports, NOT sampled acceptance |   16     16  23.2s
+T05_FAST_REPORTS_DONE
+
+julia> include("current_development/market_model/t05_pooled_tests.jl"); include("current_development/market_model/t05_fullbook_workflow_tests.jl"); include("current_development/market_model/t04_copula_grid_tests.jl"); include("current_development/market_model/t03_covariance_tests.jl"); include("current_development/market_model/t02_two_stage_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+53×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+  35 │ C0 matched R6 loglik               3.55271e-14  1.0e-9   true
+  36 │ H1 gamma_def pinned zero reducti…  0.0          1.0e-9   true
+  37 │ H2 kappa zero reduction            0.0          1.0e-9   true
+  38 │ C0 batch loglik                    1.49214e-13  1.0e-9   true
+  39 │ C0 batch RTS mean                  8.45157e-15  1.0e-8   true
+  40 │ C0 batch RTS covariance            1.11022e-16  1.0e-8   true
+  41 │ H1 batch loglik                    5.11591e-13  1.0e-9   true
+  42 │ H1 batch RTS mean                  6.34215e-15  1.0e-8   true
+  43 │ H1 batch RTS covariance            1.04083e-16  1.0e-8   true
+  44 │ H2 batch loglik                    5.00933e-13  1.0e-9   true
+  45 │ H2 batch RTS mean                  4.02109e-15  1.0e-8   true
+  46 │ H2 batch RTS covariance            1.66533e-16  1.0e-8   true
+  47 │ C1 toy Gaussian frozen batch log…  9.76996e-13  1.0e-9   true
+  48 │ C1 toy Gaussian frozen batch RTS   9.24781e-15  1.0e-8   true
+  49 │ C1 toy Gaussian frozen batch RTS…  1.38778e-16  1.0e-8   true
+  50 │ C Gate2 scalar eigen mean          1.73472e-17  1.0e-10  true
+  51 │ C Gate2 scalar eigen covariance    5.55112e-17  1.0e-10  true
+  52 │ C Gate2 scalar eigen loglik        6.66134e-16  1.0e-10  true
+  53 │ C1 Gaussian exact observation re…  9.23706e-14  1.0e-9   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+C05_EXACT_STALL fixture=12476625 legacy_gradient=[-1.5699131339808048e-5, 3.249019587192592e-5] mode_delta=2.0039525594484076e-13 marginal_delta=1.1574741165532032e-11 termination=polished decrement=1.50342686280365e-24 tighter_residual=5.340616837656853e-12
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+C05_EXACT_ZERO_MOTION fixture=12476686 mode_delta=0.0 marginal_delta=0.0 from_prediction_mode_delta=0.0 from_prediction_marginal_delta=0.0 termination=zero_motion_polished decrement=2.287082719929954e-26 tighter_residual=7.286615755219827e-12
+Test Summary:                                      | Pass  Total     Time
+Phase C revision 4 full-book deterministic engines |  305    305  1m18.1s
+T05_C7_DETERMINISTIC_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.1 hours)...
+C2_PENDING integrated third relative discrepancy=5.405838441375254e-5 limit=1e-6
+1X2-only integrated derivative: unchanged tolerance: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:23
+  Expression: discrepancy <= 1.0e-6
+   Evaluated: 5.405838441375254e-5 <= 1.0e-6
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:6 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:23 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=250.0 sd=0.05 offset=0.0: median=7.980456423339888e-5, p95=0.0002937123492387173, mean/SD=5.2933176289081284e-5, SDrelative=0.019848072832740482, pass=true
+C2_PENDING OU-only n=250.0 sd=0.05 offset=0.1: median=0.00012681564668337586, p95=0.0003205003953526742, mean/SD=4.983270328436007e-5, SDrelative=0.0009489066648507016, pass=true
+C2_PENDING OU-only n=250.0 sd=0.2 offset=0.0: median=0.0027939436086663605, p95=0.006559386627022779, mean/SD=0.0052907574840531145, SDrelative=0.058978186176263714, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=250.0 sd=0.2 offset=0.1: median=0.002284665812985587, p95=0.005602642759491695, mean/SD=0.004096491266048336, SDrelative=0.03236652111165694, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.05 offset=0.0: median=6.719431656598829e-5, p95=0.0003397951744717354, mean/SD=7.242185611347885e-5, SDrelative=0.035168787803974366, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.05 offset=0.1: median=5.249101396787026e-5, p95=0.000340478078430806, mean/SD=5.53004507873457e-5, SDrelative=0.0015084095621018534, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.2 offset=0.0: median=0.0038532361782199764, p95=0.007460724584020895, mean/SD=0.0057332037927091545, SDrelative=0.06827107338333926, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=1000.0 sd=0.2 offset=0.1: median=0.003230987746752234, p95=0.005848859507457149, mean/SD=0.00406366519516531, SDrelative=0.03704417305527696, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.05 offset=0.0: median=0.00018389354222936305, p95=0.00043817910386749763, mean/SD=9.481583679187697e-5, SDrelative=0.04316638572065623, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.05 offset=0.1: median=0.00014460114120407042, p95=0.00037224896783474295, mean/SD=7.083187016114714e-5, SDrelative=0.002191917897127249, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.2 offset=0.0: median=0.004542215732545429, p95=0.008858646583337659, mean/SD=0.010854117561799425, SDrelative=0.062199071805757344, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=4000.0 sd=0.2 offset=0.1: median=0.0037517537982107996, p95=0.006817264368071286, mean/SD=0.008088385122810635, SDrelative=0.031027066509818124, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.05 offset=0.0: median=0.00016903571134996298, p95=0.0004541422357922987, mean/SD=9.050510326923072e-5, SDrelative=0.0007327484330585943, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.05 offset=0.1: median=0.00018117239759485315, p95=0.0005078007452182122, mean/SD=9.467812386321685e-5, SDrelative=0.0008087066746456095, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.2 offset=0.0: median=0.02060874306987226, p95=0.03934220380768089, mean/SD=0.05836204173970596, SDrelative=0.14878198870219494, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=250.0 sd=0.2 offset=0.1: median=0.01900661639205037, p95=0.03986399861365017, mean/SD=0.058827577645660455, SDrelative=0.14992738568319008, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=1000.0 sd=0.05 offset=0.0: median=0.00036942988342669736, p95=0.0010965051671850026, mean/SD=0.0002678653867092285, SDrelative=0.0035786282649713508, pass=true
+C2_PENDING BTTS+OU n=1000.0 sd=0.05 offset=0.1: median=0.00031710289951392134, p95=0.0010632181061717818, mean/SD=0.00026363105100115427, SDrelative=0.0033521606195009435, pass=true
+C2_PENDING BTTS+OU n=1000.0 sd=0.2 offset=0.0: median=0.03884425368812172, p95=0.09680237161346532, mean/SD=0.09635999506697479, SDrelative=0.21825732401929177, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=1000.0 sd=0.2 offset=0.1: median=0.03735970591714821, p95=0.0947192767850607, mean/SD=0.09331525252150001, SDrelative=0.2143290321338419, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=4000.0 sd=0.05 offset=0.0: median=0.0015347646043100127, p95=0.0023776471107397334, mean/SD=0.0009451274192087017, SDrelative=0.006856521160459095, pass=true
+C2_PENDING BTTS+OU n=4000.0 sd=0.05 offset=0.1: median=0.001440035666870898, p95=0.00235977226582067, mean/SD=0.0008641541561207819, SDrelative=0.006924659948327694, pass=true
+C2_PENDING BTTS+OU n=4000.0 sd=0.2 offset=0.0: median=0.07337236800273361, p95=0.1619194006931936, mean/SD=0.2993628581839998, SDrelative=0.4939853190772666, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=4000.0 sd=0.2 offset=0.1: median=0.07174201013407955, p95=0.16186551737085647, mean/SD=0.3001396733122619, SDrelative=0.4920081069796789, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS-only n=250.0 sd=0.05 offset=0.0: median=0.00022564293326343687, p95=0.00022564293326343687, mean/SD=4.739391556360565e-6, SDrelative=0.0014887800646067317, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.05 offset=0.1: median=0.00023112841765460246, p95=0.00023112841765460246, mean/SD=2.9276260138085293e-6, SDrelative=0.008639838323828086, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.2 offset=0.0: median=0.005591013854347349, p95=0.005591013854347349, mean/SD=0.0008404810783218743, SDrelative=0.00949953295003303, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.2 offset=0.1: median=0.005909204544633173, p95=0.005909204544633173, mean/SD=0.0011062026630622506, SDrelative=0.0396865240262928, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.05 offset=0.0: median=0.0003741027348782566, p95=0.0003741027348782566, mean/SD=6.518850038370146e-6, SDrelative=0.003766377635764817, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.05 offset=0.1: median=0.0003813939706924785, p95=0.0003813939706924785, mean/SD=9.70711524995039e-6, SDrelative=0.02208009505398767, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.2 offset=0.0: median=0.004770956516465752, p95=0.004770956516465752, mean/SD=0.0011850856357710422, SDrelative=0.010329153625723286, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.2 offset=0.1: median=0.005250338501051388, p95=0.005250338501051388, mean/SD=0.0015269605304626271, SDrelative=0.047292518955222795, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.05 offset=0.0: median=0.00035833227477466423, p95=0.00035833227477466423, mean/SD=1.4597440178997084e-5, SDrelative=0.006346248214589956, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.05 offset=0.1: median=0.00038165268699863475, p95=0.00038165268699863475, mean/SD=1.8906830577342243e-5, SDrelative=0.036774866518146765, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.2 offset=0.0: median=0.0044407555795697995, p95=0.0044407555795697995, mean/SD=0.001295720601379656, SDrelative=0.010723419995153693, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.2 offset=0.1: median=0.0049614430501074835, p95=0.0049614430501074835, mean/SD=0.0016649251185065325, SDrelative=0.04975160984620841, pass=true
+Test Summary:                                          | Pass  Fail  Total  Time
+C2-pending (excluded from Phase C4 acceptance)         |   29    10     39  7.0s
+  1X2-only integrated derivative: unchanged tolerance  |    2     1      3  6.9s
+  Archived thin-book Gate 1: reported, NOT regenerated |   27     9     36  0.2s
+RNG of the outermost testset: Xoshiro(0xbc1b33a20d4cfd10, 0xc1b19aace6215e9e, 0xa56594d845757e1e, 0x0666aeba9ea62ba5, 0x68fab2fc7187c103)
+C2_PENDING_REPORTED: thin-book failures retained; excluded from C4 acceptance
+Test Summary:                                             | Pass  Total   Time
+Full-book workflow preparation (not posterior acceptance) |   85     85  10.7s
+T05_WORKFLOW_PREPARATION_DONE
+G0 0.0 marginal truncation error: -5.318624545891382e-6 / -2.6171739198055377e-7
+G1 -0.08 marginal truncation error: -5.318624545669337e-6 / -2.6171739175850917e-7
+G2 0.12 marginal truncation error: -1.1070085671915919e-5 / -1.5397196018174242e-6
+G3 0.6 marginal truncation error: -5.323858439876261e-6 / -3.547068292419908e-7
+G3 -0.6 marginal truncation error: -5.313553374630686e-6 / -1.7239560512471996e-7
+Synthetic G1 dependence recovery: -0.0799999700813346
+Synthetic G2 dependence recovery: 0.11999996060015418
+Synthetic G3 dependence recovery: 0.6000000072485645
+34×12 DataFrame
+ Row │ protocol              statistic                          draws  n_steps  ppp      extreme  obs_q05       obs_q50      obs_q95      rep_q05       rep_q50       rep_q95
+     │ String                String                             Int64  Int64    Float64  Bool     Float64       Float64      Float64      Float64       Float64       Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ synthetic Gaussian    joint_collapse_95                    200     1188    0.595    false   0.020202      0.0239899    0.0277778    0.020202      0.0244108     0.0286616
+   2 │ synthetic Gaussian    joint_direction_asymmetry            200     1188    0.39     false  -0.00425084    0.00252525   0.00761785  -0.00589226    0.0           0.00673401
+   3 │ synthetic Gaussian    joint_improvement_95                 200     1188    0.405    false   0.0218855     0.0260943    0.030303     0.0210438     0.0244108     0.0286616
+   4 │ synthetic Gaussian    joint_quality_style_lower_95         200     1188    0.54     false   0.000841751   0.00252525   0.00509259   0.000841751   0.00252525    0.00505051
+   5 │ synthetic Gaussian    joint_quality_style_upper_95         200     1188    0.58     false   0.0           0.00252525   0.00420875   0.000841751   0.00252525    0.00505051
+   6 │ synthetic Gaussian    kendall_alpha_beta                   200     1188    0.41     false  -0.602594     -0.589192    -0.573767    -0.61122      -0.591301     -0.572009
+   7 │ synthetic Gaussian    kendall_alpha_beta_minus_gaussian    200     1188    0.41     false  -0.0122591     0.00114292   0.0165677   -0.0208856    -0.000966066   0.0183256
+   8 │ synthetic Gaussian    kendall_quality_style                200     1188    0.39     false  -0.0265423     0.00469452   0.0315813   -0.0312652    -0.000713396   0.0314348
+   9 │ synthetic Gaussian    kendall_quality_style_minus_gaus…    200     1188    0.39     false  -0.0265423     0.00469452   0.0315813   -0.0312652    -0.000713396   0.0314348
+  10 │ synthetic Gaussian    kurtosis_alpha                       200     1188    0.365    false  -0.173687      0.0333477    0.295032    -0.216289     -0.0320129     0.245734
+  11 │ synthetic Gaussian    kurtosis_beta                        200     1188    0.585    false  -0.23433      -0.0614352    0.175794    -0.213592     -0.0134331     0.264937
+  12 │ synthetic Gaussian    kurtosis_quality                     200     1188    0.45     false  -0.195978     -0.0016147    0.207086    -0.237425     -0.0322104     0.214548
+  13 │ synthetic Gaussian    kurtosis_style                       200     1188    0.52     false  -0.21048      -0.0366901    0.23405     -0.20029      -0.0233714     0.216184
+  14 │ synthetic Gaussian    lag1_squared_alpha                   200     1188    0.515    false  -0.0383097     0.0010826    0.036656    -0.0427097    -0.00184417    0.0494462
+  15 │ synthetic Gaussian    lag1_squared_beta                    200     1188    0.555    false  -0.0550056    -0.0051773    0.0357623   -0.0446059    -5.5119e-5     0.0475573
+  16 │ synthetic Gaussian    lag1_squared_quality                 200     1188    0.545    false  -0.0422916    -0.00425378   0.037618    -0.0419063     0.00179151    0.0460936
+  17 │ synthetic Gaussian    lag1_squared_style                   200     1188    0.565    false  -0.0518492    -0.00290427   0.0425147   -0.0408978    -0.000146375   0.0535743
+  18 │ synthetic t3 quality  joint_collapse_95                    200     1188    0.295    false   0.023569      0.0277778    0.0311869    0.020202      0.0252525     0.0286195
+  19 │ synthetic t3 quality  joint_direction_asymmetry            200     1188    0.695    false  -0.00757576   -0.0016835    0.00340909  -0.00589226    0.0           0.00589226
+  20 │ synthetic t3 quality  joint_improvement_95                 200     1188    0.455    false   0.0218855     0.0260943    0.0294613    0.0210017     0.0252525     0.0294613
+  21 │ synthetic t3 quality  joint_quality_style_lower_95         200     1188    0.66     false   0.000841751   0.00252525   0.00420875   0.000841751   0.00252525    0.00420875
+  22 │ synthetic t3 quality  joint_quality_style_upper_95         200     1188    0.47     false   0.000841751   0.003367     0.00589226   0.000841751   0.00252525    0.00425084
+  23 │ synthetic t3 quality  kendall_alpha_beta                   200     1188    0.28     false  -0.599416     -0.583565    -0.566499    -0.607341     -0.590119     -0.569541
+  24 │ synthetic t3 quality  kendall_alpha_beta_minus_gaussian    200     1188    0.28     false  -0.00908148    0.00676925   0.0238354   -0.0170068     0.000215363   0.0207938
+  25 │ synthetic t3 quality  kendall_quality_style                200     1188    0.355    false  -0.020404      0.0103889    0.0433047   -0.0358358    -0.00101691    0.0319506
+  26 │ synthetic t3 quality  kendall_quality_style_minus_gaus…    200     1188    0.355    false  -0.020404      0.0103889    0.0433047   -0.0358358    -0.00101691    0.0319506
+  27 │ synthetic t3 quality  kurtosis_alpha                       200     1188    0.0       true   1.35021       1.94537      2.67982     -0.234085     -0.0217517     0.178208
+  28 │ synthetic t3 quality  kurtosis_beta                        200     1188    0.0       true   1.46791       2.22345      3.30195     -0.215179     -0.0210155     0.168158
+  29 │ synthetic t3 quality  kurtosis_quality                     200     1188    0.0       true   1.82606       2.53492      3.63495     -0.22887      -0.035282      0.188961
+  30 │ synthetic t3 quality  kurtosis_style                       200     1188    0.515    false  -0.187183      0.0135247    0.235736    -0.209766      0.00453702    0.230693
+  31 │ synthetic t3 quality  lag1_squared_alpha                   200     1188    0.065    false   0.0124231     0.0565831    0.129693    -0.0395014    -0.00452198    0.0430144
+  32 │ synthetic t3 quality  lag1_squared_beta                    200     1188    0.085    false   0.0137651     0.0496161    0.104768    -0.045236     -0.000382889   0.0440879
+  33 │ synthetic t3 quality  lag1_squared_quality                 200     1188    0.03     false   0.0196029     0.0603982    0.12813     -0.0402351    -0.00261512    0.0458343
+  34 │ synthetic t3 quality  lag1_squared_style                   200     1188    0.365    false  -0.0411095     0.00645203   0.0573129   -0.0462903    -0.00656436    0.0402617
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.2 hours)...
+Test Summary:                     | Pass  Total   Time
+Phase B3 grids and refiltered PPC |   92     92  10.6s
+T04_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.2 hours)...
+Phase A outputs: /tmp/jl_ZGGezl/A
+Wall seconds: 17.704553842544556
+R01_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.2 hours)...
+34×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+Synthetic persistent: (n_pairs = 4770, n_teams = 30, autocorrelation = 0.4323090305601678, ci_low = 0.4003255632689652, ci_high = 0.4620725054180068, reps = 2000, seed = 3924)
+Synthetic iid fixture: (n_pairs = 4770, n_teams = 30, autocorrelation = -0.012818048115770688, ci_low = -0.03503083165923996, ci_high = 0.009656938860452217, reps = 2000, seed = 3924)
+Synthetic common weekly shock: (icc = 0.44873747771167816, variance_week = 0.8169761097400026, variance_within = 1.0036342700886336, ms_between = 7.539443148008655, ms_within = 1.0036342700886336, n0 = 8.0, n = 1600, n_weeks = 200, n_multi_fixture_weeks = 200, n_pairs = 5600, ci_low = 0.3896948361754303, ci_high = 0.4982498542696015, reps = 2000, seed = 3928, method = "unbalanced one-way ANOVA signed MOM; whole-week percentile bootstrap")
+Synthetic no weekly shock: (icc = 0.005882559113451667, variance_week = 0.005938873697676206, variance_within = 1.0036342700886334, ms_between = 1.051145259670043, ms_within = 1.0036342700886334, n0 = 8.0, n = 1600, n_weeks = 200, n_multi_fixture_weeks = 200, n_pairs = 5600, ci_low = -0.020292643117333514, ci_high = 0.03079024796200639, reps = 2000, seed = 3928, method = "unbalanced one-way ANOVA signed MOM; whole-week percentile bootstrap")
+Test Summary:                 | Pass  Total   Time
+Phase B2 covariance contracts |  131    131  23.1s
+T03_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.2 hours)...
+24×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 256.2 hours)...
+27×6 DataFrame
+ Row │ family     point  method             value        tol      pass
+     │ String     Int64  String             Float64      Float64  Bool
+─────┼─────────────────────────────────────────────────────────────────
+   1 │ gamma          1  fresh ReverseDiff  0.0           1.0e-8  true
+   2 │ gamma          1  ForwardDiff        4.26411e-16   1.0e-6  true
+   3 │ gamma          1  finite difference  1.74526e-10   1.0e-6  true
+   4 │ gamma          2  fresh ReverseDiff  0.0           1.0e-8  true
+   5 │ gamma          2  ForwardDiff        1.10945e-16   1.0e-6  true
+   6 │ gamma          2  finite difference  3.85863e-10   1.0e-6  true
+   7 │ gamma          3  fresh ReverseDiff  0.0           1.0e-8  true
+   8 │ gamma          3  ForwardDiff        2.16345e-16   1.0e-6  true
+   9 │ gamma          3  finite difference  1.28605e-10   1.0e-6  true
+  10 │ lognormal      1  fresh ReverseDiff  0.0           1.0e-8  true
+  11 │ lognormal      1  ForwardDiff        1.34432e-16   1.0e-6  true
+  12 │ lognormal      1  finite difference  9.74142e-10   1.0e-6  true
+  13 │ lognormal      2  fresh ReverseDiff  0.0           1.0e-8  true
+  14 │ lognormal      2  ForwardDiff        2.24503e-16   1.0e-6  true
+  15 │ lognormal      2  finite difference  1.1008e-9     1.0e-6  true
+  16 │ lognormal      3  fresh ReverseDiff  0.0           1.0e-8  true
+  17 │ lognormal      3  ForwardDiff        2.48828e-16   1.0e-6  true
+  18 │ lognormal      3  finite difference  1.41097e-9    1.0e-6  true
+  19 │ logt           1  fresh ReverseDiff  0.0           1.0e-8  true
+  20 │ logt           1  ForwardDiff        1.46589e-16   1.0e-6  true
+  21 │ logt           1  finite difference  2.61981e-10   1.0e-6  true
+  22 │ logt           2  fresh ReverseDiff  0.0           1.0e-8  true
+  23 │ logt           2  ForwardDiff        2.8509e-16    1.0e-6  true
+  24 │ logt           2  finite difference  1.11034e-10   1.0e-6  true
+  25 │ logt           3  fresh ReverseDiff  0.0           1.0e-8  true
+  26 │ logt           3  ForwardDiff        1.25694e-16   1.0e-6  true
+  27 │ logt           3  finite difference  1.2653e-9     1.0e-6  true
+Test Summary:               | Pass  Total   Time
+Phase B two-stage contracts |  131    131  51.0s
+T02_DONE
+
+julia>

@@ -1,0 +1,5 @@
+run,termination,count,max_decrement,polish_steps,max_polish_steps,gate_pass
+exact_regression,decrement,0,1.50342686280365e-24,0,1,true
+exact_regression,step,0,1.50342686280365e-24,0,1,true
+exact_regression,stalled_converged,0,1.50342686280365e-24,0,1,true
+exact_regression,polished,2,1.50342686280365e-24,2,1,true

@@ -1,0 +1,4 @@
+league,comparison,n,estimate,se,method
+eng_premier,full_minus_no_style,380,0.00867267030524822,0.008147296354255259,paired Poisson goal log score; fixture SE
+eng_premier,full_minus_no_quality,380,0.06390041931578273,0.02130489163587058,paired Poisson goal log score; fixture SE
+eng_premier,total_goal_calibration_slope,380,0.47067111350875784,0.29261101189787775,Poisson log-link GLM on log predicted expected total; ideal slope 1; model-based SE

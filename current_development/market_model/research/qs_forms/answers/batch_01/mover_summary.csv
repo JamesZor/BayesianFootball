@@ -1,0 +1,4 @@
+country,n,quantity,value,status
+England,0,verified_movers,,"NOT_AVAILABLE: no verified stable team-ID columns in cached tables; team slugs not independently verified, no fuzzy joins"
+Scotland,0,verified_movers,,"NOT_AVAILABLE: no verified stable team-ID columns in cached tables; team slugs not independently verified, no fuzzy joins"
+Ireland,0,verified_movers,,"NOT_AVAILABLE: no verified stable team-ID columns in cached tables; team slugs not independently verified, no fuzzy joins"

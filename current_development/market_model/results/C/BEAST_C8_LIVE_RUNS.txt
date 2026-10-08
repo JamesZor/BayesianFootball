@@ -1,0 +1,204 @@
+CHECKPOINT:2026-10-06T07:46:59Z
+PANE:%265
+  🦋 Kaimon gate connected (market_model_c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_fullbook_recovery.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 11.3 hours)...
+C1 synthetic population: 517 full fixtures, 91 weeks
+C6 C1 chain=2 iteration=25 target=11314.87065186954
+C6 C1 chain=4 iteration=25 target=11313.868379341055
+C6 C1 chain=3 iteration=25 target=11316.698608281828
+C6 C1 chain=1 iteration=25 target=11316.572641784476
+C6 C1 chain=4 iteration=50 target=11314.45613998107
+C6 C1 chain=2 iteration=50 target=11315.993429879145
+C6 C1 chain=3 iteration=50 target=11314.371953537644
+C6 C1 chain=1 iteration=50 target=11314.11435355086
+C6 C1 chain=2 iteration=75 target=11317.225353868793
+C6 C1 chain=4 iteration=75 target=11316.745026583867
+C6 C1 chain=3 iteration=75 target=11316.875583662673
+C6 C1 chain=1 iteration=75 target=11316.091817756682
+C6 C1 chain=4 iteration=100 target=11317.368981198275
+C6 C1 chain=2 iteration=100 target=11316.719381606004
+C6 C1 chain=3 iteration=100 target=11317.90032355201
+C6 C1 chain=1 iteration=100 target=11316.367035506544
+C6 C1 chain=4 iteration=125 target=11317.363230991672
+C6 C1 chain=3 iteration=125 target=11315.070052985438
+C6 C1 chain=2 iteration=125 target=11315.729359567815
+C6 C1 chain=1 iteration=125 target=11315.00483386177
+C6 C1 chain=4 iteration=150 target=11316.749063368725
+C6 C1 chain=3 iteration=150 target=11316.572608128354
+C6 C1 chain=2 iteration=150 target=11317.163225893517
+C6 C1 chain=1 iteration=150 target=11315.98181341859
+C6 C1 chain=3 iteration=175 target=11316.672725519216
+C6 C1 chain=4 iteration=175 target=11317.726365078997
+C6 C1 chain=2 iteration=175 target=11317.91220109842
+C6 C1 chain=1 iteration=175 target=11317.106182782272
+C6 C1 chain=4 iteration=200 target=11317.795364690535
+C6 C1 chain=3 iteration=200 target=11317.703738130267
+C6 C1 chain=2 iteration=200 target=11315.12005633501
+C6 C1 chain=1 iteration=200 target=11316.355078353448
+C6 C1 chain=3 iteration=225 target=11315.83081330928
+C6 C1 chain=4 iteration=225 target=11317.39336253829
+C6 C1 chain=2 iteration=225 target=11316.663268911932
+C6 C1 chain=1 iteration=225 target=11317.63771542004
+C6 C1 chain=4 iteration=250 target=11314.59516972361
+C6 C1 chain=3 iteration=250 target=11316.794901469277
+C6 C1 chain=2 iteration=250 target=11314.639048615081
+C6 C1 chain=1 iteration=250 target=11316.213599311111
+C6 C1 chain=1 iteration=500 target=11315.442704242416
+C6 C1 chain=4 iteration=500 target=11317.247622900999
+C6 C1 chain=2 iteration=500 target=11318.203087874754
+C6 C1 chain=3 iteration=500 target=11317.290075033416
+C6 C1 chain=1 iteration=750 target=11317.369744071173
+C6 C1 chain=4 iteration=750 target=11317.77605714091
+C6 C1 chain=2 iteration=750 target=11317.652469814035
+C6 C1 chain=1 iteration=1000 target=11317.357811913693
+
+PANE:%267
+include("current_development/market_model/r05_c1_pending.jl")  🦋
+Kaimon gate connected (market_model_c_fast)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_c1_pending.jl")
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 14 seconds. 573 already precompiled.
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 12.1 hours)...
+C1 10b UNPROMOTED population=244; chains=[5211, 5212, 5213, 5214]; 2000+3000, thin1
+Revised Laplace gate: full, 30/517 books
+C6 C1 chain=1 iteration=25 target=2006.1559026121868
+C6 C1 chain=3 iteration=25 target=2008.2702160215365
+C6 C1 chain=4 iteration=25 target=2008.523031760741
+C6 C1 chain=2 iteration=25 target=2008.3175224307577
+C6 C1 chain=1 iteration=50 target=2006.4337896428685
+C6 C1 chain=4 iteration=50 target=2007.1858367270167
+C6 C1 chain=3 iteration=50 target=2007.7204236796347
+C6 C1 chain=1 iteration=75 target=2006.5299734777943
+C6 C1 chain=2 iteration=50 target=2005.5205588244135
+C6 C1 chain=1 iteration=100 target=2008.6147863610204
+C6 C1 chain=4 iteration=75 target=2007.0256244931643
+C6 C1 chain=3 iteration=75 target=2006.662154210432
+C6 C1 chain=1 iteration=125 target=2007.7572508237502
+C6 C1 chain=4 iteration=100 target=2008.70852318507
+C6 C1 chain=2 iteration=75 target=2007.525418693893
+C6 C1 chain=1 iteration=150 target=2007.25433313362
+C6 C1 chain=3 iteration=100 target=2008.4805865649535
+C6 C1 chain=1 iteration=175 target=2006.8674919406728
+C6 C1 chain=3 iteration=125 target=2007.6233867631256
+C6 C1 chain=2 iteration=100 target=2007.227707564058
+C6 C1 chain=4 iteration=125 target=2005.5941633088528
+C6 C1 chain=1 iteration=200 target=2007.3410298120164
+C6 C1 chain=1 iteration=225 target=2003.1849813366748
+C6 C1 chain=3 iteration=150 target=2006.0073262157573
+C6 C1 chain=4 iteration=150 target=2007.1054394059918
+C6 C1 chain=2 iteration=125 target=2008.1759097555998
+C6 C1 chain=1 iteration=250 target=2008.0471144384521
+C6 C1 chain=3 iteration=175 target=2008.1701550316718
+C6 C1 chain=4 iteration=175 target=2008.2458518940305
+C6 C1 chain=2 iteration=150 target=2005.7821657160287
+C6 C1 chain=3 iteration=200 target=2008.0619129838087
+C6 C1 chain=4 iteration=200 target=2005.1601861884349
+C6 C1 chain=3 iteration=225 target=2004.9338734380246
+C6 C1 chain=4 iteration=225 target=2006.6982888852476
+C6 C1 chain=2 iteration=175 target=2007.9466332953318
+C6 C1 chain=4 iteration=250 target=2006.2813849366896
+C6 C1 chain=3 iteration=250 target=2005.5122532540813
+C6 C1 chain=2 iteration=200 target=2006.417939775713
+C6 C1 chain=1 iteration=500 target=2004.3707482879852
+C6 C1 chain=2 iteration=225 target=2008.2258605439426
+C6 C1 chain=2 iteration=250 target=2008.2210667613958
+C6 C1 chain=1 iteration=750 target=2007.7550305941268
+C6 C1 chain=3 iteration=500 target=2007.8028337926162
+C6 C1 chain=4 iteration=500 target=2004.431947508984
+C6 C1 chain=1 iteration=1000 target=2008.0402113794298
+C6 C1 chain=2 iteration=500 target=2007.2768433853873
+C6 C1 chain=3 iteration=750 target=2004.9559036691765
+C6 C1 chain=4 iteration=750 target=2008.6627911630155
+C6 C1 chain=1 iteration=1250 target=2004.105609465162
+C6 C1 chain=1 iteration=1500 target=2008.6230578852624
+C6 C1 chain=3 iteration=1000 target=2007.4640504660213
+C6 C1 chain=4 iteration=1000 target=2006.0618041578248
+C6 C1 chain=2 iteration=750 target=2008.701513526643
+
+PANE:%268
+  🦋 include("current_development/market_model/r05_c1_pending.jl")
+Kaimon gate connected (market_model_c_fast)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_c1_pending.jl")
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 12 seconds. 573 already precompiled.
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 12.1 hours)...
+C1 10a UNPROMOTED population=517; chains=[5201, 5202, 5203, 5204]; 2000+3000, thin1
+Revised Laplace gate: full, 30/517 books
+C6 C1 chain=2 iteration=25 target=4881.403314610091
+C6 C1 chain=4 iteration=25 target=4881.588027149665
+C6 C1 chain=3 iteration=25 target=4882.906220967362
+C6 C1 chain=1 iteration=25 target=4882.699280848992
+C6 C1 chain=2 iteration=50 target=4881.732954789066
+C6 C1 chain=4 iteration=50 target=4878.084839625144
+C6 C1 chain=2 iteration=75 target=4881.267782077457
+C6 C1 chain=3 iteration=50 target=4879.813136663826
+C6 C1 chain=1 iteration=50 target=4878.816268656082
+C6 C1 chain=2 iteration=100 target=4877.109126571798
+C6 C1 chain=4 iteration=75 target=4882.434699996158
+C6 C1 chain=3 iteration=75 target=4882.497439843242
+C6 C1 chain=2 iteration=125 target=4882.987886357777
+C6 C1 chain=4 iteration=100 target=4881.386192787238
+C6 C1 chain=1 iteration=75 target=4881.397214151008
+C6 C1 chain=3 iteration=100 target=4881.655955098843
+C6 C1 chain=2 iteration=150 target=4882.55711001086
+C6 C1 chain=2 iteration=175 target=4881.019175591632
+C6 C1 chain=3 iteration=125 target=4881.837230038764
+C6 C1 chain=4 iteration=125 target=4880.374435387508
+C6 C1 chain=2 iteration=200 target=4882.22712103673
+C6 C1 chain=1 iteration=100 target=4876.9269099667845
+C6 C1 chain=3 iteration=150 target=4881.848282342505
+C6 C1 chain=4 iteration=150 target=4882.62421257692
+C6 C1 chain=2 iteration=225 target=4881.820722264659
+C6 C1 chain=2 iteration=250 target=4880.330801077957
+C6 C1 chain=3 iteration=175 target=4878.059760993288
+C6 C1 chain=1 iteration=125 target=4882.787293808682
+C6 C1 chain=4 iteration=175 target=4882.144520375195
+C6 C1 chain=3 iteration=200 target=4882.8884387765
+C6 C1 chain=4 iteration=200 target=4881.451027748692
+C6 C1 chain=1 iteration=150 target=4879.930917752285
+C6 C1 chain=3 iteration=225 target=4881.414364525165
+C6 C1 chain=4 iteration=225 target=4880.297026412594
+C6 C1 chain=1 iteration=175 target=4880.010455926158
+C6 C1 chain=3 iteration=250 target=4881.632648115258
+C6 C1 chain=4 iteration=250 target=4881.838735440128
+C6 C1 chain=1 iteration=200 target=4882.58915742985
+C6 C1 chain=1 iteration=225 target=4882.053184403534
+C6 C1 chain=2 iteration=500 target=4882.1774088044185
+C6 C1 chain=1 iteration=250 target=4882.266848786126
+C6 C1 chain=3 iteration=500 target=4878.104292422955
+C6 C1 chain=2 iteration=750 target=4882.675252551598
+
+ 09:46:59 up 123 days, 19:34, 36 users,  load average: 11.14, 12.88, 13.00
+Tue Oct  6 05:59:13 2026
+RECOVERY_LOG_MTIME:2026-10-06 09:39:06.506227405 +0200

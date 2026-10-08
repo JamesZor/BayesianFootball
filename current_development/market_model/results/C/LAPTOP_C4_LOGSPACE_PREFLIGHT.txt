@@ -1,0 +1,312 @@
+include("current_development/market_model/t05_pooled_tests.jl")The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/t05_pooled_tests.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.9 hours)...
+53×4 DataFrame
+ Row │ gate                               value        tol      pass
+     │ String                             Float64      Float64  Bool
+─────┼───────────────────────────────────────────────────────────────
+   1 │ G1 loglik a1_grw1                  1.59872e-13  1.0e-9   true
+   2 │ G2 smoothed mean a1_grw1           4.75314e-15  1.0e-8   true
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+   4 │ G4 FFBS cov max rel err            0.0447345    0.1      true
+   5 │ G1 loglik a2_momentum              9.59233e-14  1.0e-9   true
+   6 │ G2 smoothed mean a2_momentum       4.7462e-15   1.0e-8   true
+   7 │ G1 loglik regime (random S)        1.06581e-14  1.0e-9   true
+   8 │ G2 smoothed mean regime (random …  3.80598e-15  1.0e-8   true
+   9 │ G5 loglik feature + Student-t ω    7.10543e-15  1.0e-9   true
+  10 │ G5 smoothed mean feature + Stude…  8.42555e-15  1.0e-8   true
+  11 │ G3 RBPF(SV, σ_h→0) vs Kalman       3.55271e-15  1.0e-8   true
+  12 │ G3 RBPF(regime, Δ→0) vs Kalman     3.55271e-15  1.0e-8   true
+  13 │ G3 RBPF(regime) pre-week means v…  1.11022e-16  1.0e-10  true
+  14 │ B loglik R0                        2.20268e-13  1.0e-9   true
+  15 │ B RTS R0                           3.35842e-15  1.0e-8   true
+  16 │ B loglik R1                        1.59872e-13  1.0e-9   true
+  17 │ B RTS R1                           4.88498e-15  1.0e-8   true
+  18 │ B loglik R3                        6.39488e-14  1.0e-9   true
+  19 │ B RTS R3                           9.21485e-15  1.0e-8   true
+  20 │ B R1 zero-break reduction          0.0          1.0e-9   true
+  21 │ B R3 zero-HA reduction             4.61853e-14  1.0e-9   true
+  22 │ B RBPF fixed-omega loglik          0.0          1.0e-8   true
+  23 │ B RBPF fixed-omega pre-week mean   5.55112e-16  1.0e-8   true
+  24 │ B RBPF fixed-omega pre-week vari…  1.34615e-15  1.0e-8   true
+  25 │ B2 R5 isotropic reduction          4.61853e-14  1.0e-9   true
+  26 │ B2 R6 rho-zero reduction           3.55271e-15  1.0e-9   true
+  27 │ B2 loglik R5                       1.64135e-12  1.0e-9   true
+  28 │ B2 RTS R5                          1.58762e-14  1.0e-8   true
+  29 │ B2 loglik R6                       1.27898e-13  1.0e-9   true
+  30 │ B2 RTS R6                          4.16334e-15  1.0e-8   true
+  31 │ B2 R6 FFBS mean max z (4000)       1.04587      4.5      true
+  32 │ B2 R6 FFBS covariance relative e…  0.0356119    0.1      true
+  33 │ B2 loglik R7                       3.09086e-13  1.0e-9   true
+  34 │ B2 RTS R7                          1.00579e-14  1.0e-8   true
+  35 │ C0 matched R6 loglik               3.55271e-14  1.0e-9   true
+  36 │ H1 gamma_def pinned zero reducti…  0.0          1.0e-9   true
+  37 │ H2 kappa zero reduction            0.0          1.0e-9   true
+  38 │ C0 batch loglik                    1.49214e-13  1.0e-9   true
+  39 │ C0 batch RTS mean                  8.45157e-15  1.0e-8   true
+  40 │ C0 batch RTS covariance            1.11022e-16  1.0e-8   true
+  41 │ H1 batch loglik                    5.11591e-13  1.0e-9   true
+  42 │ H1 batch RTS mean                  6.34215e-15  1.0e-8   true
+  43 │ H1 batch RTS covariance            1.04083e-16  1.0e-8   true
+  44 │ H2 batch loglik                    5.00933e-13  1.0e-9   true
+  45 │ H2 batch RTS mean                  4.02109e-15  1.0e-8   true
+  46 │ H2 batch RTS covariance            1.66533e-16  1.0e-8   true
+  47 │ C1 toy Gaussian frozen batch log…  9.76996e-13  1.0e-9   true
+  48 │ C1 toy Gaussian frozen batch RTS   9.24781e-15  1.0e-8   true
+  49 │ C1 toy Gaussian frozen batch RTS…  1.38778e-16  1.0e-8   true
+  50 │ C Gate2 scalar eigen mean          1.73472e-17  1.0e-10  true
+  51 │ C Gate2 scalar eigen covariance    5.55112e-17  1.0e-10  true
+  52 │ C Gate2 scalar eigen loglik        6.66134e-16  1.0e-10  true
+  53 │ C1 Gaussian exact observation re…  9.23706e-14  1.0e-9   true
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.9 hours)...
+Test Summary:                                      | Pass  Total     Time
+Phase C revision 4 full-book deterministic engines |  256    256  1m13.5s
+T05_C4_DETERMINISTIC_DONE
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.9 hours)...
+C2_PENDING integrated third relative discrepancy=5.405838441375254e-5 limit=1e-6
+1X2-only integrated derivative: unchanged tolerance: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:23
+  Expression: discrepancy <= 1.0e-6
+   Evaluated: 5.405838441375254e-5 <= 1.0e-6
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:6 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:23 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=250.0 sd=0.05 offset=0.0: median=7.980456423339888e-5, p95=0.0002937123492387173, mean/SD=5.2933176289081284e-5, SDrelative=0.019848072832740482, pass=true
+C2_PENDING OU-only n=250.0 sd=0.05 offset=0.1: median=0.00012681564668337586, p95=0.0003205003953526742, mean/SD=4.983270328436007e-5, SDrelative=0.0009489066648507016, pass=true
+C2_PENDING OU-only n=250.0 sd=0.2 offset=0.0: median=0.0027939436086663605, p95=0.006559386627022779, mean/SD=0.0052907574840531145, SDrelative=0.058978186176263714, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=250.0 sd=0.2 offset=0.1: median=0.002284665812985587, p95=0.005602642759491695, mean/SD=0.004096491266048336, SDrelative=0.03236652111165694, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.05 offset=0.0: median=6.719431656598829e-5, p95=0.0003397951744717354, mean/SD=7.242185611347885e-5, SDrelative=0.035168787803974366, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.05 offset=0.1: median=5.249101396787026e-5, p95=0.000340478078430806, mean/SD=5.53004507873457e-5, SDrelative=0.0015084095621018534, pass=true
+C2_PENDING OU-only n=1000.0 sd=0.2 offset=0.0: median=0.0038532361782199764, p95=0.007460724584020895, mean/SD=0.0057332037927091545, SDrelative=0.06827107338333926, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=1000.0 sd=0.2 offset=0.1: median=0.003230987746752234, p95=0.005848859507457149, mean/SD=0.00406366519516531, SDrelative=0.03704417305527696, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.05 offset=0.0: median=0.00018389354222936305, p95=0.00043817910386749763, mean/SD=9.481583679187697e-5, SDrelative=0.04316638572065623, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.05 offset=0.1: median=0.00014460114120407042, p95=0.00037224896783474295, mean/SD=7.083187016114714e-5, SDrelative=0.002191917897127249, pass=true
+C2_PENDING OU-only n=4000.0 sd=0.2 offset=0.0: median=0.004542215732545429, p95=0.008858646583337659, mean/SD=0.010854117561799425, SDrelative=0.062199071805757344, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING OU-only n=4000.0 sd=0.2 offset=0.1: median=0.0037517537982107996, p95=0.006817264368071286, mean/SD=0.008088385122810635, SDrelative=0.031027066509818124, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.05 offset=0.0: median=0.00016903571134996298, p95=0.0004541422357922987, mean/SD=9.050510326923072e-5, SDrelative=0.0007327484330585943, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.05 offset=0.1: median=0.00018117239759485315, p95=0.0005078007452182122, mean/SD=9.467812386321685e-5, SDrelative=0.0008087066746456095, pass=true
+C2_PENDING BTTS+OU n=250.0 sd=0.2 offset=0.0: median=0.02060874306987226, p95=0.03934220380768089, mean/SD=0.05836204173970596, SDrelative=0.14878198870219494, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=250.0 sd=0.2 offset=0.1: median=0.01900661639205037, p95=0.03986399861365017, mean/SD=0.058827577645660455, SDrelative=0.14992738568319008, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=1000.0 sd=0.05 offset=0.0: median=0.00036942988342669736, p95=0.0010965051671850026, mean/SD=0.0002678653867092285, SDrelative=0.0035786282649713508, pass=true
+C2_PENDING BTTS+OU n=1000.0 sd=0.05 offset=0.1: median=0.00031710289951392134, p95=0.0010632181061717818, mean/SD=0.00026363105100115427, SDrelative=0.0033521606195009435, pass=true
+C2_PENDING BTTS+OU n=1000.0 sd=0.2 offset=0.0: median=0.03884425368812172, p95=0.09680237161346532, mean/SD=0.09635999506697479, SDrelative=0.21825732401929177, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=1000.0 sd=0.2 offset=0.1: median=0.03735970591714821, p95=0.0947192767850607, mean/SD=0.09331525252150001, SDrelative=0.2143290321338419, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=4000.0 sd=0.05 offset=0.0: median=0.0015347646043100127, p95=0.0023776471107397334, mean/SD=0.0009451274192087017, SDrelative=0.006856521160459095, pass=true
+C2_PENDING BTTS+OU n=4000.0 sd=0.05 offset=0.1: median=0.001440035666870898, p95=0.00235977226582067, mean/SD=0.0008641541561207819, SDrelative=0.006924659948327694, pass=true
+C2_PENDING BTTS+OU n=4000.0 sd=0.2 offset=0.0: median=0.07337236800273361, p95=0.1619194006931936, mean/SD=0.2993628581839998, SDrelative=0.4939853190772666, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS+OU n=4000.0 sd=0.2 offset=0.1: median=0.07174201013407955, p95=0.16186551737085647, mean/SD=0.3001396733122619, SDrelative=0.4920081069796789, pass=false
+Archived thin-book Gate 1: reported, NOT regenerated: Test Failed at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33
+  Expression: r.gate_pass
+
+Stacktrace:
+ [1] top-level scope
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:5
+ [2] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [3] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:27 [inlined]
+ [4] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+ [5] macro expansion
+   @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_c2_pending_tests.jl:33 [inlined]
+ [6] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+C2_PENDING BTTS-only n=250.0 sd=0.05 offset=0.0: median=0.00022564293326343687, p95=0.00022564293326343687, mean/SD=4.739391556360565e-6, SDrelative=0.0014887800646067317, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.05 offset=0.1: median=0.00023112841765460246, p95=0.00023112841765460246, mean/SD=2.9276260138085293e-6, SDrelative=0.008639838323828086, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.2 offset=0.0: median=0.005591013854347349, p95=0.005591013854347349, mean/SD=0.0008404810783218743, SDrelative=0.00949953295003303, pass=true
+C2_PENDING BTTS-only n=250.0 sd=0.2 offset=0.1: median=0.005909204544633173, p95=0.005909204544633173, mean/SD=0.0011062026630622506, SDrelative=0.0396865240262928, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.05 offset=0.0: median=0.0003741027348782566, p95=0.0003741027348782566, mean/SD=6.518850038370146e-6, SDrelative=0.003766377635764817, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.05 offset=0.1: median=0.0003813939706924785, p95=0.0003813939706924785, mean/SD=9.70711524995039e-6, SDrelative=0.02208009505398767, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.2 offset=0.0: median=0.004770956516465752, p95=0.004770956516465752, mean/SD=0.0011850856357710422, SDrelative=0.010329153625723286, pass=true
+C2_PENDING BTTS-only n=1000.0 sd=0.2 offset=0.1: median=0.005250338501051388, p95=0.005250338501051388, mean/SD=0.0015269605304626271, SDrelative=0.047292518955222795, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.05 offset=0.0: median=0.00035833227477466423, p95=0.00035833227477466423, mean/SD=1.4597440178997084e-5, SDrelative=0.006346248214589956, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.05 offset=0.1: median=0.00038165268699863475, p95=0.00038165268699863475, mean/SD=1.8906830577342243e-5, SDrelative=0.036774866518146765, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.2 offset=0.0: median=0.0044407555795697995, p95=0.0044407555795697995, mean/SD=0.001295720601379656, SDrelative=0.010723419995153693, pass=true
+C2_PENDING BTTS-only n=4000.0 sd=0.2 offset=0.1: median=0.0049614430501074835, p95=0.0049614430501074835, mean/SD=0.0016649251185065325, SDrelative=0.04975160984620841, pass=true
+Test Summary:                                          | Pass  Fail  Total  Time
+C2-pending (excluded from Phase C4 acceptance)         |   29    10     39  7.1s
+  1X2-only integrated derivative: unchanged tolerance  |    2     1      3  6.8s
+  Archived thin-book Gate 1: reported, NOT regenerated |   27     9     36  0.3s
+RNG of the outermost testset: Xoshiro(0x2b047d30f68e96a9, 0x88d1f2a6a4df2c42, 0xd95fa1f19b0384a2, 0x7aba99f925c50d2b, 0x5f72b4acf4a10ec6)
+C2_PENDING_REPORTED: thin-book failures retained; excluded from C4 acceptance
+
+julia> include("current_development/market_model/r05_pooled.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 253.9 hours)...
+Revised Laplace gate: full, 30/517 books
+12×21 DataFrame
+ Row │ book_type  n        spread   offset   books  median_abs_error  p95_abs_error  max_quadrature_delta  max_moment_quadrature_delta  max_sd_quadrature_delta  max_mean_error  max_sd_error  max_raw_sd_error  max_uncorrected_mean_error  max_third_relative_error  mean_failures  sd_failures  max_mean_mode_delta  moment_pass  marginal_pass  gate_pass
+     │ String     Float64  Float64  Float64  Int64  Float64           Float64        Float64               Float64                      Float64                  Float64         Float64       Float64           Float64                     Float64                   Int64          Int64        Float64              Bool         Bool           Bool
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ full         250.0     0.05      0.0     30       0.000355965    0.000445717           9.76996e-14                  8.11046e-14              6.77236e-14     2.83373e-5    0.000760736       0.000760736                   0.0167511                7.39948e-8              0            0          0.000676741         true           true       true
+   2 │ full         250.0     0.05      0.1     30       0.000402563    0.000472052           1.08358e-13                  7.62185e-14              5.34017e-14     2.76916e-5    0.000762437       0.000762437                   0.0158904                7.69054e-8              0            0          0.000653178         true           true       true
+   3 │ full         250.0     0.2       0.0     30       0.00398033     0.00493952            1.15463e-13                  1.1595e-13               3.75255e-14     0.00092845    0.0100526         0.0100526                     0.0917439                7.37338e-8              0            0          0.00741304          true           true       true
+   4 │ full         250.0     0.2       0.1     30       0.00388132     0.00517059            1.72307e-13                  9.84861e-14              5.9841e-14      0.000874932   0.0101843         0.0101843                     0.0892023                7.36438e-8              0            0          0.00710899          true           true       true
+   5 │ full        1000.0     0.05      0.0     30       0.00046093     0.000542287           5.02709e-13                  3.31101e-13              2.34368e-13     1.29906e-5    0.00077509        0.00077509                    0.0260539                7.4507e-8               0            0          0.000862495         true           true       true
+   6 │ full        1000.0     0.05      0.1     30       0.000453406    0.000532741           5.06262e-13                  3.63196e-13              2.11164e-13     1.82099e-5    0.000743765       0.000743765                   0.0249958                7.47597e-8              0            0          0.000804806         true           true       true
+   7 │ full        1000.0     0.2       0.0     30       0.00126206     0.00204387            4.54747e-13                  4.66801e-13              3.23297e-13     0.000431837   0.00467795        0.00467795                    0.0556958                7.4463e-8               0            0          0.00252326          true           true       true
+   8 │ full        1000.0     0.2       0.1     30       0.00125557     0.0020413             4.84945e-13                  3.64049e-13              2.47358e-13     0.000476517   0.00494983        0.00494983                    0.0551498                7.44333e-8              0            0          0.00248423          true           true       true
+   9 │ full        4000.0     0.05      0.0     30       0.000250707    0.00032104            2.09166e-12                  3.06943e-12              8.19012e-13     1.83761e-5    0.000634377       0.000634377                   0.0231122                7.46575e-8              0            0          0.000469645         true           true       true
+  10 │ full        4000.0     0.05      0.1     30       0.000244393    0.000339204           2.21734e-12                  1.63938e-12              8.22564e-13     1.81484e-5    0.000685622       0.000685622                   0.0224664                7.45863e-8              0            0          0.000450173         true           true       true
+  11 │ full        4000.0     0.2       0.0     30       0.000333826    0.000573121           2.23288e-12                  1.12627e-12              1.06626e-12     8.12309e-5    0.00144029        0.00144029                    0.0293505                7.46592e-8              0            0          0.000687443         true           true       true
+  12 │ full        4000.0     0.2       0.1     30       0.000333482    0.000573005           2.69296e-12                  1.60607e-12              8.04468e-13     8.35509e-5    0.00146442        0.00146442                    0.0292714                7.4658e-8               0            0          0.000684456         true           true       true
+C4 fixed C0: 875.2756941832286, min smoothed eigenvalue=1.0707614495298391e-5; 0.015909551 seconds
+C4 fixed C1: 4871.443574381916, min smoothed eigenvalue=1.0007842901553005e-5; 0.339174503 seconds
+C4 fixed H1: 874.8793665077119, min smoothed eigenvalue=9.933027762598213e-6; 0.019565384 seconds
+C4 fixed H2: 875.2756941832286, min smoothed eigenvalue=1.0707614495298391e-5; 0.008116386 seconds
+C05_C4_ENGINE_PREFLIGHT_DONE
+
+julia>

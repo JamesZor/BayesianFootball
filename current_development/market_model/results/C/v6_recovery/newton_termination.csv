@@ -1,0 +1,5 @@
+run,termination,count,max_decrement,polish_steps,max_polish_steps,gate_pass
+C1_synthetic,decrement,1696,9.743716301157053e-13,0,1,true
+C1_synthetic,step,0,9.743716301157053e-13,0,1,true
+C1_synthetic,stalled_converged,0,9.743716301157053e-13,0,1,true
+C1_synthetic,polished,1,9.743716301157053e-13,1,1,true

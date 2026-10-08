@@ -1,0 +1,9 @@
+protocol,rung,field,n,spearman,leave_one_out_min,leave_one_out_max,interpretation
+10a,C0,inversion_loss,11,0.7636363636363637,0.6848484848484848,0.8909090909090909,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10a,C0,market_family_availability,11,0.7454545454545455,0.6606060606060606,0.8787878787878788,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10a,C0,overround,11,0.2818181818181818,0.05454545454545454,0.47878787878787876,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10a,C0,selection_count,11,0.7454545454545455,0.6606060606060606,0.8787878787878788,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10b,C0,inversion_loss,11,0.8909090909090909,0.8545454545454545,0.9757575757575757,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10b,C0,market_family_availability,11,0.6727272727272727,0.5636363636363636,0.8303030303030303,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10b,C0,overround,11,0.41818181818181815,0.22424242424242424,0.6121212121212121,"descriptive n11; no sharpness index, causal regression or fitted pooling"
+10b,C0,selection_count,11,0.6727272727272727,0.5636363636363636,0.8303030303030303,"descriptive n11; no sharpness index, causal regression or fitted pooling"
