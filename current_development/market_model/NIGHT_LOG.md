@@ -284,3 +284,10 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - Blackhole compacted Sol from 150K to about 0 tokens ("tail kept 0/1 user turns", compact-all), and pi then
     stopped without its sentinel. **Plugin-trial note:** compact-all drops the live instruction.
 - **16:41:** batch 01 results relayed to Astra (pane `%98`).
+- **16:51: Astra handed over batch 02** (`f46a1ec6`), with R09–R12:
+  - R09: league or relative style;
+  - R10: style reversion at comparable horizons;
+  - R11: bootstrap-boundary robustness;
+  - R12: Scottish Premiership tier stability.
+- **16:55:** a fresh Sol session started for batch 02 (`gpt-6.1-sol`, thinking **medium**: it reuses batch-01 code and
+  caches), pane `%100`. The old session was killed because blackhole's compact-all had emptied its context.
