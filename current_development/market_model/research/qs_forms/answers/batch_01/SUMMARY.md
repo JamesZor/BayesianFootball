@@ -21,3 +21,13 @@ sco_premiership C0 level/step: 21/22 0.47 [0.41,0.55]; 22/23 0.43 [0.37,0.49]; 2
 fin_veikkausliiga C0 level/step: 2021 0.22 [0.19,0.27]; 2022 0.32 [0.27,0.38]; 2023 0.41 [0.34,0.5]; 2024 0.39 [0.33,0.46]; 2025 0.33 [0.29,0.4].
 Largest FFBS shortcut absolute error: sco_championship R6 21/22, 1.342177269416e8; shortcut assumes equal alpha/beta variances, not zero q/s correlation.
 Level/step screen >0.9 in 230 league/rung/season/gauge cells; [level_step_screen.csv](level_step_screen.csv). Partial-season labels and roster membership are in season_windows; these are latent-population, not independent team replicates.
+
+## R03 —
+COMPLETE. [forecast_joint.csv](forecast_joint.csv), [forecast_diagnostics.csv](forecast_diagnostics.csv), [joint_comparison.csv](joint_comparison.csv), [venue_contrasts.csv](venue_contrasts.csv). D=h−a, M=(h+a)/2; determinant=1, no Jacobian constant. Published median-theta marginal scores reproduced ≤1e−8.
+Pooled fixture joint C0−R6 0.00031 [-0.00018,0.00138] nats/fixture; n=3053.
+Pooled equal_league joint C0−R6 0.00066 [-4.0e-5,0.00217] nats/fixture; n=3053.
+eng_premier C0 D mean_square=0.958; D coverage90=0.903; M mean_square=0.622; M coverage90=0.966.
+sco_league_two C0 D mean_square=1.434; D coverage90=0.871; M mean_square=0.957; M coverage90=0.919.
+sco_premiership C0 D mean_square=1.306; D coverage90=0.845; M mean_square=0.839; M coverage90=0.933.
+fin_veikkausliiga C0 D mean_square=1.292; D coverage90=0.845; M mean_square=1.059; M coverage90=0.915.
+Serial/team lag uncertainty uses 999 week-block resamples of original lag-pair rows indexed by their later week, without fabricating cross-block neighbors. Team lag means appearance-lag one within season. Venue contrast/SE distribution is unselected with ≥8 appearances per role; tables retain all teams, not selected stars.

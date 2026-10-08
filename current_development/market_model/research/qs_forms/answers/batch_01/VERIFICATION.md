@@ -4,3 +4,6 @@ PASS covariance round-trip relative error ≤1e−10; R2 r=1 ≤1e−12; C0 c=0;
 
 ## R02
 PASS all published 10a point summary/team quantities within 1e−6; max error=3.091971123581061e-14. 33 fits ×128 exact joint FFBS paths; static mu/gamma preserved. Runtime=91.46s. Invocation: Q07.r02().
+
+## R03
+PASS pre-week last_observed<t in every loop; theta training dates and week labels strictly precede test; all predictive covariances PD, finite scores, unique paired fixture keys; n=3053. Median marginal score reproduction max=1.2323475573339238e-13. Bootstrap seed deterministic, 999 samples, blocks4/8/12 for comparisons. Runtime=127.8s. Invocation: Q07.r03().
