@@ -287,7 +287,11 @@ function r02()
                     push!(checks,(;league,rung,season,quantity="team:"*team,error=err,pass=err<=1e-6))
                 end
             end
-            @assert all(r.pass for r in checks) "published R02 reproduction failed; see reproduction_checks.csv"
+            if !all(r.pass for r in checks)
+                output("R02","reproduction_checks.csv",checks)
+                flush_manifest!()
+                error("published R02 reproduction failed; see reproduction_checks.csv")
+            end
             idx=indices(f)
             paths=Vector{Matrix{Float64}}(undef,length(idx))
             ts=time()
@@ -532,8 +536,9 @@ function r03()
             col=Symbol("u_"*axis)
             for kind in ("mean","mean_square","cross_correlation","weekly_signed_lag_1","weekly_signed_lag_2","weekly_signed_lag_4","weekly_squared_lag_1","weekly_squared_lag_2","weekly_squared_lag_4")
                 val=diag_stat(g,col,kind)
-                # Resampled blocks retain whole weeks. Duplicated weeks are deliberately kept as replicate observations.
-                boot=[diag_stat(g[ind,:],col,kind) for ind in ix];ci=quant(boot)
+                # Lag-pair rows are resampled by their later week: no fabricated cross-block neighbors.
+                boot=startswith(kind,"weekly_") ? lag_pair_bootstrap(g,col,kind,ix) : [diag_stat(g[ind,:],col,kind) for ind in ix]
+                ci=quant(boot)
                 push!(diagnostics,(;league,rung,axis,statistic=kind,n=DF.nrow(g),value=val,boot_q05=ci[1],boot_q95=ci[3]))
             end
             coverage=Symbol("covered90_"*axis);boot=[ST.mean(g[ind,coverage]) for ind in ix];ci=quant(boot)
@@ -556,13 +561,14 @@ function r03()
                 end
                 push!(venues,(;league,rung,team,axis,n_home=nh,n_away=na,contrast,bootstrap_se=ST.std(boots)))
             end
-            # Appearance-lag one, within season; all teams contribute, not selected contrasts.
-            push!(diagnostics,(;league,rung,axis,statistic="within_team_appearance_lag1_covariance",n=length(lagx),value=length(lagx)>1 ? ST.cov(lagx,lagy) : missing,boot_q05=missing,boot_q95=missing))
+            # Appearance-lag one, within season; lag-pair bootstrap retains whole later weeks.
+            ci=quant(team_lag_bootstrap(g,col,axis,ix))
+            push!(diagnostics,(;league,rung,axis,statistic="within_team_appearance_lag1_covariance",n=length(lagx),value=length(lagx)>1 ? ST.cov(lagx,lagy) : missing,boot_q05=ci[1],boot_q95=ci[3]))
         end
     end
     ds=output("R03","forecast_diagnostics.csv",diagnostics)
     output("R03","venue_contrasts.csv",venues)
-    lines=["COMPLETE forecasts/scores; PARTIAL serial/team uncertainty. [forecast_joint.csv](forecast_joint.csv), [forecast_diagnostics.csv](forecast_diagnostics.csv), [joint_comparison.csv](joint_comparison.csv), [venue_contrasts.csv](venue_contrasts.csv). D=h−a, M=(h+a)/2; determinant=1, no Jacobian constant. Published median-theta marginal scores reproduced ≤1e−8."]
+    lines=["COMPLETE. [forecast_joint.csv](forecast_joint.csv), [forecast_diagnostics.csv](forecast_diagnostics.csv), [joint_comparison.csv](joint_comparison.csv), [venue_contrasts.csv](venue_contrasts.csv). D=h−a, M=(h+a)/2; determinant=1, no Jacobian constant. Published median-theta marginal scores reproduced ≤1e−8."]
     for r in eachrow(DF.filter(r->r.league=="ALL"&&r.score_kind=="joint"&&r.block_weeks==8,comparison))
         push!(lines,"Pooled $(r.weighting) joint C0−R6 $(round(r.mean_C0_minus_R6;digits=5)) [$(round(r.boot_q05;digits=5)),$(round(r.boot_q95;digits=5))] nats/fixture; n=$(r.n).")
     end
@@ -570,12 +576,52 @@ function r03()
         g=DF.filter(r->r.league==league&&r.rung=="C0"&&r.statistic in ("mean_square","coverage90"),ds)
         push!(lines,"$league C0 "*join(["$(r.axis) $(r.statistic)=$(round(r.value;digits=3))" for r in eachrow(g)],"; ")*".")
     end
-    push!(lines,"Serial bootstrap here retains original calendar labels, so duplicated-week averaging does not estimate a concatenated block-series lag distribution; its intervals are diagnostic only. Within-team appearance-lag covariance has no bootstrap interval yet (NOT_AVAILABLE); venue contrast/SE distribution is unselected with ≥8 appearances per role.")
+    push!(lines,"Serial/team lag uncertainty uses 999 week-block resamples of original lag-pair rows indexed by their later week, without fabricating cross-block neighbors. Team lag means appearance-lag one within season. Venue contrast/SE distribution is unselected with ≥8 appearances per role; tables retain all teams, not selected stars.")
     summary!("R03",lines)
     verification("R03","PASS pre-week last_observed<t in every loop; theta training dates and week labels strictly precede test; all predictive covariances PD, finite scores, unique paired fixture keys; n=$(DF.nrow(forecasts)÷2). Median marginal score reproduction max=$(maximum(r.error for r in checks)). Bootstrap seed deterministic, 999 samples, blocks4/8/12 for comparisons. Runtime=$(round(time()-started;digits=2))s. Invocation: Q07.r03().")
     flush_manifest!()
 end
 
+function lag_pair_bootstrap(frame,col,kind,indices)
+    lag=parse(Int,last(split(kind,"_")));squared=occursin("squared",kind)
+    pairs=NamedTuple[]
+    for g in DF.groupby(frame,:season)
+        weeks=sort(unique(g.week));values=Dict(w=>ST.mean(g[g.week.==w,col]) for w in weeks)
+        for w in weeks
+            haskey(values,w-lag)||continue
+            a,b=values[w],values[w-lag]
+            row=first(findall((frame.season.==first(g.season)).&(frame.week.==w)))
+            push!(pairs,(;row,x=squared ? a^2 : a,y=squared ? b^2 : b))
+        end
+    end
+    return [begin
+        counts=zeros(Int,DF.nrow(frame));for i in ind;counts[i]+=1;end
+        x,y=Float64[],Float64[]
+        for p in pairs
+            append!(x,fill(p.x,counts[p.row]));append!(y,fill(p.y,counts[p.row]))
+        end
+        safe_cor(x,y)
+    end for ind in indices]
+end
+function team_lag_bootstrap(frame,col,axis,indices)
+    pairs=NamedTuple[]
+    for team in unique(vcat(frame.home_team,frame.away_team)),season in unique(frame.season)
+        rows=findall((frame.season.==season).&((frame.home_team.==team).|(frame.away_team.==team)))
+        sort!(rows;by=i->(frame.week[i],frame.fixture_id[i]))
+        val(i)=axis=="D"&&frame.away_team[i]==team ? -frame[i,col] : frame[i,col]
+        for j in 2:length(rows)
+            push!(pairs,(;row=rows[j],x=val(rows[j]),y=val(rows[j-1])))
+        end
+    end
+    return [begin
+        counts=zeros(Int,DF.nrow(frame));for i in ind;counts[i]+=1;end
+        x,y=Float64[],Float64[]
+        for p in pairs
+            append!(x,fill(p.x,counts[p.row]));append!(y,fill(p.y,counts[p.row]))
+        end
+        length(x)>1 ? ST.cov(x,y) : missing
+    end for ind in indices]
+end
 function r02_benchmark()
     league="eng_premier";p,config=panel(league;request="R02_benchmark")
     rows=NamedTuple[]
@@ -593,5 +639,7 @@ function r02_benchmark()
     end
     output("R02_benchmark","runtime_benchmark.csv",rows);flush_manifest!()
 end
+
+include(joinpath(@__DIR__, "q07_batch_01_nulls.jl"))
 
 end # module
