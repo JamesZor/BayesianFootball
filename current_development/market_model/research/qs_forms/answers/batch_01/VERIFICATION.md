@@ -7,3 +7,9 @@ PASS all published 10a point summary/team quantities within 1e−6; max error=3.
 
 ## R03
 PASS pre-week last_observed<t in every loop; theta training dates and week labels strictly precede test; all predictive covariances PD, finite scores, unique paired fixture keys; n=3053. Median marginal score reproduction max=1.2323475573339238e-13. Bootstrap seed deterministic, 999 samples, blocks4/8/12 for comparisons. Runtime=127.8s. Invocation: Q07.r03().
+
+## R04
+PASS exactly99 shared conditional nulls for each sentinel, unchanged prefix, original missingness/design/Q/R; all comparisons suffix-only. Runtime=54.70492911338806s; invocation Q07.r04().
+
+## R04
+PASS exactly99 shared conditional nulls for each sentinel, unchanged prefix, original missingness/design/Q/R; all comparisons suffix-only. Runtime=51.11627411842346s; invocation Q07.r04().

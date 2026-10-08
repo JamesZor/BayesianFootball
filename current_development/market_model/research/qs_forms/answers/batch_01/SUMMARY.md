@@ -31,3 +31,12 @@ sco_league_two C0 D mean_square=1.434; D coverage90=0.871; M mean_square=0.957; 
 sco_premiership C0 D mean_square=1.306; D coverage90=0.845; M mean_square=0.839; M coverage90=0.933.
 fin_veikkausliiga C0 D mean_square=1.292; D coverage90=0.845; M mean_square=1.059; M coverage90=0.915.
 Serial/team lag uncertainty uses 999 week-block resamples of original lag-pair rows indexed by their later week, without fabricating cross-block neighbors. Team lag means appearance-lag one within season. Venue contrast/SE distribution is unselected with ≥8 appearances per role; tables retain all teams, not selected stars.
+
+## R04 —
+COMPLETE. [dynamics_screen.csv](dynamics_screen.csv), [step_exclusions.csv](step_exclusions.csv). Fixed active-season cohort centering; conservative eligibility requires a fixture appearance in every compared calendar slot, so missing books/byes are excluded as gaps. All G ratios use actual weekly Q (process-time ratio=h).
+eng_premier q increment_lag1_correlation=0.56 (rank=0.42); q squared_increment_lag1_correlation=0.294 (rank=0.27); q OLS_delta_on_prior_level=0.001 (rank=0.19); s increment_lag1_correlation=0.7 (rank=0.68); s squared_increment_lag1_correlation=0.44 (rank=0.16); s OLS_delta_on_prior_level=-0.003 (rank=0.01).
+sco_league_two q increment_lag1_correlation=0.469 (rank=0.12); q squared_increment_lag1_correlation=0.218 (rank=0.25); q OLS_delta_on_prior_level=-0.003 (rank=0.03); s increment_lag1_correlation=0.817 (rank=0.47); s squared_increment_lag1_correlation=0.606 (rank=0.23); s OLS_delta_on_prior_level=-0.005 (rank=0.01).
+sco_premiership q increment_lag1_correlation=0.582 (rank=0.73); q squared_increment_lag1_correlation=0.379 (rank=0.86); q OLS_delta_on_prior_level=0.001 (rank=0.5); s increment_lag1_correlation=0.776 (rank=0.85); s squared_increment_lag1_correlation=0.546 (rank=0.43); s OLS_delta_on_prior_level=0.001 (rank=0.39).
+fin_veikkausliiga q increment_lag1_correlation=0.512 (rank=0.2); q squared_increment_lag1_correlation=0.245 (rank=0.26); q OLS_delta_on_prior_level=0.002 (rank=0.71); s increment_lag1_correlation=0.668 (rank=0.53); s squared_increment_lag1_correlation=0.446 (rank=0.48); s OLS_delta_on_prior_level=-0.001 (rank=0.11).
+99 shared conditional C0 null panels/sentinel, suffix only after first eight observed weeks. Null ranks are plug-in predictive ranks, not p-values; non-sentinels and R6 sensitivity have no envelopes. No half-life is estimated; isolated RTS slopes are not dynamic-law evidence.
+

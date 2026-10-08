@@ -1,0 +1,541 @@
+league,rung,axis,statistic,lag,n,value,null_q05,null_median,null_q95,null_rank,null_status
+eng_premier,C0,q,G,1,1854,0.0001536678832356394,0.00013046735385419066,0.00014082521768001702,0.0001505370020060389,0.99,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G_over_hG1,1,1854,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,process_time_ratio,1,1854,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G,2,1365,0.0004860457600814725,0.0004113482372954701,0.0004494431196922751,0.00048725812858255564,0.93,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G_over_hG1,2,1365,1.5814812758764754,1.5474980102114442,1.592987188936612,1.6544349980214812,0.28,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,process_time_ratio,2,1365,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G,4,576,0.0013896817230731181,0.0011491212765069837,0.0013638301703709167,0.0015322371099058957,0.63,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G_over_hG1,4,576,2.260852583200704,2.088619264192684,2.408288260751593,2.677742294143056,0.17,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,process_time_ratio,4,576,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G,8,133,0.002944971317051191,0.0023339970003446626,0.0034405266604622927,0.004903693564269916,0.28,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G_over_hG1,8,133,2.3955650776220385,2.131127863348716,3.066000120061527,4.278284047133973,0.21,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,process_time_ratio,8,133,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G,13,48,0.0040815353194687915,0.0029677617740515973,0.006182454414268239,0.010370172704949774,0.22,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,G_over_hG1,13,48,2.043135160925657,1.6574901683750676,3.327105968817805,5.817142882149739,0.18,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,process_time_ratio,13,48,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,increment_lag1_correlation,1,1384,0.5598759645245038,0.5295272793301563,0.5651884523198907,0.6004404394205863,0.42,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,squared_increment_lag1_correlation,1,1384,0.2944187466550756,0.24619719781039637,0.3199359115821623,0.40286001542888994,0.27,NOT_SIMULATED: non-sentinel
+eng_premier,C0,q,OLS_delta_on_prior_level,1,1854,0.0008161853231838948,-0.00021823187292429404,0.0018815029324044344,0.0035206017194711874,0.19,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G,1,1854,1.9852146351433992e-5,3.04130024015347e-5,3.303092676661826e-5,3.6454206070436296e-5,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G_over_hG1,1,1854,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,process_time_ratio,1,1854,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G,2,1365,6.857708742252734e-5,0.00010346669211295084,0.00011439778447281403,0.0001268980815386106,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G_over_hG1,2,1365,1.727195795571338,1.6780658300214197,1.72325703311757,1.7845990271179715,0.58,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,process_time_ratio,2,1365,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G,4,576,0.00023496887802740342,0.0003107070082592953,0.00038232456216707,0.00045824382536821556,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G_over_hG1,4,576,2.9589858178034083,2.5598510727512016,2.900955410350195,3.298541324458464,0.65,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,process_time_ratio,4,576,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G,8,133,0.0004619202843082,0.0007049635391890932,0.001131932641064097,0.0019175372790124676,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G_over_hG1,8,133,2.908503419044875,2.7585248828829654,4.287703560197894,6.93093840578414,0.09,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,process_time_ratio,8,133,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G,13,48,0.00030519685736963594,0.0010705709831552012,0.0021053688035211006,0.0043766097840940875,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,G_over_hG1,13,48,1.1825764791639286,2.4662892093775786,4.875543401025759,9.845473060675756,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,process_time_ratio,13,48,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,increment_lag1_correlation,1,1384,0.6997744600357436,0.6589489426541368,0.6905550397653542,0.7238146081147904,0.68,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,squared_increment_lag1_correlation,1,1384,0.4404944059628993,0.41671848245717696,0.49022399451563825,0.5606834086567393,0.16,NOT_SIMULATED: non-sentinel
+eng_premier,C0,s,OLS_delta_on_prior_level,1,1854,-0.0025044092202675485,0.0009405806274066685,0.002713798120012284,0.005125462365863613,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,R6,q,G,1,1854,0.00015509566788546965,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G_over_hG1,1,1854,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,process_time_ratio,1,1854,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G,2,1365,0.0004900757202716675,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G_over_hG1,2,1365,1.5799142779202697,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,process_time_ratio,2,1365,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G,4,576,0.001395074486579573,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G_over_hG1,4,576,2.248732194779556,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,process_time_ratio,4,576,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G,8,133,0.002959247160053705,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G_over_hG1,8,133,2.3850175833400455,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,process_time_ratio,8,133,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G,13,48,0.004097114603841785,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,G_over_hG1,13,48,2.0320532876954065,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,process_time_ratio,13,48,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,increment_lag1_correlation,1,1384,0.5577265171231938,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,squared_increment_lag1_correlation,1,1384,0.29308410732267787,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,q,OLS_delta_on_prior_level,1,1854,0.0007552315612586361,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G,1,1854,2.0467095031985078e-5,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G_over_hG1,1,1854,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,process_time_ratio,1,1854,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G,2,1365,7.014402719311611e-5,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G_over_hG1,2,1365,1.7135804344363015,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,process_time_ratio,2,1365,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G,4,576,0.0002352264320186915,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G_over_hG1,4,576,2.8732268997027908,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,process_time_ratio,4,576,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G,8,133,0.00046739914930050335,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G_over_hG1,8,133,2.854576752160434,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,process_time_ratio,8,133,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G,13,48,0.00032738961357683434,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,G_over_hG1,13,48,1.2304538768023061,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,process_time_ratio,13,48,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,increment_lag1_correlation,1,1384,0.689768032353447,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,squared_increment_lag1_correlation,1,1384,0.4316526970651679,,,,,NOT_SIMULATED: R6 sensitivity
+eng_premier,R6,s,OLS_delta_on_prior_level,1,1854,-0.0028673927431260558,,,,,NOT_SIMULATED: R6 sensitivity
+eng_championship,C0,q,G,1,2414,0.00021827757622519938,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G_over_hG1,1,2414,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,process_time_ratio,1,2414,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G,2,1848,0.0006636675297314134,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G_over_hG1,2,1848,1.5202375370127355,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,process_time_ratio,2,1848,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G,4,848,0.0017760783960373149,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G_over_hG1,4,848,2.0341970379551437,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,process_time_ratio,4,848,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G,8,169,0.004627017165345163,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G_over_hG1,8,169,2.6497323072317207,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,process_time_ratio,8,169,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G,13,46,0.009915884747404161,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,G_over_hG1,13,46,3.4944513237492947,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,process_time_ratio,13,46,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,increment_lag1_correlation,1,1848,0.49693839191452616,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,squared_increment_lag1_correlation,1,1848,0.2793445969507921,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,q,OLS_delta_on_prior_level,1,2414,0.0033210613536824676,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G,1,2414,2.0126604402593214e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G_over_hG1,1,2414,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,process_time_ratio,1,2414,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G,2,1848,7.007988547973706e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G_over_hG1,2,1848,1.7409763733098371,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,process_time_ratio,2,1848,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G,4,848,0.00023381145269870673,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G_over_hG1,4,848,2.904258562718375,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,process_time_ratio,4,848,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G,8,169,0.0006021787425259511,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G_over_hG1,8,169,3.7399424816063567,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,process_time_ratio,8,169,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G,13,46,0.0007368298065148139,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,G_over_hG1,13,46,2.8161340458628024,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,process_time_ratio,13,46,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,increment_lag1_correlation,1,1848,0.7104308252969362,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,squared_increment_lag1_correlation,1,1848,0.617501793973097,,,,,NOT_SIMULATED: non-sentinel
+eng_championship,C0,s,OLS_delta_on_prior_level,1,2414,0.0011711916454158278,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G,1,2604,0.00020356620714415748,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G_over_hG1,1,2604,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,process_time_ratio,1,2604,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G,2,2133,0.0006226413682789817,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G_over_hG1,2,2133,1.529333814816454,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,process_time_ratio,2,2133,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G,4,1372,0.0016482900353140954,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G_over_hG1,4,1372,2.0242677535211455,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,process_time_ratio,4,1372,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G,8,631,0.0036073174206967544,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G_over_hG1,8,631,2.21507628359836,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,process_time_ratio,8,631,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G,13,192,0.005674148575648956,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,G_over_hG1,13,192,2.144132729498267,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,process_time_ratio,13,192,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,increment_lag1_correlation,1,2149,0.5162384115308032,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,squared_increment_lag1_correlation,1,2149,0.24944516539191486,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,q,OLS_delta_on_prior_level,1,2604,0.005231559032075314,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G,1,2604,1.466965980008187e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G_over_hG1,1,2604,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,process_time_ratio,1,2604,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G,2,2133,5.157727571234327e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G_over_hG1,2,2133,1.757957458292776,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,process_time_ratio,2,2133,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G,4,1372,0.00017182270403488133,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G_over_hG1,4,1372,2.928198512720834,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,process_time_ratio,4,1372,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G,8,631,0.0004941670783668212,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G_over_hG1,8,631,4.21079190912852,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,process_time_ratio,8,631,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G,13,192,0.0009425534427881236,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,G_over_hG1,13,192,4.942453470072781,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,process_time_ratio,13,192,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,increment_lag1_correlation,1,2149,0.7161030462311196,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,squared_increment_lag1_correlation,1,2149,0.5064138871897056,,,,,NOT_SIMULATED: non-sentinel
+eng_league_one,C0,s,OLS_delta_on_prior_level,1,2604,0.004309777405229727,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G,1,2698,0.00024772215330324046,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G_over_hG1,1,2698,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,process_time_ratio,1,2698,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G,2,2298,0.0007532971414788237,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G_over_hG1,2,2298,1.5204476697663394,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,process_time_ratio,2,2298,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G,4,1637,0.0021315648937981573,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G_over_hG1,4,1637,2.151164990065378,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,process_time_ratio,4,1637,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G,8,851,0.00522795262984136,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G_over_hG1,8,851,2.638012265016193,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,process_time_ratio,8,851,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G,13,217,0.008234609000332804,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,G_over_hG1,13,217,2.557023879849247,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,process_time_ratio,13,217,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,increment_lag1_correlation,1,2321,0.4990269425378478,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,squared_increment_lag1_correlation,1,2321,0.34672551306044896,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,q,OLS_delta_on_prior_level,1,2698,0.00613954903168663,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G,1,2698,2.1807175241051836e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G_over_hG1,1,2698,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,process_time_ratio,1,2698,1.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G,2,2298,7.610150423112605e-5,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G_over_hG1,2,2298,1.7448730381151236,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,process_time_ratio,2,2298,2.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G,4,1637,0.0002464711093330337,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G_over_hG1,4,1637,2.8255735395414,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,process_time_ratio,4,1637,4.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G,8,851,0.0007010925499076397,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G_over_hG1,8,851,4.018703374909365,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,process_time_ratio,8,851,8.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G,13,217,0.0012757701584494084,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,G_over_hG1,13,217,4.500177806148378,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,process_time_ratio,13,217,13.0,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,increment_lag1_correlation,1,2321,0.6854289201145821,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,squared_increment_lag1_correlation,1,2321,0.4731916808421282,,,,,NOT_SIMULATED: non-sentinel
+eng_league_two,C0,s,OLS_delta_on_prior_level,1,2698,0.0020035783678606363,,,,,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G,1,1063,0.00010316479247856231,8.045531164661406e-5,9.051419545599928e-5,0.00010171858139900612,0.98,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G_over_hG1,1,1063,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,process_time_ratio,1,1063,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G,2,674,0.00034696371035044496,0.00024886773780447474,0.0003005529665685989,0.0003420513720132447,0.97,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G_over_hG1,2,674,1.681599419795005,1.551631608205446,1.6545665342737745,1.7354458468201701,0.7,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,process_time_ratio,2,674,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G,4,250,0.00097152567565256,0.0006978116551547191,0.0009100554588472404,0.0011330615825229842,0.7,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G_over_hG1,4,250,2.3543053117041928,2.1219352204318236,2.512430081327071,2.9021414789956332,0.29,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,process_time_ratio,4,250,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G,8,20,0.004817159663582106,0.0005617201318840262,0.002192109263793043,0.005524046262907729,0.9,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G_over_hG1,8,20,5.836729212370482,0.7676818450499674,2.998708812511806,7.643708443767625,0.83,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,process_time_ratio,8,20,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G,13,5,0.010201721633615768,0.0006063645788937332,0.0035651158400627817,0.012019539182271345,0.88,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,G_over_hG1,13,5,7.606740624554783,0.49835529752579144,3.048861337990955,10.757579451890196,0.85,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,process_time_ratio,13,5,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,increment_lag1_correlation,1,674,0.5821559861330914,0.49341498270688233,0.5619993849628899,0.6037787576957473,0.73,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,squared_increment_lag1_correlation,1,674,0.37918412725331174,0.21628994527198278,0.3236445385460313,0.4189334533040376,0.86,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,q,OLS_delta_on_prior_level,1,1063,0.0011284676988638522,-0.0006369962215440677,0.0011461794245913109,0.0032484340932553406,0.5,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G,1,1063,6.223207128968016e-6,8.035619060135262e-6,9.353214494867372e-6,1.0718425274007522e-5,0.01,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G_over_hG1,1,1063,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,process_time_ratio,1,1063,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G,2,674,2.5237797725637397e-5,2.921764084796417e-5,3.474975980608964e-5,4.082308192844485e-5,0.01,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G_over_hG1,2,674,2.0277163528881723,1.7425319097871195,1.8552623253441993,1.9630769352450714,0.99,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,process_time_ratio,2,674,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G,4,250,0.00010661508506027887,9.766339561183104e-5,0.00012162605370732471,0.00016033049042316256,0.22,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G_over_hG1,4,250,4.282963866171311,2.8042378288752174,3.258416318697031,3.997663474854469,0.96,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,process_time_ratio,4,250,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G,8,20,0.00038447197738957146,5.9475042149161307e-5,0.00035371400461490984,0.0010381938089983444,0.54,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G_over_hG1,8,20,7.722545012199518,0.8162037033071602,4.438610962754437,13.542607499100631,0.75,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,process_time_ratio,8,20,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G,13,5,0.0008403375589493538,6.732828046539318e-5,0.0006207274986946879,0.0025824202531265434,0.63,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,G_over_hG1,13,5,10.38714433712432,0.6450341031248749,5.129256991868558,18.80887236633434,0.77,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,process_time_ratio,13,5,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,increment_lag1_correlation,1,674,0.7761956328961019,0.714219511332211,0.7541183485272188,0.7927577037734964,0.85,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,squared_increment_lag1_correlation,1,674,0.5459285352538616,0.4744003117914212,0.562091111721311,0.6682533944920724,0.43,NOT_SIMULATED: non-sentinel
+sco_premiership,C0,s,OLS_delta_on_prior_level,1,1063,0.0012505487778977674,-0.0005535988272760614,0.00163935931837341,0.003560465806269283,0.39,NOT_SIMULATED: non-sentinel
+sco_premiership,R6,q,G,1,1063,0.00010420735452725413,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G_over_hG1,1,1063,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,process_time_ratio,1,1063,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G,2,674,0.0003503238183030799,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G_over_hG1,2,674,1.680897763369749,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,process_time_ratio,2,674,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G,4,250,0.0009789198128730538,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G_over_hG1,4,250,2.3484902224848,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,process_time_ratio,4,250,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G,8,20,0.004790383805791085,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G_over_hG1,8,20,5.746216075059055,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,process_time_ratio,8,20,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G,13,5,0.010132238868026229,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,G_over_hG1,13,5,7.4793472436182835,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,process_time_ratio,13,5,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,increment_lag1_correlation,1,674,0.5811358086315005,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,squared_increment_lag1_correlation,1,674,0.38195643144027364,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,q,OLS_delta_on_prior_level,1,1063,0.00110013823881379,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G,1,1063,6.529516941173462e-6,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G_over_hG1,1,1063,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,process_time_ratio,1,1063,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G,2,674,2.6273680172181958e-5,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G_over_hG1,2,674,2.0119160734928845,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,process_time_ratio,2,674,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G,4,250,0.00011058802351834113,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G_over_hG1,4,250,4.234157921430657,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,process_time_ratio,4,250,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G,8,20,0.00036132265838710007,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G_over_hG1,8,20,6.91710163329028,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,process_time_ratio,8,20,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G,13,5,0.0007842583991938925,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,G_over_hG1,13,5,9.239208614093757,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,process_time_ratio,13,5,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,increment_lag1_correlation,1,674,0.7608399510670145,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,squared_increment_lag1_correlation,1,674,0.5341978855138423,,,,,NOT_SIMULATED: R6 sensitivity
+sco_premiership,R6,s,OLS_delta_on_prior_level,1,1063,0.0013494096447682024,,,,,NOT_SIMULATED: R6 sensitivity
+sco_championship,C0,q,G,1,520,0.00031882177037577815,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G_over_hG1,1,520,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,process_time_ratio,1,520,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G,2,364,0.0010444597186978133,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G_over_hG1,2,364,1.637999371038503,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,process_time_ratio,2,364,2.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G,4,172,0.0032481890623505846,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G_over_hG1,4,172,2.5470257712656497,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,process_time_ratio,4,172,4.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G,8,31,0.008853891195199604,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G_over_hG1,8,31,3.4713325821367205,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,process_time_ratio,8,31,8.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G,13,2,0.0021268911856283388,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,G_over_hG1,13,2,0.5131613631223116,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,process_time_ratio,13,2,13.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,increment_lag1_correlation,1,364,0.5305522890574683,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,squared_increment_lag1_correlation,1,364,0.39070571766390805,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,q,OLS_delta_on_prior_level,1,520,0.017719288316135378,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G,1,520,1.1220628355908303e-5,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G_over_hG1,1,520,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,process_time_ratio,1,520,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G,2,364,4.2011566345537614e-5,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G_over_hG1,2,364,1.8720683464850754,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,process_time_ratio,2,364,2.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G,4,172,0.000146078806981637,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G_over_hG1,4,172,3.254693105148567,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,process_time_ratio,4,172,4.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G,8,31,0.0005681028879394842,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G_over_hG1,8,31,6.328777563962645,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,process_time_ratio,8,31,8.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G,13,2,0.0003956138493046118,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,G_over_hG1,13,2,2.71213283219287,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,process_time_ratio,13,2,13.0,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,increment_lag1_correlation,1,364,0.73385468711087,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,squared_increment_lag1_correlation,1,364,0.505172477566336,,,,,NOT_SIMULATED: non-sentinel
+sco_championship,C0,s,OLS_delta_on_prior_level,1,520,0.004140358034025318,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G,1,938,0.0002188600815412208,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G_over_hG1,1,938,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,process_time_ratio,1,938,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G,2,656,0.0006766171133754306,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G_over_hG1,2,656,1.5457755215356492,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,process_time_ratio,2,656,2.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G,4,326,0.0017840570688307574,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G_over_hG1,4,326,2.0378968337525984,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,process_time_ratio,4,326,4.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G,8,85,0.003037064110217817,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G_over_hG1,8,85,1.734592307120775,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,process_time_ratio,8,85,8.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G,13,8,0.0055584117475196955,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,G_over_hG1,13,8,1.953623207181626,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,process_time_ratio,13,8,13.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,increment_lag1_correlation,1,656,0.5246351386122133,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,squared_increment_lag1_correlation,1,656,0.3013491371348441,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,q,OLS_delta_on_prior_level,1,938,0.0035826123474918445,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G,1,938,3.5444444899293737e-6,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G_over_hG1,1,938,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,process_time_ratio,1,938,1.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G,2,656,1.2646733705965452e-5,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G_over_hG1,2,656,1.7840219732454392,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,process_time_ratio,2,656,2.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G,4,326,4.297442179422948e-5,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G_over_hG1,4,326,3.0311112161814235,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,process_time_ratio,4,326,4.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G,8,85,0.0001417311968272602,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G_over_hG1,8,85,4.998357190737254,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,process_time_ratio,8,85,8.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G,13,8,0.0001929834386945385,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,G_over_hG1,13,8,4.188210576229304,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,process_time_ratio,13,8,13.0,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,increment_lag1_correlation,1,656,0.7911506400704821,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,squared_increment_lag1_correlation,1,656,0.6311189120695888,,,,,NOT_SIMULATED: non-sentinel
+sco_league_one,C0,s,OLS_delta_on_prior_level,1,938,0.005997617427873671,,,,,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G,1,688,0.0002378538266463895,0.00019329640923687534,0.00020926238962880986,0.00023263338396678425,0.97,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G_over_hG1,1,688,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,process_time_ratio,1,688,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G,2,432,0.0007362567986181214,0.0005759398698594518,0.0006570430795540397,0.0007555621139521671,0.89,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G_over_hG1,2,432,1.5477085422566974,1.4772514619097175,1.5747962769096093,1.6834613746865958,0.35,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,process_time_ratio,2,432,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G,4,167,0.0017266395151231439,0.0014377839945725434,0.0019043514790981263,0.0024413139605909133,0.26,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G_over_hG1,4,167,1.8148115793088433,1.815131130570377,2.249286728577469,2.7753842947025147,0.06,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,process_time_ratio,4,167,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G,8,21,0.005023219184160065,0.0018232971535732502,0.0037720686514295387,0.010301774950244811,0.67,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G_over_hG1,8,21,2.6398667066790256,1.0579549319423607,2.286225724257428,5.7159974671383065,0.61,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,process_time_ratio,8,21,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,C0,q,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,C0,q,process_time_ratio,13,0,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,increment_lag1_correlation,1,432,0.4685550117934763,0.4543270538910794,0.5242091357818747,0.5805918592541516,0.12,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,squared_increment_lag1_correlation,1,432,0.21802760161231458,0.17152558184703562,0.2787157488827484,0.37926710179620954,0.25,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,q,OLS_delta_on_prior_level,1,688,-0.003059358533504867,-0.0014785018077022036,0.0015497084755704369,0.005029988996576666,0.03,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G,1,688,3.2846519707182836e-6,3.3763868539053796e-6,3.968602843258058e-6,4.729821980828617e-6,0.04,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G_over_hG1,1,688,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,process_time_ratio,1,688,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G,2,432,1.1891081019009994e-5,1.2107824039343791e-5,1.5115018426473563e-5,1.8755226817271686e-5,0.05,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G_over_hG1,2,432,1.8100975575213936,1.7677746114739379,1.8954225325178211,1.988548061631652,0.15,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,process_time_ratio,2,432,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G,4,167,3.646696250072599e-5,3.9699876581661635e-5,5.469474707654939e-5,7.643035873481868e-5,0.03,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G_over_hG1,4,167,2.775557564836271,2.800993332388076,3.473851803125394,4.212577748731618,0.06,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,process_time_ratio,4,167,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G,8,21,4.735745286352582e-5,6.424112977422091e-5,0.00017614989601213218,0.00038473735741859603,0.03,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G_over_hG1,8,21,1.8022249117145337,2.2657869913115425,5.550912233426699,12.327231603517664,0.03,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,process_time_ratio,8,21,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,C0,s,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,C0,s,process_time_ratio,13,0,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,increment_lag1_correlation,1,432,0.8173928101034741,0.7743842916627207,0.8188973681571996,0.8517187765956795,0.47,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,squared_increment_lag1_correlation,1,432,0.6064147014117631,0.568543733521363,0.6616284673317065,0.7447838486060344,0.23,NOT_SIMULATED: non-sentinel
+sco_league_two,C0,s,OLS_delta_on_prior_level,1,688,-0.004509383208728958,-0.0006902255592574282,0.0005594573574660214,0.0018185906977570946,0.01,NOT_SIMULATED: non-sentinel
+sco_league_two,R6,q,G,1,688,0.00023737392754981113,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G_over_hG1,1,688,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,process_time_ratio,1,688,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G,2,432,0.000735330964925724,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G_over_hG1,2,432,1.5488873873298918,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,process_time_ratio,2,432,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G,4,167,0.001721902232124161,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G_over_hG1,4,167,1.8134913234761565,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,process_time_ratio,4,167,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G,8,21,0.005018677526801513,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G_over_hG1,8,21,2.6428121122044783,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,process_time_ratio,8,21,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,R6,q,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,R6,q,process_time_ratio,13,0,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,increment_lag1_correlation,1,432,0.4691208842308056,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,squared_increment_lag1_correlation,1,432,0.21499623905085097,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,q,OLS_delta_on_prior_level,1,688,-0.0029457296587457756,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G,1,688,3.368924870954006e-6,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G_over_hG1,1,688,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,process_time_ratio,1,688,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G,2,432,1.217422119616106e-5,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G_over_hG1,2,432,1.8068407077171755,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,process_time_ratio,2,432,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G,4,167,3.673044042473113e-5,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G_over_hG1,4,167,2.7256796924600066,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,process_time_ratio,4,167,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G,8,21,5.505334877894547e-5,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G_over_hG1,8,21,2.042689837550294,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,process_time_ratio,8,21,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,R6,s,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+sco_league_two,R6,s,process_time_ratio,13,0,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,increment_lag1_correlation,1,432,0.8050779923302482,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,squared_increment_lag1_correlation,1,432,0.5753193907031593,,,,,NOT_SIMULATED: R6 sensitivity
+sco_league_two,R6,s,OLS_delta_on_prior_level,1,688,-0.004005772955628872,,,,,NOT_SIMULATED: R6 sensitivity
+irl_premier,C0,q,G,1,1029,0.00024403646686043672,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G_over_hG1,1,1029,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,process_time_ratio,1,1029,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G,2,707,0.0007233056717464677,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G_over_hG1,2,707,1.4819622678772078,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,process_time_ratio,2,707,2.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G,4,331,0.0015313384447027665,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G_over_hG1,4,331,1.5687598501195843,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,process_time_ratio,4,331,4.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G,8,86,0.003078367043996071,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G_over_hG1,8,86,1.5767966380187424,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,process_time_ratio,8,86,8.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+irl_premier,C0,q,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+irl_premier,C0,q,process_time_ratio,13,0,13.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,increment_lag1_correlation,1,714,0.44449865029780583,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,squared_increment_lag1_correlation,1,714,0.1958684084962116,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,q,OLS_delta_on_prior_level,1,1029,0.003943585928858486,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G,1,1029,8.891505937698642e-6,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G_over_hG1,1,1029,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,process_time_ratio,1,1029,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G,2,707,3.252750648286872e-5,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G_over_hG1,2,707,1.8291337097890812,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,process_time_ratio,2,707,2.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G,4,331,0.00012058528749933425,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G_over_hG1,4,331,3.3904629976141285,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,process_time_ratio,4,331,4.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G,8,86,0.00036760111448265156,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G_over_hG1,8,86,5.167869158756313,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,process_time_ratio,8,86,8.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,G,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+irl_premier,C0,s,G_over_hG1,13,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
+irl_premier,C0,s,process_time_ratio,13,0,13.0,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,increment_lag1_correlation,1,714,0.7539055591585219,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,squared_increment_lag1_correlation,1,714,0.5248500220745,,,,,NOT_SIMULATED: non-sentinel
+irl_premier,C0,s,OLS_delta_on_prior_level,1,1029,0.002728030679238604,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G,1,616,0.0004427817122079021,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G_over_hG1,1,616,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,process_time_ratio,1,616,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G,2,382,0.0014995656667317143,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G_over_hG1,2,382,1.6933464339055786,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,process_time_ratio,2,382,2.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G,4,140,0.004814191851544529,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G_over_hG1,4,140,2.718151923855931,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,process_time_ratio,4,140,4.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G,8,18,0.006023230499801806,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G_over_hG1,8,18,1.7003950066521945,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,process_time_ratio,8,18,8.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G,13,4,0.016787707263304225,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,G_over_hG1,13,4,2.9164756844585007,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,process_time_ratio,13,4,13.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,increment_lag1_correlation,1,384,0.5375425833684303,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,squared_increment_lag1_correlation,1,384,0.4375730315631178,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,q,OLS_delta_on_prior_level,1,616,0.002303790332329864,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G,1,616,1.053019460603083e-5,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G_over_hG1,1,616,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,process_time_ratio,1,616,1.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G,2,382,3.904837971656887e-5,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G_over_hG1,2,382,1.8541148182677065,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,process_time_ratio,2,382,2.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G,4,140,0.0001518475806478746,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G_over_hG1,4,140,3.6050516236639347,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,process_time_ratio,4,140,4.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G,8,18,0.0005164342041217621,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G_over_hG1,8,18,6.130397198761064,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,process_time_ratio,8,18,8.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G,13,4,0.0008218686821808241,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,G_over_hG1,13,4,6.003751139020336,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,process_time_ratio,13,4,13.0,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,increment_lag1_correlation,1,384,0.7485996101140258,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,squared_increment_lag1_correlation,1,384,0.5381307397399614,,,,,NOT_SIMULATED: non-sentinel
+irl_first_division,C0,s,OLS_delta_on_prior_level,1,616,0.004081386594715348,,,,,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G,1,787,0.00016587712964568176,0.00012277908715626948,0.00014022814870817956,0.00015618969518275917,0.99,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G_over_hG1,1,787,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,process_time_ratio,1,787,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G,2,577,0.0005257303716145203,0.00038049628885595876,0.0004434486500297781,0.0005061473801067448,0.97,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G_over_hG1,2,577,1.5846981821348585,1.4869340600218262,1.587548625367884,1.6852167043155593,0.49,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,process_time_ratio,2,577,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G,4,300,0.001402053514980141,0.0010076203792625611,0.0012836667630582149,0.0016509880518311834,0.7,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G_over_hG1,4,300,2.1130904513102062,1.8839706119266706,2.3347462009537194,2.808188804776072,0.25,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,process_time_ratio,4,300,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G,8,72,0.0021531842759428105,0.0017870412048988213,0.0031412908563955106,0.005124364884838372,0.12,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G_over_hG1,8,72,1.6225747037446279,1.6750457705770918,2.8671600219785396,4.345560448684811,0.06,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,process_time_ratio,8,72,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G,13,10,0.0014316554903854978,0.0011235191827514731,0.004255144326070588,0.0149148389239258,0.1,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,G_over_hG1,13,10,0.6639091576367652,0.6378555914971387,2.4483584189134064,8.868772349880034,0.07,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,process_time_ratio,13,10,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,increment_lag1_correlation,1,589,0.5119047726222932,0.48335953141432497,0.5454369722561495,0.6033345340604712,0.2,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,squared_increment_lag1_correlation,1,589,0.2450261647362702,0.21439135372640777,0.29907800776960874,0.40962255524295516,0.26,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,q,OLS_delta_on_prior_level,1,787,0.0022713706446035723,-0.002452566927167352,0.0011974827198017492,0.003975211280619705,0.71,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G,1,787,2.6495901348738044e-5,3.481461313819999e-5,4.048525157644977e-5,4.597470499064938e-5,0.01,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G_over_hG1,1,787,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,process_time_ratio,1,787,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G,2,577,9.017015598708306e-5,0.00011540579097341326,0.00013912910343884225,0.00016161182199340727,0.01,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G_over_hG1,2,577,1.701586875650443,1.6293745644427058,1.7103012858148827,1.8147806849318904,0.42,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,process_time_ratio,2,577,2.0,2.0,2.0,2.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G,4,300,0.00026944154904557835,0.00034961159305940486,0.0004499536069689729,0.0005581090027625537,0.01,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G_over_hG1,4,300,2.5422946128459545,2.3269466910965453,2.788867623191639,3.2100059727844124,0.24,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,process_time_ratio,4,300,4.0,4.0,4.0,4.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G,8,72,0.0007221832098552719,0.0007739274278249394,0.0012608731242332199,0.0020024312247133875,0.03,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G_over_hG1,8,72,3.4070515301117896,2.357656783100322,3.895583629637825,5.748320383196404,0.34,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,process_time_ratio,8,72,8.0,8.0,8.0,8.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G,13,10,0.0012991532318560892,0.0003289065750233584,0.0016350213055727606,0.006778859029647697,0.42,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,G_over_hG1,13,10,3.7717102986454796,0.5883090251550213,3.186829562635271,13.72050446606266,0.59,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,process_time_ratio,13,10,13.0,13.0,13.0,13.0,1.0,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,increment_lag1_correlation,1,589,0.6678042541537651,0.6231093237222836,0.6655021632096609,0.7165544433854026,0.53,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,squared_increment_lag1_correlation,1,589,0.44590734047044395,0.3575449167413419,0.453503112190983,0.540162063449405,0.48,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,C0,s,OLS_delta_on_prior_level,1,787,-0.0008250358953157673,-0.0019351602924994429,0.0020501348827301155,0.005307136213187327,0.11,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,R6,q,G,1,787,0.00016812003491802294,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G_over_hG1,1,787,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,process_time_ratio,1,787,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G,2,577,0.00053143524241081,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G_over_hG1,2,577,1.5805232335037978,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,process_time_ratio,2,577,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G,4,300,0.0014067410369318892,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G_over_hG1,4,300,2.091870010641252,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,process_time_ratio,4,300,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G,8,72,0.002172299030077828,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G_over_hG1,8,72,1.6151399141222695,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,process_time_ratio,8,72,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G,13,10,0.001444460372740797,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,G_over_hG1,13,10,0.6609107380857744,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,process_time_ratio,13,10,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,increment_lag1_correlation,1,589,0.5105070705413299,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,squared_increment_lag1_correlation,1,589,0.24055741889674773,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,q,OLS_delta_on_prior_level,1,787,0.0022639886548296846,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G,1,787,2.7119922581214304e-5,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G_over_hG1,1,787,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,process_time_ratio,1,787,1.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G,2,577,9.212828229880282e-5,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G_over_hG1,2,577,1.6985351271360034,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,process_time_ratio,2,577,2.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G,4,300,0.0002727698273609167,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G_over_hG1,4,300,2.514478300445644,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,process_time_ratio,4,300,4.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G,8,72,0.0007213525484114678,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G_over_hG1,8,72,3.3248276532283567,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,process_time_ratio,8,72,8.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G,13,10,0.0014113863125865549,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,G_over_hG1,13,10,4.00326282518511,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,process_time_ratio,13,10,13.0,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,increment_lag1_correlation,1,589,0.6599060406151542,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,squared_increment_lag1_correlation,1,589,0.4550405425802184,,,,,NOT_SIMULATED: R6 sensitivity
+fin_veikkausliiga,R6,s,OLS_delta_on_prior_level,1,787,-0.0014471298547113045,,,,,NOT_SIMULATED: R6 sensitivity
