@@ -14,3 +14,11 @@ PASS unique exact paired fixture intersections; original points and999 ordinary 
 ## R12
 Command: `ENV["QSF2_REQUEST"]="R12"; include("current_development/market_model/research/qs_forms/compute/r07_batch_02.jl")` in owned beast pane %304, threads16/BLAS1.
 PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.
+
+## final_checks
+Command: `ENV["QSF2_REQUEST"]="final_checks"; include("current_development/market_model/research/qs_forms/compute/r07_batch_02.jl")` in owned beast pane %304, threads16/BLAS1.
+PASS13 output hashes/row counts; 49 immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, suffix posterior explicitly unavailable; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.
+
+## R12
+Command: `ENV["QSF2_REQUEST"]="R12"; include("current_development/market_model/research/qs_forms/compute/r07_batch_02.jl")` in owned beast pane %304, threads16/BLAS1.
+PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Later-season suffix posterior reuses identical full-season masks/means; only first-season truncated posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.
