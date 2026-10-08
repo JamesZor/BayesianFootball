@@ -295,7 +295,7 @@ function r05()
     lines=["COMPLETE. [volatility_screen.csv](volatility_screen.csv), [team_energy.csv](team_energy.csv), [large_moves.csv](large_moves.csv), [large_move_books.csv](large_move_books.csv), [appearance_gaps.csv](appearance_gaps.csv). All observed suffixes, same99 conditional nulls on sentinels; gaps never labelled transfer windows."]
     for stat in ("team_first_second_energy_spearman","cross_team_energy_CV","top5pct_energy_share","weekly_mean_energy_lag1_correlation","mean_offdiagonal_centered_step_covariance")
         g=DF.filter(r->r.league in SENTINELS&&r.statistic==stat&&r.stratum=="all",result)
-        push!(lines,"$stat: "*join(["$(r.league)/$(r.axis) $(round(r.value;digits=3)) (rank=$(r.null_rank))" for r in eachrow(g) if !ismissing(r.value)],"; ")*".")
+        push!(lines,"$stat: "*join(["$(r.league)/$(r.axis) $(stat=="mean_offdiagonal_centered_step_covariance" ? round(r.value;sigdigits=4) : round(r.value;digits=3)) (rank=$(r.null_rank))" for r in eachrow(g) if !ismissing(r.value)],"; ")*".")
     end
     push!(lines,"Calendar ratios and prior-|q| tertiles are retained per axis/season in volatility_screen; nulls condition on estimated theta and selected books, so none separates inversion noise/selection from football shocks. Available book diagnostics are KL/selection count/optimizer-start spread, not quote age or exchange depth.")
     summary!("R05",lines);verification("R05","PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohort centering; steps/gaps separated. Runtime=$(time()-started)s; invocation Q07.r05().");flush_manifest!()

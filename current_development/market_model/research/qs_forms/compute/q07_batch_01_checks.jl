@@ -6,6 +6,12 @@ function repair_null_statuses()
             ismissing(r.null_rank)||(r.null_status="SIMULATED: conditional plug-in99")
         end
         output(request,name,df)
+        if request=="R05"
+            covariance=DF.filter(r->r.league in SENTINELS&&r.stratum=="all"&&r.statistic=="mean_offdiagonal_centered_step_covariance",df)
+            line="mean_offdiagonal_centered_step_covariance: "*join(["$(r.league)/$(r.axis) $(round(r.value;sigdigits=4)) (rank=$(r.null_rank))" for r in eachrow(covariance)],"; ")*"."
+            path=joinpath(OUT,"SUMMARY.md")
+            write(path,replace(read(path,String),r"(?m)^mean_offdiagonal_centered_step_covariance:.*$"=>line))
+        end
     end
     verification("metadata","PASS corrected populated null envelopes to SIMULATED; original fallback label incorrectly said non-sentinel even when all99 replicates existed. Numerical values unchanged.")
     flush_manifest!()
