@@ -10,3 +10,7 @@ PASS old continuous count/G/normalized shape absolute errors≤1e−10; masks co
 ## R11
 Command: `ENV["QSF2_REQUEST"]="R11"; include("current_development/market_model/research/qs_forms/compute/r07_batch_02.jl")` in owned beast pane %304, threads16/BLAS1.
 PASS unique exact paired fixture intersections; original points and999 ordinary percentiles≤1e−10;1999 circular draws/L, exactly T resampled weeks/stratum; joint=total+allocation per fixture and replicate≤1e−10; multiplicities identical within week. Derived seeds recorded. Circular sensitivity assumes stationarity; never used to create lag pairs. R09 comparisons explicitly unavailable; existing integrated MC sensitivity not recomputed or dismissed.
+
+## R12
+Command: `ENV["QSF2_REQUEST"]="R12"; include("current_development/market_model/research/qs_forms/compute/r07_batch_02.jl")` in owned beast pane %304, threads16/BLAS1.
+PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.
