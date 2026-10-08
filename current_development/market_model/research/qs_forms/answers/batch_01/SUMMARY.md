@@ -59,3 +59,14 @@ sco_league_two gap/IQR; rank; next-season shared/same-side: 21/22 2.298;0.82;6/0
 sco_premiership gap/IQR; rank; next-season shared/same-side: 21/22 1.701;0.9;11/1.0; 22/23 2.247;0.98;11/1.0; 23/24 2.798;1.0;11/1.0; 24/25 2.05;0.98;10/0.9; 25/26 0.565;0.29;0/NA.
 fin_veikkausliiga gap/IQR; rank; next-season shared/same-side: 2021 1.021;0.78;11/0.818; 2022 0.379;0.06;11/0.636; 2023 0.686;0.45;10/0.8; 2024 0.505;0.25;10/0.6; 2025 0.298;0.02;0/NA.
 R6/full-season curvature and both LOTO changes retained per season; consistent signs/rung sensitivity must be read jointly, not selected by largest magnitude. Null gap ranks do not establish persistent tiers; tiny n (8–24) limits shape inference. R05 prior-|q| energy is the radial screen, with no new fit.
+
+## R07 —
+PARTIAL: all published3053 fixtures reproduced (≤1e−8); [goal_reproduction_checks.csv](goal_reproduction_checks.csv), [goal_ablation_fixtures.csv](goal_ablation_fixtures.csv), [goal_ablation_summary.csv](goal_ablation_summary.csv). Integrated frozen-style NOT_AVAILABLE: no joint training-end/current conditional cache; plug-in frozen-style is available, never independently spliced.
+full_minus_no_style/mixture_128x4/fixture joint=0.00671 [0.00308,0.00923],MCchange=-0.00016,OK; total=0.00659 [0.00307,0.00919],MCchange=-0.00013,OK; allocation=0.00012 [-1.0e-5,8.0e-5],MCchange=-3.0e-5,OK.
+full_minus_no_style/mixture_128x4/equal_league joint=0.00845 [0.00375,0.0116],MCchange=-0.00025,OK; total=0.00833 [0.00375,0.01155],MCchange=-0.00022,OK; allocation=0.00012 [-3.0e-5,8.0e-5],MCchange=-3.0e-5,OK.
+full_minus_frozen_style/plugin_median_theta/fixture joint=0.01574 [0.00766,0.01761],MCchange=NA,OK; total=0.01574 [0.00766,0.01761],MCchange=NA,OK; allocation=0.0 [-0.0,0.0],MCchange=NA,OK.
+full_minus_frozen_style/plugin_median_theta/equal_league joint=0.01814 [0.01,0.02104],MCchange=NA,OK; total=0.01814 [0.01,0.02104],MCchange=NA,OK; allocation=-0.0 [-0.0,0.0],MCchange=NA,OK.
+sco_league_two full−no-style joint 0.01309 [-0.00469,0.0333] OK; total 0.01296 [-0.00457,0.03334] OK; allocation 0.00012 [-0.00017,0.00022] OK.
+sco_premiership full−no-style joint -0.01852 [-0.02741,-0.00183] OK; total -0.01836 [-0.02739,-0.00189] OK; allocation -0.00016 [-0.00016,6.0e-5] OK.
+fin_veikkausliiga full−no-style joint 0.04916 [0.01292,0.06577] OK; total 0.04886 [0.01268,0.06575] OK; allocation 0.00031 [-8.0e-5,0.00032] OK.
+Mixture allocation=joint−total exactly (not equally weighted Binomial mixing). MC_UNSTABLE means first2 versus all4 samples change delta by>0.001; no extra samples. Ablations retain C0 filter/q/mu/gamma: deletion scores do not compare refitted models.

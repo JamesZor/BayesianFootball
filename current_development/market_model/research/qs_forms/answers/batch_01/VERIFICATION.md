@@ -22,3 +22,6 @@ PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohor
 
 ## R06
 PASS C0 suffix statistics reuse99 shared conditional panels; full-season FFBS kept separate; same teams/window in observed/null; largest gap fixed once per season, side labels may align across seasons without searching gaps. Runtime=50.89862394332886s; invocation Q07.r06().
+
+## R07
+PASS published fixture intersection3053 and every plug-in joint score ≤1e−8; joint=total+allocation ≤1e−10; same whole-week joint current-state samples across variants, same128 indices as R03; first2/all4 MC check retained. Runtime=63.224801778793335s; invocation Q07.r07().
