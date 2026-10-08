@@ -248,10 +248,10 @@ function level_values(p,X,design,gauge)
     rho=ST.cor(abar,bbar)
     vq,vs,cross=ST.var(qb),ST.var(sb),ST.cov(qb,sb)
     geom=geometry(vq,vs,cross,ST.std(abar)/ST.std(bbar))
-    return (; r_level=geom.r,c_level=geom.c,k_level=geom.k,rho_ab=rho,
+    quantities = (; r_level=geom.r,c_level=geom.c,k_level=geom.k,rho_ab=rho,
         shortcut_r=sqrt((1+rho)/(1-rho)),delta_level_deg=geom.delta_deg,
-        r_weekly_cross_section=sqrt(ST.mean(vec(ST.var(s;dims=1)))/ST.mean(vec(ST.var(q;dims=1)))),
-        abar,bbar,qb,sb)
+        r_weekly_cross_section=sqrt(ST.mean(vec(ST.var(s;dims=1)))/ST.mean(vec(ST.var(q;dims=1)))))
+    return quantities, abar, bbar, qb, sb
 end
 function r02()
     started=time()
@@ -360,7 +360,7 @@ function geometry_for_theta(f,rung,theta)
 end
 
 "Exact scalar forward filter, explicit pre-week snapshot before all observations of the week."
-function forward(f,p,theta,rung; keep_states=false)
+function forward(f,p,theta,rung; keep_states=false, min_state_week=1)
     N=MID.n_teams(p)
     H=PM.fullbook_design(PM.FullBookRung(:C0),p,theta)
     Q=rung=="C0" ? PM.fullbook_process(f.arm,N,theta) : MID.process_cov(CM.conditional_arm(f.arm,theta),N,CM.covariance_schedule(f.arm,p,theta),2)
@@ -373,7 +373,7 @@ function forward(f,p,theta,rung; keep_states=false)
         js=p.week_ptr[t]:(p.week_ptr[t+1]-1)
         @assert last_observed<t
         if !isempty(js)
-            keep_states && (states[t]=(;m=copy(m),V=copy(V),last_observed))
+            keep_states && t>=min_state_week && (states[t]=(;m=copy(m),V=copy(V),last_observed))
             for j in first(js):2:last(js)
                 i=cld(j,2);B=H[j:j+1,:]
                 means[i,:].=B*m
@@ -495,7 +495,13 @@ function r03()
             f=fit(league,rung,"10b";request="R03");idx=indices(f)
             predictions=Vector{Any}(undef,length(idx));ts=time()
             Threads.@threads for j in eachindex(idx)
-                predictions[j]=forward(f,p,f.udraws[idx[j].draw,:,idx[j].chain],rung)
+                predictions[j]=forward(f,p,f.udraws[idx[j].draw,:,idx[j].chain],rung;
+                    keep_states=rung=="C0",min_state_week=minimum(p.matches.week[testix]))
+            end
+            if rung=="C0"
+                cache=joinpath(OUT,"cache","$(league)_C0_10b_forecasts.jls")
+                mkpath(dirname(cache));Serialization.serialize(cache,(;predictions,indices=idx))
+                record!("R03","beast_only_cache",basename(cache),cache;n=length(idx),detail="pre-week state mean/covariance, same128 theta indices, test-only snapshots for R07")
             end
             medianpred=forward(f,p,MID.median_theta(f),rung)
             for i in testix
@@ -641,5 +647,6 @@ function r02_benchmark()
 end
 
 include(joinpath(@__DIR__, "q07_batch_01_nulls.jl"))
+include(joinpath(@__DIR__, "q07_batch_01_levels.jl"))
 
 end # module
