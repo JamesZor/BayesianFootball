@@ -34,3 +34,6 @@ PASS corrected populated null envelopes to SIMULATED; original fallback label in
 
 ## R05_audit
 PASS selected fixture IDs linked to panel observation rows and full saved-rate rows, with exact cached raw table row ordinals; no SQL/network/raw book recreation. No quote timestamps were fabricated.
+
+## final_checks
+PASS R2/C0 identities,12000-draw retention, point/forecast round trips;3053 paired honest forecasts with PD covariance;99 replicates/sentinel and 510 null envelopes/ranks exactly reproduced from saved raw null rows; goal finite/unique keys and joint=total+allocation ≤1e−8; plug-in full/no-style allocation equality ≤1e−8; no fabricated frozen mixture or movers; 42 output hashes/row-counts/column-lists, exact selected-fixture raw-cache row links, committed-size bounds; all8 summary sections≤10 lines. Julia only on mcmc-beast, owned %304,16 threads/BLAS1. No MCMC/new fits/SQL/src edits.
