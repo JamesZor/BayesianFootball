@@ -13,3 +13,9 @@ PASS exactly99 shared conditional nulls for each sentinel, unchanged prefix, ori
 
 ## R04
 PASS exactly99 shared conditional nulls for each sentinel, unchanged prefix, original missingness/design/Q/R; all comparisons suffix-only. Runtime=51.11627411842346s; invocation Q07.r04().
+
+## R05
+PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohort centering; steps/gaps separated. Runtime=51.85799193382263s; invocation Q07.r05().
+
+## R05
+PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohort centering; steps/gaps separated. Runtime=52.45690202713013s; invocation Q07.r05().
