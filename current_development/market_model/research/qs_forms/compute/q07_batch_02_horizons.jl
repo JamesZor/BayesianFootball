@@ -92,6 +92,10 @@ function r10()
         println("R10 $league completed design-matched99 nulls");flush(stdout)
     end
     output("R10","horizon_screen.csv",rows;bulk=true);output("R10","horizon_reproduction.csv",repro)
+    r10_summary(rows)
+    verify("R10","PASS old continuous count/G/normalized shape absolute errors≤1e−10; masks constructed once from actual schedule and reused identically for observed/R6/all99 nulls; matched baseline=numerator rows; h1 identity≤1e−10. Low-support common horizon labeled, no Q-time replacement or gap interpolation.")
+end
+function r10_summary(rows)
     lines=["COMPLETE. horizon_screen.csv beast-only (manifest): primary relative q/s screens plus common/raw sensitivity, season and pool; energy and normalized shape reported separately. Old continuous counts/G/ratios reproduced ≤1e−10, including R6. All masks fixed by design;99 reused nulls/sentinel; calendar Q time=h."]
     for league in SENTINELS
         g=filter(r->r.league==league&&r.rung=="C0"&&r.season_or_pool=="POOL"&&r.axis=="s"&&r.projection=="relative"&&r.selection=="matched_start"&&r.quantity=="shape_ratio"&&r.h>1,rows)
@@ -103,5 +107,5 @@ function r10()
         push!(lines,"$league endpoint OLS axis/slope/rank "*join(["$(r.axis) $(r.value)/$(r.null_rank)" for r in g],"; ")*"; R6 style shapes "*join(["h$(r.h)=$(r.shape_ratio)" for r in sensitivity],"; ")*".")
     end
     push!(lines,"Common-horizon LOW_SUPPORT cells (quantity rows)=$(count(r->r.selection=="common_horizon"&&startswith(r.status,"LOW_SUPPORT"),rows)); raw/common modes kept separate. Season-wise slopes/shapes/counts permit inspection of pooled cancellations. h1 normalized rank suppressed; no half-life or prospective-fit superiority claim.")
-    summary!("R10",lines);verify("R10","PASS old continuous count/G/normalized shape absolute errors≤1e−10; masks constructed once from actual schedule and reused identically for observed/R6/all99 nulls; matched baseline=numerator rows; h1 identity≤1e−10. Low-support common horizon labeled, no Q-time replacement or gap interpolation.")
+    summary!("R10",lines)
 end

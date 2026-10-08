@@ -17,6 +17,7 @@ strip(read(`hostname`,String))=="mcmc-beast" || error("Julia only on beast")
 Threads.nthreads()==16 || error("requires16 threads")
 pinthreads(:cores); BLAS.set_num_threads(1)
 mkpath(QSFormsBatch02.OUT)
+QSFormsBatch02.input(joinpath(QSFormsBatch02.A1,"manifest.csv"))
 for (_,_,segment) in QSFormsBatch02.QS.LEAGUES
     name=string(nameof(typeof(segment)))
     path=joinpath(dirname(dirname(QSFormsBatch02.P)),".cache","datastore_$(name).jls")

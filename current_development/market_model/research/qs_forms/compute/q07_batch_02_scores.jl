@@ -47,6 +47,8 @@ function r11()
         f=DF.filter(:method=>==(method),gf)
         push!(tasks,paired_scores(f,:variant,"full",alt;source="R07",method,comparison="full_minus_$alt"))
     end
+    fixturekeys(f)=Set(zip(f.league,f.season,f.week,f.fixture_id))
+    @assert all(fixturekeys(t.frame)==fixturekeys(first(tasks).frame) for t in tasks)
     for task in tasks
         channels=task.goal ? ("joint","total","allocation") : ("joint",)
         for bootstrap in ("ordinary_A1","circular"),L in (4,8,12)
@@ -83,7 +85,7 @@ function r11()
                 end
                 # Audit each original week: same inclusion multiplier for all its fixtures.
                 for season in unique(g.season)
-                    weeks=unique(g.week[g.season.==season]);nt=length(weeks)
+                    weeks=unique(g.week[g.season.==season]);@assert issorted(weeks);nt=length(weeks)
                     for (j,w) in enumerate(weeks)
                         ii=findall((g.season.==season).&(g.week.==w))
                         @assert all(counts[ii].==first(counts[ii]))
