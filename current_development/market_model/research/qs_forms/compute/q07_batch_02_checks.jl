@@ -1,0 +1,49 @@
+# Final artifact and source-preservation checks, without recomputation.
+function final_checks()
+    manifest=CSV.read(joinpath(OUT,"manifest.csv"),DF.DataFrame;stringtype=String)
+    latest=Dict{String,Int}()
+    for i in 1:DF.nrow(manifest)
+        r=manifest[i,:]
+        ismissing(r.path)||isempty(r.path)|| (latest[r.path]=i)
+    end
+    countout=0;countin=0
+    for (path,i) in latest
+        r=manifest[i,:];@assert isfile(path)
+        @assert sha(path)==r.sha256 "final artifact/source hash mismatch: $path"
+        if r.kind in ("committed_output","beast_only_output")
+            f=CSV.read(path,DF.DataFrame;stringtype=String);@assert DF.nrow(f)==r.n_rows
+            countout+=1
+        elseif r.kind=="input"
+            countin+=1
+        end
+    end
+    id=CSV.read(joinpath(OUT,"projection_identity.csv"),DF.DataFrame)
+    checked=DF.filter(r->r.identity!="R05_subset_deviation_from_complete_identity",id)
+    @assert all(checked.max_abs_error.<=1e-10)
+    @assert count(==("C0_design_common_loading_zero"),id.identity)==11
+    hp=CSV.read(joinpath(OUT,"horizon_reproduction.csv"),DF.DataFrame)
+    @assert all(==( "PASS"),hp.status)
+    sp=CSV.read(joinpath(OUT,"score_reproduction.csv"),DF.DataFrame)
+    @assert maximum(sp.abs_error)<=1e-10
+    sr=CSV.read(joinpath(OUT,"score_robustness.csv"),DF.DataFrame;stringtype=String)
+    @assert all(sr.B[sr.bootstrap.=="circular"].==1999)
+    @assert Set(sr.L)==Set([4,8,12])
+    @assert all(isfinite,sr.point)&&all(isfinite,sr.boot_mean)
+    for g in DF.groupby(DF.filter(:source=>==("R07"),sr),[:league,:weighting,:method,:comparison,:bootstrap,:L])
+        @assert DF.nrow(g)==3
+        for col in (:point,:boot_mean)
+            get(c)=only(g[g.channel.==c,col])
+            @assert abs(get("joint")-get("total")-get("allocation"))<=1e-10
+        end
+    end
+    mem=CSV.read(joinpath(OUT,"scottish_tier_membership.csv"),DF.DataFrame;stringtype=String)
+    @assert all(mem.n_draws[mem.window.=="full_season"].==128)
+    @assert all(mem.n_draws[mem.window.=="null_suffix"].==0)
+    @assert all(ismissing,mem.prob_upper_group[mem.window.=="null_suffix"])
+    text=read(joinpath(OUT,"SUMMARY.md"),String)
+    for request in ("R09","R10","R11","R12")
+        section=match(Regex("(?ms)^## $request\\n(.*?)(?=^## |\\z)"),text)
+        @assert section!==nothing&&length(filter(!isempty,split(strip(section.captures[1]),'\n')))<=10
+    end
+    verify("final_checks","PASS$countout output hashes/row counts; $countin immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, suffix posterior explicitly unavailable; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.")
+end

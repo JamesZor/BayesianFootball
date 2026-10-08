@@ -1,0 +1,47 @@
+league,axis,identity,max_abs_error,estimator,status
+eng_premier,q,offdiag_product_equals_negative_energy,2.541098841762901e-20,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+eng_premier,q,offdiag_temporal_cov_equals_negative_trace,0.0,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+eng_premier,q,R05_subset_deviation_from_complete_identity,0.0003302926451398467,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+eng_premier,s,offdiag_product_equals_negative_energy,2.541098841762901e-21,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+eng_premier,s,offdiag_temporal_cov_equals_negative_trace,0.0,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+eng_premier,s,R05_subset_deviation_from_complete_identity,0.00018462636686578465,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+sco_league_two,q,offdiag_product_equals_negative_energy,5.421010862427522e-20,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+sco_league_two,q,offdiag_temporal_cov_equals_negative_trace,3.3881317890172014e-21,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+sco_league_two,q,R05_subset_deviation_from_complete_identity,0.0005876984257986596,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+sco_league_two,s,offdiag_product_equals_negative_energy,5.293955920339377e-22,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+sco_league_two,s,offdiag_temporal_cov_equals_negative_trace,1.0587911840678754e-22,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+sco_league_two,s,R05_subset_deviation_from_complete_identity,7.425215134999762e-6,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+sco_premiership,q,offdiag_product_equals_negative_energy,1.0164395367051604e-20,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+sco_premiership,q,offdiag_temporal_cov_equals_negative_trace,8.470329472543003e-22,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+sco_premiership,q,R05_subset_deviation_from_complete_identity,9.883599349177847e-5,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+sco_premiership,s,offdiag_product_equals_negative_energy,6.352747104407253e-22,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+sco_premiership,s,offdiag_temporal_cov_equals_negative_trace,1.0587911840678754e-22,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+sco_premiership,s,R05_subset_deviation_from_complete_identity,1.9057038611989823e-5,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+fin_veikkausliiga,q,offdiag_product_equals_negative_energy,2.371692252312041e-20,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+fin_veikkausliiga,q,offdiag_temporal_cov_equals_negative_trace,1.6940658945086007e-21,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+fin_veikkausliiga,q,R05_subset_deviation_from_complete_identity,0.0005605479140239326,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+fin_veikkausliiga,s,offdiag_product_equals_negative_energy,4.235164736271502e-21,complete fixed-roster vector each week,"PASS; redundant centered energy, not evidence of common shocks"
+fin_veikkausliiga,s,offdiag_temporal_cov_equals_negative_trace,4.235164736271502e-22,common weekly rows; sample covariance with temporal demeaning,PASS; sum-zero covariance identity
+fin_veikkausliiga,s,R05_subset_deviation_from_complete_identity,5.638663191616711e-5,R05 pair/appearance selection,DESCRIPTIVE; selected subset is not sum-zero; pairwise covariance uses different rows and temporal demeaning
+eng_premier,s,C0_design_common_loading_zero,4.0939474033052647e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_premier,s,C0_filtered_common_mean_equals_prior,1.2434497875801752e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_championship,s,C0_design_common_loading_zero,2.220446049250313e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_championship,s,C0_filtered_common_mean_equals_prior,2.432577948598334e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_league_one,s,C0_design_common_loading_zero,1.096345236817342e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_league_one,s,C0_filtered_common_mean_equals_prior,4.024719833891865e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_league_two,s,C0_design_common_loading_zero,8.257283745649602e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+eng_league_two,s,C0_filtered_common_mean_equals_prior,1.1809997424450102e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_premiership,s,C0_design_common_loading_zero,4.718447854656915e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_premiership,s,C0_filtered_common_mean_equals_prior,5.703770789011742e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_championship,s,C0_design_common_loading_zero,2.914335439641036e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_championship,s,C0_filtered_common_mean_equals_prior,2.452286739686743e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_league_one,s,C0_design_common_loading_zero,3.0531133177191805e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_league_one,s,C0_filtered_common_mean_equals_prior,2.324355985461324e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_league_two,s,C0_design_common_loading_zero,2.220446049250313e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+sco_league_two,s,C0_filtered_common_mean_equals_prior,5.038861484925572e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+irl_premier,s,C0_design_common_loading_zero,6.661338147750939e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+irl_premier,s,C0_filtered_common_mean_equals_prior,2.1133888290186014e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+irl_first_division,s,C0_design_common_loading_zero,2.220446049250313e-16,full-roster C0 10b; all weeks,PASS; prior-only common mode
+irl_first_division,s,C0_filtered_common_mean_equals_prior,3.928801728392273e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode
+fin_veikkausliiga,s,C0_design_common_loading_zero,0.0,full-roster C0 10b; all weeks,PASS; prior-only common mode
+fin_veikkausliiga,s,C0_filtered_common_mean_equals_prior,1.932481952238163e-15,full-roster C0 10b; all weeks,PASS; prior-only common mode

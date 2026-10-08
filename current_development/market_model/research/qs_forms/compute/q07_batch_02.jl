@@ -88,4 +88,5 @@ include("q07_batch_02_projection.jl")
 include("q07_batch_02_horizons.jl")
 include("q07_batch_02_scores.jl")
 include("q07_batch_02_tiers.jl")
+include("q07_batch_02_checks.jl")
 end
