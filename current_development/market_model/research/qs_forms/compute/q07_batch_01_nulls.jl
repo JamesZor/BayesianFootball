@@ -74,7 +74,7 @@ function motion_statistics(league,p,X,theta,cutoff)
     for axis in ("q","s")
         energies=NamedTuple[];lagx,lagy=Float64[],Float64[];driftx,drifty=Float64[],Float64[]
         variograms=Dict(h=>Float64[] for h in (1,2,4,8,13))
-        weekly=NamedTuple[];gaplist=NamedTuple[]
+        weekly=NamedTuple[];offdiagonal_covariances=Float64[]
         for season in unique(p.obs_season)
             d=season_design(p,season);elig=eligibility(p,d,season)
             z=getproperty(centered_axes(p,X,d),Symbol(axis));q=centered_axes(p,X,d).q
@@ -101,6 +101,12 @@ function motion_statistics(league,p,X,theta,cutoff)
             for h in keys(variograms),i in eachindex(d.active),t in 1:length(d.weeks)-h
                 d.weeks[t]>cutoff && all(elig[i,t:t+h]) || continue
                 push!(variograms[h],(z[i,t+h]-z[i,t])^2)
+            end
+            for i in 1:length(d.active), j in i+1:length(d.active)
+                valid=[t for t in 2:length(d.weeks) if d.weeks[t-1]>cutoff&&elig[i,t]&&elig[i,t-1]&&elig[j,t]&&elig[j,t-1]]
+                length(valid)>=3 || continue
+                dx=[z[i,t]-z[i,t-1] for t in valid];dy=[z[j,t]-z[j,t-1] for t in valid]
+                push!(offdiagonal_covariances,ST.cov(dx,dy))
             end
             for (i,team) in enumerate(d.active)
                 appeared=findall(elig[i,:])
@@ -135,6 +141,18 @@ function motion_statistics(league,p,X,theta,cutoff)
         stable=filter(r->!ismissing(r.energy_first)&&!ismissing(r.energy_second),teamaxis)
         push!(vol,(;axis,stratum="all",statistic="cross_team_energy_CV",n=length(means),value=length(means)>1&&ST.mean(means)>0 ? ST.std(means)/ST.mean(means) : missing))
         push!(vol,(;axis,stratum="all",statistic="team_first_second_energy_spearman",n=length(stable),value=spearman([r.energy_first for r in stable],[r.energy_second for r in stable])))
+        for season in unique(energy.season)
+            sg=DF.filter(:season=>==(season),energy)
+            mid=sg.energy[sg.phase.=="middle"]
+            for phase in ("early","middle","late")
+                vals=sg.energy[sg.phase.==phase]
+                push!(vol,(;axis,stratum="$(season):$phase",statistic="phase_energy_ratio_to_middle",n=length(vals),value=isempty(vals)||isempty(mid)||ST.mean(mid)==0 ? missing : ST.mean(vals)/ST.mean(mid)))
+            end
+            tr=filter(r->r.axis==axis&&r.season==season,teamrows)
+            av=[r.energy_all for r in tr];sr=filter(r->!ismissing(r.energy_first)&&!ismissing(r.energy_second),tr)
+            push!(vol,(;axis,stratum=season,statistic="cross_team_energy_CV",n=length(av),value=length(av)>1&&ST.mean(av)>0 ? ST.std(av)/ST.mean(av) : missing))
+            push!(vol,(;axis,stratum=season,statistic="team_first_second_energy_spearman",n=length(sr),value=spearman([r.energy_first for r in sr],[r.energy_second for r in sr])))
+        end
         middle=energy.energy[energy.phase.=="middle"]
         for phase in ("early","middle","late")
             vals=energy.energy[energy.phase.==phase]
@@ -156,6 +174,7 @@ function motion_statistics(league,p,X,theta,cutoff)
         end
         push!(vol,(;axis,stratum="all",statistic="weekly_mean_energy_lag1_correlation",n=length(xx),value=safe_cor(xx,yy)))
         push!(vol,(;axis,stratum="all",statistic="mean_offdiagonal_centered_step_product",n=length(collect(skipmissing(wf.offdiag))),value=mean_available(wf.offdiag)))
+        push!(vol,(;axis,stratum="all",statistic="mean_offdiagonal_centered_step_covariance",n=length(offdiagonal_covariances),value=mean_available(offdiagonal_covariances)))
         for season in unique(energy.season)
             g=DF.filter(:season=>==(season),energy)
             cuts=ST.quantile(g.prior_abs_q,[1/3,2/3])
@@ -274,8 +293,8 @@ function r05()
     end
     output("R05","large_move_books.csv",books);save_null_stats!(nullrows)
     lines=["COMPLETE. [volatility_screen.csv](volatility_screen.csv), [team_energy.csv](team_energy.csv), [large_moves.csv](large_moves.csv), [large_move_books.csv](large_move_books.csv), [appearance_gaps.csv](appearance_gaps.csv). All observed suffixes, same99 conditional nulls on sentinels; gaps never labelled transfer windows."]
-    for stat in ("team_first_second_energy_spearman","cross_team_energy_CV","top5pct_energy_share","weekly_mean_energy_lag1_correlation","mean_offdiagonal_centered_step_product")
-        g=DF.filter(r->r.league in SENTINELS&&r.statistic==stat,result)
+    for stat in ("team_first_second_energy_spearman","cross_team_energy_CV","top5pct_energy_share","weekly_mean_energy_lag1_correlation","mean_offdiagonal_centered_step_covariance")
+        g=DF.filter(r->r.league in SENTINELS&&r.statistic==stat&&r.stratum=="all",result)
         push!(lines,"$stat: "*join(["$(r.league)/$(r.axis) $(round(r.value;digits=3)) (rank=$(r.null_rank))" for r in eachrow(g) if !ismissing(r.value)],"; ")*".")
     end
     push!(lines,"Calendar ratios and prior-|q| tertiles are retained per axis/season in volatility_screen; nulls condition on estimated theta and selected books, so none separates inversion noise/selection from football shocks. Available book diagnostics are KL/selection count/optimizer-start spread, not quote age or exchange depth.")

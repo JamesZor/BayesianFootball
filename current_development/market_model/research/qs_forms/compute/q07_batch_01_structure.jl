@@ -59,8 +59,9 @@ function r08()
         name=string(nameof(typeof(segment)));name in seen&&continue;push!(seen,name)
         path=joinpath(dirname(dirname(P)),".cache","datastore_$(name).jls")
         ds=Serialization.deserialize(path)
-        for field in (:matches,:odds,:betfair_odds)
+        for field in propertynames(ds)
             table=getproperty(ds,field)
+            table isa DF.AbstractDataFrame || continue
             for col in names(table)
                 push!(columnrows,(;snapshot=name,table=String(field),column=col,n_rows=DF.nrow(table)))
             end
@@ -74,8 +75,11 @@ function r08()
     @assert all(any(r->r.snapshot==snapshot&&r.table=="betfair_odds"&&r.column=="timestamp",columnrows) for snapshot in seen)
     push!(inventory,(;field="archive_trade_timestamps",source="pinned DataStore.betfair_odds:timestamp,minutes_to_kickoff",present=true,unit="UTC DateTime/minutes",coverage="all5 pinned snapshots",limitation="archived traded-price sample timestamps, not executable quote ages"))
     push!(inventory,(;field="market_family_trade_price_history",source="pinned DataStore.betfair_odds:market_name,market_line,selection,traded_price,timestamp",present=true,unit="decimal traded price by sampled timestamp",coverage="all5 pinned snapshots; raw field inventory in snapshot_columns.csv",limitation="sampled trade-price histories can be inventoried; no bid/ask quote-event history or order-book age, so quote-level asynchronous repricing is not identified"))
-    for field in ("quote_timestamps_or_age","quote_update_history","exchange_depth","exchange_bid_ask_spread","stable_team_id")
-        push!(inventory,(;field,source="saved rates/configs/coverage and snapshot_columns.csv",present=false,unit="NOT_AVAILABLE",coverage="no verified field with these semantics",limitation=field=="stable_team_id" ? "panel/cached matches carry team slugs, no team IDs; no independent identity catalogue" : "fixture date and inversion start_spread are NOT quote age/bid-ask spread; asynchronous repricing NOT_IDENTIFIABLE"))
+    teamids=[r for r in columnrows if r.column in ("team_id","home_team_id","away_team_id","sofascore_team_id")]
+    idreason=isempty(teamids) ? "no stable IDs in any cached table; team slugs not independently verified, no fuzzy joins" : "ID fields exist outside the panel; no validated role-to-stable-ID identity join available in this batch"
+    push!(inventory,(;field="stable_team_id",source="all cached tables in snapshot_columns.csv",present=!isempty(teamids),unit="provider identity if present",coverage=isempty(teamids) ? "none" : join(unique([r.snapshot*"/"*r.table*"/"*r.column for r in teamids]),";"),limitation=idreason))
+    for field in ("quote_timestamps_or_age","quote_update_history","exchange_depth","exchange_bid_ask_spread")
+        push!(inventory,(;field,source="saved rates/configs/coverage and snapshot_columns.csv",present=false,unit="NOT_AVAILABLE",coverage="no verified field with these semantics",limitation="fixture date and inversion start_spread are NOT quote age/bid-ask spread; asynchronous quote repricing NOT_IDENTIFIABLE"))
     end
     output("R08","field_inventory.csv",inventory)
     coverage=CSV.read(joinpath(Q,"coverage_by_league.csv"),DF.DataFrame;stringtype=String)
@@ -107,13 +111,13 @@ function r08()
     # Cannot independently verify names as identities without stable IDs/catalogue in these snapshots.
     movers=DF.DataFrame(country=String[],team_id=String[],from_league=String[],to_league=String[],from_season=String[],to_season=String[],quantity=String[],q05=Float64[],median=Float64[],q95=Float64[],status=String[])
     output("R08","division_movers.csv",movers)
-    output("R08","mover_summary.csv",[(;country,n=0,quantity="verified_movers",value=missing,status="NOT_AVAILABLE: no stable IDs in panel/cached match table; exact names not independently verified, no fuzzy joins") for country in ("England","Scotland","Ireland")])
+    output("R08","mover_summary.csv",[(;country,n=0,quantity="verified_movers",value=missing,status="NOT_AVAILABLE: "*idreason) for country in ("England","Scotland","Ireland")])
     lines=["PARTIAL. [league_structure.csv](league_structure.csv), [field_inventory.csv](field_inventory.csv), [market_confounding.csv](market_confounding.csv), [market_field_correlations.csv](market_field_correlations.csv), [mover_summary.csv](mover_summary.csv). 12000 independent matched posterior permutations/league; uncertainty is fit uncertainty for these11, not population sampling."]
     for protocol in PROTOCOLS
         g=filter(r->r.rung=="C0"&&r.protocol==protocol&&r.quantity in ("SD_log_r","OLS_log_r_on_tier","England_tier_slope","Scotland_tier_slope","Ireland_tier_slope"),rows)
         push!(lines,"C0/$protocol "*join(["$(r.quantity)=$(round(r.median;digits=3)) [$(round(r.q05;digits=3)),$(round(r.q95;digits=3))]; LOO=$(ismissing(r.leave_one_out_min) ? "NA" : round(r.leave_one_out_min;digits=3)):$(ismissing(r.leave_one_out_max) ? "NA" : round(r.leave_one_out_max;digits=3))" for r in g],"; ")*".")
     end
     push!(lines,"Saved overround quantiles, inversion KL, selection/market counts, family presence AND archived trade-price timestamps/histories are available; overround aggregation is explicitly a weighted mean of season medians. Archive trade samples are not executable quote ages/update events; start_spread is optimizer dispersion, not bid-ask spread. σ_obs is not liquidity.")
-    push!(lines,"Quote-level asynchronous repricing is NOT_IDENTIFIABLE without executable quote ages/update histories; archived trade-price timestamps exist but are not a timed/quality-matched quote test. No causal sharpness/football separation. Stable team IDs are absent from cached match/panel tables and names cannot independently be verified: zero verified mover records, NOT_AVAILABLE, not evidence of no movers. No absolute division offset or <5-mover correlation.")
+    push!(lines,"Quote-level asynchronous repricing is NOT_IDENTIFIABLE without executable quote ages/update histories; archived trade-price timestamps exist but are not a timed/quality-matched quote test. No causal sharpness/football separation. Movers: $idreason; zero independently verified records, NOT_AVAILABLE, not evidence of no movers. No absolute division offset or <5-mover correlation.")
     summary!("R08",lines);verification("R08","PASS all12000 theta draws retained per fit; fixed independent league permutations preserve matched r/σ_obs; available field units/limits documented, no network or SQL. Movers explicitly NOT_AVAILABLE. Runtime=$(time()-started)s; invocation Q07.r08().");flush_manifest!()
 end
