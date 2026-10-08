@@ -19,3 +19,6 @@ PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohor
 
 ## R05
 PASS reuses R04 exact99 paths; actual sigma_q/s² per calendar step; fixed-cohort centering; steps/gaps separated. Runtime=52.45690202713013s; invocation Q07.r05().
+
+## R06
+PASS C0 suffix statistics reuse99 shared conditional panels; full-season FFBS kept separate; same teams/window in observed/null; largest gap fixed once per season, side labels may align across seasons without searching gaps. Runtime=50.89862394332886s; invocation Q07.r06().

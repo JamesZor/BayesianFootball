@@ -50,3 +50,12 @@ weekly_mean_energy_lag1_correlation: eng_premier/q 0.535 (rank=0.98); eng_premie
 mean_offdiagonal_centered_step_covariance: eng_premier/q -0.0 (rank=0.01); eng_premier/s -0.0 (rank=1.0); sco_premiership/q -0.0 (rank=0.04); sco_premiership/s -0.0 (rank=1.0); sco_league_two/q -0.0 (rank=0.12); sco_league_two/s -0.0 (rank=0.99); fin_veikkausliiga/q -0.0 (rank=0.01); fin_veikkausliiga/s -0.0 (rank=1.0).
 Calendar ratios and prior-|q| tertiles are retained per axis/season in volatility_screen; nulls condition on estimated theta and selected books, so none separates inversion noise/selection from football shocks. Available book diagnostics are KL/selection count/optimizer-start spread, not quote age or exchange depth.
 
+
+## R06 —
+COMPLETE descriptive screen. [nonlinear_levels.csv](nonlinear_levels.csv), [tier_gaps.csv](tier_gaps.csv). Full-season posterior geometry remains separate from matched-null suffix point means. 128 paths per fit, never paths-as-extra-teams; LOTO deltas are quadratic minus comparator per team (negative is better).
+Three largest C0 FFBS |curvature|: irl_first_division/2022 c=0.0367 [0.0242,0.051]; sco_championship/24/25 c=0.0343 [0.0282,0.0395]; irl_first_division/2021 c=-0.0305 [-0.0459,-0.0173].
+eng_premier gap/IQR; rank; next-season shared/same-side: 22/23 0.51;0.34;17/0.882; 23/24 0.808;0.63;17/0.824; 24/25 0.604;0.47;17/0.882; 25/26 0.603;0.41;0/NA.
+sco_league_two gap/IQR; rank; next-season shared/same-side: 21/22 2.298;0.82;6/0.833; 22/23 0.776;0.46;7/0.857; 23/24 0.55;0.19;7/0.571; 24/25 0.791;0.44;6/1.0; 25/26 1.074;0.69;0/NA.
+sco_premiership gap/IQR; rank; next-season shared/same-side: 21/22 1.701;0.9;11/1.0; 22/23 2.247;0.98;11/1.0; 23/24 2.798;1.0;11/1.0; 24/25 2.05;0.98;10/0.9; 25/26 0.565;0.29;0/NA.
+fin_veikkausliiga gap/IQR; rank; next-season shared/same-side: 2021 1.021;0.78;11/0.818; 2022 0.379;0.06;11/0.636; 2023 0.686;0.45;10/0.8; 2024 0.505;0.25;10/0.6; 2025 0.298;0.02;0/NA.
+R6/full-season curvature and both LOTO changes retained per season; consistent signs/rung sensitivity must be read jointly, not selected by largest magnitude. Null gap ranks do not establish persistent tiers; tiny n (8–24) limits shape inference. R05 prior-|q| energy is the radial screen, with no new fit.
