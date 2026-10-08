@@ -34,22 +34,23 @@ Q07.flush_manifest!()
 # 3. Request selection (call later requests explicitly after their gates)
 # ===================================================================
 q07_request=get(ENV,"QSF_REQUEST","R01")
-q07_log="/root/BF_runs/logs/market_model_qsf/$(lowercase(q07_request)).log"
-Q07.record!(q07_request,"code","loader",joinpath(@__DIR__,"q07_batch_01.jl");
-    detail="git="*strip(read(`git -C $(Q07.P) rev-parse HEAD`,String))*"; ENV[QSF_REQUEST]=$q07_request; include(r07_batch_01.jl); owned pane=%304; threads16; BLAS1")
-Q07.flush_manifest!()
-open(q07_log,"w") do io
-    println(io,"RUN $q07_request via r07_batch_01.jl; 16 threads, BLAS1")
-    redirect_stdout(io) do
-        redirect_stderr(io) do
-            try
-                getfield(Q07,Symbol(lowercase(q07_request)))()
-            catch err
-                showerror(io,err,catch_backtrace());println(io);flush(io)
-                rethrow()
-            end
+function q07_execute_request(mod,request)
+    logfile="/root/BF_runs/logs/market_model_qsf/$(lowercase(request)).log"
+    commit=strip(read(`git -C $(mod.P) rev-parse HEAD`,String))
+    mod.record!(request,"code","loader",joinpath(@__DIR__,"q07_batch_01.jl");
+        detail="git=$commit; ENV[QSF_REQUEST]=$request; include(r07_batch_01.jl); owned pane=%304; threads16; BLAS1")
+    mod.flush_manifest!()
+    # Explicit stream logging avoids stale redirected stdout bindings after Julia 1.12 reloads.
+    open(logfile,"w") do io
+        println(io,"RUN $request git=$commit via r07_batch_01.jl; threads16 BLAS1");flush(io)
+        try
+            Base.invokelatest(getfield(mod,Symbol(lowercase(request))))
+        catch err
+            showerror(io,err,catch_backtrace());println(io);flush(io)
+            rethrow()
         end
+        println(io,"R07_BATCH_01_DONE");flush(io)
     end
-    println(io,"R07_BATCH_01_DONE");flush(io)
 end
+Base.invokelatest(q07_execute_request,QSFormsBatch01,q07_request)
 println("R07_BATCH_01_DONE")
