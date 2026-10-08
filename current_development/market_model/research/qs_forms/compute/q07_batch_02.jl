@@ -81,7 +81,7 @@ end
 meanof(x)=isempty(x) ? missing : ST.mean(x)
 function rawaxes(p,X,d)
     N=MID.n_teams(p)
-    a,b=X[2 .+d.ix,d.weeks],X[2+N .+d.ix,d.weeks]
+    a,b=X[2 .+ d.ix,d.weeks],X[(2+N) .+ d.ix,d.weeks]
     (;q=(a-b)/2,s=(a+b)/2)
 end
 include("q07_batch_02_projection.jl")

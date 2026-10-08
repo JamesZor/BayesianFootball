@@ -117,8 +117,8 @@ function r12()
     output("R12","tier_window_audit.csv",audit)
     lines=["PARTIAL: scottish_tier_membership.csv, scottish_tier_robustness.csv, tier_window_audit.csv. Exactly128 full-season path means/rung; posterior suffix membership unavailable because weekly FFBS paths were not saved. Median RTS full/suffix and99 existing C0 nulls matched exactly; old gaps/persistence reproduce≤1e−10."]
     for rung in ("C0","R6")
-        g=filter(r->r.rung==rung&&r.quantity=="posterior_named",rows)
-        push!(lines,"$rung P(upper group exactly Celtic+Rangers), post-selected: "*join(["$(r.season_or_pair) $(r.median)" for r in g],"; ")*"; membership probabilities and group-size/gap quantiles in tables.")
+        g=[only(unique([r.prob_named_pair_only for r in membership if r.rung==rung&&r.season==season&&r.window=="full_season"])) for season in seasons]
+        push!(lines,"$rung P(upper group exactly Celtic+Rangers), post-selected: "*join(["$(season) $(prob)" for (season,prob) in zip(seasons,g)],"; ")*"; membership probabilities and group-size/gap quantiles in tables.")
     end
     g=filter(r->r.rung=="C0"&&r.window=="full_season"&&r.quantity in ("posterior_jaccard","posterior_ARI"),rows)
     push!(lines,"C0 shared-team persistence posterior median[5%,95%]: "*join(["$(r.season_or_pair) $(r.quantity) $(r.median)[$(r.q05),$(r.q95)]" for r in g],"; ")*". Same-side retained only as original majority statistic; trivial shared partitions not rewarded.")

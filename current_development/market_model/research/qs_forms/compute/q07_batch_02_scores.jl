@@ -59,9 +59,8 @@ function r11()
                 ix=bootstrap=="ordinary_A1" ? A.bootstrap_indices(g;block=L,rng=Random.Xoshiro(derived)) : circular_indices(g;L,rng=Random.Xoshiro(derived))
                 @assert length(ix)==B
                 record!("R11","seed","";detail="$(task.source)/$(task.comparison)/$league/$bootstrap/L$L: $derived; B=$B; circular shared starts across comparisons/channels")
-                counts=zeros(Int,DF.nrow(g));for ids in ix;counts[ids].+=1;end
-                # Vector indexed assignment has duplicate-index semantics: count each occurrence explicitly.
-                fill!(counts,0);for ids in ix,i in ids;counts[i]+=1;end
+                # Count every occurrence explicitly, including duplicates within a resample.
+                counts=zeros(Int,DF.nrow(g));for ids in ix,i in ids;counts[i]+=1;end
                 den=length.(ix);T=sum(length(unique(s.week)) for s in DF.groupby(g,:season))
                 low=any(length(unique(s.week))<2L for s in DF.groupby(g,:season))
                 status=low ? "LOW_SUPPORT: stratum T<2L; circular assumes approximate within-season stationarity" : "OK; circular assumes approximate within-season stationarity"
@@ -133,6 +132,11 @@ function r11()
         g=filter(r->r.league==league&&r.comparison=="full_minus_no_style"&&r.channel=="total"&&r.bootstrap=="circular",rows)
         push!(lines,"$league style total point=$(first(g).point); circular L/pct "*join(["$(r.L) [$(r.percentile_q05),$(r.percentile_q95)]" for r in g],"; ")*". "*first(g).status)
     end
+    eq=filter(r->r.comparison=="C0_minus_R6"&&r.league=="ALL"&&r.channel=="joint",rows)
+    allocweeks=filter(r->r.comparison=="full_minus_no_style"&&r.channel=="allocation"&&r.bootstrap=="ordinary_A1"&&r.L==8,audit)
+    boundary=sum(r.score_sum for r in allocweeks if r.region!="interior")
+    boundaryweighted=sum(r.mean_multiplicity*r.score_sum for r in allocweeks if r.region!="interior")
+    push!(lines,"Pooled C0−R6 joint 90% percentile/basic intervals all methods/L/weightings inside±.005: $(all(r->minimum((r.percentile_q05,r.basic_lo))>=-.005&&maximum((r.percentile_q95,r.basic_hi))<=.005,eq)); not leaguewise equivalence. OrdinaryL8 style allocation boundary raw score sum=$boundary versus inclusion-weighted=$boundaryweighted; circular tiny-allocation conclusions remain subject to A1 MC sensitivity.")
     summary!("R11",lines)
     verify("R11","PASS unique exact paired fixture intersections; original points and999 ordinary percentiles≤1e−10;1999 circular draws/L, exactly T resampled weeks/stratum; joint=total+allocation per fixture and replicate≤1e−10; multiplicities identical within week. Derived seeds recorded. Circular sensitivity assumes stationarity; never used to create lag pairs. R09 comparisons explicitly unavailable; existing integrated MC sensitivity not recomputed or dismissed.")
 end
