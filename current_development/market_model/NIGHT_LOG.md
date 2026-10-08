@@ -265,8 +265,14 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - **Finding:** the synthetic recovery overwrote `newton_termination.csv` in the canonical
     eng_premier and sco_league_two fit folders, on the beast only. Counts are all zero; the
     committed copies are the originals.
-- **2026-10-08 ~14:50: quality/style formulation research launched** (human's request).
+- **2026-10-08 ~14:36: quality/style formulation research launched** (human's request).
   - **Thinker:** pi `gpt-6-astra` (5× the Sol cost; the human chose "Astra thinks, Sol computes"),
     pane `%98`.
   - **Computer:** gpt-6.1-sol, launched per request batch.
   - **Branch** `pi/market-model-qs-forms` (worktree `…-pi-qsf`) off `c8c17167`. Briefs: `d804b338`.
+- **2026-10-08 14:48: Astra handed over batch 01** (`cf9ec2a2`): THEORY.md and 8 requests, R01–R08, at about
+  29 credits so far.
+  - The manager checked feasibility: everything stays within saved draws, FFBS/RTS and fixed-θ
+    simulation; no new MCMC.
+  - **14:52: Sol computer launched** (`gpt-6.1-sol`, thinking high, because the conditional FFBS and
+    mixture scoring count as modelling), pane `%99`.
