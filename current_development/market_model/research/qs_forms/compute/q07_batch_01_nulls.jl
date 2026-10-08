@@ -81,7 +81,7 @@ function motion_statistics(league,p,X,theta,cutoff)
             eligible_steps=0;excluded_steps=0
             for i in eachindex(d.active),t in 2:length(d.weeks)
                 w=d.weeks[t]
-                w>cutoff || continue
+                w-1>cutoff || continue
                 if elig[i,t]&&elig[i,t-1]
                     delta=z[i,t]-z[i,t-1]
                     u=(w-first(d.weeks))/(last(d.weeks)-first(d.weeks))
@@ -197,7 +197,12 @@ end
 function save_null_stats!(rows)
     path=joinpath(OUT,"null_statistics.csv")
     old=isfile(path) ? CSV.read(path,DF.DataFrame;stringtype=String) : DF.DataFrame()
-    output("R04-R06","null_statistics.csv",vcat(old,DF.DataFrame(rows);cols=:union))
+    frame=vcat(old,DF.DataFrame(rows);cols=:union)
+    lastrow=Dict{Tuple,Int}()
+    for i in 1:DF.nrow(frame)
+        r=frame[i,:];lastrow[(r.league,r.replicate,r.request,r.axis,r.stratum,r.statistic)]=i
+    end
+    output("R04-R06","null_statistics.csv",frame[sort(collect(values(lastrow))),:])
 end
 function r04()
     started=time();rows,nullrows,exclusions=NamedTuple[],NamedTuple[],NamedTuple[]

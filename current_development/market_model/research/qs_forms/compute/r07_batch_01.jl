@@ -35,12 +35,21 @@ Q07.flush_manifest!()
 # ===================================================================
 q07_request=get(ENV,"QSF_REQUEST","R01")
 q07_log="/root/BF_runs/logs/market_model_qsf/$(lowercase(q07_request)).log"
+Q07.record!(q07_request,"code","loader",joinpath(@__DIR__,"q07_batch_01.jl");
+    detail="git="*strip(read(`git -C $(Q07.P) rev-parse HEAD`,String))*"; ENV[QSF_REQUEST]=$q07_request; include(r07_batch_01.jl); owned pane=%304; threads16; BLAS1")
+Q07.flush_manifest!()
 open(q07_log,"w") do io
+    println(io,"RUN $q07_request via r07_batch_01.jl; 16 threads, BLAS1")
     redirect_stdout(io) do
         redirect_stderr(io) do
-            getfield(Q07,Symbol(lowercase(q07_request)))()
-            println("R07_BATCH_01_DONE")
+            try
+                getfield(Q07,Symbol(lowercase(q07_request)))()
+            catch err
+                showerror(io,err,catch_backtrace());println(io);flush(io)
+                rethrow()
+            end
         end
     end
+    println(io,"R07_BATCH_01_DONE");flush(io)
 end
 println("R07_BATCH_01_DONE")

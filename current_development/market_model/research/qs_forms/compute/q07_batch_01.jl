@@ -31,14 +31,22 @@ function flush_manifest!()
     mkpath(OUT)
     path = joinpath(OUT, "manifest.csv")
     old = isfile(path) ? CSV.read(path, DF.DataFrame; stringtype=String) : DF.DataFrame()
-    CSV.write(path, unique(vcat(old, DF.DataFrame(MANIFEST); cols=:union)))
+    frame=vcat(old,DF.DataFrame(MANIFEST);cols=:union)
+    lastrow=Dict{Tuple,Int}()
+    for i in 1:DF.nrow(frame)
+        r=frame[i,:]
+        kind=endswith(r.kind,"output") ? "output" : r.kind
+        lastrow[(r.request,kind,r.name,r.path,r.kind=="code" ? r.detail : "")]=i
+    end
+    CSV.write(path,frame[sort(collect(values(lastrow))),:])
     empty!(MANIFEST)
 end
 function output(request, name, rows)
     frame = rows isa DF.AbstractDataFrame ? rows : DF.DataFrame(rows)
     path = joinpath(OUT, name)
     CSV.write(path, frame)
-    record!(request, filesize(path)>5_000_000 ? "beast_only_output" : "committed_output",
+    bulk=name in ("geometry_draws.csv","level_geometry_draws.csv","team_season_path_means.csv","null_statistics.csv")
+    record!(request, bulk||filesize(path)>5_000_000 ? "beast_only_output" : "committed_output",
         name, path; n=DF.nrow(frame), columns=join(names(frame), ";"), detail="CSV; unavailable values blank")
     return frame
 end
@@ -106,16 +114,24 @@ function verification(request, text)
     open(joinpath(OUT,"VERIFICATION.md"),"a") do io
         println(io,"\n## $request\n",text)
     end
+    mkpath(joinpath(OUT,"logs"))
+    open(joinpath(OUT,"logs","checks.log"),"a") do io
+        println(io,"CHECK $request ",text)
+    end
+    open("/root/BF_runs/logs/market_model_qsf/checks.log","a") do io
+        println(io,"CHECK $request ",text)
+    end
     println("CHECK $request ", text)
     flush(stdout)
 end
 function summary!(request, lines)
     path = joinpath(OUT,"SUMMARY.md")
     text = isfile(path) ? read(path,String) : "# Batch 01 results\n\nInput/output hashes, exact roots, row counts and seeds: [manifest.csv](manifest.csv).\nLarge tables remain on the beast, per manager instruction. Units: natural-log rates, calendar weeks, nats.\n"
-    @assert !occursin("## $request —",text)
-    open(path,"w") do io
-        print(io,text,"\n## $request —\n",join(lines,"\n"),"\n")
-    end
+    @assert length(lines)<=10
+    section="## $request —\n"*join(lines,"\n")*"\n"
+    pattern=Regex("(?ms)^## $request —\\n.*?(?=^## |\\z)")
+    text=occursin(pattern,text) ? replace(text,pattern=>section*"\n") : text*"\n"*section
+    write(path,text)
 end
 function r01()
     mkpath(OUT)
@@ -654,5 +670,6 @@ include(joinpath(@__DIR__, "q07_batch_01_nulls.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_levels.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_goals.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_structure.jl"))
+include(joinpath(@__DIR__, "q07_batch_01_report.jl"))
 
 end # module
