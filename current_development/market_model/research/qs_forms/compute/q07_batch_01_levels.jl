@@ -45,11 +45,11 @@ function tier_rows!(out,league,rung,window,series)
             end
         end
         push!(out,(;league,rung,season,window,n=length(r.sides),gap_over_iqr=r.quantities.largest_gap_over_iqr,
-            left_team=r.left,right_team=r.right,next_season_shared_n=length(shared),same_side_fraction=same,null_rank=missing))
+            left_team=r.left,right_team=r.right,next_season_shared_n=length(shared),same_side_fraction=same,null_rank=missing,null_same_side_rank=missing))
     end
 end
 function r06()
-    started=time();rows,tierrows,nullrows=NamedTuple[],NamedTuple[],NamedTuple[]
+    started=time();rows,tierrows,nullrows,exclusions=NamedTuple[],NamedTuple[],NamedTuple[],NamedTuple[]
     means=CSV.read(joinpath(OUT,"team_season_path_means.csv"),DF.DataFrame;stringtype=String)
     for (league,_,_) in QS.LEAGUES
         p,config=panel(league);cutoff=sort(unique(p.obs_week))[8]
@@ -60,7 +60,11 @@ function r06()
                 series=Dict{String,Any}()
                 for season in config.seasons
                     value=season_nonlinear(p,point.X,season;cutoff=window=="null_suffix" ? cutoff : 0)
-                    series[season]=value;value===nothing&&continue
+                    series[season]=value
+                    if value===nothing
+                        push!(exclusions,(;league,rung,season,window,reason="NOT_AVAILABLE: fewer than8 active teams or empty suffix window"))
+                        continue
+                    end
                     nulls=rung=="C0"&&window=="null_suffix"&&sim!==nothing ? [season_nonlinear(p,X,season;cutoff) for X in sim.paths] : Any[]
                     for quantity in propertynames(value.quantities)
                         val=getproperty(value.quantities,quantity)
@@ -74,6 +78,15 @@ function r06()
                     end
                 end
                 tier_rows!(tierrows,league,rung,window,series)
+                if rung=="C0"&&window=="null_suffix"&&sim!==nothing
+                    for (rep,X) in enumerate(sim.paths)
+                        ns=Dict(s=>season_nonlinear(p,X,s;cutoff) for s in config.seasons)
+                        nt=NamedTuple[];tier_rows!(nt,league,rung,window,ns)
+                        for v in nt
+                            push!(nullrows,(;league,replicate=rep,request="R06",axis="levels",stratum=v.season,statistic="same_side_fraction",value=v.same_side_fraction,n=v.next_season_shared_n))
+                        end
+                    end
+                end
             end
             g=DF.filter(r->r.league==league&&r.rung==rung&&r.gauge=="active_cohort",means)
             for season in config.seasons
@@ -93,10 +106,11 @@ function r06()
         r=tierrows[i]
         if r.league in SENTINELS&&r.rung=="C0"&&r.window=="null_suffix"
             vals=[v.value for v in nullrows if v.league==r.league&&v.stratum==r.season&&v.statistic=="largest_gap_over_iqr"]
-            tierrows[i]=merge(r,(;null_rank=null_envelope(vals,r.gap_over_iqr).null_rank))
+            persistence=[v.value for v in nullrows if v.league==r.league&&v.stratum==r.season&&v.statistic=="same_side_fraction"]
+            tierrows[i]=merge(r,(;null_rank=null_envelope(vals,r.gap_over_iqr).null_rank,null_same_side_rank=null_envelope(persistence,r.same_side_fraction).null_rank))
         end
     end
-    result=output("R06","nonlinear_levels.csv",rows);output("R06","tier_gaps.csv",tierrows);save_null_stats!(nullrows)
+    result=output("R06","nonlinear_levels.csv",rows);output("R06","tier_gaps.csv",tierrows);output("R06","nonlinear_exclusions.csv",exclusions);save_null_stats!(nullrows)
     g=DF.filter(r->r.method=="FFBS"&&r.quantity=="c"&&r.rung=="C0",result)
     order=sortperm(abs.(g.median);rev=true)[1:min(3,DF.nrow(g))]
     lines=["COMPLETE descriptive screen. [nonlinear_levels.csv](nonlinear_levels.csv), [tier_gaps.csv](tier_gaps.csv). Full-season posterior geometry remains separate from matched-null suffix point means. 128 paths per fit, never paths-as-extra-teams; LOTO deltas are quadratic minus comparator per team (negative is better)."]

@@ -653,5 +653,6 @@ end
 include(joinpath(@__DIR__, "q07_batch_01_nulls.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_levels.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_goals.jl"))
+include(joinpath(@__DIR__, "q07_batch_01_structure.jl"))
 
 end # module
