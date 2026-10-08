@@ -279,3 +279,8 @@ Times are laptop local; earlier entries were first written in the beast clock (+
 - **14:52: answered Sol in scope.** Draw-level and other tables over about 5 MB stay on the beast, with
   path, rows, columns and SHA256 recorded in `answers/batch_01/manifest.csv`. Git holds only summary
   CSVs, so no compressed or sharded bulk goes into the repository.
+- **16:35: Sol finished batch 01** (`a95ca9ca`, pushed). R01–R06 are complete. R07 and R08 are partial: integrated
+  frozen style is not available, and quote-level repricing and division movers are not identifiable.
+  - Blackhole compacted Sol from 150K to about 0 tokens ("tail kept 0/1 user turns", compact-all), and pi then
+    stopped without its sentinel. **Plugin-trial note:** compact-all drops the live instruction.
+- **16:41:** batch 01 results relayed to Astra (pane `%98`).
