@@ -10,7 +10,7 @@ if !isdefined(parentmodule(@__MODULE__), :QualityStyleEDA)
 end
 const QS = parentmodule(@__MODULE__).QualityStyleEDA
 const MID, TB, CM, PM = QS.MID, QS.TB, QS.CM, QS.PM
-const P = normpath(joinpath(@__DIR__, "../../.."))
+const P = rstrip(normpath(joinpath(@__DIR__, "../../..")), '/')
 const Q = joinpath(P, "results/QS")
 const OUT = normpath(joinpath(@__DIR__, "../answers/batch_01"))
 const FITROOT = "/root/BF_runs/market_model_qs/current_development/market_model/results/QS/fits"
@@ -353,6 +353,245 @@ function geometry_for_theta(f,rung,theta)
     sa,sb=vals[2:3]
     rho=rung=="R6" ? tanh(theta[4]) : 0.0
     return geometry((sa^2+sb^2-2rho*sa*sb)/4,(sa^2+sb^2+2rho*sa*sb)/4,(sa^2-sb^2)/4,sa/sb)
+end
+
+"Exact scalar forward filter, explicit pre-week snapshot before all observations of the week."
+function forward(f,p,theta,rung; keep_states=false)
+    N=MID.n_teams(p)
+    H=PM.fullbook_design(PM.FullBookRung(:C0),p,theta)
+    Q=rung=="C0" ? PM.fullbook_process(f.arm,N,theta) : MID.process_cov(CM.conditional_arm(f.arm,theta),N,CM.covariance_schedule(f.arm,p,theta),2)
+    m,V=MID.initial_state(MID.GRW1(),N)
+    variance=exp(2theta[1]); k=zeros(length(m))
+    means=zeros(MID.n_fixtures(p),2);covs=zeros(MID.n_fixtures(p),2,2)
+    states=Dict{Int,Any}(); last_observed=0
+    for t in 1:p.n_weeks
+        t>=2 && (V.+=Q)
+        js=p.week_ptr[t]:(p.week_ptr[t+1]-1)
+        @assert last_observed<t
+        if !isempty(js)
+            keep_states && (states[t]=(;m=copy(m),V=copy(V),last_observed))
+            for j in first(js):2:last(js)
+                i=cld(j,2);B=H[j:j+1,:]
+                means[i,:].=B*m
+                covs[i,:,:].=B*V*B'+variance*Matrix(LA.I,2,2)
+            end
+        end
+        for j in js
+            h=view(H,j,:);LA.mul!(k,V,h)
+            S=LA.dot(h,k)+variance
+            @assert S>0 && isfinite(S)
+            e=p.obs_y[j]-LA.dot(h,m)
+            LA.axpy!(e/S,k,m);LA.BLAS.ger!(-1/S,k,k,V)
+            last_observed=t
+        end
+        V.=(V+V')/2
+    end
+    return (;means,covs,states)
+end
+logmeanexp(v) = (a=maximum(v); a+log(ST.mean(exp.(v.-a))))
+function mixture_quantile(means,sds,prob)
+    lo=minimum(means.-10sds);hi=maximum(means.+10sds)
+    for _ in 1:60
+        mid=(lo+hi)/2
+        c=ST.mean(DS.cdf.(DS.Normal.(means,sds),mid))
+        c<prob ? (lo=mid) : (hi=mid)
+    end
+    return (lo+hi)/2
+end
+"999 noncircular moving-block resamples of observed weeks within league-season, retaining whole weeks."
+function bootstrap_indices(frame;block=8,rng=Random.Xoshiro(SEED))
+    groups=[collect(DF.groupby(g,:week)) for g in DF.groupby(frame,:season)]
+    # Original row indices are retained, not fixture-resampled.
+    groups=[[collect(parentindices(w)[1]) for w in ws] for ws in groups]
+    # parentindices of nested SubDataFrames refer to the original parent frame.
+    out=Vector{Vector{Int}}(undef,999)
+    for b in 1:999
+        ix=Int[]
+        for weeks in groups
+            n=length(weeks);lengthblock=min(block,n);chosen=Int[]
+            while length(chosen)<n
+                start=Random.rand(rng,1:n-lengthblock+1)
+                append!(chosen,start:start+lengthblock-1)
+            end
+            for j in chosen[1:n]
+                append!(ix,weeks[j])
+            end
+        end
+        out[b]=ix
+    end
+    return out
+end
+function safe_cor(x,y)
+    length(x)<3 && return missing
+    (ST.std(x)==0 || ST.std(y)==0) && return missing
+    return ST.cor(x,y)
+end
+function weekly_lag(frame,col,lag;squared=false)
+    x,y=Float64[],Float64[]
+    for g in DF.groupby(frame,:season)
+        weeks=sort(unique(g.week)); vals=Dict(w=>ST.mean(g[g.week.==w,col]) for w in weeks)
+        for w in weeks
+            haskey(vals,w-lag) || continue
+            a,b=vals[w],vals[w-lag]
+            push!(x,squared ? a^2 : a);push!(y,squared ? b^2 : b)
+        end
+    end
+    return safe_cor(x,y)
+end
+function diag_stat(frame,col,kind)
+    v=frame[!,col]
+    kind=="mean" && return ST.mean(v)
+    kind=="mean_square" && return ST.mean(v.^2)
+    kind=="cross_correlation" && return safe_cor(frame.u_D,frame.u_M)
+    startswith(kind,"weekly_") && return weekly_lag(frame,col,parse(Int,last(split(kind,"_")));squared=occursin("squared",kind))
+    error("unknown statistic $kind")
+end
+function paired_comparison(request,frame;left="C0",right="R6",prefix="logp",outfile="joint_comparison.csv")
+    keys=[:league,:season,:week,:fixture_id]
+    a=DF.filter(:rung=>==(left),frame);b=DF.filter(:rung=>==(right),frame)
+    @assert length(unique(zip(a.league,a.fixture_id)))==DF.nrow(a)
+    @assert length(unique(zip(b.league,b.fixture_id)))==DF.nrow(b)
+    joined=DF.innerjoin(a,b;on=keys,makeunique=true)
+    @assert DF.nrow(joined)==DF.nrow(a)==DF.nrow(b)
+    rows=NamedTuple[]
+    for block in (4,8,12), channel in ("joint","marginal_sum")
+        perleague=NamedTuple[]
+        for (li,(league,_,_)) in enumerate(QS.LEAGUES)
+            g=DF.filter(:league=>==(league),joined)
+            delta=channel=="joint" ? g.logp_joint-g.logp_joint_1 : (g.logp_D+g.logp_M)-(g.logp_D_1+g.logp_M_1)
+            indices=bootstrap_indices(g;block,rng=Random.Xoshiro(seed(li,2,2,block)))
+            boot=[ST.mean(delta[ix]) for ix in indices]
+            ci=quant(boot)
+            push!(rows,(;league,weighting="fixture",n=length(delta),score_kind=channel,
+                mean_C0_minus_R6=ST.mean(delta),boot_q05=ci[1],boot_q95=ci[3],block_weeks=block))
+            push!(perleague,(;n=length(delta),mean=ST.mean(delta),boot))
+        end
+        for weighting in ("fixture","equal_league")
+            weights=weighting=="fixture" ? [g.n for g in perleague] : ones(length(perleague))
+            weights=weights/sum(weights)
+            boots=sum(weights[i]*perleague[i].boot for i in eachindex(perleague));ci=quant(boots)
+            push!(rows,(;league="ALL",weighting,n=sum(g.n for g in perleague),score_kind=channel,
+                mean_C0_minus_R6=sum(weights[i]*perleague[i].mean for i in eachindex(perleague)),boot_q05=ci[1],boot_q95=ci[3],block_weeks=block))
+        end
+    end
+    return output(request,outfile,rows)
+end
+function r03()
+    started=time();rows,diagnostics,venues,checks=NamedTuple[],NamedTuple[],NamedTuple[],NamedTuple[]
+    R=[1.0 -1.0;.5 .5]
+    published=CSV.read(joinpath(Q,"forecast_fixtures.csv"),DF.DataFrame;stringtype=String)
+    for (li,(league,_,_)) in enumerate(QS.LEAGUES)
+        p,config=panel(league;request="R03")
+        testix=findall(in.(p.matches.season,Ref(config.honest_test)))
+        trainix=findall(in.(p.matches.season,Ref(config.honest_train)))
+        @assert maximum(p.matches.match_date[trainix])<minimum(p.matches.match_date[testix])
+        @assert maximum(p.matches.week[trainix])<minimum(p.matches.week[testix])
+        record!("R03","split",league,"";n=length(testix),detail="train_first=$(minimum(p.matches.match_date[trainix])); train_end=$(maximum(p.matches.match_date[trainix])); test_first=$(minimum(p.matches.match_date[testix])); test_end=$(maximum(p.matches.match_date[testix])); train/test week disjoint")
+        for (ri,rung) in enumerate(("C0","R6"))
+            f=fit(league,rung,"10b";request="R03");idx=indices(f)
+            predictions=Vector{Any}(undef,length(idx));ts=time()
+            Threads.@threads for j in eachindex(idx)
+                predictions[j]=forward(f,p,f.udraws[idx[j].draw,:,idx[j].chain],rung)
+            end
+            medianpred=forward(f,p,MID.median_theta(f),rung)
+            for i in testix
+                fixture=p.matches[i,:];y=R*p.obs_y[2i-1:2i]
+                mus=[R*v.means[i,:] for v in predictions]
+                covs=[R*v.covs[i,:,:]*R' for v in predictions]
+                @assert all(LA.isposdef(LA.Symmetric(v)) for v in covs)
+                m=ST.mean(mus);S=ST.mean([covs[j]+mus[j]*mus[j]' for j in eachindex(mus)])-m*m'
+                @assert LA.isposdef(LA.Symmetric(S))
+                lj=logmeanexp([DS.logpdf(DS.MvNormal(mus[j],LA.Symmetric(covs[j])),y) for j in eachindex(mus)])
+                ld=logmeanexp([DS.logpdf(DS.Normal(mus[j][1],sqrt(covs[j][1,1])),y[1]) for j in eachindex(mus)])
+                lm=logmeanexp([DS.logpdf(DS.Normal(mus[j][2],sqrt(covs[j][2,2])),y[2]) for j in eachindex(mus)])
+                @assert all(isfinite,(lj,ld,lm))
+                covers=[mixture_quantile(getindex.(mus,k),[sqrt(v[k,k]) for v in covs],.05)<=y[k]<=mixture_quantile(getindex.(mus,k),[sqrt(v[k,k]) for v in covs],.95) for k in 1:2]
+                push!(rows,(;league,season=String(fixture.season),week=fixture.week,fixture_id=fixture.match_id,rung,n_draws=length(idx),
+                    y_D=y[1],y_M=y[2],mean_D=m[1],mean_M=m[2],var_D=S[1,1],var_M=S[2,2],cov_DM=S[1,2],
+                    u_D=(y[1]-m[1])/sqrt(S[1,1]),u_M=(y[2]-m[2])/sqrt(S[2,2]),logp_joint=lj,logp_D=ld,logp_M=lm,
+                    covered90_D=covers[1],covered90_M=covers[2],home_team=fixture.home_team,away_team=fixture.away_team))
+                mp=R*medianpred.means[i,:];vp=R*medianpred.covs[i,:,:]*R'
+                for (k,axis) in enumerate(("supremacy","level"))
+                    pub=DF.filter(r->r.league==league&&r.rung==rung&&r.protocol=="10b"&&r.match_id==fixture.match_id&&r.axis==axis,published)
+                    @assert DF.nrow(pub)==1
+                    err=abs(DS.logpdf(DS.Normal(mp[k],sqrt(vp[k,k])),y[k])-pub.logpd[1])
+                    push!(checks,(;league,rung,fixture_id=fixture.match_id,axis,error=err,pass=err<=1e-8))
+                end
+            end
+            @assert all(r.pass for r in checks)
+            println("R03 $league $rung 128 forward filters elapsed=$(time()-ts)s");flush(stdout)
+        end
+    end
+    forecasts=output("R03","forecast_joint.csv",rows)
+    output("R03","forecast_reproduction_checks.csv",checks)
+    comparison=paired_comparison("R03",forecasts)
+    for (li,(league,_,_)) in enumerate(QS.LEAGUES), rung in ("C0","R6")
+        g=DF.filter(r->r.league==league&&r.rung==rung,forecasts)
+        ix=bootstrap_indices(g;rng=Random.Xoshiro(seed(li,3,2)))
+        for axis in ("D","M")
+            col=Symbol("u_"*axis)
+            for kind in ("mean","mean_square","cross_correlation","weekly_signed_lag_1","weekly_signed_lag_2","weekly_signed_lag_4","weekly_squared_lag_1","weekly_squared_lag_2","weekly_squared_lag_4")
+                val=diag_stat(g,col,kind)
+                # Resampled blocks retain whole weeks. Duplicated weeks are deliberately kept as replicate observations.
+                boot=[diag_stat(g[ind,:],col,kind) for ind in ix];ci=quant(boot)
+                push!(diagnostics,(;league,rung,axis,statistic=kind,n=DF.nrow(g),value=val,boot_q05=ci[1],boot_q95=ci[3]))
+            end
+            coverage=Symbol("covered90_"*axis);boot=[ST.mean(g[ind,coverage]) for ind in ix];ci=quant(boot)
+            push!(diagnostics,(;league,rung,axis,statistic="coverage90",n=DF.nrow(g),value=ST.mean(g[!,coverage]),boot_q05=ci[1],boot_q95=ci[3]))
+            teams=sort(unique(vcat(g.home_team,g.away_team)))
+            lagx,lagy=Float64[],Float64[]
+            for team in teams
+                nh=count(==(team),g.home_team);na=count(==(team),g.away_team)
+                for season in unique(g.season)
+                    tg=DF.sort(DF.filter(r->r.season==season&&(r.home_team==team||r.away_team==team),g),[:week,:fixture_id])
+                    vals=[axis=="D"&&r.away_team==team ? -r[col] : r[col] for r in eachrow(tg)]
+                    length(vals)>1 && (append!(lagx,vals[2:end]);append!(lagy,vals[1:end-1]))
+                end
+                nh>=8&&na>=8 || continue
+                contrast=ST.mean(g[g.home_team.==team,col])-ST.mean((axis=="D" ? -1 : 1)*g[g.away_team.==team,col])
+                boots=Float64[]
+                for ind in ix
+                    h=ind[g.home_team[ind].==team];a=ind[g.away_team[ind].==team]
+                    isempty(h)||isempty(a) || push!(boots,ST.mean(g[h,col])-ST.mean((axis=="D" ? -1 : 1)*g[a,col]))
+                end
+                push!(venues,(;league,rung,team,axis,n_home=nh,n_away=na,contrast,bootstrap_se=ST.std(boots)))
+            end
+            # Appearance-lag one, within season; all teams contribute, not selected contrasts.
+            push!(diagnostics,(;league,rung,axis,statistic="within_team_appearance_lag1_covariance",n=length(lagx),value=length(lagx)>1 ? ST.cov(lagx,lagy) : missing,boot_q05=missing,boot_q95=missing))
+        end
+    end
+    ds=output("R03","forecast_diagnostics.csv",diagnostics)
+    output("R03","venue_contrasts.csv",venues)
+    lines=["COMPLETE forecasts/scores; PARTIAL serial/team uncertainty. [forecast_joint.csv](forecast_joint.csv), [forecast_diagnostics.csv](forecast_diagnostics.csv), [joint_comparison.csv](joint_comparison.csv), [venue_contrasts.csv](venue_contrasts.csv). D=h−a, M=(h+a)/2; determinant=1, no Jacobian constant. Published median-theta marginal scores reproduced ≤1e−8."]
+    for r in eachrow(DF.filter(r->r.league=="ALL"&&r.score_kind=="joint"&&r.block_weeks==8,comparison))
+        push!(lines,"Pooled $(r.weighting) joint C0−R6 $(round(r.mean_C0_minus_R6;digits=5)) [$(round(r.boot_q05;digits=5)),$(round(r.boot_q95;digits=5))] nats/fixture; n=$(r.n).")
+    end
+    for league in SENTINELS
+        g=DF.filter(r->r.league==league&&r.rung=="C0"&&r.statistic in ("mean_square","coverage90"),ds)
+        push!(lines,"$league C0 "*join(["$(r.axis) $(r.statistic)=$(round(r.value;digits=3))" for r in eachrow(g)],"; ")*".")
+    end
+    push!(lines,"Serial bootstrap here retains original calendar labels, so duplicated-week averaging does not estimate a concatenated block-series lag distribution; its intervals are diagnostic only. Within-team appearance-lag covariance has no bootstrap interval yet (NOT_AVAILABLE); venue contrast/SE distribution is unselected with ≥8 appearances per role.")
+    summary!("R03",lines)
+    verification("R03","PASS pre-week last_observed<t in every loop; theta training dates and week labels strictly precede test; all predictive covariances PD, finite scores, unique paired fixture keys; n=$(DF.nrow(forecasts)÷2). Median marginal score reproduction max=$(maximum(r.error for r in checks)). Bootstrap seed deterministic, 999 samples, blocks4/8/12 for comparisons. Runtime=$(round(time()-started;digits=2))s. Invocation: Q07.r03().")
+    flush_manifest!()
+end
+
+function r02_benchmark()
+    league="eng_premier";p,config=panel(league;request="R02_benchmark")
+    rows=NamedTuple[]
+    for (ri,rung) in enumerate(RUNGS)
+        f=fit(league,rung,"10a";request="R02_benchmark")
+        theta=MID.median_theta(f)
+        sample_path(f,p,theta,rung,Random.Xoshiro(seed(1,ri,1))) # compilation warmup
+        ts=time()
+        Threads.@threads for j in 1:16
+            sample_path(f,p,theta,rung,Random.Xoshiro(seed(1,ri,1,j)))
+        end
+        elapsed=time()-ts
+        push!(rows,(;league,rung,n_paths=16,seconds=elapsed,projected_11_league_128_path_seconds=elapsed*8*11))
+        println("BENCHMARK $rung 16 concurrent paths=$elapsed seconds; 11 league projection=$(elapsed*8*11)")
+    end
+    output("R02_benchmark","runtime_benchmark.csv",rows);flush_manifest!()
 end
 
 end # module
