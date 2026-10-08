@@ -1,7 +1,9 @@
 # Which quality/style formulation? — candidate theory
 
-Status: batch 01 specification, 2026-10-08. No new computations yet. Request IDs
-refer to `requests/batch_01.md`. C0 is the comparison, not assumed ground truth.
+Status: batch 01 interpreted; batch 02 requested. Sections 1–5 preserve the
+pre-result hypotheses; §6 records the new evidence and revised ordering. Request
+IDs refer to `requests/batch_01.md` and `requests/batch_02.md`. C0 is a comparison,
+not assumed ground truth.
 
 ## 1. What is known, and what “best” means
 
@@ -156,20 +158,109 @@ and goals (plus plausible non-Poisson goal dependence). Test r stability and goa
 scores out of time. A lower r in thin leagues alone is not evidence of market
 staleness or of simpler underlying football.
 
-## 6. Pre-result ordering and decision boundaries
+## 6. Batch 01 evidence and revised ordering
 
-- **Retain now:** q/s as exact interpretable coordinates; C0 as parsimonious baseline.
-- **Highest-value screens:** R6 tilt/scale freedom (R01/R03), posterior level geometry
-  (R02), and serial/axis calibration errors (R03–R05).
-- **Plausible next model, not yet a win:** hierarchical league log r, with tier as a
-  modest covariate and market sharpness only if independently measured (R08).
-- **Conditional extensions:** OU/trend, heteroskedasticity or nonlinear style only
-  after their distinct residual/path signatures survive matched null checks.
-- **Not an improvement by itself:** PCA, identified factor rewrite, polar coordinates
-  or probability transforms. Mixtures, manager regimes and cross-division bridges
-  require stronger evidence/inputs than the card supplies.
-- **Spec A, provisional:** keep 45° observation coordinates, separate level and step
-  scales, allow league r rather than fixing a universal 0.3. Do not yet add all the
-  dynamics or eliminate style. Goal-model prediction—not market ellipse fit—is the
-  eventual decision criterion. Batch 01 will update this ordering, not certify a
-  new model without fitting and forward validation.
+Source: `answers/batch_01/SUMMARY.md` and the explicitly identified diagnostic
+CSVs below, relayed at commit `a95ca9ca`. Numbers here are computed results;
+interpretations and follow-up nominations are labelled separately. Posterior,
+block-bootstrap and conditional-null uncertainty are not interchangeable.
+
+### 6.1 Supported now: interpretable axes, league variation, useful style
+
+- **R01/R03 — retain 45°.** No league's R6 10a posterior meets the prespecified
+  P(|tilt|>10°)>0.9 criterion. EPL tilt is 6.68° [−3.50,15.17], Finland 9.49°
+  [−9.53,23.01], Scottish League Two 1.44° [−3.16,5.75]. The first two are not
+  precise proofs of alignment. Crucially, honest *joint* C0−R6 score is +0.00031
+  [−0.00018,+0.00138] nats/fixture, equal-league +0.00066 [−0.00004,+0.00217]
+  (3,053 fixtures, 8-week bootstrap). Both pooled intervals meet the ±0.005
+  practical-equivalence criterion. This does not establish every league's equivalence.
+- **R08 — league-hierarchical r is the leading extension to test.** C0 SD(log r)
+  across these leagues is 0.293 [0.248,0.340] in 10a and 0.306 [0.254,0.361] in
+  10b. Within England, log-r/tier slope is −0.074 [−0.110,−0.038] / −0.109
+  [−0.150,−0.068]; within Scotland −0.198 [−0.267,−0.130] / −0.224
+  [−0.303,−0.145]. These are fit-uncertainty intervals, not uncertainty over a
+  population of leagues. Pooling itself has not been fitted or shown to win.
+- **R07 — do not delete style globally.** Integrated full−no-style goal score is
+  +0.00671 [0.00308,0.00923], almost entirely total-goal score (+0.00659).
+  Full−no-quality is +0.06127, mostly allocation (+0.06049). Scottish Premiership
+  style benefit is negative (−0.01852 [−0.02741,−0.00183]), Finland positive
+  (+0.04916 [0.01292,0.06577]). Full−frozen-style is +0.01574
+  [0.00766,0.01761] **plug-in only**; integrated frozen-style is unavailable.
+  These are deletion comparisons, not fitted rank-one/static-style competitors.
+  R11 checks interval sensitivity before treating marginal signs as settled.
+
+### 6.2 Newly important: distinguish common scoring level from relative style
+
+**R02 finding:** C0 season-average level/step ratios are 0.37–0.50 in EPL,
+0.31–0.47 in Scottish Premiership and 0.22–0.41 in Finland, versus a much less
+stable 0.54–1.74 in Scottish League Two. A universal “same geometry at levels and
+steps” claim is untenable. Ratios concern season-averaged relative states, however,
+not stationary variances or identified OU half-lives. The huge shortcut-r error in
+a two-team/one-week Scottish Championship window is a degeneracy, not a discovery.
+
+**New algebraic distinction, not yet a result:** on a fixed season roster C,
+
+    sbar_t = mean_{i in C}(s_i,t),   s_i,t = sbar_t + srel_i,t,
+    M_ha,t = mu + gamma/2 + 2 sbar_t + srel_h,t + srel_a,t.
+
+Centering discards the first style term from cross-team geometry, but not from
+predictions. In the uncentered independent-style RW, disjoint common/relative
+projections have per-week prior variances sigma_s²/|C| and
+sigma_s²(I−11'/|C|); after conditioning, posterior projections need not remain
+independent. A dynamic league-intensity state plus smaller/reverting team-relative
+style is a distinct candidate. The common term aliases a dynamic mu: it must be
+represented once, not twice. R09 tests whether this distinction explains the
+level/step contrast or goal-style benefit. It is not established by batch 01.
+
+### 6.3 Hidden dynamics: nominated, not fitted or proven
+
+- **R04 style reversion is suggestive in EPL/Scottish League Two, not universal.**
+  Their RTS style drift slopes are −0.00250 / −0.00451 with conditional-null rank
+  0.01. In `dynamics_screen.csv`, EPL G_s(13)/(13 G_s(1))=1.18 versus null median
+  4.88 (rank 0.01), but only **48 pairs** survive strict continuous-appearance
+  eligibility; Scottish League Two has 21 pairs at eight weeks and none at 13.
+  Different horizons select different teams/windows. Scottish Premiership has
+  positive style slope +0.00125 (rank 0.39) and only five 13-week pairs. R10
+  uses endpoints and matched horizon cohorts before promoting OU/different clocks.
+- **R05 quality volatility is uneven, but not stably “a volatile team type.”** EPL
+  q energy CV=0.479 (rank 0.99), top-5% energy share=0.318 (rank 1.00), and weekly
+  energy lag correlation=0.535 (rank 0.98). Yet its first/second-half team energy
+  rank correlation is −0.019 (rank 0.37); all sentinel values are small. Prefer an
+  event/calendar/noise investigation over permanent team-volatility effects.
+  RTS increment autocorrelation alone is not momentum: its matched null is also high.
+- **Do not interpret centered off-diagonal covariance as a common-shock finding.**
+  For n centered increments v with sum v=0, their mean off-diagonal product is
+  `−sum(v_i²)/(n(n−1))`. Thus the R05 extreme ranks can simply restate energy
+  differences; they do not independently identify shared shocks. R09 audits the
+  exact estimator and reports identifiable common/relative projections instead.
+- **R06 Scottish Premiership tiers deserve a narrow follow-up.** C0 largest q
+  gap/IQR is 2.25, 2.80, 2.05 in 22/23–24/25, with null ranks 0.98,1.00,0.98.
+  In 23/24 all 11 shared teams retain their gap side the next season (rank 1.00).
+  `tier_gaps.csv` places those gaps below Rangers; 25/26 instead has a 0.565 gap
+  between Rangers and Celtic. High same-side accuracy can favor the larger group;
+  partial windows and gap membership matter. R12 tests posterior/rung robustness
+  and minority membership before interpreting this as a general tier prior.
+- **R06 nonlinear s(q) is not yet a useful extension.** The selected largest
+  curvature (Irish First Division 2022, c=0.0367 [0.0242,0.0510]) has quadratic−
+  linear leave-team-out error +0.00017 [−0.00069,0.00093]. Adjacent 2021 curvature
+  is negative. A selected nonzero coefficient does not establish stable curvature.
+
+### 6.4 Scope of the next decision
+
+Keep 45° and league-varying r as the provisional Spec A basis; give level priors
+and process scales separate parameters. Test common intensity versus relative style
+before interpreting small level/step ratios as OU. Tier priors and q-event volatility
+remain local nominations, not universal additions. No case has emerged for polar
+states, a freely unidentified factor hierarchy, stable team-volatility ranks or
+mandatory nonlinear s(q). There is no new positive case for venue-specific strengths.
+
+Microstructure remains unresolved: archived trade-price timestamps are not executable
+quote ages, optimizer-start spread is not bid–ask spread, and sigma_obs is not
+liquidity. Division movers are unavailable because cached IDs are not independently
+verified; no fuzzy join or claim of zero movers is warranted. Leave both gaps
+explicit rather than spending batch 02 on unavailable data.
+
+Batch 02 is limited to R09 common/relative style, R10 robust horizon screens,
+R11 resampling robustness and R12 Scottish tier membership. No new model fits;
+these checks can sharpen the final ranked recommendation, not certify an OU,
+hierarchical or mixture model's predictive superiority.
