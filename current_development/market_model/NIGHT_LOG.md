@@ -296,3 +296,6 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   filtered values. Sol is to verify this numerically (zero loading; common-mode filtered mean equals the prior mean)
   and stop if it fails. Testing a league scoring state needs a dynamic μ_t fit (future work). The rest of
   R09–R12 proceeds.
+- **17:52: answered Sol in scope (R12 window mask).** Every Scottish Premiership season 21/22–25/26 has 198 matches
+  (rounds 1–33, pre-split only), all with Betfair odds (manager's read-only betdb query). The complete-window
+  sensitivity therefore equals the main analysis, with no exclusion of 25/26.
