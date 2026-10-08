@@ -81,7 +81,7 @@ function final_checks()
     verified=0
     for r in eachrow(manifest)
         endswith(r.kind,"output")||continue
-        @assert isfile(r.path)&&filehash(r.path)==r.sha256
+        @assert isfile(r.path)&&sha(r.path)==r.sha256
         header=names(DF.DataFrame(CSV.File(r.path;limit=1,ntasks=1)))
         @assert Set(header)==Set(split(r.columns,';'))
         @assert length(CSV.File(r.path;select=[1],ntasks=1))==r.n_rows
