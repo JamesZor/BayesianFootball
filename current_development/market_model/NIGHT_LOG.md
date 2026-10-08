@@ -291,3 +291,8 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - R12: Scottish Premiership tier stability.
 - **16:55:** a fresh Sol session started for batch 02 (`gpt-6.1-sol`, thinking **medium**: it reuses batch-01 code and
   caches), pane `%100`. The old session was killed because blackhole's compact-all had emptied its context.
+- **16:57: answered Sol in scope (R09 honest partition): NOT_IDENTIFIABLE under C0.** The rate map projects every
+  team state to zero-sum each week, so the common (league-mean) style mode has zero loading and only prior-driven
+  filtered values. Sol is to verify this numerically (zero loading; common-mode filtered mean equals the prior mean)
+  and stop if it fails. Testing a league scoring state needs a dynamic μ_t fit (future work). The rest of
+  R09–R12 proceeds.
