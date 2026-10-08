@@ -305,3 +305,16 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - The manager spot-checked the key figures against both batch SUMMARYs; all match.
   - Estimated credits: Astra 144 (46 calls), Sol 119 (231 calls), about 263 in total.
   - Codex usage: 5h window 83%, weekly 48%.
+- **2026-10-08 evening: manager verification before merging into the stream.**
+  - **Beast test suite** at the research-branch code (`4a6d0cd2`, code-identical to `3c7506a8`), each file
+    in a fresh REPL, with the published Scottish snapshot `c786e2…` at its original mtime. Passes:
+    t01, t02, t03 (131/131), t04, t05 fast-Gaussian, fast-reports, workflow, Laplace-preflight and pooled
+    (which includes the engine, sampling and Newton-regression sub-files), and t06. The t05 C2-pending set is
+    excluded as before. The three sub-files fail if included on their own (`@testset` undefined): they are
+    not standalone tests.
+  - **Hashes:** 10 key result CSVs (QS and QS-forms) are byte-identical between the laptop commits and the beast.
+  - **Tidy-up:**
+    - laptop: closed the idle agent sessions (pi-context review, Astra, Sol);
+    - beast: closed the idle `pi_mm_b`, `pi_mm_c`, `pi_mm_c8_c1_10a/10b` and `pi_mm_qsf` REPLs (about 17 GB),
+      and removed the manager review checkout;
+    - other projects' sessions untouched.

@@ -8,7 +8,7 @@
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-05 |
-| Updated | 2026-10-06 |
+| Updated | 2026-10-08 |
 | Related Files / Commits / PRs | `current_development/market_model/DESIGN.md`; TODO 023 (`current_development/market_inverse_dynamics/`); tickets T014, T015; CLV napkin §14 (`proto/clv-napkin`) |
 
 ## Context & Problem Statement
@@ -36,6 +36,13 @@ in `current_development/market_model/DESIGN.md`.
       refits, fresh tests and byte-identical scientific artifacts. Phase C stays double Poisson.
 - [ ] Phase C: pooled Turing model (Dirichlet/Beta books, learned n, u_m), synthetic recovery,
       P1 and P2 converged (divergences ≤ 0.1%), one-step MAP refits at 40 fold cutoffs.
+      *2026-10-08:* C0, H1 and H2 are accepted and byte-reproduced. **C1 is parked** by the human
+      after its synthetic recovery missed σ_s and σ_u. C2 is deferred with it.
+- [x] Cross-league quality/style EDA (added 2026-10-07): 11 Betfair leagues, R2/R6/C0 in both
+      protocols, verdicts fixed in advance, goal check, C0 recovery, reproduction
+      (`results/QS/`).
+- [x] Quality/style formulation research (added 2026-10-08): Astra thinker plus Sol computer,
+      two request batches (`research/qs_forms/REPORT.md`).
 - [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
       traceable to `results/`.
 
@@ -153,6 +160,16 @@ in `current_development/market_model/DESIGN.md`.
   All owned REPLs closed; published A/B/B2 untouched. No `src/`, DB, package/data,
   outside-data or Phase C changes. Human decision: double Poisson for C; C2 later.
   TODO remains IN_PROGRESS for C/D; `todo.sh check` and `git diff --check` pass.
+- [2026-10-08 @claude] Merged `pi/market-model-qs-forms` into the stream. It includes Phase C
+  (`b2fb0e0d`), the QS EDA (`c8c17167`) and the formulation research (`3c7506a8`).
+  - **Phase C:** C0 ≈ R6, γ ≈ 0.18, κ ≈ 0, H1 unidentified; C1 parked.
+  - **QS EDA:** 9 suitable, 2 inconclusive. r = 0.27–0.68 and rises with tier and market
+    sharpness. Style goal benefit +0.0067 nats/fixture.
+  - **Research:** keep 45° q/s; league-hierarchical r first; separate level and step priors;
+    Scottish Premiership quality tier; EPL style reversion.
+  - **Verification:** manager beast test suite at the research-branch code (see NIGHT_LOG); T03
+    131/131 with the original snapshot mtime; 10 key CSVs byte-identical laptop ↔ beast.
+  - **Next:** a Spec A goal-model TODO (src). Current state: `current_development/market_model/STATUS.md`.
 
 ## Verification & Findings
 

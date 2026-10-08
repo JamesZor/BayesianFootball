@@ -1,5 +1,7 @@
 # Morning summary, TODO 039 market model (night of 2026-10-05/06)
 
+> **Superseded 2026-10-08 by [`STATUS.md`](STATUS.md)**, the current state of the stream. Kept as the overnight record.
+
 **Status: draft, written while Phase C was still running.** Phase C's section is filled in when it
 completes. Full chronology: `NIGHT_LOG.md`.
 
