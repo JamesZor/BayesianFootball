@@ -22,4 +22,13 @@ Bulky draw/null/path-mean CSVs and binary caches remain at:
 
 Their exact paths, row counts, columns and SHA256s are in the manifest. Raw book rows for selected movements are linked by exact source-cache row ordinal, not fabricated timestamps. Per-request logs and the owned REPL capture live under `/root/BF_runs/logs/market_model_qsf/`; compact check output is retained in `logs/checks.log`.
 
-The final report amendment, metadata-repair and audit helpers operate on existing results only. They are one-shot report operations; rerunning a request itself replaces that request's summary section and updates output manifest hashes. Historical verification rows retain earlier runtimes; final artifact checks audit the current tables, all 99 raw null-statistic records per cell, score identities and size/hash bounds.
+After R01–R08, run the following **once**, in that order, through the same ENV/runner entry point:
+
+```julia
+for request in ("repair_null_statuses", "audit_large_moves", "report_amendments", "additional_report", "final_checks")
+    ENV["QSF_REQUEST"] = request
+    include("current_development/market_model/research/qs_forms/compute/r07_batch_01.jl")
+end
+```
+
+These report/metadata/audit helpers operate on existing results only. Rerunning a request itself replaces that request's summary section and updates output manifest hashes; report amendments are one-shot. Historical verification rows retain earlier runtimes; final artifact checks audit the current tables, all 99 raw null-statistic records per cell, score identities and size/hash bounds. Percentile moving-block intervals can be biased by finite-window edge weighting and need not contain the original point estimate; they are not silently recentered.

@@ -28,3 +28,9 @@ PASS published fixture intersection3053 and every plug-in joint score ≤1e−8;
 
 ## R08
 PASS all12000 theta draws retained per fit; fixed independent league permutations preserve matched r/σ_obs; available field units/limits documented, no network or SQL. Movers explicitly NOT_AVAILABLE. Runtime=9.50099492073059s; invocation Q07.r08().
+
+## metadata
+PASS corrected populated null envelopes to SIMULATED; original fallback label incorrectly said non-sentinel even when all99 replicates existed. Numerical values unchanged.
+
+## R05_audit
+PASS selected fixture IDs linked to panel observation rows and full saved-rate rows, with exact cached raw table row ordinals; no SQL/network/raw book recreation. No quote timestamps were fabricated.

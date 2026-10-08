@@ -1,88 +1,88 @@
 league,axis,stratum,statistic,n,value,null_q05,null_median,null_q95,null_rank,null_status
-eng_premier,q,all,cross_team_energy_CV,80,0.4794994372937453,0.3344900543511564,0.3831404958682057,0.431977764276777,0.99,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,team_first_second_energy_spearman,80,-0.019362400375058604,-0.1449367088607595,0.01919831223628692,0.17428035630567273,0.37,NOT_SIMULATED: non-sentinel
+eng_premier,q,all,cross_team_energy_CV,80,0.4794994372937453,0.3344900543511564,0.3831404958682057,0.431977764276777,0.99,SIMULATED: conditional plug-in99
+eng_premier,q,all,team_first_second_energy_spearman,80,-0.019362400375058604,-0.1449367088607595,0.01919831223628692,0.17428035630567273,0.37,SIMULATED: conditional plug-in99
 eng_premier,q,22/23:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-eng_premier,q,22/23:middle,phase_energy_ratio_to_middle,234,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23:late,phase_energy_ratio_to_middle,138,2.246435827403441,0.7841995820261941,1.0566411310853383,1.4890233055913675,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23,cross_team_energy_CV,20,0.44243978636758413,0.2986333817562019,0.40414436365610884,0.5386515280598868,0.72,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23,team_first_second_energy_spearman,20,0.14586466165413534,-0.4392481203007519,0.05112781954887218,0.3965413533834586,0.64,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:early,phase_energy_ratio_to_middle,86,0.8861138599260943,0.5806640711184796,0.8123805407785128,1.1815021251935272,0.64,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:middle,phase_energy_ratio_to_middle,260,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:late,phase_energy_ratio_to_middle,106,1.104907146252852,0.649418664404276,0.9418262454022851,1.4277183150206127,0.81,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24,cross_team_energy_CV,20,0.48099099645058596,0.25800908214581453,0.36450856668663856,0.4908732766626479,0.93,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24,team_first_second_energy_spearman,20,0.21353383458646616,-0.3968421052631579,0.007518796992481203,0.43819548872180447,0.79,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:early,phase_energy_ratio_to_middle,90,0.7070275635431893,0.5206828292955313,0.7900181209193361,1.1419399463317335,0.31,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:middle,phase_energy_ratio_to_middle,281,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:late,phase_energy_ratio_to_middle,116,1.9728301949446898,0.610052260701626,0.9120328145038716,1.2844358093204495,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25,cross_team_energy_CV,20,0.4211426952865329,0.27237213678077693,0.346506654124948,0.4472194134791984,0.87,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25,team_first_second_energy_spearman,20,-0.17443609022556392,-0.46075187969924813,0.016541353383458645,0.3833082706766916,0.17,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:early,phase_energy_ratio_to_middle,90,1.143011065526895,0.5043959450371396,0.8159717207252927,1.118661803377842,0.95,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:middle,phase_energy_ratio_to_middle,363,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:late,phase_energy_ratio_to_middle,90,1.5607054947991021,0.5791914078752525,0.8164355861384504,1.1239346169499687,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26,cross_team_energy_CV,20,0.3874155819524491,0.2698667852477112,0.350425617085754,0.4689952453393684,0.71,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26,team_first_second_energy_spearman,20,0.05413533834586466,-0.34285714285714286,0.042105263157894736,0.41894736842105257,0.53,NOT_SIMULATED: non-sentinel
-eng_premier,q,early,phase_energy_ratio_to_middle,266,0.891810811695638,0.6548204692412805,0.8150155707535947,0.999407908902225,0.74,NOT_SIMULATED: non-sentinel
-eng_premier,q,middle,phase_energy_ratio_to_middle,1138,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,late,phase_energy_ratio_to_middle,450,1.809158626029665,0.8041803412893073,0.9389661828244361,1.1224149723910952,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,max_over_median_squared_step,1854,45.946548394159976,22.930072482761155,28.950252967467573,39.91016637365867,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,top5pct_energy_share,1854,0.3177349713272902,0.26874297432387706,0.2824094907538037,0.3000879853556627,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,weekly_mean_energy_lag1_correlation,90,0.5349451606545333,0.1391822800765405,0.3029112340862885,0.4638491570929841,0.98,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,mean_offdiagonal_centered_step_product,111,-1.2951042764049848e-5,-1.2789264806906182e-5,-8.254442012186785e-6,-4.990001816639097e-6,0.06,NOT_SIMULATED: non-sentinel
-eng_premier,q,all,mean_offdiagonal_centered_step_covariance,760,-8.053160981879271e-6,-7.84370672600762e-6,-7.044989316812337e-6,-6.42336443513193e-6,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23:prior_abs_q_tertile_1,mean_energy,124,0.2950572601252094,0.18639698093697918,0.22927955074172635,0.2900274101289969,0.97,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23:prior_abs_q_tertile_2,mean_energy,124,0.41609206929856923,0.17812885189193797,0.2451375787180263,0.29712479496916244,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,22/23:prior_abs_q_tertile_3,mean_energy,124,0.3309885523652769,0.18766613162835516,0.24010148522548633,0.30238073799596854,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:prior_abs_q_tertile_1,mean_energy,151,0.22969717821705565,0.1731449735627267,0.22976181824723288,0.2938807981749739,0.5,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:prior_abs_q_tertile_2,mean_energy,150,0.26493290585853474,0.18928193285514036,0.22803153412384408,0.2909179135679308,0.85,NOT_SIMULATED: non-sentinel
-eng_premier,q,23/24:prior_abs_q_tertile_3,mean_energy,151,0.21919365059293502,0.1806414032701919,0.2301970413599123,0.31137400618081734,0.27,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:prior_abs_q_tertile_1,mean_energy,162,0.23441340228950033,0.1767212140035162,0.2320366610882316,0.2879720170362027,0.56,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:prior_abs_q_tertile_2,mean_energy,162,0.28256078383330885,0.18526032777685575,0.23741865623491598,0.2924130887021929,0.92,NOT_SIMULATED: non-sentinel
-eng_premier,q,24/25:prior_abs_q_tertile_3,mean_energy,163,0.2161146585274581,0.18152240989382315,0.2253180746969862,0.2806631010018667,0.41,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:prior_abs_q_tertile_1,mean_energy,181,0.22291030028322667,0.18345829579893685,0.2322456157253582,0.2926487938676189,0.44,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:prior_abs_q_tertile_2,mean_energy,181,0.2255286669048072,0.1857559326593215,0.22949059800184196,0.2792474569928419,0.45,NOT_SIMULATED: non-sentinel
-eng_premier,q,25/26:prior_abs_q_tertile_3,mean_energy,181,0.2064755345255361,0.17899698752698548,0.22880753670297094,0.28759468243029934,0.22,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,cross_team_energy_CV,80,0.427414704884625,0.38517706785195305,0.4559998130200154,0.5192324249889546,0.31,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,team_first_second_energy_spearman,80,-0.02325363338021566,-0.1270253164556962,0.07203469292076888,0.23370135958743551,0.23,NOT_SIMULATED: non-sentinel
+eng_premier,q,22/23:middle,phase_energy_ratio_to_middle,234,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,22/23:late,phase_energy_ratio_to_middle,138,2.246435827403441,0.7841995820261941,1.0566411310853383,1.4890233055913675,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,22/23,cross_team_energy_CV,20,0.44243978636758413,0.2986333817562019,0.40414436365610884,0.5386515280598868,0.72,SIMULATED: conditional plug-in99
+eng_premier,q,22/23,team_first_second_energy_spearman,20,0.14586466165413534,-0.4392481203007519,0.05112781954887218,0.3965413533834586,0.64,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:early,phase_energy_ratio_to_middle,86,0.8861138599260943,0.5806640711184796,0.8123805407785128,1.1815021251935272,0.64,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:middle,phase_energy_ratio_to_middle,260,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:late,phase_energy_ratio_to_middle,106,1.104907146252852,0.649418664404276,0.9418262454022851,1.4277183150206127,0.81,SIMULATED: conditional plug-in99
+eng_premier,q,23/24,cross_team_energy_CV,20,0.48099099645058596,0.25800908214581453,0.36450856668663856,0.4908732766626479,0.93,SIMULATED: conditional plug-in99
+eng_premier,q,23/24,team_first_second_energy_spearman,20,0.21353383458646616,-0.3968421052631579,0.007518796992481203,0.43819548872180447,0.79,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:early,phase_energy_ratio_to_middle,90,0.7070275635431893,0.5206828292955313,0.7900181209193361,1.1419399463317335,0.31,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:middle,phase_energy_ratio_to_middle,281,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:late,phase_energy_ratio_to_middle,116,1.9728301949446898,0.610052260701626,0.9120328145038716,1.2844358093204495,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,24/25,cross_team_energy_CV,20,0.4211426952865329,0.27237213678077693,0.346506654124948,0.4472194134791984,0.87,SIMULATED: conditional plug-in99
+eng_premier,q,24/25,team_first_second_energy_spearman,20,-0.17443609022556392,-0.46075187969924813,0.016541353383458645,0.3833082706766916,0.17,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:early,phase_energy_ratio_to_middle,90,1.143011065526895,0.5043959450371396,0.8159717207252927,1.118661803377842,0.95,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:middle,phase_energy_ratio_to_middle,363,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:late,phase_energy_ratio_to_middle,90,1.5607054947991021,0.5791914078752525,0.8164355861384504,1.1239346169499687,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,25/26,cross_team_energy_CV,20,0.3874155819524491,0.2698667852477112,0.350425617085754,0.4689952453393684,0.71,SIMULATED: conditional plug-in99
+eng_premier,q,25/26,team_first_second_energy_spearman,20,0.05413533834586466,-0.34285714285714286,0.042105263157894736,0.41894736842105257,0.53,SIMULATED: conditional plug-in99
+eng_premier,q,early,phase_energy_ratio_to_middle,266,0.891810811695638,0.6548204692412805,0.8150155707535947,0.999407908902225,0.74,SIMULATED: conditional plug-in99
+eng_premier,q,middle,phase_energy_ratio_to_middle,1138,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,late,phase_energy_ratio_to_middle,450,1.809158626029665,0.8041803412893073,0.9389661828244361,1.1224149723910952,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,all,max_over_median_squared_step,1854,45.946548394159976,22.930072482761155,28.950252967467573,39.91016637365867,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,all,top5pct_energy_share,1854,0.3177349713272902,0.26874297432387706,0.2824094907538037,0.3000879853556627,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,all,weekly_mean_energy_lag1_correlation,90,0.5349451606545333,0.1391822800765405,0.3029112340862885,0.4638491570929841,0.98,SIMULATED: conditional plug-in99
+eng_premier,q,all,mean_offdiagonal_centered_step_product,111,-1.2951042764049848e-5,-1.2789264806906182e-5,-8.254442012186785e-6,-4.990001816639097e-6,0.06,SIMULATED: conditional plug-in99
+eng_premier,q,all,mean_offdiagonal_centered_step_covariance,760,-8.053160981879271e-6,-7.84370672600762e-6,-7.044989316812337e-6,-6.42336443513193e-6,0.01,SIMULATED: conditional plug-in99
+eng_premier,q,22/23:prior_abs_q_tertile_1,mean_energy,124,0.2950572601252094,0.18639698093697918,0.22927955074172635,0.2900274101289969,0.97,SIMULATED: conditional plug-in99
+eng_premier,q,22/23:prior_abs_q_tertile_2,mean_energy,124,0.41609206929856923,0.17812885189193797,0.2451375787180263,0.29712479496916244,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,22/23:prior_abs_q_tertile_3,mean_energy,124,0.3309885523652769,0.18766613162835516,0.24010148522548633,0.30238073799596854,1.0,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:prior_abs_q_tertile_1,mean_energy,151,0.22969717821705565,0.1731449735627267,0.22976181824723288,0.2938807981749739,0.5,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:prior_abs_q_tertile_2,mean_energy,150,0.26493290585853474,0.18928193285514036,0.22803153412384408,0.2909179135679308,0.85,SIMULATED: conditional plug-in99
+eng_premier,q,23/24:prior_abs_q_tertile_3,mean_energy,151,0.21919365059293502,0.1806414032701919,0.2301970413599123,0.31137400618081734,0.27,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:prior_abs_q_tertile_1,mean_energy,162,0.23441340228950033,0.1767212140035162,0.2320366610882316,0.2879720170362027,0.56,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:prior_abs_q_tertile_2,mean_energy,162,0.28256078383330885,0.18526032777685575,0.23741865623491598,0.2924130887021929,0.92,SIMULATED: conditional plug-in99
+eng_premier,q,24/25:prior_abs_q_tertile_3,mean_energy,163,0.2161146585274581,0.18152240989382315,0.2253180746969862,0.2806631010018667,0.41,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:prior_abs_q_tertile_1,mean_energy,181,0.22291030028322667,0.18345829579893685,0.2322456157253582,0.2926487938676189,0.44,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:prior_abs_q_tertile_2,mean_energy,181,0.2255286669048072,0.1857559326593215,0.22949059800184196,0.2792474569928419,0.45,SIMULATED: conditional plug-in99
+eng_premier,q,25/26:prior_abs_q_tertile_3,mean_energy,181,0.2064755345255361,0.17899698752698548,0.22880753670297094,0.28759468243029934,0.22,SIMULATED: conditional plug-in99
+eng_premier,s,all,cross_team_energy_CV,80,0.427414704884625,0.38517706785195305,0.4559998130200154,0.5192324249889546,0.31,SIMULATED: conditional plug-in99
+eng_premier,s,all,team_first_second_energy_spearman,80,-0.02325363338021566,-0.1270253164556962,0.07203469292076888,0.23370135958743551,0.23,SIMULATED: conditional plug-in99
 eng_premier,s,22/23:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-eng_premier,s,22/23:middle,phase_energy_ratio_to_middle,234,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23:late,phase_energy_ratio_to_middle,138,1.5503397873886047,0.6905907730552271,1.0404257107425778,1.4310228247127643,0.97,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23,cross_team_energy_CV,20,0.38028483056301454,0.3224335408959755,0.4605377519450334,0.5891718039137726,0.13,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23,team_first_second_energy_spearman,20,0.17894736842105263,-0.2733834586466165,0.04661654135338346,0.3798496240601503,0.77,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:early,phase_energy_ratio_to_middle,86,0.5015497946539512,0.5153671540220038,0.8223503079564666,1.2206433601811928,0.05,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:middle,phase_energy_ratio_to_middle,260,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:late,phase_energy_ratio_to_middle,106,0.7041548663846775,0.6242153732890738,0.9401531720232976,1.395457255023802,0.17,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24,cross_team_energy_CV,20,0.38830664202957393,0.29648095452097345,0.41219628965372535,0.5921038099726996,0.35,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24,team_first_second_energy_spearman,20,-0.07067669172932331,-0.2932330827067669,0.009022556390977444,0.4284210526315787,0.36,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:early,phase_energy_ratio_to_middle,90,0.5690450927139066,0.5664949292838697,0.8078241330391813,1.1708817928689006,0.07,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:middle,phase_energy_ratio_to_middle,281,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:late,phase_energy_ratio_to_middle,116,0.8204735423266303,0.5498287059297253,0.8586765265340719,1.2226248064219838,0.42,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25,cross_team_energy_CV,20,0.47483247913017435,0.31564109017174397,0.4093905750855643,0.5755755992728457,0.71,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25,team_first_second_energy_spearman,20,-0.0015037593984962407,-0.23729323308270678,0.081203007518797,0.3974436090225562,0.33,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:early,phase_energy_ratio_to_middle,90,0.6625275644165111,0.5037890467298529,0.7908543116927558,1.0604570710466323,0.32,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:middle,phase_energy_ratio_to_middle,363,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:late,phase_energy_ratio_to_middle,90,1.1477900810059085,0.47670629532362196,0.7564395931655572,1.1981991504381941,0.94,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26,cross_team_energy_CV,20,0.3295307571545658,0.3185533631536269,0.45224024997971424,0.5904798528962879,0.1,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26,team_first_second_energy_spearman,20,-0.05714285714285714,-0.22045112781954887,0.15338345864661654,0.459548872180451,0.24,NOT_SIMULATED: non-sentinel
-eng_premier,s,early,phase_energy_ratio_to_middle,266,0.6236304398884438,0.6181443255516497,0.8040387398577361,1.0010597363833345,0.08,NOT_SIMULATED: non-sentinel
-eng_premier,s,middle,phase_energy_ratio_to_middle,1138,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,late,phase_energy_ratio_to_middle,450,1.0074444035169565,0.7378064765953222,0.8950023622564066,1.0756716449432526,0.85,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,max_over_median_squared_step,1854,28.189131426524785,22.368525302319632,28.98589392808804,41.975321357197735,0.39,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,top5pct_energy_share,1854,0.28453105396320355,0.2664667052483248,0.28273173457061157,0.30433377536748396,0.62,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,weekly_mean_energy_lag1_correlation,90,0.5267479394809074,0.2884261397452535,0.4486499553053757,0.5660976765487303,0.86,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,mean_offdiagonal_centered_step_product,111,4.960795092602428e-8,-2.3758233347074304e-6,-1.5940898452553171e-6,-5.784418243181217e-7,0.98,NOT_SIMULATED: non-sentinel
-eng_premier,s,all,mean_offdiagonal_centered_step_covariance,760,-9.816878219912857e-7,-1.683322679452664e-6,-1.5023058231538558e-6,-1.3587412468908958e-6,1.0,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23:prior_abs_q_tertile_1,mean_energy,124,0.07756695579113282,0.10538004745915285,0.14457520590091014,0.19605958303176146,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23:prior_abs_q_tertile_2,mean_energy,124,0.09179064352311704,0.10393535040639268,0.14086862957525964,0.1888745369437217,0.03,NOT_SIMULATED: non-sentinel
-eng_premier,s,22/23:prior_abs_q_tertile_3,mean_energy,124,0.07402841150440632,0.10654247668240382,0.14714137994044288,0.19982651816282715,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:prior_abs_q_tertile_1,mean_energy,151,0.06442257539533527,0.10642021386446468,0.1453970077388999,0.18777206314509534,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:prior_abs_q_tertile_2,mean_energy,150,0.07076613659597716,0.10617621471414351,0.14146256454990658,0.18898267434285193,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,23/24:prior_abs_q_tertile_3,mean_energy,151,0.10102745955177504,0.11160398865151773,0.14316980382480657,0.18036263583212636,0.04,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:prior_abs_q_tertile_1,mean_energy,162,0.07791527465709072,0.10993359804805218,0.14316909968194275,0.18134615993845896,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:prior_abs_q_tertile_2,mean_energy,162,0.10812867106053921,0.10744661706535763,0.14079296180839518,0.198906064810088,0.07,NOT_SIMULATED: non-sentinel
-eng_premier,s,24/25:prior_abs_q_tertile_3,mean_energy,163,0.13773056291559588,0.1054929821508473,0.1453970215354271,0.1764881888836975,0.34,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:prior_abs_q_tertile_1,mean_energy,181,0.0715113446773069,0.1120320161061348,0.14129929112326653,0.1906902320780371,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:prior_abs_q_tertile_2,mean_energy,181,0.0769176873710895,0.10932466645040056,0.13983672835845837,0.19791733171097387,0.01,NOT_SIMULATED: non-sentinel
-eng_premier,s,25/26:prior_abs_q_tertile_3,mean_energy,181,0.08677669984085275,0.10686598091116306,0.14161453603815943,0.1946661335143374,0.01,NOT_SIMULATED: non-sentinel
+eng_premier,s,22/23:middle,phase_energy_ratio_to_middle,234,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,22/23:late,phase_energy_ratio_to_middle,138,1.5503397873886047,0.6905907730552271,1.0404257107425778,1.4310228247127643,0.97,SIMULATED: conditional plug-in99
+eng_premier,s,22/23,cross_team_energy_CV,20,0.38028483056301454,0.3224335408959755,0.4605377519450334,0.5891718039137726,0.13,SIMULATED: conditional plug-in99
+eng_premier,s,22/23,team_first_second_energy_spearman,20,0.17894736842105263,-0.2733834586466165,0.04661654135338346,0.3798496240601503,0.77,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:early,phase_energy_ratio_to_middle,86,0.5015497946539512,0.5153671540220038,0.8223503079564666,1.2206433601811928,0.05,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:middle,phase_energy_ratio_to_middle,260,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:late,phase_energy_ratio_to_middle,106,0.7041548663846775,0.6242153732890738,0.9401531720232976,1.395457255023802,0.17,SIMULATED: conditional plug-in99
+eng_premier,s,23/24,cross_team_energy_CV,20,0.38830664202957393,0.29648095452097345,0.41219628965372535,0.5921038099726996,0.35,SIMULATED: conditional plug-in99
+eng_premier,s,23/24,team_first_second_energy_spearman,20,-0.07067669172932331,-0.2932330827067669,0.009022556390977444,0.4284210526315787,0.36,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:early,phase_energy_ratio_to_middle,90,0.5690450927139066,0.5664949292838697,0.8078241330391813,1.1708817928689006,0.07,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:middle,phase_energy_ratio_to_middle,281,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:late,phase_energy_ratio_to_middle,116,0.8204735423266303,0.5498287059297253,0.8586765265340719,1.2226248064219838,0.42,SIMULATED: conditional plug-in99
+eng_premier,s,24/25,cross_team_energy_CV,20,0.47483247913017435,0.31564109017174397,0.4093905750855643,0.5755755992728457,0.71,SIMULATED: conditional plug-in99
+eng_premier,s,24/25,team_first_second_energy_spearman,20,-0.0015037593984962407,-0.23729323308270678,0.081203007518797,0.3974436090225562,0.33,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:early,phase_energy_ratio_to_middle,90,0.6625275644165111,0.5037890467298529,0.7908543116927558,1.0604570710466323,0.32,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:middle,phase_energy_ratio_to_middle,363,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:late,phase_energy_ratio_to_middle,90,1.1477900810059085,0.47670629532362196,0.7564395931655572,1.1981991504381941,0.94,SIMULATED: conditional plug-in99
+eng_premier,s,25/26,cross_team_energy_CV,20,0.3295307571545658,0.3185533631536269,0.45224024997971424,0.5904798528962879,0.1,SIMULATED: conditional plug-in99
+eng_premier,s,25/26,team_first_second_energy_spearman,20,-0.05714285714285714,-0.22045112781954887,0.15338345864661654,0.459548872180451,0.24,SIMULATED: conditional plug-in99
+eng_premier,s,early,phase_energy_ratio_to_middle,266,0.6236304398884438,0.6181443255516497,0.8040387398577361,1.0010597363833345,0.08,SIMULATED: conditional plug-in99
+eng_premier,s,middle,phase_energy_ratio_to_middle,1138,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,late,phase_energy_ratio_to_middle,450,1.0074444035169565,0.7378064765953222,0.8950023622564066,1.0756716449432526,0.85,SIMULATED: conditional plug-in99
+eng_premier,s,all,max_over_median_squared_step,1854,28.189131426524785,22.368525302319632,28.98589392808804,41.975321357197735,0.39,SIMULATED: conditional plug-in99
+eng_premier,s,all,top5pct_energy_share,1854,0.28453105396320355,0.2664667052483248,0.28273173457061157,0.30433377536748396,0.62,SIMULATED: conditional plug-in99
+eng_premier,s,all,weekly_mean_energy_lag1_correlation,90,0.5267479394809074,0.2884261397452535,0.4486499553053757,0.5660976765487303,0.86,SIMULATED: conditional plug-in99
+eng_premier,s,all,mean_offdiagonal_centered_step_product,111,4.960795092602428e-8,-2.3758233347074304e-6,-1.5940898452553171e-6,-5.784418243181217e-7,0.98,SIMULATED: conditional plug-in99
+eng_premier,s,all,mean_offdiagonal_centered_step_covariance,760,-9.816878219912857e-7,-1.683322679452664e-6,-1.5023058231538558e-6,-1.3587412468908958e-6,1.0,SIMULATED: conditional plug-in99
+eng_premier,s,22/23:prior_abs_q_tertile_1,mean_energy,124,0.07756695579113282,0.10538004745915285,0.14457520590091014,0.19605958303176146,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,22/23:prior_abs_q_tertile_2,mean_energy,124,0.09179064352311704,0.10393535040639268,0.14086862957525964,0.1888745369437217,0.03,SIMULATED: conditional plug-in99
+eng_premier,s,22/23:prior_abs_q_tertile_3,mean_energy,124,0.07402841150440632,0.10654247668240382,0.14714137994044288,0.19982651816282715,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:prior_abs_q_tertile_1,mean_energy,151,0.06442257539533527,0.10642021386446468,0.1453970077388999,0.18777206314509534,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:prior_abs_q_tertile_2,mean_energy,150,0.07076613659597716,0.10617621471414351,0.14146256454990658,0.18898267434285193,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,23/24:prior_abs_q_tertile_3,mean_energy,151,0.10102745955177504,0.11160398865151773,0.14316980382480657,0.18036263583212636,0.04,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:prior_abs_q_tertile_1,mean_energy,162,0.07791527465709072,0.10993359804805218,0.14316909968194275,0.18134615993845896,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:prior_abs_q_tertile_2,mean_energy,162,0.10812867106053921,0.10744661706535763,0.14079296180839518,0.198906064810088,0.07,SIMULATED: conditional plug-in99
+eng_premier,s,24/25:prior_abs_q_tertile_3,mean_energy,163,0.13773056291559588,0.1054929821508473,0.1453970215354271,0.1764881888836975,0.34,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:prior_abs_q_tertile_1,mean_energy,181,0.0715113446773069,0.1120320161061348,0.14129929112326653,0.1906902320780371,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:prior_abs_q_tertile_2,mean_energy,181,0.0769176873710895,0.10932466645040056,0.13983672835845837,0.19791733171097387,0.01,SIMULATED: conditional plug-in99
+eng_premier,s,25/26:prior_abs_q_tertile_3,mean_energy,181,0.08677669984085275,0.10686598091116306,0.14161453603815943,0.1946661335143374,0.01,SIMULATED: conditional plug-in99
 eng_championship,q,all,cross_team_energy_CV,96,0.4343363434045094,,,,,NOT_SIMULATED: non-sentinel
 eng_championship,q,all,team_first_second_energy_spearman,96,0.10286218122626153,,,,,NOT_SIMULATED: non-sentinel
 eng_championship,q,22/23:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
@@ -335,106 +335,106 @@ eng_league_two,s,24/25:prior_abs_q_tertile_3,mean_energy,239,0.11029934481272563
 eng_league_two,s,25/26:prior_abs_q_tertile_1,mean_energy,251,0.16149352543026763,,,,,NOT_SIMULATED: non-sentinel
 eng_league_two,s,25/26:prior_abs_q_tertile_2,mean_energy,250,0.10213168984244853,,,,,NOT_SIMULATED: non-sentinel
 eng_league_two,s,25/26:prior_abs_q_tertile_3,mean_energy,251,0.10517212163149156,,,,,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,cross_team_energy_CV,55,0.48569948569156923,0.3410405056850461,0.432361587650353,0.5195573757574418,0.83,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,team_first_second_energy_spearman,55,0.0707070707070707,-0.20426406926406926,-0.0017316017316017316,0.2294083694083694,0.65,NOT_SIMULATED: non-sentinel
+sco_premiership,q,all,cross_team_energy_CV,55,0.48569948569156923,0.3410405056850461,0.432361587650353,0.5195573757574418,0.83,SIMULATED: conditional plug-in99
+sco_premiership,q,all,team_first_second_energy_spearman,55,0.0707070707070707,-0.20426406926406926,-0.0017316017316017316,0.2294083694083694,0.65,SIMULATED: conditional plug-in99
 sco_premiership,q,21/22:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_premiership,q,21/22:middle,phase_energy_ratio_to_middle,99,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22:late,phase_energy_ratio_to_middle,46,0.8233541073586627,0.5304436388932294,0.9679397138347858,1.5416922732630869,0.37,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22,cross_team_energy_CV,7,0.3521316361416313,0.2587541611477665,0.440551136087446,0.7130083436264976,0.19,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22,team_first_second_energy_spearman,7,0.03571428571428571,-0.6428571428571429,0.03571428571428571,0.7178571428571426,0.52,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:early,phase_energy_ratio_to_middle,60,1.111971263652152,0.47600068862097716,0.8089105011524631,1.249961426848442,0.84,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:middle,phase_energy_ratio_to_middle,138,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:late,phase_energy_ratio_to_middle,54,0.7144264348406064,0.4953891299444097,0.8018001255161711,1.391263794953668,0.37,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23,cross_team_energy_CV,12,0.31486201349362436,0.22288612058449406,0.3712943586876099,0.5526303903433382,0.35,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23,team_first_second_energy_spearman,12,0.15384615384615385,-0.576923076923077,0.0,0.5342657342657341,0.7,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:early,phase_energy_ratio_to_middle,36,0.486877046994576,0.42795808610547026,0.7149785723951024,1.2207697137605948,0.13,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:middle,phase_energy_ratio_to_middle,144,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:late,phase_energy_ratio_to_middle,38,0.6889961218816423,0.41418942068971354,0.762958750470201,1.1887492084636364,0.39,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24,cross_team_energy_CV,12,0.3841220649382361,0.23865771316957202,0.3660606193826083,0.5436913970826884,0.57,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24,team_first_second_energy_spearman,12,0.20279720279720279,-0.46503496503496505,0.04195804195804196,0.45664335664335653,0.72,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:early,phase_energy_ratio_to_middle,26,0.47096855935306264,0.3583226934047519,0.698113833430355,1.2413076921890631,0.2,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:middle,phase_energy_ratio_to_middle,143,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:late,phase_energy_ratio_to_middle,48,1.3520220432168912,0.4733145476977182,0.7964429137828787,1.2094009496746314,0.97,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25,cross_team_energy_CV,12,0.5585987836987029,0.27012121799828814,0.4014243436622365,0.5748324267530859,0.93,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25,team_first_second_energy_spearman,12,0.25874125874125875,-0.46293706293706294,0.09090909090909091,0.44895104895104887,0.73,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:early,phase_energy_ratio_to_middle,20,0.8837221956500042,0.2960618794644022,0.5607630603231544,1.107594422611072,0.87,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:middle,phase_energy_ratio_to_middle,153,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:late,phase_energy_ratio_to_middle,58,0.631506129133539,0.46471181466162315,0.8050932945987521,1.3571657733973657,0.25,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26,cross_team_energy_CV,12,0.4025618820761754,0.277051024209316,0.39312972644937966,0.5426671631827102,0.55,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26,team_first_second_energy_spearman,12,0.5314685314685315,-0.5244755244755245,-0.006993006993006993,0.49790209790209783,0.97,NOT_SIMULATED: non-sentinel
-sco_premiership,q,early,phase_energy_ratio_to_middle,142,0.6744641513232648,0.5509122765905593,0.740781954096649,0.9990010429221768,0.32,NOT_SIMULATED: non-sentinel
-sco_premiership,q,middle,phase_energy_ratio_to_middle,677,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,late,phase_energy_ratio_to_middle,244,0.849781165941957,0.6548190116960728,0.8351604223389889,1.0892904668138756,0.52,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,max_over_median_squared_step,1063,27.293303351283633,19.158384132525946,28.66771675375391,40.85132839453475,0.46,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,top5pct_energy_share,1063,0.2948206490469956,0.26580534963927394,0.2898340196147204,0.3134935652523389,0.71,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,weekly_mean_energy_lag1_correlation,84,0.491748224383508,0.08378685778103395,0.2977740609591422,0.5055156319561993,0.91,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,mean_offdiagonal_centered_step_product,112,-9.655454783735727e-6,-1.3243736028668813e-5,-9.884618079929466e-6,-5.911163704559363e-6,0.55,NOT_SIMULATED: non-sentinel
-sco_premiership,q,all,mean_offdiagonal_centered_step_covariance,330,-8.916286046234372e-6,-8.775393225931593e-6,-7.556192631564571e-6,-6.736135412493429e-6,0.04,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22:prior_abs_q_tertile_1,mean_energy,49,0.2612892048667423,0.13051190906506505,0.21581375295607605,0.3232957911190494,0.8,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22:prior_abs_q_tertile_2,mean_energy,48,0.22941933619407406,0.1402287313646924,0.21329180821076776,0.3045338744319369,0.63,NOT_SIMULATED: non-sentinel
-sco_premiership,q,21/22:prior_abs_q_tertile_3,mean_energy,48,0.2539436826581105,0.13899785618786953,0.214696020482431,0.34499876541826985,0.68,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:prior_abs_q_tertile_1,mean_energy,84,0.16103615891295767,0.1353763193469044,0.20147619304144104,0.2858735960028136,0.18,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:prior_abs_q_tertile_2,mean_energy,84,0.16859610869844005,0.1319309530165847,0.19786910620650325,0.2766088828933058,0.24,NOT_SIMULATED: non-sentinel
-sco_premiership,q,22/23:prior_abs_q_tertile_3,mean_energy,84,0.1679755063220657,0.14544444837876508,0.204265405585361,0.27609933908674406,0.23,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:prior_abs_q_tertile_1,mean_energy,73,0.163555165506313,0.14211734585802627,0.20396142775401327,0.31231953725864436,0.14,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:prior_abs_q_tertile_2,mean_energy,72,0.2868560358912331,0.15410366845402268,0.20419777619859053,0.2755728477369747,0.96,NOT_SIMULATED: non-sentinel
-sco_premiership,q,23/24:prior_abs_q_tertile_3,mean_energy,73,0.2371508645382595,0.14891863650309778,0.2086233051473457,0.29073016439478105,0.74,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:prior_abs_q_tertile_1,mean_energy,73,0.3176392296158728,0.139849869029854,0.2018579931176157,0.294334564561812,0.98,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:prior_abs_q_tertile_2,mean_energy,72,0.25000709703897817,0.15168175557638452,0.21692666586177994,0.32762588895398603,0.79,NOT_SIMULATED: non-sentinel
-sco_premiership,q,24/25:prior_abs_q_tertile_3,mean_energy,72,0.3717110052852193,0.15541516071150518,0.21783138889085094,0.30401818499900696,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:prior_abs_q_tertile_1,mean_energy,77,0.25000886497008246,0.15460765453946393,0.2060206286290716,0.27861858410871654,0.85,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:prior_abs_q_tertile_2,mean_energy,77,0.23136928639849091,0.15263056725291563,0.20959165512658992,0.30440578120726197,0.69,NOT_SIMULATED: non-sentinel
-sco_premiership,q,25/26:prior_abs_q_tertile_3,mean_energy,77,0.33474014428897064,0.15451097173034165,0.20972492260486075,0.3104539753235529,0.95,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,cross_team_energy_CV,55,0.5478994490803243,0.4326013882606925,0.5325826523430433,0.6859865548863432,0.6,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,team_first_second_energy_spearman,55,-0.08787878787878788,-0.19643578643578644,0.05988455988455989,0.29668109668109666,0.23,NOT_SIMULATED: non-sentinel
+sco_premiership,q,21/22:middle,phase_energy_ratio_to_middle,99,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22:late,phase_energy_ratio_to_middle,46,0.8233541073586627,0.5304436388932294,0.9679397138347858,1.5416922732630869,0.37,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22,cross_team_energy_CV,7,0.3521316361416313,0.2587541611477665,0.440551136087446,0.7130083436264976,0.19,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22,team_first_second_energy_spearman,7,0.03571428571428571,-0.6428571428571429,0.03571428571428571,0.7178571428571426,0.52,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:early,phase_energy_ratio_to_middle,60,1.111971263652152,0.47600068862097716,0.8089105011524631,1.249961426848442,0.84,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:middle,phase_energy_ratio_to_middle,138,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:late,phase_energy_ratio_to_middle,54,0.7144264348406064,0.4953891299444097,0.8018001255161711,1.391263794953668,0.37,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23,cross_team_energy_CV,12,0.31486201349362436,0.22288612058449406,0.3712943586876099,0.5526303903433382,0.35,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23,team_first_second_energy_spearman,12,0.15384615384615385,-0.576923076923077,0.0,0.5342657342657341,0.7,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:early,phase_energy_ratio_to_middle,36,0.486877046994576,0.42795808610547026,0.7149785723951024,1.2207697137605948,0.13,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:middle,phase_energy_ratio_to_middle,144,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:late,phase_energy_ratio_to_middle,38,0.6889961218816423,0.41418942068971354,0.762958750470201,1.1887492084636364,0.39,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24,cross_team_energy_CV,12,0.3841220649382361,0.23865771316957202,0.3660606193826083,0.5436913970826884,0.57,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24,team_first_second_energy_spearman,12,0.20279720279720279,-0.46503496503496505,0.04195804195804196,0.45664335664335653,0.72,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:early,phase_energy_ratio_to_middle,26,0.47096855935306264,0.3583226934047519,0.698113833430355,1.2413076921890631,0.2,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:middle,phase_energy_ratio_to_middle,143,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:late,phase_energy_ratio_to_middle,48,1.3520220432168912,0.4733145476977182,0.7964429137828787,1.2094009496746314,0.97,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25,cross_team_energy_CV,12,0.5585987836987029,0.27012121799828814,0.4014243436622365,0.5748324267530859,0.93,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25,team_first_second_energy_spearman,12,0.25874125874125875,-0.46293706293706294,0.09090909090909091,0.44895104895104887,0.73,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:early,phase_energy_ratio_to_middle,20,0.8837221956500042,0.2960618794644022,0.5607630603231544,1.107594422611072,0.87,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:middle,phase_energy_ratio_to_middle,153,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:late,phase_energy_ratio_to_middle,58,0.631506129133539,0.46471181466162315,0.8050932945987521,1.3571657733973657,0.25,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26,cross_team_energy_CV,12,0.4025618820761754,0.277051024209316,0.39312972644937966,0.5426671631827102,0.55,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26,team_first_second_energy_spearman,12,0.5314685314685315,-0.5244755244755245,-0.006993006993006993,0.49790209790209783,0.97,SIMULATED: conditional plug-in99
+sco_premiership,q,early,phase_energy_ratio_to_middle,142,0.6744641513232648,0.5509122765905593,0.740781954096649,0.9990010429221768,0.32,SIMULATED: conditional plug-in99
+sco_premiership,q,middle,phase_energy_ratio_to_middle,677,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,late,phase_energy_ratio_to_middle,244,0.849781165941957,0.6548190116960728,0.8351604223389889,1.0892904668138756,0.52,SIMULATED: conditional plug-in99
+sco_premiership,q,all,max_over_median_squared_step,1063,27.293303351283633,19.158384132525946,28.66771675375391,40.85132839453475,0.46,SIMULATED: conditional plug-in99
+sco_premiership,q,all,top5pct_energy_share,1063,0.2948206490469956,0.26580534963927394,0.2898340196147204,0.3134935652523389,0.71,SIMULATED: conditional plug-in99
+sco_premiership,q,all,weekly_mean_energy_lag1_correlation,84,0.491748224383508,0.08378685778103395,0.2977740609591422,0.5055156319561993,0.91,SIMULATED: conditional plug-in99
+sco_premiership,q,all,mean_offdiagonal_centered_step_product,112,-9.655454783735727e-6,-1.3243736028668813e-5,-9.884618079929466e-6,-5.911163704559363e-6,0.55,SIMULATED: conditional plug-in99
+sco_premiership,q,all,mean_offdiagonal_centered_step_covariance,330,-8.916286046234372e-6,-8.775393225931593e-6,-7.556192631564571e-6,-6.736135412493429e-6,0.04,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22:prior_abs_q_tertile_1,mean_energy,49,0.2612892048667423,0.13051190906506505,0.21581375295607605,0.3232957911190494,0.8,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22:prior_abs_q_tertile_2,mean_energy,48,0.22941933619407406,0.1402287313646924,0.21329180821076776,0.3045338744319369,0.63,SIMULATED: conditional plug-in99
+sco_premiership,q,21/22:prior_abs_q_tertile_3,mean_energy,48,0.2539436826581105,0.13899785618786953,0.214696020482431,0.34499876541826985,0.68,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:prior_abs_q_tertile_1,mean_energy,84,0.16103615891295767,0.1353763193469044,0.20147619304144104,0.2858735960028136,0.18,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:prior_abs_q_tertile_2,mean_energy,84,0.16859610869844005,0.1319309530165847,0.19786910620650325,0.2766088828933058,0.24,SIMULATED: conditional plug-in99
+sco_premiership,q,22/23:prior_abs_q_tertile_3,mean_energy,84,0.1679755063220657,0.14544444837876508,0.204265405585361,0.27609933908674406,0.23,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:prior_abs_q_tertile_1,mean_energy,73,0.163555165506313,0.14211734585802627,0.20396142775401327,0.31231953725864436,0.14,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:prior_abs_q_tertile_2,mean_energy,72,0.2868560358912331,0.15410366845402268,0.20419777619859053,0.2755728477369747,0.96,SIMULATED: conditional plug-in99
+sco_premiership,q,23/24:prior_abs_q_tertile_3,mean_energy,73,0.2371508645382595,0.14891863650309778,0.2086233051473457,0.29073016439478105,0.74,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:prior_abs_q_tertile_1,mean_energy,73,0.3176392296158728,0.139849869029854,0.2018579931176157,0.294334564561812,0.98,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:prior_abs_q_tertile_2,mean_energy,72,0.25000709703897817,0.15168175557638452,0.21692666586177994,0.32762588895398603,0.79,SIMULATED: conditional plug-in99
+sco_premiership,q,24/25:prior_abs_q_tertile_3,mean_energy,72,0.3717110052852193,0.15541516071150518,0.21783138889085094,0.30401818499900696,1.0,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:prior_abs_q_tertile_1,mean_energy,77,0.25000886497008246,0.15460765453946393,0.2060206286290716,0.27861858410871654,0.85,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:prior_abs_q_tertile_2,mean_energy,77,0.23136928639849091,0.15263056725291563,0.20959165512658992,0.30440578120726197,0.69,SIMULATED: conditional plug-in99
+sco_premiership,q,25/26:prior_abs_q_tertile_3,mean_energy,77,0.33474014428897064,0.15451097173034165,0.20972492260486075,0.3104539753235529,0.95,SIMULATED: conditional plug-in99
+sco_premiership,s,all,cross_team_energy_CV,55,0.5478994490803243,0.4326013882606925,0.5325826523430433,0.6859865548863432,0.6,SIMULATED: conditional plug-in99
+sco_premiership,s,all,team_first_second_energy_spearman,55,-0.08787878787878788,-0.19643578643578644,0.05988455988455989,0.29668109668109666,0.23,SIMULATED: conditional plug-in99
 sco_premiership,s,21/22:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_premiership,s,21/22:middle,phase_energy_ratio_to_middle,99,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22:late,phase_energy_ratio_to_middle,46,1.260758354340644,0.49327136385310777,0.9991471874205352,1.537532459001562,0.84,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22,cross_team_energy_CV,7,0.47191041385735955,0.27154652392767553,0.5774858931044142,0.9098244015091984,0.33,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22,team_first_second_energy_spearman,7,0.2857142857142857,-0.5821428571428571,0.17857142857142858,0.75,0.66,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:early,phase_energy_ratio_to_middle,60,1.0328044751804428,0.4570813941473721,0.7707840349589155,1.3695201997347088,0.8,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:middle,phase_energy_ratio_to_middle,138,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:late,phase_energy_ratio_to_middle,54,0.7299940301874801,0.3772546138035672,0.7362277937834618,1.1939018049629733,0.49,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23,cross_team_energy_CV,12,0.7033276441047627,0.27563770200289983,0.47571371303927606,0.7387973728656079,0.93,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23,team_first_second_energy_spearman,12,0.3146853146853147,-0.4972027972027972,0.013986013986013986,0.5510489510489507,0.77,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:early,phase_energy_ratio_to_middle,36,0.5478227709387258,0.37679367789843604,0.6921249543542175,1.1230638831913053,0.27,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:middle,phase_energy_ratio_to_middle,144,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:late,phase_energy_ratio_to_middle,38,0.9397963890530436,0.42957445318437637,0.7761371901684967,1.3085385265051674,0.73,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24,cross_team_energy_CV,12,0.3822559092666752,0.3111237523168733,0.47466969678263693,0.6699972947772512,0.24,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24,team_first_second_energy_spearman,12,-0.32867132867132864,-0.42937062937062936,0.027972027972027972,0.5391608391608391,0.12,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:early,phase_energy_ratio_to_middle,26,1.0210049085703685,0.3061917914009468,0.6037738858082647,1.3783757126584346,0.87,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:middle,phase_energy_ratio_to_middle,143,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:late,phase_energy_ratio_to_middle,48,0.7782582367755081,0.38590740432314097,0.7228394772666722,1.1824459921204593,0.58,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25,cross_team_energy_CV,12,0.43130368016078435,0.35233831921154585,0.47467260027281927,0.7357886644952718,0.31,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25,team_first_second_energy_spearman,12,-0.08391608391608392,-0.42727272727272725,-0.013986013986013986,0.5251748251748252,0.39,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:early,phase_energy_ratio_to_middle,20,0.5391067612306805,0.25607284116776063,0.519540772510622,1.1808486634247852,0.59,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:middle,phase_energy_ratio_to_middle,153,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:late,phase_energy_ratio_to_middle,58,0.965739841526643,0.3912628592755707,0.7290436325402073,1.2374621862997741,0.75,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26,cross_team_energy_CV,12,0.6176453707719949,0.31989408990540036,0.49043468316448446,0.7041733121047251,0.83,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26,team_first_second_energy_spearman,12,-0.04895104895104895,-0.4594405594405594,0.02097902097902098,0.5083916083916081,0.4,NOT_SIMULATED: non-sentinel
-sco_premiership,s,early,phase_energy_ratio_to_middle,142,0.7628847782489493,0.5228652169389866,0.6868908095159049,0.9260506221935348,0.69,NOT_SIMULATED: non-sentinel
-sco_premiership,s,middle,phase_energy_ratio_to_middle,677,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,late,phase_energy_ratio_to_middle,244,0.9430425514483703,0.6094713197054763,0.7937585155678606,0.9636196675879748,0.89,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,max_over_median_squared_step,1063,38.369487276280985,20.012119844344635,26.494458891647202,37.67466573851678,0.96,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,top5pct_energy_share,1063,0.29772983890399796,0.263493800016611,0.28465142224923634,0.3078705165132206,0.81,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,weekly_mean_energy_lag1_correlation,84,0.45428157129247676,0.28614879669832066,0.4703229344726547,0.6490799159374239,0.42,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,mean_offdiagonal_centered_step_product,112,-3.6551083471302927e-7,-1.3638040715131372e-6,-7.912299288707711e-7,-4.052816776926428e-7,0.96,NOT_SIMULATED: non-sentinel
-sco_premiership,s,all,mean_offdiagonal_centered_step_covariance,330,-4.5469645024263624e-7,-7.622000619834915e-7,-6.707834509742436e-7,-5.841595637918965e-7,1.0,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22:prior_abs_q_tertile_1,mean_energy,49,0.09744768846679074,0.06090221585304395,0.09556587636619651,0.16607460078644215,0.55,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22:prior_abs_q_tertile_2,mean_energy,48,0.04790150864034759,0.05742072142035634,0.09345005437648661,0.17443342980735527,0.03,NOT_SIMULATED: non-sentinel
-sco_premiership,s,21/22:prior_abs_q_tertile_3,mean_energy,48,0.08198583104608444,0.05276837736104559,0.09246006019394375,0.16301445401751546,0.39,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:prior_abs_q_tertile_1,mean_energy,84,0.045265868254659655,0.057978871530205346,0.08565321885314676,0.12430881396895135,0.03,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:prior_abs_q_tertile_2,mean_energy,84,0.051220352108824405,0.05924841985077235,0.08958631410515279,0.1400676956060822,0.03,NOT_SIMULATED: non-sentinel
-sco_premiership,s,22/23:prior_abs_q_tertile_3,mean_energy,84,0.05634902740065591,0.056985403986146085,0.08300899285841927,0.14129689455906974,0.05,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:prior_abs_q_tertile_1,mean_energy,73,0.049402458891192325,0.05651406458162436,0.09197981858536852,0.1314629085887728,0.02,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:prior_abs_q_tertile_2,mean_energy,72,0.045938537398641885,0.06084132249270946,0.09127952686388159,0.14865219262013063,0.01,NOT_SIMULATED: non-sentinel
-sco_premiership,s,23/24:prior_abs_q_tertile_3,mean_energy,73,0.08388829682549356,0.0561258167271467,0.08591083885380342,0.14003357105132141,0.44,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:prior_abs_q_tertile_1,mean_energy,73,0.05297943830985701,0.05830814422455537,0.09722123113081188,0.15999319964065153,0.02,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:prior_abs_q_tertile_2,mean_energy,72,0.048811206117632115,0.061710286518205974,0.09414885571420742,0.1364251640617386,0.02,NOT_SIMULATED: non-sentinel
-sco_premiership,s,24/25:prior_abs_q_tertile_3,mean_energy,72,0.08907259663569062,0.05364971821714071,0.09050299672603018,0.13193726361787425,0.47,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:prior_abs_q_tertile_1,mean_energy,77,0.0710923174333936,0.06395976622580568,0.09719599062312258,0.15258027346103686,0.18,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:prior_abs_q_tertile_2,mean_energy,77,0.07107197333135724,0.061897231277389504,0.09328616864480574,0.15431294032641227,0.14,NOT_SIMULATED: non-sentinel
-sco_premiership,s,25/26:prior_abs_q_tertile_3,mean_energy,77,0.07773279190919875,0.06321920170191925,0.09965952239849307,0.1440278310658445,0.23,NOT_SIMULATED: non-sentinel
+sco_premiership,s,21/22:middle,phase_energy_ratio_to_middle,99,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22:late,phase_energy_ratio_to_middle,46,1.260758354340644,0.49327136385310777,0.9991471874205352,1.537532459001562,0.84,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22,cross_team_energy_CV,7,0.47191041385735955,0.27154652392767553,0.5774858931044142,0.9098244015091984,0.33,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22,team_first_second_energy_spearman,7,0.2857142857142857,-0.5821428571428571,0.17857142857142858,0.75,0.66,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:early,phase_energy_ratio_to_middle,60,1.0328044751804428,0.4570813941473721,0.7707840349589155,1.3695201997347088,0.8,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:middle,phase_energy_ratio_to_middle,138,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:late,phase_energy_ratio_to_middle,54,0.7299940301874801,0.3772546138035672,0.7362277937834618,1.1939018049629733,0.49,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23,cross_team_energy_CV,12,0.7033276441047627,0.27563770200289983,0.47571371303927606,0.7387973728656079,0.93,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23,team_first_second_energy_spearman,12,0.3146853146853147,-0.4972027972027972,0.013986013986013986,0.5510489510489507,0.77,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:early,phase_energy_ratio_to_middle,36,0.5478227709387258,0.37679367789843604,0.6921249543542175,1.1230638831913053,0.27,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:middle,phase_energy_ratio_to_middle,144,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:late,phase_energy_ratio_to_middle,38,0.9397963890530436,0.42957445318437637,0.7761371901684967,1.3085385265051674,0.73,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24,cross_team_energy_CV,12,0.3822559092666752,0.3111237523168733,0.47466969678263693,0.6699972947772512,0.24,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24,team_first_second_energy_spearman,12,-0.32867132867132864,-0.42937062937062936,0.027972027972027972,0.5391608391608391,0.12,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:early,phase_energy_ratio_to_middle,26,1.0210049085703685,0.3061917914009468,0.6037738858082647,1.3783757126584346,0.87,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:middle,phase_energy_ratio_to_middle,143,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:late,phase_energy_ratio_to_middle,48,0.7782582367755081,0.38590740432314097,0.7228394772666722,1.1824459921204593,0.58,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25,cross_team_energy_CV,12,0.43130368016078435,0.35233831921154585,0.47467260027281927,0.7357886644952718,0.31,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25,team_first_second_energy_spearman,12,-0.08391608391608392,-0.42727272727272725,-0.013986013986013986,0.5251748251748252,0.39,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:early,phase_energy_ratio_to_middle,20,0.5391067612306805,0.25607284116776063,0.519540772510622,1.1808486634247852,0.59,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:middle,phase_energy_ratio_to_middle,153,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:late,phase_energy_ratio_to_middle,58,0.965739841526643,0.3912628592755707,0.7290436325402073,1.2374621862997741,0.75,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26,cross_team_energy_CV,12,0.6176453707719949,0.31989408990540036,0.49043468316448446,0.7041733121047251,0.83,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26,team_first_second_energy_spearman,12,-0.04895104895104895,-0.4594405594405594,0.02097902097902098,0.5083916083916081,0.4,SIMULATED: conditional plug-in99
+sco_premiership,s,early,phase_energy_ratio_to_middle,142,0.7628847782489493,0.5228652169389866,0.6868908095159049,0.9260506221935348,0.69,SIMULATED: conditional plug-in99
+sco_premiership,s,middle,phase_energy_ratio_to_middle,677,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,late,phase_energy_ratio_to_middle,244,0.9430425514483703,0.6094713197054763,0.7937585155678606,0.9636196675879748,0.89,SIMULATED: conditional plug-in99
+sco_premiership,s,all,max_over_median_squared_step,1063,38.369487276280985,20.012119844344635,26.494458891647202,37.67466573851678,0.96,SIMULATED: conditional plug-in99
+sco_premiership,s,all,top5pct_energy_share,1063,0.29772983890399796,0.263493800016611,0.28465142224923634,0.3078705165132206,0.81,SIMULATED: conditional plug-in99
+sco_premiership,s,all,weekly_mean_energy_lag1_correlation,84,0.45428157129247676,0.28614879669832066,0.4703229344726547,0.6490799159374239,0.42,SIMULATED: conditional plug-in99
+sco_premiership,s,all,mean_offdiagonal_centered_step_product,112,-3.6551083471302927e-7,-1.3638040715131372e-6,-7.912299288707711e-7,-4.052816776926428e-7,0.96,SIMULATED: conditional plug-in99
+sco_premiership,s,all,mean_offdiagonal_centered_step_covariance,330,-4.5469645024263624e-7,-7.622000619834915e-7,-6.707834509742436e-7,-5.841595637918965e-7,1.0,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22:prior_abs_q_tertile_1,mean_energy,49,0.09744768846679074,0.06090221585304395,0.09556587636619651,0.16607460078644215,0.55,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22:prior_abs_q_tertile_2,mean_energy,48,0.04790150864034759,0.05742072142035634,0.09345005437648661,0.17443342980735527,0.03,SIMULATED: conditional plug-in99
+sco_premiership,s,21/22:prior_abs_q_tertile_3,mean_energy,48,0.08198583104608444,0.05276837736104559,0.09246006019394375,0.16301445401751546,0.39,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:prior_abs_q_tertile_1,mean_energy,84,0.045265868254659655,0.057978871530205346,0.08565321885314676,0.12430881396895135,0.03,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:prior_abs_q_tertile_2,mean_energy,84,0.051220352108824405,0.05924841985077235,0.08958631410515279,0.1400676956060822,0.03,SIMULATED: conditional plug-in99
+sco_premiership,s,22/23:prior_abs_q_tertile_3,mean_energy,84,0.05634902740065591,0.056985403986146085,0.08300899285841927,0.14129689455906974,0.05,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:prior_abs_q_tertile_1,mean_energy,73,0.049402458891192325,0.05651406458162436,0.09197981858536852,0.1314629085887728,0.02,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:prior_abs_q_tertile_2,mean_energy,72,0.045938537398641885,0.06084132249270946,0.09127952686388159,0.14865219262013063,0.01,SIMULATED: conditional plug-in99
+sco_premiership,s,23/24:prior_abs_q_tertile_3,mean_energy,73,0.08388829682549356,0.0561258167271467,0.08591083885380342,0.14003357105132141,0.44,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:prior_abs_q_tertile_1,mean_energy,73,0.05297943830985701,0.05830814422455537,0.09722123113081188,0.15999319964065153,0.02,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:prior_abs_q_tertile_2,mean_energy,72,0.048811206117632115,0.061710286518205974,0.09414885571420742,0.1364251640617386,0.02,SIMULATED: conditional plug-in99
+sco_premiership,s,24/25:prior_abs_q_tertile_3,mean_energy,72,0.08907259663569062,0.05364971821714071,0.09050299672603018,0.13193726361787425,0.47,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:prior_abs_q_tertile_1,mean_energy,77,0.0710923174333936,0.06395976622580568,0.09719599062312258,0.15258027346103686,0.18,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:prior_abs_q_tertile_2,mean_energy,77,0.07107197333135724,0.061897231277389504,0.09328616864480574,0.15431294032641227,0.14,SIMULATED: conditional plug-in99
+sco_premiership,s,25/26:prior_abs_q_tertile_3,mean_energy,77,0.07773279190919875,0.06321920170191925,0.09965952239849307,0.1440278310658445,0.23,SIMULATED: conditional plug-in99
 sco_championship,q,all,cross_team_energy_CV,27,0.6437230511781853,,,,,NOT_SIMULATED: non-sentinel
 sco_championship,q,all,team_first_second_energy_spearman,27,0.09340659340659341,,,,,NOT_SIMULATED: non-sentinel
 sco_championship,q,22/23:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
@@ -603,106 +603,106 @@ sco_league_one,s,24/25:prior_abs_q_tertile_3,mean_energy,56,0.05827732771075827,
 sco_league_one,s,25/26:prior_abs_q_tertile_1,mean_energy,63,0.051968189795926246,,,,,NOT_SIMULATED: non-sentinel
 sco_league_one,s,25/26:prior_abs_q_tertile_2,mean_energy,62,0.06731888172404853,,,,,NOT_SIMULATED: non-sentinel
 sco_league_one,s,25/26:prior_abs_q_tertile_3,mean_energy,63,0.06445578163327499,,,,,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,cross_team_energy_CV,36,0.6242067170951962,0.323755519883988,0.41848464116547074,0.5251690295304245,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,team_first_second_energy_spearman,35,0.12492997198879552,-0.29025210084033615,-0.0058823529411764705,0.25901960784313705,0.8,NOT_SIMULATED: non-sentinel
+sco_league_two,q,all,cross_team_energy_CV,36,0.6242067170951962,0.323755519883988,0.41848464116547074,0.5251690295304245,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,all,team_first_second_energy_spearman,35,0.12492997198879552,-0.29025210084033615,-0.0058823529411764705,0.25901960784313705,0.8,SIMULATED: conditional plug-in99
 sco_league_two,q,21/22:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_league_two,q,21/22:middle,phase_energy_ratio_to_middle,47,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,21/22:late,phase_energy_ratio_to_middle,46,1.406645256720483,0.4934862818907011,1.0774800468678394,1.9819452380087481,0.79,NOT_SIMULATED: non-sentinel
-sco_league_two,q,21/22,cross_team_energy_CV,3,0.37345403763815915,0.10616811378151518,0.36974896374346944,0.786593640534984,0.51,NOT_SIMULATED: non-sentinel
+sco_league_two,q,21/22:middle,phase_energy_ratio_to_middle,47,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,21/22:late,phase_energy_ratio_to_middle,46,1.406645256720483,0.4934862818907011,1.0774800468678394,1.9819452380087481,0.79,SIMULATED: conditional plug-in99
+sco_league_two,q,21/22,cross_team_energy_CV,3,0.37345403763815915,0.10616811378151518,0.36974896374346944,0.786593640534984,0.51,SIMULATED: conditional plug-in99
 sco_league_two,q,21/22,team_first_second_energy_spearman,2,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_league_two,q,22/23:early,phase_energy_ratio_to_middle,23,0.7450696534375781,0.37511764910768913,0.7377540913255385,1.6921064082383246,0.51,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23:middle,phase_energy_ratio_to_middle,116,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23:late,phase_energy_ratio_to_middle,57,1.2322551521897884,0.5600668353776135,0.9991661823602965,1.669777159852809,0.78,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23,cross_team_energy_CV,10,0.38372842050358,0.22541863423089642,0.3556338336115877,0.49115602088322374,0.63,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23,team_first_second_energy_spearman,10,0.23636363636363636,-0.5648484848484848,-0.10303030303030303,0.49212121212121207,0.81,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:early,phase_energy_ratio_to_middle,14,0.6387592462638837,0.2289869393915469,0.7376164996848107,1.461589226703152,0.43,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:middle,phase_energy_ratio_to_middle,90,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:late,phase_energy_ratio_to_middle,34,0.6607081120480943,0.4828680299373424,0.9831408823299129,1.624021072426592,0.2,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24,cross_team_energy_CV,8,0.48377387499901847,0.19824302800366503,0.3884002420696779,0.585381492466438,0.78,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24,team_first_second_energy_spearman,8,-0.09523809523809523,-0.6190476190476191,0.07142857142857142,0.6690476190476189,0.36,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:early,phase_energy_ratio_to_middle,22,1.3447561685368192,0.3759615315934828,0.7488516793756458,1.458624307337554,0.92,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:middle,phase_energy_ratio_to_middle,68,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:late,phase_energy_ratio_to_middle,23,0.8880716244182935,0.42278731920292745,0.9216865013632664,1.86460433440498,0.47,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25,cross_team_energy_CV,6,0.216360121137043,0.2131290390956449,0.3758604497155267,0.6529007631483295,0.07,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25,team_first_second_energy_spearman,6,-0.5428571428571428,-0.7714285714285715,0.02857142857142857,0.7199999999999996,0.18,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:early,phase_energy_ratio_to_middle,28,1.891400016413554,0.3778488562019538,0.8146990375360376,1.6951719201833242,0.98,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:middle,phase_energy_ratio_to_middle,80,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:late,phase_energy_ratio_to_middle,40,3.0534604950891815,0.5308501686508977,1.0082403435942628,1.8075391625015609,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26,cross_team_energy_CV,9,0.7775417493244084,0.22240131303055524,0.376054742474441,0.5895287681185166,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26,team_first_second_energy_spearman,9,0.31666666666666665,-0.54,-0.03333333333333333,0.603333333333333,0.83,NOT_SIMULATED: non-sentinel
-sco_league_two,q,early,phase_energy_ratio_to_middle,87,1.215355199077415,0.5740254595371741,0.8051596557655869,1.1350977201113963,0.95,NOT_SIMULATED: non-sentinel
-sco_league_two,q,middle,phase_energy_ratio_to_middle,401,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,late,phase_energy_ratio_to_middle,200,1.4675147359621574,0.7679975862755859,0.9687065807717264,1.2644780985819302,0.99,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,max_over_median_squared_step,688,39.47251256908785,18.993422787505917,25.1464758386672,41.11327610668613,0.94,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,top5pct_energy_share,688,0.31501559252232425,0.25955705234142623,0.2891471873551537,0.315889537651283,0.94,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,weekly_mean_energy_lag1_correlation,130,0.17239569652129716,0.09402972360270107,0.22372293363944268,0.3865050116356662,0.33,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,mean_offdiagonal_centered_step_product,142,-3.628872139800087e-5,-4.8523330636124934e-5,-3.30657558443815e-5,-1.962091561738549e-5,0.39,NOT_SIMULATED: non-sentinel
-sco_league_two,q,all,mean_offdiagonal_centered_step_covariance,180,-3.2286185685143594e-5,-3.467986695535509e-5,-2.73267501421286e-5,-2.1458095978889014e-5,0.12,NOT_SIMULATED: non-sentinel
-sco_league_two,q,21/22:prior_abs_q_tertile_1,mean_energy,31,0.2620077848588735,0.13141048152384757,0.22784460943655707,0.3482744938645233,0.7,NOT_SIMULATED: non-sentinel
-sco_league_two,q,21/22:prior_abs_q_tertile_2,mean_energy,31,0.16244940630263247,0.12909572734893857,0.2239810319811114,0.3481119761007112,0.15,NOT_SIMULATED: non-sentinel
-sco_league_two,q,21/22:prior_abs_q_tertile_3,mean_energy,31,0.2735984462116343,0.13035937181762722,0.23516697469932613,0.37867956540762227,0.75,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23:prior_abs_q_tertile_1,mean_energy,66,0.20778872926175346,0.1576352273397832,0.23079129252579436,0.29862984344724186,0.32,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23:prior_abs_q_tertile_2,mean_energy,65,0.21944813386474554,0.1653733809991617,0.24048680249620585,0.34526698407562506,0.39,NOT_SIMULATED: non-sentinel
-sco_league_two,q,22/23:prior_abs_q_tertile_3,mean_energy,65,0.4139760094754571,0.17206376243613247,0.2422055059065802,0.3283441495325585,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:prior_abs_q_tertile_1,mean_energy,46,0.19518456602971046,0.15282118897679475,0.22194548229322147,0.3207885122727823,0.3,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:prior_abs_q_tertile_2,mean_energy,46,0.1623155647854554,0.1581867777828467,0.2276837145887305,0.3322550927270758,0.09,NOT_SIMULATED: non-sentinel
-sco_league_two,q,23/24:prior_abs_q_tertile_3,mean_energy,46,0.21496560049804073,0.14740349664652716,0.22491683613183924,0.34138021084750403,0.41,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:prior_abs_q_tertile_1,mean_energy,38,0.1682186716330452,0.14613823849939223,0.22724457694763706,0.3801003418759212,0.13,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:prior_abs_q_tertile_2,mean_energy,37,0.27213513989845356,0.1331313019087047,0.23304918165497515,0.3349299637772718,0.79,NOT_SIMULATED: non-sentinel
-sco_league_two,q,24/25:prior_abs_q_tertile_3,mean_energy,38,0.21223094262570963,0.1421442028444631,0.21414664067668795,0.33620110044224316,0.47,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:prior_abs_q_tertile_1,mean_energy,49,0.2657367296595136,0.15825706461088188,0.22025805413373856,0.3046108374873137,0.8,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:prior_abs_q_tertile_2,mean_energy,49,0.27610055520007964,0.14284125219514812,0.2268616239596967,0.3132679144132094,0.86,NOT_SIMULATED: non-sentinel
-sco_league_two,q,25/26:prior_abs_q_tertile_3,mean_energy,50,0.5603765180285083,0.1592506472311028,0.2305798794247131,0.3253067356602548,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,cross_team_energy_CV,36,0.5316664682537676,0.49798174749736024,0.6224633575572677,0.7880867541869555,0.13,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,team_first_second_energy_spearman,35,0.0949579831932773,-0.18899159663865545,0.09831932773109243,0.35366946778711483,0.5,NOT_SIMULATED: non-sentinel
+sco_league_two,q,22/23:early,phase_energy_ratio_to_middle,23,0.7450696534375781,0.37511764910768913,0.7377540913255385,1.6921064082383246,0.51,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23:middle,phase_energy_ratio_to_middle,116,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23:late,phase_energy_ratio_to_middle,57,1.2322551521897884,0.5600668353776135,0.9991661823602965,1.669777159852809,0.78,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23,cross_team_energy_CV,10,0.38372842050358,0.22541863423089642,0.3556338336115877,0.49115602088322374,0.63,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23,team_first_second_energy_spearman,10,0.23636363636363636,-0.5648484848484848,-0.10303030303030303,0.49212121212121207,0.81,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:early,phase_energy_ratio_to_middle,14,0.6387592462638837,0.2289869393915469,0.7376164996848107,1.461589226703152,0.43,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:middle,phase_energy_ratio_to_middle,90,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:late,phase_energy_ratio_to_middle,34,0.6607081120480943,0.4828680299373424,0.9831408823299129,1.624021072426592,0.2,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24,cross_team_energy_CV,8,0.48377387499901847,0.19824302800366503,0.3884002420696779,0.585381492466438,0.78,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24,team_first_second_energy_spearman,8,-0.09523809523809523,-0.6190476190476191,0.07142857142857142,0.6690476190476189,0.36,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:early,phase_energy_ratio_to_middle,22,1.3447561685368192,0.3759615315934828,0.7488516793756458,1.458624307337554,0.92,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:middle,phase_energy_ratio_to_middle,68,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:late,phase_energy_ratio_to_middle,23,0.8880716244182935,0.42278731920292745,0.9216865013632664,1.86460433440498,0.47,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25,cross_team_energy_CV,6,0.216360121137043,0.2131290390956449,0.3758604497155267,0.6529007631483295,0.07,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25,team_first_second_energy_spearman,6,-0.5428571428571428,-0.7714285714285715,0.02857142857142857,0.7199999999999996,0.18,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:early,phase_energy_ratio_to_middle,28,1.891400016413554,0.3778488562019538,0.8146990375360376,1.6951719201833242,0.98,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:middle,phase_energy_ratio_to_middle,80,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:late,phase_energy_ratio_to_middle,40,3.0534604950891815,0.5308501686508977,1.0082403435942628,1.8075391625015609,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26,cross_team_energy_CV,9,0.7775417493244084,0.22240131303055524,0.376054742474441,0.5895287681185166,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26,team_first_second_energy_spearman,9,0.31666666666666665,-0.54,-0.03333333333333333,0.603333333333333,0.83,SIMULATED: conditional plug-in99
+sco_league_two,q,early,phase_energy_ratio_to_middle,87,1.215355199077415,0.5740254595371741,0.8051596557655869,1.1350977201113963,0.95,SIMULATED: conditional plug-in99
+sco_league_two,q,middle,phase_energy_ratio_to_middle,401,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,late,phase_energy_ratio_to_middle,200,1.4675147359621574,0.7679975862755859,0.9687065807717264,1.2644780985819302,0.99,SIMULATED: conditional plug-in99
+sco_league_two,q,all,max_over_median_squared_step,688,39.47251256908785,18.993422787505917,25.1464758386672,41.11327610668613,0.94,SIMULATED: conditional plug-in99
+sco_league_two,q,all,top5pct_energy_share,688,0.31501559252232425,0.25955705234142623,0.2891471873551537,0.315889537651283,0.94,SIMULATED: conditional plug-in99
+sco_league_two,q,all,weekly_mean_energy_lag1_correlation,130,0.17239569652129716,0.09402972360270107,0.22372293363944268,0.3865050116356662,0.33,SIMULATED: conditional plug-in99
+sco_league_two,q,all,mean_offdiagonal_centered_step_product,142,-3.628872139800087e-5,-4.8523330636124934e-5,-3.30657558443815e-5,-1.962091561738549e-5,0.39,SIMULATED: conditional plug-in99
+sco_league_two,q,all,mean_offdiagonal_centered_step_covariance,180,-3.2286185685143594e-5,-3.467986695535509e-5,-2.73267501421286e-5,-2.1458095978889014e-5,0.12,SIMULATED: conditional plug-in99
+sco_league_two,q,21/22:prior_abs_q_tertile_1,mean_energy,31,0.2620077848588735,0.13141048152384757,0.22784460943655707,0.3482744938645233,0.7,SIMULATED: conditional plug-in99
+sco_league_two,q,21/22:prior_abs_q_tertile_2,mean_energy,31,0.16244940630263247,0.12909572734893857,0.2239810319811114,0.3481119761007112,0.15,SIMULATED: conditional plug-in99
+sco_league_two,q,21/22:prior_abs_q_tertile_3,mean_energy,31,0.2735984462116343,0.13035937181762722,0.23516697469932613,0.37867956540762227,0.75,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23:prior_abs_q_tertile_1,mean_energy,66,0.20778872926175346,0.1576352273397832,0.23079129252579436,0.29862984344724186,0.32,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23:prior_abs_q_tertile_2,mean_energy,65,0.21944813386474554,0.1653733809991617,0.24048680249620585,0.34526698407562506,0.39,SIMULATED: conditional plug-in99
+sco_league_two,q,22/23:prior_abs_q_tertile_3,mean_energy,65,0.4139760094754571,0.17206376243613247,0.2422055059065802,0.3283441495325585,1.0,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:prior_abs_q_tertile_1,mean_energy,46,0.19518456602971046,0.15282118897679475,0.22194548229322147,0.3207885122727823,0.3,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:prior_abs_q_tertile_2,mean_energy,46,0.1623155647854554,0.1581867777828467,0.2276837145887305,0.3322550927270758,0.09,SIMULATED: conditional plug-in99
+sco_league_two,q,23/24:prior_abs_q_tertile_3,mean_energy,46,0.21496560049804073,0.14740349664652716,0.22491683613183924,0.34138021084750403,0.41,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:prior_abs_q_tertile_1,mean_energy,38,0.1682186716330452,0.14613823849939223,0.22724457694763706,0.3801003418759212,0.13,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:prior_abs_q_tertile_2,mean_energy,37,0.27213513989845356,0.1331313019087047,0.23304918165497515,0.3349299637772718,0.79,SIMULATED: conditional plug-in99
+sco_league_two,q,24/25:prior_abs_q_tertile_3,mean_energy,38,0.21223094262570963,0.1421442028444631,0.21414664067668795,0.33620110044224316,0.47,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:prior_abs_q_tertile_1,mean_energy,49,0.2657367296595136,0.15825706461088188,0.22025805413373856,0.3046108374873137,0.8,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:prior_abs_q_tertile_2,mean_energy,49,0.27610055520007964,0.14284125219514812,0.2268616239596967,0.3132679144132094,0.86,SIMULATED: conditional plug-in99
+sco_league_two,q,25/26:prior_abs_q_tertile_3,mean_energy,50,0.5603765180285083,0.1592506472311028,0.2305798794247131,0.3253067356602548,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,all,cross_team_energy_CV,36,0.5316664682537676,0.49798174749736024,0.6224633575572677,0.7880867541869555,0.13,SIMULATED: conditional plug-in99
+sco_league_two,s,all,team_first_second_energy_spearman,35,0.0949579831932773,-0.18899159663865545,0.09831932773109243,0.35366946778711483,0.5,SIMULATED: conditional plug-in99
 sco_league_two,s,21/22:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_league_two,s,21/22:middle,phase_energy_ratio_to_middle,47,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,21/22:late,phase_energy_ratio_to_middle,46,0.6619407313773706,0.4394554999418524,0.9594014065450011,1.8900900963945728,0.2,NOT_SIMULATED: non-sentinel
-sco_league_two,s,21/22,cross_team_energy_CV,3,0.561146510457914,0.1671244421244724,0.5709805308353444,1.0018816189772433,0.48,NOT_SIMULATED: non-sentinel
+sco_league_two,s,21/22:middle,phase_energy_ratio_to_middle,47,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,21/22:late,phase_energy_ratio_to_middle,46,0.6619407313773706,0.4394554999418524,0.9594014065450011,1.8900900963945728,0.2,SIMULATED: conditional plug-in99
+sco_league_two,s,21/22,cross_team_energy_CV,3,0.561146510457914,0.1671244421244724,0.5709805308353444,1.0018816189772433,0.48,SIMULATED: conditional plug-in99
 sco_league_two,s,21/22,team_first_second_energy_spearman,2,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-sco_league_two,s,22/23:early,phase_energy_ratio_to_middle,23,0.640205721291895,0.2580207801905892,0.5737069204568623,1.4046945572341838,0.58,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23:middle,phase_energy_ratio_to_middle,116,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23:late,phase_energy_ratio_to_middle,57,0.8602751267739555,0.45600171118421884,0.9544985217854322,1.7273417496313572,0.44,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23,cross_team_energy_CV,10,0.33111111484002015,0.3423907616581541,0.5071930699126451,0.7499078645806795,0.05,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23,team_first_second_energy_spearman,10,-0.7575757575757576,-0.4303030303030303,0.07878787878787878,0.6121212121212121,0.01,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:early,phase_energy_ratio_to_middle,14,0.9941575480754895,0.21083122454079192,0.5871208113686514,1.3591067490785627,0.84,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:middle,phase_energy_ratio_to_middle,90,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:late,phase_energy_ratio_to_middle,34,0.6315363434141767,0.39507960745990695,0.8004321349236161,1.6984598050020212,0.32,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24,cross_team_energy_CV,8,0.5424135616466627,0.3332044616016596,0.5893940478450629,0.8964479791204751,0.32,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24,team_first_second_energy_spearman,8,-0.09523809523809523,-0.3333333333333333,0.14285714285714285,0.7404761904761903,0.3,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:early,phase_energy_ratio_to_middle,22,0.6484656078743705,0.2645086151873868,0.582860972167714,1.573955437255583,0.56,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:middle,phase_energy_ratio_to_middle,68,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:late,phase_energy_ratio_to_middle,23,0.5984213926297418,0.2993408202932953,0.6982599224265398,1.6638834468847103,0.4,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25,cross_team_energy_CV,6,0.5133178068282694,0.3177172285189795,0.5998672639230078,0.9089237269764529,0.37,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25,team_first_second_energy_spearman,6,0.5428571428571428,-0.6628571428571428,0.08571428571428572,0.7199999999999996,0.84,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:early,phase_energy_ratio_to_middle,28,1.0698819453078618,0.35436673929972573,0.7893636961807798,1.5813015683796108,0.82,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:middle,phase_energy_ratio_to_middle,80,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:late,phase_energy_ratio_to_middle,40,0.7948639618497235,0.35117200260082276,0.7442581452352311,1.437787997412242,0.58,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26,cross_team_energy_CV,9,0.6817086302341967,0.33538885269063146,0.536527516162817,0.8463073582974224,0.8,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26,team_first_second_energy_spearman,9,0.8666666666666667,-0.54,0.06666666666666667,0.6349999999999999,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,early,phase_energy_ratio_to_middle,87,0.8552218061332238,0.43210631625306417,0.6873658610509266,1.0522492835391795,0.81,NOT_SIMULATED: non-sentinel
-sco_league_two,s,middle,phase_energy_ratio_to_middle,401,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-sco_league_two,s,late,phase_energy_ratio_to_middle,200,0.7386010359908272,0.5916476306303288,0.8323447677494499,1.1782840737036324,0.29,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,max_over_median_squared_step,688,15.916369059127291,16.907210593628903,23.513750854447977,37.11397576417485,0.03,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,top5pct_energy_share,688,0.24295407028405744,0.2584177386268322,0.28609422525845807,0.3216941262224132,0.02,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,weekly_mean_energy_lag1_correlation,130,0.26766141574423225,0.2930311806521366,0.46396340313847534,0.6013289799882355,0.03,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,mean_offdiagonal_centered_step_product,142,-3.6526748298482426e-7,-7.66317682135888e-7,-4.885980150806551e-7,-2.8473632860909765e-7,0.82,NOT_SIMULATED: non-sentinel
-sco_league_two,s,all,mean_offdiagonal_centered_step_covariance,180,-2.195584329727234e-7,-4.529144636733374e-7,-3.345388373416593e-7,-2.4872365635240244e-7,0.99,NOT_SIMULATED: non-sentinel
-sco_league_two,s,21/22:prior_abs_q_tertile_1,mean_energy,31,0.036149684739087536,0.028441700588907957,0.05621570271186773,0.11495325406042776,0.14,NOT_SIMULATED: non-sentinel
-sco_league_two,s,21/22:prior_abs_q_tertile_2,mean_energy,31,0.0302682126616973,0.02591414142217032,0.0546516614387337,0.10983505391554585,0.11,NOT_SIMULATED: non-sentinel
-sco_league_two,s,21/22:prior_abs_q_tertile_3,mean_energy,31,0.05435076545886083,0.023718535802517933,0.05534073053163006,0.09717062331837092,0.49,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23:prior_abs_q_tertile_1,mean_energy,66,0.04492316351314004,0.0428072405567369,0.061159459282020906,0.11705595841539322,0.12,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23:prior_abs_q_tertile_2,mean_energy,65,0.06192168497652104,0.042911330094408534,0.060457000604352044,0.09539736409165256,0.52,NOT_SIMULATED: non-sentinel
-sco_league_two,s,22/23:prior_abs_q_tertile_3,mean_energy,65,0.053998705645191644,0.037089051283951985,0.05889670465268847,0.09911158716629676,0.37,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:prior_abs_q_tertile_1,mean_energy,46,0.042276171091037214,0.030245956021632506,0.05926397861665713,0.11341017045929032,0.27,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:prior_abs_q_tertile_2,mean_energy,46,0.04627768965594539,0.031279606880687566,0.057970431991758616,0.11584498742809624,0.22,NOT_SIMULATED: non-sentinel
-sco_league_two,s,23/24:prior_abs_q_tertile_3,mean_energy,46,0.06255096455820497,0.03190009078928284,0.06126272541089355,0.10604437794629984,0.53,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:prior_abs_q_tertile_1,mean_energy,38,0.038074216387260995,0.028157879387840243,0.049910361204131434,0.08768076456730195,0.22,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:prior_abs_q_tertile_2,mean_energy,37,0.04145607668577997,0.0268546092985504,0.05740455151523155,0.09810901019172076,0.24,NOT_SIMULATED: non-sentinel
-sco_league_two,s,24/25:prior_abs_q_tertile_3,mean_energy,38,0.03219286892414284,0.025819418826128534,0.04694837735971386,0.08855749169922333,0.18,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:prior_abs_q_tertile_1,mean_energy,49,0.03278887848511641,0.031832604631448956,0.051947109379733035,0.07973759512647383,0.07,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:prior_abs_q_tertile_2,mean_energy,49,0.05580201125179893,0.028294300744926112,0.05543674063065015,0.08693537809835637,0.52,NOT_SIMULATED: non-sentinel
-sco_league_two,s,25/26:prior_abs_q_tertile_3,mean_energy,50,0.0821293337256429,0.025457310779544936,0.049169602578829234,0.08704222744347095,0.92,NOT_SIMULATED: non-sentinel
+sco_league_two,s,22/23:early,phase_energy_ratio_to_middle,23,0.640205721291895,0.2580207801905892,0.5737069204568623,1.4046945572341838,0.58,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23:middle,phase_energy_ratio_to_middle,116,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23:late,phase_energy_ratio_to_middle,57,0.8602751267739555,0.45600171118421884,0.9544985217854322,1.7273417496313572,0.44,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23,cross_team_energy_CV,10,0.33111111484002015,0.3423907616581541,0.5071930699126451,0.7499078645806795,0.05,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23,team_first_second_energy_spearman,10,-0.7575757575757576,-0.4303030303030303,0.07878787878787878,0.6121212121212121,0.01,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:early,phase_energy_ratio_to_middle,14,0.9941575480754895,0.21083122454079192,0.5871208113686514,1.3591067490785627,0.84,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:middle,phase_energy_ratio_to_middle,90,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:late,phase_energy_ratio_to_middle,34,0.6315363434141767,0.39507960745990695,0.8004321349236161,1.6984598050020212,0.32,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24,cross_team_energy_CV,8,0.5424135616466627,0.3332044616016596,0.5893940478450629,0.8964479791204751,0.32,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24,team_first_second_energy_spearman,8,-0.09523809523809523,-0.3333333333333333,0.14285714285714285,0.7404761904761903,0.3,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:early,phase_energy_ratio_to_middle,22,0.6484656078743705,0.2645086151873868,0.582860972167714,1.573955437255583,0.56,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:middle,phase_energy_ratio_to_middle,68,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:late,phase_energy_ratio_to_middle,23,0.5984213926297418,0.2993408202932953,0.6982599224265398,1.6638834468847103,0.4,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25,cross_team_energy_CV,6,0.5133178068282694,0.3177172285189795,0.5998672639230078,0.9089237269764529,0.37,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25,team_first_second_energy_spearman,6,0.5428571428571428,-0.6628571428571428,0.08571428571428572,0.7199999999999996,0.84,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:early,phase_energy_ratio_to_middle,28,1.0698819453078618,0.35436673929972573,0.7893636961807798,1.5813015683796108,0.82,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:middle,phase_energy_ratio_to_middle,80,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:late,phase_energy_ratio_to_middle,40,0.7948639618497235,0.35117200260082276,0.7442581452352311,1.437787997412242,0.58,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26,cross_team_energy_CV,9,0.6817086302341967,0.33538885269063146,0.536527516162817,0.8463073582974224,0.8,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26,team_first_second_energy_spearman,9,0.8666666666666667,-0.54,0.06666666666666667,0.6349999999999999,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,early,phase_energy_ratio_to_middle,87,0.8552218061332238,0.43210631625306417,0.6873658610509266,1.0522492835391795,0.81,SIMULATED: conditional plug-in99
+sco_league_two,s,middle,phase_energy_ratio_to_middle,401,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+sco_league_two,s,late,phase_energy_ratio_to_middle,200,0.7386010359908272,0.5916476306303288,0.8323447677494499,1.1782840737036324,0.29,SIMULATED: conditional plug-in99
+sco_league_two,s,all,max_over_median_squared_step,688,15.916369059127291,16.907210593628903,23.513750854447977,37.11397576417485,0.03,SIMULATED: conditional plug-in99
+sco_league_two,s,all,top5pct_energy_share,688,0.24295407028405744,0.2584177386268322,0.28609422525845807,0.3216941262224132,0.02,SIMULATED: conditional plug-in99
+sco_league_two,s,all,weekly_mean_energy_lag1_correlation,130,0.26766141574423225,0.2930311806521366,0.46396340313847534,0.6013289799882355,0.03,SIMULATED: conditional plug-in99
+sco_league_two,s,all,mean_offdiagonal_centered_step_product,142,-3.6526748298482426e-7,-7.66317682135888e-7,-4.885980150806551e-7,-2.8473632860909765e-7,0.82,SIMULATED: conditional plug-in99
+sco_league_two,s,all,mean_offdiagonal_centered_step_covariance,180,-2.195584329727234e-7,-4.529144636733374e-7,-3.345388373416593e-7,-2.4872365635240244e-7,0.99,SIMULATED: conditional plug-in99
+sco_league_two,s,21/22:prior_abs_q_tertile_1,mean_energy,31,0.036149684739087536,0.028441700588907957,0.05621570271186773,0.11495325406042776,0.14,SIMULATED: conditional plug-in99
+sco_league_two,s,21/22:prior_abs_q_tertile_2,mean_energy,31,0.0302682126616973,0.02591414142217032,0.0546516614387337,0.10983505391554585,0.11,SIMULATED: conditional plug-in99
+sco_league_two,s,21/22:prior_abs_q_tertile_3,mean_energy,31,0.05435076545886083,0.023718535802517933,0.05534073053163006,0.09717062331837092,0.49,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23:prior_abs_q_tertile_1,mean_energy,66,0.04492316351314004,0.0428072405567369,0.061159459282020906,0.11705595841539322,0.12,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23:prior_abs_q_tertile_2,mean_energy,65,0.06192168497652104,0.042911330094408534,0.060457000604352044,0.09539736409165256,0.52,SIMULATED: conditional plug-in99
+sco_league_two,s,22/23:prior_abs_q_tertile_3,mean_energy,65,0.053998705645191644,0.037089051283951985,0.05889670465268847,0.09911158716629676,0.37,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:prior_abs_q_tertile_1,mean_energy,46,0.042276171091037214,0.030245956021632506,0.05926397861665713,0.11341017045929032,0.27,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:prior_abs_q_tertile_2,mean_energy,46,0.04627768965594539,0.031279606880687566,0.057970431991758616,0.11584498742809624,0.22,SIMULATED: conditional plug-in99
+sco_league_two,s,23/24:prior_abs_q_tertile_3,mean_energy,46,0.06255096455820497,0.03190009078928284,0.06126272541089355,0.10604437794629984,0.53,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:prior_abs_q_tertile_1,mean_energy,38,0.038074216387260995,0.028157879387840243,0.049910361204131434,0.08768076456730195,0.22,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:prior_abs_q_tertile_2,mean_energy,37,0.04145607668577997,0.0268546092985504,0.05740455151523155,0.09810901019172076,0.24,SIMULATED: conditional plug-in99
+sco_league_two,s,24/25:prior_abs_q_tertile_3,mean_energy,38,0.03219286892414284,0.025819418826128534,0.04694837735971386,0.08855749169922333,0.18,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:prior_abs_q_tertile_1,mean_energy,49,0.03278887848511641,0.031832604631448956,0.051947109379733035,0.07973759512647383,0.07,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:prior_abs_q_tertile_2,mean_energy,49,0.05580201125179893,0.028294300744926112,0.05543674063065015,0.08693537809835637,0.52,SIMULATED: conditional plug-in99
+sco_league_two,s,25/26:prior_abs_q_tertile_3,mean_energy,50,0.0821293337256429,0.025457310779544936,0.049169602578829234,0.08704222744347095,0.92,SIMULATED: conditional plug-in99
 irl_premier,q,all,cross_team_energy_CV,49,0.4455572447098473,,,,,NOT_SIMULATED: non-sentinel
 irl_premier,q,all,team_first_second_energy_spearman,49,0.052244897959183675,,,,,NOT_SIMULATED: non-sentinel
 irl_premier,q,2021:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
@@ -903,103 +903,103 @@ irl_first_division,s,2024:prior_abs_q_tertile_3,mean_energy,48,0.051097092366155
 irl_first_division,s,2025:prior_abs_q_tertile_1,mean_energy,53,0.027602342370835503,,,,,NOT_SIMULATED: non-sentinel
 irl_first_division,s,2025:prior_abs_q_tertile_2,mean_energy,53,0.049386576695506695,,,,,NOT_SIMULATED: non-sentinel
 irl_first_division,s,2025:prior_abs_q_tertile_3,mean_energy,54,0.0364343766041674,,,,,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,cross_team_energy_CV,43,0.43302642116712325,0.39241544617735025,0.4578797406855492,0.5677899587180286,0.29,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,team_first_second_energy_spearman,43,-0.0025672002416188464,-0.22099063726970702,-0.0028692237994563576,0.30496828752642696,0.51,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,q,all,cross_team_energy_CV,43,0.43302642116712325,0.39241544617735025,0.4578797406855492,0.5677899587180286,0.29,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,team_first_second_energy_spearman,43,-0.0025672002416188464,-0.22099063726970702,-0.0028692237994563576,0.30496828752642696,0.51,SIMULATED: conditional plug-in99
 fin_veikkausliiga,q,2021:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-fin_veikkausliiga,q,2021:middle,phase_energy_ratio_to_middle,61,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2021:late,phase_energy_ratio_to_middle,32,0.5471839943835881,0.47491682619562603,0.9689168618447029,1.9054544201099701,0.14,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,q,2021:middle,phase_energy_ratio_to_middle,61,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2021:late,phase_energy_ratio_to_middle,32,0.5471839943835881,0.47491682619562603,0.9689168618447029,1.9054544201099701,0.14,SIMULATED: conditional plug-in99
 fin_veikkausliiga,q,2021,cross_team_energy_CV,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
 fin_veikkausliiga,q,2021,team_first_second_energy_spearman,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-fin_veikkausliiga,q,2022:early,phase_energy_ratio_to_middle,32,1.3174965243622578,0.47281574638910134,0.8221918090315229,1.5303261517512778,0.86,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022:middle,phase_energy_ratio_to_middle,98,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022:late,phase_energy_ratio_to_middle,49,0.647287918096108,0.47011415893934905,0.9105197170475656,1.551649641035546,0.24,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022,cross_team_energy_CV,11,0.5353014733054403,0.27234318493871146,0.4348893005608117,0.6794729763697912,0.83,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022,team_first_second_energy_spearman,11,0.12727272727272726,-0.49,0.00909090909090909,0.5109090909090908,0.64,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:early,phase_energy_ratio_to_middle,35,0.7191419149636468,0.36488697116531404,0.7729403387605694,1.3511265104096624,0.44,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:middle,phase_energy_ratio_to_middle,81,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:late,phase_energy_ratio_to_middle,36,0.5481176269312629,0.37675431618334176,0.7715532855015168,1.2896903631381853,0.19,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023,cross_team_energy_CV,8,0.38967367876067804,0.25053806330796047,0.4321922599702063,0.686550435824959,0.42,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023,team_first_second_energy_spearman,8,-0.4523809523809524,-0.6666666666666666,0.0,0.6190476190476191,0.15,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:early,phase_energy_ratio_to_middle,30,0.5606077908723862,0.3533635368859548,0.7123296336078656,1.4803404954815036,0.29,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:middle,phase_energy_ratio_to_middle,114,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:late,phase_energy_ratio_to_middle,47,0.8429140094785639,0.544063783949388,0.8421266694198307,1.662437148895776,0.51,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024,cross_team_energy_CV,12,0.3924175998861053,0.2775294216015641,0.4359234797482804,0.6266121955911886,0.36,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024,team_first_second_energy_spearman,12,-0.42657342657342656,-0.46293706293706294,0.006993006993006993,0.5188811188811188,0.07,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:early,phase_energy_ratio_to_middle,40,1.5697935915167929,0.41703882110633816,0.8352063213308114,1.431542217761411,0.98,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:middle,phase_energy_ratio_to_middle,93,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:late,phase_energy_ratio_to_middle,39,1.18113231151332,0.504156676767842,0.8664211838570549,1.5686486061890723,0.87,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025,cross_team_energy_CV,12,0.43845695662944306,0.2968811546454639,0.4353366805263427,0.6508894310142128,0.53,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025,team_first_second_energy_spearman,12,0.5874125874125874,-0.4286713286713287,0.006993006993006993,0.5048951048951048,0.99,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,early,phase_energy_ratio_to_middle,137,1.0194714824299187,0.6000277410802802,0.8115671557657788,1.0834728083686844,0.87,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,middle,phase_energy_ratio_to_middle,447,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,late,phase_energy_ratio_to_middle,203,0.746598964456333,0.6970579255358662,0.8693922910041043,1.1222761541887813,0.23,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,max_over_median_squared_step,787,41.30892511751108,18.06896208704915,25.874561097806737,38.92931284419013,0.97,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,top5pct_energy_share,787,0.31102025045830906,0.26122976531566355,0.2883548096104407,0.31118909852009685,0.95,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,weekly_mean_energy_lag1_correlation,84,0.23485918802556793,0.09496871115285445,0.25767904795151336,0.43954983375545686,0.42,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,mean_offdiagonal_centered_step_product,91,-1.8803369300573736e-5,-2.276061264884628e-5,-1.5488003745136588e-5,-9.524349569473763e-6,0.25,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,all,mean_offdiagonal_centered_step_covariance,330,-1.6272829915776725e-5,-1.4007945113489288e-5,-1.1956631754770458e-5,-9.860418375656494e-6,0.01,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2021:prior_abs_q_tertile_1,mean_energy,31,0.23089002777700196,0.141459325043058,0.24005640500623418,0.37385804922632015,0.46,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2021:prior_abs_q_tertile_2,mean_energy,31,0.2907314941372303,0.15274828832471146,0.24892625575498623,0.3578801230556906,0.71,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2021:prior_abs_q_tertile_3,mean_energy,31,0.3771199689443126,0.15008186479990254,0.2422517523023203,0.3948071467348391,0.92,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022:prior_abs_q_tertile_1,mean_energy,60,0.19223017832078393,0.15140113967195742,0.22765167648146817,0.32623338852162914,0.21,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022:prior_abs_q_tertile_2,mean_energy,59,0.3397775890643843,0.14125471379686866,0.23162251618616808,0.3233331644633671,0.99,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2022:prior_abs_q_tertile_3,mean_energy,60,0.3062303394098652,0.1533367730713398,0.21598905118723838,0.34229814695800326,0.83,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:prior_abs_q_tertile_1,mean_energy,51,0.36653366126463444,0.16784185302662308,0.23104522813892145,0.3305626790554478,0.97,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:prior_abs_q_tertile_2,mean_energy,50,0.20848477952538297,0.1465004828404486,0.2347270751807151,0.3208941012888592,0.36,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2023:prior_abs_q_tertile_3,mean_energy,51,0.2410290213083331,0.15635732602667507,0.23454381374387392,0.3273483049841933,0.6,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:prior_abs_q_tertile_1,mean_energy,64,0.2018521914826218,0.16000204034836707,0.22831715865331537,0.3221779904004261,0.32,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:prior_abs_q_tertile_2,mean_energy,63,0.29097961036005804,0.1592647300467082,0.22782924572473848,0.34144563953575935,0.84,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2024:prior_abs_q_tertile_3,mean_energy,64,0.28132090781282615,0.1489525989852415,0.228087898798239,0.3070316193438519,0.84,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:prior_abs_q_tertile_1,mean_energy,57,0.24130056186801707,0.15850679918908436,0.22517170353365282,0.3361450709357376,0.56,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:prior_abs_q_tertile_2,mean_energy,58,0.40441829357549036,0.1396073517268512,0.23318520214629762,0.3539818725456963,0.97,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,q,2025:prior_abs_q_tertile_3,mean_energy,57,0.28038323811145177,0.16107935210377283,0.23214900028333504,0.3462284697906533,0.68,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,cross_team_energy_CV,43,0.4708892954345138,0.440720510195692,0.530557392378009,0.6519757731243871,0.19,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,team_first_second_energy_spearman,43,-0.15705225007550588,-0.18965569314406522,0.018272425249169437,0.26122017517366347,0.13,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,q,2022:early,phase_energy_ratio_to_middle,32,1.3174965243622578,0.47281574638910134,0.8221918090315229,1.5303261517512778,0.86,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022:middle,phase_energy_ratio_to_middle,98,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022:late,phase_energy_ratio_to_middle,49,0.647287918096108,0.47011415893934905,0.9105197170475656,1.551649641035546,0.24,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022,cross_team_energy_CV,11,0.5353014733054403,0.27234318493871146,0.4348893005608117,0.6794729763697912,0.83,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022,team_first_second_energy_spearman,11,0.12727272727272726,-0.49,0.00909090909090909,0.5109090909090908,0.64,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:early,phase_energy_ratio_to_middle,35,0.7191419149636468,0.36488697116531404,0.7729403387605694,1.3511265104096624,0.44,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:middle,phase_energy_ratio_to_middle,81,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:late,phase_energy_ratio_to_middle,36,0.5481176269312629,0.37675431618334176,0.7715532855015168,1.2896903631381853,0.19,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023,cross_team_energy_CV,8,0.38967367876067804,0.25053806330796047,0.4321922599702063,0.686550435824959,0.42,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023,team_first_second_energy_spearman,8,-0.4523809523809524,-0.6666666666666666,0.0,0.6190476190476191,0.15,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:early,phase_energy_ratio_to_middle,30,0.5606077908723862,0.3533635368859548,0.7123296336078656,1.4803404954815036,0.29,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:middle,phase_energy_ratio_to_middle,114,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:late,phase_energy_ratio_to_middle,47,0.8429140094785639,0.544063783949388,0.8421266694198307,1.662437148895776,0.51,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024,cross_team_energy_CV,12,0.3924175998861053,0.2775294216015641,0.4359234797482804,0.6266121955911886,0.36,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024,team_first_second_energy_spearman,12,-0.42657342657342656,-0.46293706293706294,0.006993006993006993,0.5188811188811188,0.07,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:early,phase_energy_ratio_to_middle,40,1.5697935915167929,0.41703882110633816,0.8352063213308114,1.431542217761411,0.98,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:middle,phase_energy_ratio_to_middle,93,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:late,phase_energy_ratio_to_middle,39,1.18113231151332,0.504156676767842,0.8664211838570549,1.5686486061890723,0.87,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025,cross_team_energy_CV,12,0.43845695662944306,0.2968811546454639,0.4353366805263427,0.6508894310142128,0.53,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025,team_first_second_energy_spearman,12,0.5874125874125874,-0.4286713286713287,0.006993006993006993,0.5048951048951048,0.99,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,early,phase_energy_ratio_to_middle,137,1.0194714824299187,0.6000277410802802,0.8115671557657788,1.0834728083686844,0.87,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,middle,phase_energy_ratio_to_middle,447,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,late,phase_energy_ratio_to_middle,203,0.746598964456333,0.6970579255358662,0.8693922910041043,1.1222761541887813,0.23,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,max_over_median_squared_step,787,41.30892511751108,18.06896208704915,25.874561097806737,38.92931284419013,0.97,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,top5pct_energy_share,787,0.31102025045830906,0.26122976531566355,0.2883548096104407,0.31118909852009685,0.95,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,weekly_mean_energy_lag1_correlation,84,0.23485918802556793,0.09496871115285445,0.25767904795151336,0.43954983375545686,0.42,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,mean_offdiagonal_centered_step_product,91,-1.8803369300573736e-5,-2.276061264884628e-5,-1.5488003745136588e-5,-9.524349569473763e-6,0.25,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,all,mean_offdiagonal_centered_step_covariance,330,-1.6272829915776725e-5,-1.4007945113489288e-5,-1.1956631754770458e-5,-9.860418375656494e-6,0.01,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2021:prior_abs_q_tertile_1,mean_energy,31,0.23089002777700196,0.141459325043058,0.24005640500623418,0.37385804922632015,0.46,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2021:prior_abs_q_tertile_2,mean_energy,31,0.2907314941372303,0.15274828832471146,0.24892625575498623,0.3578801230556906,0.71,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2021:prior_abs_q_tertile_3,mean_energy,31,0.3771199689443126,0.15008186479990254,0.2422517523023203,0.3948071467348391,0.92,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022:prior_abs_q_tertile_1,mean_energy,60,0.19223017832078393,0.15140113967195742,0.22765167648146817,0.32623338852162914,0.21,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022:prior_abs_q_tertile_2,mean_energy,59,0.3397775890643843,0.14125471379686866,0.23162251618616808,0.3233331644633671,0.99,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2022:prior_abs_q_tertile_3,mean_energy,60,0.3062303394098652,0.1533367730713398,0.21598905118723838,0.34229814695800326,0.83,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:prior_abs_q_tertile_1,mean_energy,51,0.36653366126463444,0.16784185302662308,0.23104522813892145,0.3305626790554478,0.97,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:prior_abs_q_tertile_2,mean_energy,50,0.20848477952538297,0.1465004828404486,0.2347270751807151,0.3208941012888592,0.36,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2023:prior_abs_q_tertile_3,mean_energy,51,0.2410290213083331,0.15635732602667507,0.23454381374387392,0.3273483049841933,0.6,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:prior_abs_q_tertile_1,mean_energy,64,0.2018521914826218,0.16000204034836707,0.22831715865331537,0.3221779904004261,0.32,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:prior_abs_q_tertile_2,mean_energy,63,0.29097961036005804,0.1592647300467082,0.22782924572473848,0.34144563953575935,0.84,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2024:prior_abs_q_tertile_3,mean_energy,64,0.28132090781282615,0.1489525989852415,0.228087898798239,0.3070316193438519,0.84,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:prior_abs_q_tertile_1,mean_energy,57,0.24130056186801707,0.15850679918908436,0.22517170353365282,0.3361450709357376,0.56,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:prior_abs_q_tertile_2,mean_energy,58,0.40441829357549036,0.1396073517268512,0.23318520214629762,0.3539818725456963,0.97,SIMULATED: conditional plug-in99
+fin_veikkausliiga,q,2025:prior_abs_q_tertile_3,mean_energy,57,0.28038323811145177,0.16107935210377283,0.23214900028333504,0.3462284697906533,0.68,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,cross_team_energy_CV,43,0.4708892954345138,0.440720510195692,0.530557392378009,0.6519757731243871,0.19,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,team_first_second_energy_spearman,43,-0.15705225007550588,-0.18965569314406522,0.018272425249169437,0.26122017517366347,0.13,SIMULATED: conditional plug-in99
 fin_veikkausliiga,s,2021:early,phase_energy_ratio_to_middle,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-fin_veikkausliiga,s,2021:middle,phase_energy_ratio_to_middle,61,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2021:late,phase_energy_ratio_to_middle,32,0.6297775502219476,0.37851987852824087,1.0034429547643773,1.9546635828341863,0.22,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,s,2021:middle,phase_energy_ratio_to_middle,61,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2021:late,phase_energy_ratio_to_middle,32,0.6297775502219476,0.37851987852824087,1.0034429547643773,1.9546635828341863,0.22,SIMULATED: conditional plug-in99
 fin_veikkausliiga,s,2021,cross_team_energy_CV,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
 fin_veikkausliiga,s,2021,team_first_second_energy_spearman,0,,,,,,NOT_AVAILABLE: insufficient eligible pairs
-fin_veikkausliiga,s,2022:early,phase_energy_ratio_to_middle,32,0.5945380719472961,0.4283597837442238,0.7948302414172848,1.6490475832849496,0.17,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022:middle,phase_energy_ratio_to_middle,98,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022:late,phase_energy_ratio_to_middle,49,0.7068174461714545,0.4520821476285413,0.8143159304726849,1.3988260907392467,0.35,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022,cross_team_energy_CV,11,0.3751772003965831,0.337202561583617,0.48873764526866276,0.7192288704616812,0.12,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022,team_first_second_energy_spearman,11,-0.6909090909090909,-0.43181818181818177,-0.01818181818181818,0.5281818181818181,0.01,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:early,phase_energy_ratio_to_middle,35,0.7177169428747704,0.31659698563124167,0.7057138313853818,1.308770290420937,0.56,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:middle,phase_energy_ratio_to_middle,81,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:late,phase_energy_ratio_to_middle,36,0.4557295255162277,0.42547659655149717,0.6951632367995789,1.3104138229018183,0.12,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023,cross_team_energy_CV,8,0.37073624116063353,0.2535797049014189,0.4785936404422974,0.7804650907214953,0.26,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023,team_first_second_energy_spearman,8,-0.07142857142857142,-0.6904761904761905,-0.047619047619047616,0.5499999999999999,0.5,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:early,phase_energy_ratio_to_middle,30,0.8985732698446787,0.28651755932247985,0.6830348102254127,1.2966292282647744,0.78,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:middle,phase_energy_ratio_to_middle,114,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:late,phase_energy_ratio_to_middle,47,0.675247105005596,0.42758505124463564,0.7768024129389113,1.3813552930608664,0.28,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024,cross_team_energy_CV,12,0.44823030678166953,0.33809981510493436,0.48844730166194594,0.7170090378997748,0.34,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024,team_first_second_energy_spearman,12,0.0,-0.5321678321678321,0.027972027972027972,0.5825174825174824,0.46,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:early,phase_energy_ratio_to_middle,40,0.5791782523979815,0.37705085654168646,0.7365161627729248,1.3931557498317038,0.2,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:middle,phase_energy_ratio_to_middle,93,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:late,phase_energy_ratio_to_middle,39,1.5386541849481887,0.34482078200215527,0.7767645243820627,1.4043376136575805,0.99,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025,cross_team_energy_CV,12,0.5158063029428054,0.32410767581700367,0.46808727211608436,0.7371937200431149,0.6,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025,team_first_second_energy_spearman,12,0.0,-0.5118881118881119,-0.006993006993006993,0.41048951048951016,0.52,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,early,phase_energy_ratio_to_middle,137,0.6754211241195188,0.5685101100208559,0.7705572438854692,1.048646754690267,0.28,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,middle,phase_energy_ratio_to_middle,447,1.0,1.0,1.0,1.0,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,late,phase_energy_ratio_to_middle,203,0.8009953532150677,0.5857619711939712,0.8397403362464972,1.026988297043887,0.42,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,max_over_median_squared_step,787,30.546185612200134,19.33648503619747,26.16511333184801,41.65558448501498,0.79,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,top5pct_energy_share,787,0.30196262639126636,0.2686492475301307,0.28860340787396294,0.3113837740162799,0.77,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,weekly_mean_energy_lag1_correlation,84,0.2600703952084935,0.16175762718765238,0.3994602586573215,0.544102873856014,0.16,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,mean_offdiagonal_centered_step_product,91,-2.1310778757348126e-6,-5.116349227901344e-6,-3.393550162478937e-6,-1.597411634614039e-6,0.92,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,all,mean_offdiagonal_centered_step_covariance,330,-2.1225907479622017e-6,-3.6773737523597034e-6,-2.860639410006455e-6,-2.3296449950643075e-6,1.0,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2021:prior_abs_q_tertile_1,mean_energy,31,0.13412475536353827,0.08563585169279853,0.14670202696427767,0.23037288038728324,0.43,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2021:prior_abs_q_tertile_2,mean_energy,31,0.07535011349369515,0.08434933389305925,0.15257166014954957,0.25493459514479755,0.03,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2021:prior_abs_q_tertile_3,mean_energy,31,0.09385786466405792,0.07860534119344037,0.14181135333139863,0.25940981353580256,0.12,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022:prior_abs_q_tertile_1,mean_energy,60,0.09444680608301641,0.09475654796504533,0.14278011343340774,0.2165062895969927,0.06,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022:prior_abs_q_tertile_2,mean_energy,59,0.07675492421719117,0.0896736279354614,0.14010015530775782,0.22247829824598966,0.01,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2022:prior_abs_q_tertile_3,mean_energy,60,0.09133085768610592,0.0941952475676338,0.14080538047902166,0.232536627074012,0.05,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:prior_abs_q_tertile_1,mean_energy,51,0.06460882618605257,0.08082931056521482,0.1339672348707225,0.23457835099948143,0.01,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:prior_abs_q_tertile_2,mean_energy,50,0.0673299844202962,0.08889545456344287,0.13666634118749854,0.21813763100013359,0.01,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2023:prior_abs_q_tertile_3,mean_energy,51,0.0836273315672128,0.09090397284602555,0.14760580531853937,0.2296358803095015,0.03,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:prior_abs_q_tertile_1,mean_energy,64,0.12784068747368532,0.08520332972735217,0.13966586774400377,0.20013879311264335,0.38,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:prior_abs_q_tertile_2,mean_energy,63,0.15933038205367978,0.09949339001748687,0.14190807553435297,0.2141352612657382,0.7,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2024:prior_abs_q_tertile_3,mean_energy,64,0.06484135934301063,0.10262169410450747,0.14473315934054554,0.21124316336542698,0.02,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:prior_abs_q_tertile_1,mean_energy,57,0.08802990890719717,0.08922794593360206,0.1484667764249205,0.25180821069275094,0.06,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:prior_abs_q_tertile_2,mean_energy,58,0.0871006933488574,0.08959445512627323,0.15083688029946163,0.23411900817184442,0.05,NOT_SIMULATED: non-sentinel
-fin_veikkausliiga,s,2025:prior_abs_q_tertile_3,mean_energy,57,0.14992887221176698,0.09394783596907876,0.1465296864355638,0.23884403012511293,0.56,NOT_SIMULATED: non-sentinel
+fin_veikkausliiga,s,2022:early,phase_energy_ratio_to_middle,32,0.5945380719472961,0.4283597837442238,0.7948302414172848,1.6490475832849496,0.17,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022:middle,phase_energy_ratio_to_middle,98,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022:late,phase_energy_ratio_to_middle,49,0.7068174461714545,0.4520821476285413,0.8143159304726849,1.3988260907392467,0.35,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022,cross_team_energy_CV,11,0.3751772003965831,0.337202561583617,0.48873764526866276,0.7192288704616812,0.12,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022,team_first_second_energy_spearman,11,-0.6909090909090909,-0.43181818181818177,-0.01818181818181818,0.5281818181818181,0.01,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:early,phase_energy_ratio_to_middle,35,0.7177169428747704,0.31659698563124167,0.7057138313853818,1.308770290420937,0.56,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:middle,phase_energy_ratio_to_middle,81,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:late,phase_energy_ratio_to_middle,36,0.4557295255162277,0.42547659655149717,0.6951632367995789,1.3104138229018183,0.12,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023,cross_team_energy_CV,8,0.37073624116063353,0.2535797049014189,0.4785936404422974,0.7804650907214953,0.26,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023,team_first_second_energy_spearman,8,-0.07142857142857142,-0.6904761904761905,-0.047619047619047616,0.5499999999999999,0.5,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:early,phase_energy_ratio_to_middle,30,0.8985732698446787,0.28651755932247985,0.6830348102254127,1.2966292282647744,0.78,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:middle,phase_energy_ratio_to_middle,114,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:late,phase_energy_ratio_to_middle,47,0.675247105005596,0.42758505124463564,0.7768024129389113,1.3813552930608664,0.28,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024,cross_team_energy_CV,12,0.44823030678166953,0.33809981510493436,0.48844730166194594,0.7170090378997748,0.34,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024,team_first_second_energy_spearman,12,0.0,-0.5321678321678321,0.027972027972027972,0.5825174825174824,0.46,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:early,phase_energy_ratio_to_middle,40,0.5791782523979815,0.37705085654168646,0.7365161627729248,1.3931557498317038,0.2,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:middle,phase_energy_ratio_to_middle,93,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:late,phase_energy_ratio_to_middle,39,1.5386541849481887,0.34482078200215527,0.7767645243820627,1.4043376136575805,0.99,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025,cross_team_energy_CV,12,0.5158063029428054,0.32410767581700367,0.46808727211608436,0.7371937200431149,0.6,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025,team_first_second_energy_spearman,12,0.0,-0.5118881118881119,-0.006993006993006993,0.41048951048951016,0.52,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,early,phase_energy_ratio_to_middle,137,0.6754211241195188,0.5685101100208559,0.7705572438854692,1.048646754690267,0.28,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,middle,phase_energy_ratio_to_middle,447,1.0,1.0,1.0,1.0,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,late,phase_energy_ratio_to_middle,203,0.8009953532150677,0.5857619711939712,0.8397403362464972,1.026988297043887,0.42,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,max_over_median_squared_step,787,30.546185612200134,19.33648503619747,26.16511333184801,41.65558448501498,0.79,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,top5pct_energy_share,787,0.30196262639126636,0.2686492475301307,0.28860340787396294,0.3113837740162799,0.77,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,weekly_mean_energy_lag1_correlation,84,0.2600703952084935,0.16175762718765238,0.3994602586573215,0.544102873856014,0.16,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,mean_offdiagonal_centered_step_product,91,-2.1310778757348126e-6,-5.116349227901344e-6,-3.393550162478937e-6,-1.597411634614039e-6,0.92,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,all,mean_offdiagonal_centered_step_covariance,330,-2.1225907479622017e-6,-3.6773737523597034e-6,-2.860639410006455e-6,-2.3296449950643075e-6,1.0,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2021:prior_abs_q_tertile_1,mean_energy,31,0.13412475536353827,0.08563585169279853,0.14670202696427767,0.23037288038728324,0.43,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2021:prior_abs_q_tertile_2,mean_energy,31,0.07535011349369515,0.08434933389305925,0.15257166014954957,0.25493459514479755,0.03,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2021:prior_abs_q_tertile_3,mean_energy,31,0.09385786466405792,0.07860534119344037,0.14181135333139863,0.25940981353580256,0.12,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022:prior_abs_q_tertile_1,mean_energy,60,0.09444680608301641,0.09475654796504533,0.14278011343340774,0.2165062895969927,0.06,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022:prior_abs_q_tertile_2,mean_energy,59,0.07675492421719117,0.0896736279354614,0.14010015530775782,0.22247829824598966,0.01,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2022:prior_abs_q_tertile_3,mean_energy,60,0.09133085768610592,0.0941952475676338,0.14080538047902166,0.232536627074012,0.05,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:prior_abs_q_tertile_1,mean_energy,51,0.06460882618605257,0.08082931056521482,0.1339672348707225,0.23457835099948143,0.01,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:prior_abs_q_tertile_2,mean_energy,50,0.0673299844202962,0.08889545456344287,0.13666634118749854,0.21813763100013359,0.01,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2023:prior_abs_q_tertile_3,mean_energy,51,0.0836273315672128,0.09090397284602555,0.14760580531853937,0.2296358803095015,0.03,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:prior_abs_q_tertile_1,mean_energy,64,0.12784068747368532,0.08520332972735217,0.13966586774400377,0.20013879311264335,0.38,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:prior_abs_q_tertile_2,mean_energy,63,0.15933038205367978,0.09949339001748687,0.14190807553435297,0.2141352612657382,0.7,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2024:prior_abs_q_tertile_3,mean_energy,64,0.06484135934301063,0.10262169410450747,0.14473315934054554,0.21124316336542698,0.02,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:prior_abs_q_tertile_1,mean_energy,57,0.08802990890719717,0.08922794593360206,0.1484667764249205,0.25180821069275094,0.06,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:prior_abs_q_tertile_2,mean_energy,58,0.0871006933488574,0.08959445512627323,0.15083688029946163,0.23411900817184442,0.05,SIMULATED: conditional plug-in99
+fin_veikkausliiga,s,2025:prior_abs_q_tertile_3,mean_energy,57,0.14992887221176698,0.09394783596907876,0.1465296864355638,0.23884403012511293,0.56,SIMULATED: conditional plug-in99

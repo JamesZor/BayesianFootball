@@ -12,6 +12,7 @@ fin_veikkausliiga R6 10a delta=9.49° [-9.53,23.01]; P(|delta|>10°)=0.524.
 Three largest median tilts with ≥90% eigengap>0.1: fin_veikkausliiga 9.49° (P>10°=0.524); eng_premier 6.68° (P>10°=0.283); sco_premiership 4.36° (P>10°=0.079).
 Largest R6 rotation residual-variance reduction 1−l_minus/Vs: irl_first_division 10b, median 0.0625 [0.0006,0.3441]; this is not a forecast gain or refitted R6–C0 comparison.
 Largest 10a/10b median tilt change: eng_championship 3.57°. No R6 10a fit meets P(|delta|>10°)>0.9: true.
+Direct R6–C0 residual comparison (medians): largest 1−R6_minor/C0_Vs=0.0769 at irl_first_division/10b, C0_Vs=0.0002564616238035762, R6_minor=0.00023674804680358835; [geometry_residual_comparison.csv](geometry_residual_comparison.csv). This is distinct from within-R6 rotation gain.
 
 ## R02 —
 COMPLETE. [level_geometry.csv](level_geometry.csv), [reproduction_checks.csv](reproduction_checks.csv), [season_windows.csv](season_windows.csv); path means/draw table locations and hashes in manifest. Exact joint FFBS, 128 theta draws/fit; fixed gauges never differenced across changing rosters.
@@ -21,6 +22,8 @@ sco_premiership C0 level/step: 21/22 0.47 [0.41,0.55]; 22/23 0.43 [0.37,0.49]; 2
 fin_veikkausliiga C0 level/step: 2021 0.22 [0.19,0.27]; 2022 0.32 [0.27,0.38]; 2023 0.41 [0.34,0.5]; 2024 0.39 [0.33,0.46]; 2025 0.33 [0.29,0.4].
 Largest FFBS shortcut absolute error: sco_championship R6 21/22, 1.342177269416e8; shortcut assumes equal alpha/beta variances, not zero q/s correlation.
 Level/step screen >0.9 in 230 league/rung/season/gauge cells; [level_step_screen.csv](level_step_screen.csv). Partial-season labels and roster membership are in season_windows; these are latent-population, not independent team replicates.
+The all-row shortcut maximum above comes from Scottish Championship21/22 (2 teams,1 week): near-rank-one rho≈1 makes that shortcut NOT_IDENTIFIABLE as an ellipse scale. No rows were discarded. Largest error among ≥8-team windows: irl_first_division/R2/2024 0.1426.
+Largest R2−C0 median r_level: sco_championship/21/22 0.2443; C0 FFBS−RTS: sco_championship/21/22 0.3675; strongest C0 median log-distance level/step: fin_veikkausliiga/2021 ratio=0.2244; [level_sensitivity.csv](level_sensitivity.csv). These are finite latent-population screens, not calibrated OU half-lives.
 
 ## R03 —
 COMPLETE. [forecast_joint.csv](forecast_joint.csv), [forecast_diagnostics.csv](forecast_diagnostics.csv), [joint_comparison.csv](joint_comparison.csv), [venue_contrasts.csv](venue_contrasts.csv). D=h−a, M=(h+a)/2; determinant=1, no Jacobian constant. Published median-theta marginal scores reproduced ≤1e−8.
@@ -31,6 +34,8 @@ sco_league_two C0 D mean_square=1.434; D coverage90=0.871; M mean_square=0.957; 
 sco_premiership C0 D mean_square=1.306; D coverage90=0.845; M mean_square=0.839; M coverage90=0.933.
 fin_veikkausliiga C0 D mean_square=1.292; D coverage90=0.845; M mean_square=1.059; M coverage90=0.915.
 Serial/team lag uncertainty uses 999 week-block resamples of original lag-pair rows indexed by their later week, without fabricating cross-block neighbors. Team lag means appearance-lag one within season. Venue contrast/SE distribution is unselected with ≥8 appearances per role; tables retain all teams, not selected stars.
+Largest joint/marginal Δ disagreement: sco_championship, joint 0.00283, marginal-sum 0.00195; [joint_marginal_disagreement.csv](joint_marginal_disagreement.csv). Both pooled8-week joint intervals lie within ±0.005: practical equivalence at the packet tolerance, not exact equality.
+Largest |C0 signed-week lag|: irl_first_division/M/weekly_signed_lag_1 0.592 [0.123,0.608]; selected maximum, not adjusted evidence. Unselected venue contrast/SE q05/median/q95: [venue_standardized_distribution.csv](venue_standardized_distribution.csv).
 
 ## R04 —
 COMPLETE. [dynamics_screen.csv](dynamics_screen.csv), [step_exclusions.csv](step_exclusions.csv). Fixed active-season cohort centering; conservative eligibility requires a fixture appearance in every compared calendar slot, so missing books/byes are excluded as gaps. All G ratios use actual weekly Q (process-time ratio=h).
@@ -47,9 +52,9 @@ team_first_second_energy_spearman: eng_premier/q -0.019 (rank=0.37); eng_premier
 cross_team_energy_CV: eng_premier/q 0.479 (rank=0.99); eng_premier/s 0.427 (rank=0.31); sco_premiership/q 0.486 (rank=0.83); sco_premiership/s 0.548 (rank=0.6); sco_league_two/q 0.624 (rank=1.0); sco_league_two/s 0.532 (rank=0.13); fin_veikkausliiga/q 0.433 (rank=0.29); fin_veikkausliiga/s 0.471 (rank=0.19).
 top5pct_energy_share: eng_premier/q 0.318 (rank=1.0); eng_premier/s 0.285 (rank=0.62); sco_premiership/q 0.295 (rank=0.71); sco_premiership/s 0.298 (rank=0.81); sco_league_two/q 0.315 (rank=0.94); sco_league_two/s 0.243 (rank=0.02); fin_veikkausliiga/q 0.311 (rank=0.95); fin_veikkausliiga/s 0.302 (rank=0.77).
 weekly_mean_energy_lag1_correlation: eng_premier/q 0.535 (rank=0.98); eng_premier/s 0.527 (rank=0.86); sco_premiership/q 0.492 (rank=0.91); sco_premiership/s 0.454 (rank=0.42); sco_league_two/q 0.172 (rank=0.33); sco_league_two/s 0.268 (rank=0.03); fin_veikkausliiga/q 0.235 (rank=0.42); fin_veikkausliiga/s 0.26 (rank=0.16).
-mean_offdiagonal_centered_step_covariance: eng_premier/q -0.0 (rank=0.01); eng_premier/s -0.0 (rank=1.0); sco_premiership/q -0.0 (rank=0.04); sco_premiership/s -0.0 (rank=1.0); sco_league_two/q -0.0 (rank=0.12); sco_league_two/s -0.0 (rank=0.99); fin_veikkausliiga/q -0.0 (rank=0.01); fin_veikkausliiga/s -0.0 (rank=1.0).
+mean_offdiagonal_centered_step_covariance: eng_premier/q -8.053e-6 (rank=0.01); eng_premier/s -9.817e-7 (rank=1.0); sco_premiership/q -8.916e-6 (rank=0.04); sco_premiership/s -4.547e-7 (rank=1.0); sco_league_two/q -3.229e-5 (rank=0.12); sco_league_two/s -2.196e-7 (rank=0.99); fin_veikkausliiga/q -1.627e-5 (rank=0.01); fin_veikkausliiga/s -2.123e-6 (rank=1.0).
 Calendar ratios and prior-|q| tertiles are retained per axis/season in volatility_screen; nulls condition on estimated theta and selected books, so none separates inversion noise/selection from football shocks. Available book diagnostics are KL/selection count/optimizer-start spread, not quote age or exchange depth.
-
+Audit links: [large_move_observations.csv](large_move_observations.csv), [large_move_rate_rows.csv](large_move_rate_rows.csv), [large_move_raw_source_index.csv](large_move_raw_source_index.csv) point to actual log-rate targets and exact row ordinals in pinned odds/trade-price caches; archive samples are not executable quote-age evidence.
 
 ## R06 —
 COMPLETE descriptive screen. [nonlinear_levels.csv](nonlinear_levels.csv), [tier_gaps.csv](tier_gaps.csv). Full-season posterior geometry remains separate from matched-null suffix point means. 128 paths per fit, never paths-as-extra-teams; LOTO deltas are quadratic minus comparator per team (negative is better).
@@ -59,6 +64,8 @@ sco_league_two gap/IQR; rank; next-season shared/same-side: 21/22 2.298;0.82;6/0
 sco_premiership gap/IQR; rank; next-season shared/same-side: 21/22 1.701;0.9;11/1.0; 22/23 2.247;0.98;11/1.0; 23/24 2.798;1.0;11/1.0; 24/25 2.05;0.98;10/0.9; 25/26 0.565;0.29;0/NA.
 fin_veikkausliiga gap/IQR; rank; next-season shared/same-side: 2021 1.021;0.78;11/0.818; 2022 0.379;0.06;11/0.636; 2023 0.686;0.45;10/0.8; 2024 0.505;0.25;10/0.6; 2025 0.298;0.02;0/NA.
 R6/full-season curvature and both LOTO changes retained per season; consistent signs/rung sensitivity must be read jointly, not selected by largest magnitude. Null gap ranks do not establish persistent tiers; tiny n (8–24) limits shape inference. R05 prior-|q| energy is the radial screen, with no new fit.
+Selected largest |C0 FFBS curvature|: irl_first_division/2022, c=0.0367 [0.0242,0.051]; LOTO quadratic−linear=0.00017 [-0.00069,0.00093], quadratic−horizontal=-0.00101 [-0.00218,1.0e-5]. Descriptive selected maximum, not model-selection evidence.
+Largest matched C0 suffix gap/IQR: sco_premiership/23/24 2.798, gap rank=1.0; next-season shared n=11, same-side fraction=1.0, rank=1.0. Rank includes the same largest-gap search under each null; no Gaussian-mixture fitting.
 
 ## R07 —
 PARTIAL: all published3053 fixtures reproduced (≤1e−8); [goal_reproduction_checks.csv](goal_reproduction_checks.csv), [goal_ablation_fixtures.csv](goal_ablation_fixtures.csv), [goal_ablation_summary.csv](goal_ablation_summary.csv). Integrated frozen-style NOT_AVAILABLE: no joint training-end/current conditional cache; plug-in frozen-style is available, never independently spliced.
@@ -70,6 +77,7 @@ sco_league_two full−no-style joint 0.01309 [-0.00469,0.0333] OK; total 0.01296
 sco_premiership full−no-style joint -0.01852 [-0.02741,-0.00183] OK; total -0.01836 [-0.02739,-0.00189] OK; allocation -0.00016 [-0.00016,6.0e-5] OK.
 fin_veikkausliiga full−no-style joint 0.04916 [0.01292,0.06577] OK; total 0.04886 [0.01268,0.06575] OK; allocation 0.00031 [-8.0e-5,0.00032] OK.
 Mixture allocation=joint−total exactly (not equally weighted Binomial mixing). MC_UNSTABLE means first2 versus all4 samples change delta by>0.001; no extra samples. Ablations retain C0 filter/q/mu/gamma: deletion scores do not compare refitted models.
+Quality control, pooled fixture-weighted mixture4: joint Δ=0.06127 [0.05074,0.06925] OK; total Δ=0.00078 [-0.00135,0.00353] OK; allocation Δ=0.06049 [0.05006,0.06813] OK. This is deletion arithmetic, not a refitted quality-only/style-only comparison.
 
 ## R08 —
 PARTIAL. [league_structure.csv](league_structure.csv), [field_inventory.csv](field_inventory.csv), [market_confounding.csv](market_confounding.csv), [market_field_correlations.csv](market_field_correlations.csv), [mover_summary.csv](mover_summary.csv). 12000 independent matched posterior permutations/league; uncertainty is fit uncertainty for these11, not population sampling.

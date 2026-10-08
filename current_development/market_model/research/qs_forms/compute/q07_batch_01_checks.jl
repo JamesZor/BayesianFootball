@@ -54,7 +54,7 @@ function final_checks()
             ismissing(r.null_rank)&&continue
             @assert startswith(r.null_status,"SIMULATED")&&r.league in SENTINELS
             request=="R04"&&(@assert r.rung=="C0")
-            stratum=request=="R04" ? string(r.lag) : string(r.stratum)
+            stratum=request=="R04" ? "lag_$(r.lag)" : string(r.stratum)
             vals=keyed[(r.league,request,r.axis,stratum,r.statistic)]
             env=null_envelope(vals,r.value)
             @assert maximum(abs.([env.null_q05-r.null_q05,env.null_median-r.null_median,env.null_q95-r.null_q95,env.null_rank-r.null_rank]))<1e-12
@@ -82,14 +82,28 @@ function final_checks()
     for r in eachrow(manifest)
         endswith(r.kind,"output")||continue
         @assert isfile(r.path)&&filehash(r.path)==r.sha256
+        header=names(DF.DataFrame(CSV.File(r.path;limit=1,ntasks=1)))
+        @assert Set(header)==Set(split(r.columns,';'))
+        @assert length(CSV.File(r.path;select=[1],ntasks=1))==r.n_rows
         if r.kind=="committed_output";@assert filesize(r.path)<=5_000_000;end
         verified+=1
+    end
+    raw_index=CSV.read(joinpath(OUT,"large_move_raw_source_index.csv"),DF.DataFrame;stringtype=String)
+    for g in DF.groupby(raw_index,:snapshot_path)
+        ds=Serialization.deserialize(first(g.snapshot_path))
+        for r in eachrow(g)
+            r.n_rows==0&&continue
+            ix=parse.(Int,split(r.source_rows,';'))
+            @assert length(ix)==r.n_rows&&length(unique(ix))==r.n_rows
+            table=getproperty(ds,Symbol(r.table))
+            @assert all(table.match_id[ix].==r.fixture_id)
+        end
     end
     text=read(joinpath(OUT,"SUMMARY.md"),String)
     for request in ("R01","R02","R03","R04","R05","R06","R07","R08")
         section=split(split(text,"## $request —\n";limit=2)[2],"\n## ";limit=2)[1]
         @assert length(filter(!isempty,split(strip(section),'\n')))<=10
     end
-    verification("final_checks","PASS R2/C0 identities,12000-draw retention, point/forecast round trips;3053 paired honest forecasts with PD covariance;99 replicates/sentinel and $compared null envelopes/ranks exactly reproduced from saved raw null rows; goal finite/unique keys and joint=total+allocation ≤1e−8; plug-in full/no-style allocation equality ≤1e−8; no fabricated frozen mixture or movers; $verified output hashes, committed-size bounds; all8 summary sections≤10 lines. Julia only on mcmc-beast, owned %304,16 threads/BLAS1. No MCMC/new fits/SQL/src edits.")
+    verification("final_checks","PASS R2/C0 identities,12000-draw retention, point/forecast round trips;3053 paired honest forecasts with PD covariance;99 replicates/sentinel and $compared null envelopes/ranks exactly reproduced from saved raw null rows; goal finite/unique keys and joint=total+allocation ≤1e−8; plug-in full/no-style allocation equality ≤1e−8; no fabricated frozen mixture or movers; $verified output hashes/row-counts/column-lists, exact selected-fixture raw-cache row links, committed-size bounds; all8 summary sections≤10 lines. Julia only on mcmc-beast, owned %304,16 threads/BLAS1. No MCMC/new fits/SQL/src edits.")
     flush_manifest!()
 end
