@@ -211,7 +211,7 @@ function null_envelope(values,observed;status="SIMULATED")
     end
     @assert length(v)==99
     q=quant(v)
-    return (;null_q05=q[1],null_median=q[2],null_q95=q[3],null_rank=(1+count(<=(observed),v))/100,null_status=status)
+    return (;null_q05=q[1],null_median=q[2],null_q95=q[3],null_rank=(1+count(<=(observed),v))/100,null_status="SIMULATED: conditional plug-in99")
 end
 function save_null_stats!(rows)
     path=joinpath(OUT,"null_statistics.csv")
