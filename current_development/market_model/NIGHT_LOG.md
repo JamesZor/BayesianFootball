@@ -276,3 +276,6 @@ Times are laptop local; earlier entries were first written in the beast clock (+
     simulation; no new MCMC.
   - **14:52: Sol computer launched** (`gpt-6.1-sol`, thinking high, because the conditional FFBS and
     mixture scoring count as modelling), pane `%99`.
+- **14:52: answered Sol in scope.** Draw-level and other tables over about 5 MB stay on the beast, with
+  path, rows, columns and SHA256 recorded in `answers/batch_01/manifest.csv`. Git holds only summary
+  CSVs, so no compressed or sharded bulk goes into the repository.
