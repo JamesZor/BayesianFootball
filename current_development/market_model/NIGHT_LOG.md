@@ -299,3 +299,5 @@ Times are laptop local; earlier entries were first written in the beast clock (+
 - **17:52: answered Sol in scope (R12 window mask).** Every Scottish Premiership season 21/22–25/26 has 198 matches
   (rounds 1–33, pre-split only), all with Betfair odds (manager's read-only betdb query). The complete-window
   sensitivity therefore equals the main analysis, with no exclusion of 25/26.
+- **17:59: Sol finished batch 02** (`4a6d0cd2`, PHASEQFS_DONE). The R09 zero-loading check passed (max loading 1.1e-15).
+  Results relayed to Astra at 18:02 (pane `%98`).
