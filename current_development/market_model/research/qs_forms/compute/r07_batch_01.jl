@@ -23,7 +23,7 @@ Q07.record!("shared", "code", "git_commit", "";
     detail=strip(read(`git -C $(Q07.P) rev-parse HEAD`,String)))
 for (_,_,segment) in Q07.QS.LEAGUES
     name=string(nameof(typeof(segment)))
-    path=joinpath(dirname(dirname(dirname(Q07.P))),".cache","datastore_$(name).jls")
+    path=joinpath(dirname(dirname(Q07.P)),".cache","datastore_$(name).jls")
     @assert Q07.sha(path)==Q07.QS.SNAPSHOT_HASHES[name]
     Q07.record!("shared","input_cache",name,path;detail="read-only pinned datastore; verified SHA")
 end
