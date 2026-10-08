@@ -107,5 +107,9 @@ function r10_summary(rows)
         push!(lines,"$league endpoint OLS axis/slope/rank "*join(["$(r.axis) $(r.value)/$(r.null_rank)" for r in g],"; ")*"; R6 style shapes "*join(["h$(r.h)=$(r.shape_ratio)" for r in sensitivity],"; ")*".")
     end
     push!(lines,"Common-horizon LOW_SUPPORT cells (quantity rows)=$(count(r->r.selection=="common_horizon"&&startswith(r.status,"LOW_SUPPORT"),rows)); raw/common modes kept separate. Season-wise slopes/shapes/counts permit inspection of pooled cancellations. h1 normalized rank suppressed; no half-life or prospective-fit superiority claim.")
+    qrows=filter(r->r.league in ("eng_premier","sco_league_two")&&r.rung=="C0"&&r.season_or_pool=="POOL"&&r.axis=="q"&&r.projection=="relative"&&r.selection=="matched_start"&&r.quantity=="shape_ratio"&&r.h>1,rows)
+    push!(lines,"Matched quality shape/rank: "*join(["$(r.league)/h$(r.h) $(r.shape_ratio)/$(r.null_rank)" for r in qrows],"; ")*".")
+    grows=filter(r->r.rung=="C0"&&r.season_or_pool=="POOL"&&r.axis=="s"&&r.projection=="relative"&&r.selection=="matched_start"&&r.quantity=="Gh"&&r.h==13,rows)
+    push!(lines,"Matched style h13 raw squared-log-rate energy/null90%/rank: "*join(["$(r.league) $(r.Gh) [$(r.null_q05),$(r.null_q95)]/$(r.null_rank)" for r in grows],"; ")*"; raw energy ranks need not match normalized-shape ranks.")
     summary!("R10",lines)
 end
