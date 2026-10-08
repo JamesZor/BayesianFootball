@@ -61,3 +61,18 @@ function report_amendments()
         "Largest |C0 signed-week lag|: $(s.league)/$(s.axis)/$(s.statistic) $(round(s.value;digits=3)) [$(round(s.boot_q05;digits=3)),$(round(s.boot_q95;digits=3))]; selected maximum, not adjusted evidence. Unselected venue contrast/SE q05/median/q95: [venue_standardized_distribution.csv](venue_standardized_distribution.csv)."])
     flush_manifest!()
 end
+function additional_report()
+    nonlinear_table=CSV.read(joinpath(OUT,"nonlinear_levels.csv"),DF.DataFrame;stringtype=String)
+    candidates=DF.filter(r->r.rung=="C0"&&r.method=="FFBS"&&r.quantity=="c",nonlinear_table)
+    g=candidates[argmax(abs.(candidates.median)),:]
+    at(quantity)=only(eachrow(DF.filter(r->r.league==g.league&&r.rung==g.rung&&r.season==g.season&&r.method==g.method&&r.quantity==quantity,nonlinear_table)))
+    a=at("LOTO_quadratic_minus_linear");b=at("LOTO_quadratic_minus_intercept")
+    insert_summary_lines!("R06",["Selected largest |C0 FFBS curvature|: $(g.league)/$(g.season), c=$(round(g.median;digits=4)) [$(round(g.q05;digits=4)),$(round(g.q95;digits=4))]; LOTO quadratic−linear=$(round(a.median;digits=5)) [$(round(a.q05;digits=5)),$(round(a.q95;digits=5))], quadratic−horizontal=$(round(b.median;digits=5)) [$(round(b.q05;digits=5)),$(round(b.q95;digits=5))]. Descriptive selected maximum, not model-selection evidence."])
+    tiers=CSV.read(joinpath(OUT,"tier_gaps.csv"),DF.DataFrame;stringtype=String)
+    ti=DF.filter(r->r.rung=="C0"&&!ismissing(r.null_rank),tiers)
+    g=ti[argmax(ti.gap_over_iqr),:]
+    insert_summary_lines!("R06",["Largest matched C0 suffix gap/IQR: $(g.league)/$(g.season) $(round(g.gap_over_iqr;digits=3)), gap rank=$(g.null_rank); next-season shared n=$(g.next_season_shared_n), same-side fraction=$(g.same_side_fraction), rank=$(g.null_same_side_rank). Rank includes the same largest-gap search under each null; no Gaussian-mixture fitting."])
+    goals=CSV.read(joinpath(OUT,"goal_ablation_summary.csv"),DF.DataFrame;stringtype=String)
+    quality=DF.filter(r->r.league=="ALL"&&r.weighting=="fixture"&&r.method=="mixture_128x4"&&r.comparison=="full_minus_no_quality"&&r.block_weeks==8,goals)
+    insert_summary_lines!("R07",["Quality control, pooled fixture-weighted mixture4: "*join(["$(r.channel) Δ=$(round(r.mean_delta;digits=5)) [$(round(r.boot_q05;digits=5)),$(round(r.boot_q95;digits=5))] $(r.status)" for r in eachrow(quality)],"; ")*". This is deletion arithmetic, not a refitted quality-only/style-only comparison."])
+end

@@ -671,6 +671,7 @@ include(joinpath(@__DIR__, "q07_batch_01_levels.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_goals.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_structure.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_report.jl"))
+include(joinpath(@__DIR__, "q07_batch_01_book_audit.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_checks.jl"))
 
 end # module
