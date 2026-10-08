@@ -73,10 +73,16 @@ function r12()
             named=ST.mean(v.named for v in values)
             for team in d.active
                 push!(membership,(;rung,season,window="full_season",team,prob_upper_group=ST.mean(team in v.upper for v in values),prob_named_pair_only=named,n_draws=128,status="OK; named Celtic/Rangers contrast post-selected from R06"))
-                push!(membership,(;rung,season,window="null_suffix",team,prob_upper_group=missing,prob_named_pair_only=missing,n_draws=0,status="NOT_AVAILABLE: A1 stores full-season FFBS means only; no weekly paths to apply suffix mask; no resimulation"))
+                samewindow=first(d.weeks)>sim.cutoff
+                push!(membership,(;rung,season,window="null_suffix",team,prob_upper_group=samewindow ? ST.mean(team in v.upper for v in values) : missing,prob_named_pair_only=samewindow ? named : missing,n_draws=samewindow ? 128 : 0,status=samewindow ? "OK; exact suffix=full-season window; existing128 path means reused" : "NOT_AVAILABLE: first-season suffix cuts saved full-season FFBS means; no weekly paths or resimulation"))
             end
             for quantity in ("gap","lower_n","upper_n","named")
                 add(rung,season,"full_season","posterior_"*quantity,length(d.active),[getproperty(v,Symbol(quantity)) for v in values],Any[])
+                if first(d.weeks)>sim.cutoff
+                    add(rung,season,"null_suffix","posterior_"*quantity,length(d.active),[getproperty(v,Symbol(quantity)) for v in values],Any[];status="OK; exact suffix=full-season mask")
+                else
+                    add(rung,season,"null_suffix","posterior_"*quantity,length(d.active),[missing],Any[];status="NOT_AVAILABLE: first-season truncated FFBS mean not cached")
+                end
             end
         end
         for i in 1:length(seasons)-1
@@ -84,6 +90,8 @@ function r12()
             nontrivial=count(v->v.status=="OK",vals)
             for quantity in ("same","oriented_same","jaccard","ARI")
                 add(rung,"$s->$t","full_season","posterior_"*quantity,first(vals).n,[getproperty(v,Symbol(quantity)) for v in vals],Any[];status="$(nontrivial)/128 nontrivial partitions; trivial partitions excluded from Jaccard/ARI")
+                samewindows=first(A.season_design(p,s).weeks)>sim.cutoff&&first(A.season_design(p,t).weeks)>sim.cutoff
+                add(rung,"$s->$t","null_suffix","posterior_"*quantity,first(vals).n,samewindows ? [getproperty(v,Symbol(quantity)) for v in vals] : [missing],Any[];status=samewindows ? "OK; both suffix masks equal cached full-season masks" : "NOT_AVAILABLE: first-season posterior suffix mean not cached")
             end
         end
         for window in ("full_season","null_suffix")
@@ -115,7 +123,7 @@ function r12()
     output("R12","scottish_tier_membership.csv",membership)
     output("R12","scottish_tier_robustness.csv",rows)
     output("R12","tier_window_audit.csv",audit)
-    lines=["PARTIAL: scottish_tier_membership.csv, scottish_tier_robustness.csv, tier_window_audit.csv. Exactly128 full-season path means/rung; posterior suffix membership unavailable because weekly FFBS paths were not saved. Median RTS full/suffix and99 existing C0 nulls matched exactly; old gaps/persistence reproduce≤1e−10."]
+    lines=["PARTIAL: scottish_tier_membership.csv, scottish_tier_robustness.csv, tier_window_audit.csv. Exactly128 full-season path means/rung; suffix posterior means reused where suffix=full window (22/23–25/26). Only21/22 suffix posterior unavailable: weekly FFBS paths not saved. Median RTS full/suffix and99 existing C0 nulls matched exactly; old gaps/persistence reproduce≤1e−10."]
     for rung in ("C0","R6")
         g=[only(unique([r.prob_named_pair_only for r in membership if r.rung==rung&&r.season==season&&r.window=="full_season"])) for season in seasons]
         push!(lines,"$rung P(upper group exactly Celtic+Rangers), post-selected: "*join(["$(season) $(prob)" for (season,prob) in zip(seasons,g)],"; ")*"; membership probabilities and group-size/gap quantiles in tables.")
@@ -131,5 +139,5 @@ function r12()
     push!(lines,"Existing-complete-window sensitivity NOT_AVAILABLE: no executable complete-season flag in A1 season_windows or tier_gaps; exact all-window masks retained. No fresh EPL clustering, mixture optimization or mover joining; posterior suffix not replaced by fresh paths.")
     push!(lines,"Conditional Gaussian-RW null is not a test against every unimodal heavy-tail population. Local tier/heavy-tail level-prior nomination remains descriptive/post-selected, not a universal mixture, changed axes or demonstrated prospective goal benefit.")
     summary!("R12",lines)
-    verify("R12","PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.")
+    verify("R12","PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Later-season suffix posterior reuses identical full-season masks/means; only first-season truncated posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.")
 end

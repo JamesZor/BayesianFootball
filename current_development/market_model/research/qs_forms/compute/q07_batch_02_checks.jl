@@ -38,12 +38,16 @@ function final_checks()
     end
     mem=CSV.read(joinpath(OUT,"scottish_tier_membership.csv"),DF.DataFrame;stringtype=String)
     @assert all(mem.n_draws[mem.window.=="full_season"].==128)
-    @assert all(mem.n_draws[mem.window.=="null_suffix"].==0)
-    @assert all(ismissing,mem.prob_upper_group[mem.window.=="null_suffix"])
+    windows=loadcsv("season_windows.csv");cutoff=nulls("sco_premiership").cutoff
+    for r in eachrow(DF.filter(:window=>==("null_suffix"),mem))
+        w=only(eachrow(DF.filter(x->x.league=="sco_premiership"&&x.season==r.season,windows)))
+        @assert r.n_draws==(w.first_week>cutoff ? 128 : 0)
+        @assert ismissing(r.prob_upper_group)==(r.n_draws==0)
+    end
     text=read(joinpath(OUT,"SUMMARY.md"),String)
     for request in ("R09","R10","R11","R12")
         section=match(Regex("(?ms)^## $request\\n(.*?)(?=^## |\\z)"),text)
         @assert section!==nothing&&length(filter(!isempty,split(strip(section.captures[1]),'\n')))<=10
     end
-    verify("final_checks","PASS$countout output hashes/row counts; $countin immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, suffix posterior explicitly unavailable; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.")
+    verify("final_checks","PASS$countout output hashes/row counts; $countin immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, identical later-season suffix means reused and first-season suffix posterior explicitly unavailable; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.")
 end
