@@ -73,11 +73,13 @@ function geometry(vq, vs, cross, k)
     lp, lm = (total+gap)/2, (total-gap)/2
     delta = mod(rad2deg(atan(2cross,vq-vs)/2)+90,180)-90
     c = vq>0 && vs>0 ? cross/sqrt(vq*vs) : missing
+    @assert ismissing(c) || abs(c)<=1+1e-12
+    c = ismissing(c) ? c : clamp(c,-1.0,1.0)
     return (; Vq=vq, Vs=vs, C=cross, r=vq>0 ? sqrt(vs/vq) : missing, c, k,
         phi_deg=mod(45-delta+90,180)-90, delta_deg=delta, l_plus=lp, l_minus=lm,
         f_minor=total>0 ? lm/total : missing, eigengap=total>0 ? gap/total : missing,
         rotation_gain=vs>0 ? 1-lm/vs : missing,
-        I=ismissing(c) ? missing : -0.5log1p(-c^2))
+        I=ismissing(c)||abs(c)>=1 ? missing : -0.5log1p(-c^2))
 end
 function step_geometry(f, rung, i, c)
     value(name) = f.draws[i,only(findall(==(name),f.names)),c]
@@ -249,7 +251,7 @@ function level_values(p,X,design,gauge)
     vq,vs,cross=ST.var(qb),ST.var(sb),ST.cov(qb,sb)
     geom=geometry(vq,vs,cross,ST.std(abar)/ST.std(bbar))
     quantities = (; r_level=geom.r,c_level=geom.c,k_level=geom.k,rho_ab=rho,
-        shortcut_r=sqrt((1+rho)/(1-rho)),delta_level_deg=geom.delta_deg,
+        shortcut_r=rho<1 ? sqrt(max(0.0,(1+rho)/(1-rho))) : missing,delta_level_deg=geom.delta_deg,
         r_weekly_cross_section=sqrt(ST.mean(vec(ST.var(s;dims=1)))/ST.mean(vec(ST.var(q;dims=1)))))
     return quantities, abar, bbar, qb, sb
 end
@@ -319,7 +321,9 @@ function r02()
                 point=(;point...,r_step=gr.r,level_step_ratio=point.r_level/gr.r)
                 for method in ("RTS_point","FFBS"), quantity in propertynames(point)
                     qs=method=="RTS_point" ? ntuple(_->getproperty(point,quantity),3) : quant(getproperty.(vals,quantity))
-                    push!(stats,(;league,rung,protocol="10a",season,method,gauge,n_teams=length(d.active),n_weeks=length(d.weeks),quantity=String(quantity),q05=qs[1],median=qs[2],q95=qs[3]))
+                    n_available=method=="RTS_point" ? Int(!ismissing(getproperty(point,quantity))) : count(!ismissing,getproperty.(vals,quantity))
+                    n_missing=(method=="RTS_point" ? 1 : length(vals))-n_available
+                    push!(stats,(;league,rung,protocol="10a",season,method,gauge,n_teams=length(d.active),n_weeks=length(d.weeks),quantity=String(quantity),q05=qs[1],median=qs[2],q95=qs[3],n_available,n_missing,reason=n_missing>0 ? "NOT_IDENTIFIABLE: denominator zero or exact rank-one two-team correlation" : "OK"))
                 end
             end
             cache=joinpath(OUT,"cache","$(league)_$(rung)_point.jls")
@@ -337,7 +341,7 @@ function r02()
         g=DF.filter(r->r.league==league&&r.rung=="C0"&&r.method=="FFBS"&&r.gauge=="full_roster"&&r.quantity=="level_step_ratio",result)
         push!(lines,"$league C0 level/step: "*join(["$(r.season) $(round(r.median;digits=2)) [$(round(r.q05;digits=2)),$(round(r.q95;digits=2))]" for r in eachrow(g)],"; ")*".")
     end
-    errors=abs.(draws.shortcut_r-draws.r_level)
+    errors=coalesce.(abs.(draws.shortcut_r-draws.r_level),-Inf)
     g=draws[argmax(errors),:]
     push!(lines,"Largest FFBS shortcut absolute error: $(g.league) $(g.rung) $(g.season), $(round(maximum(errors);digits=4)); shortcut assumes equal alpha/beta variances, not zero q/s correlation.")
     groups=DF.groupby(draws,[:league,:rung,:season,:gauge])
@@ -648,5 +652,6 @@ end
 
 include(joinpath(@__DIR__, "q07_batch_01_nulls.jl"))
 include(joinpath(@__DIR__, "q07_batch_01_levels.jl"))
+include(joinpath(@__DIR__, "q07_batch_01_goals.jl"))
 
 end # module
