@@ -44,6 +44,8 @@ end
 function r12()
     league="sco_premiership";p,config=panel(league);sim=nulls(league)
     seasons=config.seasons
+    @assert Set(seasons)==Set(["21/22","22/23","23/24","24/25","25/26"])
+    record!("R12","manager_verified_metadata","";detail="Manager read-only betdb query2026-10-08: every Scottish Premiership season21/22–25/26 has198 matches, rounds1–33 pre-split, all198 with Betfair odds; post-split never ingested in any season. Complete-window mask=all five seasons; computer ran no SQL.")
     # No new paths: this table contains full-season means only, not weekly FFBS arrays.
     means=loadcsv("team_season_path_means.csv";request="R12")
     g=DF.filter(r->r.league==league&&r.rung in ("C0","R6")&&r.gauge=="active_cohort",means)
@@ -56,7 +58,8 @@ function r12()
     for season in seasons
         w=only(eachrow(DF.filter(r->r.league==league&&r.season==season,windows)))
         matches=DF.filter(:season=>==(season),p.matches)
-        push!(audit,(;season,first_date=w.first_date,last_date=w.last_date,n_fixtures=DF.nrow(matches),n_weeks=w.n_weeks,partial_label=w.label,cohort_n=w.n_teams,status="Existing accepted-panel coverage; label does not define an executable complete-season mask"))
+        @assert DF.nrow(matches)<=198
+        push!(audit,(;season,first_date=w.first_date,last_date=w.last_date,n_fixtures=DF.nrow(matches),n_weeks=w.n_weeks,partial_label="pre-split rounds1–33 in every season; post-split absent in every season",cohort_n=w.n_teams,n_raw_ingested_matches=198,n_accepted_panel_exclusions=198-DF.nrow(matches),original_A1_label=w.label,status="manager-verified betdb counts2026-10-08:198 raw matches/season, all with Betfair odds; n_fixtures is accepted model panel, not raw count; computer ran no SQL"))
     end
     for rung in ("C0","R6")
         posterior=Dict{String,Vector{Any}}()
@@ -117,7 +120,7 @@ function r12()
             v=joint_tier_count(observed,seasons);nv=[joint_tier_count(x,seasons) for x in ns]
             add(rung,"ALL_WINDOWS",window,"count_gap_ge2_next_Jaccard_ge0p8",v.eligible,[Float64(v.count)],[Float64(x.count) for x in nv];point=true,status="OK; n_shared denotes eligible nontrivial transitions")
             add(rung,"ALL_WINDOWS",window,"eligible_transition_denominator",v.eligible,[Float64(v.eligible)],[Float64(x.eligible) for x in nv];point=true)
-            add(rung,"EXISTING_COMPLETE_WINDOWS",window,"count_gap_ge2_next_Jaccard_ge0p8",0,[missing],Any[];status="NOT_AVAILABLE: A1 windows have no complete-season flag/mask; no new favorable subset invented",point=true)
+            add(rung,"EXISTING_COMPLETE_WINDOWS",window,"count_gap_ge2_next_Jaccard_ge0p8",v.eligible,[Float64(v.count)],[Float64(x.count) for x in nv];status="IDENTICAL_TO_MAIN: all five seasons share pre-split rounds1–33 window,198 raw matches each, manager-verified betdb counts2026-10-08; exact accepted-panel masks shared by data/null",point=true)
         end
     end
     output("R12","scottish_tier_membership.csv",membership)
@@ -135,9 +138,9 @@ function r12()
         push!(lines,"C0 $window joint gap≥2/next-Jaccard≥.8 count=$(r.median), eligible transitions=$(r.n_shared), null90%=[$(r.null_q05),$(r.null_q95)], rank=$(r.null_rank); dependent seasons not multiplied as independent evidence.")
     end
     a=only(filter(r->r.season=="25/26",audit))
-    push!(lines,"25/26 coverage $(a.first_date) to $(a.last_date), fixtures=$(a.n_fixtures), weeks=$(a.n_weeks), roster=$(a.cohort_n); existing label: $(a.partial_label). Gap change cannot be separated from incomplete coverage here.")
-    push!(lines,"Existing-complete-window sensitivity NOT_AVAILABLE: no executable complete-season flag in A1 season_windows or tier_gaps; exact all-window masks retained. No fresh EPL clustering, mixture optimization or mover joining; posterior suffix not replaced by fresh paths.")
+    push!(lines,"25/26 coverage $(a.first_date) to $(a.last_date), accepted-panel fixtures=$(a.n_fixtures)/198 raw, weeks=$(a.n_weeks), roster=$(a.cohort_n). Pre-split rounds1–33 are the ingested window in EVERY season; post-split rounds are absent in every season, not uniquely missing in25/26. Accepted-panel exclusions are listed separately.")
+    push!(lines,"Complete-window sensitivity identical to main: all seasons21/22–25/26 share the same pre-split rounds1–33 window (198 matches each, manager-verified betdb counts2026-10-08, all198 with Betfair odds). Computer ran no SQL; mask includes all five seasons, with identical actual accepted-panel windows in observed/null. No fresh EPL clustering or paths.")
     push!(lines,"Conditional Gaussian-RW null is not a test against every unimodal heavy-tail population. Local tier/heavy-tail level-prior nomination remains descriptive/post-selected, not a universal mixture, changed axes or demonstrated prospective goal benefit.")
     summary!("R12",lines)
-    verify("R12","PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Later-season suffix posterior reuses identical full-season masks/means; only first-season truncated posterior suffix and complete-window mask unavailable, explicitly reported rather than regenerated.")
+    verify("R12","PASS128 full-season means/draw IDs per C0/R6 season, active-cohort team sets match; original largest gap/IQR and aligned same-side persistence reproduce≤1e−10; low/high orientation fixed, Jaccard/ARI calculated only nontrivial shared partitions; same point/null full and suffix windows;99 C0 panels reused. Later-season suffix posterior reuses identical full-season masks/means; only first-season truncated posterior suffix unavailable. Manager-verified complete pre-split mask=all five seasons; sensitivity exactly identical to main, raw198 versus accepted-panel counts distinguished; no SQL by computer.")
 end

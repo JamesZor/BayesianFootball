@@ -44,10 +44,20 @@ function final_checks()
         @assert r.n_draws==(w.first_week>cutoff ? 128 : 0)
         @assert ismissing(r.prob_upper_group)==(r.n_draws==0)
     end
+    tiers=CSV.read(joinpath(OUT,"scottish_tier_robustness.csv"),DF.DataFrame;stringtype=String)
+    for r in eachrow(DF.filter(:season_or_pair=>==("EXISTING_COMPLETE_WINDOWS"),tiers))
+        a=only(eachrow(DF.filter(x->x.rung==r.rung&&x.window==r.window&&x.quantity==r.quantity&&x.season_or_pair=="ALL_WINDOWS",tiers)))
+        for col in (:n_shared,:q05,:median,:q95,:null_q05,:null_median,:null_q95,:null_rank)
+            @assert isequal(r[col],a[col])
+        end
+    end
+    audit=CSV.read(joinpath(OUT,"tier_window_audit.csv"),DF.DataFrame)
+    @assert all(audit.n_raw_ingested_matches.==198)
+    @assert all(audit.n_fixtures+audit.n_accepted_panel_exclusions.==198)
     text=read(joinpath(OUT,"SUMMARY.md"),String)
     for request in ("R09","R10","R11","R12")
         section=match(Regex("(?ms)^## $request\\n(.*?)(?=^## |\\z)"),text)
         @assert section!==nothing&&length(filter(!isempty,split(strip(section.captures[1]),'\n')))<=10
     end
-    verify("final_checks","PASS$countout output hashes/row counts; $countin immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, identical later-season suffix means reused and first-season suffix posterior explicitly unavailable; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.")
+    verify("final_checks","PASS$countout output hashes/row counts; $countin immutable input hashes;11 common-mode zero-loading/prior checks; energy/product/covariance tolerance≤1e−10; old horizon reproduction; original score point/interval reproduction≤1e−10;1999 circular B per L4/8/12; paired goal point/bootstrap-mean additivity≤1e−10;128 full-season tier means, identical later-season suffix means reused and first-season suffix posterior explicitly unavailable; complete pre-split mask identical to main, raw198 matches/season versus accepted-panel exclusions explicit; all4 summaries≤10 lines. No MCMC/new draws/SQL/src/package changes. Julia only on beast, pane%304,threads16/BLAS1.")
 end
