@@ -47,4 +47,3 @@ C0 null_suffix joint gap≥2/next-Jaccard≥.8 count=2.0, eligible transitions=4
 25/26 coverage 2025-08-02 to 2026-04-12, fixtures=193, weeks=37, roster=12; existing label: accepted-panel season window; near-complete Scottish lower 25/26 and pre-split Premiership retained as published. Gap change cannot be separated from incomplete coverage here.
 Existing-complete-window sensitivity NOT_AVAILABLE: no executable complete-season flag in A1 season_windows or tier_gaps; exact all-window masks retained. No fresh EPL clustering, mixture optimization or mover joining; posterior suffix not replaced by fresh paths.
 Conditional Gaussian-RW null is not a test against every unimodal heavy-tail population. Local tier/heavy-tail level-prior nomination remains descriptive/post-selected, not a universal mixture, changed axes or demonstrated prospective goal benefit.
-

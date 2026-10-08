@@ -65,7 +65,8 @@ function summary!(request,lines)
     text=isfile(path) ? read(path,String) : "# Batch 02 results\n\nSources: batch 01 relay a95ca9ca; code commits, cache/input/output SHA256s and exact beast paths in [manifest.csv](manifest.csv). Seed 610802; rates natural log, energies squared log-rates, scores nats/fixture. Large tables stay on beast. Conditional-null ranks=(1+#null≤observed)/100, not p-values.\n"
     section="## $request\n"*join(lines,"\n")*"\n"
     pattern=Regex("(?ms)^## $request\\n.*?(?=^## |\\z)")
-    write(path,occursin(pattern,text) ? replace(text,pattern=>section*"\n") : text*"\n"*section)
+    updated=occursin(pattern,text) ? replace(text,pattern=>section*"\n") : text*"\n"*section
+    write(path,rstrip(updated)*"\n")
 end
 function verify(request,text)
     for (path,h) in INPUTS; @assert sha(path)==h "input changed: $path"; end
