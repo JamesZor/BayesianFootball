@@ -251,3 +251,22 @@ Times are laptop local; earlier entries were first written in the beast clock (+
   - The eng_championship fit kept running on the beast.
   - Done so far: eng_premier (pilot) and sco_league_two (`R06_FIT_DONE`).
   - Auto-resume is scheduled for 15:30 (`resume_pi_at_reset.sh`).
+- **2026-10-07 ~17:26:** the human's resumed pi-context review agent restarted the EDA pi on pi 0.99.2
+  and sent it a message signed "Manager". Blackhole compaction then fired at 167K → 21K tokens.
+- **2026-10-07 ~20:03:** pi asked whether to accept a T03 snapshot-metadata exception. Option 1
+  (accept) was selected **in the pane, not by the manager**: the watcher had lapsed after the 15:41
+  resume. The report credits "the manager".
+- **2026-10-07 ~20:05: QS EDA complete** at `c8c17167` (9 suitable, 2 inconclusive, 0 unsuitable).
+- **2026-10-08 manager review, in progress:**
+  - **T03 passes 131/131** on the beast once the published snapshot `c786e2…` carries its original
+    mtime (2026-09-25 12:57:15.48 UTC, the laptop original). The "exception" is therefore unnecessary:
+    pi had run T03 against the fresh cache.
+  - **T06 passes 85/85.**
+  - **Finding:** the synthetic recovery overwrote `newton_termination.csv` in the canonical
+    eng_premier and sco_league_two fit folders, on the beast only. Counts are all zero; the
+    committed copies are the originals.
+- **2026-10-08 ~14:50: quality/style formulation research launched** (human's request).
+  - **Thinker:** pi `gpt-6-astra` (5× the Sol cost; the human chose "Astra thinks, Sol computes"),
+    pane `%98`.
+  - **Computer:** gpt-6.1-sol, launched per request batch.
+  - **Branch** `pi/market-model-qs-forms` (worktree `…-pi-qsf`) off `c8c17167`. Briefs: `d804b338`.
