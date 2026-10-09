@@ -75,10 +75,25 @@ Block = 8-week noncircular moving block within season, 999 reps, 90% CI (prescri
 | market_c0 − control_grw | +0.00835 [−0.01148, +0.02332] | +0.01096 [−0.00615, +0.01828] | −0.00262 [−0.01177, +0.00965] |
 | market_c0 − control_td | +0.00031 [−0.01758, +0.02000] | +0.01187 [+0.00081, +0.01928] worse | −0.01156 [−0.02208, +0.00436] |
 
-Posterior-mixture scores over each arm's own draws, as in R07: 4,000 draws per goal arm and 512 for the market arm. Market C0 is a model of market rates, not goals, so its total-goal channel is the weakest. `paired_goal_logscore.csv` also contains harness fixture-clustered 95% intervals for every goal-score pair; its point estimates agree with the block estimates to 1e-12.
+Posterior-mixture scores over each arm's own draws, as in R07: 4,000 draws per goal arm and 512 for the market arm. Market C0 is a model of market rates, not goals, so its total-goal channel is the weakest. `paired_goal_logscore.csv` also contains harness fixture-clustered 95% intervals for every goal-score pair; its point estimates agree with the block estimates to 1e-12. All six primary goal-channel clustered intervals cross zero, including qs_weak_r allocation ([−0.00247, +0.00458]).
 
 Market-close goal-score pairs are not defined on the full 710-fixture panel: 193 fixtures lack an
 invertible book. They are explicitly omitted rather than compared on a favourable smaller subset.
+
+## Transition-cohort bias
+
+Model minus close win probability for the transitioning club, percentage points; positive means
+overrated. First 20-match windows, harness club-season-clustered 95% intervals. Counts are the
+common scored fixture counts: any-transition 132, promoted into L1 71, entered SPFL 69. The
+relegated-into-L1 cohort has no scored fixtures on this lower-tier panel and is not estimated.
+
+| Arm | Any transition | Promoted into L1 | Entered SPFL |
+|---|---|---|---|
+| control_grw | +4.33 [+1.21, +8.13] | +1.84 [+0.28, +3.40] | −3.26 [−8.66, +4.75] |
+| control_td | +3.45 [+1.22, +6.29] | +3.01 [+1.77, +4.25] | −7.96 [−13.09, −4.38] |
+| qs_market_r | +3.44 [+0.33, +7.15] | +0.62 [−1.46, +2.84] | −1.60 [−7.81, +7.90] |
+| qs_weak_r | +3.66 [+0.66, +7.28] | +0.73 [−1.01, +2.79] | −1.92 [−7.98, +7.41] |
+| market_c0 | +0.93 [−0.43, +2.32] | +0.69 [−1.12, +2.06] | +1.23 [+0.01, +2.12] |
 
 ## Posterior r by fold (median over folds of per-fold posterior medians)
 
