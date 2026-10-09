@@ -1,0 +1,1402 @@
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_c
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_co
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_con
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_cont
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_contr
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_contro
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_f
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_fo
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_for
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forw
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwa
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwar
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forward
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwardi
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwardin
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.j
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl")
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl");
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl");
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); w
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); wr
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); wri
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); writ
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write(
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/r
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/ro
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/roo
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/B
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_r
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_ru
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_run
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/l
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/lo
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/log
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/q
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_e
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_ex
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_exp
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_expe
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_exper
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experi
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experim
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experime
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experimen
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/c
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/co
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/con
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/cont
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/contr
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/contro
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_r
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_re
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_reg
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regr
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regre
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regres
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regress
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regressi
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regressio
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.s
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.st
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.sta
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.stat
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.statu
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status"
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status",
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status",
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "P
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PA
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PAS
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS"
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS")
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS")
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") c
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") ca
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") cat
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catc
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch e
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch er
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err;
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err;
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; s
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; sh
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; sho
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; show
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showe
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; shower
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerr
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerro
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(s
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(st
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(std
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stde
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stder
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr,
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr,
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, e
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, er
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err,
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err,
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, c
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, ca
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, cat
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catc
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_b
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_ba
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_bac
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_back
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backt
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtr
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtra
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrac
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace(
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace())
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace());
+
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace());
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); p
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pr
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pri
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); prin
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); print
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); printl
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(s
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(st
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(std
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stde
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stder
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr)
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr);
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr);
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); w
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wr
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wri
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); writ
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write(
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/r
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/ro
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/roo
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/B
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_r
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_ru
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_run
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/l
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/lo
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/log
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/q
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_e
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_ex
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exp
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_expe
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exper
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experi
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experim
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experime
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experimen
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/c
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/co
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/con
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/cont
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/contr
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/contro
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_r
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_re
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_reg
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regr
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regre
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regres
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regress
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regressi
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regressio
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_
+
+
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.s
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.st
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.sta
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.stat
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.statu
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status"
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status",
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status",
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "F
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FA
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAI
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL"
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL")
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL")
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL") e
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL") en
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL") end
+
+
+
+
+
+julia>
+try include("experiments/scotland/06_qs_joint_and_market_observation/t05_control_forwarding.jl"); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/control_regression_v1.status", "FAIL") end
+
+[CONTROL_VERIFIED] experiment=scottish_lower_qs_wave2_2426 run_id=98447840-e95c-420f-92b4-2db6545506a3 folds=40
+Test Summary:                                     | Pass  Total  Time
+Wave 2 complete owned control preflight (offline) |    8      8  5.3s
+Test Summary:                               | Pass  Total  Time
+Wave 2 control scoring comparison (offline) |    7      7  1.6s
+[CONTROL_SCORE_PARITY] arm=qs_joint (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+[CONTROL_SCORE_PARITY] arm=qs_joint__rhat_rerun (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+[CONTROL_SCORE_PARITY] arm=grw_marketobs (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+[CONTROL_SCORE_PARITY] arm=grw_marketobs__rhat_rerun (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+[CONTROL_SCORE_PARITY] arm=qs_marketobs (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+[CONTROL_SCORE_PARITY] arm=qs_marketobs__rhat_rerun (rows = 2, cells = 30, exact = true, max_abs_diff = 0.0, passed = true, mismatches = "")
+Test Summary:                                                            | Pass  Total  Time
+Wave 2 explicit forwarding: all candidate primary/rerun stages (offline) |   42     42  1.5s
+GRID_CONTROL_FORWARDING_PASS: offline mocks only, no sampling
+4
+
+
+
+julia>
+
+
+julia>

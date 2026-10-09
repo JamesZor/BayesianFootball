@@ -1,0 +1,2 @@
+candidate,primary_run_id,final_run_id,rerun_folds,max_rhat,min_ess_tail,git_sha
+qs_joint,2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea,2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea,,1.0093676210309184,761.022212780583,081ba5a6

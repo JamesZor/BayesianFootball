@@ -1,20 +1,25 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 after 20:14 UTC stop (beast). Owner: pi. Manager: Claude.
+Updated: 2026-10-09 after 20:32 UTC resume (beast). Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 wrapper fix authorised; offline regression pending before resume.**
-Historical scoring stop at source 8f285a6a retained in PHASE3_BLOCKED.md.
+**Phase 3 resumed at 081ba5a6: grw_marketobs running.**
+Offline regression57/57 PASS; QS scoring/receipt completed from persisted UUID
+without sampling. Internal GRW paired-control scoring664 rows/9960 fields
+exactly matches existing values (maxdiff0). All80 joint checkpoints SHA256
+unchanged. CONTROL_FORWARDING_REVALIDATION.md. Historical scoring stop at
+source8f285a6a retained in PHASE3_BLOCKED.md.
 GRW control completed as `grw_joint` UUID 98447840-e95c-420f-92b4-2db6545506a3:
 40 folds, Rhat max 1.01008, bulk min 641.78, tail min 324.47 (one review flag),
 zero divergences, no Rhat reruns. QS 40 folds persisted/parity hard PASS,
 UUID 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea, Rhat 1.00937, bulk/tail
-832.35/761.02, zero divergences/reruns due. Scoring stops because the wrapper
-never supplies the GRW control to non-control arms: expected exactly one
-role=:control; found 0. No market arm started or retry. PHASE3_BLOCKED.md.
-All owned panes closed after read-only audit. Mock-chain queue validation PASS;
+832.35/761.02, zero divergences/reruns due. Initial scoring stopped because the
+wrapper did not supply the GRW control to non-control arms: expected exactly one
+role=:control; found 0. Manager-authorised explicit owned/completed control
+forwarding fixes this within l05/r05 only. V2 skips standalone GRW, resumes QS
+scoring and now samples market arms. Mock-chain queue validation PASS;
 full smoke-probe ETA 12.3192 h was disclosed before approval.
 
 ## Done
@@ -52,14 +57,12 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Validate experiment-only l05/r05 control-reference forwarding with offline
-regression in fresh beast REPL. Manager authorises resume: skip standalone GRW,
-QS must resolve to persisted2a5eee90 and finish scoring/receipt without sampling,
-then market arms under fresh launcher attempt/fresh REPLs. Internal paired-control
-scoring explicitly allowed only if every GRW score row equals existing rows
-exactly/absolute1e-12; save baseline/comparison CSVs, stop on mismatch. GRW
-control preflight verifies experiment/status/all40 folds before sampling.
-All priors/seeds/budgets/thresholds unchanged. Original approved order:
+Poll v2 launcher every5–6min (20min on Claude route), preserve market-arm
+checkpoints/UUIDs/diagnostics and prescribed reruns. Stop on any gate failure
+including every-field GRW score parity (exact/absolute1e-12). No standalone
+GRW stage or joint resampling; QS completed scoring/receipt from2a5eee90.
+Explicit control preflight verifies experiment/status/all40 folds. All science
+unchanged. Original approved order:
 `grw_joint → qs_joint → grw_marketobs → qs_marketobs`, each 4×(500+1000).
 Preserve initial/final UUIDs, diagnostics, rerun-selection CSVs and manifests.
 Final divergence <=0.1%, finite Rhat; report residual Rhat flags and tail ESS
@@ -70,16 +73,19 @@ prior/data/budget/seed/threshold changes.
 
 ## Beast panes and artifacts
 
-NO owned panes open. Launcher %390 stopped on failure; successful GRW %391
-closed automatically; QS %392 retained for read-only UUID/diagnostic audit,
-then closed along with launcher after evidence retrieval. All earlier owned
-panes %342–%389 closed; other sessions untouched. Both fits and all 80 initial
-checkpoints preserved. No source update or retry on beast.
+OPEN v2 launcher pi_qsx2_grid_launcher_v2 %394; fresh grw_marketobs REPL
+pi_qsx2_phase3_grid_v2_grw_marketobs %396 (started20:32:29UTC).
+Offline regression %393 and resumed QS %395 closed after PASS. Prior %390–392
+and all earlier owned panes closed; other sessions untouched. Both joint fits
+and all80 initial checkpoints preserved, hashes unchanged. Do not update the
+beast checkout while grid runs.
 
-Checkout: `/root/BF_runs/qs_experiment` at 8f285a6a.
+Checkout: `/root/BF_runs/qs_experiment` at 081ba5a6.
 Checkpoints: `data/checkpoints/scottish_lower_qs_wave2_2426/<arm>/` in checkout.
-Logs: `/root/BF_runs/logs/qs_experiment_w2/phase3_launcher_v1.log`
-and `phase3_grid_v1_<arm>.log`.
+Logs: `/root/BF_runs/logs/qs_experiment_w2/phase3_launcher_v2.log`
+and `phase3_grid_v2_<arm>.log`; historical v1 logs retained.
+Launcher `/tmp/qsx2_phase3_resume_v2.sh` (committed evidence copy in results/gate_logs)
+skips standalone GRW; tracked original phase3_gate.sh unchanged.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: experiment `logs/` and `results/`.
 Frozen market_rates.csv SHA256:
