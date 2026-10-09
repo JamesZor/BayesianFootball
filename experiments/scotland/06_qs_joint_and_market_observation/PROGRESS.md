@@ -5,7 +5,8 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 BLOCKED at qs_joint harness scoring, source 8f285a6a.**
+**Phase 3 wrapper fix authorised; offline regression pending before resume.**
+Historical scoring stop at source 8f285a6a retained in PHASE3_BLOCKED.md.
 GRW control completed as `grw_joint` UUID 98447840-e95c-420f-92b4-2db6545506a3:
 40 folds, Rhat max 1.01008, bulk min 641.78, tail min 324.47 (one review flag),
 zero divergences, no Rhat reruns. QS 40 folds persisted/parity hard PASS,
@@ -51,11 +52,14 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Await manager review/authorisation of experiment-only l05/r05 control-reference
-forwarding; do not retry or refit persisted GRW/QS fits. PHASE3_BLOCKED.md has
-exact diagnosis, UUIDs, CSV evidence and proposed resume. When authorised,
-use a fresh launcher attempt label; immutable evidence/receipts/checkpoints
-avoid duplicate sampling. Approved order:
+Validate experiment-only l05/r05 control-reference forwarding with offline
+regression in fresh beast REPL. Manager authorises resume: skip standalone GRW,
+QS must resolve to persisted2a5eee90 and finish scoring/receipt without sampling,
+then market arms under fresh launcher attempt/fresh REPLs. Internal paired-control
+scoring explicitly allowed only if every GRW score row equals existing rows
+exactly/absolute1e-12; save baseline/comparison CSVs, stop on mismatch. GRW
+control preflight verifies experiment/status/all40 folds before sampling.
+All priors/seeds/budgets/thresholds unchanged. Original approved order:
 `grw_joint → qs_joint → grw_marketobs → qs_marketobs`, each 4×(500+1000).
 Preserve initial/final UUIDs, diagnostics, rerun-selection CSVs and manifests.
 Final divergence <=0.1%, finite Rhat; report residual Rhat flags and tail ESS

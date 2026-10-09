@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -70,6 +70,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Mock-chain queue validation PASS (checkpoint resume / exact seeded replay) before approved grid launch at 8f285a6a, 19:07:51 UTC. Active launcher %390 / first-arm grw_joint REPL %391; 2/40 initial fold checkpoints as of beast 19:21 UTC. No completed arm/UUID/score claimed. PROGRESS/HANDOVER refreshed after compaction; next monitor every 5–6 min, collect prescribed reruns and diagnostics, stop on failure. No beast checkout updates during the run.
 
 - [2026-10-09 @pi] BLOCKED Phase 3 at 8f285a6a: grw_joint completes UUID 98447840-e95c-420f-92b4-2db6545506a3, 40 folds, Rhat1.01008/bulk641.78/tail324.47, zero divergences/no reruns; one tail review flag. qs_joint persists UUID 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea, four hard checks incl. parity PASS, Rhat1.00937/bulk832.35/tail761.02, zero divergences/reruns due; then scoring fails expected exactly one role=:control; found0. Experiment wrapper never supplies GRW control for non-control candidates. Read-only retained-REPL audit records exact CSVs/check rows. No retry/market arm sampling; all 80 checkpoints/both DB fits retained, owned panes closed. Await manager authorisation of experiment-only l05/r05 control forwarding and resume without refitting; PHASE3_BLOCKED.md.
+
+- [2026-10-09 @pi] Manager authorises l05/r05 explicit GRW RunRef forwarding for every candidate primary/rerun, with ownership/status/full40-fold preflight and offline regression. Skip standalone GRW; QS must resolve to persisted2a5eee90 before any sampling, complete scoring/receipt then market arms. Fresh attempts/REPLs, unchanged science. Clarification authorises unchanged harness internal paired-control recomputation, requiring all GRW score rows equal existing values exactly/absolute1e-12 before candidate acceptance; snapshot/comparison CSVs and fail-closed regression added. Original tail ESS324 review retained. Validation pending; historical failure untouched.
 
 ## Verification & Findings
 
