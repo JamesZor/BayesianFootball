@@ -53,6 +53,8 @@ smallest transition bias. Its gap to every goal arm is not detectable.
 | `market_c0` | **0.64240** | **0.61343** | −0.00335 [−0.00702, +0.00434] | 0.68859 | 1.023 | files |
 | market close | 0.64182 | 0.61312 | — | 0.68988 | — | — |
 
+All 710 fixtures are forecast and goal-scored. The common quoted panel for market metrics is
+595 fixtures for 1X2, 379 for OU2.5, 178 for BTTS (627 with any scored market; 2,899 observations).
 Full tables, goal log-score channels, posterior r by fold and the bootstrap caveat are in
 [REPORT.md](REPORT.md). The machine-readable results are in `results/`.
 
@@ -86,6 +88,7 @@ owned `pi_qsx_*` REPLs from detached checkouts of `exp/qs-goal-vs-market`.
 - Grids: `r04_goal_grid.jl` (`-t 14`, cores 0–13, seeds 4001–4004 in priority order) and
   `r04_market_grid.jl` (`-t 2`, then resumed at `-t 16`), at `e6685ceb`.
 - Scoring: `r05_score.jl` (+ `r05_score_r_only.jl`, + `r05_block_check.jl`), at `81c77a42`+;
+  `r05_goal_cluster.jl` adds the harness clustered intervals from frozen goal scores;
   `r05_figures.jl` renders the frozen posterior-r CSV.
 - Reproduction: fresh-REPL `r06_reproduce.jl` at `ac04b173`: all six refits exact.
 - Final record: `r07_finalize.jl` verifies persisted scores, upserts the completed decision and

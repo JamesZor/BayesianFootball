@@ -1,7 +1,8 @@
 # Phase 5 scoring: harness scorecard (adapter for the market arm and the market close) plus the
 # experiment's own 8-week block bootstrap, goal log-score channels and posterior r by fold.
 # Include in an owned persistent beast REPL AFTER the goal and market grids. Writes
-# harness_scores for the goal and market arms (experiment namespace only) and CSVs to OUT.
+# harness_scores for the goal arms (experiment namespace only) and CSVs for all arms to OUT.
+# The file-based market arm has no database run UUID and is not inserted into harness_scores.
 using BayesianFootball, CSV, DataFrames, Dates, Distributions, LinearAlgebra, Random
 using Serialization, Statistics, ThreadPinning, UUIDs
 pinthreads(:cores)
@@ -192,11 +193,19 @@ for (tier, a, b) in s5_pairs_spec
         # Loss orientation: negative log score difference (a − b); < 0 means a is better.
         d = -(j[!, channel] .- j[!, Symbol(channel, "_1")])
         bb = s5_block_bootstrap(j.match_id, d)
+        fa = DataFrame(match_id = j.match_id, selection = fill(channel, nrow(j)),
+                       ll_model = -j[!, channel])
+        fb = DataFrame(match_id = j.match_id, selection = fill(channel, nrow(j)),
+                       ll_model = -j[!, Symbol(channel, "_1")])
+        clustered = H5._paired_bootstrap(fa, fb; B = 10_000)
+        isapprox(clustered.delta, bb.mean; atol = 1e-12, rtol = 0) ||
+            error("goal point estimates differ for $a/$b/$channel")
         # Goal scores have no market-close counterpart: the close is not a rate pair for the
         # 193 fixtures without an invertible book, so market_close pairs are skipped above.
         push!(s5_goal_rows, (; tier, arm = a, reference = b, channel = String(channel),
             n = nrow(j), delta_neg_logscore = bb.mean, block8_lo90 = bb.lo, block8_hi90 = bb.hi,
-            class_block8 = classify(bb.lo, bb.hi)))
+            class_block8 = classify(bb.lo, bb.hi),
+            clustered_lo95 = clustered.lo, clustered_hi95 = clustered.hi)))
     end
 end
 CSV.write(joinpath(S5_OUT, "paired_goal_logscore.csv"), DataFrame(s5_goal_rows))

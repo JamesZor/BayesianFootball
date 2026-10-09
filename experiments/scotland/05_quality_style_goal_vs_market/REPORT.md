@@ -25,7 +25,12 @@
 
 Experiment `scottish_lower_quality_style_2426`; scorecard v1.2, de-vigged Betfair TWA(−20,0]; pinned snapshot SHA256 `c786e2fc…423b4`.
 
-## Target-panel scores (harness, 710 fixtures)
+## Target-panel scores (harness)
+
+All arms forecast 710 fixtures. Market metrics use the **same available quoted selections**:
+1X2 = 595 fixtures / 1,785 observations; OU2.5 = 379 / 758; BTTS = 178 / 356;
+all markets = 627 fixtures / 2,899 observations. Goal log scores below use all 710 fixtures.
+No arm-specific filtering is applied.
 
 | Arm | LL all | LL 1X2 | LL OU2.5 | LL BTTS | RPS 1X2 | Brier 1X2 | ECE 1X2 | ECE all | Compression | Model-on-market |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -70,7 +75,10 @@ Block = 8-week noncircular moving block within season, 999 reps, 90% CI (prescri
 | market_c0 − control_grw | +0.00835 [−0.01148, +0.02332] | +0.01096 [−0.00615, +0.01828] | −0.00262 [−0.01177, +0.00965] |
 | market_c0 − control_td | +0.00031 [−0.01758, +0.02000] | +0.01187 [+0.00081, +0.01928] worse | −0.01156 [−0.02208, +0.00436] |
 
-Posterior-mixture scores over each arm's own draws, as in R07: 4,000 draws per goal arm and 512 for the market arm. Market C0 is a model of market rates, not goals, so its total-goal channel is the weakest.
+Posterior-mixture scores over each arm's own draws, as in R07: 4,000 draws per goal arm and 512 for the market arm. Market C0 is a model of market rates, not goals, so its total-goal channel is the weakest. `paired_goal_logscore.csv` also contains harness fixture-clustered 95% intervals for every goal-score pair; its point estimates agree with the block estimates to 1e-12.
+
+Market-close goal-score pairs are not defined on the full 710-fixture panel: 193 fixtures lack an
+invertible book. They are explicitly omitted rather than compared on a favourable smaller subset.
 
 ## Posterior r by fold (median over folds of per-fold posterior medians)
 
