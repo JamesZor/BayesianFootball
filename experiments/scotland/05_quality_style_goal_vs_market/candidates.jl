@@ -11,8 +11,8 @@ const EXPERIMENT = "scottish_lower_quality_style_2426"
 const TODO = 40
 const QUESTION = "Does a quality/style rotation of team strength, with market-informed r, improve 40-fold goal forecasts, and how close does it come to a market-odds QS model?"
 const DIMENSION = "dynamics_quality_style"
-const STATUS = "running"
-const DECISION = "Pending: smoke then 40-fold grid."
+const STATUS = "completed"
+const DECISION = "No promotion: QS improves compression, not 1X2 LogLoss; prescribed block verdict is worse, but cluster/circular intervals cross zero. Market C0 is file-based; see REPORT.md."
 const README = joinpath(@__DIR__, "README.md")
 const CONTROL = "control_grw"
 

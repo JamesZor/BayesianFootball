@@ -1,0 +1,7 @@
+arm,fold,chains_identical,chains_max_abs,latents_identical,latents_max_abs,n_values,seconds
+control_grw,1,true,0.0,true,0.0,392000,58.4
+control_td,1,true,0.0,true,0.0,200000,10.3
+qs_market_r,1,true,0.0,true,0.0,392000,25.7
+qs_weak_r,1,true,0.0,true,0.0,392000,8.5
+market_c0,5,true,0.0,true,0.0,36000,94.2
+market_c0,33,true,0.0,true,0.0,36000,91.4
