@@ -4,6 +4,8 @@ set -euo pipefail
 cd /root/BF_runs/qs_experiment
 logdir=/root/BF_runs/logs/qs_experiment_w2
 mkdir -p "$logdir"
+output=${QSX2_TEST_OUTPUT:-/root/BF_runs/qs_experiment_w2_out/phase1}
+rerun_first=${QSX2_RERUN_RECOVERY_FIRST:-false}
 if [[ $# == 0 ]]; then
   set -- market:test/test_market_rate_observation.jl \
     tape:test/tape_allocation_tests.jl \
@@ -26,7 +28,7 @@ for item in "$@"; do
   tmux send-keys -t "$pane" -l -- 'JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16'
   sleep 0.2
   tmux send-keys -t "$pane" Enter
-  code="using LinearAlgebra, ThreadPinning; pinthreads(:cores); BLAS.set_num_threads(1); started = time(); try include(\"$file\"); println(\"PHASE1_INCLUDE_RETURNED_$name wall_s=\", time()-started); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE1_FAIL_$name wall_s=\", time()-started); write(\"$status\", \"FAIL\") end; write(\"$notify\", read(\"$status\", String) * \"\\n\")"
+  code="ENV[\"QSX2_TEST_OUTPUT\"] = \"$output\"; ENV[\"QSX2_RERUN_RECOVERY_FIRST\"] = \"$rerun_first\"; using LinearAlgebra, ThreadPinning; pinthreads(:cores); BLAS.set_num_threads(1); started = time(); try include(\"$file\"); println(\"PHASE1_INCLUDE_RETURNED_$name wall_s=\", time()-started); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE1_FAIL_$name wall_s=\", time()-started); write(\"$status\", \"FAIL\") end; write(\"$notify\", read(\"$status\", String) * \"\\n\")"
   sleep 8
   tmux send-keys -t "$pane" -l -- "$code"
   sleep 0.2

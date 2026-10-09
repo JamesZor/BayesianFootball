@@ -1,5 +1,5 @@
 using Test, BayesianFootball, CSV, DataFrames, Distributions, DynamicPPL
-using ForwardDiff, LinearAlgebra, LogDensityProblems, MCMCChains, Random, ReverseDiff, Statistics
+using ForwardDiff, LinearAlgebra, LogDensityProblems, MCMCChains, Random, ReverseDiff, Serialization, Statistics
 
 const MRO_PG = BayesianFootball.Models.PreGame
 const MRO_API = MRO_PG.Builder
@@ -76,6 +76,13 @@ end
         table = DataFrame(match_id = [2, 1, 3], log_lambda_h = [0.2, 0.3, NaN],
             log_lambda_a = [-0.1, 0.1, NaN], full_book = [true, true, false])
         feature = Features.MarketRatesFeature(table)
+        @test feature.match_ids == [1, 2, 3]
+        @test feature.log_lambda_h == [0.3, 0.2, 0.0]
+        @test feature.log_lambda_a == [0.1, -0.1, 0.0]
+        @test feature.full_book == [true, true, false]
+        @test feature.full_book isa Vector{Bool}
+        @test BayesianFootball.Harness._structural_equal(feature,
+            Features.MarketRatesFeature(table[3:-1:1, :]))
         empty = DataFrame()
         ds = Data.DataStore(Data.ScottishLower(), empty, empty, empty, empty, empty, empty, empty, empty)
         data = Dict{Symbol,Any}()
@@ -86,7 +93,35 @@ end
         @test_throws ErrorException Features.MarketRatesFeature(vcat(table, table[1:1, :]))
         bad = deepcopy(table); bad.full_book[3] = true
         @test_throws ErrorException Features.MarketRatesFeature(bad)
+        shuffled = Dict{Symbol,Any}()
+        Features.add_feature!(shuffled, feature, [3, 99, 1, 0, 2, 4], Dict(), ds)
+        @test shuffled[:flat_market_log_h] == [0.0, 0.0, 0.3, 0.0, 0.2, 0.0]
+        @test shuffled[:flat_market_available] == [0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
+        empty_feature = Features.MarketRatesFeature(table[1:0, :])
+        Features.add_feature!(shuffled, empty_feature, [1, 2], Dict(), ds)
+        @test shuffled[:flat_market_log_h] == zeros(2)
+        @test shuffled[:flat_market_available] == zeros(2)
         model = mro_model(MultiScaleGRW(), feature)
+        # Exercise the UNCHANGED harness comparator on a complete config, without sampling.
+        candidate = BayesianFootball.Harness.Candidate(name = "array_parity", model = model,
+            scope = Wave2MarketTable.QSMarketArm.goal_scope(),
+            sampler = Samplers.QueuedNUTSConfig(n_samples = 200, n_warmup = 200, n_chains = 2))
+        config = BayesianFootball.Harness.fit_config(candidate; stage = :smoke, experiment = "array_parity")
+        io = IOBuffer(); Serialization.serialize(io, config); seekstart(io)
+        restored = Serialization.deserialize(io)
+        @test BayesianFootball.Harness._structural_equal(config, restored)
+        @test string(config.model) == string(restored.model)
+        @test Features.market_rates_digest(feature) ==
+            Features.market_rates_digest(Features.MarketRatesFeature(table[3:-1:1, :]))
+        @test string(model) != string(mro_model(MultiScaleGRW(), feature;
+            prior = truncated(Normal(0.0, 0.21), 0.0, Inf)))
+        for column in (:match_ids, :log_lambda_h, :log_lambda_a, :full_book)
+            changed_config = deepcopy(restored)
+            values = getproperty(changed_config.model.observation.feature, column)
+            values[1] = column == :full_book ? !values[1] : values[1] + 1
+            @test !BayesianFootball.Harness._structural_equal(config, changed_config)
+            @test string(config.model) != string(changed_config.model)
+        end
         @test model isa MRO_API.PoissonCountModel
         @test MRO_API.observation_family(model.observation) == :poisson
         @test MRO_API.observation_wired(model.observation)
@@ -134,6 +169,14 @@ end
     end
 
     feature = Wave2MarketTable.feature()
+    frozen = CSV.read(Wave2MarketTable.TABLE_PATH, DataFrame)
+    @test feature.match_ids == frozen.match_id
+    @test feature.log_lambda_h == frozen.log_lambda_h
+    @test feature.log_lambda_a == frozen.log_lambda_a
+    @test feature.full_book == frozen.full_book
+    @test length(feature.match_ids) == 1430 && count(feature.full_book) == 1107
+    io = IOBuffer(); Serialization.serialize(io, feature); seekstart(io)
+    @test BayesianFootball.Harness._structural_equal(feature, Serialization.deserialize(io))
     for (arm, dynamics) in (("grw", MultiScaleGRW()), ("qs", mro_weak_qs()))
         model = mro_model(dynamics, feature)
         fs = mro_real_features(model)
@@ -157,7 +200,7 @@ end
                 push!(gradients, compiled)
                 push!(exact_checks, (; arm, point = number, forward_error, fresh_error))
             end
-            output = "/root/BF_runs/qs_experiment_w2_out/phase1"
+            output = get(ENV, "QSX2_TEST_OUTPUT", "/root/BF_runs/qs_experiment_w2_out/phase1")
             mkpath(output)
             CSV.write(joinpath(output, "exact_ad_$arm.csv"), DataFrame(exact_checks))
             audit = MarketRateFDAudit.audit(f, points, gradients, arm, output)
@@ -178,18 +221,20 @@ end
 
     @testset "synthetic recovery, frozen seeds and smoke budget" begin
         # Manager amendment: retain the original seed, run TWO further fixed seeds per arm.
-        # The original interval CSV is immutable; do not refit it or overwrite its evidence.
+        # The original interval CSV is immutable; never overwrite its evidence.
+        # Manager's array-feature revalidation reruns all three seeds into a separate output.
+        rerun_first = get(ENV, "QSX2_RERUN_RECOVERY_FIRST", "false") == "true"
         original = CSV.read(joinpath(MRO_DIR, "results", "synthetic_recovery.csv"), DataFrame)
         @test nrow(original) == 14
         intervals = NamedTuple[]
-        for row in eachrow(original)
+        for row in (rerun_first ? eachrow(original[1:0, :]) : eachrow(original))
             index = row.arm == "grw" ? 1 : 2
             push!(intervals, (; arm = row.arm, fold = row.fold, seed = 1,
                 data_seed = 20261013 + index, sampler_seed = 20261015 + index,
                 parameter = row.parameter, truth = row.truth, lo = row.lo, median = row.median,
                 hi = row.hi, covered = row.covered, wall_seconds = row.wall_seconds))
         end
-        for seed in 2:3
+        for seed in (rerun_first ? (1:3) : (2:3))
             for (index, (arm, dynamics)) in enumerate((("grw", MultiScaleGRW()), ("qs", mro_weak_qs())))
                 model = mro_model(dynamics, feature)
                 fs = mro_real_features(model)
@@ -202,8 +247,8 @@ end
                 started = time()
                 chain = Samplers.run_sampler(MRO_PG.build_turing_model(model, synthetic), config)
                 for name in sort!(collect(keys(truth)))
-                    # Select the immutable first seed, not the other new-seed intervals.
-                    baseline = only(filter(row -> row.arm == arm && row.parameter == name && row.seed == 1, intervals))
+                    # Truths remain anchored to the immutable first-seed evidence.
+                    baseline = only(filter(row -> row.arm == arm && row.parameter == name, eachrow(original)))
                     draws = vec(Array(chain[Symbol(name)]))
                     lo, median, hi = quantile(draws, [0.05, 0.5, 0.95])
                     covered = lo <= truth[name] <= hi
@@ -214,7 +259,7 @@ end
                 end
             end
         end
-        output = "/root/BF_runs/qs_experiment_w2_out/phase1"
+        output = get(ENV, "QSX2_TEST_OUTPUT", "/root/BF_runs/qs_experiment_w2_out/phase1")
         mkpath(output)
         CSV.write(joinpath(output, "synthetic_recovery_three_seeds.csv"), DataFrame(intervals))
         for row in intervals

@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -18,7 +18,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 ## Acceptance Criteria
 
 - [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
-- [x] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery evidenced under manager amendments.
+- [ ] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery revalidated for array feature under manager amendments.
 - [ ] Four W2 candidates pass smoke hard gates; manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [ ] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
@@ -56,6 +56,9 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Manager authorised the one-line candidate loader fix and fresh smoke retry via confirmation. Apply Base.include(@__MODULE__, ...); no priors/seeds/inputs/threshold changes. Failed attempt retained, v2 evidence names; grid still separately gated.
 
 - [2026-10-09 @pi] BLOCKED Phase 2 at ac30c4d7: both joint arms six hard passes; grw_marketobs five pass/fit_parity fails; qs_marketobs not started. Read-only audit 58665779 proves 1430 original/reloaded dictionary key/value tuples identical but structural comparator sees Dict internals; no gate fix or sampling retry. Historical failed row also blocks eligibility under current policy. PHASE2_PARITY_BLOCKED.md reports UUIDs, diagnostics, ETA and proposed manager review; all owned panes closed. Phase 1 remains PASS; no grid.
+
+- [2026-10-09 @pi] Manager authorises in-component parity fix only: MarketRatesFeature sorted plain ID/rate/Bool vectors, binary search extraction; no src/harness edits. Revalidate full component and 0 B tape entry points in fresh beast REPLs, then ONLY market smokes; joint passes stand. Preserve prior GRW market smoke Rhat 1.14 / bulk ESS 16 and 4.2 h ETA for grid approval discussion, with full four-arm ETA. All frozen inputs/priors/budgets/seeds unchanged; new outputs preserve old evidence.
+- [2026-10-09 @pi] FOLLOW-UP (out of package): harness _structural_equal has no AbstractDict method, so future Dict-carrying configurations can fail persistence parity despite identical active contents. Record for a separate harness task; do not fix or bypass here. Historical-failure eligibility is also unchanged; component-local canonical display explicitly authorised in a separate confirmation gives the vector recipe a content/prior identity; arrays alone do not change the generic model display. It is not a relabelled failed attempt.
 
 ## Verification & Findings
 

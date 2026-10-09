@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**BLOCKED Phase 2 at ac30c4d7: grw_marketobs fit_parity fails. Both joint smokes hard PASS; qs_marketobs not started. Phase 1 remains PASS at 153239a7.** Historical recipe-loading failure at 73147ce0 retained in PHASE2_BLOCKED.md. Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. V2 joint smoke UUIDs and failed market-observation fit UUID are recorded in PHASE2_PARITY_BLOCKED.md. Earlier loader failure had no sampling. No grid or predictive scoring.
+**Manager-authorised array feature and canonical component identity prepared; fresh revalidation pending. Joint smoke passes stand. No harness edits or grid approval.** Previous dictionary parity failure at ac30c4d7 retained; prior Phase 1 PASS at 153239a7 is historical baseline. Historical recipe-loading failure at 73147ce0 retained in PHASE2_BLOCKED.md. Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. V2 joint smoke UUIDs and failed market-observation fit UUID are recorded in PHASE2_PARITY_BLOCKED.md. Earlier loader failure had no sampling. No grid or predictive scoring.
 
 ## Done
 
@@ -28,7 +28,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Next action
 
-Await manager parity/eligibility review. Read-only diagnosis at 58665779: original and database-restored rate dictionaries have identical 1430 key/value entries, but _structural_equal compares Dict internals and returns false. Serialization-only config clone reproduces; other fields unchanged. No fix/retry/threshold/input change. See PHASE2_PARITY_BLOCKED.md; historical failed row also blocks future smoke eligibility under current policy. Ask before grid. Phase 1 evidence pushed at e86a03fe; no Phase 1 rerun needed. No predictive scores/refits of wave-1 references. Priors/truths/seeds unchanged; manager amendments in DECISIONS_LOG.md.
+Commit/push new component-only array storage/canonical identity, then fresh full component and tape entry points. phase1_arrays outputs retain old evidence; all three declared recovery seeds per arm revalidated. On pass, ONLY market-arm smokes, retaining joint passes. No src/harness changes; AbstractDict gap logged as TODO follow-up. Before grid ask manager with prior GRW market Rhat 1.14 / bulk ESS 16, 4.2 h ETA, new flags and full four-arm ETA. No predictive scores/reference refits or priors/truths/seeds/threshold changes.
 
 ## Beast panes and artifacts
 

@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** BLOCKED Phase 2 persistence parity; Phase 1 passed. Grid NOT authorised.
+> **Status:** manager-authorised array feature prepared; fresh component/tape revalidation next. Joint smoke passes stand. Grid NOT authorised.
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.

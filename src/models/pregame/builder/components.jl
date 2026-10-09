@@ -1001,6 +1001,11 @@ Base.@kwdef struct MarketRateObservation{
     sigma_prior::S = truncated(Normal(0.0, 0.20), 0.0, Inf)
 end
 
+# Component-local canonical identity; the harness hashes the model's display.
+# Include the actual input and prior, not a cosmetic attempt suffix or stale cached digest.
+_cb_observation_display(o::MarketRateObservation) =
+    "MarketRateObservation(feature=sorted_arrays_v1,sha256=$(CB_Features.market_rates_digest(o.feature)),sigma_prior=$(repr(o.sigma_prior)))"
+
 "Data-only log rates and binary-mask × dynamics weights, frozen before the model runs."
 struct MarketRateDesign
     log_h::Vector{Float64}
