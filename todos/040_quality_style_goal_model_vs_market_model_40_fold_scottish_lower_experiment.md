@@ -19,9 +19,9 @@ Execute `experiments/pi_qs_goal_vs_market_prompt.md` phases 0–6: validate the 
 
 - [x] Phase 0 merged-base acceptance tests pass on mcmc-beast; C2-pending explicitly excluded by manager.
 - [x] QualityStyleGRW builder, OOS, reconstruction, AD parity and zero-allocation tests pass.
-- [ ] Market arm and score adapter validated on matching 40-fold fixtures.
-- [ ] All four goal arms and market arm pass smoke; manager approves full grid.
-- [ ] 40-fold grid, paired-bootstrap scoring, report and leaderboard completed without ROI.
+- [x] Market arm and score adapter validated on matching 40-fold fixtures.
+- [x] All four goal arms and market arm pass smoke; manager approves full grid.
+- [ ] 40-fold grid, paired-bootstrap scoring, report and leaderboard completed without ROI. (Grid, scoring and report done; goal-arm grid rows are in `harness_scores`; shared `LEADERBOARD.md`/`REGISTER.md` regeneration left to the manager.)
 - [ ] Fresh-REPL frozen-seed reproduction recorded with byte-for-byte comparison.
 
 ## Ideas & Candidate Solutions
@@ -34,6 +34,9 @@ Follow the phase gates, fixed priors and seeds in the work package. Record decis
 - [2026-10-09 @pi] Initial Phase 0 stop: pooled t05 C4 full-book deterministic 305/305, C2-pending child testset 29 passed / 10 failed (one integrated derivative, nine archived thin-book Gate 1); manager clarification requested. All other prescribed base tests passed, pinned ScottishLower SHA256 `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`.
 - [2026-10-09 @pi] Manager explicitly ruled Phase 0 PASS: the expected C2-pending 29/39 is outside acceptance by design; C1 and C2 parked. All acceptance assertions passed. Resumed Phase 1 without changing C2 tests.
 - [2026-10-09 @pi] Phase 1 PASS: `QualityStyleGRW` builder, q/s reconstruction and σ_q,K/σ_s,K OOS; full-model linked and unlinked gradient parity on pinned real fold. New test 373/373 (45s), tape matrix 150/150 plus QS 2/2 at 0 B, MultiScaleGRW 124/124, builder and harness 179/179 passed on beast. Starting Phase 2 market arm and scoring adapter. See `experiments/scotland/05_quality_style_goal_vs_market/PROGRESS.md`.
+- [2026-10-09 @pi] Phase 2 PASS: four-season B2 market panel reproduces 710/595/78/517; 40 folds leak-free; adapter equals harness (max |Δ| 0.0, 664 rows). Phase 3 smokes: 4 goal arms 6/6 hard checks; market folds 1/21/40 gates pass. Manager approved grid with priority order and concurrent market arm.
+- [2026-10-09 @pi] Phase 4: goal grids `a036d22a` (control_grw), `b18ae74b` (qs_market_r), `21f2a9f9` (qs_weak_r), `1dccb320` (control_td); max R̂ ≤ 1.0117, no reruns, divergences ≤ 8.1e-5; qs_weak_r min tail ESS 355 (< engine 400, reported). Market C0 40/40 gates, max R̂ 1.0014.
+- [2026-10-09 @pi] Phase 5: no promotion. QS arms 1X2 LL +0.00159/+0.00107 vs control (prescribed noncircular block: "worse"; cluster and circular block: not detectable); compression 1.19 → 1.01/1.05; goals do not move r off the market prior; market C0 1X2 LL 0.61343 vs close 0.61312. See `experiments/scotland/05_quality_style_goal_vs_market/REPORT.md`. Phase 6 reproduction running.
 
 ## Verification & Findings
 

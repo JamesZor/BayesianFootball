@@ -4,7 +4,9 @@ Updated: 2026-10-09 UTC. Owner: pi. Branch: `exp/qs-goal-vs-market`.
 
 ## Current phase
 
-Phase 4 — **GRID RUNNING at `e6685ceb`** (manager approved 2026-10-09 with order control_grw → qs_market_r → qs_weak_r → control_td, market concurrent, 20-min polls).
+Phase 6 — **reproduction running** (`r06_reproduce.jl`, pane `%341`). Phase 5 DONE: scoring at `81c77a42`+, report in `REPORT.md`, card in `README.md`, tables in `results/`. Goal-arm grid scores are written to `harness_scores`; the market arm's rows are not (file-based run). The shared leaderboard is not regenerated.
+
+Phase 4 — DONE (was: **GRID RUNNING at `e6685ceb`**) (manager approved 2026-10-09 with order control_grw → qs_market_r → qs_weak_r → control_td, market concurrent, 20-min polls).
 
 | Arm | Status | Started (UTC) | Hours | run_id |
 |---|---|---|---|---|
@@ -45,10 +47,10 @@ Phase 2 PASS at `ef8d0d8e`: B2 counts 710/595/78/517 reproduced; 40 folds leak-f
 
 ## Next action
 
-Poll every 20 min. Per arm: record hours, run_id, R̂/divergences; refit any goal fold with R̂ > 1.05 once, seeded. Watch goal-arm speed; pause the market session if it slows the goal arm > ~20%. Then Phase 5 scoring.
+Wait for `REPRODUCTION_DONE` in `/root/BF_runs/logs/qs_experiment/phase6_repro.log`. Write `REPRODUCIBILITY.md`, close TODO 040 (or mark the leaderboard step for the manager), tidy beast sessions, then print the sentinel.
 
 ## Open beast sessions
 
-- `pi_qsx_market_grid` pane `%340`: `-t 16`, cores 0–15, `r04_market_grid.jl` (resume), log `/root/BF_runs/logs/qs_experiment/phase4_market_grid.log`, outputs `/root/BF_runs/qs_experiment_out/market_grid/`.
-- `pi_qsx_goal_grid` (%338) and the 2-thread market session (%339) closed.
+- `pi_qsx_repro` pane `%341`: fresh `-t 16` REPL, `r06_reproduce.jl`, log `/root/BF_runs/logs/qs_experiment/phase6_repro.log`, outputs `/root/BF_runs/qs_experiment_out/repro/`.
+- All earlier `pi_qsx_*` sessions closed.
 - `pi_qsx_phase2` closed. No other sessions touched.
