@@ -16,7 +16,7 @@
 
 Namespace `scottish_lower_qs_wave2_2426`, scorecard **v1.2**, de-vigged Betfair TWA(−20,0]. Frozen snapshot `c786e2fc…423b4`; exact full hashes in PROGRESS.md. Runs: `results/phase3/RUNS.csv`, including original sampling source; all4×40 folds, 4×(500+1000), attempt0, no Rhat reruns. Full diagnostics/hard gates: PHASE3.md and committed phase3 CSVs.
 
-All arms forecast710 fixtures; quoted common panels: 1X2 **595 fixtures/1785 selections**, OU2.5 **379/758**, BTTS **178/356**, all **627/2899**. Harness LogLoss is selection-level binary LogLoss, not summed categorical match loss. No arm-specific subset. Goal scores use all710 fixtures. Each report table is a view of named committed CSVs under `results/phase4/`; underlying observation and goal-fixture rows are also committed.
+All arms forecast710 fixtures; quoted common observation panels (not the historical RPS denominators; see audit below): 1X2 **595 fixtures/1785 selections**, OU2.5 **379/758**, BTTS **178/356**, all **627/2899**. Harness LogLoss is selection-level binary LogLoss, not summed categorical match loss. No arm-specific subset. Goal scores use all710 fixtures. Each report table is a view of named committed CSVs under `results/phase4/`; underlying observation and goal-fixture rows are also committed.
 
 ## Outcome scores and slopes
 
@@ -32,6 +32,25 @@ All arms forecast710 fixtures; quoted common panels: 1X2 **595 fixtures/1785 sel
 | grw_joint     | 0.616372 | 0.690005 | 0.681137 | 0.224365 | 0.213204 | 0.01243 | 0.01214 | 1.239             | 0.542                 |
 | control_grw   | 0.616783 | 0.687864 | 0.691295 | 0.224987 | 0.213354 | 0.01797 | 0.02035 | 1.192             | 0.373                 |
 | qs_weak_r     | 0.617849 | 0.686823 | 0.6898   | 0.225489 | 0.213838 | 0.01872 | 0.01341 | 1.051             | 0.435                 |
+
+### 1X2 population and score-law audit
+
+**The historical RPS rows above are not on the same595 fixtures.** Read-only `r11_score_panel_audit.jl` reproduced each original value and denominator; `results/score_panel_audit.csv` and `rps_original_fixture_rows.csv` retain the evidence. All arms and the close have exactly the same595 common fixture IDs and1785 home/draw/away selection keys for the like-for-like recomputation below.
+
+| Row | Original RPS fixtures / selections | Common fixtures / selections | Common-panel RPS |
+|---|---:|---:|---:|
+| market_close | 1528 /4584 | 595 /1785 | 0.221438 |
+| grw_marketobs | 596 /1788 | 595 /1785 | 0.220654 |
+| qs_marketobs | 596 /1788 | 595 /1785 | 0.220809 |
+| market_c0 | 596 /1788 | 595 /1785 | 0.221554 |
+| grw_joint | 596 /1788 | 595 /1785 | 0.224157 |
+| qs_joint | 596 /1788 | 595 /1785 | 0.223881 |
+| control_grw | 596 /1788 | 595 /1785 | 0.224830 |
+| qs_weak_r | 596 /1788 | 595 /1785 | 0.225356 |
+
+The original close RPS traverses all Lower odds in the evaluation context, including932 fixtures outside the target panel; every original RPS row also includes target fixture14343735, absent from the binary-observation panel. RPS eligibility uses match-score outcomes, whereas binary LogLoss requires the odds row's `is_winner` label. The harness attaches the binary panel's fixture count to metric rows, so that metadata does **not** describe these original RPS denominators. Thus0.211104 is not a like-for-like close baseline; its apparent large advantage disappears on the common panel. Historical score/reference rows remain unchanged.
+
+RPS uses the same home/draw/away order and normalisation for all rows: `mean(((p_h-y_h)^2+(p_h+p_d-y_h-y_d)^2)/2)`. It does not renormalise the model's finite-score-grid probabilities. **Harness LogLoss is per-selection binary LogLoss**, averaged over1785 selections: `mean(-y*log(p)-(1-y)*log(1-p))`, not categorical LogLoss. Standard three-way categorical LogLoss averages595 values `-log(p_winner/sum(p_home,p_draw,p_away))`: **close1.053440200; GRW market1.050324307; QS market1.050476956**. Unit-sum normalisation is explicit for this categorical diagnostic; maximum raw trio-sum errors are2.22e-16 /3.42e-5 /5.14e-5 respectively. This read-only diagnostic does not change the no-promotion decision.
 
 ## All prescribed paired outcome comparisons
 

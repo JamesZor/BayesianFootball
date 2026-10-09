@@ -1,0 +1,2 @@
+julia,threads,blas_threads,turing,distributions,mcmcchains,reversediff,manifest_sha256
+1.12.4,16,1,0.41.4,0.25.126,7.7.0,1.17.0,f86f49b72b987dd4c87ac80d16f132e5342e988fededbe27e54c6afe8133b6cc

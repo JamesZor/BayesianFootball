@@ -9,7 +9,7 @@ const TODO = 41
 const QUESTION = "Does QS help joint goals+proxy-xG forecasts, and can builder market-rate observations match saved market C0?"
 const DIMENSION = "quality_style_and_observation"
 const STATUS = "completed"
-const DECISION = "No promotion: primary noncircular intervals cross zero; circular market-vs-joint intervals favour market arms. Market micro r informed near0.3; GRW ESS review flags retained. Four frozen-seed reproductions byte-identical."
+const DECISION = "No promotion: primary noncircular intervals cross zero; circular market-vs-joint intervals favour market arms. Market micro r informed near0.3; GRW ESS review flags retained. Four frozen-seed reproductions byte-identical; leakage audit passed. Historical RPS populations differ; common-panel comparison documented."
 const README = joinpath(@__DIR__, "README.md")
 const CONTROL = "grw_joint"
 
