@@ -1,0 +1,61 @@
+[root@mcmc-beast qs_experiment]# JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> try include("experiments/scotland/06_qs_joint_and_market_observation/r09_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase5_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase5_final_audit.status", "FAIL") end
+FINAL_GRID_AUDIT_PASS runs=4 folds=160 chains=640 retained_per_chain=1000 hard_passes=16; original CSV audit bytes unchanged
+4
+
+julia> try include("experiments/scotland/06_qs_joint_and_market_observation/r10_leakage_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/leakage_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/leakage_audit.status", "FAIL") end
+QS_MARKET_ARM_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 346.0 hours)...
+LoadError: prediction keys mismatch
+Stacktrace:
+  [1] error(s::String)
+    @ Base ./error.jl:44
+  [2] top-level scope
+    @ ~/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/r10_leakage_audit.jl:119
+  [3] include(mapexpr::Function, mod::Module, _path::String)
+    @ Base ./Base.jl:307
+  [4] top-level scope
+    @ REPL[2]:1
+  [5] __repl_entry_eval_expanded_with_loc(mod::Module, ast::Any, toplevel_file::Ref{Ptr{UInt8}}, toplevel_line::Ref{Int32})
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:301
+  [6] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:308
+  [7] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) (repeats 3 times)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:312
+  [8] toplevel_eval_with_hooks
+    @ ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:305 [inlined]
+  [9] eval_user_input(ast::Any, backend::REPL.REPLBackend, mod::Module)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:330
+ [10] repl_backend_loop(backend::REPL.REPLBackend, get_module::Function)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:452
+ [11] start_repl_backend(backend::REPL.REPLBackend, consumer::Any; get_module::Function)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:427
+ [12] start_repl_backend
+    @ ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:424 [inlined]
+ [13] run_repl(repl::REPL.AbstractREPL, consumer::Any; backend_on_current_task::Bool, backend::Any)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:653
+ [14] run_repl(repl::REPL.AbstractREPL, consumer::Any)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:639
+ [15] run_std_repl(REPL::Module, quiet::Bool, banner::Symbol, history_file::Bool)
+    @ Base ./client.jl:478
+ [16] run_main_repl(interactive::Bool, quiet::Bool, banner::Symbol, history_file::Bool)
+    @ Base ./client.jl:499
+ [17] repl_main
+    @ ./client.jl:586 [inlined]
+ [18] _start()
+    @ Base ./client.jl:561
+in expression starting at /root/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/r10_leakage_audit.jl:14
+4
+
+julia>

@@ -10,6 +10,7 @@
 8. Market σ_obs medians are 0.1198/0.1192 versus saved C0 0.0639, with the same HalfNormal(0.20) prior but different state/time-clock formulations.
 9. All grids have zero divergences and Rhat≤1.01721; retain GRW joint tail ESS324.47 and GRW market tail339.34/bulk395.44 review flags. No extra sampling authorised.
 10. Decision: no promotion on the prescribed primary intervals. All references match saved wave1 scores exactly; no ROI/staking. Phase5 reproduction is recorded separately.
+11. Read-only leakage audit PASS: both market arms ×40 folds have zero active target/future observations; all1,430 frozen rows use only their own close, target closes never enter their forecast likelihood, and saved-prediction 1X2 LogLoss on595 common fixtures matches exactly (0.6117542636747713/0.6119173567756958); see [audit](LEAKAGE_AUDIT.md) and `results/leakage_audit.csv`.
 
 ## Fixed panel, score law and traceability
 

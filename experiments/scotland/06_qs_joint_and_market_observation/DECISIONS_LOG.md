@@ -152,4 +152,12 @@
 
 ## 2026-10-09 — Phase5 frozen reproduction PASS
 
-- Sourcee7abd34e, fresh REPLs
+- Sourcee7abd34e, fresh REPLs%403–%406, onefold1 each in original order, frozen attempt0 chain/post seeds and4×(500+1000). All8posterior chain/latent Float64 payload comparisons byte-identical/SHA256equal,maxdiff0. No retries, reference refits, new DB fits or source/sampler changes. All160 original grid checkpoint digests unchanged; launcherexit0. All owned panes closed.
+- REPRODUCIBILITY.md and phase5CSV/logs record exact UUIDs/seeds/counts/source. Final fresh read-only original-grid/ownership/budget audit and completed register materialisation next; task remains IN_PROGRESS until verification/checks recorded. No more sampling authorised.
+
+## 2026-10-10 — Manager-required leakage audit PASS
+
+- Read-only r10_leakage_audit.jl in beast%407: all80folds have zero active market observations in held-out targets or with kickoff >= first target kickoff; zero held-out likelihood rows of any kind. Saved-model and persisted-fold target equality checked. No fits, inversion optimisation, DB writes or scientific changes.
+- All1430frozen rows match saved own-close rates/flags; reconstructing closes with all other matches removed is exact. Own-book KL objectives equal frozen objectives,maxgap0. Source dependency inspection confirms per-match-only inversion and no future-match information.
+- Both arms' saved-latent probabilities equal committed prediction rows;595common fixtures/1785selections recompute LogLoss0.6117542636747713 and0.6119173567756958 exactly. No promotion decision unchanged.
+- Initial audit failed only on Symbol/runtime versus string/CSV prediction keys, after provenance and40zero-count folds passed. Normalised key types only; final audit PASS. Both logs preserved. All owned panes closed. TODO041 remains IN_PROGRESS pending final registry materialisation/task closure.

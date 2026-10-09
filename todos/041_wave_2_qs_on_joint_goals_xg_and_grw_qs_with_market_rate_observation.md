@@ -8,7 +8,7 @@
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
-| Updated | 2026-10-09 |
+| Updated | 2026-10-10 |
 | Related Files / Commits / PRs | experiments/pi_qs_joint_marketobs_prompt.md; experiments/scotland/06_qs_joint_and_market_observation/; TODO 040 |
 
 ## Context & Problem Statement
@@ -24,6 +24,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [x] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [x] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
 - [x] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
+- [x] Manager-required read-only leakage audit: both market arms ×40 folds have zero active target/future observations; own-close provenance and595-fixture saved-prediction LogLoss parity recorded.
 - [ ] Phase-boundary commits/pushes, progress/decisions current; todo check and diff check pass.
 
 ## Ideas & Candidate Solutions
@@ -81,8 +82,11 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Phase5 four reproductions PASS at sourcee7abd34e: fresh%403–%406, onefold1 per newarm, unchanged attempt0 seeds and4×(500+1000). Posterior chain/latent raw Float64 bytes/SHA256 identical in all8channels,maxdiff0. No new DB runs, reference fits or retry. All160 original grid checkpoint digests unchanged. ReproductionCSV/logs and REPRODUCIBILITY.md committed; all owned panes closed. Final read-only original-grid audit/register/task checks next before task closure.
 
+- [2026-10-10 @pi] Manager-requested leakage audit PASS, read-only on beast%407 (now closed): all80folds have zero active observations in held-out targets or at/after first target kickoff; any held-out likelihood rows also zero. All1430frozen rates match own-close provenance with isolated close reconstruction and stored KL equality,maxgap0. Saved predictions reprice exactly;595fixtures/1785selections LogLoss0.6117542636747713/0.6119173567756958 equals report exactly. No fits/optimisation/DB writes. CSVs, LEAKAGE_AUDIT.md and report summary line committed; initial Symbol/string key mismatch evidence preserved. Final original-grid audit also PASS; registry materialisation/task closure still pending.
+
 ## Verification & Findings
 
+- [2026-10-10 @pi] Leakage audit and independent CSV checks PASS:80 populated folds,1430 unique provenance rows,2 exact score reproductions. `./scripts/todo.sh check` and `git diff --check` PASS before leakage-audit commit.
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.
 - Beast snapshot SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4; original mtime 2026-09-25 12:57:15.480765468 UTC intact.
 - Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Historical Phase 1 PASS at 153239a7; new array feature PASS b006743f (ARRAY_FEATURE_REVALIDATION.md). All four Phase 2 hard smokes PASS (PHASE2.md), convergence flags retained. Grid approved, queue validation PASS; grid at 8f285a6a stops at qs_joint scoring (missing control reference), after both joint fits persisted/parity PASS. Historical PHASE3_BLOCKED.md retained; authorised wrapper fix081ba5a6/regression57PASS resumes QS scoring without sampling, control664row parity exact/all80joint checkpoints unchanged. All four40-fold grids complete; fresh16hard-pass audit and all3candidate control parities exact, no reruns due. PHASE3.md; Phase4/5 incomplete.

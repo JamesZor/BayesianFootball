@@ -1,9 +1,11 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 after Phase4 gates/report/boards acceptance. Owner: pi. Manager: Claude.
+Updated: 2026-10-10 after manager-requested leakage audit PASS. Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
+
+**Additional leakage audit PASS:** both market arms ×40folds, zero active target/time overlap and zero held-out likelihood rows. All1430frozen rates have exact own-close/isolated-book provenance;595common-fixture saved-prediction LogLoss matches the report exactly. See LEAKAGE_AUDIT.md and results/leakage_*.csv. Read-only original-grid final audit also PASS; pane%407 closed. No refits, inversion optimisation or DB writes. Final registry materialisation/task closure remains pending.
 
 **Phase 4 COMPLETE; Phase 5 four reproductions PASS. Final read-only audit/record/checks next before task closure.** All4 fold1 chain/latent payloads byte-identical,maxdiff0; frozen attempt0 seeds,4×(500+1000), separate scratch checkpoints. All160 original checkpoint digests unchanged. No DB fit writes or reference refits. Sourcee7abd34e; reproduction CSVs/logs/REPRODUCIBILITY committed at Phase5 boundary. Canonical board/read-only score audit PASS:4×664rows/9960fields EXACT,maxdiff0; only4new grid rows/cohorts and one register row added. Fresh v2 scorer and interval audit PASS. All56 market/30 goal pairs, three bootstrap paths, exact saved reference parity,236 r rows/120 sigma rows, native SVG and CSV-traceable REPORT. All primary noncircular1X2 intervals cross zero; circular contradicts both marketarms-vs-GRWjoint. No promotion. Wave1 current-scorer provenance follow-up recorded read-only; wave1 source/outputs untouched. All four40-fold arms
 persisted, four hard grid checks per arm PASS, zero divergences, all Rhat<=1.05:

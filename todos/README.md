@@ -49,7 +49,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [038](038_market_evaluation_layer_typed_recipe_axes_pluggable_evaluators_unified_clv.md) | Market evaluation layer: typed recipe axes, pluggable evaluators, unified CLV | ACTIVE | P1 | claude | 2026-09-28 |
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-08 |
 | [040](040_quality_style_goal_model_vs_market_model_40_fold_scottish_lower_experiment.md) | Quality/style goal model vs market model: 40-fold Scottish Lower experiment | COMPLETED | P1 | pi | 2026-10-09 |
-| [041](041_wave_2_qs_on_joint_goals_xg_and_grw_qs_with_market_rate_observation.md) | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation | IN_PROGRESS | P1 | pi | 2026-10-09 |
+| [041](041_wave_2_qs_on_joint_goals_xg_and_grw_qs_with_market_rate_observation.md) | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation | IN_PROGRESS | P1 | pi | 2026-10-10 |
 <!-- TASKS:END -->
 
 **039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast

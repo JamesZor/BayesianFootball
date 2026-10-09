@@ -1,0 +1,3 @@
+arm,fixtures,selections,logloss,reported_logloss,logloss_gap,saved_probability_gap
+grw_marketobs,595,1785,0.6117542636747713,0.6117542636747713,0.0,0.0
+qs_marketobs,595,1785,0.6119173567756958,0.6119173567756958,0.0,0.0
