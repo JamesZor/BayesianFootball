@@ -1,0 +1,3 @@
+START phase2_smoke_grw_joint pane=%374 2026-10-09T17:04:22Z
+END phase2_smoke_grw_joint FAIL 2026-10-09T17:04:45Z
+PHASE2_BLOCKED: grw_joint; retain pane=%374 for diagnosis

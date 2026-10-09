@@ -65,3 +65,9 @@
 - Six required hard checks must all be present/pass; database parity must not abstain. Convergence and performance review flags are reported, not hidden or treated as passing diagnostics. Report Rhat, bulk/tail ESS, divergence rate, wall and largest-fold probe ETA.
 - ETA extrapolation: probe sampling window x(40x4x1500)/(16x100); largest fold, excludes grid/scoring overhead, not a guarantee. No grid code executed or authorised; ask manager after all four hard smoke passes.
 - Initial Phase 2 commit hit a transient index.lock. The compound shell command (not set -e locally) continued and started launcher %372 on e86a03fe, which had no phase2_gate.sh; no Julia, smoke checks or sampling ran. Lock disappeared without removal; no git process remained. Close owned idle launcher, retain phase2_launcher0_no_source.log, and retry the commit once with set -e before any Julia. No scientific gate/seed rerun.
+
+## 2026-10-09 — Phase 2 stop before smoke checks (73147ce0)
+
+- First grw_joint entry point fails at candidates.jl:5: include undefined in Main.Wave2Candidates (bare Module constructor does not define the include helper). No candidate build, datastore preflight, registration, smoke hard check, model sampling or DB write occurred; other three arms not started. No UUID/convergence/ETA available.
+- Stop/report per package. Proposed one-line Base.include(@__MODULE__, ...) correction, preserving Main.QSMarketArm and all frozen inputs/priors/seeds/thresholds. No source correction or retry yet; await manager authorisation. Keep previous launch evidence and use new names after approval.
+- Phase 1 remains accepted under all three amendments, evidence e86a03fe; no Phase 1 rerun required. PHASE2_BLOCKED.md records precise error and action. Owned idle panes closed; no grid.

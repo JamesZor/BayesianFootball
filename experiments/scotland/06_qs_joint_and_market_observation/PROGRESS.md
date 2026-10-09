@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 2 recipes/launcher prepared; Phase 1 PASS under manager amendments at 153239a7.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. Only Phase 1 synthetic fits have run; no smoke, grid or predictive scoring yet.
+**BLOCKED Phase 2 at 73147ce0: recipe loading fails before smoke (`include` undefined in bare Wave2Candidates module). Phase 1 remains PASS at 153239a7.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. Phase 2 grw_joint entry point failed before checks/sampling; no smoke UUID, grid or predictive scoring.
 
 ## Done
 
@@ -28,11 +28,11 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Next action
 
-Phase 1 evidence pushed at e86a03fe. Commit/push four candidate recipes and smoke adapter, then run fresh smoke on unchanged pinned snapshot, one owned REPL per arm in order. Report wall/ETA, hard checks and convergence. Ask manager before grid. No predictive scores/refits of wave-1 references. Priors/truths/seeds unchanged; manager amendments in DECISIONS_LOG.md.
+Await manager authorisation of surgical candidates.jl line-5 fix: Base.include(@__MODULE__, ...) instead of unqualified include. Retain failed attempt; no prior/seed/table/threshold change. See PHASE2_BLOCKED.md. After approval, new smoke evidence names and fresh REPL per arm; ask before grid. Phase 1 evidence pushed at e86a03fe; no Phase 1 rerun needed. No predictive scores/refits of wave-1 references. Priors/truths/seeds unchanged; manager amendments in DECISIONS_LOG.md.
 
 ## Beast panes and artifacts
 
-None open. Amended REPLs `%368`–`%371` and launcher `%367` closed after PASS/evidence retrieval. Diagnosis `%365`/`%366` also closed. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
+None open. Failed grw_joint REPL %374 and launcher %373 closed after evidence retrieval. Initial shell-only launcher %372 also closed; no Julia ran there. All earlier owned panes closed; other sessions untouched. Diagnosis `%365`/`%366` also closed. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.

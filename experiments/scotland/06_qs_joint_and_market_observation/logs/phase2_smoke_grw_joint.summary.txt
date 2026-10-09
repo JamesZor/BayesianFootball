@@ -1,0 +1,28 @@
+Source: 73147ce0; fresh beast REPL %374, 16 threads pinned, BLAS 1.
+LoadError: UndefVarError: `include` not defined in `Main.Wave2Candidates`
+Suggestion: check for spelling errors or missing imports.
+Hint: a global variable of this name also exists in Compiler.
+    - Also declared public in Compiler (loaded but not imported in Main).
+Stacktrace:
+  [1] top-level scope
+    @ ~/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/candidates.jl:5
+  [2] include(mod::Module, _path::String)
+    @ Base ./Base.jl:306
+  [3] top-level scope
+    @ ~/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/r03_smoke.jl:15
+  [4] include(mapexpr::Function, mod::Module, _path::String)
+    @ Base ./Base.jl:307
+  [5] top-level scope
+    @ REPL[1]:1
+  [6] __repl_entry_eval_expanded_with_loc(mod::Module, ast::Any, toplevel_file::Ref{Ptr{UInt8}}, toplevel_line::Ref{Int32})
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:301
+  [7] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:308
+  [8] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) (repeats 4 times)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:312
+  [9] toplevel_eval_with_hooks
+    @ ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:305 [inlined]
+ [10] eval_user_input(ast::Any, backend::REPL.REPLBackend, mod::Module)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:330
+ [11] repl_backend_loop(backend::REPL.REPLBackend, get_module::Function)
+PHASE2_FAIL_grw_joint wall_s=14.675230026245117

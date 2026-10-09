@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** active; Phase 1 passed, Phase 2 smoke next. Grid NOT authorised.
+> **Status:** blocked on Phase 2 recipe loading; Phase 1 passed. Grid NOT authorised.
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
@@ -45,7 +45,10 @@ aligns by match ID; held-out matches never appear in their fold's training rows.
 ## Execution record
 
 - Phase 1 verified source 153239a7; acceptance evidence pushed at e86a03fe.
-- Phase 2: fresh owned beast REPL per arm via phase2_gate.sh, 16 pinned threads,
+- Phase 2 source 73147ce0: first grw_joint entry point fails at candidates.jl:5
+  (include undefined in the bare candidates module), before any check/sampling.
+  No UUID/ETA/convergence; see PHASE2_BLOCKED.md. Await manager loading-fix approval.
+- Phase 2 method: fresh owned beast REPL per arm via phase2_gate.sh, 16 pinned threads,
   BLAS 1, pinned ScottishLower input (not generic CLI's ScottishPyramid cache).
 - Harness smoke: folds 1 and 40, 2x(200+200), all required hard checks, persistence
   parity and standard 16-chain largest-fold performance probe. Root seeds 20261040–43
