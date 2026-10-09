@@ -1,0 +1,22 @@
+tier,arm,reference,channel,n,delta_neg_logscore,block8_lo90,block8_hi90,class_block8
+primary,qs_market_r,control_grw,joint,710,-0.002724401757014775,-0.008390118932757618,0.0017834770389134093,no detectable difference
+primary,qs_market_r,control_grw,total,710,-0.003315709024348253,-0.009674900412111456,0.00030374242992896913,no detectable difference
+primary,qs_market_r,control_grw,allocation,710,0.0005913072673334754,-0.0014923852695993875,0.0036907546897646105,no detectable difference
+primary,qs_weak_r,control_grw,joint,710,-0.0013791127775997084,-0.005312838229394774,0.002552368670145259,no detectable difference
+primary,qs_weak_r,control_grw,total,710,-0.002495970120553557,-0.007342307351005301,0.0003323034086913515,no detectable difference
+primary,qs_weak_r,control_grw,allocation,710,0.0011168573429538471,0.00014698426260731685,0.003673209413863911,worse
+secondary,control_grw,control_td,joint,710,-0.008039250514761856,-0.018302734005429165,0.009501535814402925,no detectable difference
+secondary,control_grw,control_td,total,710,0.0009053612491742854,-0.0034126002492947992,0.010786654355641561,no detectable difference
+secondary,control_grw,control_td,allocation,710,-0.00894461176393614,-0.016763691439505127,0.0003375857495758927,no detectable difference
+secondary,qs_market_r,control_td,joint,710,-0.010763652271776631,-0.020205772949476744,0.004974144391434782,no detectable difference
+secondary,qs_market_r,control_td,total,710,-0.002410347775173968,-0.0049971140458082465,0.0034994118903152603,no detectable difference
+secondary,qs_market_r,control_td,allocation,710,-0.008353304496602668,-0.017107635753953177,0.002964970427804183,no detectable difference
+secondary,qs_weak_r,control_td,joint,710,-0.009418363292361566,-0.018141910429496044,0.007174587035299817,no detectable difference
+secondary,qs_weak_r,control_td,total,710,-0.0015906088713792716,-0.004396603301819692,0.005087671484076271,no detectable difference
+secondary,qs_weak_r,control_td,allocation,710,-0.007827754420982293,-0.015603259328996718,0.0031782887092330642,no detectable difference
+secondary,market_c0,control_td,joint,710,0.0003083363014171549,-0.017579176666545633,0.020004637036405225,no detectable difference
+secondary,market_c0,control_td,total,710,0.011868568786094743,0.0008068443051973078,0.019279812519707444,worse
+secondary,market_c0,control_td,allocation,710,-0.01156023248467759,-0.02207755578346833,0.004355675473779305,no detectable difference
+secondary,market_c0,control_grw,joint,710,0.008347586816179014,-0.011483194574301695,0.023319791767558523,no detectable difference
+secondary,market_c0,control_grw,total,710,0.010963207536920459,-0.006152565600949001,0.01828476967095155,no detectable difference
+secondary,market_c0,control_grw,allocation,710,-0.0026156207207414495,-0.01177111921726942,0.00965390105072823,no detectable difference
