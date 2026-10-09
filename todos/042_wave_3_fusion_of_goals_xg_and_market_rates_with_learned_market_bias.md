@@ -22,7 +22,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 
 ## Acceptance Criteria
 
-- [ ] Phase 0: branch health on the beast, frozen table SHA confirmed.
+- [x] Phase 0: branch health on the beast, frozen table SHA confirmed.
 - [ ] Phase 1: fusion observation in src with the six test groups passing (likelihood 1e-12, bias-off equality, exact AD 1e-10 + FD convergence, 0 B tapes, 3-seed recovery gate).
 - [ ] Phase 2: candidates + smoke for fusion_qs_bias / fusion_qs_nobias / fusion_grw_bias; manager approval before grid.
 - [ ] Phase 3: 40-fold grid, R̂ ≤ 1.05 rerun policy, divergences ≤ 0.1%.
@@ -36,6 +36,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 ## Work Log & Progress
 
 [2026-10-10 @claude] Created; Phase 0 started.
+[2026-10-10 @claude] Phase 0 PASS at 122cbc37: 16/16 gates in fresh beast REPLs, pins match (see 07_.../PHASE0.md).
 Include session/worktree when claiming. Example (replace with actual facts):
 
 <!-- - [2026-10-09 @pi] Claimed in session <id>, worktree <path>; next action: ... -->
