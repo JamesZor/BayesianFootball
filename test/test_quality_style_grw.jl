@@ -149,6 +149,15 @@ end
 
         @test maximum(abs.(sum(states.oos_q, dims = 2))) < 1e-12
         @test maximum(abs.(sum(states.oos_s, dims = 2))) < 1e-12
+        # Reproduce the actual held-out draw from the chain's micro-scale τₖ/rₖ;
+        # carrying the last state forward, or using a macro scale, cannot pass.
+        rng = MersenneTwister(0)
+        zq, zs = randn(rng, 5, 4), randn(rng, 5, 4)
+        τk = vec(Array(chain[:"dyn.τₖ"]))
+        rk = vec(Array(chain[:"dyn.rₖ"]))
+        σq = τk ./ sqrt.(1 .+ rk.^2)
+        @test states.oos_q ≈ (zq .- mean(zq, dims = 2)) .* σq
+        @test states.oos_s ≈ (zs .- mean(zs, dims = 2)) .* (rk .* σq)
         oos = QSAPI._cb_oos_dynamics(config, states, Dict(), 7, 2, 3, 5)
         @test oos.att_h ≈ vec(states.α[2, end, :]) .+ states.oos_q[:, 2] .+ states.oos_s[:, 2]
         @test oos.def_a ≈ vec(states.β[3, end, :]) .- states.oos_q[:, 3] .+ states.oos_s[:, 3]
@@ -186,15 +195,16 @@ end
         @test isfinite(f(θ))
         tape = ReverseDiff.compile(ReverseDiff.GradientTape(f, θ))
         relerr(a, b) = norm(a - b) / max(norm(a), norm(b), 1.0)
+        probe_rng = MersenneTwister(20261010)
         for δ in (0.0, 0.001, -0.002)
-            point = θ .+ δ .* sin.(collect(eachindex(θ)))
+            point = θ .+ δ .* randn(probe_rng, length(θ))
             compiled = similar(point)
             ReverseDiff.gradient!(compiled, tape, point)
             forward = ForwardDiff.gradient(f, point)
             @test all(isfinite, compiled)
             @test relerr(compiled, forward) <= 1e-6
             @test relerr(compiled, ReverseDiff.gradient(f, point)) <= 1e-8
-            for j in unique(round.(Int, range(1, length(point); length = 7)))
+            for j in eachindex(point)
                 h = 1e-5
                 plus, minus = copy(point), copy(point)
                 plus[j] += h
