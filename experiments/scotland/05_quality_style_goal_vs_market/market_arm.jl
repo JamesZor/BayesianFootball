@@ -223,12 +223,12 @@ end
 One fold at the frozen Phase C C0 budget (4 × (2000 warmup + 3000)). Outputs are
 immutable; the convergence gate (R̂ ≤ 1.05, bulk/tail ESS ≥ 200) precedes any price.
 """
-function run_fold(full, fold, fixtures, output; warmup = 2000, samples = 3000)
+function run_fold(full, fold, fixtures, output; warmup = 2000, samples = 3000,
+                  seeds = SEEDS .+ 100fold.number)
     work = joinpath(output, "fold_$(lpad(fold.number, 2, '0'))")
     isdir(work) && !isempty(readdir(work)) && error("immutable market fold exists: $work")
     mkpath(work)
     training = training_panel(full, fold)
-    seeds = SEEDS .+ 100fold.number
     arm = PM.FullBookRung(:C0)
     result = PM.fit_fullbook(arm, training.panel; seeds, warmup, samples, progress = false,
         filter_fn = FG.evaluator(arm, training.panel))
