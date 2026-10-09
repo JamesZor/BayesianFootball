@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 1 resumed under three manager amendments: likelihood diagnosis first, no fix yet.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component gate FAILED: 1 likelihood assertion, 370 finite-difference assertions, 1 frozen recovery miss. No retry/fix; allocation/builder/harness gates not started. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
+**Phase 1 resumed under three manager amendments; likelihood diagnosis complete, test correction prepared.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component gate FAILED: 1 likelihood assertion, 370 finite-difference assertions, 1 frozen recovery miss. No retry/fix; allocation/builder/harness gates not started. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -26,11 +26,11 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Next action
 
-Run fresh likelihood decomposition diagnosis before any fix. Manager amendments/seeds recorded in DECISIONS_LOG.md. Then implement the justified correction and amended exact-AD/FD-convergence/recovery gates; allocation/builder/harness and smoke next. Ask before grid. Table/hash unchanged; Phase 1 not accepted. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
+Diagnosis PASS at bd924940: returned-only submodel prior 1.20364656 / likelihood 0; production seam prior 1.20364656 / likelihood 2.56230834, joint 3.76595490. Linked joint differs by log(.12)=-2.12026354. Hand Normal value and helper identical. Correct only the test accumulation seam; production unchanged. Run amended exact-AD/FD-convergence/recovery gates; allocation/builder/harness and smoke next. Ask before grid. Table/hash unchanged; Phase 1 not accepted. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
 
 ## Beast panes and artifacts
 
-None open. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
+None open. Diagnosis `%365`/`%366` closed after results retrieval (PASS 16:19:22 UTC, bd924940). Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.

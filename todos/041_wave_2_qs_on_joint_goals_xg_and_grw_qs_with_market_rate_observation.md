@@ -47,6 +47,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Manager amendments authorise resumption: decompose/diagnose likelihood before fixing; exact AD relative 1e-10 plus selected-coordinate FD convergence/Richardson 1e-8; retain first recovery seed and run two further fixed seeds per arm, no parameter misses all three and pooled coverage >=80%. Record all three and additional seeds before fitting. Diagnosis first; no production/test fix yet.
 
+- [2026-10-09 @pi] Likelihood decomposition diagnosis at bd924940: _observe returns but does not accumulate ll; production parent does. Production ll=2.5623083423195876 exactly equals hand Normal constants-inclusive ll, prior=1.2036465597893726. Linked joint differs by log(.12)=-2.120263536200091. Fix test seam only, no production change; amended tests prepared, new seed runs not started.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.

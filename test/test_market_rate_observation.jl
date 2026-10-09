@@ -5,6 +5,8 @@ const MRO_PG = BayesianFootball.Models.PreGame
 const MRO_API = MRO_PG.Builder
 const MRO_DIR = joinpath(@__DIR__, "..", "experiments", "scotland", "06_qs_joint_and_market_observation")
 isdefined(Main, :Wave2MarketTable) || include(joinpath(MRO_DIR, "l01_market_table.jl"))
+isdefined(Main, :Wave2LikelihoodAudit) || include(joinpath(MRO_DIR, "l02_likelihood_audit.jl"))
+isdefined(Main, :MarketRateFDAudit) || include(joinpath(@__DIR__, "helpers", "market_rate_fd_audit.jl"))
 
 mro_model(dynamics, feature; prior = truncated(Normal(0.0, 0.20), 0.0, Inf)) =
     CountModelBuilder(:market_rate_test) |> add(GlobalInterception()) |> add(dynamics) |>
@@ -100,8 +102,12 @@ end
         @test_throws ErrorException MRO_API.observation_design(model.observation, FeatureSet(bad_data), 4, ones(4))
         @test_throws ErrorException MRO_API.observation_design(model.observation, fs, 3, ones(3))
         eh, ea, sigma = [0.4, 0.1, 8.0, -4.0], [0.0, -0.2, -3.0, 7.0], 0.12
-        expected = sum(design.mask_weights[i] * (logpdf(Normal(eh[i], sigma), design.log_h[i]) +
+        # Independent hand-written Normal log density, including BOTH normalising constants.
+        expected = sum(design.mask_weights[i] * (-2log(sigma) - log(2pi) -
+            ((design.log_h[i] - eh[i])^2 + (design.log_a[i] - ea[i])^2) / (2sigma^2)) for i in 1:4)
+        via_logpdf = sum(design.mask_weights[i] * (logpdf(Normal(eh[i], sigma), design.log_h[i]) +
             logpdf(Normal(ea[i], sigma), design.log_a[i])) for i in 1:4)
+        @test expected ≈ via_logpdf atol = 1e-12 rtol = 0
         @test MRO_API._market_rate_ll(eh, ea, sigma, design) ≈ expected atol = 1e-12 rtol = 0
         zeros_design = MRO_API.MarketRateDesign(design.log_h, design.log_a, zeros(4), 0.0)
         @test MRO_API._market_rate_ll(eh, ea, sigma, zeros_design) == 0.0
@@ -110,9 +116,16 @@ end
         @test MRO_API._market_rate_ll(eh, ea, sigma, changed) == MRO_API._market_rate_ll(eh, ea, sigma, design)
         tm = MRO_API._observe(model.observation, eh, ea, zeros(Int, 4), zeros(Int, 4),
             ones(4), zeros(4), zeros(4), 2, 12, design)
-        density = mro_density(tm)
+        # _observe returns ll; only the production parent accumulates it. Mirror that seam.
+        @test mro_density(tm).f([sigma]) == logpdf(model.observation.sigma_prior, sigma)
+        accumulated = Wave2LikelihoodAudit.accumulated(tm)
+        density = mro_density(accumulated)
         @test length(density.theta) == 1
         @test density.f([sigma]) ≈ expected + logpdf(model.observation.sigma_prior, sigma) atol = 1e-12 rtol = 0
+        likelihood = DynamicPPL.LogDensityFunction(accumulated, DynamicPPL.getloglikelihood)
+        @test LogDensityProblems.logdensity(likelihood, [sigma]) ≈ expected atol = 1e-12 rtol = 0
+        @test mro_density(accumulated; linked = true).f([log(sigma)]) ≈
+            expected + logpdf(model.observation.sigma_prior, sigma) + log(sigma) atol = 1e-12 rtol = 0
         zero_tm = MRO_API._observe(model.observation, eh, ea, fill(999, 4), fill(999, 4),
             ones(4), zeros(4), zeros(4), 2, 12, zeros_design)
         @test mro_density(zero_tm).f([sigma]) == logpdf(model.observation.sigma_prior, sigma)
@@ -130,50 +143,94 @@ end
             @test isfinite(f(theta))
             tape = ReverseDiff.compile(ReverseDiff.GradientTape(f, theta))
             rng = MersenneTwister(20261012)
-            for delta in (0.0, 0.001, -0.002)
+            points, gradients, exact_checks = Vector{Float64}[], Vector{Float64}[], NamedTuple[]
+            for (number, delta) in enumerate((0.0, 0.001, -0.002))
                 point = theta + delta .* randn(rng, length(theta))
                 compiled = similar(point); ReverseDiff.gradient!(compiled, tape, point)
                 forward = ForwardDiff.gradient(f, point)
-                @test norm(compiled - forward) / max(norm(compiled), norm(forward), 1.0) <= 1e-6
-                @test norm(compiled - ReverseDiff.gradient(f, point)) / max(norm(compiled), 1.0) <= 1e-8
-                for j in eachindex(point)
-                    plus, minus = copy(point), copy(point)
-                    plus[j] += 1e-5; minus[j] -= 1e-5
-                    finite = (f(plus) - f(minus)) / 2e-5
-                    @test abs(compiled[j] - finite) / max(abs(compiled[j]), abs(finite), 1.0) <= 1e-6
-                end
+                fresh = ReverseDiff.gradient(f, point)
+                forward_error = norm(compiled - forward) / max(norm(compiled), norm(forward), 1.0)
+                fresh_error = norm(compiled - fresh) / max(norm(compiled), norm(fresh), 1.0)
+                @test forward_error <= 1e-10
+                @test fresh_error <= 1e-10
+                push!(points, point)
+                push!(gradients, compiled)
+                push!(exact_checks, (; arm, point = number, forward_error, fresh_error))
             end
-            println("MARKET_AD arm=", arm, " fold=40 parameters=", length(theta), " PASS")
+            output = "/root/BF_runs/qs_experiment_w2_out/phase1"
+            mkpath(output)
+            CSV.write(joinpath(output, "exact_ad_$arm.csv"), DataFrame(exact_checks))
+            audit = MarketRateFDAudit.audit(f, points, gradients, arm, output)
+            for row in audit.comparisons
+                @test row.high_precision_ad_relative_error <= 1e-10
+            end
+            for row in audit.rows
+                row.precision == "BigFloat128" && (@test row.trend_ok)
+            end
+            for row in audit.extrapolations
+                @test row.passed
+            end
+            println("MARKET_AD_EVIDENCE arm=", arm, " fold=40 parameters=", length(theta),
+                " forward_max=", maximum(row.forward_error for row in exact_checks),
+                " fresh_max=", maximum(row.fresh_error for row in exact_checks))
         end
     end
 
     @testset "synthetic recovery, frozen seeds and smoke budget" begin
+        # Manager amendment: retain the original seed, run TWO further fixed seeds per arm.
+        # The original interval CSV is immutable; do not refit it or overwrite its evidence.
+        original = CSV.read(joinpath(MRO_DIR, "results", "synthetic_recovery.csv"), DataFrame)
+        @test nrow(original) == 14
         intervals = NamedTuple[]
-        for (index, (arm, dynamics)) in enumerate((("grw", MultiScaleGRW()), ("qs", mro_weak_qs())))
-            model = mro_model(dynamics, feature)
-            fs = mro_real_features(model)
-            synthetic, truth = mro_synthetic(fs, dynamics, MersenneTwister(20261013 + index))
-            Random.seed!(20261015 + index)
-            config = Samplers.NUTSConfig(n_samples = 200, n_warmup = 200, n_chains = 2,
-                accept_rate = 0.65, max_depth = 10, show_progress = false, silence_initial_stepsize = true)
-            started = time()
-            chain = Samplers.run_sampler(MRO_PG.build_turing_model(model, synthetic), config)
-            for name in sort!(collect(keys(truth)))
-                draws = vec(Array(chain[Symbol(name)]))
-                lo, median, hi = quantile(draws, [0.05, 0.5, 0.95])
-                covered = lo <= truth[name] <= hi
-                push!(intervals, (; arm, fold = 40, parameter = name, truth = truth[name], lo,
-                    median, hi, covered, wall_seconds = time() - started))
-                println("RECOVERY arm=", arm, " parameter=", name, " truth=", truth[name],
-                    " interval=[", lo, ",", hi, "] covered=", covered)
+        for row in eachrow(original)
+            index = row.arm == "grw" ? 1 : 2
+            push!(intervals, (; arm = row.arm, fold = row.fold, seed = 1,
+                data_seed = 20261013 + index, sampler_seed = 20261015 + index,
+                parameter = row.parameter, truth = row.truth, lo = row.lo, median = row.median,
+                hi = row.hi, covered = row.covered, wall_seconds = row.wall_seconds))
+        end
+        for seed in 2:3
+            for (index, (arm, dynamics)) in enumerate((("grw", MultiScaleGRW()), ("qs", mro_weak_qs())))
+                model = mro_model(dynamics, feature)
+                fs = mro_real_features(model)
+                data_seed = 20261013 + index + 10(seed - 1)
+                sampler_seed = 20261015 + index + 10(seed - 1)
+                synthetic, truth = mro_synthetic(fs, dynamics, MersenneTwister(data_seed))
+                Random.seed!(sampler_seed)
+                config = Samplers.NUTSConfig(n_samples = 200, n_warmup = 200, n_chains = 2,
+                    accept_rate = 0.65, max_depth = 10, show_progress = false, silence_initial_stepsize = true)
+                started = time()
+                chain = Samplers.run_sampler(MRO_PG.build_turing_model(model, synthetic), config)
+                for name in sort!(collect(keys(truth)))
+                    # Select the immutable first seed, not the other new-seed intervals.
+                    baseline = only(filter(row -> row.arm == arm && row.parameter == name && row.seed == 1, intervals))
+                    draws = vec(Array(chain[Symbol(name)]))
+                    lo, median, hi = quantile(draws, [0.05, 0.5, 0.95])
+                    covered = lo <= truth[name] <= hi
+                    push!(intervals, (; arm, fold = 40, seed, data_seed, sampler_seed,
+                        parameter = name, truth = truth[name], lo, median, hi, covered,
+                        wall_seconds = time() - started))
+                    @test baseline.truth == truth[name]
+                end
             end
         end
         output = "/root/BF_runs/qs_experiment_w2_out/phase1"
         mkpath(output)
-        CSV.write(joinpath(output, "synthetic_recovery.csv"), DataFrame(intervals))
+        CSV.write(joinpath(output, "synthetic_recovery_three_seeds.csv"), DataFrame(intervals))
         for row in intervals
-            @test row.covered
+            println("RECOVERY arm=", row.arm, " seed=", row.seed, " parameter=", row.parameter,
+                " truth=", row.truth, " interval=[", row.lo, ",", row.hi, "] covered=", row.covered)
         end
+        @test length(intervals) == 42
+        for (arm, parameter) in unique([(row.arm, row.parameter) for row in intervals])
+            group = filter(row -> row.arm == arm && row.parameter == parameter, intervals)
+            @test length(group) == 3
+            @test any(row.covered for row in group)  # No parameter misses ALL three seeds.
+        end
+        coverage = count(row.covered for row in intervals) / length(intervals)
+        @test coverage >= 0.80
+        println("RECOVERY_GATE covered=", count(row.covered for row in intervals),
+            "/", length(intervals), " pooled_coverage=", coverage)
     end
 end
 println("MARKET_RATE_OBSERVATION_TESTS_DONE")
