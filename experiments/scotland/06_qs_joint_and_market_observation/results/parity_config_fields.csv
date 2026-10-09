@@ -1,0 +1,9 @@
+field,structural_equal
+name,true
+model,false
+splitter,true
+sampler,true
+execution,true
+tags,true
+description,true
+save_dir,true

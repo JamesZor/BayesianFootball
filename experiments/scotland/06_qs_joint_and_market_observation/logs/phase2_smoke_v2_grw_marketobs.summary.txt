@@ -1,0 +1,36 @@
+Source: ac30c4d7; fresh beast REPL %378, 16 pinned threads, BLAS 1.
+[PREFLIGHT] candidate=grw_marketobs completed_grid=none grid_registry_hash=d6bd75edd1ff840f956e9a3b8c4362c08844c6058d35c8da7871774faea4f6aa smoke_template_registry_hash=d2d25057b0d298d871e294400d912c0b483ef81c1631cbe41d9629ae4b3f0f34
+LoadError: BayesianFootball.Harness.HarnessCheckError("fit_parity", "FitConfig changed on reload")
+Stacktrace:
+  [1] _run_hard_check!(records::Vector{NamedTuple}, base::@NamedTuple{run_id::Nothing, recipe_hash::String, experiment::String, candidate::String, stage::String, git_sha::SubString{String}}, check::String, f::BayesianFootball.Harness.var"#265#266"{BayesianFootball.Training.Inference.Fit{BayesianFootball.Training.Inference.FitConfig{BayesianFootball.Models.PreGame.Builder.PoissonCountModel{BayesianFootball.Models.PreGame.GlobalInterception, BayesianFootball.Models.PreGame.MultiScaleGRW, BayesianFootball.Models.PreGame.GlobalHomeAdvantage, Tuple{}, BayesianFootball.Models.PreGame.Builder.MarketRateObservation{BayesianFootball.Features.MarketRatesFeature, Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64, Float64, Float64}}, BayesianFootball.Models.PreGame.Builder.ClampGuard}, BayesianFootball.Data.ScopedWalkForwardCV, BayesianFootball.Samplers.QueuedNUTSConfig, BayesianFootball.Training.Inference.QueuedExecution}, Vector{BayesianFootball.Training.Inference.FoldFit{MCMCChains.Chains{Float64, AxisArrays.AxisArray{Float64, 3, Array{Float64, 3}, Tuple{AxisArrays.Axis{:iter, StepRange{Int64, Int64}}, AxisArrays.Axis{:var, Vector{Symbol}}, AxisArrays.Axis{:chain, UnitRange{Int64}}}}, Missing, @NamedTuple{parameters::Vector{Symbol}, internals::Vector{Symbol}}, @NamedTuple{varname_to_symbol::OrderedCollections.OrderedDict{AbstractPPL.VarName, Symbol}, start_time::Vector{Float64}, stop_time::Vector{Float64}, samplerstate::Vector{Nothing}}}, BayesianFootball.Data.GroupedSplitMetaData}}, BayesianFootball.Models.Latents.CountLatents{Float64, Nothing}}})
+    @ BayesianFootball.Harness ~/BF_runs/qs_experiment/src/harness/checks.jl:51
+  [2] _run_hard_check!(f::Function, records::Vector{NamedTuple}, base::@NamedTuple{run_id::Nothing, recipe_hash::String, experiment::String, candidate::String, stage::String, git_sha::SubString{String}}, check::String)
+    @ BayesianFootball.Harness ~/BF_runs/qs_experiment/src/harness/checks.jl:54
+  [3] smoke(candidate::BayesianFootball.Harness.Candidate{BayesianFootball.Models.PreGame.Builder.PoissonCountModel{BayesianFootball.Models.PreGame.GlobalInterception, BayesianFootball.Models.PreGame.MultiScaleGRW, BayesianFootball.Models.PreGame.GlobalHomeAdvantage, Tuple{}, BayesianFootball.Models.PreGame.Builder.MarketRateObservation{BayesianFootball.Features.MarketRatesFeature, Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64, Float64, Float64}}, BayesianFootball.Models.PreGame.Builder.ClampGuard}, BayesianFootball.Samplers.QueuedNUTSConfig}; ds::BayesianFootball.Data.DataStore, experiment::String, db::BayesianFootball.Training.Inference.PostgresStorage, perf_probe::Bool, perf_chains::Int64, perf_warmup::Int64, perf_samples::Int64, log_dir::String, proc_root::String)
+    @ BayesianFootball.Harness ~/BF_runs/qs_experiment/src/harness/stages.jl:193
+  [4] smoke
+    @ ~/BF_runs/qs_experiment/src/harness/stages.jl:104 [inlined]
+  [5] (::Main.Wave2Smoke.var"#run")(candidate::BayesianFootball.Harness.Candidate{BayesianFootball.Models.PreGame.Builder.PoissonCountModel{BayesianFootball.Models.PreGame.GlobalInterception, BayesianFootball.Models.PreGame.MultiScaleGRW, BayesianFootball.Models.PreGame.GlobalHomeAdvantage, Tuple{}, BayesianFootball.Models.PreGame.Builder.MarketRateObservation{BayesianFootball.Features.MarketRatesFeature, Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64, Float64, Float64}}, BayesianFootball.Models.PreGame.Builder.ClampGuard}, BayesianFootball.Samplers.QueuedNUTSConfig}, ds::BayesianFootball.Data.DataStore, metadata::@NamedTuple{experiment::String, question::String, dimension::String, readme::String}; output::String, log_dir::String)
+    @ Main.Wave2Smoke ~/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/l03_smoke.jl:35
+  [6] top-level scope
+    @ ~/BF_runs/qs_experiment/experiments/scotland/06_qs_joint_and_market_observation/r03_smoke.jl:27
+  [7] include(mapexpr::Function, mod::Module, _path::String)
+    @ Base ./Base.jl:307
+  [8] top-level scope
+    @ REPL[1]:1
+  [9] __repl_entry_eval_expanded_with_loc(mod::Module, ast::Any, toplevel_file::Ref{Ptr{UInt8}}, toplevel_line::Ref{Int32})
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:301
+ [10] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:308
+ [11] toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) (repeats 4 times)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:312
+ [12] toplevel_eval_with_hooks
+    @ ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:305 [inlined]
+ [13] eval_user_input(ast::Any, backend::REPL.REPLBackend, mod::Module)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:330
+ [14] repl_backend_loop(backend::REPL.REPLBackend, get_module::Function)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:452
+ [15] start_repl_backend(backend::REPL.REPLBackend, consumer::Any; get_module::Function)
+    @ REPL ~/.julia/juliaup/julia-1.12.4+0.x64.linux.gnu/share/julia/stdlib/v1.12/REPL/src/REPL.jl:427
+ [16] start_repl_backend
+PHASE2_FAIL_grw_marketobs wall_s=263.0173969268799

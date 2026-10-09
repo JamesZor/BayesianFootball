@@ -1,0 +1,7 @@
+START phase2_smoke_v2_grw_joint pane=%376 2026-10-09T17:18:13Z
+END phase2_smoke_v2_grw_joint PASS 2026-10-09T17:21:51Z
+START phase2_smoke_v2_qs_joint pane=%377 2026-10-09T17:21:51Z
+END phase2_smoke_v2_qs_joint PASS 2026-10-09T17:25:38Z
+START phase2_smoke_v2_grw_marketobs pane=%378 2026-10-09T17:25:38Z
+END phase2_smoke_v2_grw_marketobs FAIL 2026-10-09T17:30:09Z
+PHASE2_BLOCKED: grw_marketobs; retain pane=%378 for diagnosis

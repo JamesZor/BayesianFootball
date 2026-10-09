@@ -1,0 +1,2 @@
+candidate,run_id,saved_run_status,entries,cloned_config_structural,cloned_dictionary_structural,cloned_dictionary_value_equal,persisted_dictionary_structural,persisted_dictionary_value_equal,persisted_model_structural,other_config_fields_unchanged
+grw_marketobs,8ff19fe2-8a83-4a50-b964-8b8ac617e316,completed,1430,false,false,true,false,true,false,true

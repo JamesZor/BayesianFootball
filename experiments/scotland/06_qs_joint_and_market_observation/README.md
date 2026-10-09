@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** Phase 2 loader fix/retry authorised; Phase 1 passed. Grid NOT authorised.
+> **Status:** BLOCKED Phase 2 persistence parity; Phase 1 passed. Grid NOT authorised.
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
@@ -61,6 +61,16 @@ aligns by match ID; held-out matches never appear in their fold's training rows.
 - ETA will extrapolate the largest-fold full-concurrency probe to
   40x4x1500 iterations. This excludes grid/scoring overhead and is not a guarantee.
 - **Ask manager after all four smoke hard passes, before ANY grid.**
+
+## Current Phase 2 stop
+
+V2 source ac30c4d7: grw_joint/qs_joint all six hard checks pass; grw_marketobs
+five pass then fit_parity fails; qs_marketobs not started. All short-smoke
+convergence/performance review flags retained. Read-only audit at 58665779
+shows all injected dictionary values survive the database round trip exactly,
+but the structural comparator examines Dict internals. No gate fix/retry yet;
+manager parity/eligibility review required. Full partial results, UUIDs, flags
+and ETA caveats: [PHASE2_PARITY_BLOCKED.md](PHASE2_PARITY_BLOCKED.md).
 
 ## Decision and planned comparisons
 

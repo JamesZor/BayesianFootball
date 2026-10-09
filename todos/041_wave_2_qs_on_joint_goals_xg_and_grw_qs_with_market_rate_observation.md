@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -54,6 +54,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] BLOCKED Phase 2 at 73147ce0: candidates.jl:5 unqualified include is undefined in the bare Module(:Wave2Candidates). First entry point fails before candidate build/checks/sampling/DB writes; other arms not started, no UUID/ETA. Proposed Base.include(@__MODULE__, ...) one-line fix; awaiting manager authorisation, no retry. Phase 1 remains accepted. PHASE2_BLOCKED.md/evidence recorded; owned idle panes closed.
 
 - [2026-10-09 @pi] Manager authorised the one-line candidate loader fix and fresh smoke retry via confirmation. Apply Base.include(@__MODULE__, ...); no priors/seeds/inputs/threshold changes. Failed attempt retained, v2 evidence names; grid still separately gated.
+
+- [2026-10-09 @pi] BLOCKED Phase 2 at ac30c4d7: both joint arms six hard passes; grw_marketobs five pass/fit_parity fails; qs_marketobs not started. Read-only audit 58665779 proves 1430 original/reloaded dictionary key/value tuples identical but structural comparator sees Dict internals; no gate fix or sampling retry. Historical failed row also blocks eligibility under current policy. PHASE2_PARITY_BLOCKED.md reports UUIDs, diagnostics, ETA and proposed manager review; all owned panes closed. Phase 1 remains PASS; no grid.
 
 ## Verification & Findings
 

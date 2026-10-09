@@ -77,3 +77,11 @@
 - Explicit ruling via confirmation: apply one-line Base.include(@__MODULE__, ...) in candidates.jl and retry smoke. Grid approval remains separate. No scientific gate had started at failure; no input/seed/prior/threshold change.
 - Preserve original phase2_smoke_grw_joint.* and launch logs; retry with phase2_smoke_v2_* evidence/session names and new phase2_launcher_v2.log. Same fresh-REPL serial arm order, pinned snapshot, registrations and smoke budgets.
 - Correct README-only shape-prior typo (Normal(4,1) -> Normal(4,1.5)); executable prior already exactly matched experiment 04 and remains unchanged.
+
+## 2026-10-09 — Phase 2 persistence parity stop and read-only diagnosis
+
+- V2 source ac30c4d7: grw_joint and qs_joint all 6 hard checks pass, saved UUIDs e169aa8e-2302-4c9c-9e39-6c3b1e93218b and 032bd044-1f10-4e71-9876-f586a04eaa48. Short-smoke Rhat maxima 1.05414/1.07449, ESS minima 182.89/69.66 and 133.14/79.94, zero divergences; review flags retained. Probe ETAs 1.937/1.955 h.
+- grw_marketobs passes 5 hard checks then fit_parity FAIL (FitConfig changed on reload), saved fit UUID 8ff19fe2-8a83-4a50-b964-8b8ac617e316. Sampler completion is not a smoke pass. Rhat 1.13787, ESS 16.10/57.47, zero divergences, performance review (GC 36.2%, GC-stall 56.4%, efficiency 4.741); ETA 4.219 h. qs_marketobs not started; no grid.
+- Read-only audit source 58665779 confirms all 1430 dictionary key/value tuples unchanged after in-memory and actual DB round trips. _structural_equal descends into Dict hash-table internals, so returns false despite value equality; full serialization-only config clone reproduces, non-model fields unchanged. No chain/latent parity claim after config short-circuit.
+- Stop/report; no parity fix, sampling retry or threshold/input/seed change. Proposed exact per-key recursive AbstractDict comparison with positive and mutation-negative regressions requires manager review. Also request eligibility policy: current has_passing_smoke rejects any historical failed hard row even after a passing retry; retain history, do not delete/relabel it.
+- PHASE2_PARITY_BLOCKED.md is current stop evidence; raw/CSV/probe receipts retained. Table/manifest digests rechecked unchanged. All owned panes closed, TODO BLOCKED pending manager parity/eligibility ruling.
