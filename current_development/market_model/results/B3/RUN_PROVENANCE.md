@@ -1,0 +1,14 @@
+- R6 G0 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 88.07489109039307 seconds; 4 x (2000+3000), thin 1.
+- R6 G0 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 44.92952013015747 seconds; 4 x (2000+3000), thin 1.
+- R6 G1 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 87.00689101219177 seconds; 4 x (2000+3000), thin 1.
+- R6 G1 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 45.7431218624115 seconds; 4 x (2000+3000), thin 1.
+- R6 G1_including_thin 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 97.43400502204895 seconds; 4 x (2000+3000), thin 1.
+- R6 G1_including_thin 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 54.72967004776001 seconds; 4 x (2000+3000), thin 1.
+- Full R04 SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`; 501.5812849998474 seconds; threads=16; R04_DONE.
+- R6 G0 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 88.0252251625061 seconds; 4 x (2000+3000), thin 1.
+- R6 G0 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 45.763842821121216 seconds; 4 x (2000+3000), thin 1.
+- R6 G1 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 85.34729790687561 seconds; 4 x (2000+3000), thin 1.
+- R6 G1 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 45.752763986587524 seconds; 4 x (2000+3000), thin 1.
+- R6 G1_including_thin 10a, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4522, 98.27876591682434 seconds; 4 x (2000+3000), thin 1.
+- R6 G1_including_thin 10b, SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`, seed 4523, 56.11411714553833 seconds; 4 x (2000+3000), thin 1.
+- Full R04 SHA `2e02a7854a9ccc59fd8ba4c81aa6cf9ca6f5090a`; 508.820631980896 seconds; threads=16; R04_DONE.

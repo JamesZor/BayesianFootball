@@ -1,0 +1,193 @@
+gate,value,tol,pass
+C3 Gate1 max SD relative BTTS+OU n=250.0 sd=0.05 offset=0.0,0.0007327484330585943,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=250.0 sd=0.05 offset=0.0,9.050510326923072e-05,0.05,true
+C3 Gate1 median marginal BTTS+OU n=250.0 sd=0.05 offset=0.0,0.00016903571134996298,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=250.0 sd=0.05 offset=0.0,0.0004541422357922987,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=250.0 sd=0.05 offset=0.1,0.0008087066746456095,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=250.0 sd=0.05 offset=0.1,9.467812386321685e-05,0.05,true
+C3 Gate1 median marginal BTTS+OU n=250.0 sd=0.05 offset=0.1,0.00018117239759485315,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=250.0 sd=0.05 offset=0.1,0.0005078007452182122,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=250.0 sd=0.2 offset=0.0,0.14878198870219494,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=250.0 sd=0.2 offset=0.0,0.05836204173970596,0.05,false
+C3 Gate1 median marginal BTTS+OU n=250.0 sd=0.2 offset=0.0,0.02060874306987226,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=250.0 sd=0.2 offset=0.0,0.03934220380768089,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=250.0 sd=0.2 offset=0.1,0.14992738568319008,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=250.0 sd=0.2 offset=0.1,0.058827577645660455,0.05,false
+C3 Gate1 median marginal BTTS+OU n=250.0 sd=0.2 offset=0.1,0.01900661639205037,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=250.0 sd=0.2 offset=0.1,0.03986399861365017,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=1000.0 sd=0.05 offset=0.0,0.0035786282649713508,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=1000.0 sd=0.05 offset=0.0,0.0002678653867092285,0.05,true
+C3 Gate1 median marginal BTTS+OU n=1000.0 sd=0.05 offset=0.0,0.00036942988342669736,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=1000.0 sd=0.05 offset=0.0,0.0010965051671850026,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=1000.0 sd=0.05 offset=0.1,0.0033521606195009435,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=1000.0 sd=0.05 offset=0.1,0.00026363105100115427,0.05,true
+C3 Gate1 median marginal BTTS+OU n=1000.0 sd=0.05 offset=0.1,0.00031710289951392134,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=1000.0 sd=0.05 offset=0.1,0.0010632181061717818,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=1000.0 sd=0.2 offset=0.0,0.21825732401929177,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=1000.0 sd=0.2 offset=0.0,0.09635999506697479,0.05,false
+C3 Gate1 median marginal BTTS+OU n=1000.0 sd=0.2 offset=0.0,0.03884425368812172,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=1000.0 sd=0.2 offset=0.0,0.09680237161346532,0.05,false
+C3 Gate1 max SD relative BTTS+OU n=1000.0 sd=0.2 offset=0.1,0.2143290321338419,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=1000.0 sd=0.2 offset=0.1,0.09331525252150001,0.05,false
+C3 Gate1 median marginal BTTS+OU n=1000.0 sd=0.2 offset=0.1,0.03735970591714821,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=1000.0 sd=0.2 offset=0.1,0.0947192767850607,0.05,false
+C3 Gate1 max SD relative BTTS+OU n=4000.0 sd=0.05 offset=0.0,0.006856521160459095,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=4000.0 sd=0.05 offset=0.0,0.0009451274192087017,0.05,true
+C3 Gate1 median marginal BTTS+OU n=4000.0 sd=0.05 offset=0.0,0.0015347646043100127,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=4000.0 sd=0.05 offset=0.0,0.0023776471107397334,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=4000.0 sd=0.05 offset=0.1,0.006924659948327694,0.05,true
+C3 Gate1 max mean/SD BTTS+OU n=4000.0 sd=0.05 offset=0.1,0.0008641541561207819,0.05,true
+C3 Gate1 median marginal BTTS+OU n=4000.0 sd=0.05 offset=0.1,0.001440035666870898,0.01,true
+C3 Gate1 p95 marginal BTTS+OU n=4000.0 sd=0.05 offset=0.1,0.00235977226582067,0.05,true
+C3 Gate1 max SD relative BTTS+OU n=4000.0 sd=0.2 offset=0.0,0.4939853190772666,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=4000.0 sd=0.2 offset=0.0,0.2993628581839998,0.05,false
+C3 Gate1 median marginal BTTS+OU n=4000.0 sd=0.2 offset=0.0,0.07337236800273361,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=4000.0 sd=0.2 offset=0.0,0.1619194006931936,0.05,false
+C3 Gate1 max SD relative BTTS+OU n=4000.0 sd=0.2 offset=0.1,0.4920081069796789,0.05,false
+C3 Gate1 max mean/SD BTTS+OU n=4000.0 sd=0.2 offset=0.1,0.3001396733122619,0.05,false
+C3 Gate1 median marginal BTTS+OU n=4000.0 sd=0.2 offset=0.1,0.07174201013407955,0.01,false
+C3 Gate1 p95 marginal BTTS+OU n=4000.0 sd=0.2 offset=0.1,0.16186551737085647,0.05,false
+C3 Gate1 max SD relative BTTS-only n=250.0 sd=0.05 offset=0.0,0.0014887800646067317,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=250.0 sd=0.05 offset=0.0,4.739391556360565e-06,0.05,true
+C3 Gate1 median marginal BTTS-only n=250.0 sd=0.05 offset=0.0,0.00022564293326343687,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=250.0 sd=0.05 offset=0.0,0.00022564293326343687,0.05,true
+C3 Gate1 max SD relative BTTS-only n=250.0 sd=0.05 offset=0.1,0.008639838323828086,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=250.0 sd=0.05 offset=0.1,2.9276260138085293e-06,0.05,true
+C3 Gate1 median marginal BTTS-only n=250.0 sd=0.05 offset=0.1,0.00023112841765460246,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=250.0 sd=0.05 offset=0.1,0.00023112841765460246,0.05,true
+C3 Gate1 max SD relative BTTS-only n=250.0 sd=0.2 offset=0.0,0.00949953295003303,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=250.0 sd=0.2 offset=0.0,0.0008404810783218743,0.05,true
+C3 Gate1 median marginal BTTS-only n=250.0 sd=0.2 offset=0.0,0.005591013854347349,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=250.0 sd=0.2 offset=0.0,0.005591013854347349,0.05,true
+C3 Gate1 max SD relative BTTS-only n=250.0 sd=0.2 offset=0.1,0.0396865240262928,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=250.0 sd=0.2 offset=0.1,0.0011062026630622506,0.05,true
+C3 Gate1 median marginal BTTS-only n=250.0 sd=0.2 offset=0.1,0.005909204544633173,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=250.0 sd=0.2 offset=0.1,0.005909204544633173,0.05,true
+C3 Gate1 max SD relative BTTS-only n=1000.0 sd=0.05 offset=0.0,0.003766377635764817,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=1000.0 sd=0.05 offset=0.0,6.518850038370146e-06,0.05,true
+C3 Gate1 median marginal BTTS-only n=1000.0 sd=0.05 offset=0.0,0.0003741027348782566,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=1000.0 sd=0.05 offset=0.0,0.0003741027348782566,0.05,true
+C3 Gate1 max SD relative BTTS-only n=1000.0 sd=0.05 offset=0.1,0.02208009505398767,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=1000.0 sd=0.05 offset=0.1,9.70711524995039e-06,0.05,true
+C3 Gate1 median marginal BTTS-only n=1000.0 sd=0.05 offset=0.1,0.0003813939706924785,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=1000.0 sd=0.05 offset=0.1,0.0003813939706924785,0.05,true
+C3 Gate1 max SD relative BTTS-only n=1000.0 sd=0.2 offset=0.0,0.010329153625723286,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=1000.0 sd=0.2 offset=0.0,0.0011850856357710422,0.05,true
+C3 Gate1 median marginal BTTS-only n=1000.0 sd=0.2 offset=0.0,0.004770956516465752,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=1000.0 sd=0.2 offset=0.0,0.004770956516465752,0.05,true
+C3 Gate1 max SD relative BTTS-only n=1000.0 sd=0.2 offset=0.1,0.047292518955222795,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=1000.0 sd=0.2 offset=0.1,0.0015269605304626271,0.05,true
+C3 Gate1 median marginal BTTS-only n=1000.0 sd=0.2 offset=0.1,0.005250338501051388,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=1000.0 sd=0.2 offset=0.1,0.005250338501051388,0.05,true
+C3 Gate1 max SD relative BTTS-only n=4000.0 sd=0.05 offset=0.0,0.006346248214589956,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=4000.0 sd=0.05 offset=0.0,1.4597440178997084e-05,0.05,true
+C3 Gate1 median marginal BTTS-only n=4000.0 sd=0.05 offset=0.0,0.00035833227477466423,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=4000.0 sd=0.05 offset=0.0,0.00035833227477466423,0.05,true
+C3 Gate1 max SD relative BTTS-only n=4000.0 sd=0.05 offset=0.1,0.036774866518146765,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=4000.0 sd=0.05 offset=0.1,1.8906830577342243e-05,0.05,true
+C3 Gate1 median marginal BTTS-only n=4000.0 sd=0.05 offset=0.1,0.00038165268699863475,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=4000.0 sd=0.05 offset=0.1,0.00038165268699863475,0.05,true
+C3 Gate1 max SD relative BTTS-only n=4000.0 sd=0.2 offset=0.0,0.010723419995153693,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=4000.0 sd=0.2 offset=0.0,0.001295720601379656,0.05,true
+C3 Gate1 median marginal BTTS-only n=4000.0 sd=0.2 offset=0.0,0.0044407555795697995,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=4000.0 sd=0.2 offset=0.0,0.0044407555795697995,0.05,true
+C3 Gate1 max SD relative BTTS-only n=4000.0 sd=0.2 offset=0.1,0.04975160984620841,0.05,true
+C3 Gate1 max mean/SD BTTS-only n=4000.0 sd=0.2 offset=0.1,0.0016649251185065325,0.05,true
+C3 Gate1 median marginal BTTS-only n=4000.0 sd=0.2 offset=0.1,0.0049614430501074835,0.01,true
+C3 Gate1 p95 marginal BTTS-only n=4000.0 sd=0.2 offset=0.1,0.0049614430501074835,0.05,true
+C3 Gate1 max SD relative OU-only n=250.0 sd=0.05 offset=0.0,0.019848072832740482,0.05,true
+C3 Gate1 max mean/SD OU-only n=250.0 sd=0.05 offset=0.0,5.2933176289081284e-05,0.05,true
+C3 Gate1 median marginal OU-only n=250.0 sd=0.05 offset=0.0,7.980456423339888e-05,0.01,true
+C3 Gate1 p95 marginal OU-only n=250.0 sd=0.05 offset=0.0,0.0002937123492387173,0.05,true
+C3 Gate1 max SD relative OU-only n=250.0 sd=0.05 offset=0.1,0.0009489066648507016,0.05,true
+C3 Gate1 max mean/SD OU-only n=250.0 sd=0.05 offset=0.1,4.983270328436007e-05,0.05,true
+C3 Gate1 median marginal OU-only n=250.0 sd=0.05 offset=0.1,0.00012681564668337586,0.01,true
+C3 Gate1 p95 marginal OU-only n=250.0 sd=0.05 offset=0.1,0.0003205003953526742,0.05,true
+C3 Gate1 max SD relative OU-only n=250.0 sd=0.2 offset=0.0,0.058978186176263714,0.05,false
+C3 Gate1 max mean/SD OU-only n=250.0 sd=0.2 offset=0.0,0.0052907574840531145,0.05,true
+C3 Gate1 median marginal OU-only n=250.0 sd=0.2 offset=0.0,0.0027939436086663605,0.01,true
+C3 Gate1 p95 marginal OU-only n=250.0 sd=0.2 offset=0.0,0.006559386627022779,0.05,true
+C3 Gate1 max SD relative OU-only n=250.0 sd=0.2 offset=0.1,0.03236652111165694,0.05,true
+C3 Gate1 max mean/SD OU-only n=250.0 sd=0.2 offset=0.1,0.004096491266048336,0.05,true
+C3 Gate1 median marginal OU-only n=250.0 sd=0.2 offset=0.1,0.002284665812985587,0.01,true
+C3 Gate1 p95 marginal OU-only n=250.0 sd=0.2 offset=0.1,0.005602642759491695,0.05,true
+C3 Gate1 max SD relative OU-only n=1000.0 sd=0.05 offset=0.0,0.035168787803974366,0.05,true
+C3 Gate1 max mean/SD OU-only n=1000.0 sd=0.05 offset=0.0,7.242185611347885e-05,0.05,true
+C3 Gate1 median marginal OU-only n=1000.0 sd=0.05 offset=0.0,6.719431656598829e-05,0.01,true
+C3 Gate1 p95 marginal OU-only n=1000.0 sd=0.05 offset=0.0,0.0003397951744717354,0.05,true
+C3 Gate1 max SD relative OU-only n=1000.0 sd=0.05 offset=0.1,0.0015084095621018534,0.05,true
+C3 Gate1 max mean/SD OU-only n=1000.0 sd=0.05 offset=0.1,5.53004507873457e-05,0.05,true
+C3 Gate1 median marginal OU-only n=1000.0 sd=0.05 offset=0.1,5.249101396787026e-05,0.01,true
+C3 Gate1 p95 marginal OU-only n=1000.0 sd=0.05 offset=0.1,0.000340478078430806,0.05,true
+C3 Gate1 max SD relative OU-only n=1000.0 sd=0.2 offset=0.0,0.06827107338333926,0.05,false
+C3 Gate1 max mean/SD OU-only n=1000.0 sd=0.2 offset=0.0,0.0057332037927091545,0.05,true
+C3 Gate1 median marginal OU-only n=1000.0 sd=0.2 offset=0.0,0.0038532361782199764,0.01,true
+C3 Gate1 p95 marginal OU-only n=1000.0 sd=0.2 offset=0.0,0.007460724584020895,0.05,true
+C3 Gate1 max SD relative OU-only n=1000.0 sd=0.2 offset=0.1,0.03704417305527696,0.05,true
+C3 Gate1 max mean/SD OU-only n=1000.0 sd=0.2 offset=0.1,0.00406366519516531,0.05,true
+C3 Gate1 median marginal OU-only n=1000.0 sd=0.2 offset=0.1,0.003230987746752234,0.01,true
+C3 Gate1 p95 marginal OU-only n=1000.0 sd=0.2 offset=0.1,0.005848859507457149,0.05,true
+C3 Gate1 max SD relative OU-only n=4000.0 sd=0.05 offset=0.0,0.04316638572065623,0.05,true
+C3 Gate1 max mean/SD OU-only n=4000.0 sd=0.05 offset=0.0,9.481583679187697e-05,0.05,true
+C3 Gate1 median marginal OU-only n=4000.0 sd=0.05 offset=0.0,0.00018389354222936305,0.01,true
+C3 Gate1 p95 marginal OU-only n=4000.0 sd=0.05 offset=0.0,0.00043817910386749763,0.05,true
+C3 Gate1 max SD relative OU-only n=4000.0 sd=0.05 offset=0.1,0.002191917897127249,0.05,true
+C3 Gate1 max mean/SD OU-only n=4000.0 sd=0.05 offset=0.1,7.083187016114714e-05,0.05,true
+C3 Gate1 median marginal OU-only n=4000.0 sd=0.05 offset=0.1,0.00014460114120407042,0.01,true
+C3 Gate1 p95 marginal OU-only n=4000.0 sd=0.05 offset=0.1,0.00037224896783474295,0.05,true
+C3 Gate1 max SD relative OU-only n=4000.0 sd=0.2 offset=0.0,0.062199071805757344,0.05,false
+C3 Gate1 max mean/SD OU-only n=4000.0 sd=0.2 offset=0.0,0.010854117561799425,0.05,true
+C3 Gate1 median marginal OU-only n=4000.0 sd=0.2 offset=0.0,0.004542215732545429,0.01,true
+C3 Gate1 p95 marginal OU-only n=4000.0 sd=0.2 offset=0.0,0.008858646583337659,0.05,true
+C3 Gate1 max SD relative OU-only n=4000.0 sd=0.2 offset=0.1,0.031027066509818124,0.05,true
+C3 Gate1 max mean/SD OU-only n=4000.0 sd=0.2 offset=0.1,0.008088385122810635,0.05,true
+C3 Gate1 median marginal OU-only n=4000.0 sd=0.2 offset=0.1,0.0037517537982107996,0.01,true
+C3 Gate1 p95 marginal OU-only n=4000.0 sd=0.2 offset=0.1,0.006817264368071286,0.05,true
+C3 Gate1 max SD relative full n=250.0 sd=0.05 offset=0.0,0.000760735783273403,0.05,true
+C3 Gate1 max mean/SD full n=250.0 sd=0.05 offset=0.0,2.833730499002444e-05,0.05,true
+C3 Gate1 median marginal full n=250.0 sd=0.05 offset=0.0,0.0003559646430049135,0.01,true
+C3 Gate1 p95 marginal full n=250.0 sd=0.05 offset=0.0,0.00044571744122494654,0.05,true
+C3 Gate1 max SD relative full n=250.0 sd=0.05 offset=0.1,0.0007624371421365295,0.05,true
+C3 Gate1 max mean/SD full n=250.0 sd=0.05 offset=0.1,2.7691552550447664e-05,0.05,true
+C3 Gate1 median marginal full n=250.0 sd=0.05 offset=0.1,0.0004025634378708176,0.01,true
+C3 Gate1 p95 marginal full n=250.0 sd=0.05 offset=0.1,0.00047205155014329314,0.05,true
+C3 Gate1 max SD relative full n=250.0 sd=0.2 offset=0.0,0.01005262023812592,0.05,true
+C3 Gate1 max mean/SD full n=250.0 sd=0.2 offset=0.0,0.0009284497092163062,0.05,true
+C3 Gate1 median marginal full n=250.0 sd=0.2 offset=0.0,0.003980333011027959,0.01,true
+C3 Gate1 p95 marginal full n=250.0 sd=0.2 offset=0.0,0.004939517385298409,0.05,true
+C3 Gate1 max SD relative full n=250.0 sd=0.2 offset=0.1,0.010184310576972222,0.05,true
+C3 Gate1 max mean/SD full n=250.0 sd=0.2 offset=0.1,0.0008749316442138652,0.05,true
+C3 Gate1 median marginal full n=250.0 sd=0.2 offset=0.1,0.003881320508417385,0.01,true
+C3 Gate1 p95 marginal full n=250.0 sd=0.2 offset=0.1,0.0051705855019272395,0.05,true
+C3 Gate1 max SD relative full n=1000.0 sd=0.05 offset=0.0,0.0007750903941161624,0.05,true
+C3 Gate1 max mean/SD full n=1000.0 sd=0.05 offset=0.0,1.2990591142075119e-05,0.05,true
+C3 Gate1 median marginal full n=1000.0 sd=0.05 offset=0.0,0.0004609295826489834,0.01,true
+C3 Gate1 p95 marginal full n=1000.0 sd=0.05 offset=0.0,0.000542287329273261,0.05,true
+C3 Gate1 max SD relative full n=1000.0 sd=0.05 offset=0.1,0.0007437647021613092,0.05,true
+C3 Gate1 max mean/SD full n=1000.0 sd=0.05 offset=0.1,1.8209941052830745e-05,0.05,true
+C3 Gate1 median marginal full n=1000.0 sd=0.05 offset=0.1,0.0004534061526539901,0.01,true
+C3 Gate1 p95 marginal full n=1000.0 sd=0.05 offset=0.1,0.0005327409079657119,0.05,true
+C3 Gate1 max SD relative full n=1000.0 sd=0.2 offset=0.0,0.004677953939681512,0.05,true
+C3 Gate1 max mean/SD full n=1000.0 sd=0.2 offset=0.0,0.0004318373530153015,0.05,true
+C3 Gate1 median marginal full n=1000.0 sd=0.2 offset=0.0,0.0012620595985342042,0.01,true
+C3 Gate1 p95 marginal full n=1000.0 sd=0.2 offset=0.0,0.0020438721661637962,0.05,true
+C3 Gate1 max SD relative full n=1000.0 sd=0.2 offset=0.1,0.004949833452193686,0.05,true
+C3 Gate1 max mean/SD full n=1000.0 sd=0.2 offset=0.1,0.000476517425536382,0.05,true
+C3 Gate1 median marginal full n=1000.0 sd=0.2 offset=0.1,0.0012555716109159398,0.01,true
+C3 Gate1 p95 marginal full n=1000.0 sd=0.2 offset=0.1,0.0020412980820049055,0.05,true
+C3 Gate1 max SD relative full n=4000.0 sd=0.05 offset=0.0,0.0006343769994786586,0.05,true
+C3 Gate1 max mean/SD full n=4000.0 sd=0.05 offset=0.0,1.8376105310930656e-05,0.05,true
+C3 Gate1 median marginal full n=4000.0 sd=0.05 offset=0.0,0.0002507074075595028,0.01,true
+C3 Gate1 p95 marginal full n=4000.0 sd=0.05 offset=0.0,0.00032104046285059696,0.05,true
+C3 Gate1 max SD relative full n=4000.0 sd=0.05 offset=0.1,0.0006856222558189184,0.05,true
+C3 Gate1 max mean/SD full n=4000.0 sd=0.05 offset=0.1,1.8148407838545612e-05,0.05,true
+C3 Gate1 median marginal full n=4000.0 sd=0.05 offset=0.1,0.0002443927002455659,0.01,true
+C3 Gate1 p95 marginal full n=4000.0 sd=0.05 offset=0.1,0.0003392040472391056,0.05,true
+C3 Gate1 max SD relative full n=4000.0 sd=0.2 offset=0.0,0.001440292419393585,0.05,true
+C3 Gate1 max mean/SD full n=4000.0 sd=0.2 offset=0.0,8.123088649835448e-05,0.05,true
+C3 Gate1 median marginal full n=4000.0 sd=0.2 offset=0.0,0.00033382601020415237,0.01,true
+C3 Gate1 p95 marginal full n=4000.0 sd=0.2 offset=0.0,0.0005731206954488145,0.05,true
+C3 Gate1 max SD relative full n=4000.0 sd=0.2 offset=0.1,0.0014644226503098823,0.05,true
+C3 Gate1 max mean/SD full n=4000.0 sd=0.2 offset=0.1,8.355087756738226e-05,0.05,true
+C3 Gate1 median marginal full n=4000.0 sd=0.2 offset=0.1,0.0003334815777289446,0.01,true
+C3 Gate1 p95 marginal full n=4000.0 sd=0.2 offset=0.1,0.000573004593960702,0.05,true

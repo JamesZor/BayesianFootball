@@ -1,0 +1,4 @@
+league,comparison,n,estimate,se,method
+eng_league_two,full_minus_no_style,538,-0.0005064386041704256,0.004140371064175403,paired Poisson goal log score; fixture SE
+eng_league_two,full_minus_no_quality,538,0.05573307889843228,0.01329185844696503,paired Poisson goal log score; fixture SE
+eng_league_two,total_goal_calibration_slope,538,0.6113107174391773,0.3611998454421059,Poisson log-link GLM on log predicted expected total; ideal slope 1; model-based SE

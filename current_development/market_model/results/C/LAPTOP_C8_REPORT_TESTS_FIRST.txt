@@ -1,0 +1,43 @@
+include("current_development/market_model/t05_fast_reports_tests.jl")The latest version of Julia in the `release` channel is 1.13.1+0.x64.linux.gnu. You currently have `1.12.1+0.x64.linux.gnu` installed. Run:
+
+  juliaup update
+
+in your terminal shell to install Julia 1.13.1+0.x64.linux.gnu and update the `release` channel to that version.
+
+  🦋 Kaimon gate connected (BayesianFootball-market-model-pi-c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.1 (2025-10-17)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/t05_fast_reports_tests.jl")
+C8 fast-stage reports, NOT sampled acceptance: Error During Test at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fast_reports_tests.jl:15
+  Got exception outside of a @test
+  FieldError: type Main.MarketInverseDynamics.ArmFit has no field `logdraws`, available fields: `arm`, `names`, `draws`, `udraws`, `paths`, `path_theta`, `aux_mean`, `seconds`
+  Stacktrace:
+   [1] getproperty
+     @ ./Base_compiler.jl:54 [inlined]
+   [2] home_advantage(fits::Dict{Tuple{Symbol, String}, Main.MarketInverseDynamics.ArmFit}, p::Main.MarketInverseDynamics.MarketPanel, train::Main.MarketInverseDynamics.MarketPanel)
+     @ Main.FastFullBookReports ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/l05_fast_reports.jl:60
+   [3] top-level scope
+     @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fast_reports_tests.jl:16
+   [4] macro expansion
+     @ ~/.julia/juliaup/julia-1.12.1+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1776 [inlined]
+   [5] macro expansion
+     @ ~/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fast_reports_tests.jl:36 [inlined]
+   [6] include(mapexpr::Function, mod::Module, _path::String)
+     @ Base ./Base.jl:307
+   [7] top-level scope
+     @ REPL[1]:1
+Test Summary:                                 | Pass  Error  Total  Time
+C8 fast-stage reports, NOT sampled acceptance |    4      1      5  7.8s
+RNG of the outermost testset: Xoshiro(0x50825d7331ad9e24, 0xa7c0f4a522a5f688, 0xedacc6172d6e7c9c, 0xf1e5ce50105e34f5, 0x896dbe06ef5b637b)
+ERROR: LoadError: Some tests did not pass: 4 passed, 0 failed, 1 errored, 0 broken.
+in expression starting at /home/james/bet_project/.worktrees/BayesianFootball-market-model-pi-c/current_development/market_model/t05_fast_reports_tests.jl:15
+
+julia>

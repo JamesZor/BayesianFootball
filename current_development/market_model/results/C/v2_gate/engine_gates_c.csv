@@ -1,0 +1,49 @@
+gate,value,tol,pass
+C Gate1 median marginal full n=250.0 sd=0.05 offset=0.0,0.0003559646430049135,0.01,true
+C Gate1 p95 marginal full n=250.0 sd=0.05 offset=0.0,0.00044571744122494654,0.05,true
+C Gate1 max mean/SD full n=250.0 sd=0.05 offset=0.0,0.016751093307285254,0.05,true
+C Gate1 max SD relative full n=250.0 sd=0.05 offset=0.0,0.000760735783273403,0.05,true
+C Gate1 median marginal full n=250.0 sd=0.05 offset=0.1,0.0004025634378708176,0.01,true
+C Gate1 p95 marginal full n=250.0 sd=0.05 offset=0.1,0.00047205155014329314,0.05,true
+C Gate1 max mean/SD full n=250.0 sd=0.05 offset=0.1,0.015890424705337046,0.05,true
+C Gate1 max SD relative full n=250.0 sd=0.05 offset=0.1,0.0007624371421365295,0.05,true
+C Gate1 median marginal full n=250.0 sd=0.2 offset=0.0,0.003980333011027959,0.01,true
+C Gate1 p95 marginal full n=250.0 sd=0.2 offset=0.0,0.004939517385298409,0.05,true
+C Gate1 max mean/SD full n=250.0 sd=0.2 offset=0.0,0.09174392511223031,0.05,false
+C Gate1 max SD relative full n=250.0 sd=0.2 offset=0.0,0.01005262023812592,0.05,true
+C Gate1 median marginal full n=250.0 sd=0.2 offset=0.1,0.003881320508417385,0.01,true
+C Gate1 p95 marginal full n=250.0 sd=0.2 offset=0.1,0.0051705855019272395,0.05,true
+C Gate1 max mean/SD full n=250.0 sd=0.2 offset=0.1,0.08920229803652978,0.05,false
+C Gate1 max SD relative full n=250.0 sd=0.2 offset=0.1,0.010184310576972222,0.05,true
+C Gate1 median marginal full n=1000.0 sd=0.05 offset=0.0,0.0004609295826489834,0.01,true
+C Gate1 p95 marginal full n=1000.0 sd=0.05 offset=0.0,0.000542287329273261,0.05,true
+C Gate1 max mean/SD full n=1000.0 sd=0.05 offset=0.0,0.026053879943977096,0.05,true
+C Gate1 max SD relative full n=1000.0 sd=0.05 offset=0.0,0.0007750903941161624,0.05,true
+C Gate1 median marginal full n=1000.0 sd=0.05 offset=0.1,0.0004534061526539901,0.01,true
+C Gate1 p95 marginal full n=1000.0 sd=0.05 offset=0.1,0.0005327409079657119,0.05,true
+C Gate1 max mean/SD full n=1000.0 sd=0.05 offset=0.1,0.024995793375410292,0.05,true
+C Gate1 max SD relative full n=1000.0 sd=0.05 offset=0.1,0.0007437647021613092,0.05,true
+C Gate1 median marginal full n=1000.0 sd=0.2 offset=0.0,0.0012620595985342042,0.01,true
+C Gate1 p95 marginal full n=1000.0 sd=0.2 offset=0.0,0.0020438721661637962,0.05,true
+C Gate1 max mean/SD full n=1000.0 sd=0.2 offset=0.0,0.055695830633312585,0.05,false
+C Gate1 max SD relative full n=1000.0 sd=0.2 offset=0.0,0.004677953939681512,0.05,true
+C Gate1 median marginal full n=1000.0 sd=0.2 offset=0.1,0.0012555716109159398,0.01,true
+C Gate1 p95 marginal full n=1000.0 sd=0.2 offset=0.1,0.0020412980820049055,0.05,true
+C Gate1 max mean/SD full n=1000.0 sd=0.2 offset=0.1,0.055149764742987134,0.05,false
+C Gate1 max SD relative full n=1000.0 sd=0.2 offset=0.1,0.004949833452193686,0.05,true
+C Gate1 median marginal full n=4000.0 sd=0.05 offset=0.0,0.0002507074075595028,0.01,true
+C Gate1 p95 marginal full n=4000.0 sd=0.05 offset=0.0,0.00032104046285059696,0.05,true
+C Gate1 max mean/SD full n=4000.0 sd=0.05 offset=0.0,0.023112191920341595,0.05,true
+C Gate1 max SD relative full n=4000.0 sd=0.05 offset=0.0,0.0006343769994786586,0.05,true
+C Gate1 median marginal full n=4000.0 sd=0.05 offset=0.1,0.0002443927002455659,0.01,true
+C Gate1 p95 marginal full n=4000.0 sd=0.05 offset=0.1,0.0003392040472391056,0.05,true
+C Gate1 max mean/SD full n=4000.0 sd=0.05 offset=0.1,0.022466368785810115,0.05,true
+C Gate1 max SD relative full n=4000.0 sd=0.05 offset=0.1,0.0006856222558189184,0.05,true
+C Gate1 median marginal full n=4000.0 sd=0.2 offset=0.0,0.00033382601020415237,0.01,true
+C Gate1 p95 marginal full n=4000.0 sd=0.2 offset=0.0,0.0005731206954488145,0.05,true
+C Gate1 max mean/SD full n=4000.0 sd=0.2 offset=0.0,0.02935054022797718,0.05,true
+C Gate1 max SD relative full n=4000.0 sd=0.2 offset=0.0,0.001440292419393585,0.05,true
+C Gate1 median marginal full n=4000.0 sd=0.2 offset=0.1,0.0003334815777289446,0.01,true
+C Gate1 p95 marginal full n=4000.0 sd=0.2 offset=0.1,0.000573004593960702,0.05,true
+C Gate1 max mean/SD full n=4000.0 sd=0.2 offset=0.1,0.029271351480037122,0.05,true
+C Gate1 max SD relative full n=4000.0 sd=0.2 offset=0.1,0.0014644226503098823,0.05,true

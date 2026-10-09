@@ -1,0 +1,46 @@
+  🦋 Kaimon gate connected (market_model_c)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> include("current_development/market_model/r05_fullbook_recovery.jl")
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 11.3 hours)...
+C1 synthetic population: 517 full fixtures, 91 weeks
+C6 C1 chain=2 iteration=25 target=11314.87065186954
+C6 C1 chain=4 iteration=25 target=11313.868379341055
+C6 C1 chain=3 iteration=25 target=11316.698608281828
+C6 C1 chain=1 iteration=25 target=11316.572641784476
+C6 C1 chain=4 iteration=50 target=11314.45613998107
+C6 C1 chain=2 iteration=50 target=11315.993429879145
+C6 C1 chain=3 iteration=50 target=11314.371953537644
+C6 C1 chain=1 iteration=50 target=11314.11435355086
+C6 C1 chain=2 iteration=75 target=11317.225353868793
+C6 C1 chain=4 iteration=75 target=11316.745026583867
+C6 C1 chain=3 iteration=75 target=11316.875583662673
+C6 C1 chain=1 iteration=75 target=11316.091817756682
+C6 C1 chain=4 iteration=100 target=11317.368981198275
+C6 C1 chain=2 iteration=100 target=11316.719381606004
+C6 C1 chain=3 iteration=100 target=11317.90032355201
+C6 C1 chain=1 iteration=100 target=11316.367035506544
+C6 C1 chain=4 iteration=125 target=11317.363230991672
+C6 C1 chain=3 iteration=125 target=11315.070052985438
+C6 C1 chain=2 iteration=125 target=11315.729359567815
+C6 C1 chain=1 iteration=125 target=11315.00483386177
+C6 C1 chain=4 iteration=150 target=11316.749063368725
+C6 C1 chain=3 iteration=150 target=11316.572608128354
+C6 C1 chain=2 iteration=150 target=11317.163225893517
+C6 C1 chain=1 iteration=150 target=11315.98181341859
+C6 C1 chain=3 iteration=175 target=11316.672725519216
+C6 C1 chain=4 iteration=175 target=11317.726365078997
+C6 C1 chain=2 iteration=175 target=11317.91220109842
+C6 C1 chain=1 iteration=175 target=11317.106182782272
+C6 C1 chain=4 iteration=200 target=11317.795364690535
+C6 C1 chain=3 iteration=200 target=11317.703738130267
+C6 C1 chain=2 iteration=200 target=11315.12005633501
+C6 C1 chain=1 iteration=200 target=11316.355078353448

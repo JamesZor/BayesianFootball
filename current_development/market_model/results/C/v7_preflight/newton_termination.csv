@@ -1,0 +1,6 @@
+run,termination,count,max_decrement,polish_steps,max_polish_steps,gate_pass
+real_preflight,decrement,1597,9.96108898035961e-13,0,3,true
+real_preflight,step,0,9.96108898035961e-13,0,3,true
+real_preflight,stalled_converged,0,9.96108898035961e-13,0,3,true
+real_preflight,polished,0,9.96108898035961e-13,0,3,true
+real_preflight,zero_motion_polished,11,9.96108898035961e-13,27,3,true

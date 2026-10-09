@@ -1,0 +1,5 @@
+league,rung,season,window,reason
+sco_championship,C0,21/22,full_season,NOT_AVAILABLE: fewer than8 active teams or empty suffix window
+sco_championship,C0,21/22,null_suffix,NOT_AVAILABLE: fewer than8 active teams or empty suffix window
+sco_championship,R6,21/22,full_season,NOT_AVAILABLE: fewer than8 active teams or empty suffix window
+sco_championship,R6,21/22,null_suffix,NOT_AVAILABLE: fewer than8 active teams or empty suffix window

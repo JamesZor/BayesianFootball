@@ -1,0 +1,100 @@
+- 2026-10-05T16:47:26.397: R0 10a; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 23.15821599960327 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T16:48:09.111: R1 10a; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 42.60336899757385 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T16:49:08.376: R2 10a; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 59.18868923187256 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T16:51:17.123: R3 10a; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 128.66528606414795 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T17:00:44.703: R4 10a; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 567.4913640022278 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- 2026-10-05T17:00:55.547: R0 10b; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 10.777249097824097 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T17:01:15.910: R1 10b; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 20.29175901412964 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T17:01:44.683: R2 10b; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 28.695115089416504 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T17:02:46.735: R3 10b; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 61.97224402427673 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T17:09:18.770: R4 10b; SHA `a4cb636436df1af6fb77c795067352eaed449fa3`; 391.9539270401001 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- Gamma preflight SHA `2fcf355aa6933ccdab78c0095e28a4d6c1845177`; wall time 33.98986792564392 seconds; 4 × (1000 warmup + 1000 retained), acceptance 0.8, seed 4009.
+- 2026-10-05T18:10:14.049: R0 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 23.207685947418213 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:10:56.480: R1 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 42.3203649520874 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:11:55.567: R2 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 59.011324882507324 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:14:04.701: R3 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 129.04844093322754 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:23:24.624: R4 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 559.8286991119385 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- 2026-10-05T18:23:35.603: R0 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 10.91112995147705 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:23:56.391: R1 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 20.71298384666443 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:24:25.088: R2 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.621520042419434 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:25:27.273: R3 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 62.10292911529541 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T18:31:57.094: R4 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 389.7411379814148 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- 2026-10-05T18:35:13.237: family gamma fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 39.009192943573 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:35:43.591: family gamma fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.381540060043335 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:36:12.476: family gamma fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.49980401992798 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:36:38.971: family gamma fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 26.071470022201538 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:37:05.511: family gamma fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 26.19921112060547 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:37:33.625: family gamma fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 27.782235860824585 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:38:02.813: family gamma fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.86322784423828 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:38:31.069: family gamma fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 27.92393183708191 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:38:59.014: family gamma fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 27.61679482460022 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:39:29.348: family gamma fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 30.00135898590088 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:00.572: family gamma fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 30.884194135665894 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:15.876: family lognormal fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 14.87079906463623 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:24.590: family lognormal fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.2860848903656 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:33.618: family lognormal fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.734352827072144 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:43.785: family lognormal fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.904191017150879 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:40:53.697: family lognormal fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.600537061691284 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:02.604: family lognormal fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.609992027282715 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:12.127: family lognormal fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.239444017410278 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:22.077: family lognormal fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.664965152740479 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:32.325: family lognormal fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.965280055999756 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:42.583: family lognormal fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.967873096466064 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:41:52.648: family lognormal fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.654140949249268 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:43:38.781: family logt fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 105.83036494255066 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:45:38.782: family logt fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 119.17145895957947 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:47:27.676: family logt fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 108.42642498016357 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:49:01.151: family logt fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 93.01394391059875 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:50:54.201: family logt fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 112.58755397796631 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:52:54.893: family logt fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 120.21415090560913 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:54:36.004: family logt fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 100.65050005912781 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:56:48.486: family logt fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 131.99786520004272 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T18:59:10.360: family logt fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 141.41425800323486 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:01:12.949: family logt fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 122.11045718193054 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:03:07.815: family logt fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 114.39589095115662 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- Full runner SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; wall time 3291.8010461330414 seconds; R02_DONE.
+- 2026-10-05T19:11:14.939: R0 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 23.24123787879944 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:11:58.094: R1 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 43.044591188430786 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:12:57.293: R2 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 59.122862815856934 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:15:07.300: R3 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 129.92527413368225 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:24:32.152: R4 10a; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 564.7548961639404 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- 2026-10-05T19:24:43.228: R0 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 11.009829998016357 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:25:04.015: R1 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 20.71549916267395 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:25:32.694: R2 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.603014945983887 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:26:34.739: R3 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 61.9623920917511 seconds; 4 chains; warmup=2000, retained=3000, thin=1.
+- 2026-10-05T19:33:09.396: R4 10b; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 394.5758979320526 seconds; 4 chains; warmup=1000, retained=2000, thin=4.
+- 2026-10-05T19:36:23.490: family gamma fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 38.88574004173279 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:36:53.881: family gamma fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.457111835479736 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:37:23.382: family gamma fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 29.135939836502075 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:37:50.362: family gamma fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 26.640671014785767 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:38:16.939: family gamma fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 26.244621992111206 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:38:45.549: family gamma fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.26298499107361 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:39:15.470: family gamma fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 29.576545000076294 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:39:44.468: family gamma fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.657711029052734 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:40:12.865: family gamma fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 28.06617283821106 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:40:42.639: family gamma fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 29.432572841644287 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:41:14.371: family gamma fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 31.40465998649597 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:41:28.389: family lognormal fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 13.62925410270691 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:41:36.953: family lognormal fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.146099090576172 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:41:45.430: family lognormal fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.185709953308105 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:41:54.579: family lognormal fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.921818017959595 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:04.170: family lognormal fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.320618867874146 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:12.798: family lognormal fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.336316108703613 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:21.302: family lognormal fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.242664098739624 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:30.621: family lognormal fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.029205083847046 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:39.790: family lognormal fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 8.894093990325928 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:49.623: family lognormal fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.54215693473816 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:42:59.030: family lognormal fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 9.122666120529175 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:44:46.978: family logt fold 0; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 107.63591313362122 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:46:42.614: family logt fold 1; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 114.79553198814392 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:48:22.621: family logt fold 2; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 99.53105521202087 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:50:21.066: family logt fold 3; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 117.97673296928406 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:52:23.742: family logt fold 4; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 122.18124079704285 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:54:25.462: family logt fold 5; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 121.22958421707153 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:56:21.435: family logt fold 6; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 115.50178098678589 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T19:58:28.524: family logt fold 7; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 126.61383986473083 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T20:00:19.064: family logt fold 8; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 110.0716700553894 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T20:02:29.658: family logt fold 9; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 130.13183903694153 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- 2026-10-05T20:04:25.964: family logt fold 10; SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; 115.82938289642334 seconds; 4 chains × (1000 warmup + 1000 retained), acceptance 0.8.
+- Full runner SHA `8663544edf6a494bb2edb7d2ad791b64408b63bc`; wall time 3308.673413991928 seconds; R02_DONE.
+- Figure-only render SHA `9469f327e399ba47f633e56df86438306d90f0d1`; completed twice to R02_FIGURES_DONE; margins only, no sampling or CSV writes. Corrected PNGs matched byte-for-byte; all statistical CSV hashes remained unchanged.

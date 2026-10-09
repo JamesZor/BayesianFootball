@@ -1,0 +1,497 @@
+# 039 — Market model: inversion and team-strength EDA
+
+| Field | Value |
+|---|---|
+| ID | 039 |
+| Title | Market model: inversion and team-strength EDA |
+| Status | IN_PROGRESS |
+| Priority | P1 |
+| Assignee | pi |
+| Created | 2026-10-05 |
+| Updated | 2026-10-08 |
+| Related Files / Commits / PRs | `current_development/market_model/DESIGN.md`; TODO 023 (`current_development/market_inverse_dynamics/`); tickets T014, T015; CLV napkin §14 (`proto/clv-napkin`) |
+
+## Context & Problem Statement
+
+The human's design note of 2026-10-05 proposes a "market model": invert each match's odds to
+double-Poisson rates, then model those rates with the attack/defence/home structure and a GRW
+on α, β, instead of modelling goals. TODO 023 already inverted the close (SSE, per match) and
+fitted Kalman GRWs to the log-rates. Three things remain open: how to invert (each match in
+isolation, or pooled with other matches), what the latent rates look like, and how well they
+decompose into team strength. The full design and the decisions from the 2026-10-05 grill are
+in `current_development/market_model/DESIGN.md`.
+
+## Acceptance Criteria
+
+- [x] Phase A: KL inversion with the 1X2 gate, synthetic recovery, KL vs SSE, inversion-quality
+      EDA including the held-out-line test.
+- [x] Phase B: two-stage ladder R0–R4 on the Kalman engine (engine gates pass; R̂ ≤ 1.05,
+      ESS ≥ 200), measures on both axes and both θ protocols; Gamma / log-normal / log-t test;
+      rate-distribution and rates-vs-goals EDA.
+- [x] Phase B2: config regression, covariance rungs R2/R5–R7 in both protocols,
+      batch/FFBS gates, convergence and byte-reproducible results; stream process README;
+      quality/style rotation, season-average RTS levels correlation and weekly level ICC.
+- [x] Phase B3: refiltered FFBS Gaussian-step tail/dependence PPCs; four global-parameter
+      score grids with book/heldout/bias/outcome comparisons; converged informational R6
+      refits, fresh tests and byte-identical scientific artifacts. Phase C stays double Poisson.
+- [ ] Phase C revision 4 (the manager superseded the old Turing/MAP route): full-book
+      C0/C1/H1/H2, learned n/u_m under exact-density Laplace C1, full-book synthetic recovery,
+      four-chain convergence, prescribed 10a/10b measures/figures and two-run byte reproduction.
+      *2026-10-08:* C0, H1 and H2 are accepted and byte-reproduced. **C1 is parked** by the human
+      after its synthetic recovery missed σ_s and σ_u.
+- [ ] C2 thin-book pooling: deferred to the human, and parked with C1; the scientific and
+      numerical blockers are retained.
+- [x] Cross-league quality/style EDA (added 2026-10-07): 11 Betfair leagues, R2/R6/C0 in both
+      protocols, verdicts fixed in advance, goal check, C0 recovery, reproduction
+      (`results/QS/`).
+- [x] Quality/style formulation research (added 2026-10-08): Astra thinker plus Sol computer,
+      two request batches (`research/qs_forms/REPORT.md`).
+- [ ] Phase D: isolated vs pooled and team-parameter EDA; findings README with every number
+      traceable to `results/`.
+
+## Ideas & Candidate Solutions
+
+- Isolated vs group is one spectrum: `log λ = structure + u_m`, with u_m free (isolated),
+  u_m = 0 (pure structure), or hierarchical (chosen). Pooling fixes T015 by construction.
+- A tempered cross-entropy with a free concentration is not a proper likelihood; use
+  Dirichlet (1X2) and Beta (two-way) with one learned n.
+- Rejected for now: Dixon–Coles ρ and other grids (double Poisson agreed); fixing T015 in `src`
+  (local gate instead); builder-native observation (after the EDA).
+- Literature: Egidi, Pauli & Torelli (2018) invert per match from 1X2 only; Wunderlich &
+  Memmert (2018) find odds-based ratings beat goal- and result-based ratings out of sample.
+
+## Recovery in progress / historical blockers / deferred C2
+
+Revision8 HANDOVER: C0/H1/H2 both protocols accepted at70336b07;107/107 engine
+and20/20 convergence gates. TWO fresh full fast runs match26 CSVs+3 PNGs bytewise.
+C1 recovery%265 at6335316f and production10b%267/10a%268 at41e28736 remain live,
+frozen and UNPROMOTED. At07:46:59Z progress is1000/750/500/750 recovery,
+1500/750/1000/1000 10b,250/750/500/250 10a. Do not relaunch/kill/check out code.
+Recovery truth/convergence and accepted C1 inference/reproduction remain; overall
+Phase C acceptance above is UNMET, C2/PhaseD deferred. Current report:
+results/C/PHASE_C_PROGRESS_REPORT.md; ownership/logs/uncertain measured ETAs:
+results/C/HANDOVER.md. The blocked paragraphs below are HISTORICAL evidence,
+not a current numerical stop. Revision7 lifted the reviewed zero-motion blocker.
+
+Revision6 exact-stall regression now passes unchanged limits, but prescribed C1
+recovery is BLOCKED on a NEW100-iteration Newton exhaustion at seed4961's initial
+target. Observer-only trace identifies fixture12476686: calls7–100 have zero
+actual movement, δ1.035864027765691e-12 (>1e-12), Newton step4.189252610998754e-8.
+Armijo accepts rounded zero-motion candidates, never reaching the exhaustion
+branch that triggers polishing. No rule/tolerance/iteration/seed change or fit
+retry was made. Need explicit review of zero-motion stall recognition before
+recovery; C0/C1/H1/H2 scope remains authorised and C2 separately deferred.
+
+Revision 5 termination implemented, but its required exact-stall regression fails
+at fixture12476625: accepted decrement3.382117013018548e-12 nats passes1e-9,
+mode difference4.0159674463691175e-7 exceeds1e-8 and marginal difference
+6.658597637709818e-7 exceeds1e-9. Tighter damped AD Newton residual7.67031e-12;
+legacy replay exactly matches the seed4964 gradient. Same two numerical failures
+in focused and fresh aggregate t05 (282pass/2fail/284): stop, no third variation
+or beast recovery launch. Review of termination/accuracy compatibility is required.
+C0/C1/H1/H2 remains authorised; C2 is separately deferred.
+
+Revision 4 explicitly authorises full-book C0/C1/H1/H2; scope approval is not
+missing and C2 is not their blocker. The sampler and synthetic generator now
+exist, but **C1 recovery is separately BLOCKED on joint-mode solver robustness**:
+two prescribed beast attempts fail the same line search, with FD then AD.
+No third numerical variation; a reviewed remedy at the frozen supported
+coordinate is required before recovery/production promotion. No completed
+fit/retained intervals, convergence, evaluation or production reproduction.
+
+Revision 3 fixes full-book means but fails thin-book Gate 1: at n=250,
+SD=.20, BTTS+O/U median marginal error .020609 nats (limit .01) and
+O/U-only SD error .058978 (limit .05), with independently stable quadrature.
+The integrated 1X2 third-derivative test fails twice at 5.41e-5 relative error
+(limit 1e-6); stop without a third variation. Four 2-D types completed;
+all-types Gate 1 remains incomplete, not passed. No sampling. An amended
+thin-book approximation and resolved integration derivatives are dependencies.
+Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`;
+earlier revisions preserved.
+
+## Work Log & Progress
+
+- [2026-10-06 @pi] Revision8 HANDOVER at statistical/reporting source70336b07:
+  clean%270/%271 pipelines BOTH R05_FAST_RUNGS_DONE,107/107 engine/state/scalar
+  gates and20/20 convergence rows (maxRhat1.000985775031962,minbulk/tailESS
+  6074.903633053705/6129.2431286740775). Exact full26CSV/3PNG file sets and bytes
+  match; BYTE_COMPARISON.txt + both manifests checked remotely/on laptop.
+  Manager approved explicit absent Ross County/Airdrie plot panels (no data
+  expansion); correctKelty key. Scalar5ab plot-failed attempt fully preserved,
+  not a clean reproduction. Fresh final-source reports22/22,scalar/native17/17,
+  t05 305/305,workflow85/85,t04 92/92,t03/t02 each131/131;C2 29pass/10fail excluded.
+  C0 vsR6 honest pairedscore+.001285(SE.004312); H1away suppression unidentified
+  under mu/HA gauge; H2kappa90% spanszero,no supported gain. Static HA mixesALL
+  12000draws,10btrainingonly. PHASE_C_PROGRESS_REPORT/README/HANDOVER updated;
+  oldV7/failed evidence retained. C1%267/%268 launched04:50:29/32Z at41e28736
+  (eachGate1 12/12,engine53/53), recovery%2656335316f ONLYread, all left live.
+  07:46:59Z conservative ETAs:10b15.6h,10a36.1h,recovery54.6h(censored16.2–54.6h).
+  NoC1posterior/acceptance/accounting fabricated. Ownidle%270/%271/%66closed.
+  Source/scientific hashes,diffcheck/todocheck recorded before commit/push;
+  fullPhaseC acceptance staysunchecked, remaining recovery+C1promotion/inference/
+  reproduction. No duplicate sampler/core include or C2/PhaseD scope expansion.
+
+- [2026-10-06 @pi] Revision8 Gaussian-only speed correction explicitly approved
+  by manager via ask_user_question after measured original C0 throughput ~170
+  iterations/minute/chain implied hours. Original41e28736 attempt%266 preserved
+  in beast logs/c8/dense_attempt_preserved and original checkout, stopped solely
+  for computation at05:02:12Z, not convergence/selection. No completed fit existed.
+  New scalar Gaussian likelihood callback uses the SAME native slice sampler;
+  priors/seeds/adaptation/budgets/thresholds unchanged, default C1 path unchanged.
+  Fresh laptop%65:17/17 arithmetic/sampler checks,54 toy/full-real parity gates
+  (likelihood1e-9, filtered mean/cov1e-8), report16/16. New frozen5ab9980b
+  checkout market_model_c_fast_scalar, own%269, first full fast run launched
+ 05:02:13Z. C1%267/%268 remain at41e28736; recovery%265 at6335316f untouched.
+
+- [2026-10-06 @pi] Revision8 claimed: leave frozen recovery6335316f pane%265
+  untouched (all chains250 at06:44 checkpoint, load4.73). Separate new beast
+  checkout/panes for exact C0/H1/H2 both protocols/two-run verification and
+  unpromoted C1 10a/10b production. Priors/seeds/budgets/thresholds unchanged.
+  Adding fast-stage HA state+hyperdraw mixture reports, measured published-R6
+  comparison and dedicated runners. C1 must not be interpreted before recovery.
+  Laptop deterministic preparation pane%63 owned; no unrelated panes operated.
+
+- [2026-10-06 @pi] Revision7 HANDOVER, not complete or newly blocked. Source6335316f
+  accepted-step stalls (<1e-14 motion OR equal Float64 target) reuse revision6
+  polish/error gates and separate zero_motion_polished accounting. Fixture12476686
+  mode/marginal gaps0.0/0.0 from recorded point and original prediction,1step,
+  delta2.287082719929954e-26; old12476625 unchanged PASS. Fresh %58/final %61
+  t05 305/305; C2-pending29pass/10fail excluded. %58 t04 92/92,t03/t02 131/131,
+  full real Gate1 12/12,state53/53,four517-fixture fixed filters/smoothers;
+  preflight1597decrement+11zero-motion,27steps/max3,maxdelta9.96108898035961e-13.
+  Owned beast%265 recovery remains ACTIVE at frozen6335316f, all chains warmup200
+  checkpoint; no retained fit/convergence/interval/promotion. Data binary unchanged
+  de6a986b...8da0d1. Remote v6 outputs/root accounting preserved intact before
+  checkout, no reset/delete/stash. Ancillary workflow/core-stage preparation has
+  fresh85/85 gates (independent conditional theta/u batch/filtration/schema checks),
+  core runner parsed NOT run. One early negative pairing test selected wrong axis;
+  corrected index, no numerical threshold change, original failure retained.
+  Local %58–%61 closed; active%265 explicitly transferred, do not restart/kill it.
+  Priority remains recovery, C0/C1 both protocols/10b and measuredR6gap, H1/H2,
+  figures/full workflow/reproduction. C2 deferred; no src/package/data/grid/DB
+  changes or unrelated panes. Report/repro/handover and source/scientific checks
+  record in-progress evidence only. No posterior conclusion or production DONE.
+
+- [2026-10-06 @pi] Revision7 claimed: explicit manager authorisation treats accepted
+  zero-motion (<1e-14 infinity movement) or equal-Float64-density steps as stalls;
+  reuse revision6 polish and unchanged acceptance/error rules, separate accounting.
+  Add exact fixture12476686 regression at seed4961 recorded coordinate, then follow
+  revision5 priorities. Prior source/scientific hashes verified; C2 deferred.
+
+- [2026-10-06 @pi] Revision6 BLOCKED final evidence: primary statistical source
+  d9e6c003, observer-only diagnostic04e67fa8. Frozen seed4961 initial target fails
+  at full fixture12476686:100 calls, gradient norm4.9497130117024364e-5,
+  δ1.035864027765691e-12, step4.189252610998754e-8. Calls7–100 (94 calls) show
+  zero actual movement: Armijo rounds to accepting unchanged x, so polish branch
+  is never entered. Raw bracket min eigenvalue965.3501213272148, not PSD failure.
+  No new solver fix/retry, raised limit, changed threshold/seed/prior/population.
+  Original recovery accounting1696decrement+1polished, maxδ9.743716301157053e-13;
+  deterministic observer prefix146decrement, failed fixture excluded from accepted
+  counts. Root matches run-local recovery CSV; scientific evidence not promotion.
+  Generated binary unchangedde6a986b...8da0d1. No completed recovery fit/intervals,
+  production fits/measures/figures/reproduction. Owned %56/%264 closed, no running
+  session. Exact-case gate stays PASS, fresh t05 289/289, t02–t04 and real Gate1/
+  state checks pass; C2 unchanged/deferred. Hash/diff/todo checks recorded at handoff.
+  Review zero-motion Armijo stall recognition before any further numerical remedy.
+
+- [2026-10-06 @pi] Revision6 recovery at frozen d9e6c003 fails a NEW check:
+  seed4961 initial target (iteration0), joint_mode exhaustion100 iterations;
+  peers cancelled at warmup1. Root theta[-4.3667389598945885,-4.699137880221636,
+  -3.0309405303003616,7.090705824646739]. Stop before retained samples, no solver
+  remedy/retry or threshold change. Exact-case gate remains passed. Deterministic
+  observer-only trace will capture the failing fixture/g/delta, not restart fitting.
+  Beast owned %264; original generated binary still byte-identicalde6a986b...8da0d1.
+  Historical v4_ad output moved preserving binary to logs/9de98548_recovery_outputs
+  before checkout, no deletion/reset. Accounting written on failure as prescribed.
+
+- [2026-10-06 @pi] Revision6 exact-case gate PASSES unchanged tolerances: mode
+  gap2.0039525594484076e-13, marginal gap1.1574741165532032e-11 nats;
+  fixture12476625 polished in1 undamped step, δ1.50342686280365e-24.
+  Owned %56 fresh t05 289/289 (T05_C6_DETERMINISTIC_DONE), C2-pending29pass/10fail,
+  t04 92/92, t03/t02 131/131 and full real Gate1 12/12, state53/53, four517-fixture
+  filters/smoothers. Core real preflight0.345s C1 fixed filter; not production.
+  Frozen source to be pushed before prescribed beast C1 recovery; no prior/seed/
+  data/grid/threshold changes. Revision5 evidence archived unchanged.
+
+- [2026-10-06 @pi] Revision6 claimed after explicit manager review of revision5's
+  inconsistent acceptance rule. Brief copied unchanged into experiments/.
+  Implement up to3 undamped derivative-only Newton steps on qualifying stalls,
+  keep every tolerance/seed/setting; exact-case regression before any sampling.
+  Previous v5 blocked evidence preserved; full-book scope authorised, C2 deferred.
+
+- [2026-10-06 @pi] Revision 5 BLOCKED before sampling, statistical source120ac906.
+  Implemented exactly the
+  decrement/step/stalled-converged rules, fail-loud1e-9 acceptance gate, thread-safe
+  accounting and finally-write hooks. Test-only original-termination forward replay
+  identifies fixture12476625 at the frozen seed4964 warmup8 coordinate and exactly
+  reproduces the reported gradient. Accepted δ3.382117013018548e-12; mode error
+  4.0159674463691175e-7 (limit1e-8), Laplace marginal error6.658597637709818e-7
+  (limit1e-9). Tighter diagnostic Newton residual7.670308832530282e-12; logdet
+  shift1.3317370690657526e-6 dominates tiny density change8.773426429797837e-12.
+  Focused and fresh aggregate checks fail identically: no third numerical variation.
+  Fresh %55 t05 282pass/2fail/284 (all inherited270 and new rule6 checks pass);
+  accounting root/v5_newton records two actual stalled-converged solves, maxδ above.
+  Initial same-expression accounting command hit Julia world age; separate command
+  writes both CSVs correctly. No beast run, fits or promotion; source/settings frozen.
+  Reports/handover preserve revision4. Review the required accuracy versus termination
+  rule before any further recovery. Fresh %55 t04 92/92, t03/t02 131/131,
+  separate C2-pending unchanged29pass/10fail; all markers. Both owned %54/%55
+  closed; no remote pane created. Source/scientific hashes and tracker checks
+  identify blocked evidence, not production reproduction.
+
+- [2026-10-06 @pi] Revision 5 claimed: manager explicitly authorises Newton-decrement
+  termination only, accounting and exact seed4964-coordinate regression, then recovery
+  and full-book rungs in priority order. C2 remains deferred; all scientific settings
+  frozen. Owned laptop pane %54; no recovery active. Previous blocked evidence preserved.
+
+- [2026-10-06 @pi] Revision 4 BLOCKED on repeated C1 recovery joint-mode failure,
+  statistical source 9de98548. Synthetic-only AD retry: seed4964, warmup8,
+  theta[-3.549527585137839,-4.460929121755582,-2.821549571263347,
+  7.9567722491577495], gradient[-1.5699131339808048e-5,3.249019587192592e-5].
+  Same line-search failure as c2547742 FD attempt: stop without third variation.
+  Peers cooperatively cancelled at warmup7/8; no retained fit/intervals or
+  production promotion. Both generated panels byte-identical (de6a986b...8da0d1),
+  not production reproduction. Final fresh %52 t05 270/270, t04 92/92, t03
+  131/131, t02 131/131; separate C2-pending unchanged 29pass/10fail. Six real
+  preflight CSVs regenerate byte-identically, full Gate1 12/12, state53/53.
+  Sampler/generator/frozen seeds committed; recovery/evaluation/HA/u smoothing,
+  figures and complete production workflow/reproduction unfinished. Report,
+  repro and handover updated; engine-only notes archived. All owned laptop
+  %49–%52 and beast %261–%263 closed; logs/checkout/binaries preserved. No
+  seed/prior/data/grid/threshold/package/src/DB or unrelated pane changes.
+  Dependency: reviewed joint-mode robustness remedy, not scope reapproval.
+
+- [2026-10-06 @pi] Recovery at c2547742 generated all 517 synthetic full books
+  with unchanged seed 3962, then slice sampling aborted on joint-mode line
+  search (gradient [-2.53355e-5, 2.86396e-5]); no completed fit or intervals.
+  Added synthetic-only AD derivative dispatch (real books keep FD), fail-fast
+  cooperative chain cancellation and failing coordinate logs, not rejection.
+  Fresh %52 accepted t05 270/270; C2-pending unchanged. %51 regenerated all
+  six real preflight CSVs byte-identically to the engine checkpoint. One
+  further recovery attempt will stop if the same solver failure recurs; no
+  tolerance, seed, prior, data, score-grid or C2 change is authorised.
+
+- [2026-10-06 @pi] Recovery prerequisite at source 19ad4b99 stopped before
+  sampling: frozen seed 3962, fixture 15336943 Dirichlet p underflowed to zero
+  (generating log rates -0.292584 / 2.790308; OU0.5 small shape 0.000588104).
+  No seed was changed, book clipped, fixture dropped or prior narrowed.
+  Added exact log-Gamma/Dirichlet storage and density dispatch for synthetic
+  books; real-book density/marginal algebra remains unchanged. Fresh %51 t05
+  deterministic 256/256, separate C2-pending 29 pass/10 fail. Original %50
+  t04 92/92, t03 131/131, t02 131/131. First-attempt remote log/engine CSV
+  preserved; no recovery interval or posterior fit exists yet.
+
+- [2026-10-06 @pi] Revision 4 continued from engine checkpoint. Implementing a
+  dedicated full-book slice wrapper (no R6 prior/coordinate bound), ID-joined
+  honest restriction, full-book synthetic generator and frozen seed manifest.
+  Beast connectivity/load checked (load 0.00); reserved checkout/session unused.
+  Owned laptop %49 deterministic tests only; sampling remains beast-only.
+  One new test indexing error (`2f-1` is Julia Float32 syntax) corrected to
+  explicit `2*f-1`, with the failed run retained. Recovery/convergence must pass
+  before any production promotion; C2 remains deferred with unchanged gates.
+
+- [2026-10-06 @pi] Revision 4 verified engine checkpoint HANDOVER, not completion.
+  Full-book C0/C1/H1/H2 state filters, conditional moments, frozen C1 factors,
+  RTS and independent batch gates implemented. Fresh %47 necessary t05 209/209,
+  53/53 state gates; full-book Gate 1 12/12 settings. Fixed-parameter filters
+  and smoothers complete for all 517 fixtures in every authorised rung, NOT fits.
+  Fresh %46 regressions t04 92/92, t03 131/131, t02 131/131. C2-pending separately
+  reports 29 pass/10 fail, excluded by manager scope; no numerical waiver.
+  No sampler/sampling/recovery, beast checkout/session, forecast/HA posterior,
+  shrinkage/ratings figures or production reproduction. V3 source/report/CSV
+  evidence preserved, new CSVs in results/C/v4_preflight/. All owned %45/%46/%47
+  closed; no src/package/data/DB/grid/threshold or unrelated pane changes.
+  Report/repro/handover list exact remaining work; TODO remains IN_PROGRESS.
+
+- [2026-10-06 @pi] Revision 4 claimed: manager authorises full-book-only C0/C1/H1/H2;
+  C2 remains deferred. Preserve revision-3 evidence and separate pending thin-book
+  diagnostics from acceptance, with unchanged thresholds. H1 prior clarified by
+  manager: independent gamma_att N(.15,.25^2), gamma_def N(0,.25^2);
+  pinning gamma_def=0 recovers C0. No sampling until deterministic engine gates pass.
+
+- [2026-10-06 @pi] Revision 3 BLOCKED, implementation `8591099b`.
+  Cubic mean correction preserves all 360 full-book log marginals exactly;
+  worst corrected full mean error/SD .00092845 (limit .05). All 2-D types
+  completed: full 30, OU-only 25, BTTS+OU 10, BTTS-only 1, all 12 settings.
+  Thin-book scientific gates fail; n=250 failures are quadrature-resolved.
+  1X2 integrated solver stalled; adaptive derivative check then failed twice,
+  current necessary tests 129 pass/1 fail/130 assertions. Stop per two-failure
+  rule, no third variation. All-types gate incomplete; no production fits,
+  convergence, forecasts/shrinkage/ratings/HA or figures. Owned pane `%43`
+  closed; no beast session, src/package/data/DB changes, Phase D or later
+  score-grid C2. Addendum copied unchanged; prior evidence archived. Tracker
+  and diff checks pass; report explicitly lists incomplete acceptance.
+
+- [2026-10-06 @pi] Revision 3 claimed. Copied the manager's addendum into
+  experiments/ unchanged. Owned laptop Julia pane `%43`, 8 threads/BLAS=1.
+  Implementing cubic third-derivative mean correction with AD/finite-difference
+  checks, keeping the revision-2 marginal and covariance; evaluate all book
+  types before promotion. Previous blocker evidence preserved; no sampling yet.
+
+- [2026-10-06 @pi] Phase C revision 2 BLOCKED, statistical source `7b6c7659`.
+  Fresh owned laptop pane `%42`: necessary t05 update checks 24/24
+  (`T05_UPDATE_DONE`, not full recovery acceptance); t04 92/92, t03 131/131,
+  t02 131/131. Fresh revised runner stops at `C05_LIKELIHOOD_BLOCKED`.
+  First 30 full books, all 12 n/spread/offset settings: marginal gates pass,
+  posterior-mean gates fail in four settings (12/30 books at n=250, SD=.20,
+  no offset; maximum error/SD .091744). Orders 32/64 agree to 2.70e-12 nats;
+  clipping is inactive. Thin-book gates stop before promotion; no C0/C1/C2,
+  H1/H2 or synthetic fits, beast session, forecasts/shrinkage/ratings or figures.
+  Source/report/CSV evidence under results/C; v1 files preserved verbatim.
+  All owned panes closed; no src/DB/package/data/prior-phase changes, Phase D
+  or later grid C2. Full acceptance unmet; tracker/diff checks pass at handoff.
+
+- [2026-10-06 @pi] Phase C revision 2 claimed on the same authorised branch/worktree.
+  Read the blocked first-attempt report first; preserve preflight artifacts.
+  Owned laptop persistent Julia pane `%41`, cache SHA verified, 8 threads/BLAS=1.
+  Implement the exact-density joint-mode update and revised quadrature/moment gates
+  before production sampling; no Phase D or later score-grid Phase C2.
+
+- [2026-10-06 @pi] Phase C claimed and blocked on `pi/market-model-phase-c`.
+  Owned laptop persistent Julia pane `%39`, pinned cache verified, BLAS=1.
+  Deterministic mathematical tests 11/11 (`T05_PREFLIGHT_DONE`), then necessary
+  preflight checks (`C_PREFLIGHT05_BLOCKED`): at prior-median n=1000 and side
+  prediction SD=0.20, full-book median absolute marginal error 0.013041;
+  supremacy-only 1X2 median/p95 0.755114/0.933657 nats. Only 7/36
+  no-complete-1X2 books meet the rank-one/10-degree projection condition.
+  Exact quadrature at orders 16/32 agrees within 1.01e-10 nats across the checks.
+  Dirichlet large-n loss has reverse, not Phase A's forward KL orientation;
+  dropping the total likelihood cannot reproduce its full exact marginal.
+  No production sampler, C0/C1/C2/H1/H2 fits, beast session, Phase D/later
+  score-grid C2, src/package/data changes or DB writes. Prior phases untouched.
+  Full acceptance remains unmet; see results/C report and reproduction notes.
+
+
+- [2026-10-06 @pi] Phase B3 claimed on `pi/market-model-phase-b3`, dedicated worktree.
+  Local pane `%34`; pinned cache SHA matches locally and on beast, initial load 0.06.
+  Building local score-grid profiles and refiltered FFBS posterior predictive tail checks;
+  same R6 priors/budgets, no Phase C, `src/`, package/data changes or database writes.
+
+- [2026-10-05 @pi] Phase B2 claimed on `pi/market-model-phase-b2` in the dedicated
+  `BayesianFootball-market-model-pi-b2` worktree. Config-driven pipeline and R5–R7 only;
+  no C/D or `src/` changes. Human approved excluding only nondeterministic `runtime.csv`
+  from Phase A's byte regression; all other CSVs and published A/B files stay unchanged.
+  Laptop REPL `%27` is owned; beast uses `root@mcmc-beast` (the default local username
+  is not a beast account). Initial load 3.84. Reused engine already derives season breaks
+  from observed season dates; no literal boundary exists there to replace.
+- [2026-10-05 @pi] Human/manager addendum accepted mid-run, post-processing only:
+  posterior quality/style rotation and level-residual weekly ICC, simulations and
+  Koopman/Baio citations. Copied manager brief §7 verbatim into this branch's brief.
+  Human clarified levels: season-average RTS means across active teams, point correlation
+  at median theta; posterior intervals apply to innovation rotation. Implementation
+  defines active teams as those observed in accepted-panel fixtures for the season.
+  Both completed full B2 runs are preserved; no additional model fits for the addendum.
+
+- [2026-10-05 @claude] Design agreed with the human over four rounds of questions. Worktree
+  `/home/james/bet_project/.worktrees/BayesianFootball-market-model`, branch
+  `feat/market-model-inversion-eda` off `feat/market-inverse-grw-dynamics`. ID 039 taken as the
+  next free number after the experiment-harness index (038). Next: Phase A brief for pi.
+- [2026-10-05 @pi] Phase A loader, runner, and tests implemented locally; 264 tests pass,
+  but the runner fails twice at the residual Plots layout assertion. CSV diagnostics were
+  written before the failure; figure set/runtime are incomplete. See
+  `current_development/market_model/results/A/PHASE_A_REPORT.md`. Phase A blocked,
+  not promoted to Phase B; manager/human review pending.
+- [2026-10-05 @pi] Phase A follow-up: diagnosed the Plots/GR failure as state left by
+  the log-x KL histogram, repaired the empty histogram and figure ordering, added
+  same-fixture in-sample held-out comparisons. Fresh `pi_julia_mm` tmux Julia REPL:
+  `R01_DONE` and `T01_DONE` (269/269). All four figures and runtime CSV present;
+  Phase A ready for manager review, not Phase B authorisation.
+- [2026-10-05 @pi] Phase B claimed in `pi/market-model-phase-b`, worktree
+  `BayesianFootball-market-model-pi-b`; only own tmux REPLs. Implementing the 517-fixture
+  ladder, conditional Kalman gates, family comparison and outcome EDA. Human approved
+  seeded R4 RBPF (prior fixture-shared Gamma proposals; exact conditional Kalman states)
+  and family-specific priors for the new static scale/shape parameters. Manager added
+  fixed-omega reduction, per-week ESS/resampling and three-seed stability checks.
+  No Phase C work. Initial deterministic R1 FFBS test exposed ~1.2e-8 round-off noise
+  in zero-process steps; the prototype now copies the mathematically deterministic
+  backward step exactly, rather than loosening the test.
+- [2026-10-05 @claude] Phase A reviewed and merged (`42b09664`). Rerun in a fresh tmux REPL
+  (`claude_julia_mm`): 269/269 tests, runner 38.6 s, every CSV and PNG byte-identical to
+  `efa71a3c`. Accepted deviations: 12473327 refused at gate 1 (no book in the snapshot); KL gate
+  fixed at 0.01 (nothing reaches it). Phase B awaits human sign-off.
+
+- [2026-10-05 @pi] Phase B verified and handed off for manager/human review. Fresh
+  laptop: 131/131, `T02_DONE`. Two fresh beast full runs at `8663544e`:
+  `R02_DONE` in 3291.801 / 3308.673 s; all 37 regenerated scientific CSVs byte-identical.
+  All 30 ladder θ gates and 33 family-fit gates pass; zero retained NUTS divergences.
+  R4 fixed-omega reduction, per-week ESS/resampling, named worst weeks and three-seed
+  diagnostics are published; severe occasional particle collapse is explicitly reported.
+  Log-t leads fixture CV by 21.03 ± 10.35 nats versus Gamma (fixture SE), not a decisive
+  universal winner. Plot-only margins corrected/verified at `9469f327`. Report:
+  `current_development/market_model/results/B/PHASE_B_REPORT.md`; seeded proof:
+  `results/B/REPRODUCIBILITY.md`. No Phase C/D or `src/` changes, DB writes or package
+  changes. TODO remains IN_PROGRESS for unapproved/uncompleted C/D.
+
+- [2026-10-05 @pi] Phase B2 and the human hierarchy addendum verified for manager review.
+  Fresh laptop `%31`: t03 131/131, t02 131/131, `R01_DONE`/`T03_DONE`/`T02_DONE`.
+  Two fresh beast full runs at `25a408e2`: `R03_DONE` in 566.876 / 565.324 s;
+  all 10 core CSVs and both PNGs byte-identical; 34 engine gates and 32 theta gates pass.
+  Addendum-only fresh runs at `fd8b23a9`: `R03_HIERARCHY_DONE` twice, both additional
+  CSVs byte-identical, no new fits. R6 leads honest point density and brings
+  supremacy/level coverage to 90.11% / 91.21%; style/quality innovation SD ratio
+  0.315 (10a) / 0.282 (10b), not an exactly one-dimensional hierarchy. Honest weekly
+  level ICC is consistent with zero. Full evidence/citations/limitations in
+  `current_development/market_model/results/B2/PHASE_B2_REPORT.md`; process in the
+  stream README. Published A/B artifacts untouched; owned REPLs closed, other
+  sessions not operated. No Phase C/D, group/tier fits, `src/` or DB/package changes.
+  TODO remains IN_PROGRESS pending unapproved/unimplemented C/D.
+- [2026-10-05 @claude] **Phase B reviewed and merged** (`ea242b20`).
+  - Laptop: fresh REPL, t02 131/131.
+  - Gates: engine 24/24, convergence 30/30; 0 divergences in 33 family fits.
+  - Independent beast rerun at `8663544e` (3,374 s): all 37 runner CSVs byte-identical to
+    pi's (the two preflight CSVs are not runner outputs).
+- [2026-10-05 @claude] **Phase B2 reviewed and merged.**
+  - Laptop: fresh REPL, t03 131/131 and t02 131/131.
+  - Gates: engine 34/34, convergence 32/32.
+  - Independent beast rerun at `25a408e2` (601 s), then the addendum at `fd8b23a9`: all 12
+    CSVs and both PNGs byte-identical to `SCIENTIFIC_SHA256SUMS.txt`.
+  - Attribution corrected in the README and report: the manager, not the human, answered
+    pi's question on the per-season levels definition.
+
+- [2026-10-06 @pi] Phase B3 verified for manager/human review on
+  `pi/market-model-phase-b3`. Fresh laptop `%36`: t04 92/92, t03 131/131,
+  t02 131/131, all markers. Two fresh beast runs at `2e02a785`: `R04_DONE`
+  in 501.581 / 508.821 s; all 32 CSVs and three PNGs byte-identical. All 24
+  R6 theta gates pass. No Gaussian PPC p-value is extreme: no alternative step
+  model fitted. G1 Dixon–Coles has lowest heldout point MAE (0.008648 vs G0
+  0.008846); mean 1X2-only log-total bias shrinks from -0.102716 to -0.008941.
+  Paired outcome-loss CIs include zero. R6 covariance remains strongly negative;
+  G1 including the 78 thin books is informational, with a changed evaluation set.
+  Only 353 structural fixtures quote OU2.5: grid/G0 outcome losses cover all 517,
+  close-paired losses explicitly cover available quotes. Report, methods,
+  scientific hashes and reproduction commands in `results/B3/` under the stream.
+  All owned REPLs closed; published A/B/B2 untouched. No `src/`, DB, package/data,
+  outside-data or Phase C changes. Human decision: double Poisson for C; C2 later.
+  TODO remains IN_PROGRESS for C/D; `todo.sh check` and `git diff --check` pass.
+- [2026-10-08 @claude] Merged `pi/market-model-qs-forms` into the stream. It includes Phase C
+  (`b2fb0e0d`), the QS EDA (`c8c17167`) and the formulation research (`3c7506a8`).
+  - **Phase C:** C0 ≈ R6, γ ≈ 0.18, κ ≈ 0, H1 unidentified; C1 parked.
+  - **QS EDA:** 9 suitable, 2 inconclusive. r = 0.27–0.68 and rises with tier and market
+    sharpness. Style goal benefit +0.0067 nats/fixture.
+  - **Research:** keep 45° q/s; league-hierarchical r first; separate level and step priors;
+    Scottish Premiership quality tier; EPL style reversion.
+  - **Verification:** manager beast test suite at the research-branch code (see NIGHT_LOG); T03
+    131/131 with the original snapshot mtime; 10 key CSVs byte-identical laptop ↔ beast.
+  - **Next:** a Spec A goal-model TODO (src). Current state: `current_development/market_model/STATUS.md`.
+
+## Verification & Findings
+
+**Phase A (2026-10-05).** 595 of 710 fixtures accepted (78 no book, 36 no complete 1X2, 1 T014).
+The 239 panel market groups removed by the completeness gate are all one-runner O/U 0.5 groups;
+TODO 023's target builder already skipped them, and an ungated rerun reproduces its 623 SSE rates
+exactly. KL vs SSE: median |Δ log λ| ≈ 0.0002–0.002, max 0.039. Multi-start spread 4e-8.
+
+The double-Poisson grid misprices the close systematically: draw −1.34 pp [−1.41, −1.26],
+home/away +0.65/+0.68 pp, BTTS-yes −0.79 pp in sample and −1.20 pp held out. **Consequence
+(manager check):** on the 517 accepted books with ≥ 5 selections, inverting from the 1X2 alone
+gives a log-total 0.103 lower than the full book (q05/q50/q95 −0.181/−0.105/−0.014) with
+supremacy almost unchanged (+0.010). The 78 accepted 1X2-only books therefore carry totals biased
+low by about 0.10, the size of the panel's whole log-total sd.
+
+**Phase B (2026-10-05).** 517 fixtures / 1034 observations, excluding the prescribed
+78 1X2-only accepted books. Weekly R2 explains 98.06% supremacy / 92.52% level
+(smoothed R²); honest 25/26 RMSE .19556 / .05049. Per-team HA adds negligible gains;
+heavy tails modestly improve density but worsen supremacy RMSE and do not fix coverage.
+All acceptance evidence and limitations (R4 ESS collapse, static log-t's infinite rate
+moments, weak away-goal calibration flattening) are recorded in the Phase B report.
+Phases C/D require human sign-off; this task is not closed.

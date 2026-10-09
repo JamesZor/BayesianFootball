@@ -1,0 +1,37 @@
+league,comparison,n,estimate,se,method
+eng_premier,full_minus_no_style,380,0.00867267030524822,0.008147296354255259,paired double-Poisson goal log score; fixture SE
+eng_premier,full_minus_no_quality,380,0.06390041931578273,0.02130489163587058,paired double-Poisson goal log score; fixture SE
+eng_premier,total_goal_calibration_slope,380,0.4706711135087572,0.29261101189788075,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+eng_championship,full_minus_no_style,551,0.004268486431718839,0.004211852503256218,paired double-Poisson goal log score; fixture SE
+eng_championship,full_minus_no_quality,551,0.045238941525875195,0.01371159035698697,paired double-Poisson goal log score; fixture SE
+eng_championship,total_goal_calibration_slope,551,0.5454903956118426,0.3033223831614904,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+eng_league_one,full_minus_no_style,547,0.0151525585678603,0.005742272366257266,paired double-Poisson goal log score; fixture SE
+eng_league_one,full_minus_no_quality,547,0.0389332883400233,0.012863160838857796,paired double-Poisson goal log score; fixture SE
+eng_league_one,total_goal_calibration_slope,547,1.2125855691245464,0.2801606906912838,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+eng_league_two,full_minus_no_style,538,-0.0005064386041704256,0.004140371064175403,paired double-Poisson goal log score; fixture SE
+eng_league_two,full_minus_no_quality,538,0.05573307889843228,0.01329185844696503,paired double-Poisson goal log score; fixture SE
+eng_league_two,total_goal_calibration_slope,538,0.6113107174391803,0.36119984544211126,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+sco_premiership,full_minus_no_style,193,-0.019769501981334796,0.00829910067486847,paired double-Poisson goal log score; fixture SE
+sco_premiership,full_minus_no_quality,193,0.08947629157476715,0.03675334873051066,paired double-Poisson goal log score; fixture SE
+sco_premiership,total_goal_calibration_slope,193,-0.10396103708374362,0.38539974030841995,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+sco_championship,full_minus_no_style,134,0.0004518311003594475,0.013753648682510361,paired double-Poisson goal log score; fixture SE
+sco_championship,full_minus_no_quality,134,0.09131338576470589,0.04267820599190507,paired double-Poisson goal log score; fixture SE
+sco_championship,total_goal_calibration_slope,134,0.8591007656135266,0.4989547402091828,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+sco_league_one,full_minus_no_style,150,0.0075166204197497895,0.006513802098149912,paired double-Poisson goal log score; fixture SE
+sco_league_one,full_minus_no_quality,150,0.06063380611434127,0.02826289994998941,paired double-Poisson goal log score; fixture SE
+sco_league_one,total_goal_calibration_slope,150,0.06520978886461211,0.8321722975797606,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+sco_league_two,full_minus_no_style,124,0.013350677064077216,0.015033660567981205,paired double-Poisson goal log score; fixture SE
+sco_league_two,full_minus_no_quality,124,0.06115881139455188,0.030834955176794396,paired double-Poisson goal log score; fixture SE
+sco_league_two,total_goal_calibration_slope,124,1.0702593835238674,0.5538983168948558,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+irl_premier,full_minus_no_style,179,-0.009154930948337848,0.00916427916682694,paired double-Poisson goal log score; fixture SE
+irl_premier,full_minus_no_quality,179,0.054056601479756675,0.027609796817633356,paired double-Poisson goal log score; fixture SE
+irl_premier,total_goal_calibration_slope,179,0.37810351885803667,0.4784305854637274,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+irl_first_division,full_minus_no_style,128,0.022028028264818707,0.008854560841845889,paired double-Poisson goal log score; fixture SE
+irl_first_division,full_minus_no_quality,128,0.06496478268380665,0.042436990378051265,paired double-Poisson goal log score; fixture SE
+irl_first_division,total_goal_calibration_slope,128,1.7657459170833183,0.6255643383162142,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+fin_veikkausliiga,full_minus_no_style,129,0.05024612043109614,0.017687805137855447,paired double-Poisson goal log score; fixture SE
+fin_veikkausliiga,full_minus_no_quality,129,0.20296382805911006,0.048858063380526895,paired double-Poisson goal log score; fixture SE
+fin_veikkausliiga,total_goal_calibration_slope,129,1.4769627101647622,0.4871998953698349,Poisson GLM log-link on log predicted total; ideal 1; model-based SE
+all_leagues_pooled,full_minus_no_style,3053,0.006666933942077175,0.002309737678120063,paired double-Poisson goal log score; fixture SE
+all_leagues_pooled,full_minus_no_quality,3053,0.0625114184260102,0.006824481837730922,paired double-Poisson goal log score; fixture SE
+all_leagues_pooled,total_goal_calibration_slope,3053,0.7798340141410403,0.10535665173515944,Poisson GLM log-link on log predicted total; ideal 1; model-based SE

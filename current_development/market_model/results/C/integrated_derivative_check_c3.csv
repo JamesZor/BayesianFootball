@@ -1,0 +1,3 @@
+attempt,book_fixture,measure,observed,tolerance,pass
+1,12473328,level-integrated T AD versus Hessian central-difference relative error,5.405790669565064e-5,1e-6,false
+2,12473328,level-integrated T AD versus Hessian central-difference relative error with all-jet quadrature norm,5.405838441375254e-5,1e-6,false

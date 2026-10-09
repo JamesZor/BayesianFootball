@@ -47,7 +47,49 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [036](036_harness_persistence_and_reporting_fixes_k_l_m_j_gate_alignment.md) | Harness persistence and reporting fixes (k, l, m, j, gate alignment) | ACTIVE | P1 | pi | 2026-09-28 |
 | [037](037_context_cards_short_linked_docs_for_harness_persistence_w2_components_and_fit_pi.md) | Context cards: short linked docs for harness, persistence, W2 components and fit pipeline | ACTIVE | P2 | pi | 2026-09-28 |
 | [038](038_market_evaluation_layer_typed_recipe_axes_pluggable_evaluators_unified_clv.md) | Market evaluation layer: typed recipe axes, pluggable evaluators, unified CLV | ACTIVE | P1 | claude | 2026-09-28 |
+| [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-08 |
 <!-- TASKS:END -->
+
+**039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast
+C0/H1/H2 BOTH protocols accepted,107/107 gates,20/20 convergence; TWO fresh
+full pipelines26CSV+3PNG byte-identical. Final reports22/22,scalar/native17/17,
+t05 305/305,workflow85/85,t04 92/92,t03/t02 each131/131. Manager-approved scalar
+callback and explicitly absent club panels; dense/plot-failed attempts preserved.
+C0≈R6; H1 away suppression unidentified,H2kappa spanszero/no gain. Static HA
+mixesall12000draws; honesttrainingonly. PHASE_C_PROGRESS_REPORT/HANDOVER current.
+Recovery%265 at6335316f, C1 10b%267/10a%268 at41e28736 LIVE/frozen/unpromoted.
+At07:46:59Z uncertain conservative remaining15.6h/36.1h forC1,54.6h recovery
+(censored16.2–54.6h). No fullPhaseC DONE: recovery+C1inference/reproduction remain;
+C2/PhaseD deferred, settings unchanged, no duplicate sampling. Ownidlepanesclosed.
+Historical revision7:
+Revision7 HANDOVER / IN_PROGRESS (2026-10-06): both exact regressions PASS,
+new fixture12476686 mode/marginal gaps0.0/0.0; unchanged tolerances. Fresh t05
+305/305, t04 92/92,t03/t02 131/131, full Gate1 12/12,state53/53. Prepared workflow
+85/85, core C0/C1 runner parsed NOT executed. Frozen6335316f recovery ACTIVE in
+beast%265, all chains warmup200 checkpoint; no completed fit/interval/convergence
+or production promotion. Do not restart/kill/check out code while it runs. Local
+panes closed; active recovery ownership transferred in results/C/HANDOVER.md.
+Recovery then C0/C1/10b and measuredR6gap, H1/H2, figures/full reproduction remain.
+C2 remains deferred. Historical revision6 BLOCKED (2026-10-06): exact-case polish now passes
+(mode2.00e-13/marginal1.16e-11), fresh t05 289/289, full Gate1 12/12,
+engines53/53. Prescribed recovery at d9e6c003 hits NEW Newton100-iteration
+exhaustion, root seed4961 initial target; peers cancelled warmup1. No retained
+fit or promotion. Observer-only trace: fixture12476686, calls7–100 zero movement,
+δ1.035864e-12 (>1e-12), step4.189253e-8; Armijo accepts unchanged x and never
+triggers polishing. Review zero-motion stall recognition; no solver retry/fix or
+tolerance change. Owned %56/%264 closed. C0/C1/H1/H2 authorised; C2 deferred.
+Historical revision5 BLOCKED checkpoint, source120ac906: authorised stopping rule/accounting
+implemented, but exact seed4964-coordinate regression fails twice identically.
+Fixture12476625: δ3.3821e-12 passes; mode gap4.0160e-7 exceeds1e-8,
+Laplace marginal gap6.6586e-7 exceeds1e-9. Tighter Newton residual7.67e-12;
+legacy gradient reproduced exactly. Fresh t05 282pass/2fail/284; no third
+variation, beast sampling or promotion. Review accuracy/termination compatibility.
+C0/C1/H1/H2 remains authorised; C2 deferred. Prior revision4 Gate1 and engine
+results remain historical, not regenerated under revision5. Recovery, fits,
+measures/figures and two-run production reproduction are unfinished. Thresholds,
+seeds, priors, data and grid unchanged; revision4 evidence preserved.
+Evidence: `current_development/market_model/results/C/PHASE_C_REPORT.md`.
+Double Poisson stays for C; later score-grid C2 and Phase D remain unauthorised.
 
 ## Commands and Task Files
 

@@ -1,0 +1,4 @@
+source,comparison,status
+R09,full_minus_no_relative_style,NOT_IDENTIFIABLE: manager canceled C0 zero-loading common-style partition; no score rows
+R09,full_minus_frozen_common,NOT_IDENTIFIABLE: manager canceled C0 zero-loading common-style partition; no score rows
+R09,full_minus_neither_motion_nor_relative,NOT_IDENTIFIABLE: manager canceled C0 zero-loading common-style partition; no score rows

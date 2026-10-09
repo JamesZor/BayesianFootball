@@ -1,0 +1,25 @@
+league,rung,protocol,season,n_teams,n_weeks,corr_alpha_beta,implied_r,corr_q_s,measured_r,method
+sco_championship,R2,10a,21/22,2,1,-1.0,0.0,1.0,0.41227625789280137,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10a,22/23,10,41,-0.6692518094425473,0.445130969233039,0.13637006552950143,0.4479285886389174,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10a,23/24,10,40,-0.8609884341960042,0.27330880958463305,-0.05637394745029153,0.2736835037369058,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10a,24/25,10,32,-0.8216815055526088,0.3128685934550232,-0.15706915856574474,0.3160894443635492,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10a,21/22,2,1,-1.0,0.0,1.0,0.48896031412052005,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10a,22/23,10,41,-0.6777613574343334,0.43825180755026144,0.13516224371319754,0.4409917919049146,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10a,23/24,10,40,-0.860282436669186,0.2740539452873044,-0.07416771165460093,0.27470472408058894,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10a,24/25,10,32,-0.8229796679667235,0.31161665618783874,-0.1452237918323788,0.31435714609558607,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10a,21/22,2,1,-1.0,0.0,1.0,0.4938104724774837,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10a,22/23,10,41,-0.6777322111401548,0.4382754338163884,0.13613175062615496,0.441055291691556,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10a,23/24,10,40,-0.8602990339671837,0.2740364446625193,-0.07517813943283448,0.2747051122142075,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10a,24/25,10,32,-0.8230556752444228,0.3115432548610727,-0.1446388452885857,0.31426103311506937,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10b,21/22,2,1,-1.0,0.0,1.0,0.42275860800278736,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10b,22/23,10,41,-0.6686376717887724,0.4456260232411785,0.13848301763469925,0.44851244558324554,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10b,23/24,10,40,-0.8609820832150517,0.2733155191746349,-0.057132222574830346,0.27370038920544354,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R2,10b,24/25,10,32,-0.8219084276634689,0.31264998467353394,-0.1569564036797152,0.3158647929242349,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10b,21/22,2,1,-1.0,0.0,0.9999999999999999,0.4962630451219499,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10b,22/23,10,41,-0.6753346844909411,0.44021735239498394,0.13747910448828268,0.44305548758481594,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10b,23/24,10,40,-0.860232623296483,0.2741064649749495,-0.07278893577026505,0.2747332735229706,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,R6,10b,24/25,10,32,-0.8226823478966327,0.31190367528258295,-0.14626030979080965,0.31468550211288454,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10b,21/22,2,1,-1.0,0.0,1.0,0.4898274713434508,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10b,22/23,10,41,-0.6755882726371314,0.44001209719988676,0.13620369013546485,0.4427970464760726,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10b,23/24,10,40,-0.8602234720071814,0.2741161126571034,-0.07167204008628117,0.27472378379859885,season-average RTS point means; implied r assumes zero q/s correlation
+sco_championship,C0,10b,24/25,10,32,-0.8225943974685405,0.3119885459004754,-0.14680171667575825,0.3147917476106504,season-average RTS point means; implied r assumes zero q/s correlation
