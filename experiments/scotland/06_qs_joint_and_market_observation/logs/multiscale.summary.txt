@@ -1,0 +1,2 @@
+MultiScaleGRW |  124    124  30.0s
+PHASE0_INCLUDE_RETURNED_multiscale wall_s=44.777445793151855

@@ -1,0 +1,4 @@
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+Phase B2 covariance contracts |  131    131  1m08.2s
+T03_DONE
+PHASE0_INCLUDE_RETURNED_t03 wall_s=85.66073489189148

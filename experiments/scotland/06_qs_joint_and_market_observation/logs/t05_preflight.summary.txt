@@ -1,0 +1,3 @@
+Phase C preflight mathematics (not pooled acceptance) |   11     11  3.2s
+T05_PREFLIGHT_DONE
+PHASE0_INCLUDE_RETURNED_t05_preflight wall_s=18.49449110031128

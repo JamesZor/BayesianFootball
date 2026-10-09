@@ -1,0 +1,7 @@
+Composable count-model builder |   37     37  8.2s
+Composable engine has a static, compile-time-unrolled AD kernel |   13     13  20.5s
+Negative-binomial observations are compiled-ReverseDiff safe |   32     32  17.2s
+Composable model parity with the legacy PreGame count engine |    5      5  2.8s
+Builder feature semantics and OOS extraction |    9      9  4.5s
+MultiScaleGRW dynamics builder integration |   10     10  3.3s
+PHASE0_INCLUDE_RETURNED_builder wall_s=71.40427994728088

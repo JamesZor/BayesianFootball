@@ -1,0 +1,3 @@
+C8 scalar Gaussian arithmetic, unchanged model and native sampler |   17     17  19.2s
+T05_FAST_GAUSSIAN_DONE
+PHASE0_INCLUDE_RETURNED_t05_fast wall_s=37.4113872051239

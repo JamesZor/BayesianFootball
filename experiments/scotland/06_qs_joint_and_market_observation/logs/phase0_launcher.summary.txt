@@ -1,0 +1,34 @@
+START quality_style test/test_quality_style_grw.jl pane=%343 2026-10-09T15:08:56Z
+END quality_style PASS 2026-10-09T15:10:05Z
+START multiscale test/test_multiscale_grw.jl pane=%344 2026-10-09T15:10:05Z
+END multiscale PASS 2026-10-09T15:10:58Z
+START tape test/tape_allocation_tests.jl pane=%345 2026-10-09T15:10:58Z
+END tape PASS 2026-10-09T15:16:47Z
+START builder test/builder_tests.jl pane=%346 2026-10-09T15:16:47Z
+END builder PASS 2026-10-09T15:18:07Z
+START harness test/harness_runner_tests.jl pane=%347 2026-10-09T15:18:07Z
+END harness PASS 2026-10-09T15:20:07Z
+START t01 current_development/market_model/t01_market_model_tests.jl pane=%348 2026-10-09T15:20:07Z
+END t01 PASS 2026-10-09T15:20:58Z
+START t02 current_development/market_model/t02_two_stage_tests.jl pane=%349 2026-10-09T15:20:58Z
+END t02 PASS 2026-10-09T15:22:52Z
+START t03 current_development/market_model/t03_covariance_tests.jl pane=%350 2026-10-09T15:22:52Z
+END t03 PASS 2026-10-09T15:24:26Z
+START t04 current_development/market_model/t04_copula_grid_tests.jl pane=%351 2026-10-09T15:24:26Z
+END t04 PASS 2026-10-09T15:25:28Z
+START t05_fast current_development/market_model/t05_fast_gaussian_tests.jl pane=%352 2026-10-09T15:25:29Z
+END t05_fast PASS 2026-10-09T15:26:15Z
+START t05_reports current_development/market_model/t05_fast_reports_tests.jl pane=%353 2026-10-09T15:26:15Z
+END t05_reports PASS 2026-10-09T15:27:22Z
+START t05_workflow current_development/market_model/t05_fullbook_workflow_tests.jl pane=%354 2026-10-09T15:27:22Z
+END t05_workflow PASS 2026-10-09T15:28:37Z
+START t05_preflight current_development/market_model/t05_laplace_preflight_tests.jl pane=%355 2026-10-09T15:28:37Z
+END t05_preflight PASS 2026-10-09T15:29:04Z
+START t05_pooled current_development/market_model/t05_pooled_tests.jl pane=%356 2026-10-09T15:29:04Z
+C2_PENDING_EXCLUDED: known 29/39, 10 failures; not an acceptance gate
+END t05_pooled PASS 2026-10-09T15:31:17Z
+START t06 current_development/market_model/t06_qs_eda_tests.jl pane=%357 2026-10-09T15:31:17Z
+END t06 PASS 2026-10-09T15:31:47Z
+START coverage experiments/scotland/06_qs_joint_and_market_observation/r00_coverage.jl pane=%358 2026-10-09T15:31:47Z
+END coverage PASS 2026-10-09T15:32:29Z
+PHASE0_ALL_PASS

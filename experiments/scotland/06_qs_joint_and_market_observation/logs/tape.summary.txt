@@ -1,0 +1,4 @@
+Zero-allocation compiled gradients |  150    150  5m17.3s
+QualityStyleGRW zero-allocation compiled gradient |    2      2  7.3s
+TAPE_ALLOCATION_TESTS_DONE
+PHASE0_INCLUDE_RETURNED_tape wall_s=339.3453299999237

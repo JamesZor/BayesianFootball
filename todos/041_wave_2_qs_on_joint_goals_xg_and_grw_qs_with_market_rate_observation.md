@@ -17,7 +17,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 ## Acceptance Criteria
 
-- [ ] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
+- [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
 - [ ] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery evidenced.
 - [ ] Four W2 candidates pass smoke hard gates; manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
@@ -35,8 +35,10 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Claimed in session 01a12134-5a93-7644-aa40-b5294e798206, worktree /home/james/bet_project/.worktrees/BayesianFootball-qs-experiment, branch exp/qs-goal-vs-market. Phase 0 started; fresh beast tests and coverage next. Read-only betdb; Julia exclusively beast.
 
+- [2026-10-09 @pi] Phase 0 PASS at ec96c079: all fresh beast test entry points pass with the authorised C2-pending exclusion (29/39). Exact joint-feature coverage in every training window of both 56/57; 180–530 covered per tournament/fold, 50%–100%; heldout 710/710. See PHASE0.md, results/phase0_gates.csv and results/proxy_xg_coverage.csv. All owned panes closed; Phase 1 next.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.
 - Beast snapshot SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4; original mtime 2026-09-25 12:57:15.480765468 UTC intact.
-- Phase 0 gates not yet run. Evidence will live under experiments/scotland/06_qs_joint_and_market_observation/logs/.
+- Phase 0: QS 373/373, GRW 124/124, tape 150/150 + QS 2/2 (0 B), builder 106/106, harness 179/179, market t01–t06 pass (full-book 305/305). Exact counts/wall times and summaries committed in experiments/scotland/06_qs_joint_and_market_observation/; C2 known failures not hidden.

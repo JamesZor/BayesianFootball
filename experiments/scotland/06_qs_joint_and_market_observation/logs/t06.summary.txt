@@ -1,0 +1,6 @@
+QS local segments and league configuration |   68     68  0.6s
+Per-draw rotation against closed-form covariance |    5      5  0.0s
+Goal variants reduce to the full predictor at zero contribution |    4      4  0.1s
+Predeclared verdict thresholds and protocol sensitivity |    8      8  1.9s
+T06_DONE
+PHASE0_INCLUDE_RETURNED_t06 wall_s=20.971771001815796

@@ -1,0 +1,4 @@
+   3 │ G4 FFBS mean max |z| (4000 draws)  1.49006      4.5      true
+Phase B two-stage contracts |  131    131  1m28.1s
+T02_DONE
+PHASE0_INCLUDE_RETURNED_t02 wall_s=104.8248279094696

@@ -1,0 +1,3 @@
+C8 fast-stage reports, NOT sampled acceptance |   22     22  41.3s
+T05_FAST_REPORTS_DONE
+PHASE0_INCLUDE_RETURNED_t05_reports wall_s=58.98969292640686

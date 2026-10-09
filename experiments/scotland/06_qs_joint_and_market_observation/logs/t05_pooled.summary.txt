@@ -1,0 +1,7 @@
+Phase C revision 4 full-book deterministic engines |  305    305  1m39.7s
+T05_C7_DETERMINISTIC_DONE
+C2-pending (excluded from Phase C4 acceptance)         |   29    10     39  7.1s
+  1X2-only integrated derivative: unchanged tolerance  |    2     1      3  6.8s
+  Archived thin-book Gate 1: reported, NOT regenerated |   27     9     36  0.3s
+C2_PENDING_REPORTED: thin-book failures retained; excluded from C4 acceptance
+PHASE0_INCLUDE_RETURNED_t05_pooled wall_s=124.38739609718323

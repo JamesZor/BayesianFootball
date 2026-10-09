@@ -1,0 +1,4 @@
+COVERAGE tournament=56 training_covered=(180, 530) training_fraction=(0.5, 1.0) heldout=355/355
+COVERAGE tournament=57 training_covered=(180, 530) training_fraction=(0.5, 1.0) heldout=355/355
+PHASE0_COVERAGE_DONE folds=40
+PHASE0_INCLUDE_RETURNED_coverage wall_s=33.4137499332428

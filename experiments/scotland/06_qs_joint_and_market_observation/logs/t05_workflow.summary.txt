@@ -1,0 +1,3 @@
+Full-book workflow preparation (not posterior acceptance) |   85     85  46.6s
+T05_WORKFLOW_PREPARATION_DONE
+PHASE0_INCLUDE_RETURNED_t05_workflow wall_s=65.2690110206604

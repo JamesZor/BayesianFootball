@@ -1,0 +1,17 @@
+gate,source_commit,pass,accepted_assertions,include_wall_seconds,exclusion,evidence
+quality_style,ec96c079,True,373,59.98210406303406,,logs/quality_style.summary.txt
+multiscale,ec96c079,True,124,44.777445793151855,,logs/multiscale.summary.txt
+tape,ec96c079,True,152,339.3453299999237,,logs/tape.summary.txt
+builder,ec96c079,True,106,71.40427994728088,,logs/builder.summary.txt
+harness,ec96c079,True,179,111.52963185310364,,logs/harness.summary.txt
+t01,ec96c079,True,269,42.26317310333252,,logs/t01.summary.txt
+t02,ec96c079,True,131,104.8248279094696,,logs/t02.summary.txt
+t03,ec96c079,True,131,85.66073489189148,,logs/t03.summary.txt
+t04,ec96c079,True,92,53.474337100982666,,logs/t04.summary.txt
+t05_fast,ec96c079,True,17,37.4113872051239,,logs/t05_fast.summary.txt
+t05_reports,ec96c079,True,22,58.98969292640686,,logs/t05_reports.summary.txt
+t05_workflow,ec96c079,True,85,65.2690110206604,,logs/t05_workflow.summary.txt
+t05_preflight,ec96c079,True,11,18.49449110031128,,logs/t05_preflight.summary.txt
+t05_pooled,ec96c079,True,305,124.38739609718323,C2-pending: 29 pass / 10 fail excluded,logs/t05_pooled.summary.txt
+t06,ec96c079,True,85,20.971771001815796,,logs/t06.summary.txt
+coverage,ec96c079,True,0,33.4137499332428,,logs/coverage.summary.txt
