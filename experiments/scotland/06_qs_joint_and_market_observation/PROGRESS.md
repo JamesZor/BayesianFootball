@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 COMPLETE; Phase 4 scoring/report next.** All four40-fold arms
+**Phase 3 COMPLETE; Phase 4 scoring implementation in progress.** All four40-fold arms
 persisted, four hard grid checks per arm PASS, zero divergences, all Rhat<=1.05:
 no prescribed reruns needed. Source8f285a6a initial joints; wrapper fix/resume
 081ba5a6. Offline regression57/57 PASS, QS completes scoring without sampling,
@@ -61,7 +61,7 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Phase4: prescribed score/report pairs and three bootstrap paths, exact saved
+Phase4: r06_score.jl adapts wave1 r05_score and includes unchanged block/goal-cluster scripts. Explicit saved UUIDs only, no fits or DB writes. Run in fresh owned beast REPL, then finish report/figures/leaderboard. Prescribed score/report pairs and three bootstrap paths, exact saved
 wave1 reference parity, fold posterior r/sigma and r figure, leaderboard rows.
 Classify on noncircular8-week interval, flag circular contradictions. Read the
 original work package §4 and wave1 scoring paths before implementation.

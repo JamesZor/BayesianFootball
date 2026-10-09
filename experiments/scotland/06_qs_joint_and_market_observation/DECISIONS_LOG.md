@@ -133,3 +133,7 @@
 - GRWmarket%396 completes21:18:36UTC UUIDe47a71a7-52eb-4aa5-b747-e64099ea9977; QSmarket%397 completes22:05:57UTC UUID81fdf817-f82d-4f66-9bfd-5f456c4fe29f. All4×40initial folds Rhat<=1.05, zero divergences; no prescribed reruns due, all selection ledgersfalse. Both market internalGRW score comparisons664rows/9960fields EXACT maxdiff0, matching QS resume evidence.
 - Fresh read-only DB audit%398 checks exactly4completed named runs/no duplicate or new joints, all160folds/640chains/1000retained per chain,16hard passes. All80joint checkpoints remain hash-identical. Original GRWjoint tail324.47 and GRWmarket tail339.34/bulk395.44 review flags retained: tail ESS never authorises extra sampling here. PHASE3.md and exact CSV/logs committed.
 - All owned panes closed including launcher%394 and final audit%398. Source/sampler/seed/prior/input/threshold/reference unchanged; src/harness untouched. Phase4 full report/bootstraps/leaderboard and Phase5 fresh frozen-seed byte reproduction remain; task IN_PROGRESS. No predictive decision or full package completion claimed.
+
+## 2026-10-09 — Phase4 saved-fit scoring
+
+- Adapt wave1 r05_score.jl with explicit final wave2 UUIDs and saved wave1 control_grw/qs_weak_r/C0. No sampling or database writes in scoring. Preserve all prescribed pairs, seeds, panel and weights. Reference independent harness metrics and fixture goal scores must match saved wave1 exactly before reporting. Include unchanged r05_block_check/r05_goal_cluster as additional reuse/parity evidence.
