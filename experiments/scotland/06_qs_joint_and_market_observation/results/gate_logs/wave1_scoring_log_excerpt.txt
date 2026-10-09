@@ -1,0 +1,30 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 335.9 hours)...
+ERROR: LoadError: no completed grid run for qs_weak_r
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:44
+RUN qs_weak_r 21f2a9f9-b96f-4034-97de-767704a9d54a engine_convergence=false max_rhat=1.009185881966469 min_ess_bulk=819.8010907853144 min_ess_tail=355.2617368328725 divergences=0/160000 extra_tags=["convergence:FAIL"]
+ERROR: LoadError: ArgumentError: index dyn.rₖ not found
+Stacktrace:
+  [1] axisindexes
+    @ ~/.julia/packages/AxisArrays/gTmxS/src/indexing.jl:317 [inlined]
+
+ERROR: LoadError: ArgumentError: index dyn.rₖ not found
+Stacktrace:
+  [1] axisindexes
+    @ ~/.julia/packages/AxisArrays/gTmxS/src/indexing.jl:317 [inlined]
+
+PHASE5_SCORE best_goal_1x2=control_grw
+PHASE5_SCORE_DONE
+
+
+PHASE5_SCORE best_goal_1x2=control_grw
+PHASE5_SCORE_DONE
+
+
+
+BLOCK_CHECK max|noncircular_mean-point|=0.005752189698839746 max|circular_mean-point|=0.0008146668509779766
+BLOCK_CHECK_DONE
+
+
+

@@ -61,7 +61,7 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Phase4: r06_score.jl adapts wave1 r05_score and includes unchanged block/goal-cluster scripts. Explicit saved UUIDs only, no fits or DB writes. Run in fresh owned beast REPL, then finish report/figures/leaderboard. Prescribed score/report pairs and three bootstrap paths, exact saved
+Phase4: r06_score.jl adapts wave1 r05_score and includes unchanged block/goal-cluster scripts. v1 stops on inherited extra parenthesis at209 after exact reference harness parity; manager authorises one-character wave2-only fix and fresh v2 retry. Read-only wave1 source provenance follow-up recorded in TODO/DECISIONS. Explicit saved UUIDs only, no fits or DB writes. Run in fresh owned beast REPL, then finish report/figures/leaderboard. Prescribed score/report pairs and three bootstrap paths, exact saved
 wave1 reference parity, fold posterior r/sigma and r figure, leaderboard rows.
 Classify on noncircular8-week interval, flag circular contradictions. Read the
 original work package §4 and wave1 scoring paths before implementation.
@@ -71,7 +71,7 @@ Retain both GRW tail flags in the report. Task remains IN_PROGRESS.
 
 ## Beast panes and artifacts
 
-NO owned panes open. Successful market REPLs%396/%397 closed automatically;
+Owned scoring pane %401 (`pi_qsx2_phase4_v2`), fresh retry after manager-authorised one-character syntax correction. Failed %400 closed; failed scoring log/partial outputs retained in phase4_v1. No sampling/DB writes. %399 startup used unavailable shell PATH Julia and exited before execution. Successful market REPLs%396/%397 closed automatically;
 launcher%394 closed after PASS. Fresh read-only final audit%398 PASS, then
 closed after evidence retrieval. Offline regression%393/resumedQS%395 and
 all earlier owned panes closed. Other sessions untouched. All160 initial

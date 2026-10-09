@@ -1,0 +1,15 @@
+ec96c079 HEAD@{2026-10-09 17:08:56 +0200}: checkout: moving from d16a5800f4da8cb142cd4684344653eb87f367f5 to ec96c079
+d16a5800 HEAD@{2026-10-09 16:22:28 +0200}: checkout: moving from 54a22ee75cb21e7ec6859061bac0f94d298b877d to origin/exp/qs-goal-vs-market
+54a22ee7 HEAD@{2026-10-09 16:15:16 +0200}: checkout: moving from d41ac97215cebc5b4908955325e0599d275c80f4 to origin/exp/qs-goal-vs-market
+ac04b173 HEAD@{2026-10-09 15:46:58 +0200}: checkout: moving from b14e98b96000151747c49aefbe7f52032dc815c3 to origin/exp/qs-goal-vs-market
+b14e98b9 HEAD@{2026-10-09 15:40:04 +0200}: checkout: moving from 7f3ff52b6d6b1dd86e8756f4920c3c0fa37b79f4 to origin/exp/qs-goal-vs-market
+7f3ff52b HEAD@{2026-10-09 15:38:31 +0200}: checkout: moving from 81c77a427a0cfd0236f70cf368d1e79353adeaa4 to origin/exp/qs-goal-vs-market
+81c77a42 HEAD@{2026-10-09 15:37:15 +0200}: checkout: moving from 727af1d4856e50223a67c13094979b4326d34db8 to origin/exp/qs-goal-vs-market
+727af1d4 HEAD@{2026-10-09 15:15:40 +0200}: checkout: moving from 79e5c344d8975a11ad075e50f449e0b6b4b73e38 to origin/exp/qs-goal-vs-market
+2026-10-09 15:16:40.620717954 +0200 /root/BF_runs/qs_experiment_out/phase5/RUNS.csv
+2026-10-09 15:40:04.745013856 +0200 /root/BF_runs/qs_experiment_out/phase5/block_bootstrap_check.csv
+2026-10-09 15:17:07.549135878 +0200 /root/BF_runs/qs_experiment_out/phase5/goal_logscore_fixtures.csv
+2026-10-09 15:16:39.339745708 +0200 /root/BF_runs/qs_experiment_out/phase5/harness_scores_vs_control_grw.csv
+2026-10-09 16:15:34.538173266 +0200 /root/BF_runs/qs_experiment_out/phase5/paired_goal_logscore.csv
+2026-10-09 15:17:06.446159670 +0200 /root/BF_runs/qs_experiment_out/phase5/paired_logloss.csv
+2026-10-09 15:38:31.831866697 +0200 /root/BF_runs/qs_experiment_out/phase5/posterior_r_by_fold.csv
