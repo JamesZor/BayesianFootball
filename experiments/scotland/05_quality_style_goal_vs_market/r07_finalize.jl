@@ -24,12 +24,13 @@ for c in F7C.CANDIDATES
     fit.config.name == c.name || error("$id has the wrong run name")
     f7_commits[string(id)] = (; candidate = c.name, git_sha = fit.metadata.git_commit)
     actual = Harness.read_scores(f7_db; run_id = id, scorecard_version = "v1.2",
-        subset = "target", market = "all", metric = "logloss",
-        control_run_id = F7_RUNS[F7C.CONTROL])
+        subset = "target", market = "all", metric = "logloss")
     actual = filter(:stage => ==("grid"), actual)
     expected = filter(r -> r.model == c.name && r.subset == "target" &&
                           r.market == "all" && r.metric == "logloss", f7_expected)
     nrow(actual) == nrow(expected) == 1 || error("$id: missing/ambiguous score rows")
+    # Absolute headline scores have a NULL control key; only paired delta rows carry it.
+    isequal(actual.control_run_id, expected.control_run_id) || error("$id: control keys differ")
     only(actual.value) == only(expected.value) || error("$id: persisted score differs from CSV")
     println("FINALIZE score_verified arm=$(c.name) run=$id logloss=$(only(actual.value))")
 end
