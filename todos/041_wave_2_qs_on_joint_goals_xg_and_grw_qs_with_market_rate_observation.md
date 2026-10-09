@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -42,6 +42,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Manager authorises option 1: include wave-1 market_arm.jl as Main.QSMarketArm; table adapter calls original namespace. Resume Phase 1 without modifying guard/manifest or priors/seeds; add exact IDs/log rates/full-book parity and 710/595/78/517 counts, record frozen SHA256 before tests.
 
 - [2026-10-09 @pi] Authorised table preparation PASS at 4a71c02e: exact IDs/log rates/flags match wave-1 prepared panel after CSV round-trip; 1430 rows, 1107 full books, target counts 710/595/78/517. Frozen SHA256 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549 recorded in PROGRESS/DECISIONS_LOG; saved manifest digest unchanged. Fresh component gates next.
+
+- [2026-10-09 @pi] BLOCKED at ec1a4137: fresh component gate 5533 pass / 372 fail (1 standalone likelihood, 370 finite-difference, 1 recovery miss). All 14 frozen intervals preserved; GRW dyn.β.σₖ truth .024 above 90% upper .0227293. No retry/tuning; launcher stopped before allocation/builder/harness, no smoke/grid. Table/manifest digests unchanged; owned panes closed. Await manager review of PHASE1_BLOCKED.md.
 
 ## Verification & Findings
 

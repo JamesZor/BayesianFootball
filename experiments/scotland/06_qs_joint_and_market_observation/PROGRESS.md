@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 1 table preparation PASS at 4a71c02e; component tests next.** Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component source remains unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
+**BLOCKED Phase 1: component gate failed at ec1a4137 (5533 pass / 372 fail).** Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component gate FAILED: 1 likelihood assertion, 370 finite-difference assertions, 1 frozen recovery miss. No retry/fix; allocation/builder/harness gates not started. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -22,14 +22,15 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 - Phase 1 preparation failed 15:47:15 UTC (50.78 s): saved wave-1 manifest encodes Main.QSMarketArm, new loader nests it under Main.Wave2MarketTable. The exact repr provenance guard stopped before freezing a table. Evidence preserved; owned idle sessions closed.
 - Manager authorised original namespace; preparation-v2 PASS 15:58:54 UTC, 36.2634 s. Frozen table 1,430 rows / 1,107 full books, target counts exactly 710/595/78/517, exact values match wave-1 panel after CSV round-trip.
 - Frozen market_rates.csv SHA256: 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549. Guard/manifest unchanged; manifest digest identical before/after.
+- Component entry point failed 16:07:56 UTC (183.3400 s include): likelihood 22/23, GRW AD 2867/2932, QS AD 2627/2932, recovery 15/16 assertions. All AD failures are central finite differences; compiled/fresh ReverseDiff and ForwardDiff comparisons pass. 13/14 recovery intervals cover; GRW defence micro scale misses. Details/evidence in PHASE1_BLOCKED.md and results/synthetic_recovery.csv. No new gate executed afterward; table and manifest digests unchanged.
 
 ## Next action
 
-Commit/push frozen table/hash and parity evidence, then run fresh unit/AD/recovery and tape/builder/harness gates via phase1_gate.sh. Stop/report any failed gate. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
+Await manager review of PHASE1_BLOCKED.md: standalone density mismatch, finite-difference failures and frozen recovery miss. Do not retry/tune/relax thresholds. Table/hash/parity evidence pushed at ec1a4137; Phase 1 not accepted. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
 
 ## Beast panes and artifacts
 
-None open. Preparation-v2 `%361`/`%362` closed after PASS/evidence retrieval. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
+None open. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.

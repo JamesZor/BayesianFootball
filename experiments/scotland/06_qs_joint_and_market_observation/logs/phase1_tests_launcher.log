@@ -1,0 +1,3 @@
+START phase1_market test/test_market_rate_observation.jl pane=%364 2026-10-09T16:04:44Z
+END phase1_market FAIL 2026-10-09T16:07:56Z
+PHASE1_BLOCKED: phase1_market; retain pane=%364 for diagnosis

@@ -1,0 +1,62 @@
+Source: ec1a4137
+Fresh beast REPL %364 / launcher %363; 16 threads, cores pinned, BLAS 1.
+FAIL; no retry or threshold/seed changes.
+MARKET_AD PASS text is unconditional; test summary is authoritative (AD FAILED).
+
+injected feature, builder and likelihood: Test Failed at /root/BF_runs/qs_experiment/test/test_market_rate_observation.jl:115
+  Expression: ≈(density.f([sigma]), expected + logpdf(model.observation.sigma_prior, sigma), atol = 1.0e-12, rtol = 0)
+   Evaluated: 1.2036465597893726 ≈ 3.7659549021089602 (atol=1.0e-12, rtol=0)
+
+
+grw real-fold AD: Test Failed at /root/BF_runs/qs_experiment/test/test_market_rate_observation.jl:143
+  Expression: abs(compiled[j] - finite) / max(abs(compiled[j]), abs(finite), 1.0) <= 1.0e-6
+   Evaluated: 2.443709063545748e-6 <= 1.0e-6
+
+
+qs real-fold AD: Test Failed at /root/BF_runs/qs_experiment/test/test_market_rate_observation.jl:143
+  Expression: abs(compiled[j] - finite) / max(abs(compiled[j]), abs(finite), 1.0) <= 1.0e-6
+   Evaluated: 5.869589941198683e-6 <= 1.0e-6
+
+
+synthetic recovery, frozen seeds and smoke budget: Test Failed at /root/BF_runs/qs_experiment/test/test_market_rate_observation.jl:175
+  Expression: row.covered
+
+
+Test Summary:                                       | Pass  Fail  Total     Time
+MarketRateObservation                               | 5533   372   5905  2m44.6s
+  injected feature, builder and likelihood          |   22     1     23     5.8s
+  grw real-fold AD                                  | 2867    65   2932    24.2s
+  qs real-fold AD                                   | 2627   305   2932    13.2s
+  synthetic recovery, frozen seeds and smoke budget |   15     1     16  1m46.7s
+RNG of the outermost testset: Xoshiro(0x1324d36222a5dfb6, 0x4a5670865dcf2943, 0x8b3f9de8eb2e0e9f, 0xa49490d14a475303, 0x2a76303adbece9af)
+LoadError: Some tests did not pass: 5533 passed, 372 failed, 0 errored, 0 broken.
+in expression starting at /root/BF_runs/qs_experiment/test/test_market_rate_observation.jl:72
+PHASE1_FAIL_phase1_market wall_s=183.34003686904907
+5
+
+
+
+julia> 
+
+
+julia> 
+
+
+
+MARKET_AD arm=grw fold=40 parameters=975 PASS
+MARKET_AD arm=qs fold=40 parameters=975 PASS
+RECOVERY arm=grw parameter=dyn.α.σ₀ truth=0.12 interval=[0.07818050945415606,0.13793639736228752] covered=true
+RECOVERY arm=grw parameter=dyn.α.σₖ truth=0.03 interval=[0.025591249965885035,0.03614223836309683] covered=true
+RECOVERY arm=grw parameter=dyn.α.σₛ truth=0.06 interval=[0.029841858394491792,0.06603201433056108] covered=true
+RECOVERY arm=grw parameter=dyn.β.σ₀ truth=0.2 interval=[0.12177254882641025,0.20006462061124466] covered=true
+RECOVERY arm=grw parameter=dyn.β.σₖ truth=0.024 interval=[0.011703884611242044,0.02272934787590222] covered=false
+RECOVERY arm=grw parameter=dyn.β.σₛ truth=0.11 interval=[0.10312381057379705,0.17373620905803558] covered=true
+RECOVERY arm=grw parameter=obs.σ_obs truth=0.07 interval=[0.06738377608993211,0.07220859293692583] covered=true
+RECOVERY arm=qs parameter=dyn.r₀ truth=0.4 interval=[0.2507841677217178,0.5031158440942773] covered=true
+RECOVERY arm=qs parameter=dyn.rₖ truth=0.3 interval=[0.14539161066284126,0.30905197608672713] covered=true
+RECOVERY arm=qs parameter=dyn.rₛ truth=0.4 interval=[0.2559678544271204,0.5818711216677259] covered=true
+RECOVERY arm=qs parameter=dyn.τ₀ truth=0.16 interval=[0.14901446530712123,0.2322794353804673] covered=true
+RECOVERY arm=qs parameter=dyn.τₖ truth=0.027 interval=[0.024787973519581265,0.03314725196336742] covered=true
+RECOVERY arm=qs parameter=dyn.τₛ truth=0.085 interval=[0.07231036060628485,0.12054655578198445] covered=true
+RECOVERY arm=qs parameter=obs.σ_obs truth=0.07 interval=[0.06870441063267398,0.07346856833206025] covered=true
+PHASE1_FAIL_phase1_market wall_s=183.34003686904907
