@@ -1,0 +1,5 @@
+START phase3_grid_v1_grw_joint pane=%391 2026-10-09T19:07:51Z
+END phase3_grid_v1_grw_joint PASS 2026-10-09T19:41:28Z
+START phase3_grid_v1_qs_joint pane=%392 2026-10-09T19:41:28Z
+END phase3_grid_v1_qs_joint FAIL 2026-10-09T20:14:20Z
+PHASE3_BLOCKED: qs_joint; retain pane=%392 for diagnosis
