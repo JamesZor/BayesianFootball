@@ -4,7 +4,7 @@
 |---|---|
 | ID | 040 |
 | Title | Quality/style goal model vs market model: 40-fold Scottish Lower experiment |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -31,9 +31,8 @@ Follow the phase gates, fixed priors and seeds in the work package. Record decis
 ## Work Log & Progress
 
 - [2026-10-09 @pi] Claimed in pi worktree `/home/james/bet_project/.worktrees/BayesianFootball-qs-experiment`; beginning Phase 0 branch-health gate on mcmc-beast. No experiment scores yet.
+- [2026-10-09 @pi] Phase 0 BLOCKED: pooled t05 C4 full-book deterministic 305/305, but its intentionally excluded C2-pending child testset reported 29 passed / 10 failed (one integrated derivative, nine archived thin-book Gate 1); the child catches its own exception, hiding failures from the driver. Explicit package stop condition forbids continuing to Phase 1. Manager to resolve acceptance scope. All other prescribed base tests passed, pinned ScottishLower SHA256 `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`. See `experiments/scotland/05_quality_style_goal_vs_market/PROGRESS.md`.
 
 ## Verification & Findings
 
-Not run yet. Record commands, pass/fail or skips, wall time, benchmark metrics,
-R-hat / bulk and tail ESS / divergences / predictive scores as applicable, and
-links to artifacts and immutable run IDs. Distinguish hypotheses from findings.
+Phase 0 on mcmc-beast isolated checkout `a4729e8e`: `include("test/test_multiscale_grw.jl")` 124/124; `phase0_gate.sh` used fresh Julia REPL per other entry point. Tape 150/150 (5m15s); t01 269/269; t02 131/131; t03 131/131; t04 92/92; t05 pooled C4 305/305 but excluded C2 pending 29/39 (10 failures). Builder, harness, other t05 files, and t06 passed. Test output `/root/BF_runs/logs/qs_experiment/`; no smoke, sampling, scores, or reproduction attempted.

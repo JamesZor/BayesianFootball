@@ -48,7 +48,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [037](037_context_cards_short_linked_docs_for_harness_persistence_w2_components_and_fit_pi.md) | Context cards: short linked docs for harness, persistence, W2 components and fit pipeline | ACTIVE | P2 | pi | 2026-09-28 |
 | [038](038_market_evaluation_layer_typed_recipe_axes_pluggable_evaluators_unified_clv.md) | Market evaluation layer: typed recipe axes, pluggable evaluators, unified CLV | ACTIVE | P1 | claude | 2026-09-28 |
 | [039](039_market_model_inversion_and_team_strength_eda.md) | Market model: inversion and team-strength EDA | IN_PROGRESS | P1 | pi | 2026-10-08 |
-| [040](040_quality_style_goal_model_vs_market_model_40_fold_scottish_lower_experiment.md) | Quality/style goal model vs market model: 40-fold Scottish Lower experiment | IN_PROGRESS | P1 | pi | 2026-10-09 |
+| [040](040_quality_style_goal_model_vs_market_model_40_fold_scottish_lower_experiment.md) | Quality/style goal model vs market model: 40-fold Scottish Lower experiment | BLOCKED | P1 | pi | 2026-10-09 |
 <!-- TASKS:END -->
 
 **039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast

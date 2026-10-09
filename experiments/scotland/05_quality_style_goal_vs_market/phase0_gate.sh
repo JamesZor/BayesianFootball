@@ -30,7 +30,7 @@ for item in \
   sleep 0.2
   tmux send-keys -t "$pane" Enter
   # Input is sent to the REPL, never as a Julia command-line argument.
-  code="using LinearAlgebra; BLAS.set_num_threads(1); try include(\"$file\"); println(\"PHASE0_PASS_$name\"); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE0_FAIL_$name\"); write(\"$status\", \"FAIL\") end"
+  code="using LinearAlgebra; BLAS.set_num_threads(1); try include(\"$file\"); println(\"PHASE0_INCLUDE_RETURNED_$name\"); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE0_FAIL_$name\"); write(\"$status\", \"FAIL\") end"
   sleep 8
   tmux send-keys -t "$pane" -l -- "$code"
   sleep 0.2
@@ -42,6 +42,11 @@ for item in \
     sleep 10
   done
   outcome=$(<"$status")
+  # t05_pooled_tests.jl catches its excluded C2 TestSetException, so an include
+  # returning normally is NOT evidence that every assertion passed.
+  if [[ "$name" == t05_pooled ]] && grep -aq 'C2_PENDING_REPORTED: thin-book failures retained' "$logdir/${name}.log"; then
+    outcome=FAIL_C2_PENDING
+  fi
   printf 'END %s %s %s\n' "$name" "$outcome" "$(date -u +%FT%TZ)"
   tmux kill-session -t "$session"
   if [[ "$outcome" != PASS ]]; then
