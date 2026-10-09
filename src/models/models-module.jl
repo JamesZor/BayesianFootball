@@ -49,7 +49,7 @@ using .PreGame: CountModelBuilder, PoissonCountModel, NegBinCountModel,
     cb_varinfo_sites, cb_chain_columns, cb_parameter_count, GRWDynamicsDesign,
     GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
     GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
-    TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics,
+    TimeDecayDynamics, MultiScaleGRW, QualityStyleGRW, StaticZeroDynamics, PositionalPlayerDynamics,
     GlobalDispersion, HomeAwayDispersion
 
 # Expose the sub-modules and typed posterior API to the rest of the package.
@@ -100,7 +100,7 @@ export cb_predictor_terms, cb_predictor_names, cb_covariates,
 export GRWDynamicsDesign
 export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception
 export GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage
-export TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics
+export TimeDecayDynamics, MultiScaleGRW, QualityStyleGRW, StaticZeroDynamics, PositionalPlayerDynamics
 export GlobalDispersion, HomeAwayDispersion
 # We must re-export the contract function so other modules can use it.
 export required_mapping_keys

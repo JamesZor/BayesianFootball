@@ -23,6 +23,9 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
 
     println("Running MultiScaleGRW dynamics tests...")
     include("test_multiscale_grw.jl")
+
+    println("Running QualityStyleGRW dynamics tests...")
+    include("test_quality_style_grw.jl")
     include("pyramid_tier_tests.jl")
 
     println("Running zero-allocation compiled-gradient tests...")

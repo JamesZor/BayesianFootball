@@ -112,7 +112,7 @@ export DynamicRecombinedGoalsModel, DynamicPxGRecombModel
 export AbstractRecombinationConfig, EmpiricalRecombinationConfig, HierarchicalOfficiatingConfig
 export AbstractSquadWealthConfig, NoSquadWealthConfig, LinearSquadWealthConfig
 export AbstractPxGObservationConfig, NoPxGObservationConfig, GammaPxGObservationConfig
-export TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig, HierarchicalFrankCopulaConfig, GlobalFrankCopulaConfig
+export TimeDecayDynamics, MultiScaleGRW, QualityStyleGRW, StaticZeroDynamics, PositionalPlayerDynamics, HierarchicalPlayerDynamicsConfig, OutfieldPlayerDynamicsConfig, HierarchicalFrankCopulaConfig, GlobalFrankCopulaConfig
 export GlobalDispersion, HomeAwayDispersion
 
 ##

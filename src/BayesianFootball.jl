@@ -115,10 +115,10 @@ using .Models: AbstractPosteriorLatents, CountLatents, RecombLatents, SmileLaten
                cb_parameter_count, GRWDynamicsDesign
 using .Models: GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
                GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
-               TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics
+               TimeDecayDynamics, MultiScaleGRW, QualityStyleGRW, StaticZeroDynamics, PositionalPlayerDynamics
 export GlobalInterception, SeasonalInterception, HierarchicalMonthlyInterception,
        GlobalHomeAdvantage, HierarchicalTeamHomeAdvantage, HierarchicalLeagueHomeAdvantage,
-       TimeDecayDynamics, MultiScaleGRW, StaticZeroDynamics, PositionalPlayerDynamics, build
+       TimeDecayDynamics, MultiScaleGRW, QualityStyleGRW, StaticZeroDynamics, PositionalPlayerDynamics, build
 export GRWDynamicsDesign
 using .Predictions: AbstractScoreGrid, NonMonotoneSmileError, StandardScoreGrid,
                     SmileScoreGrid, GridWorkspace,

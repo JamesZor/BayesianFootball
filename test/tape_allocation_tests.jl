@@ -218,3 +218,17 @@ end
     @test all(n -> occursin("__noguard__", n) && !occursin("__poisson__", n), pruned)
     @test built == 3 * 6 * 2 * 7 - 3 * 5 * 7
 end
+
+@testset "QualityStyleGRW zero-allocation compiled gradient" begin
+    pooled = _ta_pooled_store()
+    model = _ta_build("quality_style_poisson", QualityStyleGRW(), (),
+                      PoissonObservation(), ClampGuard())
+    fs = TA_F.create_features(TA_BOUNDARY, pooled, model, :match_biweek)
+    result = _ta_compiled_bytes(model, fs)
+    @test result.bytes == 0
+    @test result.n_parameters > 0
+    if result.bytes != 0
+        @info "Allocating QualityStyleGRW instructions" result.rows
+    end
+end
+println("TAPE_ALLOCATION_TESTS_DONE")

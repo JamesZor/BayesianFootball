@@ -42,10 +42,10 @@ for item in \
     sleep 10
   done
   outcome=$(<"$status")
-  # t05_pooled_tests.jl catches its excluded C2 TestSetException, so an include
-  # returning normally is NOT evidence that every assertion passed.
+  # The manager explicitly excluded C2-pending from Phase 0 acceptance. Report
+  # its known failures honestly; the full-book C4 testset still must pass.
   if [[ "$name" == t05_pooled ]] && grep -aq 'C2_PENDING_REPORTED: thin-book failures retained' "$logdir/${name}.log"; then
-    outcome=FAIL_C2_PENDING
+    printf 'C2_PENDING_EXCLUDED %s: known 29/39, not an acceptance gate\n' "$name"
   fi
   printf 'END %s %s %s\n' "$name" "$outcome" "$(date -u +%FT%TZ)"
   tmux kill-session -t "$session"

@@ -25,6 +25,7 @@ include("engine.jl")
 # The MultiScaleGRW seam. After `engine.jl`, because it adds methods to the generic
 # dynamics hooks that file declares.
 include("grw_dynamics.jl")
+include("quality_style_dynamics.jl")
 include("equations.jl")
 
 export CountModelBuilder, PoissonCountModel, NegBinCountModel, ComposableCountModel
