@@ -4,7 +4,7 @@ Updated: 2026-10-09 UTC. Owner: pi. Branch: `exp/qs-goal-vs-market`.
 
 ## Current phase
 
-Phase 0 — merged-base branch-health gate, in progress. No component implementation or experiment run has started.
+Phase 0 — merged-base branch-health gate, in progress. No component implementation or experiment run has started. Beast isolated detached checkout at `36e77f4f`; `.env` and `Manifest.toml` linked, pinned snapshot installed with SHA256 `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4` and mtime `2026-09-25 12:57:15.480765468 UTC`.
 
 ## Done
 
@@ -17,4 +17,4 @@ Copy the published ScottishLower snapshot (preserving and restoring prescribed m
 
 ## Open beast sessions
 
-None created yet. Do not touch sessions owned by other workstreams.
+`pi_qsx_gate0`, pane `%319`, Julia REPL for Phase 0; output `/root/BF_runs/logs/qs_experiment/phase0_repl.log`. Do not touch sessions owned by other workstreams.
