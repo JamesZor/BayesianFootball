@@ -1,0 +1,5 @@
+label,experiment,run_id,sampling_git_sha
+grw_joint,scottish_lower_qs_wave2_2426,98447840-e95c-420f-92b4-2db6545506a3,8f285a6a
+qs_joint,scottish_lower_qs_wave2_2426,2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea,8f285a6a
+grw_marketobs,scottish_lower_qs_wave2_2426,e47a71a7-52eb-4aa5-b747-e64099ea9977,081ba5a6
+qs_marketobs,scottish_lower_qs_wave2_2426,81fdf817-f82d-4f66-9bfd-5f456c4fe29f,081ba5a6

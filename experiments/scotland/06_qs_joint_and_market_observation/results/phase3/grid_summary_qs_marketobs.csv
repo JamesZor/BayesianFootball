@@ -1,0 +1,2 @@
+candidate,primary_run_id,final_run_id,rerun_folds,max_rhat,min_ess_tail,git_sha
+qs_marketobs,81fdf817-f82d-4f66-9bfd-5f456c4fe29f,81fdf817-f82d-4f66-9bfd-5f456c4fe29f,,1.0163454040838478,781.3022132891987,081ba5a6

@@ -1,0 +1,1043 @@
+JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16[root@mcmc-beast qs_experiment]# JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+
+  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+
+julia>
+
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/log
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/q
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_e
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_ex
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_exp
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_expe
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_exper
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experi
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experim
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experime
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experimen
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/p
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/ph
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/pha
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phas
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_f
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fi
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fin
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fina
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_a
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_au
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_aud
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audi
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.s
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.st
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.sta
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.stat
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.statu
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status"
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status",
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status",
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "P
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PA
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PAS
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS"
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS")
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS")
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") c
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") ca
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") cat
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catc
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch e
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch er
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err;
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err;
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; s
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; sh
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; sho
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; show
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showe
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; shower
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerr
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerro
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(s
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(st
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(std
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stde
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stder
+
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr,
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr,
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, e
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, er
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err,
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err,
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, c
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, ca
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, cat
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catc
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_b
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_ba
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_bac
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_back
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backt
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtr
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtra
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrac
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace(
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace())
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace());
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace());
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); p
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pr
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pri
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); prin
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); print
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); printl
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(s
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(st
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(std
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stde
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stder
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr)
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr);
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr);
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); w
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wr
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wri
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); writ
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write(
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/r
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/ro
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/roo
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/B
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_r
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_ru
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_run
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/l
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/lo
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/log
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/q
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_e
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_ex
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exp
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_expe
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exper
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experi
+
+
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experim
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experime
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experimen
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/p
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/ph
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/pha
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phas
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_f
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fi
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fin
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_fina
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_a
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_au
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_aud
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audi
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.s
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.st
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.sta
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.stat
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.statu
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status"
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status",
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status",
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "F
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FA
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAI
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL"
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL")
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL")
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL") e
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL") en
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL") end
+
+
+
+
+julia>
+try include("/tmp/qsx2_phase3_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase3_final_audit.status", "FAIL") end
+
+FINAL_GRID_AUDIT_PASS runs=4 folds=160 chains=640 retained_per_chain=1000 hard_passes=16; no new joint runs
+4
+
+
+
+julia>
+
+
+julia>

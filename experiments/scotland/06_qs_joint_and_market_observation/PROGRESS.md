@@ -1,26 +1,30 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 after 20:32 UTC resume (beast). Owner: pi. Manager: Claude.
+Updated: 2026-10-09 after 22:05:57 UTC grid completion (beast). Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 resumed at 081ba5a6: grw_marketobs running.**
-Offline regression57/57 PASS; QS scoring/receipt completed from persisted UUID
-without sampling. Internal GRW paired-control scoring664 rows/9960 fields
-exactly matches existing values (maxdiff0). All80 joint checkpoints SHA256
-unchanged. CONTROL_FORWARDING_REVALIDATION.md. Historical scoring stop at
-source8f285a6a retained in PHASE3_BLOCKED.md.
-GRW control completed as `grw_joint` UUID 98447840-e95c-420f-92b4-2db6545506a3:
-40 folds, Rhat max 1.01008, bulk min 641.78, tail min 324.47 (one review flag),
-zero divergences, no Rhat reruns. QS 40 folds persisted/parity hard PASS,
-UUID 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea, Rhat 1.00937, bulk/tail
-832.35/761.02, zero divergences/reruns due. Initial scoring stopped because the
-wrapper did not supply the GRW control to non-control arms: expected exactly one
-role=:control; found 0. Manager-authorised explicit owned/completed control
-forwarding fixes this within l05/r05 only. V2 skips standalone GRW, resumes QS
-scoring and now samples market arms. Mock-chain queue validation PASS;
-full smoke-probe ETA 12.3192 h was disclosed before approval.
+**Phase 3 COMPLETE; Phase 4 scoring/report next.** All four40-fold arms
+persisted, four hard grid checks per arm PASS, zero divergences, all Rhat<=1.05:
+no prescribed reruns needed. Source8f285a6a initial joints; wrapper fix/resume
+081ba5a6. Offline regression57/57 PASS, QS completes scoring without sampling,
+no standalone/new GRW run. All80 joint checkpoint hashes unchanged.
+All three candidate internal-control score comparisons664rows/9960fields
+EXACT, maxdiff0. Fresh read-only final audit confirms4runs/160folds/640chains,
+1000retained per chain,16hard passes. No owned panes remain.
+
+Final UUIDs (namespace scottish_lower_qs_wave2_2426):
+- grw_joint: 98447840-e95c-420f-92b4-2db6545506a3
+- qs_joint: 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea
+- grw_marketobs: e47a71a7-52eb-4aa5-b747-e64099ea9977
+- qs_marketobs: 81fdf817-f82d-4f66-9bfd-5f456c4fe29f
+
+KEEP tail-ESS400 review flags: GRW joint324.47, GRW market339.34 (bulk395.44).
+No extra sampling is authorised for tail ESS. PHASE3.md / results/phase3
+has complete CSV evidence, checks, UUIDs and rerun-selection ledgers.
+Historical missing-control stop retained in PHASE3_BLOCKED.md/v1 logs;
+CONTROL_FORWARDING_REVALIDATION.md documents authorised correction/parity.
 
 ## Done
 
@@ -57,28 +61,21 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Poll v2 launcher every5–6min (20min on Claude route), preserve market-arm
-checkpoints/UUIDs/diagnostics and prescribed reruns. Stop on any gate failure
-including every-field GRW score parity (exact/absolute1e-12). No standalone
-GRW stage or joint resampling; QS completed scoring/receipt from2a5eee90.
-Explicit control preflight verifies experiment/status/all40 folds. All science
-unchanged. Original approved order:
-`grw_joint → qs_joint → grw_marketobs → qs_marketobs`, each 4×(500+1000).
-Preserve initial/final UUIDs, diagnostics, rerun-selection CSVs and manifests.
-Final divergence <=0.1%, finite Rhat; report residual Rhat flags and tail ESS
-against 400. Never third attempt or choose a favourable initial fit.
-After all four arms: commit Phase 3 evidence, then Phase 4 prescribed scoring
-and Phase 5 frozen-seed reproduction. No reference refits, ROI/staking or
-prior/data/budget/seed/threshold changes.
+Phase4: prescribed score/report pairs and three bootstrap paths, exact saved
+wave1 reference parity, fold posterior r/sigma and r figure, leaderboard rows.
+Classify on noncircular8-week interval, flag circular contradictions. Read the
+original work package §4 and wave1 scoring paths before implementation.
+Phase5: fresh frozen-seed one-fold reproduction per new arm, byte comparison.
+Do not refit references or tune priors/data/budgets/seeds/thresholds. No ROI/staking.
+Retain both GRW tail flags in the report. Task remains IN_PROGRESS.
 
 ## Beast panes and artifacts
 
-OPEN v2 launcher pi_qsx2_grid_launcher_v2 %394; fresh grw_marketobs REPL
-pi_qsx2_phase3_grid_v2_grw_marketobs %396 (started20:32:29UTC).
-Offline regression %393 and resumed QS %395 closed after PASS. Prior %390–392
-and all earlier owned panes closed; other sessions untouched. Both joint fits
-and all80 initial checkpoints preserved, hashes unchanged. Do not update the
-beast checkout while grid runs.
+NO owned panes open. Successful market REPLs%396/%397 closed automatically;
+launcher%394 closed after PASS. Fresh read-only final audit%398 PASS, then
+closed after evidence retrieval. Offline regression%393/resumedQS%395 and
+all earlier owned panes closed. Other sessions untouched. All160 initial
+fold checkpoints/both original joint fits preserved; joint hashes unchanged.
 
 Checkout: `/root/BF_runs/qs_experiment` at 081ba5a6.
 Checkpoints: `data/checkpoints/scottish_lower_qs_wave2_2426/<arm>/` in checkout.
@@ -102,4 +99,4 @@ All five phase boundaries evidenced and committed/pushed; exact work-package
 tests, four smoke hard passes plus manager grid approval, ordered grids,
 complete CSV-traceable paired report and exact saved reference parity,
 fresh frozen-seed reproduction, todo/diff checks. Stop on failed gates;
-no loosened thresholds. Phase 3 and later are not complete.
+no loosened thresholds. Phase3 complete; Phase4/5 are NOT complete.
