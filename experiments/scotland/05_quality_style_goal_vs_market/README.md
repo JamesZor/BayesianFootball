@@ -18,9 +18,9 @@ model fitted to the market itself?
 | `market_c0` | Phase C C0 Gaussian Kalman QS model on inverted Betfair closes, refitted per fold | — | market arm (not a builder model) |
 
 The goal arms use `GlobalInterception`, `GlobalHomeAdvantage` and the W2 sampler (4 × (500 + 1000),
-acceptance 0.65). `QualityStyleGRW` uses α = q + s and β = s − q, with per-side scales τ shared with
-the control's priors (τ₀ ~ Gamma(2, 0.08), τₛ ~ Gamma(2, 0.0425), τₖ ~ Gamma(2, 0.0135)), so the QS
-arms differ from each other only in r.
+acceptance 0.65). `QualityStyleGRW` uses α = q + s and β = s − q. Its per-side scales
+(τ₀ ~ Gamma(2, 0.08), τₛ ~ Gamma(2, 0.0425), τₖ ~ Gamma(2, 0.0135)) have prior means equal to
+the averages of the control's attack/defence prior means. The QS arms differ from each other only in r.
 
 Scope `lower`: tournaments 56/57, two history seasons, `match_biweek`, targets 24/25 + 25/26. That
 gives 40 walk-forward folds and 710 held-out fixtures.
@@ -47,7 +47,7 @@ smallest transition bias. Its gap to every goal arm is not detectable.
 | Arm | LL all | LL 1X2 | Δ 1X2 vs control [block 90%] | LL OU2.5 | Compression | Run |
 |---|---:|---:|---|---:|---:|---|
 | `control_grw` (ctl) | 0.64452 | 0.61678 | 0 | 0.68786 | 1.192 | `a036d22a` |
-| `control_td` | 0.64685 | 0.62046 | +0.00368 (from the control_grw − control_td pair: [−0.00715, +0.00103]) | 0.68983 | 2.782 | `1dccb320` |
+| `control_td` | 0.64685 | 0.62046 | +0.00368 [−0.00103, +0.00715] (sign-reversed pair) | 0.68983 | 2.782 | `1dccb320` |
 | `qs_market_r` | 0.64520 | 0.61837 | +0.00159 [+0.00042, +0.00369] worse | 0.68708 | **1.007** | `b18ae74b` |
 | `qs_weak_r` | 0.64472 | 0.61785 | +0.00107 [+0.00032, +0.00287] worse | 0.68682 | 1.051 | `21f2a9f9` |
 | `market_c0` | **0.64240** | **0.61343** | −0.00335 [−0.00702, +0.00434] | 0.68859 | 1.023 | files |
@@ -71,7 +71,8 @@ Full tables, goal log-score channels, posterior r by fold and the bootstrap cave
 - **Block bootstrap.** The prescribed noncircular 8-week scheme is off-centre on this panel by up
   to 0.0058. A circular-block sensitivity is reported alongside it; it does not replace the prescribed class.
 - **Leaderboard.** Goal-arm grid scores are written to `harness_scores`. The shared
-  `experiments/LEADERBOARD.md` and `REGISTER.md` are not regenerated here; see TODO 040.
+  `experiments/LEADERBOARD.md`, `LEADERBOARD.csv` and `REGISTER.md` were regenerated through
+  `scripts/leaderboard.jl`; all four goal UUIDs are present. The market arm remains file-based.
 
 ## Reproduction
 
@@ -84,7 +85,11 @@ owned `pi_qsx_*` REPLs from detached checkouts of `exp/qs-goal-vs-market`.
 - Smokes: `r03_goal_smoke.jl` and `r03_market_smoke.jl`, at `2060056f`.
 - Grids: `r04_goal_grid.jl` (`-t 14`, cores 0–13, seeds 4001–4004 in priority order) and
   `r04_market_grid.jl` (`-t 2`, then resumed at `-t 16`), at `e6685ceb`.
-- Scoring: `r05_score.jl` (+ `r05_score_r_only.jl`, + `r05_block_check.jl`), at `81c77a42`+.
+- Scoring: `r05_score.jl` (+ `r05_score_r_only.jl`, + `r05_block_check.jl`), at `81c77a42`+;
+  `r05_figures.jl` renders the frozen posterior-r CSV.
+- Reproduction: fresh-REPL `r06_reproduce.jl` at `ac04b173`: all six refits exact.
+- Final record: `r07_finalize.jl` verifies persisted scores, upserts the completed decision and
+  regenerates the shared leaderboard/register without resampling.
 
 Logs are in `/root/BF_runs/logs/qs_experiment/`. Byte-for-byte refit checks are in
 [REPRODUCIBILITY.md](REPRODUCIBILITY.md).

@@ -81,6 +81,11 @@ Posterior-mixture scores over each arm's own draws, as in R07: 4,000 draws per g
 
 Ranges are across folds. Per-fold rows: `results/posterior_r_by_fold.csv`.
 
+![Posterior r medians and 90% intervals by fold, with prior medians](results/posterior_r_by_fold.svg)
+
+Whiskers are per-fold posterior 90% intervals; dashed lines are prior medians. All panels use
+the same logarithmic scale. Folds 1 and 21 have no sampled micro-scale ratio, so no rₖ point is shown.
+
 ## Files
 
 `results/RUNS.csv`, `harness_scores_vs_control_grw.csv` (full harness scorecard incl. subsets and transition cohorts), `paired_logloss.csv`, `paired_goal_logscore.csv`, `block_bootstrap_check.csv`, `posterior_r_by_fold.csv`, `market_grid_summary.csv`. Beast outputs: `/root/BF_runs/qs_experiment_out/`. Logs: `/root/BF_runs/logs/qs_experiment/`.

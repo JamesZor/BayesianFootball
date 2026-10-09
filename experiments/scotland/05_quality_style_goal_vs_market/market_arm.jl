@@ -16,7 +16,7 @@ const PM = Q.PM
 const FG = Q.FG
 const D = BayesianFootball.Data
 const SNAPSHOT_SHA = "c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4"
-# Phase C C0 10b chain seeds; fold k uses these + 100k (frozen before any market fit).
+# Phase C C0 10b chain seeds; fold k uses these + 100 * k (frozen before any market fit).
 const SEEDS = Int.(TOML.parsefile(joinpath(STREAM, "fullbook_seeds.toml"))["C0"]["10b"])
 const PREDICTION_SEED = 3963
 const N_THETA = 128
