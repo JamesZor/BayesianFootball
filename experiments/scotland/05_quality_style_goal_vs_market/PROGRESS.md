@@ -8,11 +8,11 @@ Phase 4 — **GRID RUNNING at `e6685ceb`** (manager approved 2026-10-09 with ord
 
 | Arm | Status | Started (UTC) | Hours | run_id |
 |---|---|---|---|---|
-| control_grw | running | 13:09 | | |
-| qs_market_r | queued | | | |
+| control_grw | **done**, hard PASS; max R̂ 1.0117, min ESS 650/644, 6 div (3.75e-5); 1X2 LL 0.61678 | 13:09 | 0.26 | `a036d22a-ff32-404c-b801-5f928d8a89f4` |
+| qs_market_r | running | 13:25 | | |
 | qs_weak_r | queued | | | |
 | control_td | queued | | | |
-| market (C0) | running, fold 1/40 done (234 s, identical to smoke) | 13:10 | | n/a (files) |
+| market (C0) | running; folds 1–6 done, all gates pass (R̂ ≤ 1.0013), ~175–260 s/fold on 2 threads → ~2.7 h total | 13:10 | | n/a (files) |
 
 Phase 3 — smokes DONE at `2060056f`.
 
