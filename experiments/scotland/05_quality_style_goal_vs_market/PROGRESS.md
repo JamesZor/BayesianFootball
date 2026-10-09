@@ -8,11 +8,13 @@ Phase 4 — **GRID RUNNING at `e6685ceb`** (manager approved 2026-10-09 with ord
 
 | Arm | Status | Started (UTC) | Hours | run_id |
 |---|---|---|---|---|
-| control_grw | **done**, hard PASS; max R̂ 1.0117, min ESS 650/644, 6 div (3.75e-5); 1X2 LL 0.61678 | 13:09 | 0.26 | `a036d22a-ff32-404c-b801-5f928d8a89f4` |
-| qs_market_r | running | 13:25 | | |
-| qs_weak_r | queued | | | |
-| control_td | queued | | | |
-| market (C0) | running; folds 1–6 done, all gates pass (R̂ ≤ 1.0013), ~175–260 s/fold on 2 threads → ~2.7 h total | 13:10 | | n/a (files) |
+| control_grw | **done**, hard PASS; max R̂ 1.0117, min ESS bulk 650, 6 div (3.75e-5); 1X2 LL 0.61678 | 13:09 | 0.26 | `a036d22a-ff32-404c-b801-5f928d8a89f4` |
+| qs_market_r | **done**, hard PASS; max R̂ 1.0100, ESS 951, 2 div (1.25e-5); 1X2 LL 0.61837 | 13:25 | 0.27 | `b18ae74b-9bc1-4cfa-b363-a640131adb2d` |
+| qs_weak_r | **done**, hard PASS; max R̂ 1.0092, ESS 820, 0 div; 1X2 LL 0.61785 | 13:41 | 0.26 | `21f2a9f9-b96f-4034-97de-767704a9d54a` |
+| control_td | **done**, hard PASS; max R̂ 1.0072, ESS 1079, 13 div (8.1e-5); 1X2 LL 0.62046 | 13:57 | 0.03 | `1dccb320-526c-4700-9258-134788a636ef` |
+| market (C0) | folds 1–16 done on 2 threads, all gates pass; goal grids finished, so restarted at 14:3x on 16 threads (session `%340`), resuming from fold 17 (fold 17 was in flight, empty dir, refitted from scratch with the same seeds) | 13:10 | | n/a (files) |
+
+All goal folds R̂ ≤ 1.0117 (max over parameters, all folds) → **no R̂ > 1.05 reruns needed**. Divergences ≤ 8.1e-5 ≪ 0.1%. Goal grids ran ~0.26 h per GRW arm (the ETA was based on older, slower runs). The 1X2 LogLoss above is the harness `target`/`1X2` score printed by the grid runner, not a paired comparison; the paired intervals come in Phase 5.
 
 Phase 3 — smokes DONE at `2060056f`.
 
@@ -47,6 +49,6 @@ Poll every 20 min. Per arm: record hours, run_id, R̂/divergences; refit any goa
 
 ## Open beast sessions
 
-- `pi_qsx_goal_grid` pane `%338`: `-t 14`, cores 0–13, `r04_goal_grid.jl`, log `/root/BF_runs/logs/qs_experiment/phase4_goal_grid.log`.
-- `pi_qsx_market_grid` pane `%339`: `-t 2`, cores 14–15, `r04_market_grid.jl`, log `phase4_market_grid.log`, outputs `/root/BF_runs/qs_experiment_out/market_grid/`.
+- `pi_qsx_market_grid` pane `%340`: `-t 16`, cores 0–15, `r04_market_grid.jl` (resume), log `/root/BF_runs/logs/qs_experiment/phase4_market_grid.log`, outputs `/root/BF_runs/qs_experiment_out/market_grid/`.
+- `pi_qsx_goal_grid` (%338) and the 2-thread market session (%339) closed.
 - `pi_qsx_phase2` closed. No other sessions touched.
