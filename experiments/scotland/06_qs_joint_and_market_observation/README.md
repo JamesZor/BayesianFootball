@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid explicitly authorised after disclosure; queue validation precedes sampling. Full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
+> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid explicitly authorised after disclosure; mock-chain queue validation PASS, ordered grid running at 8f285a6a (grw_joint first). Full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
@@ -60,17 +60,28 @@ aligns by match ID; held-out matches never appear in their fold's training rows.
   Raw logs: /root/BF_runs/logs/qs_experiment_w2/.
 - ETA will extrapolate the largest-fold full-concurrency probe to
   40x4x1500 iterations. This excludes grid/scoring overhead and is not a guarantee.
-- **Ask manager after all four smoke hard passes, before ANY grid.**
+- Manager approval obtained after all four hard passes and convergence/ETA disclosure; grid started 19:07:51 UTC at frozen source 8f285a6a.
 
-## Current Phase 2 stop
+## Historical Phase 2 stop (resolved)
 
-V2 source ac30c4d7: grw_joint/qs_joint all six hard checks pass; grw_marketobs
-five pass then fit_parity fails; qs_marketobs not started. All short-smoke
-convergence/performance review flags retained. Read-only audit at 58665779
-shows all injected dictionary values survive the database round trip exactly,
-but the structural comparator examines Dict internals. No gate fix/retry yet;
-manager parity/eligibility review required. Full partial results, UUIDs, flags
-and ETA caveats: [PHASE2_PARITY_BLOCKED.md](PHASE2_PARITY_BLOCKED.md).
+V2 source ac30c4d7: both joint smokes pass; dictionary-backed grw_marketobs
+fails fit_parity. Read-only audit at 58665779 shows all injected dictionary
+values survive the round trip, but the comparator examines Dict internals.
+Manager-authorised array feature and canonical identity at b006743f resolve
+this without harness edits. Full revalidation and market-only smokes pass;
+joint passes retained. Historical evidence remains in
+[PHASE2_PARITY_BLOCKED.md](PHASE2_PARITY_BLOCKED.md); current acceptance in
+[PHASE2.md](PHASE2.md). Convergence/performance flags remain.
+
+## Phase 3 running
+
+Mock-chain queue validation passed checkpoint resume and exact seeded replay.
+Approved grid at 8f285a6a runs in fixed order with atomic checkpoints and
+immutable per-chain seed manifests. Each initial Rhat>1.05 fold receives one
+attempt-1 rerun; always use the rerun, never choose the better fit. Initial
+UUIDs/diagnostics retained. Final divergence <=0.1%, finite Rhat; tail ESS
+review against 400. No arm complete or predictive result claimed yet.
+See [PROGRESS.md](PROGRESS.md) for active panes and latest checkpoint count.
 
 ## Decision and planned comparisons
 

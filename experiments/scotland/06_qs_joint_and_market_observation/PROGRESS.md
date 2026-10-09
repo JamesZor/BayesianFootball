@@ -1,42 +1,88 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 UTC. Owner: pi. Manager: Claude.
+Updated: 2026-10-09 19:21 UTC (beast). Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Manager GRID approval received; grid queue validation next, no production sampling yet.** Array feature revalidated b006743f (3831/3831, tapes 160/160 at 0 B); joint ac30c4d7 passes retained, markets d0d933ae pass actual DB parity. No harness edits. Short-smoke convergence/performance flags remain; full ETA 12.3192 h. Previous dictionary parity failure at ac30c4d7 retained; prior Phase 1 PASS at 153239a7 is historical baseline. Historical recipe-loading failure at 73147ce0 retained in PHASE2_BLOCKED.md. Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. V2 joint smoke UUIDs and failed market-observation fit UUID are recorded in PHASE2_PARITY_BLOCKED.md. Earlier loader failure had no sampling. No grid or predictive scoring.
+**Phase 3 approved grid running at frozen source 8f285a6a.** First arm
+`grw_joint`: 2/40 initial fold checkpoints landed (folds 2 and 36) as of
+19:21 UTC. No arm complete, grid UUID or predictive result claimed.
+Mock-chain queue validation PASS, including checkpoint resume and exact seeded
+replay. No failure reported; active Julia process using about 12 cores / 5 GB.
+Full four-arm smoke-probe ETA 12.3192 h excludes overhead and reruns.
 
 ## Done
 
-- Local branch clean at 9a86f7b1; task created/claimed.
-- Beast checkout `/root/BF_runs/qs_experiment` clean at d16a5800, dependency/environment symlinks intact.
-- Pinned snapshot digest and original mtime verified unchanged.
-- Read wave-1 summary, panel/fold code and Phase 0 launcher; manager C2 exclusion preserved.
-- Setup committed/pushed at ec96c079; isolated beast checkout updated to that exact source; tests launched.
-- Fresh QS 373/373 (59.98 s include wall); MultiScaleGRW 124/124 (44.78 s); tape 150/150 plus QS 2/2, 0 B assertions pass (339.35 s); builder 106/106 (71.40 s); harness 179/179 (111.53 s).
-- Market t01–t06 pass; pooled full-book 305/305, C2-pending 29/39 explicitly excluded. Exact summaries committed under logs/.
-- Exact joint-feature coverage: both 56 and 57 have 180–530 covered training matches per fold (50%–100%); all 710 held-out matches covered. Per-fold CSV recorded.
-- Phase 0 complete 15:32:29 UTC; all owned sessions closed.
-- MarketRateObservation, injected feature, exports/seams, tests and table adapter prepared at 27c53ede; fresh-REPL launcher at 351b8ddd. No acceptance claimed.
-- Phase 1 preparation failed 15:47:15 UTC (50.78 s): saved wave-1 manifest encodes Main.QSMarketArm, new loader nests it under Main.Wave2MarketTable. The exact repr provenance guard stopped before freezing a table. Evidence preserved; owned idle sessions closed.
-- Manager authorised original namespace; preparation-v2 PASS 15:58:54 UTC, 36.2634 s. Frozen table 1,430 rows / 1,107 full books, target counts exactly 710/595/78/517, exact values match wave-1 panel after CSV round-trip.
-- Frozen market_rates.csv SHA256: 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549. Guard/manifest unchanged; manifest digest identical before/after.
-- Component entry point failed 16:07:56 UTC (183.3400 s include): likelihood 22/23, GRW AD 2867/2932, QS AD 2627/2932, recovery 15/16 assertions. All AD failures are central finite differences; compiled/fresh ReverseDiff and ForwardDiff comparisons pass. 13/14 recovery intervals cover; GRW defence micro scale misses. Details/evidence in PHASE1_BLOCKED.md and results/synthetic_recovery.csv. No new gate executed afterward; table and manifest digests unchanged.
+- Phase 0 PASS at ec96c079, evidence 2f0c01e9. Fresh QS 373/373,
+  MultiScaleGRW 124/124, tapes 150+2 at 0 B, builder 106/106,
+  harness 179/179, market t01–t06 with authorised C2-pending exclusion
+  (29/39). Proxy-xG coverage every training fold/tournament 56/57:
+  180–530 matches, 50–100%; held-out 710/710. PHASE0.md.
+- Phase 1 table preparation PASS at 4a71c02e: exact wave-1 value/CSV parity,
+  1430 rows / 1107 full books; target counts 710/595/78/517. Manager-authorised
+  Main.QSMarketArm namespace, original provenance guard/manifest untouched.
+- Amended component PASS at 153239a7: 3787/3787; exact AD <=4.2e-16,
+  selected-coordinate FD convergence/Richardson gates; all three recovery
+  seeds per arm 39/42 coverage, zero all-seed misses. PHASE1.md.
+- Array-backed feature / canonical observation identity at b006743f fully
+  revalidated: component 3831/3831, tape entry point 160/160 at 0 B,
+  AD <=4.11e-16, all 42 recovery intervals exactly reproduced. Evidence
+  d0d933ae / ARRAY_FEATURE_REVALIDATION.md. No src/harness edits; comparator
+  AbstractDict gap recorded as out-of-package TODO follow-up.
+- Phase 2 all four six-hard-check smokes PASS. Joint source ac30c4d7 retained;
+  market-only d0d933ae includes real DB parity. Fresh read-only eligibility
+  audit confirms all four recipes. Evidence a7b332a6 / PHASE2.md.
+  All short-smoke convergence/performance flags retained: GRW market
+  Rhat 1.13787 / bulk ESS 16.10 / tail 57.47, QS market
+  1.06250 / 67.14 / 74.33, zero divergences. Prior GRW 1.14/bulk16/4.219 h
+  warning disclosed alongside full four-arm 12.3192 h ETA before approval.
+- Manager explicitly approves fixed order/budget. l05/r05 durable seeded
+  queue at 8f285a6a; mock validation complete 19:06:40 UTC. Grid started
+  19:07:51 UTC. Atomic per-fold checkpoints, UUID receipts, one prescribed
+  attempt-1 rerun for every initial Rhat>1.05 fold, always select the rerun.
 
-- Amended Phase 1 complete 16:47:05 UTC at 153239a7. Exact AD errors <=4.2e-16 at 1e-10 gate, historical FD counts 65/305 reproduce; all selected-coordinate convergence/Richardson checks pass. Recovery 39/42 (92.86%), no parameter misses all 3 seeds. All intervals and derivative evidence frozen in results/; see PHASE1.md.
+Earlier failures remain in PHASE1_BLOCKED.md, PHASE2_BLOCKED.md and
+PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Fresh full component and tape entry points at b006743f PASS, complete 18:13:39 UTC; see ARRAY_FEATURE_REVALIDATION.md. Acceptance evidence pushed at d0d933ae; market-only smokes PASS, complete 18:36:10 UTC. Read-only eligibility audit PASS for all four recipes, 18:44:26 UTC. PHASE2 evidence pushed a7b332a6; manager explicitly approves grid. Freeze l05/r05 queue/seeds, validate mock-chain durability/resume, then launch prescribed order. phase1_arrays outputs retain old evidence; all three declared recovery seeds per arm revalidated. On pass, ONLY market-arm smokes, retaining joint passes. No src/harness changes; AbstractDict gap logged as TODO follow-up. Before grid ask manager with prior GRW market Rhat 1.14 / bulk ESS 16, 4.2 h ETA, new flags and full four-arm ETA. No predictive scores/reference refits or priors/truths/seeds/threshold changes.
+Poll every 5–6 min on Codex (20 min on Claude route). Watch launcher and
+checkpoint landings; stop/report any gate failure. Approved order:
+`grw_joint → qs_joint → grw_marketobs → qs_marketobs`, each 4×(500+1000).
+Preserve initial/final UUIDs, diagnostics, rerun-selection CSVs and manifests.
+Final divergence <=0.1%, finite Rhat; report residual Rhat flags and tail ESS
+against 400. Never third attempt or choose a favourable initial fit.
+After all four arms: commit Phase 3 evidence, then Phase 4 prescribed scoring
+and Phase 5 frozen-seed reproduction. No reference refits, ROI/staking or
+prior/data/budget/seed/threshold changes.
 
 ## Beast panes and artifacts
 
-Validation REPLs %381/%382 and launcher %380 closed after PASS/evidence retrieval. Earlier V2 %375–%378 and audit %379 closed. Market launcher %383 / market REPLs %384–%385 and read-only audit %386–%387 closed after PASS/evidence retrieval. None open. Both joint hard smokes pass (6/6 each); marketobs 5 pass/1 parity failure, other market arm not started. Convergence/performance review flags retained; no grid. Failed grw_joint REPL %374 and launcher %373 closed after evidence retrieval. Initial shell-only launcher %372 also closed; no Julia ran there. All earlier owned panes closed; other sessions untouched. Diagnosis `%365`/`%366` also closed. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
-Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
+OPEN: launcher `pi_qsx2_grid_launcher_v1` %390 and first-arm fresh REPL
+`pi_qsx2_phase3_grid_v1_grw_joint` %391. Gate advances in approved order,
+closes each successful arm and retains failed pane for diagnosis.
+All earlier owned panes %342–%389 closed; other sessions untouched.
+Do not update the beast checkout during the running grid.
+
+Checkout: `/root/BF_runs/qs_experiment` at 8f285a6a.
+Checkpoints: `data/checkpoints/scottish_lower_qs_wave2_2426/<arm>/` in checkout.
+Logs: `/root/BF_runs/logs/qs_experiment_w2/phase3_launcher_v1.log`
+and `phase3_grid_v1_<arm>.log`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
-Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.
+Local evidence: experiment `logs/` and `results/`.
+Frozen market_rates.csv SHA256:
+`680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549`.
+Original saved inversion manifest SHA256:
+`57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1`.
+Pinned snapshot SHA256:
+`c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`,
+mtime `2026-09-25 12:57:15.480765468 UTC` unchanged.
 
 ## Definition of done
 
-All five phase boundaries evidenced and committed/pushed; exact work-package tests, four smoke hard passes plus manager grid approval, ordered grids, complete CSV-traceable paired report and saved reference parity, fresh frozen-seed reproduction, todo/diff checks. Stop on a failed gate; do not loosen thresholds.
+All five phase boundaries evidenced and committed/pushed; exact work-package
+tests, four smoke hard passes plus manager grid approval, ordered grids,
+complete CSV-traceable paired report and exact saved reference parity,
+fresh frozen-seed reproduction, todo/diff checks. Stop on failed gates;
+no loosened thresholds. Phase 3 and later are not complete.
