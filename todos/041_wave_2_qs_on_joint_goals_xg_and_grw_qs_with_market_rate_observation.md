@@ -18,7 +18,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 ## Acceptance Criteria
 
 - [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
-- [ ] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery revalidated for array feature under manager amendments.
+- [x] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery revalidated for array feature under manager amendments.
 - [ ] Four W2 candidates pass smoke hard gates; manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [ ] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
@@ -59,6 +59,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Manager authorises in-component parity fix only: MarketRatesFeature sorted plain ID/rate/Bool vectors, binary search extraction; no src/harness edits. Revalidate full component and 0 B tape entry points in fresh beast REPLs, then ONLY market smokes; joint passes stand. Preserve prior GRW market smoke Rhat 1.14 / bulk ESS 16 and 4.2 h ETA for grid approval discussion, with full four-arm ETA. All frozen inputs/priors/budgets/seeds unchanged; new outputs preserve old evidence.
 - [2026-10-09 @pi] FOLLOW-UP (out of package): harness _structural_equal has no AbstractDict method, so future Dict-carrying configurations can fail persistence parity despite identical active contents. Record for a separate harness task; do not fix or bypass here. Historical-failure eligibility is also unchanged; component-local canonical display explicitly authorised in a separate confirmation gives the vector recipe a content/prior identity; arrays alone do not change the generic model display. It is not a relabelled failed attempt.
+
+- [2026-10-09 @pi] Array feature at b006743f fully revalidated in fresh beast REPLs %381/%382: component 3831/3831, tape entry point 150+2+8/160 (0 B). Exact AD <=4.11e-16, 735 Richardson checks pass unchanged 1e-8 gate. ALL 3 declared recovery seeds per arm rerun: 39/42 coverage, zero all-seed misses; all 42 interval values exactly reproduce prior evidence. No harness edits. New report ARRAY_FEATURE_REVALIDATION.md / phase1_arrays outputs; next ONLY market smokes, no grid yet.
 
 ## Verification & Findings
 

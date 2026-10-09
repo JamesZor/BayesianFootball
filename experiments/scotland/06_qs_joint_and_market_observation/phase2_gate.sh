@@ -20,7 +20,7 @@ for arm in grw_marketobs qs_marketobs; do
   tmux send-keys -t "$pane" -l -- 'JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16'
   sleep 0.2
   tmux send-keys -t "$pane" Enter
-  code="ENV[\"QSX2_ONLY\"] = \"$arm\"; started = time(); try include(\"experiments/scotland/06_qs_joint_and_market_observation/r03_smoke.jl\"); println(\"PHASE2_INCLUDE_RETURNED_$arm wall_s=\", time()-started); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE2_FAIL_$arm wall_s=\", time()-started); write(\"$status\", \"FAIL\") end; write(\"$notify\", read(\"$status\", String) * \"\\n\")"
+  code="ENV[\"QSX2_ONLY\"] = \"$arm\"; ENV[\"QSX2_SMOKE_OUTPUT\"] = \"/root/BF_runs/qs_experiment_w2_out/phase2_arrays\"; started = time(); try include(\"experiments/scotland/06_qs_joint_and_market_observation/r03_smoke.jl\"); println(\"PHASE2_INCLUDE_RETURNED_$arm wall_s=\", time()-started); write(\"$status\", \"PASS\") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println(\"PHASE2_FAIL_$arm wall_s=\", time()-started); write(\"$status\", \"FAIL\") end; write(\"$notify\", read(\"$status\", String) * \"\\n\")"
   sleep 8
   tmux send-keys -t "$pane" -l -- "$code"
   sleep 0.2

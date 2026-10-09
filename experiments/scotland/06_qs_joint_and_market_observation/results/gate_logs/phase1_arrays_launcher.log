@@ -1,0 +1,5 @@
+START phase1_arrays_market test/test_market_rate_observation.jl pane=%381 2026-10-09T17:59:33Z
+END phase1_arrays_market PASS 2026-10-09T18:07:42Z
+START phase1_arrays_tape test/tape_allocation_tests.jl pane=%382 2026-10-09T18:07:42Z
+END phase1_arrays_tape PASS 2026-10-09T18:13:39Z
+PHASE1_REQUESTED_GATES_PASS

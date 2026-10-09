@@ -25,6 +25,6 @@ w2_smoke_metadata = (; experiment = W2_SMOKE_CANDIDATES.EXPERIMENT,
 
 # %% 4. Full harness smoke: folds 1 and 40, 2x(200+200), 16-chain performance probe
 w2_smoke_summary = Wave2Smoke.run(w2_smoke_candidate, w2_smoke_ds, w2_smoke_metadata;
-    output = "/root/BF_runs/qs_experiment_w2_out/phase2",
+    output = get(ENV, "QSX2_SMOKE_OUTPUT", "/root/BF_runs/qs_experiment_w2_out/phase2"),
     log_dir = ENV["BF_LOG_DIR"])
 println("PHASE2_SMOKE_DONE arm=", w2_smoke_name)

@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** manager-authorised array feature prepared; fresh component/tape revalidation next. Joint smoke passes stand. Grid NOT authorised.
+> **Status:** array feature revalidated: component 3831/3831, tapes 160/160 at 0 B. Joint smoke passes stand; ONLY market smokes next. Grid NOT authorised.
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
