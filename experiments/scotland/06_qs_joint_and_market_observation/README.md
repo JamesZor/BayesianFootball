@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** Phase 4 scored/reported; Phase 5 frozen-seed reproduction next. All four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Exact saved reference parity; GRW ESS review flags retained. See [REPORT.md](REPORT.md) and [PHASE3.md](PHASE3.md).
+> **Status:** Phase 4 reported and all four Phase 5 frozen-seed reproductions byte-identical; final register/audit checks in progress. All four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Exact saved reference parity; GRW ESS review flags retained. See [REPORT.md](REPORT.md) and [PHASE3.md](PHASE3.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; run UUID `98447840-e95c-420f-92b4-2db6545506a3`.
 > **Scorecard:** v1.2, de-vigged Betfair TWA(−20,0]; same wave1 score/interval paths, saved reference UUIDs only.
@@ -131,4 +131,6 @@ Scoring runner: `r06_score.jl`, reused unchanged wave1 block/goal-cluster script
 Exact saved reference metrics and goal-fixture scores pass; reused harness CSV
 rows are byte-identical to wave1. No scoring DB writes, reference refits or ROI.
 Wave1 source/result provenance discrepancy is a separate TODO041 follow-up,
-not repaired here. Frozen-seed reproduction: `r07_reproduce.jl` / `phase5_gate.sh`.
+not repaired here. Frozen-seed reproduction: `r07_reproduce.jl` / `phase5_gate.sh`;
+all4 fold1 posterior chain/latent payloads byte-identical, maxdiff0. All160
+original checkpoint digests unchanged. See [REPRODUCIBILITY.md](REPRODUCIBILITY.md).

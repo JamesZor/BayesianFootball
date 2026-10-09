@@ -1,0 +1,14 @@
+bash experiments/scotland/06_qs_joint_and_marke 
+t_observation/phase5_gate.sh; echo PHASE5_LAUNCHER_EXIT:$?
+
+START phase5_repro_grw_joint pane=%403 2026-10-09T22:43:05Z
+END phase5_repro_grw_joint PASS 2026-10-09T22:44:53Z
+START phase5_repro_qs_joint pane=%404 2026-10-09T22:44:53Z
+END phase5_repro_qs_joint PASS 2026-10-09T22:46:44Z
+START phase5_repro_grw_marketobs pane=%405 2026-10-09T22:46:44Z
+END phase5_repro_grw_marketobs PASS 2026-10-09T22:48:36Z
+START phase5_repro_qs_marketobs pane=%406 2026-10-09T22:48:36Z
+END phase5_repro_qs_marketobs PASS 2026-10-09T22:50:31Z
+PHASE5_REPRODUCTIONS_PASS
+PHASE5_LAUNCHER_EXIT:0
+[root@mcmc-beast qs_experiment]# 

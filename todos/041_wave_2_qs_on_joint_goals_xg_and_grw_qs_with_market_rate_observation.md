@@ -23,7 +23,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [x] Manager approval before grid.
 - [x] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [x] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
-- [ ] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
+- [x] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
 - [ ] Phase-boundary commits/pushes, progress/decisions current; todo check and diff check pass.
 
 ## Ideas & Candidate Solutions
@@ -78,6 +78,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Phase3 COMPLETE22:05:57UTC at081ba5a6: both market arms finish ordered grids, UUIDs e47a71a7-52eb-4aa5-b747-e64099ea9977 /81fdf817-f82d-4f66-9bfd-5f456c4fe29f. All4arms×40folds,4chains×1000retained,16hard checks PASS, zero divergences, maxRhat1.01721: no prescribed reruns due. Each candidate control parity664rows/9960fields EXACT maxdiff0. GRWjoint tail324 and GRWmarket tail339/bulk395 review flags retained. Fresh read-only DB audit confirms exactly4completed named runs (no new joint runs); all80joint hashes still unchanged. PHASE3.md/results/phase3 exact CSVs/logs. All owned panes closed, source/science unchanged. Phase4/5 remain; TODO stays IN_PROGRESS.
 
 - [2026-10-09 @pi] Phase4 COMPLETE: fresh v2 score/interval/record gates PASS. Manager-authorised single-parenthesis wave2-only fix; failed v1 retained. All56market/30goal pairs, prescribed/circular/cluster intervals,236r/120sigma rows/native SVG, CSV-traceable10line summary. Reference metrics and710goal rows per reference exact;1992 reused harness CSV rows byte-identical. Existing Phase3 scores4×664rows/9960fields EXACT maxdiff0; canonical boards add only four grid rows/cohorts and this register row. No primary noncircular1X2 detectable difference; circular market-vs-GRWjoint better flags retained. No promotion, GRWESS flags retained. No reference refits or scoring DB writes. PHASE4.md/REPORT.md; fresh frozen-seed Phase5 still required.
+
+- [2026-10-09 @pi] Phase5 four reproductions PASS at sourcee7abd34e: fresh%403–%406, onefold1 per newarm, unchanged attempt0 seeds and4×(500+1000). Posterior chain/latent raw Float64 bytes/SHA256 identical in all8channels,maxdiff0. No new DB runs, reference fits or retry. All160 original grid checkpoint digests unchanged. ReproductionCSV/logs and REPRODUCIBILITY.md committed; all owned panes closed. Final read-only original-grid audit/register/task checks next before task closure.
 
 ## Verification & Findings
 

@@ -34,7 +34,8 @@ if r8_status == "completed"
     end
 end
 r8_decision = "No promotion: primary prescribed noncircular intervals cross zero; circular market-vs-joint intervals favour market arms. Market micro r informed near0.3; GRW ESS review flags retained."
-r8_status == "scored" && (r8_decision *= " Frozen-seed reproduction pending.")
+r8_decision *= r8_status == "scored" ? " Frozen-seed reproduction pending." :
+    " Four frozen-seed reproductions byte-identical."
 Harness.write_experiment!(r8_db, (; id=R8C.EXPERIMENT, date=Date(2026,10,9), todo="041",
     question=R8C.QUESTION, dimension=R8C.DIMENSION, status=r8_status, decision=r8_decision,
     run_ids=join(string.(r8_ids.run_id), ","),

@@ -149,3 +149,7 @@
 
 - Fresh v2 scorer PASS after authorised one-character syntax fix; exact independent harness-reference metrics and all710 fixture goal-reference rows per saved arm, no sampling/DB writes. Goal-cluster reuse confirms all30pairs, byte-identical interval CSV. All56market and30goal comparisons have noncircular/circular/cluster paths; figure236fold-r rows and120sigma rows. Native SVG uses unchanged weak-r prior median1.
 - All primary noncircular1X2 intervals cross zero; circular flags both market arms versusGRWjoint better. Noncircular drift0.004564; preserve classification and contradictions. No promotion. GRWESS flags retained. Source/result trace tables, full observations and REPORT committed at phase boundary; canonical board/DB score equality audit next, then only four frozen-seed onefold reproductions.
+
+## 2026-10-09 — Phase5 frozen reproduction PASS
+
+- Sourcee7abd34e, fresh REPLs
