@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | IN_PROGRESS |
+| Status | COMPLETED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -25,7 +25,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [x] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
 - [x] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
 - [x] Manager-required read-only leakage audit: both market arms ×40 folds have zero active target/future observations; own-close provenance and595-fixture saved-prediction LogLoss parity recorded.
-- [ ] Phase-boundary commits/pushes, progress/decisions current; todo check and diff check pass.
+- [x] Read-only RPS population/normalisation audit and standard595-fixture categorical 1X2 LogLoss documented; historical scores retained.
+- [x] Phase-boundary commits/pushes, progress/decisions current; todo check and diff check pass.
 
 ## Ideas & Candidate Solutions
 
@@ -83,6 +84,14 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Phase5 four reproductions PASS at sourcee7abd34e: fresh%403–%406, onefold1 per newarm, unchanged attempt0 seeds and4×(500+1000). Posterior chain/latent raw Float64 bytes/SHA256 identical in all8channels,maxdiff0. No new DB runs, reference fits or retry. All160 original grid checkpoint digests unchanged. ReproductionCSV/logs and REPRODUCIBILITY.md committed; all owned panes closed. Final read-only original-grid audit/register/task checks next before task closure.
 
 - [2026-10-10 @pi] Manager-requested leakage audit PASS, read-only on beast%407 (now closed): all80folds have zero active observations in held-out targets or at/after first target kickoff; any held-out likelihood rows also zero. All1430frozen rates match own-close provenance with isolated close reconstruction and stored KL equality,maxgap0. Saved predictions reprice exactly;595fixtures/1785selections LogLoss0.6117542636747713/0.6119173567756958 equals report exactly. No fits/optimisation/DB writes. CSVs, LEAKAGE_AUDIT.md and report summary line committed; initial Symbol/string key mismatch evidence preserved. Final original-grid audit also PASS; registry materialisation/task closure still pending.
+
+- [2026-10-10 @pi] PACKAGE COMPLETE per manager: score-panel audit source7b43c1d8, all8 rows share595fixtures/1785selection keys; historical RPS denominators596(models)/1528(close), same /2 divisor. Close includes932 non-target fixtures; all RPS rows include14343735 with3 missing odds outcome labels. Common close/GRWmarket/QSmarket RPS0.221438/0.220654/0.220809; unit-sum categorical LogLoss1.053440200/1.050324307/1.050476956. REPORT subsection/CSV evidence pushed. Final registry materialisation and readback completed,4grid UUIDs present; original160fold/640chain/16hard-pass audit byte-unchanged. Canonical leaderboards unchanged, register changes only Wave2 status/decision. Pane%408 closed; no owned panes remain. Final todo/diff checks PASS; closure commit/push is the final checkpoint. No additional refits or source/harness changes.
+
+## Follow-ups (out of this completed package)
+
+1. **Harness `_structural_equal` Dict gap:** add content-based `AbstractDict` comparison, with positive save/load parity and negative changed-key/value regressions. Current generic comparison inspects Dict internals and can reject equal active contents. Wave2 uses the authorised sorted-array feature; no comparator fix or parity bypass here. Evidence: PHASE2_PARITY_BLOCKED.md and ARRAY_FEATURE_REVALIDATION.md.
+2. **Wave1 `r05_score.jl` parse defect and producer provenance:** repair the extra parenthesis introduced by54a22ee7 and restore a verified end-to-end saved-fit scorer/receipt. Base outputs were produced at727af1d4, r-only extraction repaired at81c77a42/7f3ff52b and committedb14e98b9; clustered goal columns were produced separately by `r05_goal_cluster.jl` at54a22ee7 and committedd16a5800. The current full script was not the producer of the final CSVs. Keep frozen references unchanged; do not refit them. Evidence: DECISIONS_LOG.md and results/gate_logs/wave1_*.
+3. **Harness RPS population/metadata contract:** separately version a scorer that restricts close/model RPS to the same graded target fixtures and reports actual metric-specific denominators. Preserve historical scorecards. This package documents the discrepancy and common-panel diagnostics rather than changing src/harness or rewriting wave1 scores.
 
 ## Verification & Findings
 

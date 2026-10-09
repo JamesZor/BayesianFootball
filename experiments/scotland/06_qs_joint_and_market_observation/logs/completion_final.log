@@ -1,0 +1,44 @@
+[root@mcmc-beast qs_experiment]# JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+julia> try include("experiments/scotland/06_qs_joint_and_market_observation/r11_score_panel_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/score_panel_audit.status","PASS") catch err; showerror(stderr,err,catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/score_panel_audit.status","FAIL") end
+QS_MARKET_ARM_LOADED
+QS_SCORING_ADAPTER_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 346.2 hours)...
+SCORE_PANEL_AUDIT_PASS rows=8 common_fixtures=595 common_selections=1785; original RPS populations explicitly recorded
+4
+
+julia> let ds=Main.QSMarketArm.checked_datastore(); odds=SP_H._betfair_closing_odds(ds); extra=filter(r->r.match_id==14343735 && r.market_name=="1X2",odds); CSV.write("/root/BF_runs/qs_experiment_w2_out/score_panel_audit/rps_extra_fixture_odds.csv",extra); println("RPS_EXTRA_FIXTURE missing_labels=",count(ismissing,extra.is_winner)," selections=",nrow(extra)); end
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 346.2 hours)...
+RPS_EXTRA_FIXTURE missing_labels=3 selections=3
+
+julia> try ENV["QSX2_RECORD_STATUS"]="completed"; include("experiments/scotland/06_qs_joint_and_market_observation/r08_record.jl"); include("experiments/scotland/06_qs_joint_and_market_observation/r09_final_audit.jl"); write("/root/BF_runs/logs/qs_experiment_w2/completion.status","PASS") catch err; showerror(stderr,err,catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/completion.status","FAIL") end
+NOTICE:  relation "harness_scores" already exists, skipping
+NOTICE:  column "control_run_id" of relation "harness_scores" already exists, skipping
+NOTICE:  column "panel" of relation "harness_scores" already exists, skipping
+NOTICE:  constraint "harness_scores_pkey" of relation "harness_scores" does not exist, skipping
+NOTICE:  relation "harness_scores_unique_idx" already exists, skipping
+NOTICE:  relation "harness_scores_lookup_idx" already exists, skipping
+NOTICE:  relation "harness_experiments" already exists, skipping
+NOTICE:  column "run_commits" of relation "harness_experiments" already exists, skipping
+NOTICE:  relation "harness_checks" already exists, skipping
+NOTICE:  relation "harness_checks_recipe_stage_idx" already exists, skipping
+NOTICE:  relation "harness_checks_run_idx" already exists, skipping
+Wrote experiments/LEADERBOARD.csv, experiments/LEADERBOARD.md, experiments/REGISTER.md
+PHASE4_RECORD_PASS status=completed arms=4 exact_phase3_scores=true
+FINAL_GRID_AUDIT_PASS runs=4 folds=160 chains=640 retained_per_chain=1000 hard_passes=16; original CSV audit bytes unchanged
+4
+
+julia> let rows=filter(r->r.id==R8C.EXPERIMENT,Harness.read_experiments(r8_db)); nrow(rows)==1 && only(rows.status)=="completed" || error("registry status mismatch"); issubset(Set(string.(r8_ids.run_id)),Set(split(only(rows.run_ids),","))) || error("registry UUID mismatch"); CSV.write("/root/BF_runs/qs_experiment_w2_out/phase5/final_registry.csv",rows); println("FINAL_REGISTRY_PASS completed=true all_four_grid_UUIDs_present=true"); end
+FINAL_REGISTRY_PASS completed=true all_four_grid_UUIDs_present=true
+
+julia>

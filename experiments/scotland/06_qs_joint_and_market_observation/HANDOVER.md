@@ -1,4 +1,6 @@
-# Wave 2 — Phase 3 complete; scoring/reproduction handover
+# Historical Wave 2 Phase 3 handover
+
+> **Superseded 2026-10-10: package COMPLETED; TODO041 closed. Do not resume sampling.** Current evidence: REPORT.md, PHASE5.md, REPRODUCIBILITY.md and PROGRESS.md. The original Phase3 handover below is retained as historical context, not current instructions.
 
 **Resume at Phase 4, NOT sampling.** Read PROGRESS.md/DECISIONS_LOG.md,
 PHASE3.md and original experiments/pi_qs_joint_marketobs_prompt.md §4–6.

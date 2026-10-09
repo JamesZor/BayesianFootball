@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** Phase 4 reported and all four Phase 5 frozen-seed reproductions byte-identical; final register/audit checks in progress. All four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Exact saved reference parity; GRW ESS review flags retained. See [REPORT.md](REPORT.md) and [PHASE3.md](PHASE3.md).
+> **Status:** COMPLETED. Phase 4 reported, all four Phase 5 frozen-seed reproductions byte-identical, leakage and score-population audits passed; completed registry and original-grid checks verified. All four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Exact saved reference parity; GRW ESS review flags retained. See [REPORT.md](REPORT.md), [PHASE5.md](PHASE5.md) and [PHASE3.md](PHASE3.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; run UUID `98447840-e95c-420f-92b4-2db6545506a3`.
 > **Scorecard:** v1.2, de-vigged Betfair TWA(−20,0]; same wave1 score/interval paths, saved reference UUIDs only.
