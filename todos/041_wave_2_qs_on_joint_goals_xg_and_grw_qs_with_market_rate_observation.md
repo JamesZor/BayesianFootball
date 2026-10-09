@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -69,9 +69,11 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Mock-chain queue validation PASS (checkpoint resume / exact seeded replay) before approved grid launch at 8f285a6a, 19:07:51 UTC. Active launcher %390 / first-arm grw_joint REPL %391; 2/40 initial fold checkpoints as of beast 19:21 UTC. No completed arm/UUID/score claimed. PROGRESS/HANDOVER refreshed after compaction; next monitor every 5–6 min, collect prescribed reruns and diagnostics, stop on failure. No beast checkout updates during the run.
 
+- [2026-10-09 @pi] BLOCKED Phase 3 at 8f285a6a: grw_joint completes UUID 98447840-e95c-420f-92b4-2db6545506a3, 40 folds, Rhat1.01008/bulk641.78/tail324.47, zero divergences/no reruns; one tail review flag. qs_joint persists UUID 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea, four hard checks incl. parity PASS, Rhat1.00937/bulk832.35/tail761.02, zero divergences/reruns due; then scoring fails expected exactly one role=:control; found0. Experiment wrapper never supplies GRW control for non-control candidates. Read-only retained-REPL audit records exact CSVs/check rows. No retry/market arm sampling; all 80 checkpoints/both DB fits retained, owned panes closed. Await manager authorisation of experiment-only l05/r05 control forwarding and resume without refitting; PHASE3_BLOCKED.md.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.
 - Beast snapshot SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4; original mtime 2026-09-25 12:57:15.480765468 UTC intact.
-- Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Historical Phase 1 PASS at 153239a7; new array feature PASS b006743f (ARRAY_FEATURE_REVALIDATION.md). All four Phase 2 hard smokes PASS (PHASE2.md), convergence flags retained. Grid approval obtained; durable-queue validation PASS and ordered grid RUNNING at 8f285a6a. Phase 3+ incomplete; historical blocked notes remain evidence.
+- Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Historical Phase 1 PASS at 153239a7; new array feature PASS b006743f (ARRAY_FEATURE_REVALIDATION.md). All four Phase 2 hard smokes PASS (PHASE2.md), convergence flags retained. Grid approved, queue validation PASS; grid at 8f285a6a stops at qs_joint scoring (missing control reference), after both joint fits persisted/parity PASS. PHASE3_BLOCKED.md; no retry or market sampling. Phase 3+ incomplete; historical blocked notes remain evidence.
 - Phase 0: QS 373/373, GRW 124/124, tape 150/150 + QS 2/2 (0 B), builder 106/106, harness 179/179, market t01–t06 pass (full-book 305/305). Exact counts/wall times and summaries committed in experiments/scotland/06_qs_joint_and_market_observation/; C2 known failures not hidden.

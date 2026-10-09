@@ -1,16 +1,20 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 19:21 UTC (beast). Owner: pi. Manager: Claude.
+Updated: 2026-10-09 after 20:14 UTC stop (beast). Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 approved grid running at frozen source 8f285a6a.** First arm
-`grw_joint`: 2/40 initial fold checkpoints landed (folds 2 and 36) as of
-19:21 UTC. No arm complete, grid UUID or predictive result claimed.
-Mock-chain queue validation PASS, including checkpoint resume and exact seeded
-replay. No failure reported; active Julia process using about 12 cores / 5 GB.
-Full four-arm smoke-probe ETA 12.3192 h excludes overhead and reruns.
+**Phase 3 BLOCKED at qs_joint harness scoring, source 8f285a6a.**
+GRW control completed as `grw_joint` UUID 98447840-e95c-420f-92b4-2db6545506a3:
+40 folds, Rhat max 1.01008, bulk min 641.78, tail min 324.47 (one review flag),
+zero divergences, no Rhat reruns. QS 40 folds persisted/parity hard PASS,
+UUID 2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea, Rhat 1.00937, bulk/tail
+832.35/761.02, zero divergences/reruns due. Scoring stops because the wrapper
+never supplies the GRW control to non-control arms: expected exactly one
+role=:control; found 0. No market arm started or retry. PHASE3_BLOCKED.md.
+All owned panes closed after read-only audit. Mock-chain queue validation PASS;
+full smoke-probe ETA 12.3192 h was disclosed before approval.
 
 ## Done
 
@@ -47,8 +51,11 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Poll every 5–6 min on Codex (20 min on Claude route). Watch launcher and
-checkpoint landings; stop/report any gate failure. Approved order:
+Await manager review/authorisation of experiment-only l05/r05 control-reference
+forwarding; do not retry or refit persisted GRW/QS fits. PHASE3_BLOCKED.md has
+exact diagnosis, UUIDs, CSV evidence and proposed resume. When authorised,
+use a fresh launcher attempt label; immutable evidence/receipts/checkpoints
+avoid duplicate sampling. Approved order:
 `grw_joint → qs_joint → grw_marketobs → qs_marketobs`, each 4×(500+1000).
 Preserve initial/final UUIDs, diagnostics, rerun-selection CSVs and manifests.
 Final divergence <=0.1%, finite Rhat; report residual Rhat flags and tail ESS
@@ -59,11 +66,11 @@ prior/data/budget/seed/threshold changes.
 
 ## Beast panes and artifacts
 
-OPEN: launcher `pi_qsx2_grid_launcher_v1` %390 and first-arm fresh REPL
-`pi_qsx2_phase3_grid_v1_grw_joint` %391. Gate advances in approved order,
-closes each successful arm and retains failed pane for diagnosis.
-All earlier owned panes %342–%389 closed; other sessions untouched.
-Do not update the beast checkout during the running grid.
+NO owned panes open. Launcher %390 stopped on failure; successful GRW %391
+closed automatically; QS %392 retained for read-only UUID/diagnostic audit,
+then closed along with launcher after evidence retrieval. All earlier owned
+panes %342–%389 closed; other sessions untouched. Both fits and all 80 initial
+checkpoints preserved. No source update or retry on beast.
 
 Checkout: `/root/BF_runs/qs_experiment` at 8f285a6a.
 Checkpoints: `data/checkpoints/scottish_lower_qs_wave2_2426/<arm>/` in checkout.

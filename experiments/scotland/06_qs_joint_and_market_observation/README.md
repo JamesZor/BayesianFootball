@@ -1,9 +1,9 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid explicitly authorised after disclosure; mock-chain queue validation PASS, ordered grid running at 8f285a6a (grw_joint first). Full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
+> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid explicitly authorised after disclosure; mock-chain queue validation PASS; grid at 8f285a6a stopped after qs_joint persistence because its harness control was not supplied. GRW complete; neither market arm started. See [PHASE3_BLOCKED.md](PHASE3_BLOCKED.md). Full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
-> **Control:** `grw_joint`; predictive run UUID pending.
-> **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
+> **Control:** `grw_joint`; run UUID `98447840-e95c-420f-92b4-2db6545506a3`.
+> **Scorecard:** same versioned harness/scoring path as wave 1; no paired predictive conclusions yet.
 
 ## Questions and fixed panel
 
@@ -73,15 +73,19 @@ joint passes retained. Historical evidence remains in
 [PHASE2_PARITY_BLOCKED.md](PHASE2_PARITY_BLOCKED.md); current acceptance in
 [PHASE2.md](PHASE2.md). Convergence/performance flags remain.
 
-## Phase 3 running
+## Phase 3 stopped
 
 Mock-chain queue validation passed checkpoint resume and exact seeded replay.
 Approved grid at 8f285a6a runs in fixed order with atomic checkpoints and
 immutable per-chain seed manifests. Each initial Rhat>1.05 fold receives one
 attempt-1 rerun; always use the rerun, never choose the better fit. Initial
 UUIDs/diagnostics retained. Final divergence <=0.1%, finite Rhat; tail ESS
-review against 400. No arm complete or predictive result claimed yet.
-See [PROGRESS.md](PROGRESS.md) for active panes and latest checkpoint count.
+review against 400. GRW complete (Rhat1.01008, bulk641.78, tail324.47:
+one tail review flag, zero divergences); QS persisted with hard parity pass
+(Rhat1.00937, bulk832.35, tail761.02, zero divergences), then scoring fails:
+expected exactly one role=:control; found 0. Wrapper control forwarding
+requires manager review; no retry/market sampling. All owned panes closed.
+See [PHASE3_BLOCKED.md](PHASE3_BLOCKED.md) and [PROGRESS.md](PROGRESS.md).
 
 ## Decision and planned comparisons
 
