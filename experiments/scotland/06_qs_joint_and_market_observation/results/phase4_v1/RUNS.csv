@@ -1,0 +1,8 @@
+label,experiment,run_id
+grw_joint,scottish_lower_qs_wave2_2426,98447840-e95c-420f-92b4-2db6545506a3
+qs_joint,scottish_lower_qs_wave2_2426,2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea
+grw_marketobs,scottish_lower_qs_wave2_2426,e47a71a7-52eb-4aa5-b747-e64099ea9977
+qs_marketobs,scottish_lower_qs_wave2_2426,81fdf817-f82d-4f66-9bfd-5f456c4fe29f
+control_grw,scottish_lower_quality_style_2426,a036d22a-ff32-404c-b801-5f928d8a89f4
+qs_weak_r,scottish_lower_quality_style_2426,21f2a9f9-b96f-4034-97de-767704a9d54a
+market_c0,scottish_lower_quality_style_2426,885df0a4-3a3b-5ca3-a70b-2a7af68c2d09

@@ -137,3 +137,8 @@
 ## 2026-10-09 — Phase4 saved-fit scoring
 
 - Adapt wave1 r05_score.jl with explicit final wave2 UUIDs and saved wave1 control_grw/qs_weak_r/C0. No sampling or database writes in scoring. Preserve all prescribed pairs, seeds, panel and weights. Reference independent harness metrics and fixture goal scores must match saved wave1 exactly before reporting. Include unchanged r05_block_check/r05_goal_cluster as additional reuse/parity evidence.
+
+## 2026-10-09 — Authorised Phase4 syntax retry
+
+- Phase4 v1 at f9b6cdd7 stops at r06_score.jl:209: inherited extra closing parenthesis after the new clustered-hi field. Partial harness/reference parity CSVs and failed log retained under phase4_v1; no sampling or DB writes. Manager explicitly authorises deleting that single parenthesis in wave2 only and fresh-REPL retry with frozen settings unchanged. Wave1 source/outputs stay untouched.
+- Read-only git provenance follow-up underway: current line blame 54a22ee7; historical classify(...) ending had three parentheses legitimately (function+tuple+push). New scalar clustered.hi retained all three, introducing the defect. Base result CSVs committed b14e98b9; clustered columns added via standalone r05_goal_cluster.jl and committed d16a5800. Check source/log provenance before final conclusion.

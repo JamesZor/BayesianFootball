@@ -206,7 +206,7 @@ for (tier, a, b) in s5_pairs_spec
         push!(s5_goal_rows, (; tier, arm = a, reference = b, channel = String(channel),
             n = nrow(j), delta_neg_logscore = bb.mean, block8_lo90 = bb.lo, block8_hi90 = bb.hi,
             class_block8 = classify(bb.lo, bb.hi),
-            clustered_lo95 = clustered.lo, clustered_hi95 = clustered.hi)))
+            clustered_lo95 = clustered.lo, clustered_hi95 = clustered.hi))
     end
 end
 CSV.write(joinpath(S5_OUT, "paired_goal_logscore.csv"), DataFrame(s5_goal_rows))
