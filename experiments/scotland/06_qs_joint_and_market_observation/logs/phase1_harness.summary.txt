@@ -1,0 +1,4 @@
+Source: 153239a7; fresh beast, 16 pinned threads, BLAS 1.
+Test Summary:                        | Pass  Total     Time
+Harness Runner and Gate Verification |  179    179  1m36.3s
+PHASE1_INCLUDE_RETURNED_phase1_harness wall_s=111.74443912506104

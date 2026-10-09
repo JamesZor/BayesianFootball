@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 1 resumed under three manager amendments; likelihood diagnosis complete, test correction prepared.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component gate FAILED: 1 likelihood assertion, 370 finite-difference assertions, 1 frozen recovery miss. No retry/fix; allocation/builder/harness gates not started. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
+**Phase 1 PASS under manager amendments at 153239a7; Phase 2 next.** Previous component failure at ec1a4137 (5533 pass / 372 fail) retained. Table preparation remains PASS at 4a71c02e. Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Amended component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Prior failed attempt retained; PHASE1.md is current acceptance evidence. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. Only Phase 1 synthetic fits have run; no smoke, grid or predictive scoring yet.
 
 ## Done
 
@@ -24,13 +24,15 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 - Frozen market_rates.csv SHA256: 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549. Guard/manifest unchanged; manifest digest identical before/after.
 - Component entry point failed 16:07:56 UTC (183.3400 s include): likelihood 22/23, GRW AD 2867/2932, QS AD 2627/2932, recovery 15/16 assertions. All AD failures are central finite differences; compiled/fresh ReverseDiff and ForwardDiff comparisons pass. 13/14 recovery intervals cover; GRW defence micro scale misses. Details/evidence in PHASE1_BLOCKED.md and results/synthetic_recovery.csv. No new gate executed afterward; table and manifest digests unchanged.
 
+- Amended Phase 1 complete 16:47:05 UTC at 153239a7. Exact AD errors <=4.2e-16 at 1e-10 gate, historical FD counts 65/305 reproduce; all selected-coordinate convergence/Richardson checks pass. Recovery 39/42 (92.86%), no parameter misses all 3 seeds. All intervals and derivative evidence frozen in results/; see PHASE1.md.
+
 ## Next action
 
-Diagnosis PASS at bd924940: returned-only submodel prior 1.20364656 / likelihood 0; production seam prior 1.20364656 / likelihood 2.56230834, joint 3.76595490. Linked joint differs by log(.12)=-2.12026354. Hand Normal value and helper identical. Correct only the test accumulation seam; production unchanged. Run amended exact-AD/FD-convergence/recovery gates; allocation/builder/harness and smoke next. Ask before grid. Table/hash unchanged; Phase 1 not accepted. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
+Commit/push Phase 1 acceptance evidence, then declare four candidates and run fresh smoke on the unchanged pinned snapshot. Report wall/ETA, hard checks and convergence. Ask manager before grid. No predictive scores/refits of wave-1 references. Priors/truths/seeds unchanged; manager amendments in DECISIONS_LOG.md.
 
 ## Beast panes and artifacts
 
-None open. Diagnosis `%365`/`%366` closed after results retrieval (PASS 16:19:22 UTC, bd924940). Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
+None open. Amended REPLs `%368`–`%371` and launcher `%367` closed after PASS/evidence retrieval. Diagnosis `%365`/`%366` also closed. Failed component REPL `%364` and launcher `%363` closed after evidence retrieval. Preparation-v2 `%361`/`%362` also closed. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.

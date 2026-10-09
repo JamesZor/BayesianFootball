@@ -1,30 +1,26 @@
 # Wave 2 — manager handover (2026-10-09)
 
-**Resumed under three manager amendments; likelihood diagnosis before fixes.**
-See current PROGRESS/DECISIONS_LOG; the bullets below preserve the prior stop checkpoint.
+**Phase 1 PASS under all three manager amendments; Phase 2 next.**
 
-- Branch exp/qs-goal-vs-market, TODO 041 BLOCKED, assignee pi.
-- Phase 0 remains PASS; its complete source/evidence is in PHASE0.md.
-- Manager option 1 implemented at 4a71c02e: Main.QSMarketArm reused, exact
-  table-value parity added; original guard and saved manifest untouched.
-- Table preparation PASS; target counts 710/595/78/517, all IDs/log rates/flags
-  exactly match wave-1 prepared panel after CSV round-trip. Frozen table/hash
-  and parity evidence pushed at ec1a4137; SHA256 in DECISIONS_LOG/PROGRESS.
-- Fresh component gate 5533 pass / 372 fail: standalone density assertion,
-  370 finite-difference assertions (GRW 65, QS 305), GRW defence micro-scale
-  recovery miss. Compiled/fresh ReverseDiff and ForwardDiff comparisons pass,
-  but AD is NOT accepted. Unconditional MARKET_AD PASS print lines are misleading.
-- All frozen priors/truths/seeds/budgets unchanged; all 14 recovery intervals
-  preserved in results/synthetic_recovery.csv (13 cover). No retry/tuning/fix.
-- Allocation/builder/harness gates did not start after the component failure.
-  No smoke, grid, scoring, ROI/staking or wave-1 reference refit.
-- Next manager review: inspect density/context helper for standalone likelihood
-  discrepancy, assess finite-difference failures without loosening 1e-6, and
-  address the predeclared recovery miss without tuning seeds/truths. See
-  PHASE1_BLOCKED.md and logs/phase1_market.summary.txt for exact evidence.
-- Beast checkout /root/BF_runs/qs_experiment detached at ec1a4137; environment
-  symlinks/cache unchanged. Table and saved manifest digests rechecked unchanged.
-  Raw logs in /root/BF_runs/logs/qs_experiment_w2/. All owned sessions closed;
-  other sessions untouched. No further Julia until manager authorisation.
-- Read PROGRESS.md and DECISIONS_LOG.md first on resumption. Historical first
-  provenance stop retained in PHASE1_BLOCKED.md; resolved only by manager ruling.
+- Branch exp/qs-goal-vs-market, TODO 041 IN_PROGRESS, assignee pi.
+- Phase 0 PASS, evidence in PHASE0.md. Phase 1 source 153239a7, evidence PHASE1.md.
+- Main.QSMarketArm reused. Exact wave-1 table parity/counts passed; original
+  provenance guard/manifest untouched. Frozen SHA256 in PROGRESS/DECISIONS_LOG.
+- Likelihood diagnosis ran BEFORE correction: _observe returns ll and production
+  parent accumulates it. Standalone test seam was wrong; src unchanged. Normal
+  likelihood equals independent constants-inclusive hand formula at 1e-12.
+  Linked versus unlinked density difference equals log(sigma), as required.
+- Exact AD <=4.2e-16 at 1e-10; all historical failing coordinates plus 50 others
+  per model included in three-point FD audits. All convergence/Richardson gates
+  pass; both arithmetic precisions and floor estimates preserved.
+- Recovery 39/42=92.86%; no parameter misses all three seeds. All 42 intervals,
+  truths/seeds and coverage flags saved; first-seed CSV untouched, no tuning.
+- Component 3787/3787; tapes 150/150+QS 2/2+MRO 8/8 (0 B); builder 106/106;
+  harness 179/179. Earlier failures remain archived in PHASE1_BLOCKED.md.
+- Next: four candidates and fresh smoke on the pinned ScottishLower snapshot.
+  Report hard checks, review flags and ETA; ASK MANAGER BEFORE GRID.
+- No smoke, grid, predictive scoring, ROI/staking or wave-1 reference refit yet.
+- Beast source 153239a7; environment symlinks/cache unchanged. All owned panes
+  closed after evidence retrieval; other sessions untouched. Raw logs outside
+  checkout at /root/BF_runs/logs/qs_experiment_w2/.
+- Read PROGRESS.md and DECISIONS_LOG.md first on resumption.

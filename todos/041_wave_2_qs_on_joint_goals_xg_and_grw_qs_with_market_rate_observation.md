@@ -18,7 +18,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 ## Acceptance Criteria
 
 - [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
-- [ ] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery evidenced.
+- [x] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery evidenced under manager amendments.
 - [ ] Four W2 candidates pass smoke hard gates; manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [ ] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
@@ -49,9 +49,11 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Likelihood decomposition diagnosis at bd924940: _observe returns but does not accumulate ll; production parent does. Production ll=2.5623083423195876 exactly equals hand Normal constants-inclusive ll, prior=1.2036465597893726. Linked joint differs by log(.12)=-2.120263536200091. Fix test seam only, no production change; amended tests prepared, new seed runs not started.
 
+- [2026-10-09 @pi] Phase 1 PASS at 153239a7 under manager amendments: component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Likelihood test seam corrected after decomposition, no src change; AD <=4.2e-16 at 1e-10 gate; all selected FD/Richardson checks pass; recovery 39/42 (92.86%), no parameter misses all three seeds. Exact evidence in PHASE1.md/results. Table/manifest digests unchanged, owned panes closed. Phase 2 next; approval before grid.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.
 - Beast snapshot SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4; original mtime 2026-09-25 12:57:15.480765468 UTC intact.
-- Phase 1 preparation: FAIL `inversion provenance differs`; exact source/evidence and proposed next action in PHASE1_BLOCKED.md. No component gate evidence yet.
+- Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Current Phase 1 PASS at 153239a7; PHASE1.md is authoritative, PHASE1_BLOCKED.md retains historical evidence.
 - Phase 0: QS 373/373, GRW 124/124, tape 150/150 + QS 2/2 (0 B), builder 106/106, harness 179/179, market t01–t06 pass (full-book 305/305). Exact counts/wall times and summaries committed in experiments/scotland/06_qs_joint_and_market_observation/; C2 known failures not hidden.

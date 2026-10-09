@@ -1,0 +1,9 @@
+START phase1_market_v2 test/test_market_rate_observation.jl pane=%368 2026-10-09T16:31:08Z
+END phase1_market_v2 PASS 2026-10-09T16:37:47Z
+START phase1_tape test/tape_allocation_tests.jl pane=%369 2026-10-09T16:37:47Z
+END phase1_tape PASS 2026-10-09T16:43:44Z
+START phase1_builder test/builder_tests.jl pane=%370 2026-10-09T16:43:44Z
+END phase1_builder PASS 2026-10-09T16:45:04Z
+START phase1_harness test/harness_runner_tests.jl pane=%371 2026-10-09T16:45:04Z
+END phase1_harness PASS 2026-10-09T16:47:05Z
+PHASE1_REQUESTED_GATES_PASS

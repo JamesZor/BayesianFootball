@@ -1,0 +1,9 @@
+Source: 153239a7; fresh beast, 16 threads pinned, BLAS 1.
+MARKET_FD arm=grw historical_failures=[26, 21, 18] failed_union=33 random_others=50 selected=83 richardson_max=4.1923948189319555e-16 high_precision_trend_failures=0
+MARKET_AD_EVIDENCE arm=grw fold=40 parameters=975 forward_max=4.0510180339559594e-16 fresh_max=0.0
+MARKET_FD arm=qs historical_failures=[101, 101, 103] failed_union=112 random_others=50 selected=162 richardson_max=4.264873620725574e-18 high_precision_trend_failures=0
+MARKET_AD_EVIDENCE arm=qs fold=40 parameters=975 forward_max=4.1098944827644414e-16 fresh_max=0.0
+RECOVERY_GATE covered=39/42 pooled_coverage=0.9285714285714286
+Test Summary:         | Pass  Total     Time
+MarketRateObservation | 3787   3787  6m12.1s
+PHASE1_INCLUDE_RETURNED_phase1_market_v2 wall_s=390.33836793899536

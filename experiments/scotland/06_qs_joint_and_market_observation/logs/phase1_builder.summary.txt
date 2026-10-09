@@ -1,0 +1,14 @@
+Source: 153239a7; fresh beast, 16 pinned threads, BLAS 1.
+Test Summary:                  | Pass  Total  Time
+Composable count-model builder |   37     37  8.5s
+Test Summary:                                                   | Pass  Total   Time
+Composable engine has a static, compile-time-unrolled AD kernel |   13     13  20.4s
+Test Summary:                                                | Pass  Total   Time
+Negative-binomial observations are compiled-ReverseDiff safe |   32     32  17.3s
+Test Summary:                                                | Pass  Total  Time
+Composable model parity with the legacy PreGame count engine |    5      5  2.8s
+Test Summary:                                | Pass  Total  Time
+Builder feature semantics and OOS extraction |    9      9  4.4s
+Test Summary:                              | Pass  Total  Time
+MultiScaleGRW dynamics builder integration |   10     10  3.3s
+PHASE1_INCLUDE_RETURNED_phase1_builder wall_s=71.67702984809875

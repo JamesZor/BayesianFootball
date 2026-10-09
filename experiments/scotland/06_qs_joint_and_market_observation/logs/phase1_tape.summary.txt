@@ -1,0 +1,8 @@
+Source: 153239a7; fresh beast, 16 threads pinned, BLAS 1.
+Test Summary:                      | Pass  Total     Time
+Zero-allocation compiled gradients |  150    150  5m17.2s
+Test Summary:                                     | Pass  Total  Time
+QualityStyleGRW zero-allocation compiled gradient |    2      2  7.3s
+Test Summary:                                            | Pass  Total  Time
+MarketRateObservation zero-allocation compiled gradients |    8      8  8.8s
+PHASE1_INCLUDE_RETURNED_phase1_tape wall_s=347.8802638053894
