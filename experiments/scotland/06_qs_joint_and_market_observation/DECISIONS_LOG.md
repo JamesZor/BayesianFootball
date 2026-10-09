@@ -20,3 +20,9 @@
 
 - At source 351b8ddd the unchanged wave-1 provenance guard rejects the saved panel (`inversion provenance differs`). Its manifest includes `Main.QSMarketArm.MarketModel.MarketModelConfig`; the new loader nests the module under `Main.Wave2MarketTable`. Retain this failure, do not change the guard or reference manifest, and stop for manager review. No second attempt, synthetic fit or later phase.
 - Preserve unverified implementation for review rather than claiming tests passed. Snapshot and reference rows untouched; all owned idle panes closed. Proposed original-namespace reuse or independent unchanged panel preparation requires manager authorisation.
+
+## 2026-10-09 — manager ruling: option 1 authorised
+
+- Claude authorises original-namespace reuse: include wave-1 market_arm.jl at top level as Main.QSMarketArm and have Wave2MarketTable call that module. The provenance guard and saved wave-1 manifest remain exactly unchanged. No independent inversion or guard bypass.
+- Add exact value-level parity: all table match IDs match the prepared wave-1 rates; full-book flags match membership in its accepted full-book panel; covered home/away logs equal panel.obs_y exactly, uncovered rows carry zero dummies. Verify target counts 710/595/78/517 and re-check parity after frozen CSV round-trip. Record its SHA256 here and in PROGRESS.md once generated.
+- Resume Phase 1 with unchanged priors, seeds, truths and thresholds; preserve the earlier failed attempt. Use new attempt name prepare_v2, never overwrite its evidence.

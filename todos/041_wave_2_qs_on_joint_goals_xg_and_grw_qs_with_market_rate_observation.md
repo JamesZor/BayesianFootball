@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -38,6 +38,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Phase 0 PASS at ec96c079: all fresh beast test entry points pass with the authorised C2-pending exclusion (29/39). Exact joint-feature coverage in every training window of both 56/57; 180–530 covered per tournament/fold, 50%–100%; heldout 710/710. See PHASE0.md, results/phase0_gates.csv and results/proxy_xg_coverage.csv. All owned panes closed; Phase 1 next.
 
 - [2026-10-09 @pi] BLOCKED Phase 1 at 351b8ddd: table preparation fails unchanged wave-1 inversion provenance guard (50.78 s fresh-REPL include). Saved manifest is qualified Main.QSMarketArm; new adapter nests it under Main.Wave2MarketTable. No guard bypass, retry, frozen table or new fits/tests. Component implementation remains unverified. Await Claude authorisation of namespace reuse or separate unchanged panel preparation; see PHASE1_BLOCKED.md. Owned panes closed; Phase 2+ not started.
+
+- [2026-10-09 @pi] Manager authorises option 1: include wave-1 market_arm.jl as Main.QSMarketArm; table adapter calls original namespace. Resume Phase 1 without modifying guard/manifest or priors/seeds; add exact IDs/log rates/full-book parity and 710/595/78/517 counts, record frozen SHA256 before tests.
 
 ## Verification & Findings
 

@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**BLOCKED in Phase 1 at 351b8ddd: table preparation failed `inversion provenance differs`.** Stopped per package; no retry or bypass. See `PHASE1_BLOCKED.md`. Component source is unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
+**Phase 1 resumed: manager authorised option 1 (original Main.QSMarketArm namespace).** Original guard/manifest unchanged; exact table-value/count parity added, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component source remains unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -23,7 +23,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Next action
 
-Await Claude manager review of PHASE1_BLOCKED.md. Proposed correction: reuse wave-1 module in its original namespace or regenerate the unchanged inversion panel in a separate wave-2 directory; do not bypass/overwrite the saved manifest. Only after authorisation: freeze and commit table/hash, then fresh unit/AD/recovery and tape/builder/harness gates. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
+Commit/push authorised namespace correction; run fresh table preparation (prepare_v2). Preserve original guard and saved manifest; record exact parity and SHA256. Commit frozen table/hash before fresh unit/AD/recovery and tape/builder/harness gates. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
 
 ## Beast panes and artifacts
 

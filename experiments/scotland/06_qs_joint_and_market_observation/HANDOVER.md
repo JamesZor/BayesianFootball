@@ -1,6 +1,7 @@
 # Wave 2 — manager handover (2026-10-09)
 
-**Stopped on Phase 1 gate failure; do not resume without manager authorisation.**
+**Resumed after manager authorisation of option 1 (Main.QSMarketArm namespace).**
+Current state is in PROGRESS.md; the remaining bullets below preserve the prior stop checkpoint.
 
 - Branch `exp/qs-goal-vs-market`; task 041 BLOCKED, assignee pi.
 - Phase 0 source ec96c079, evidence 2f0c01e9: all required tests pass with only
