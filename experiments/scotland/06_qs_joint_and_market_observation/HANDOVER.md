@@ -1,6 +1,7 @@
 # Wave 2 — manager handover (2026-10-09)
 
-**BLOCKED on component gate at ec1a4137. Phase 1 not accepted.**
+**Resumed under three manager amendments; likelihood diagnosis before fixes.**
+See current PROGRESS/DECISIONS_LOG; the bullets below preserve the prior stop checkpoint.
 
 - Branch exp/qs-goal-vs-market, TODO 041 BLOCKED, assignee pi.
 - Phase 0 remains PASS; its complete source/evidence is in PHASE0.md.

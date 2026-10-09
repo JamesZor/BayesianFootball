@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -44,6 +44,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Authorised table preparation PASS at 4a71c02e: exact IDs/log rates/flags match wave-1 prepared panel after CSV round-trip; 1430 rows, 1107 full books, target counts 710/595/78/517. Frozen SHA256 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549 recorded in PROGRESS/DECISIONS_LOG; saved manifest digest unchanged. Fresh component gates next.
 
 - [2026-10-09 @pi] BLOCKED at ec1a4137: fresh component gate 5533 pass / 372 fail (1 standalone likelihood, 370 finite-difference, 1 recovery miss). All 14 frozen intervals preserved; GRW dyn.β.σₖ truth .024 above 90% upper .0227293. No retry/tuning; launcher stopped before allocation/builder/harness, no smoke/grid. Table/manifest digests unchanged; owned panes closed. Await manager review of PHASE1_BLOCKED.md.
+
+- [2026-10-09 @pi] Manager amendments authorise resumption: decompose/diagnose likelihood before fixing; exact AD relative 1e-10 plus selected-coordinate FD convergence/Richardson 1e-8; retain first recovery seed and run two further fixed seeds per arm, no parameter misses all three and pooled coverage >=80%. Record all three and additional seeds before fitting. Diagnosis first; no production/test fix yet.
 
 ## Verification & Findings
 
