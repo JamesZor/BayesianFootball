@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid NOT authorised; full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
+> **Status:** array feature revalidated (3831/3831, tapes 160/160 at 0 B); all four hard smokes PASS. Convergence/performance flags retained. Grid explicitly authorised after disclosure; queue validation precedes sampling. Full four-arm probe ETA 12.3192 h. See [PHASE2.md](PHASE2.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.

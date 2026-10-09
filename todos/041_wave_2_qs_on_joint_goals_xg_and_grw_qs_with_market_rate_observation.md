@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -20,7 +20,7 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
 - [x] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery revalidated for array feature under manager amendments.
 - [x] Four W2 candidates pass smoke hard gates; convergence and full ETA reported.
-- [ ] Manager approval before grid.
+- [x] Manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [ ] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
 - [ ] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
@@ -64,6 +64,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Array feature at b006743f fully revalidated in fresh beast REPLs %381/%382: component 3831/3831, tape entry point 150+2+8/160 (0 B). Exact AD <=4.11e-16, 735 Richardson checks pass unchanged 1e-8 gate. ALL 3 declared recovery seeds per arm rerun: 39/42 coverage, zero all-seed misses; all 42 interval values exactly reproduce prior evidence. No harness edits. New report ARRAY_FEATURE_REVALIDATION.md / phase1_arrays outputs; next ONLY market smokes, no grid yet.
 
 - [2026-10-09 @pi] Phase 2 all four hard smokes PASS: retained joint UUIDs stand; market-only retry d0d933ae UUIDs 30ad2ca7-ccd4-4cc0-9973-81142b67dcb3 / 3ec74b0f-ee29-4bef-9ed9-dea5ceb8bba5 pass actual DB parity. New market Rhat/bulk/tail: GRW 1.13787/16.10/57.47, QS 1.06250/67.14/74.33; zero divergences, convergence/performance flags NOT waived. Four-arm ETA 1.9374+1.9550+4.1991+4.2278=12.3192 h, before overhead/reruns. Prior GRW 1.14/bulk16/4.219 h clearly retained. Read-only audit confirms all four recipes smoke-eligible without harness changes/history deletion. PHASE2.md and committed phase2_arrays receipts; all owned panes closed. BLOCKED only on manager grid approval; no grid/scoring/reference refit.
+
+- [2026-10-09 @pi] Manager explicitly authorises frozen four-arm grid after full convergence/12.3192 h disclosure. Grid infrastructure added as l05/r05 pair: unchanged core sample_fold with 16-task queue, atomic fold checkpoints and explicit per-chain seeds (202700000+100000*arm+100*fold+10*attempt+chain; attempt 0/1). Core fit_model only assembles completed checkpoints; unchanged Harness.grid handles parity/coverage/persistence/scoring. Every Rhat>1.05 fold gets exactly one rerun in separate __rhat_rerun artifact; rerun always selected, not best-of-two. Preserve initial UUID/diagnostics and selection ledger. Mock-chain queue validation required BEFORE real sampling; no src/harness changes.
 
 ## Verification & Findings
 

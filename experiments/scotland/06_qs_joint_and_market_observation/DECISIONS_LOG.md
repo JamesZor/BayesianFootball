@@ -103,3 +103,11 @@
 - Four-arm probe ETA 1.9374+1.9550+4.1991+4.2278 = 12.3192 h (~12 h 19 min) before setup/scoring/checkpoint overhead and diagnostic reruns. PHASE2.md and four_arm_smoke_summary.csv carry all flags, exact values, UUIDs and source commits.
 - Additional read-only fresh REPL %387 at d0d933ae verifies unchanged has_passing_smoke true for all four current recipes. No sampling/DB writes; exact audit source and receipt saved. Original table/manifest SHA256 unchanged. All owned panes closed.
 - Stop at approval gate. TODO 041 BLOCKED only on manager grid approval; no grid code, scores, ROI/staking or reference refits. Ask with full ETA and explicit GRW 1.14/bulk16 warning; preserve prescribed grid budget/order and convergence rerun policy.
+
+## 2026-10-09 — Explicit grid approval and seeds frozen before sampling
+
+- Manager authorises the frozen four-arm grid, with all short-smoke flags and full 12.3192 h ETA disclosed. No budget/prior/data/threshold tuning.
+- Experimental durable queue uses unchanged Training.sample_fold, 16 concurrent tasks, fixed per-chain task-local seeds: 202700000 + 100000*arm + 100*fold + 10*attempt + chain (arm 1–4 in approved order, fold 1–40, attempt 0/1, chain 1–4). Postprocessing seed 202700000+100000*arm+9000+attempt. Frozen BEFORE first grid; same queue can refit a single fold byte-for-byte independent of scheduling/resume.
+- Reason for local queue: core fit_model writes checkpoints only AFTER the whole pending queue returns. Atomic complete-fold landing avoids losing a multi-hour in-flight run; no core/harness modification. Manifest refuses changed recipe/sampler/seeds; mock-chain persistence/resume/seed tests precede real sampling.
+- Unchanged Harness.grid consumes the complete checkpoints, audits latents/coverage/parity and persists/scorers as usual. Primary UUID retained. If any Rhat>1.05, a separately named __rhat_rerun full fit keeps unaffected initial folds and refits each bad fold ONCE with attempt-1 seeds. Always select that rerun, even if worse; never third attempt, prior tuning or favourable subset. Preserve selection and both diagnostics/UUIDs. Final divergence <=0.1% / finite-Rhat gate; tail ESS reviewed against 400.
+- Grid shell is sequential fresh REPL per arm; immutable attempt-labelled logs and receipt/checkpoint resume. No scoring adapter/references changed.
