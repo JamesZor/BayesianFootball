@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 0 PASS at ec96c079; Phase 1 next.** All prescribed fresh-REPL gates pass under the manager's C2-pending exclusion. See `PHASE0.md` and `results/phase0_gates.csv`. No component, smoke, grid or scoring has started.
+**Phase 0 PASS at ec96c079; Phase 1 implementation prepared, unverified.** All prescribed fresh-REPL gates pass under the manager's C2-pending exclusion. Phase 0 evidence pushed at 2f0c01e9. See `PHASE0.md` and `results/phase0_gates.csv`. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -21,7 +21,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Next action
 
-Commit/push Phase 0 evidence; implement MarketRateObservation and injected feature, tests, allocation matrix and synthetic recovery. Prior derivation: C0 FullBookRung uses HalfNormal(0.20) for sigma_obs (l05_fullbook_engine.jl:30). Record frozen choice before any fit. Stop/report any failed gate.
+Commit/push Phase 1 source; freeze market-rate table from unchanged wave-1 inversion output in a fresh beast REPL. Fetch CSV/hash and commit before tests. Then fresh REPL test_market_rate_observation.jl (unit, real-fold AD, synthetic smoke-budget recovery), tape allocation matrix, builder and harness regression. Stop/report any failed gate. Priors/truths/seeds frozen in DECISIONS_LOG.md.
 
 ## Beast panes and artifacts
 

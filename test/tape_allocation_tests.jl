@@ -231,4 +231,23 @@ end
         @info "Allocating QualityStyleGRW instructions" result.rows
     end
 end
+@testset "MarketRateObservation zero-allocation compiled gradients" begin
+    pooled = _ta_pooled_store()
+    rows = _ta_rows()
+    feature = TA_F.MarketRatesFeature(DataFrame(match_id = rows.match_id,
+        log_lambda_h = [0.1 * sin(i) for i in 1:nrow(rows)],
+        log_lambda_a = [0.1 * cos(i) for i in 1:nrow(rows)],
+        full_book = [isodd(i) for i in 1:nrow(rows)]))
+    for dynamics in (MultiScaleGRW(), QualityStyleGRW()), guard in (ClampGuard(), NoGuard())
+        observation = MarketRateObservation(feature = feature)
+        model = _ta_build("market_rate", dynamics, (), observation, guard)
+        fs = TA_F.create_features(TA_BOUNDARY, pooled, model, :match_biweek)
+        result = _ta_compiled_bytes(model, fs)
+        @test result.bytes == 0
+        @test result.n_parameters > 0
+        println("MARKET_TAPE dynamics=", nameof(typeof(dynamics)), " guard=", nameof(typeof(guard)),
+            " bytes=", result.bytes)
+        result.bytes == 0 || @info "Allocating market-rate instructions" result.rows
+    end
+end
 println("TAPE_ALLOCATION_TESTS_DONE")

@@ -94,6 +94,7 @@ const ComposableCountModel = Union{PoissonCountModel, NegBinCountModel}
 
 # `build` picks the struct from the observation config. Dispatch, not a branch.
 _assemble(o::PoissonObservation, i, t, h, c, g)          = PoissonCountModel(i, t, h, c, o, g)
+_assemble(o::MarketRateObservation, i, t, h, c, g)       = PoissonCountModel(i, t, h, c, o, g)
 # The joint two-arm observation prices from its Poisson goals arm, so it belongs to the SAME
 # prediction family as a plain Poisson. Its Gamma arm is a fit-time likelihood and never touches a
 # score grid — which is why widening `O` above is safe rather than a loophole.
@@ -434,6 +435,14 @@ function validate(b::CountModelBuilder)
             "feature must be a MatchProxyXGFeature; got $(nameof(typeof(obs.feature)))" :
             "shape_prior must have strictly positive support; got minimum $(minimum(obs.shape_prior))"))
 
+    market_prior_valid = !(obs isa MarketRateObservation) ||
+        (minimum(obs.sigma_prior) >= 0.0 && isfinite(quantile(obs.sigma_prior, 0.99)))
+    push!(out, cb_result("market observation scale prior is well posed",
+        market_prior_valid,
+        !(obs isa MarketRateObservation) ? "not a market-rate observation" :
+        market_prior_valid ? "nonnegative scale prior with finite upper tail" :
+        "MarketRateObservation needs a nonnegative sigma_prior with a finite upper tail"))
+
     # A half-open σ_κ prior is what makes the deltas shrink to zero when there is nothing to find.
     # A prior with support below 0 would let σ_κ flip sign, which reflects the delta set through
     # the origin and leaves the likelihood invariant — a label-switching mode, not a wider prior.
@@ -624,6 +633,7 @@ _sites_dynamics(::CB_PG.TimeDecayDynamics)  =
 _sites_dynamics(::CB_PG.StaticZeroDynamics) = Symbol[]
 
 _sites_observation(::PoissonObservation) = Symbol[]
+_sites_observation(::MarketRateObservation) = [Symbol("obs.σ_obs")]
 # Declaration order inside `_joint_gamma_poisson_params`, which is the θ layout.
 _sites_observation(::SharedKappaJoint) = [Symbol("obs.ν"), Symbol("obs.log_κ")]
 # ... and inside `_joint_hierarchical_kappa_params`, which extends it rather than reordering it.

@@ -986,6 +986,30 @@ abstract type AbstractObservationConfig <: CB_PG.AbstractModelComponent end
 struct PoissonObservation <: AbstractObservationConfig end
 
 """
+    MarketRateObservation(; feature, sigma_prior = truncated(Normal(0, 0.20), 0, Inf))
+
+Observe injected full-book log rates with independent Normal noise of shared scale σ_obs.
+Uncovered matches contribute exactly zero likelihood, including no goals likelihood.
+Predictions use exp(linear predictor) through the ordinary double-Poisson grid.
+The default observation-scale prior matches the market C0 HalfNormal(0.20).
+"""
+Base.@kwdef struct MarketRateObservation{
+    F<:CB_Features.MarketRatesFeature,
+    S<:ContinuousUnivariateDistribution,
+} <: AbstractObservationConfig
+    feature::F
+    sigma_prior::S = truncated(Normal(0.0, 0.20), 0.0, Inf)
+end
+
+"Data-only log rates and binary-mask × dynamics weights, frozen before the model runs."
+struct MarketRateDesign
+    log_h::Vector{Float64}
+    log_a::Vector{Float64}
+    mask_weights::Vector{Float64}
+    weight_sum::Float64
+end
+
+"""
     NegativeBinomialObservation
 
 `y ~ RobustNegativeBinomial(r, exp(η))`. Wraps any `src` dispersion config
@@ -1274,7 +1298,8 @@ The observations whose SCORE GRID is the double-Poisson grid, and which therefor
 `PoissonCountModel`. Membership of this Union is the single place that decision is recorded; the
 struct's type parameter reads it, and `_assemble` dispatches on it.
 """
-const CBPoissonFamilyObservation = Union{PoissonObservation, JointGammaPoissonObservation}
+const CBPoissonFamilyObservation =
+    Union{PoissonObservation, JointGammaPoissonObservation, MarketRateObservation}
 
 """
     CBNegBinFamilyObservation
@@ -1297,6 +1322,7 @@ const CBNegBinFamilyObservation =
 "The `TypesInterfaces` supertype the built model must carry, so that score-matrix
 dispatch in `src/predictions/` reaches the matching grid."
 observation_family(::PoissonObservation)           = :poisson
+observation_family(::MarketRateObservation)        = :poisson
 observation_family(::NegativeBinomialObservation)  = :negbin
 observation_family(::DixonColesCorrelation)        = :dixon_coles
 observation_family(::FrankCopulaCorrelation)       = :frank_copula
@@ -1314,6 +1340,7 @@ observation_family(::JointGammaNegBinObservation)   = :negbin
 "Is the observation density implemented in the production builder engine?"
 observation_wired(::AbstractObservationConfig)     = false
 observation_wired(::PoissonObservation)            = true
+observation_wired(::MarketRateObservation)         = true
 observation_wired(::JointGammaPoissonObservation)  = true
 # The two scalar dispersion variants return a plain `(h, a)` pair, which the engine can
 # broadcast without a branch. `AdvancedVolatilityDispersion` returns per-team and per-month
@@ -1329,6 +1356,7 @@ observation_wired(o::JointGammaNegBinObservation)  =
 
 "Chain-site prefixes the observation layer owns, for the site-collision check."
 observation_prefixes(::PoissonObservation)          = Symbol[]
+observation_prefixes(::MarketRateObservation)       = [:obs]
 observation_prefixes(::NegativeBinomialObservation) = [:disp]
 observation_prefixes(::DixonColesCorrelation)       = [:dc]
 observation_prefixes(::FrankCopulaCorrelation)      = [:cop]
@@ -1365,6 +1393,7 @@ Extra features this observation's likelihood reads. Concatenated onto the struct
 features by `Features.required_features`. Most observations read nothing beyond the goals.
 """
 observation_features(::AbstractObservationConfig) = CB_Features.AbstractFeatureConfig[]
+observation_features(o::MarketRateObservation) = CB_Features.AbstractFeatureConfig[o.feature]
 _joint_observation_features(::AbstractKappaMode, o) =
     CB_Features.AbstractFeatureConfig[o.feature]
 observation_features(o::JointGammaPoissonObservation) =
@@ -1384,6 +1413,19 @@ time-decay clock as the goals arm; deriving it twice is two places for the half-
 """
 observation_design(::AbstractObservationConfig, feature_set, n_matches::Int,
                    match_weights::Vector{Float64}) = nothing
+
+function observation_design(::MarketRateObservation, feature_set, n_matches::Int,
+                            match_weights::Vector{Float64})
+    keys = (:flat_market_log_h, :flat_market_log_a, :flat_market_available)
+    all(k -> haskey(feature_set.data, k), keys) || error("market-rate feature is missing")
+    h, a, mask = (Vector{Float64}(feature_set.data[k]) for k in keys)
+    all(v -> length(v) == n_matches && all(isfinite, v), (h, a, mask, match_weights)) ||
+        error("market-rate design vectors must be finite and match the fold length")
+    all(x -> x == 0.0 || x == 1.0, mask) || error("market-rate availability must be binary")
+    all(x -> x >= 0.0, match_weights) || error("market-rate weights must be nonnegative")
+    weights = mask .* match_weights
+    return MarketRateDesign(h, a, weights, sum(weights))
+end
 
 # ONE method for both joint arms. The Gamma arm's design is the part of the two-arm likelihood the
 # goal density cannot see: the proxy observations, their logs, and the availability mask folded into

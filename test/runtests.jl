@@ -43,6 +43,9 @@ using DataFrames, Dates, InlineStrings # Add any other packages your tests need 
     println("Running bench-depth and late-game feature tests...")
     include("test_bench_and_late_game_features.jl")
 
+    println("Running market-rate observation tests...")
+    include("test_market_rate_observation.jl")
+
     println("Running two-arm joint Gamma/Poisson observation tests...")
     include("test_joint_gamma_poisson.jl")
 

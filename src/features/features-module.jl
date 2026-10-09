@@ -26,7 +26,7 @@ export OpenPlayGoalsFeature, OpenPlayPxGFeature, SquadWealthFeature, RefereeOffi
 export BenchDepthFeature, PxGFeature, PxGRapmFeature, LateGameChanceFeature,
        pxg_match_observations, pxg_rapm_deltas
 # Match-level pxG as a masked OBSERVATION, for the two-arm joint likelihood.
-export MatchProxyXGFeature
+export MatchProxyXGFeature, MarketRatesFeature
 
 # Core Architecture
 include("./model_requirements.jl")
@@ -56,6 +56,7 @@ include("./extractors/open_play_extractors.jl")
 include("./pxg.jl")
 # Reuses `pxg_match_observations`' measurement ladder, so it must follow pxg.jl.
 include("./match_proxy_xg.jl")
+include("./market_rates.jl")
 include("./pxg_rapm.jl")
 include("./bench_depth.jl")
 include("./late_game.jl")

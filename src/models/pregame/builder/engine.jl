@@ -152,6 +152,30 @@ The log-factorial is data, precomputed in `build_turing_model`.
     return sum(ll_h .* wts) + sum(ll_a .* wts)
 end
 
+# Reduce the quadratic residuals before combining with a sampled scalar: no Real in a
+# fused tracked broadcast. All rows are evaluated; finite dummies × zero mask vanish.
+function _market_rate_ll(η_h, η_a, σ_obs, design::MarketRateDesign)
+    residual_h = design.log_h .- η_h
+    residual_a = design.log_a .- η_a
+    rss = sum((residual_h .* residual_h) .* design.mask_weights) +
+          sum((residual_a .* residual_a) .* design.mask_weights)
+    return -rss / (2 * σ_obs^2) -
+           2 * design.weight_sum * (log(σ_obs) + log(2π) / 2)
+end
+
+@model function _observe(o::MarketRateObservation, η_h, η_a,
+                         yh::Vector{Int}, ya::Vector{Int}, wts::Vector{Float64},
+                         lfh::Vector{Float64}, lfa::Vector{Float64},
+                         n_teams::Int, n_months::Int, design::MarketRateDesign)
+    obs ~ to_submodel(_market_rate_params(o))
+    return _market_rate_ll(η_h, η_a, obs.σ_obs, design)
+end
+
+@model function _market_rate_params(o::MarketRateObservation)
+    σ_obs ~ o.sigma_prior
+    return (; σ_obs)
+end
+
 # Smooth, branch-free saturation of log-dispersion to (-10, 10). The high even
 # power is effectively identity over the prior's typical region (the difference
 # at log_r=3.1 is below machine-relevant density tolerance) while remaining
@@ -701,6 +725,8 @@ function _cb_checked_oos(c::AbstractCovariateConfig, feature_set, df)
 end
 
 _cb_extract_observation(::PoissonObservation, chain, n_teams) = nothing
+_cb_extract_observation(::MarketRateObservation, chain, n_teams) =
+    (; σ_obs = vec(Array(chain[Symbol("obs.σ_obs")])))
 _cb_extract_observation(observation, chain, n_teams, feature_set) =
     _cb_extract_observation(observation, chain, n_teams)
 
@@ -860,7 +886,7 @@ end
 
 # The prediction NamedTuple must carry exactly what the score grid for this family
 # reads. `true_xg_h/a` mirror λ so the downstream evaluation path is unchanged.
-_cb_rates(::PoissonObservation, λ_h, λ_a, _, h_idx, a_idx, m_idx) =
+_cb_rates(::Union{PoissonObservation,MarketRateObservation}, λ_h, λ_a, _, h_idx, a_idx, m_idx) =
     (; λ_h, λ_a, true_xg_h = λ_h, true_xg_a = λ_a)
 
 # The joint model is the one case where λ and the expected xG genuinely differ, so `true_xg_*`
