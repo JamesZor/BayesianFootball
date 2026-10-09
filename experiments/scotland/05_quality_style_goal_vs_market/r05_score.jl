@@ -21,24 +21,35 @@ const S5_SEED = 20261009
 s5_ds = QSMarketArm.checked_datastore()
 s5_db = Training.PostgresStorage(S5C.EXPERIMENT)
 s5_refs = H5.RunRef[]
+# Resolve by run name, not by `find_completed_run`: the engine appends `convergence:FAIL`
+# to a saved config's tags when its stricter gate fails (qs_weak_r: tail ESS 355 < 400),
+# which changes the config hash. The loaded recipe is then checked field by field.
+s5_fits = Dict{String,Any}()
 for c in S5C.CANDIDATES
     cfg = H5.fit_config(c; stage = :grid, experiment = S5C.EXPERIMENT)
-    id = H5.find_completed_run(s5_db, cfg)
-    id === nothing && error("no completed grid run for $(c.name)")
+    id = Training.Inference._run_uuid(s5_db, c.name)
+    fit = Training.load_fit(s5_db, id)
+    saved = fit.config
+    for f in (:name, :model, :splitter, :sampler, :execution, :description)
+        string(getfield(saved, f)) == string(getfield(cfg, f)) ||
+            error("$(c.name) run $id recipe field $f differs from the candidate")
+    end
+    extra = setdiff(Training.Inference._db_recipe_tags(saved.tags),
+                    Training.Inference._db_recipe_tags(cfg.tags))
+    issubset(extra, ["convergence:FAIL"]) || error("$(c.name) run $id has extra tags $extra")
+    s5_fits[c.name] = fit
     push!(s5_refs, H5.RunRef(c.name, S5C.EXPERIMENT, id, c.name == S5C.CONTROL ? :control : :candidate))
+    d = fit.diagnostics
+    println("RUN $(c.name) $id engine_convergence=$(d.passed) max_rhat=$(d.max_rhat) ",
+            "min_ess_bulk=$(d.min_ess_bulk) min_ess_tail=$(d.min_ess_tail) ",
+            "divergences=$(d.n_divergent)/$(d.n_transitions) extra_tags=$extra")
 end
 s5_ctl = only(filter(r -> r.role === :control, s5_refs))
-s5_fits = Dict(r.label => Training.load_fit(s5_db, r.run_id) for r in s5_refs)
 s5_template = s5_fits[s5_ctl.label]
 s5_market = Serialization.deserialize(joinpath(dirname(S5_OUT), "market_grid", "market_latents.jls"))
 
-"De-vigged Betfair close as a degenerate container: rates inverted from each accepted book."
-function s5_close_latents(ds, ids)
-    # Fixtures whose close does not invert cannot be priced as 'market close' rows; the
-    # harness's own market columns (p_market) already ARE the de-vigged close per selection.
-    return nothing
-end
-
+# The market close needs no container: the harness observation frame's `p_market` column
+# IS the de-vigged Betfair TWA(−20,0] close for each scored selection (section 3).
 # Market UUIDs: deterministic, not mcmc runs; recorded in RUNS.csv.
 const S5_MARKET_ID = uuid5(UUID("6f1c3c2e-7a3b-4d55-9a8f-0b2d5c1e9a40"), "qs_market_c0_40fold")
 s5_market_ref = H5.RunRef("market_c0", S5C.EXPERIMENT, S5_MARKET_ID, :candidate)
@@ -81,8 +92,13 @@ function s5_week(id)
     return (String(s5_match[id].season), d - Day(dayofweek(d) - 1))
 end
 
-"999 noncircular moving blocks of whole weeks within league season (R07 scheme), 90% CI."
-function s5_block_bootstrap(fixture_ids, delta; B = S5_B, block = S5_BLOCK, seed = S5_SEED)
+"""
+999 noncircular moving blocks of whole weeks within league season (R07 scheme), 90% CI.
+`sums[i]`/`counts[i]` are fixture i's summed difference and observation count, so every
+replicate is an observation-weighted mean, exactly like the point estimate.
+"""
+function s5_block_bootstrap(fixture_ids, sums, counts = ones(length(sums));
+                            B = S5_B, block = S5_BLOCK, seed = S5_SEED)
     weeks = Dict{Tuple{String,Date},Vector{Int}}()
     for (i, id) in enumerate(fixture_ids)
         push!(get!(weeks, s5_week(id), Int[]), i)
@@ -104,13 +120,14 @@ function s5_block_bootstrap(fixture_ids, delta; B = S5_B, block = S5_BLOCK, seed
                 append!(chosen, s:(s + L - 1))
             end
             for w in chosen[1:length(ws)], i in ws[w]
-                total += delta[i]
-                n += 1
+                total += sums[i]
+                n += counts[i]
             end
         end
         stats[b] = total / n
     end
-    return (; mean = mean(delta), lo = quantile(stats, 0.05), hi = quantile(stats, 0.95))
+    return (; mean = sum(sums) / sum(counts), lo = quantile(stats, 0.05),
+              hi = quantile(stats, 0.95))
 end
 
 classify(lo, hi) = hi < 0 ? "better" : lo > 0 ? "worse" : "no detectable difference"
@@ -132,15 +149,9 @@ for (tier, a, b) in s5_pairs_spec, family in ("1X2", "OU2.5", "BTTS", "all")
     nrow(j) == nrow(fa) == nrow(fb) || error("$a/$b $family observation sets differ")
     perfix = combine(groupby(transform(j, [:la, :lb] => ((x, y) -> x .- y) => :d), :match_id),
                      :d => sum => :d, nrow => :n)
-    # Observation-weighted mean = sum over fixtures / total obs; bootstrap fixture sums / counts.
-    block = let ids = perfix.match_id, d = perfix.d ./ mean(perfix.n)
-        s5_block_bootstrap(ids, d)
-    end
-    clustered = H5._paired_bootstrap(fa, b == "market_close" ? :market : fb; B = 10_000,
-                                     family = nothing)
-    if b == "market_close"
-        clustered = H5._paired_bootstrap(fa, :market; B = 10_000)
-    end
+    block = s5_block_bootstrap(perfix.match_id, perfix.d, perfix.n)
+    # Harness fixture-clustered paired bootstrap (its own 95% interval, seed 20260911).
+    clustered = H5._paired_bootstrap(fa, b == "market_close" ? :market : fb; B = 10_000)
     push!(s5_rows, (; tier, arm = a, reference = b, market = family, n_obs = nrow(j),
         n_fixtures = nrow(perfix), delta_logloss = mean(j.la .- j.lb),
         block8_lo90 = block.lo, block8_hi90 = block.hi,
@@ -181,6 +192,8 @@ for (tier, a, b) in s5_pairs_spec
         # Loss orientation: negative log score difference (a − b); < 0 means a is better.
         d = -(j[!, channel] .- j[!, Symbol(channel, "_1")])
         bb = s5_block_bootstrap(j.match_id, d)
+        # Goal scores have no market-close counterpart: the close is not a rate pair for the
+        # 193 fixtures without an invertible book, so market_close pairs are skipped above.
         push!(s5_goal_rows, (; tier, arm = a, reference = b, channel = String(channel),
             n = nrow(j), delta_neg_logscore = bb.mean, block8_lo90 = bb.lo, block8_hi90 = bb.hi,
             class_block8 = classify(bb.lo, bb.hi)))
