@@ -5,7 +5,7 @@ cd /root/BF_runs/qs_experiment
 logdir=/root/BF_runs/logs/qs_experiment_w2
 mkdir -p "$logdir"
 for arm in grw_joint qs_joint grw_marketobs qs_marketobs; do
-  name="phase2_smoke_$arm"
+  name="phase2_smoke_v2_$arm"
   session="pi_qsx2_$name"
   status="$logdir/$name.status"
   notify="$logdir/$name.notify"

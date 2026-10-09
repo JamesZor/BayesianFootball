@@ -2,7 +2,7 @@
 # Same lower scope and W2 sampler as wave 1. No ROI/staking or reference refits.
 using BayesianFootball
 using Distributions
-include(joinpath(@__DIR__, "l01_market_table.jl"))
+Base.include(@__MODULE__, joinpath(@__DIR__, "l01_market_table.jl"))
 
 const EXPERIMENT = "scottish_lower_qs_wave2_2426"
 const TODO = 41

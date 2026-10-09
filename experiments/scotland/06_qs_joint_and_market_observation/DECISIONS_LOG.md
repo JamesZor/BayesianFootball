@@ -71,3 +71,9 @@
 - First grw_joint entry point fails at candidates.jl:5: include undefined in Main.Wave2Candidates (bare Module constructor does not define the include helper). No candidate build, datastore preflight, registration, smoke hard check, model sampling or DB write occurred; other three arms not started. No UUID/convergence/ETA available.
 - Stop/report per package. Proposed one-line Base.include(@__MODULE__, ...) correction, preserving Main.QSMarketArm and all frozen inputs/priors/seeds/thresholds. No source correction or retry yet; await manager authorisation. Keep previous launch evidence and use new names after approval.
 - Phase 1 remains accepted under all three amendments, evidence e86a03fe; no Phase 1 rerun required. PHASE2_BLOCKED.md records precise error and action. Owned idle panes closed; no grid.
+
+## 2026-10-09 — Manager authorises loader fix and fresh smoke retry
+
+- Explicit ruling via confirmation: apply one-line Base.include(@__MODULE__, ...) in candidates.jl and retry smoke. Grid approval remains separate. No scientific gate had started at failure; no input/seed/prior/threshold change.
+- Preserve original phase2_smoke_grw_joint.* and launch logs; retry with phase2_smoke_v2_* evidence/session names and new phase2_launcher_v2.log. Same fresh-REPL serial arm order, pinned snapshot, registrations and smoke budgets.
+- Correct README-only shape-prior typo (Normal(4,1) -> Normal(4,1.5)); executable prior already exactly matched experiment 04 and remains unchanged.

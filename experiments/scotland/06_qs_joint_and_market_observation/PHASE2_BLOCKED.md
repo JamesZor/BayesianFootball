@@ -1,4 +1,7 @@
-# Phase 2 — recipe loading BLOCKED (2026-10-09)
+# Phase 2 — historical recipe-loading failure (2026-10-09)
+
+Manager subsequently authorised the one-line loader fix and fresh smoke retry;
+see DECISIONS_LOG.md/PROGRESS.md for current status. Original failure follows.
 
 Source `73147ce0`, fresh owned beast REPL `%374`, launcher `%373`, 16 threads,
 BLAS 1. First grw_joint entry point failed at 17:04:45 UTC, include wall

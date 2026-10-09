@@ -1,6 +1,6 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** blocked on Phase 2 recipe loading; Phase 1 passed. Grid NOT authorised.
+> **Status:** Phase 2 loader fix/retry authorised; Phase 1 passed. Grid NOT authorised.
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; predictive run UUID pending.
 > **Scorecard:** same versioned harness/scoring path as wave 1; no scores yet.
@@ -24,7 +24,7 @@ Executable source of truth: [candidates.jl](candidates.jl).
 
 All arms use GlobalInterception and GlobalHomeAdvantage. Joint observation is
 experiment 04's unchanged no-league-delta specification, k=25, fallback=:none,
-shape prior truncated Normal(4,1) to [.5,Inf), log-kappa Normal(0,.2).
+shape prior truncated Normal(4,1.5) to [.5,Inf), log-kappa Normal(0,.2).
 Market sigma prior is C0 HalfNormal(.20). Predictions remain double Poisson.
 W2 grid budget: 4 chains x (500 warmup + 1000 retained), accept .65, depth 10.
 
@@ -47,7 +47,8 @@ aligns by match ID; held-out matches never appear in their fold's training rows.
 - Phase 1 verified source 153239a7; acceptance evidence pushed at e86a03fe.
 - Phase 2 source 73147ce0: first grw_joint entry point fails at candidates.jl:5
   (include undefined in the bare candidates module), before any check/sampling.
-  No UUID/ETA/convergence; see PHASE2_BLOCKED.md. Await manager loading-fix approval.
+  No UUID/ETA/convergence; see PHASE2_BLOCKED.md. Manager authorised the
+  one-line Base.include fix and fresh smoke retry, retaining failed evidence.
 - Phase 2 method: fresh owned beast REPL per arm via phase2_gate.sh, 16 pinned threads,
   BLAS 1, pinned ScottishLower input (not generic CLI's ScottishPyramid cache).
 - Harness smoke: folds 1 and 40, 2x(200+200), all required hard checks, persistence

@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -52,6 +52,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 - [2026-10-09 @pi] Phase 1 PASS at 153239a7 under manager amendments: component 3787/3787; tapes 150/150 + QS 2/2 + MRO 8/8 (0 B); builder 106/106; harness 179/179. Likelihood test seam corrected after decomposition, no src change; AD <=4.2e-16 at 1e-10 gate; all selected FD/Richardson checks pass; recovery 39/42 (92.86%), no parameter misses all three seeds. Exact evidence in PHASE1.md/results. Table/manifest digests unchanged, owned panes closed. Phase 2 next; approval before grid.
 
 - [2026-10-09 @pi] BLOCKED Phase 2 at 73147ce0: candidates.jl:5 unqualified include is undefined in the bare Module(:Wave2Candidates). First entry point fails before candidate build/checks/sampling/DB writes; other arms not started, no UUID/ETA. Proposed Base.include(@__MODULE__, ...) one-line fix; awaiting manager authorisation, no retry. Phase 1 remains accepted. PHASE2_BLOCKED.md/evidence recorded; owned idle panes closed.
+
+- [2026-10-09 @pi] Manager authorised the one-line candidate loader fix and fresh smoke retry via confirmation. Apply Base.include(@__MODULE__, ...); no priors/seeds/inputs/threshold changes. Failed attempt retained, v2 evidence names; grid still separately gated.
 
 ## Verification & Findings
 
