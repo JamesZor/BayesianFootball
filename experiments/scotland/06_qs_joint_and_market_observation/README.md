@@ -28,6 +28,20 @@ shape prior truncated Normal(4,1.5) to [.5,Inf), log-kappa Normal(0,.2).
 Market sigma prior is C0 HalfNormal(.20). Predictions remain double Poisson.
 W2 grid budget: 4 chains x (500 warmup + 1000 retained), accept .65, depth 10.
 
+## Immutable final runs
+
+| Arm | run_id |
+|---|---|
+| grw_joint | `98447840-e95c-420f-92b4-2db6545506a3` |
+| qs_joint | `2a5eee90-3402-40ce-a5e3-f4c6b57fc8ea` |
+| grw_marketobs | `e47a71a7-52eb-4aa5-b747-e64099ea9977` |
+| qs_marketobs | `81fdf817-f82d-4f66-9bfd-5f456c4fe29f` |
+
+All primary deltas use the control UUID above or saved C0's deterministic
+file-based UUID (`results/phase4/RUNS.csv`), never a new reference fit.
+Saved Poisson references: control_grw `a036d22a-ff32-404c-b801-5f928d8a89f4`,
+qs_weak_r `21f2a9f9-b96f-4034-97de-767704a9d54a`.
+
 ## Gates and provenance
 
 [PHASE0.md](PHASE0.md): fresh branch-health gates and joint-feature coverage.

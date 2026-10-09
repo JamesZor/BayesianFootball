@@ -1,11 +1,11 @@
 # Wave 2 — progress
 
-Updated: 2026-10-09 after 22:05:57 UTC grid completion (beast). Owner: pi. Manager: Claude.
+Updated: 2026-10-09 after Phase4 gates/report/boards acceptance. Owner: pi. Manager: Claude.
 Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 3 COMPLETE; Phase 4 scoring implementation in progress.** All four40-fold arms
+**Phase 4 COMPLETE; Phase 5 frozen-seed reproduction next.** Canonical board/read-only score audit PASS:4×664rows/9960fields EXACT,maxdiff0; only4new grid rows/cohorts and one register row added. Fresh v2 scorer and interval audit PASS. All56 market/30 goal pairs, three bootstrap paths, exact saved reference parity,236 r rows/120 sigma rows, native SVG and CSV-traceable REPORT. All primary noncircular1X2 intervals cross zero; circular contradicts both marketarms-vs-GRWjoint. No promotion. Wave1 current-scorer provenance follow-up recorded read-only; wave1 source/outputs untouched. All four40-fold arms
 persisted, four hard grid checks per arm PASS, zero divergences, all Rhat<=1.05:
 no prescribed reruns needed. Source8f285a6a initial joints; wrapper fix/resume
 081ba5a6. Offline regression57/57 PASS, QS completes scoring without sampling,
@@ -61,17 +61,13 @@ PHASE2_PARITY_BLOCKED.md; do not remove/relabel failed evidence.
 
 ## Next action
 
-Phase4: r06_score.jl adapts wave1 r05_score and includes unchanged block/goal-cluster scripts. v1 stops on inherited extra parenthesis at209 after exact reference harness parity; manager authorises one-character wave2-only fix and fresh v2 retry. Read-only wave1 source provenance follow-up recorded in TODO/DECISIONS. Explicit saved UUIDs only, no fits or DB writes. Run in fresh owned beast REPL, then finish report/figures/leaderboard. Prescribed score/report pairs and three bootstrap paths, exact saved
-wave1 reference parity, fold posterior r/sigma and r figure, leaderboard rows.
-Classify on noncircular8-week interval, flag circular contradictions. Read the
-original work package §4 and wave1 scoring paths before implementation.
-Phase5: fresh frozen-seed one-fold reproduction per new arm, byte comparison.
+Finish r08_record read-only Phase3/Phase4 score equality audit and canonical leaderboard/register materialisation. Commit/push Phase4 boundary, close%401, then Phase5 via phase5_gate.sh: fresh REPL per newarm, fold1 ONLY, unchanged attempt0 chain/post seeds and sampler, separate reproduction checkpoints. r07_reproduce adapts wave1 r06_reproduce comparisons to frozen wave2queue. Compare raw Float64 bytes/SHA256 for chains/latents; stop first mismatch, no retry. All160 original checkpoint digests frozen before reproduction. No reference resampling.
 Do not refit references or tune priors/data/budgets/seeds/thresholds. No ROI/staking.
 Retain both GRW tail flags in the report. Task remains IN_PROGRESS.
 
 ## Beast panes and artifacts
 
-Owned scoring pane %401 (`pi_qsx2_phase4_v2`), fresh retry after manager-authorised one-character syntax correction. Failed %400 closed; failed scoring log/partial outputs retained in phase4_v1. No sampling/DB writes. %399 startup used unavailable shell PATH Julia and exited before execution. Successful market REPLs%396/%397 closed automatically;
+NO owned panes open at Phase4 boundary. %401 closed after score/interval/record PASS. Next phase5_gate launcher creates ONLY fresh reproduction REPLs. Failed %400 closed; failed scoring log/partial outputs retained in phase4_v1. No sampling/DB writes. %399 startup used unavailable shell PATH Julia and exited before execution. Successful market REPLs%396/%397 closed automatically;
 launcher%394 closed after PASS. Fresh read-only final audit%398 PASS, then
 closed after evidence retrieval. Offline regression%393/resumedQS%395 and
 all earlier owned panes closed. Other sessions untouched. All160 initial

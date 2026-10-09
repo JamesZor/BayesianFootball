@@ -1,0 +1,5 @@
+arm,rows,cells,exact,max_abs_diff,passed,mismatches
+grw_joint,664,9960,true,0.0,true,
+qs_joint,664,9960,true,0.0,true,
+grw_marketobs,664,9960,true,0.0,true,
+qs_marketobs,664,9960,true,0.0,true,
