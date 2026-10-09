@@ -1,0 +1,6 @@
+Source: 4a71c02e
+MARKET_TABLE_VALUE_PARITY exact=true rows=1430 full_book=1107 target_counts=(panel = 710, accepted = 595, one_x2_only = 78, ladder = 517)
+MARKET_TABLE rows=1430 full_book=1107 sha256=680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549
+PHASE1_TABLE_DONE
+PHASE1_INCLUDE_RETURNED_phase1_prepare_v2 wall_s=36.26337695121765
+Manifest SHA256 before/after: 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1

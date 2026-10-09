@@ -41,6 +41,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Manager authorises option 1: include wave-1 market_arm.jl as Main.QSMarketArm; table adapter calls original namespace. Resume Phase 1 without modifying guard/manifest or priors/seeds; add exact IDs/log rates/full-book parity and 710/595/78/517 counts, record frozen SHA256 before tests.
 
+- [2026-10-09 @pi] Authorised table preparation PASS at 4a71c02e: exact IDs/log rates/flags match wave-1 prepared panel after CSV round-trip; 1430 rows, 1107 full books, target counts 710/595/78/517. Frozen SHA256 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549 recorded in PROGRESS/DECISIONS_LOG; saved manifest digest unchanged. Fresh component gates next.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.

@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 1 resumed: manager authorised option 1 (original Main.QSMarketArm namespace).** Original guard/manifest unchanged; exact table-value/count parity added, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component source remains unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
+**Phase 1 table preparation PASS at 4a71c02e; component tests next.** Manager-authorised Main.QSMarketArm namespace, original guard/manifest unchanged. Exact table-value/count parity passed, including frozen CSV round-trip. Earlier failure at 351b8ddd retained in PHASE1_BLOCKED.md. Component source remains unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -20,14 +20,16 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 - Phase 0 complete 15:32:29 UTC; all owned sessions closed.
 - MarketRateObservation, injected feature, exports/seams, tests and table adapter prepared at 27c53ede; fresh-REPL launcher at 351b8ddd. No acceptance claimed.
 - Phase 1 preparation failed 15:47:15 UTC (50.78 s): saved wave-1 manifest encodes Main.QSMarketArm, new loader nests it under Main.Wave2MarketTable. The exact repr provenance guard stopped before freezing a table. Evidence preserved; owned idle sessions closed.
+- Manager authorised original namespace; preparation-v2 PASS 15:58:54 UTC, 36.2634 s. Frozen table 1,430 rows / 1,107 full books, target counts exactly 710/595/78/517, exact values match wave-1 panel after CSV round-trip.
+- Frozen market_rates.csv SHA256: 680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549. Guard/manifest unchanged; manifest digest identical before/after.
 
 ## Next action
 
-Commit/push authorised namespace correction; run fresh table preparation (prepare_v2). Preserve original guard and saved manifest; record exact parity and SHA256. Commit frozen table/hash before fresh unit/AD/recovery and tape/builder/harness gates. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
+Commit/push frozen table/hash and parity evidence, then run fresh unit/AD/recovery and tape/builder/harness gates via phase1_gate.sh. Stop/report any failed gate. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
 
 ## Beast panes and artifacts
 
-None open. Preparation launcher `%359` and failed idle REPL `%360` closed after evidence retrieval; Phase 0 REPLs `%343`–`%358` and launcher `%342` also closed. IDs retained in committed log summaries. Never touch other sessions.
+None open. Preparation-v2 `%361`/`%362` closed after PASS/evidence retrieval. Original saved manifest SHA256 57941606a195010fe86cbfda0564d61f456379d05d0e8988dce3bb2edd600fb1, unchanged before/after. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.
