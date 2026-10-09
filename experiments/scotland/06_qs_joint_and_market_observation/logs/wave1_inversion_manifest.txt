@@ -1,0 +1,2 @@
+c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+Main.QSMarketArm.MarketModel.MarketModelConfig{BayesianFootball.Data.ScottishLower}("pooled_56_57_four_seasons", BayesianFootball.Data.ScottishLower(), [56, 57], ["22/23", "23/24", "24/25", "25/26"], ["22/23", "23/24", "24/25"], ["25/26"], (-20.0, 0.0), 5, Dict(14035501 => "T014 swapped book"), NamedTuple())

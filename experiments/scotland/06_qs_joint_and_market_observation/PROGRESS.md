@@ -5,7 +5,7 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 
 ## Current phase
 
-**Phase 0 PASS at ec96c079; Phase 1 implementation prepared, unverified.** All prescribed fresh-REPL gates pass under the manager's C2-pending exclusion. Phase 0 evidence pushed at 2f0c01e9. See `PHASE0.md` and `results/phase0_gates.csv`. No new fit, smoke, grid or scoring has started.
+**BLOCKED in Phase 1 at 351b8ddd: table preparation failed `inversion provenance differs`.** Stopped per package; no retry or bypass. See `PHASE1_BLOCKED.md`. Component source is unverified; new AD/allocation/recovery tests have not run. Phase 0 remains PASS at ec96c079, evidence pushed at 2f0c01e9. No new fit, smoke, grid or scoring has started.
 
 ## Done
 
@@ -18,14 +18,16 @@ Branch: `exp/qs-goal-vs-market`. TODO: 041.
 - Market t01–t06 pass; pooled full-book 305/305, C2-pending 29/39 explicitly excluded. Exact summaries committed under logs/.
 - Exact joint-feature coverage: both 56 and 57 have 180–530 covered training matches per fold (50%–100%); all 710 held-out matches covered. Per-fold CSV recorded.
 - Phase 0 complete 15:32:29 UTC; all owned sessions closed.
+- MarketRateObservation, injected feature, exports/seams, tests and table adapter prepared at 27c53ede; fresh-REPL launcher at 351b8ddd. No acceptance claimed.
+- Phase 1 preparation failed 15:47:15 UTC (50.78 s): saved wave-1 manifest encodes Main.QSMarketArm, new loader nests it under Main.Wave2MarketTable. The exact repr provenance guard stopped before freezing a table. Evidence preserved; owned idle sessions closed.
 
 ## Next action
 
-Commit/push Phase 1 source; freeze market-rate table from unchanged wave-1 inversion output in a fresh beast REPL. Fetch CSV/hash and commit before tests. Then fresh REPL test_market_rate_observation.jl (unit, real-fold AD, synthetic smoke-budget recovery), tape allocation matrix, builder and harness regression. Stop/report any failed gate. Priors/truths/seeds frozen in DECISIONS_LOG.md.
+Await Claude manager review of PHASE1_BLOCKED.md. Proposed correction: reuse wave-1 module in its original namespace or regenerate the unchanged inversion panel in a separate wave-2 directory; do not bypass/overwrite the saved manifest. Only after authorisation: freeze and commit table/hash, then fresh unit/AD/recovery and tape/builder/harness gates. Priors/truths/seeds remain frozen in DECISIONS_LOG.md. Phase 2+ not started.
 
 ## Beast panes and artifacts
 
-None open. Fresh gate REPLs `%343`–`%358` and launcher `%342` closed after all evidence was fetched. All pane IDs retained in `logs/phase0_launcher.summary.txt`. Never touch other sessions.
+None open. Preparation launcher `%359` and failed idle REPL `%360` closed after evidence retrieval; Phase 0 REPLs `%343`–`%358` and launcher `%342` also closed. IDs retained in committed log summaries. Never touch other sessions.
 Logs: `/root/BF_runs/logs/qs_experiment_w2/`.
 Outputs: `/root/BF_runs/qs_experiment_w2_out/`.
 Local evidence: `experiments/scotland/06_qs_joint_and_market_observation/logs/` and `results/`.

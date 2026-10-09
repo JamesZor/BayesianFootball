@@ -15,3 +15,8 @@
 - Feature accepts a table and aligns by match ID. Refuse duplicates and nonfinite covered rows; uncovered rows get zero dummies. The experiment creates a sorted frozen CSV from the unchanged wave-1 inversion panel, checks its SHA256 before injection, and retains the snapshot pin. src contains no prototype imports.
 - AD and synthetic recovery use real fold 40 (not fold 1, whose absent micro states cannot test rₖ). AD checks every coordinate at three perturbed points in linked space, compiled/fresh ReverseDiff, ForwardDiff and central finite differences, unchanged 1e-6 threshold.
 - Synthetic recovery is predeclared at smoke budget 2×(200 warmup+200 retained), accept .65, depth 10. Data seeds 20261014/20261015 and sampler seeds 20261016/20261017 for GRW/QS. σ_obs=.07; GRW attack scales [.12,.06,.03], defence [.20,.11,.024]; QS τ=[.16,.085,.027], r=[.4,.4,.3]. Preserve real full-book mask; all 14 scale/ratio intervals reported to CSV, including any miss. No seed or truth tuning after a result.
+
+## 2026-10-09 — stop on Phase 1 preparation failure
+
+- At source 351b8ddd the unchanged wave-1 provenance guard rejects the saved panel (`inversion provenance differs`). Its manifest includes `Main.QSMarketArm.MarketModel.MarketModelConfig`; the new loader nests the module under `Main.Wave2MarketTable`. Retain this failure, do not change the guard or reference manifest, and stop for manager review. No second attempt, synthetic fit or later phase.
+- Preserve unverified implementation for review rather than claiming tests passed. Snapshot and reference rows untouched; all owned idle panes closed. Proposed original-namespace reuse or independent unchanged panel preparation requires manager authorisation.

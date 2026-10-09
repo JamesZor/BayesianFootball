@@ -1,0 +1,13 @@
+Source commit: 351b8ddd
+START phase1_prepare experiments/scotland/06_qs_joint_and_market_observation/r01_prepare_table.jl pane=%360 2026-10-09T15:46:15Z
+LoadError: inversion provenance differs
+prepare_panel: experiments/scotland/05_quality_style_goal_vs_market/market_arm.jl:57
+Main.Wave2MarketTable.QSMarketArm.prepare_panel
+Main.Wave2MarketTable.prepare: l01_market_table.jl:13
+r01_prepare_table.jl:13
+PHASE1_FAIL_phase1_prepare wall_s=50.78477120399475
+END phase1_prepare FAIL 2026-10-09T15:47:15Z
+PHASE1_BLOCKED: phase1_prepare; no retry, no new fits or tests
+Raw evidence: /root/BF_runs/logs/qs_experiment_w2/phase1_prepare.log
+Launcher: /root/BF_runs/logs/qs_experiment_w2/phase1_prepare_launcher.log
+Owned idle panes %359 and %360 closed after retrieval.
