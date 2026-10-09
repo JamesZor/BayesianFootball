@@ -4,7 +4,17 @@ Updated: 2026-10-09 UTC. Owner: pi. Branch: `exp/qs-goal-vs-market`.
 
 ## Current phase
 
-Phase 3 — **smokes DONE at `2060056f`; awaiting manager approval for the grid.**
+Phase 4 — **GRID RUNNING at `e6685ceb`** (manager approved 2026-10-09 with order control_grw → qs_market_r → qs_weak_r → control_td, market concurrent, 20-min polls).
+
+| Arm | Status | Started (UTC) | Hours | run_id |
+|---|---|---|---|---|
+| control_grw | running | 13:09 | | |
+| qs_market_r | queued | | | |
+| qs_weak_r | queued | | | |
+| control_td | queued | | | |
+| market (C0) | running, fold 1/40 done (234 s, identical to smoke) | 13:10 | | n/a (files) |
+
+Phase 3 — smokes DONE at `2060056f`.
 
 ### Smoke summary (`logs/phase3_smoke.log`)
 
@@ -33,8 +43,10 @@ Phase 2 PASS at `ef8d0d8e`: B2 counts 710/595/78/517 reproduced; 40 folds leak-f
 
 ## Next action
 
-Ask the manager to approve the grid (Phase 4). No grid before approval.
+Poll every 20 min. Per arm: record hours, run_id, R̂/divergences; refit any goal fold with R̂ > 1.05 once, seeded. Watch goal-arm speed; pause the market session if it slows the goal arm > ~20%. Then Phase 5 scoring.
 
 ## Open beast sessions
 
-`pi_qsx_phase2` pane `%337` (warm REPL; log `/root/BF_runs/logs/qs_experiment/phase2_checks.log`). No other sessions touched.
+- `pi_qsx_goal_grid` pane `%338`: `-t 14`, cores 0–13, `r04_goal_grid.jl`, log `/root/BF_runs/logs/qs_experiment/phase4_goal_grid.log`.
+- `pi_qsx_market_grid` pane `%339`: `-t 2`, cores 14–15, `r04_market_grid.jl`, log `phase4_market_grid.log`, outputs `/root/BF_runs/qs_experiment_out/market_grid/`.
+- `pi_qsx_phase2` closed. No other sessions touched.
