@@ -8,8 +8,8 @@ const EXPERIMENT = "scottish_lower_qs_wave2_2426"
 const TODO = 41
 const QUESTION = "Does QS help joint goals+proxy-xG forecasts, and can builder market-rate observations match saved market C0?"
 const DIMENSION = "quality_style_and_observation"
-const STATUS = "active"
-const DECISION = "Pending four smoke gates and manager grid approval; no predictive result yet."
+const STATUS = "scored"
+const DECISION = "No promotion: primary noncircular intervals cross zero; circular market-vs-joint intervals favour market arms. Market micro r informed near0.3; GRW ESS review flags retained. Frozen-seed reproduction pending."
 const README = joinpath(@__DIR__, "README.md")
 const CONTROL = "grw_joint"
 

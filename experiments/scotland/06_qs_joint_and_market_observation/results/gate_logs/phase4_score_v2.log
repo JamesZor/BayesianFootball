@@ -1,0 +1,1236 @@
+JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+
+  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+
+
+julia> 
+
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_s
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_sc
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_sco
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_scor
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.j
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl")
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl");
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); 
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); w
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); wr
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); wri
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); writ
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write(
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/r
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/ro
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/roo
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/B
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_r
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_ru
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_run
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/l
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/lo
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/log
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/q
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_e
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_ex
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_exp
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_expe
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_exper
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experi
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experim
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experime
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experimen
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/p
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/ph
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/pha
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phas
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_s
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_sc
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_sco
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_scor
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.s
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.st
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.sta
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.stat
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.statu
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status"
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status",
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", 
+
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "P
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PA
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PAS
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS"
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS")
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") c
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") ca
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") cat
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catc
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch e
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch er
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err;
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; s
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; sh
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; sho
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; show
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showe
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; shower
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerr
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerro
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(s
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(st
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(std
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stde
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stder
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr,
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, e
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, er
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err,
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, c
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, ca
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, cat
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catc
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_b
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_ba
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_bac
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_back
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backt
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtr
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtra
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrac
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace(
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace())
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace());
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); p
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pr
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); pri
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); prin
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); print
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); printl
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(s
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(st
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(std
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stde
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stder
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr)
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr);
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); 
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); w
+
+
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wr
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); wri
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); writ
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write(
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/r
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/ro
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/roo
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/B
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_r
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_ru
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_run
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/l
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/lo
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/log
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/q
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_e
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_ex
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exp
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_expe
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_exper
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experi
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experim
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experime
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experimen
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/p
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/ph
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/pha
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phas
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_s
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_sc
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_sco
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_scor
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.s
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.st
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.sta
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.stat
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.statu
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status"
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status",
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", 
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "F
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FA
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAI
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL"
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL")
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL") 
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL") e
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL") en
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL") end
+
+
+
+
+julia> 
+try include("experiments/scotland/06_qs_joint_and_market_observation/r06_score.jl"); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); write("/root/BF_runs/logs/qs_experiment_w2/phase4_score_v2.status", "FAIL") end
+
+QS_MARKET_ARM_LOADED
+QS_SCORING_ADAPTER_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 345.5 hours)...
+BLOCK_CHECK max|noncircular_mean-point|=0.004564260395650546 max|circular_mean-point|=0.0006758554457288787
+BLOCK_CHECK_DONE
+GOAL_CLUSTER_DONE pairs=30 fixtures=710 all_point_estimates_match=true
+PHASE4_SCORE_DONE
+4
+
+
+
+julia> 
+
+
+julia> 
+

@@ -1,0 +1,14 @@
+-- headline
+SELECT model, max(value) FILTER(WHERE metric='logloss' AND market='1X2') AS ll_1x2,max(value) FILTER(WHERE metric='logloss' AND market='OU2.5') AS ll_ou25,max(value) FILTER(WHERE metric='logloss' AND market='BTTS') AS ll_btts,max(value) FILTER(WHERE metric='rps' AND market='1X2') AS rps,max(value) FILTER(WHERE metric='brier' AND market='1X2') AS brier,max(value) FILTER(WHERE metric='ece' AND market='1X2') AS ece_1x2,max(value) FILTER(WHERE metric='ece' AND market='all') AS ece_all,max(value) FILTER(WHERE metric='compression_slope') AS compression_slope,max(value) FILTER(WHERE metric='model_on_market_slope') AS model_on_market_slope FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/harness_scores_vs_grw_joint.csv' WHERE subset='target' GROUP BY model UNION ALL SELECT 'market_close',max(value) FILTER(WHERE metric='market_logloss' AND market='1X2'),max(value) FILTER(WHERE metric='market_logloss' AND market='OU2.5'),max(value) FILTER(WHERE metric='market_logloss' AND market='BTTS'),max(value) FILTER(WHERE metric='market_rps' AND market='1X2'),max(value) FILTER(WHERE metric='market_brier' AND market='1X2'),max(value) FILTER(WHERE metric='market_ece' AND market='1X2'),max(value) FILTER(WHERE metric='market_ece' AND market='all'),NULL,NULL FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/harness_scores_vs_grw_joint.csv' WHERE subset='target' AND model='grw_joint' ;
+
+-- r_summary
+SELECT arm,scale,count(*) AS folds,median(r_median) AS median_r,min(r_median) AS min_median,max(r_median) AS max_median,median(r_q05) AS median_q05,median(r_q95) AS median_q95,sum(r_q95<1) AS excludes_prior_median,sum(r_q05<=0.3 AND r_q95>=0.3) AS covers_0_3 FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/posterior_r_by_fold.csv' GROUP BY arm,scale ORDER BY arm,scale;
+
+-- sigma_summary
+SELECT arm,count(*) AS folds,median(median) AS median_sigma,median(q05) AS median_q05,median(q95) AS median_q95 FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/posterior_sigma_by_fold.csv' GROUP BY arm ORDER BY arm;
+
+-- paired_intervals
+SELECT a.*, b.noncircular_mean,b.circular_lo90,b.circular_hi90,b.circular_class,b.circular_contradicts,b.noncircular_class AS prescribed_class FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/paired_logloss.csv' a JOIN 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/block_bootstrap_all_markets.csv' b USING(arm,reference,market,tier) ORDER BY tier,arm,reference,market;
+
+-- goal_intervals
+SELECT a.*,b.circular_lo90,b.circular_hi90,b.circular_class,b.circular_contradicts FROM 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/paired_goal_logscore.csv' a JOIN 'experiments/scotland/06_qs_joint_and_market_observation/results/phase4/goal_circular_sensitivity.csv' b USING(arm,reference,channel,tier) ORDER BY tier,arm,reference,channel;

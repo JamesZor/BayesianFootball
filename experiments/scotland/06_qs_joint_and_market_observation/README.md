@@ -1,9 +1,9 @@
 # 06 — QS joint goals+xG and builder market-rate observations
 
-> **Status:** Phase 3 complete: all four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Three candidate control-score comparisons exact (664 rows each); no joint resampling. GRW tail-ESS review flags 324/339 retained. See [PHASE3.md](PHASE3.md). Phase 4 report and Phase 5 reproduction remain.
+> **Status:** Phase 4 scored/reported; Phase 5 frozen-seed reproduction next. All four 40-fold grids, 16 hard passes, zero divergences, no Rhat reruns due. Exact saved reference parity; GRW ESS review flags retained. See [REPORT.md](REPORT.md) and [PHASE3.md](PHASE3.md).
 > **Experiment:** `scottish_lower_qs_wave2_2426`; **TODO:** 041.
 > **Control:** `grw_joint`; run UUID `98447840-e95c-420f-92b4-2db6545506a3`.
-> **Scorecard:** same versioned harness/scoring path as wave 1; no paired predictive conclusions yet.
+> **Scorecard:** v1.2, de-vigged Betfair TWA(−20,0]; same wave1 score/interval paths, saved reference UUIDs only.
 
 ## Questions and fixed panel
 
@@ -96,11 +96,25 @@ also below400. All owned panes closed. See [PHASE3.md](PHASE3.md),
 [CONTROL_FORWARDING_REVALIDATION.md](CONTROL_FORWARDING_REVALIDATION.md)
 and [PROGRESS.md](PROGRESS.md). Original stop evidence remains unchanged.
 
-## Decision and planned comparisons
+## Decision and measured comparisons
 
-Pending. Primary A: qs_joint−grw_joint. Primary B: each market-observation arm
-versus saved C0 and grw_joint. Secondary: joint versus saved Poisson controls,
-qs_marketobs−grw_marketobs, and every arm versus the close. Same outcome/goal
-scores, slopes, cohorts and three bootstrap paths as wave 1. Classification uses
-the prescribed noncircular interval; flag circular disagreement. Report all fold
-r and sigma posteriors and convergence reruns. No predictive result claimed yet.
+**No promotion on the prescribed primary intervals.** All primary noncircular
+1X2 intervals cross zero. QS joint−GRW joint point delta −0.000192; GRW/QS
+market-observation LL0.611754/0.611917 versus saved C0 0.613434 and GRW joint
+0.616372. Circular intervals classify both market arms versus GRW joint as
+better: this contradicts, and does not replace, the prescribed classification.
+
+All prescribed pairs, OU2.5/BTTS, RPS/Brier/ECE, goal total/allocation scores,
+slopes and transition biases are in [REPORT.md](REPORT.md), with CSV traces in
+`results/phase4/`. Posterior r by fold and native SVG show that market QS
+micro r is much more informed (median0.228; 36/38 intervals exclude prior
+median1; all38 contain0.3), while joint micro r remains broad. Market sigma
+medians0.1198/0.1192 versus saved C0 0.0639 reflect different state clocks.
+Keep GRW joint tail324.47 and GRW market tail339.34/bulk395.44 review flags.
+
+Scoring runner: `r06_score.jl`, reused unchanged wave1 block/goal-cluster scripts;
+`r06_interval_audit.jl` adds circular sensitivities for all markets and goals.
+Exact saved reference metrics and goal-fixture scores pass; reused harness CSV
+rows are byte-identical to wave1. No scoring DB writes, reference refits or ROI.
+Wave1 source/result provenance discrepancy is a separate TODO041 follow-up,
+not repaired here. Frozen-seed reproduction: `r07_reproduce.jl` / `phase5_gate.sh`.

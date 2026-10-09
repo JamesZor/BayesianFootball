@@ -1,0 +1,4 @@
+arm,rows,max_abs_diff,exact
+control_grw,598,0.0,true
+qs_weak_r,598,0.0,true
+market_c0,598,0.0,true
