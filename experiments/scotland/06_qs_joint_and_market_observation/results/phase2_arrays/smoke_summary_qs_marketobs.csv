@@ -1,0 +1,2 @@
+candidate,run_id,recipe_hash,git_sha,root_seed,wall_seconds,hard_pass,convergence_status,max_rhat,min_ess_bulk,min_ess_tail,divergences,divergence_rate,estimated_grid_seconds,performance_status
+qs_marketobs,3ec74b0f-ee29-4bef-9ed9-dea5ceb8bba5,a8e460f6a1c995da5fa8a38468ee4af1afbf2f144911b955eb1c671e45c17503,d0d933ae,20261043,227.258070230484,true,fail,1.0624970785119117,67.13910961636199,74.32777564477591,0,0.0,15219.91756545,review

@@ -1,0 +1,5 @@
+START phase2_smoke_arrays_grw_marketobs pane=%384 2026-10-09T18:26:56Z
+END phase2_smoke_arrays_grw_marketobs PASS 2026-10-09T18:31:34Z
+START phase2_smoke_arrays_qs_marketobs pane=%385 2026-10-09T18:31:34Z
+END phase2_smoke_arrays_qs_marketobs PASS 2026-10-09T18:36:10Z
+PHASE2_SMOKE_HARD_GATES_PASS; STOP — manager approval required before grid

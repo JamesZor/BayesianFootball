@@ -4,7 +4,7 @@
 |---|---|
 | ID | 041 |
 | Title | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-09 |
@@ -19,7 +19,8 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [x] Phase 0 fresh beast branch-health tests and per-fold proxy-xG coverage recorded.
 - [x] MarketRateObservation wiring, masked likelihood, real-fold AD, 0 B tapes and synthetic recovery revalidated for array feature under manager amendments.
-- [ ] Four W2 candidates pass smoke hard gates; manager approval before grid.
+- [x] Four W2 candidates pass smoke hard gates; convergence and full ETA reported.
+- [ ] Manager approval before grid.
 - [ ] Ordered 40-fold grids with checkpoints, prescribed convergence reruns and diagnostics.
 - [ ] Report/CSV/leaderboard with all prescribed pairs, bootstraps and posterior parameters; saved wave-1 references unchanged.
 - [ ] Fresh-REPL frozen-seed fold reproduction for each arm, byte comparison recorded.
@@ -62,9 +63,11 @@ Compare QS versus MultiScaleGRW on joint goals + proxy-xG, and both dynamics obs
 
 - [2026-10-09 @pi] Array feature at b006743f fully revalidated in fresh beast REPLs %381/%382: component 3831/3831, tape entry point 150+2+8/160 (0 B). Exact AD <=4.11e-16, 735 Richardson checks pass unchanged 1e-8 gate. ALL 3 declared recovery seeds per arm rerun: 39/42 coverage, zero all-seed misses; all 42 interval values exactly reproduce prior evidence. No harness edits. New report ARRAY_FEATURE_REVALIDATION.md / phase1_arrays outputs; next ONLY market smokes, no grid yet.
 
+- [2026-10-09 @pi] Phase 2 all four hard smokes PASS: retained joint UUIDs stand; market-only retry d0d933ae UUIDs 30ad2ca7-ccd4-4cc0-9973-81142b67dcb3 / 3ec74b0f-ee29-4bef-9ed9-dea5ceb8bba5 pass actual DB parity. New market Rhat/bulk/tail: GRW 1.13787/16.10/57.47, QS 1.06250/67.14/74.33; zero divergences, convergence/performance flags NOT waived. Four-arm ETA 1.9374+1.9550+4.1991+4.2278=12.3192 h, before overhead/reruns. Prior GRW 1.14/bulk16/4.219 h clearly retained. Read-only audit confirms all four recipes smoke-eligible without harness changes/history deletion. PHASE2.md and committed phase2_arrays receipts; all owned panes closed. BLOCKED only on manager grid approval; no grid/scoring/reference refit.
+
 ## Verification & Findings
 
 - Initial branch clean at 9a86f7b1. Beast detached checkout clean at d16a5800; .env and Manifest symlinks intact.
 - Beast snapshot SHA256 c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4; original mtime 2026-09-25 12:57:15.480765468 UTC intact.
-- Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Current Phase 1 PASS at 153239a7; PHASE1.md is authoritative, PHASE1_BLOCKED.md retains historical evidence.
+- Historical Phase 1 preparation failure `inversion provenance differs` resolved by manager-authorised namespace reuse; earlier component failures resolved under three manager amendments. Historical Phase 1 PASS at 153239a7; new array feature PASS b006743f (ARRAY_FEATURE_REVALIDATION.md). All four Phase 2 hard smokes PASS (PHASE2.md), convergence flags retained. Current blocker is GRID approval only; historical blocked notes remain evidence.
 - Phase 0: QS 373/373, GRW 124/124, tape 150/150 + QS 2/2 (0 B), builder 106/106, harness 179/179, market t01–t06 pass (full-book 305/305). Exact counts/wall times and summaries committed in experiments/scotland/06_qs_joint_and_market_observation/; C2 known failures not hidden.
