@@ -4,9 +4,9 @@
 |---|---|
 | ID | 043 |
 | Title | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices |
-| Status | IN_PROGRESS |
+| Status | COMPLETED |
 | Priority | P2 |
-| Assignee | Claude CLI (handover from pi) |
+| Assignee | claude |
 | Created | 2026-10-10 |
 | Updated | 2026-10-10 |
 | Related Files / Commits / PRs | `experiments/pi_qs_marketobs_backtest_prompt.md`; `experiments/scotland/08_qs_marketobs_backtest/` |
@@ -20,8 +20,8 @@ Backtest five saved models against T−25m/T−6h/T−24h Betfair archive prices
 - [x] Phase 0: canonical and option_b_live inventories, historical experiment 07 m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
 - [x] Phase 1 allocator audit with source line references; Phase 2 scenario allocator tested or unnecessary.
 - [x] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
-- [ ] Reports answer all five brief questions with numbers traceable to committed CSVs.
-- [ ] Follow-ups recorded, branch pushed, owned beast panes closed, PHASEBT_DONE.
+- [x] Reports answer all five brief questions with numbers traceable to committed CSVs.
+- [x] Follow-ups recorded, branch pushed, owned beast panes closed, QBT_DONE (the Claude brief's sentinel; it replaces PHASEBT_DONE).
 
 ## Ideas & Candidate Solutions
 
@@ -45,6 +45,14 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 - [2026-10-10 @claude] Handover: pi (Codex fault + weekly quota) handed Phases 3–4 to a Claude CLI agent; brief `experiments/claude_qs_backtest_phase34_brief.md` (`d83cca9e`). Not BLOCKED; Phases 0–2 accepted. Phase 3 runner `l02_phase3_grid.jl`/`r02_phase3_grid.jl` (`f059662b`) running on beast in owned REPL `jl-claude_qsbt_p3`. Fresh-REPL cold-load smoke of the native ScenarioKelly checks: 51/51 PASS. C0 has genuine draw-level latents (512 = 128θ × 4 state draws per fold), so its BakerMcHale and scenario cells are computed, not NOT_AVAILABLE.
 
 - [2026-10-10 @claude] Phase 3 PASS (runner `4f1d3d43`). Gate m12 × T−25m × historical_exp07 = 2.515204600600047 / 1127, bit-identical; canonical 2.773493294562897 / 1132 and option_b_live 2.207736087761667 / 1172 also reproduce Phase 0 exactly. 100/100 cells computed (none NOT_AVAILABLE), 0 build errors, 1,435 scenario solves converged, DB audit unchanged 10/10. First attempt stopped at CSV write (C0 `converged = nothing`); fixed and rerun. Results in `results/phase3/`. Stopped at the phase boundary.
+
+- [2026-10-10 @claude] Phase 4 done; TODO closed. README.md and REPORT.md answer the five questions from `results/phase3` plus local derived tables (`x04_phase4_tables.py` → `results/phase4/`).
+  - qs_marketobs trails m12 at T−25m (canonical 1.857 vs 2.773, d −4.05 ×10⁻³/day [−11.95, 1.27]) and at T−6h, and leads only at T−24h (78–289 bets, no committed interval excluding 0).
+  - On the same fixtures, the T−25m ROI per stake is at least the early ROI, so the T−24h lead is a fixture-subset effect. T−24h/360 prices are up to 6 h old and not executable.
+  - Trust tiers add nothing consistent. Scenario Kelly gives +1.50 [0.14, 2.66] for qs_marketobs at T−25m and does not change the ranking.
+  - CLV is positive in 100/100 cells, at +0.17 to +0.40 pp at T−25m.
+  - Everything is in-sample (2 seasons, 99 slates, experiment 07 policy selection with m12), and the intervals are wide.
+  - No owned beast session remains.
 
 ## Verification & Findings
 
@@ -74,3 +82,14 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 - No fits, source allocator changes, or DB writes. At those earlier stops, m12 UUID `132df5c2-c742-4e95-8693-3aeb2b2cbaef` had not been loaded.
 - Evidence and resume requirements: `experiments/scotland/08_qs_marketobs_backtest/{REPORT,HANDOVER,PROGRESS,DECISIONS_LOG}.md`, committed attempt logs and execution-status CSV.
 - `scripts/todo.sh check` and `git diff --check` passed before the source commits; final checks recorded in handoff commit. Owned session closed and verified absent.
+
+### Phase 4 findings and follow-ups (Claude CLI)
+
+Report: `experiments/scotland/08_qs_marketobs_backtest/REPORT.md`. Follow-ups, none started:
+
+1. **`kkt_residual` budget tolerance** (`src/Portfolio/implementations/allocators.jl`). It treats the budget as binding only within 1e-6, while the barrier stops 1e-5 to 1e-3 short. That flags 255 healthy scenario solve-days. Scale the tolerance with `barrier_mu`, or use μ/(B − Σa) as ν.
+2. **Bootstrap centring.** Noncircular 8-week blocks under-sample the edge weeks, so intervals can be lopsided. Adopt circular or stationary blocks experiment-wide, or report both.
+3. **Executable prices.** Re-score the T−25m and T−6h cells on back/lay touch and depth from the 26/27 order-book archive, not last-traded prices.
+4. **CLV coverage.** At T−25m the close covers 96% of 1X2 bets but only 61% of OU2.5, 43% of BTTS and 34% of OU1.5 bets. Use a fixed complete-close fixture set or a wider close window; never impute.
+5. **Out-of-sample season.** Freeze one policy per model and score 26/27 prospectively; every Phase 3 policy is in-sample through experiment 07.
+6. **Scenario Kelly for the market-informed models.** It helped qs_marketobs, fusion and C0 at T−25m. Confirm out of sample before any production change.

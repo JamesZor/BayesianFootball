@@ -130,3 +130,21 @@
 - Scenario Kelly: 1,435 daily joint solves, all `converged = true`, 1000 scenarios each, up to 69 legs (T−25m). Every per-draw grid reproduced its book's `p_grid` bit for bit. The 255 days with KKT residual > 1e-3 (max 0.16) are exactly the days whose joint raw total sits at the 0.99 budget (0.98919–0.98999). `kkt_residual` sets ν = 0 unless `sum(a) ≥ B − 1e-6`, but the 1e-6 log barrier stops 1e-5–1e-3 short of B, so the residual reports the budget multiplier. It is a diagnostic artifact, not a failed solve. Follow-up recorded; src stays frozen.
 - **DB audit:** before/after unchanged 10/10 on both attempts; SHOW `off` logged once (accepted ruling 1).
 - Committed: `results/phase3/{phase3_cells, phase3_markets, phase3_daily, phase3_bootstrap_growth, phase3_paired_vs_m12, phase3_scenario_days, phase3_gate, phase3_db_*}.csv`, bet ledger `phase3_bets.csv.gz` (45,191 bets with CLV), log `logs/phase3_grid.log`.
+
+## 2026-10-10 — Phase 4 report (Claude CLI)
+
+- Manager accepted Phase 3 and authorised Phase 4, adding two requirements: say plainly that T−24h/360 uses prices up to 6 hours old (not executable at bet time), and give n_bets behind every early-snapshot claim. Both are in REPORT.md.
+- Phase 4 tables come from `x04_phase4_tables.py`. It runs locally, reads only the committed `results/phase3` CSVs (plus the Phase 0 snapshot books, for their fixture IDs) and writes `results/phase4/`. No Julia, no DB, no refits; no policy or threshold was chosen after seeing results.
+- **Bootstrap re-implementation.** The bootstrap was re-implemented in numpy with the same scheme and seed number; the RNG differs from Julia's. Point estimates equal the committed paired-vs-m12 values exactly, and the bounds land within 0.71 ×10⁻³/day (`phase4_check_vs_julia.csv`). The REPORT's model-vs-m12 numbers stay the committed Julia ones; numpy is used only for the new contrasts and the circular sensitivity.
+- **New contrasts (descriptive, not preregistered):**
+  - canonical − plain_kelly (Q3) and scenario_kelly − canonical (Q4), per model and snapshot;
+  - a circular-block sensitivity;
+  - CLV intervals by week blocks;
+  - a same-fixture timing check (Q2): each early snapshot's bets against the T−25m bets on the fixtures that early book prices, compared by ROI per stake, since growth cannot be split by fixture without re-staking.
+- **Answers:**
+  1. qs_marketobs trails m12 at T−25m and T−6h in every policy. It leads at T−24h, with no committed interval excluding 0.
+  2. On the same fixtures, the T−25m return per stake is at least the early one, so the T−24h lead is a fixture-subset effect.
+  3. The trust tiers add nothing consistent.
+  4. Scenario Kelly helps qs_marketobs, fusion and C0 at T−25m (intervals exclude 0) and leaves the ranking unchanged.
+  5. CLV is positive in 100/100 cells and is inversely related to wealth at T−25m.
+- **TODO 043 closed.** Follow-ups (REPORT § Follow-ups): kkt_residual tolerance, bootstrap centring, executable prices, CLV coverage, an out-of-sample season, and scenario Kelly confirmation.

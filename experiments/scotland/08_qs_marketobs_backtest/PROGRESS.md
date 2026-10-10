@@ -1,10 +1,7 @@
-# Wave 4 progress — Phase 3 PASS (Claude CLI)
+# Wave 4 progress — DONE (Claude CLI)
 
-- Handover from pi (Codex fault + weekly quota): Phases 0–2 accepted; Claude CLI runs Phases 3–4 under `experiments/claude_qs_backtest_phase34_brief.md`. Rulings 1–3 binding.
-- Phase 3 design frozen in DECISIONS_LOG before any grid number.
-- **Gate PASS, bit-identical:** m12 × T−25m × historical_exp07 = 2.515204600600047 / 1127 / 99 slates.
-- Cross-checks inside the grid: canonical 2.773493294562897 / 1132 and option_b_live 2.207736087761667 / 1172 equal Phase 0 exactly.
-- 100/100 cells (5 models × 4 snapshots × 5 policies) COMPUTED; C0 is draw-level (512), so none NOT_AVAILABLE. Bootstrap intervals (8-week noncircular blocks, 999 reps, 90%) and paired m12 differences in committed CSVs.
-- All 1,435 scenario-Kelly daily solves converged; KKT > 1e-3 only on budget-binding days (a residual-tolerance artifact, logged as a follow-up).
-- DB audit unchanged 10/10 on both runner attempts. Runner `4f1d3d43`; results `results/phase3/`; log `logs/phase3_grid.log`.
-- Next: Phase 4 (README.md + REPORT.md answering the five questions), on manager's go.
+- Phases 0–2 (pi) accepted; Claude CLI ran Phases 3–4 under `experiments/claude_qs_backtest_phase34_brief.md`.
+- **Phase 3 PASS.** The gate is bit-identical (2.515204600600047 / 1127). 100/100 cells were computed, the DB audit was unchanged 10/10, and all 1,435 scenario solves converged. Runner `4f1d3d43`, results in `results/phase3/`.
+- **Phase 4 done.** README.md and REPORT.md answer the five questions with traceable numbers. Derived tables come from the local `x04_phase4_tables.py` and are in `results/phase4/`.
+- Headline: qs_marketobs does not beat m12 at T−25m or T−6h. Its T−24h lead is a fixture-subset effect: low coverage, with T−24h/360 prices up to 6 hours old. Scenario Kelly helps the market-informed models at T−25m. Trust tiers add nothing consistent. CLV is positive but small. All results are in-sample, with wide intervals.
+- TODO 043 is COMPLETED with follow-ups, everything is pushed, and no owned beast session remains.
