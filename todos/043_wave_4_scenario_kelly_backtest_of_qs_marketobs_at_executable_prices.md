@@ -19,7 +19,7 @@ Backtest five saved models against T−25m/T−6h/T−24h Betfair archive prices
 
 - [x] Phase 0: canonical and option_b_live inventories, historical experiment 07 m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
 - [x] Phase 1 allocator audit with source line references; Phase 2 scenario allocator tested or unnecessary.
-- [ ] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
+- [x] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
 - [ ] Reports answer all five brief questions with numbers traceable to committed CSVs.
 - [ ] Follow-ups recorded, branch pushed, owned beast panes closed, PHASEBT_DONE.
 
@@ -43,6 +43,8 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 - [2026-10-10 @pi] Manager accepted Phase0 and authorised allocator check/conditional Phase2. Phase1 audit complete with line references: per-match posterior-mean joint score-grid Kelly, coherent same-match payoff correlations; BakerMcHale per-match re-solves/scalar shrink; risk/cap do not jointly optimise daily expected log wealth. Shared posterior daily objective missing; Phase2 required. MatchBook/stake_slate do not retain/receive draw-level inputs, so pending confirmation of an opt-in experiment daily-slate adapter within src-allocator-only scope. No src changes/tests/DB/panes yet. T−6h and both labelled T−24h bounds remain low-coverage unpooled strata. Audit in PHASE1_ALLOCATOR_AUDIT.md and DECISIONS_LOG.md.
 
 - [2026-10-10 @claude] Handover: pi (Codex fault + weekly quota) handed Phases 3–4 to a Claude CLI agent; brief `experiments/claude_qs_backtest_phase34_brief.md` (`d83cca9e`). Not BLOCKED; Phases 0–2 accepted. Phase 3 runner `l02_phase3_grid.jl`/`r02_phase3_grid.jl` (`f059662b`) running on beast in owned REPL `jl-claude_qsbt_p3`. Fresh-REPL cold-load smoke of the native ScenarioKelly checks: 51/51 PASS. C0 has genuine draw-level latents (512 = 128θ × 4 state draws per fold), so its BakerMcHale and scenario cells are computed, not NOT_AVAILABLE.
+
+- [2026-10-10 @claude] Phase 3 PASS (runner `4f1d3d43`). Gate m12 × T−25m × historical_exp07 = 2.515204600600047 / 1127, bit-identical; canonical 2.773493294562897 / 1132 and option_b_live 2.207736087761667 / 1172 also reproduce Phase 0 exactly. 100/100 cells computed (none NOT_AVAILABLE), 0 build errors, 1,435 scenario solves converged, DB audit unchanged 10/10. First attempt stopped at CSV write (C0 `converged = nothing`); fixed and rerun. Results in `results/phase3/`. Stopped at the phase boundary.
 
 ## Verification & Findings
 

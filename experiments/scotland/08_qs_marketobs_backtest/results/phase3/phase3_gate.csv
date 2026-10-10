@@ -1,0 +1,2 @@
+model,snapshot,policy,final_wealth,n_bets,n_slates,n_books,expected_wealth,expected_bets,abs_gap,bit_identical,status
+m12,T-25m_s90,historical_exp07,2.515204600600047,1127,99,608,2.515204600600047,1127,0.0,true,PASS

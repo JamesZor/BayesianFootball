@@ -119,3 +119,14 @@
 - **CLV:** the napkin close (`proto/clv-napkin` l01 `cn_close_book`): Betfair TWA over (−20, 0], complete markets only, overround in [0.90, 1.10], multiplicative de-vig. `clv_pp = 100·(p_close − 1/odds_taken)`, `clv_pct = 100·(odds_taken·p_close − 1)`, beat = clv_pp > 0. Bets without a valid close are counted in `clv_coverage`, never imputed.
 - **Uncertainty:** wave 2's scheme on daily log growth: 8-week **noncircular** moving blocks within season, B = 999, seed 20261009, 90% percentile interval. Paired differences against m12 on the same snapshot and policy over the union of days (a missing day counts as zero growth; `unmatched_days` is reported).
 - A cell that errors is reported as ERROR/NOT_AVAILABLE with its reason; nothing is retried with different settings.
+
+## 2026-10-10 — Phase 3 result (runner `4f1d3d43`)
+
+- First attempt (`f059662b`) computed all 100 cells but stopped while writing `phase3_cells.csv`: C0 enters as latents, so `BuildReport.converged` is `nothing`, which CSV cannot write. The audit was still unchanged (finally block). Fix: `something(converged, missing)`, nothing else changed. Rerun in a fresh owned REPL; the whole grid takes about 3 minutes.
+- **Gate PASS, bit-identical:** m12 × T−25m × historical_exp07 = 2.515204600600047, 1127 bets, 99 slates, 608 books. The grid's own copy of the cell is identical.
+- **Independent cross-checks:** inside the grid, m12 × T−25m × canonical = 2.773493294562897 / 1132 (Phase 0 `8018dacf`) and option_b_live = 2.207736087761667 / 1172 (Phase 0 `72cd5496`), both exact.
+- Inputs: all four snapshot books equal the committed Phase 0 books; datastore cache sha256 `c786e2fc…`; close book 4,448 de-vigged selections.
+- **100/100 cells COMPUTED**, 0 build errors, none NOT_AVAILABLE (C0 included; see the design entry). Paired m12 comparisons: 0 unmatched days in every pair.
+- Scenario Kelly: 1,435 daily joint solves, all `converged = true`, 1000 scenarios each, up to 69 legs (T−25m). Every per-draw grid reproduced its book's `p_grid` bit for bit. The 255 days with KKT residual > 1e-3 (max 0.16) are exactly the days whose joint raw total sits at the 0.99 budget (0.98919–0.98999). `kkt_residual` sets ν = 0 unless `sum(a) ≥ B − 1e-6`, but the 1e-6 log barrier stops 1e-5–1e-3 short of B, so the residual reports the budget multiplier. It is a diagnostic artifact, not a failed solve. Follow-up recorded; src stays frozen.
+- **DB audit:** before/after unchanged 10/10 on both attempts; SHOW `off` logged once (accepted ruling 1).
+- Committed: `results/phase3/{phase3_cells, phase3_markets, phase3_daily, phase3_bootstrap_growth, phase3_paired_vs_m12, phase3_scenario_days, phase3_gate, phase3_db_*}.csv`, bet ledger `phase3_bets.csv.gz` (45,191 bets with CLV), log `logs/phase3_grid.log`.

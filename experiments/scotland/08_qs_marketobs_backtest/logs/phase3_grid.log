@@ -1,0 +1,44 @@
+SOURCE l00_phase0_inventory.jl sha256=0b4e0d6dc3ce0f6b489893d05cd4a42398e08937066869aeb5030d472f97671c
+SOURCE l01_scenario_kelly.jl sha256=1335adb4af51164d95187be4fc26b3cdccaeda36fc0bf959a764e77afec0164a
+SOURCE l02_phase3_grid.jl sha256=42fd9f5056367c57b9e34d3d9bd832ee35ca5e2d90552f4a8285b65a0209eded
+SOURCE r02_phase3_grid.jl sha256=b88a07fd0d20429d7433b07e41b07d41058e5ced043636998c1935453d8a1101
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+RUNTIME version=1.12.4 threads=16 BLAS=1 package_root=/root/BF_runs/qs_backtest_phase0
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+DATASTORE_CACHE sha256=c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+MODEL qs_marketobs run=81fdf817-f82d-4f66-9bfd-5f456c4fe29f draws=4000 layout=4chains_x_1000 folds=40
+MODEL m12 run=132df5c2-c742-4e95-8693-3aeb2b2cbaef draws=3200 layout=4chains_x_800 folds=40
+MODEL grw_joint run=98447840-e95c-420f-92b4-2db6545506a3 draws=4000 layout=4chains_x_1000 folds=40
+MODEL fusion_qs_nobias run=5afdfeb3-abad-4d23-82fb-1bfe6babe797 draws=4000 layout=4chains_x_1000 folds=40
+MODEL market_c0 run=c0_files:/root/BF_runs/qs_experiment_out/market_grid draws=512 layout=theta128_x_state4 folds=40
+INPUT_PARITY_PASS snapshot=T-25m_s90 selections=3723 fixtures=611
+INPUT_PARITY_PASS snapshot=T-6h_s90 selections=1062 fixtures=295
+INPUT_PARITY_PASS snapshot=T-24h_s90 selections=153 fixtures=53
+INPUT_PARITY_PASS snapshot=T-24h_s360 selections=562 fixtures=190
+CLOSE_BOOK selections=4448
+GATE wealth=2.515204600600047 bets=1127 slates=99 status=PASS
+GROUP_DONE model=market_c0 snapshot=T-24h_s90 cells=5 errors=0
+GROUP_DONE model=fusion_qs_nobias snapshot=T-24h_s90 cells=5 errors=0
+GROUP_DONE model=grw_joint snapshot=T-24h_s90 cells=5 errors=0
+GROUP_DONE model=qs_marketobs snapshot=T-24h_s90 cells=5 errors=0
+GROUP_DONE model=m12 snapshot=T-24h_s90 cells=5 errors=0
+GROUP_DONE model=market_c0 snapshot=T-24h_s360 cells=5 errors=0
+GROUP_DONE model=m12 snapshot=T-24h_s360 cells=5 errors=0
+GROUP_DONE model=grw_joint snapshot=T-24h_s360 cells=5 errors=0
+GROUP_DONE model=fusion_qs_nobias snapshot=T-24h_s360 cells=5 errors=0
+GROUP_DONE model=qs_marketobs snapshot=T-24h_s360 cells=5 errors=0
+GROUP_DONE model=market_c0 snapshot=T-6h_s90 cells=5 errors=0
+GROUP_DONE model=m12 snapshot=T-6h_s90 cells=5 errors=0
+GROUP_DONE model=qs_marketobs snapshot=T-6h_s90 cells=5 errors=0
+GROUP_DONE model=fusion_qs_nobias snapshot=T-6h_s90 cells=5 errors=0
+GROUP_DONE model=grw_joint snapshot=T-6h_s90 cells=5 errors=0
+GROUP_DONE model=market_c0 snapshot=T-25m_s90 cells=5 errors=0
+GROUP_DONE model=m12 snapshot=T-25m_s90 cells=5 errors=0
+GROUP_DONE model=fusion_qs_nobias snapshot=T-25m_s90 cells=5 errors=0
+GROUP_DONE model=grw_joint snapshot=T-25m_s90 cells=5 errors=0
+GROUP_DONE model=qs_marketobs snapshot=T-25m_s90 cells=5 errors=0
+GRID_DONE cells=100 computed=100 other=0
+DB_AUDIT_AFTER unchanged=true tables=10
+PHASE3_PASS
+PHASE3_END
