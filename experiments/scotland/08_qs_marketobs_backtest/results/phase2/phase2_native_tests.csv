@@ -1,0 +1,6 @@
+test,value,expected,tolerance,passed
+single_bet_closed_form_net_commission,0.1918355076221378,0.1918367346938775,2.0e-5,true
+independent_grid_objective,0.03947081362915944,0.039470768482049584,1.0e-5,true
+independent_analytic_stake,0.1923063392747018,0.19230769230769232,2.0e-5,true
+shared_posterior_joint_total_stake,0.1999987862332272,0.2,2.0e-5,true
+seed_replay_max_stake_difference,0.0,0.0,0.0,true
