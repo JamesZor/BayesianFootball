@@ -11,7 +11,7 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 3 RUNNING — `phase3_gate.sh a1` at dde8a441 launched 01:04 UTC 2026-10-10; queue check PASS (10/10); fusion_qs_bias grid started 01:05 UTC.
+- **Phase:** 3 RUNNING — `phase3_gate.sh a1` at dde8a441 launched 01:04 UTC 2026-10-10; queue check PASS (10/10); fusion_qs_bias PASS 01:59 UTC (run `26de19bf-fc29-4818-bfdf-7bf76535901f`, 54 min, max R̂ 1.0194, no reruns, 0 divergences, tail ESS < 400 on fold 40 only: 330.7); fusion_qs_nobias started 01:59 UTC.
 - **Done:** Phase 0; Phase 2 smoke a1 (UUIDs in `PHASE2.md`); Phase 1 fusion observation at 01f42219, all 8 gates pass (attempt a1); evidence in `results/phase1/`.
 - **Flag for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%).
 - **Next action:** wait for `PHASE3_GRIDS_PASS` / `PHASE3_BLOCKED` in `/root/BF_runs/logs/qs_experiment_w3/phase3_launcher_a1.log` (background `ssh -n` until-grep with an explicit long Bash timeout: without one, background commands die at the 120 s default). On a block, resume with a fresh attempt label (checkpoints and receipts resume). Full ETA 13.343 h.
