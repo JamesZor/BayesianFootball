@@ -1,0 +1,11 @@
+check,arm,rows,max_abs_diff,tolerance,passed
+harness_independent_scores,qs_marketobs,598,0.0,0.0,true
+harness_independent_scores,qs_joint,598,0.0,0.0,true
+observation_frame,qs_marketobs,2899,0.0,0.0,true
+observation_frame,qs_joint,2899,0.0,0.0,true
+observation_frame,market_close,2899,0.0,0.0,true
+common_panel_scores,qs_marketobs,595,1.1102230246251565e-16,1.0e-14,true
+common_panel_scores,qs_joint,595,2.220446049250313e-16,1.0e-14,true
+common_panel_scores,market_close,595,1.1102230246251565e-16,1.0e-14,true
+goal_logscore_fixtures,qs_marketobs,710,0.0,0.0,true
+goal_logscore_fixtures,qs_joint,710,0.0,0.0,true
