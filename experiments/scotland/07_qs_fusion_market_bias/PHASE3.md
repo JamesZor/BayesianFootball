@@ -27,5 +27,5 @@ pre-declared in `DECISIONS_LOG.md` (base 203200000). Every harness grid hard che
   budget, and nothing about the sampler changed.
 
 Evidence: `results/phase3/` (diagnostics, grid summaries, rerun selections, receipts, control
-score snapshots and parity), `logs/phase3_launcher_a1.log`. Beast logs:
+score snapshots and parity), `results/gate_logs/phase3_launcher_a1.log`. Beast logs:
 `/root/BF_runs/logs/qs_experiment_w3/phase3/a1/`. No `claude_qsx3_*` sessions remain.
