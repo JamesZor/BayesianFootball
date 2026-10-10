@@ -11,8 +11,8 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 2 COMPLETE (smoke PASS, `PHASE2.md`); manager approved the grid as frozen. QF3_HANDOVER printed.
+- **Phase:** 3 RUNNING — `phase3_gate.sh a1` at dde8a441 launched 01:04 UTC 2026-10-10; queue check PASS (10/10); fusion_qs_bias grid started 01:05 UTC.
 - **Done:** Phase 0; Phase 2 smoke a1 (UUIDs in `PHASE2.md`); Phase 1 fusion observation at 01f42219, all 8 gates pass (attempt a1); evidence in `results/phase1/`.
 - **Flag for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%).
-- **Next action:** on approval, Phase 3 grid (qs_bias → qs_nobias → grw_bias, control forwarding as wave 2 `l05_grid.jl`). Full ETA 13.343 h.
-- **Open beast panes:** none.
+- **Next action:** wait for `PHASE3_GRIDS_PASS` / `PHASE3_BLOCKED` in `/root/BF_runs/logs/qs_experiment_w3/phase3_launcher_a1.log` (background until-grep; never poll). On a block, resume with a fresh attempt label (checkpoints and receipts resume). Full ETA 13.343 h.
+- **Open beast panes:** `claude_qsx3_p3_<arm>` (one at a time, owned by the gate).
