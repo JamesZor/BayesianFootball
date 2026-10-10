@@ -11,7 +11,7 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 2 smoke PASS (hard checks; `PHASE2.md`). Awaiting manager grid approval (AskUserQuestion).
+- **Phase:** 2 COMPLETE (smoke PASS, `PHASE2.md`); manager approved the grid as frozen. QF3_HANDOVER printed.
 - **Done:** Phase 0; Phase 2 smoke a1 (UUIDs in `PHASE2.md`); Phase 1 fusion observation at 01f42219, all 8 gates pass (attempt a1); evidence in `results/phase1/`.
 - **Flag for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%).
 - **Next action:** on approval, Phase 3 grid (qs_bias → qs_nobias → grw_bias, control forwarding as wave 2 `l05_grid.jl`). Full ETA 13.343 h.
