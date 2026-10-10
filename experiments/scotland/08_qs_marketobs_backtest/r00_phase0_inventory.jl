@@ -1,4 +1,4 @@
-# Phase 0 only: can the exact canonical MatchDay defaults reproduce experiment 07?
+# Phase 0 only: reproduce experiment 07's own raw historical cell, then inventory snapshots.
 # No fitting, policy tuning, database writes, live/replay ledger access, or Phase 1 work.
 # Execute in an owned persistent beast REPL: julia --project -t 16 -i
 
@@ -15,7 +15,7 @@ pinthreads(:cores)
 # 2. Fixed paths; manager-authorised static read paths plus before/after audit
 # ===================================================================
 const QSBT0_LOG_DIR = "/root/BF_runs/logs/qs_backtest"
-const QSBT0_RESULTS = joinpath(@__DIR__, "results")
+const QSBT0_RESULTS = joinpath(@__DIR__, "results", "phase0_historical")
 mkpath(QSBT0_LOG_DIR)
 
 # ===================================================================
@@ -25,7 +25,7 @@ mkpath(QSBT0_LOG_DIR)
 if !isdefined(Main, :QSBacktestPhase0)
     include(joinpath(@__DIR__, "l00_phase0_inventory.jl"))
 end
-open(joinpath(QSBT0_LOG_DIR, "phase0_resume.log"), "w") do io
+open(joinpath(QSBT0_LOG_DIR, "phase0_historical.log"), "w") do io
     redirect_stdout(io) do
         redirect_stderr(io) do
             try
@@ -49,4 +49,4 @@ open(joinpath(QSBT0_LOG_DIR, "phase0_resume.log"), "w") do io
         end
     end
 end
-println("Phase 0 stopped; inspect /root/BF_runs/logs/qs_backtest/phase0_resume.log")
+println("Phase 0 stopped; inspect /root/BF_runs/logs/qs_backtest/phase0_historical.log")

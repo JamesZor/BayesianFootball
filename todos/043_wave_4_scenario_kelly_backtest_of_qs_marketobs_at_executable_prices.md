@@ -4,7 +4,7 @@
 |---|---|
 | ID | 043 |
 | Title | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P2 |
 | Assignee | pi |
 | Created | 2026-10-10 |
@@ -17,7 +17,7 @@ Backtest five saved models against T−25m/T−6h/T−24h Betfair archive prices
 
 ## Acceptance Criteria
 
-- [ ] Phase 0: canonical and option_b_live inventories, canonical m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
+- [ ] Phase 0: canonical and option_b_live inventories, historical experiment 07 m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
 - [ ] Phase 1 allocator audit with source line references; Phase 2 scenario allocator tested or unnecessary.
 - [ ] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
 - [ ] Reports answer all five brief questions with numbers traceable to committed CSVs.
@@ -35,6 +35,8 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 - [2026-10-10 @pi] Manager authorised Phase 0 resume: static read-path verification plus before/after table-wide DB audit replaces session-default assertion; actual SHOW value logged once, no PGOPTIONS debugging. Canonical alone targets 1127 bets / 2.5152 ±0.00005. Both canonical and option_b_live inventories reported; raw probabilities, no fitted calibration; plain_kelly 0.25 retained. Updated loader to audit even failure exits and to deserialize cache with no SQL fallback. Static gate passes, four injected negative fixtures rejected.
 
 - [2026-10-10 @pi] Resumed runner `8018dacf` FAIL canonical parity: wealth 2.773493294562897 / 1132 bets versus 2.5152 ±0.00005 / 1127. 710 saved OOS IDs, 99 slates, 611 books, converged=true, zero build errors. Static gate PASS and finally before/after DB audit unchanged 10/10 (byte-identical); SHOW default off logged once. No retry/tuning/fit/write; numerical Option B and remaining snapshot inventory stopped. Pane %452 closed. Dependency: Claude reviews canonical target/stack mismatch before authorising further Phase 0 work.
+
+- [2026-10-10 @pi] Ruling 3: manager corrected historical target association. Reconstructed runner-3 m12/raw/B0_canonical/prod from runner/loader/CSV with line citations; FractionalKelly0.30/min0.001/tradeable markets, λ23/cap0.25/canonical geometric trust. It is now the sole reproduction gate. Canonical measurement retained separately, no rerun/tuning. New outputs preserve prior audits; same cached inputs/710 IDs/T−25 book required. Static checker PASS; next execute historical gate, fixed Option B reference and snapshot inventory if accepted.
 
 ## Verification & Findings
 

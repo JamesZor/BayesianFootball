@@ -1,12 +1,11 @@
 # 08 — qs_marketobs executable-price backtest
 
-**Phase 0 BLOCKED at canonical parity:** m12 wealth **2.7734933**, **1132 bets**;
-required **2.5152 ±0.00005**, **1127 bets**. No retry or retuning.
-Static read-path checks passed and all ten before/after DB table audits were unchanged.
-SHOW default was `off`, recorded rather than asserted under the manager ruling.
-Both canonical and option_b_live policy inventories are reported; fitted calibration is out of scope.
-Option B's numerical run, remaining snapshots and later phases stopped at the failed gate.
-TODO 043 remains BLOCKED; owned beast pane closed. See [REPORT.md](REPORT.md) and [HANDOVER.md](HANDOVER.md).
+**Phase 0 resumed under ruling 3:** reproduce experiment 07's own historical cell,
+not today's canonical stack. [Exact recipe and line citations](HISTORICAL_REPRODUCTION_RECIPE.md).
+Canonical's measured **2.7734933 / 1132** remains a separate policy result, no rerun.
+Historical gate remains **2.5152 ±0.00005 / 1127**; all other rulings remain fixed.
+New audited execution and three-snapshot coverage are pending. No later phase is authorised.
+The preceding blocked report/handback is historical until this authorised run finishes.
 
 ## Scope and source of truth
 

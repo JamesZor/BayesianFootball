@@ -1,0 +1,3 @@
+SOURCE l00_phase0_inventory.jl sha256=0b4e0d6dc3ce0f6b489893d05cd4a42398e08937066869aeb5030d472f97671c
+SOURCE r00_phase0_inventory.jl sha256=e96e462fe853600f169e4ade2bee4fbdc9d673e7359d2d85431b7ac6171f7588
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback

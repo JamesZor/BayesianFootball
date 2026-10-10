@@ -1,0 +1,4 @@
+model,container,basket,setting,t1,ratio,lambda,cap,n_slates,n_bets,return_pct,wealth
+m12,raw,B0_canonical,prod,0.35,1.4,23.0,0.25,99,1127,151.52046006000467,2.515204600600047
+model,container,trust,bets,slates
+m12,raw,flat_1.00,1643,99

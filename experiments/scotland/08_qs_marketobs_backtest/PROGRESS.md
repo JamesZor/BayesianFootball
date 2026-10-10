@@ -1,14 +1,13 @@
 # Wave 4 progress
 
-- Phase: 0 — BLOCKED at canonical reproduction; check recorded 2026-10-10 11:10Z.
-- Done: manager rulings recorded before execution; canonical / option_b_live / plain_kelly raw-probability inventories reported; transitive read paths reviewed; static gate PASS and four injected negative cases rejected.
-- Executed source: `8018dacf`, one resumed runner. Actual SHOW default `off` logged once; no assertion/debugging/PGOPTIONS changes. Before/after counts/timestamp maxima byte-identical across 10 tables, including finally audit after failure.
-- Canonical m12 T−25: wealth 2.773493294562897, 1132 bets, 99 slates, 611 built books, converged=true, zero build errors. Target 2.5152 ±0.00005 and 1127 bets: BOTH FAIL.
-- Saved fit loaded once by UUID; saved OOS universe restricted to 710 IDs. No refitting/tuning/DB writes/betdb connection/src changes.
-- Pending: canonical parity resolution; option_b_live numerical reference; all snapshot coverage/staleness summaries and T−6h/T−24h books; all later phases. T−25 book/refusals already saved from reproduction, not a completed coverage inventory.
-- Next action: Claude reviews target/stack mismatch and authorises any further Phase 0 work. No automatic retry or Phase 1. Old session-default blocker is superseded by manager ruling, not current.
-- Open panes/jobs: NONE. Resume pane `%452`, pi_qsbt_phase0, closed/session absent; old %451 closed. No Julia backtest process remains.
-- Beast isolated worktree: `/root/BF_runs/qs_backtest_phase0` @ `8018dacf`, detached checkout, Julia 1.12.4 with 16 threads/core pinning/BLAS 1. No unrelated sessions/worktrees touched on resume.
-- Logs: `/root/BF_runs/logs/qs_backtest/phase0_resume.log`; committed local copy in `logs/`. Old attempt 1/2 logs preserved.
-- Evidence: `results/phase0_reproduction.csv`, canonical_daily, fixture_universe, t25_book/refusals, db_before/after/audit, session_default, execution_status, arm_status, policy_inventory. Current REPORT/HANDOVER/DECISIONS_LOG updated.
-- Definition of done checked: NOT MET. Canonical reproduction failed; three-snapshot coverage incomplete. TODO 043 BLOCKED, not closed.
+- Phase: 0 — IN_PROGRESS, manager ruling 3 authorised historical reproduction.
+- Done: exact m12/raw/B0_canonical/prod recipe reconstructed with runner/loader/CSV line citations; historical raw identity proven equivalent to raw saved rates; ruling recorded before execution. Static read-path gate PASS.
+- Target: 1127 bets, normalised terminal wealth 2.5152 ±0.00005. Historical bankroll reporting scale £1000; market/trust/shrink/execution recipe fixed, no fitting/tuning.
+- Canonical: retain measured 2.773493294562897 / 1132 from source8018dacf as a separate arm; former failed gate superseded by manager. Do not rerun completed canonical work.
+- Same inputs: saved m12 UUID/cache hash; require 710-ID and T−25-book equality with committed canonical inputs. betdb never connected; no SQL fallback. Static SELECT/SHOW reads plus before/after audit still required on every runner.
+- Next: commit/push source; detached checkout only in owned beast worktree; fresh owned pi_qsbt_phase0 REPL. Run historical first; if fail compare available committed dated evidence with equivalence warnings and stop. If pass, fixed Option B raw reference and three snapshot coverage inventories (plus T−24h sensitivity if low coverage), then hand over Phase 0. No Phase 1.
+- Output directory: `results/phase0_historical/` (new); beast log `/root/BF_runs/logs/qs_backtest/phase0_historical.log`. Previous canonical results/audits/logs remain preserved.
+- Reference inventory: no exact runner-3 daily/slate artefact in 17 committed experiment07 CSVs; forensic ledger has a different flat/full-market policy (see HISTORICAL_REPRODUCTION_RECIPE.md).
+- Open panes/jobs: NONE yet. Old %451/%452 closed. No sampling permitted.
+- Beast worktree: `/root/BF_runs/qs_backtest_phase0`, currently source8018dacf; cache hash remains c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4.
+- Definition of done: historical gate accepted, unchanged DB audit, all three snapshot coverage/staleness reports, settings difference reported. Not yet met.
