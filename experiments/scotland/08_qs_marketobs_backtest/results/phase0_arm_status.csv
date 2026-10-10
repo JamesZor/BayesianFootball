@@ -1,8 +1,9 @@
 model,policy,snapshot,status,reason
-m12,canonical,T-25m,FAILED_REPRODUCTION,wealth=2.773493294562897 vs 2.5152 +/-0.00005; bets=1132 vs 1127
-m12,option_b_live,T-25m,NOT_RUN,canonical reproduction gate failed; stop rule
+m12,canonical,T-25m,COMPUTED_POLICY_REFERENCE,wealth=2.773493294562897; bets=1132; original gate superseded by ruling3; source8018dacf retained without rerun
+m12,experiment07_historical,T-25m,PASS_REPRODUCTION,wealth=2.515204600600047; bets=1127; exact committed headline; source72cd5496
+m12,option_b_live,T-25m,COMPUTED_POLICY_REFERENCE,wealth=2.207736087761667; bets=1172; raw probabilities; source72cd5496
 all,plain_kelly,all,NOT_RUN,Phase 3 not reached
-all,canonical,T-6h,NOT_RUN,Phase 0 failed before snapshot inventory
-all,canonical,T-24h,NOT_RUN,Phase 0 failed before snapshot inventory
-all,option_b_live,T-6h,NOT_RUN,Phase 0 failed before snapshot inventory
-all,option_b_live,T-24h,NOT_RUN,Phase 0 failed before snapshot inventory
+all,canonical,T-6h,NOT_RUN,snapshot complete; numerical policy grid awaits Phase3
+all,canonical,T-24h,NOT_RUN,primary and sensitivity snapshots complete; numerical policy grid awaits Phase3
+all,option_b_live,T-6h,NOT_RUN,snapshot complete; numerical policy grid awaits Phase3
+all,option_b_live,T-24h,NOT_RUN,primary and sensitivity snapshots complete; numerical policy grid awaits Phase3

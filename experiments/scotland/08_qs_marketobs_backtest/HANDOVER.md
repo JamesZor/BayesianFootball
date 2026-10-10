@@ -1,69 +1,87 @@
-# Claude handover — Phase 0 BLOCKED at canonical parity
+# Claude handover — Phase 0 PASS
 
-## Stop reason and next decision
+**PHASEBT_HANDOVER**. Historical reproduction accepted under ruling3; all snapshots
+and coverage complete; stop at the Phase0 boundary. No Phase1 or later work ran.
 
-Exact canonical m12 T−25 produced **wealth 2.773493294562897 / 1132 bets**.
-The manager's frozen target is **2.5152 ±0.00005 / 1127 bets**. Both checks failed.
-The runner stopped on the first canonical attempt, completed its finally DB audit,
-and did not run option_b_live, remaining snapshots or later phases. No retuning/retry.
+## Decisive evidence
 
-Review the canonical target/stack mismatch before authorising any further work. The
-pre-recorded historical experiment 07 stack differs, but its causal contribution was
-not tested. Do not silently substitute it, relax tolerance or proceed on higher wealth.
-A successful phase boundary has **not** been reached; Phase 0 remains incomplete.
+- Source72cd5496 reproduced experiment07 **m12/raw/B0_canonical/prod**:
+  **2.515204600600047 wealth / 1127 bets / 99 slates / 608 books**,
+  converged=true, zero build errors. This exactly matches the committed CSV headline,
+  passing target2.5152±0.00005/1127. Initial £1000 is normalised for unit wealth.
+- [HISTORICAL_REPRODUCTION_RECIPE.md](HISTORICAL_REPRODUCTION_RECIPE.md) cites the
+  exact runner/loader/CSV lines. Historical uses tradeable11-direction book,
+  FractionalKelly0.30/minimum0.001, λ23/cap0.25 and geometric canonical trust.
+  Its raw identity rates are unchanged; raw fit used directly, no fitted calibration.
+- Same m12 saved UUID/cache/710 prediction IDs and T−25/90-minute book as canonical.
+  Runtime assertions passed; fixture-universe and book CSVs are also byte-identical.
+- Canonical retained separately, no rerun: **2.773493294562897 / 1132** from8018dacf.
+  It uses canonical13-direction book/BakerMcHale/minimum0.0001. Prior target failure
+  is superseded, not erased; no single-component causal attribution was made.
+- Fixed option_b_live raw m12 reference also ran: **2.207736087761667 / 1172**.
+  [phase0_policy_reference.csv](results/phase0_policy_reference.csv) distinguishes
+  policy references from the historical gate and records executed source per row.
 
-## Manager rulings applied
+## Coverage, not executable liquidity
 
-- Static read-path review/checker plus table-wide before/after audits replaces the old
-  session-default assertion. Actual SHOW value logged once: **off**, informational.
-- Before/after snapshots are **byte-identical**, 10/10 tables unchanged, including
-  count/maxima review of all fit/config/harness tables. Audit completed on failure.
-- canonical and option_b_live are distinct named policies; policy_inventory.csv and
-  REPORT.md report both. All model probabilities stay raw; fitted calibration is out
-  of scope. plain_kelly 0.25 retained with canonical caps/execution/λ defaults.
-- Canonical is the sole reproduction target and runs first. Historical-control run
-  removed, no betdb SQL fallback, no PGOPTIONS changes/debugging, no source allocator work.
+Fixed denominator710; primary max staleness90 minutes:
 
-## Evidence and what's done
+| Book | Archive fixtures | Canonical fixtures | Complete1X2 | Archive selections |
+|---|---:|---:|---:|---:|
+| T−25m | 611 (86.06%) | 611 | 545 (76.76%) | 3723 |
+| T−6h | 295 (41.55%) | 291 | 182 (25.63%) | 1062 |
+| T−24h | 53 (7.46%) | 53 | 47 (6.62%) | 153 |
+| T−24h/360-minute sensitivity | 190 (26.76%) | 190 | 170 (23.94%) | 562 |
 
-- `results/phase0_reproduction.csv`: canonical failure, 99 slates, 611 built books,
-  converged=true, zero build errors.
-- `results/phase0_canonical_daily.csv`: 99 daily rows, unit initial bankroll.
-- `results/phase0_fixture_universe.csv`: 710 held-out IDs after season restriction.
-- `results/phase0_t25_book.csv` and refusals: 90-minute point-in-time price book used.
-- `results/phase0_db_before.csv`, `phase0_db_after.csv`, `phase0_db_audit.csv`:
-  table counts, timestamp maxima/absence markers and per-table unchanged flags.
-- `results/phase0_session_default.csv`, `phase0_execution_status.csv`,
-  `phase0_arm_status.csv`, `policy_inventory.csv`: record actual session value,
-  chronology, unfinished arms and frozen settings.
-- `logs/phase0_resume.log`: executed source hashes, static PASS, SHOW off, gate FAIL,
-  finally audit PASS. Old attempt 1/2 logs preserved separately.
-- `READ_PATH_AUDIT.md`, `DECISIONS_LOG.md`, `REPORT.md`, `PROGRESS.md`: review/rulings/status.
-- TODO 043 remains BLOCKED with acceptance criteria unchecked. No conclusions about
-  qs_marketobs, other models, CLV or uncertainty are available.
+All per-market fixture/selection denominators and staleness quantiles are committed;
+zero rows included, no favourable subset. T−24h is sparse even after six-hour widening.
+Archive-only OU4.5/5.5 and unsupported CorrectScore are explicitly labelled, not
+added to canonical staking scope. Refusal tables are builder-global; filter to the
+fixed710-ID panel before interpreting panel-level reason counts.
 
-## Frozen addresses / runtime
+**Important:** existing point-in-time builder uses last-traded archive prices,
+not verified executable back/lay touch/depth. Do not present these reference returns
+or coverage as executable-fill evidence. Policy selection also reused these seasons.
 
-- Local: `/home/james/bet_project/.worktrees/BayesianFootball-qs-experiment`.
-- Branch: `exp/qs-goal-vs-market`. Executed source: `8018dacf59e62d9b2780cc2f6a26f428ab52419d`.
-- Beast: `/root/BF_runs/qs_backtest_phase0` @ `8018dacf` (detached checkout, not merged).
-- Beast log: `/root/BF_runs/logs/qs_backtest/phase0_resume.log`.
-- m12 loaded once by UUID `132df5c2-c742-4e95-8693-3aeb2b2cbaef`, namespace
-  `scottish_lower_joint_player_2426`; saved predictions only, no refit.
-- Owned session pi_qsbt_phase0 `%452`: closed and verified absent. No jobs remain;
-  old %451 also closed. No unrelated sessions/worktrees touched on resume.
-- Julia 1.12.4, persistent REPL, 16 threads, BLAS 1, pinthreads(:cores).
-- Datastore SHA256 (unchanged):
+## Safety and ownership
+
+- Static read-path checker PASS locally/on beast; actual SHOW default off recorded
+  once. Four negative fixtures were already tested in prior safety work. No PGOPTIONS
+  debugging, writes, fitting, SQL cache fallback or betdb connection.
+- Before/after audit byte-identical, **10/10** fit/config/harness tables unchanged;
+  timestamp absence explicit, no unrelated-writer exemptions. Audit runs in finally.
+- Beast `/root/BF_runs/qs_backtest_phase0` @72cd5496 detached; fresh persistent Julia
+  1.12.4 REPL, 16 threads, core-pinned, BLAS1. Owned pi_qsbt_phase0 pane **%453 closed**
+  and session verified absent. %451/%452 already closed; no unrelated panes touched.
+- Checkout initially blocked on nine owned untracked canonical outputs: each matched
+  its committed hash, archived in `/root/BF_runs/qsbt_canonical_artifacts_8018dacf`,
+  then checkout succeeded. No forced checkout/deletion/merge.
+- Datastore SHA256 unchanged:
   `c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4`.
-- Manifest SHA256:
-  `f86f49b72b987dd4c87ac80d16f132e5342e988fededbe27e54c6afe8133b6cc`.
 
-## Verification / incomplete work
+## Files and current state
 
-- Static checker PASS; four injected negative cases correctly rejected.
-- Runtime audited DB tables unchanged 10/10; local `cmp` confirms byte-identical snapshots.
-- Canonical reproduction FAIL; required bet count and wealth both differ.
-- Snapshot aggregates T−25/T−6h/T−24h remain unfinished; later snapshots unbuilt.
-- Phase 1/2/3/4 work has not started. No broader test suite run; no src changes.
-- Final tracker/diff checks and evidence commit are pushed on the allowed branch; use
-  `git log -1` for the handback commit (executed source stays `8018dacf`).
+- New results: `results/phase0_historical/` — historical target/result/daily, OptionB
+  daily, input IDs, all books/refusals, coverage/overview, audit and SHOW record.
+- New log: `logs/phase0_historical.log`; local result checks:
+  `logs/historical_result_checks.log`. Beast log:
+  `/root/BF_runs/logs/qs_backtest/phase0_historical.log`.
+- Prior canonical results/audits and attempts1–3 logs remain preserved. Execution
+  chronology and arm status CSVs now distinguish superseded failures/current pass.
+- [REPORT.md](REPORT.md), [DECISIONS_LOG.md](DECISIONS_LOG.md), [READ_PATH_AUDIT.md](READ_PATH_AUDIT.md).
+- TODO043 Phase0 criterion checked; overall IN_PROGRESS, paused for manager.
+  Final tracker/diff checks and evidence pushed; see `git log -1` for evidence commit.
+  Executed source remains72cd5496, not the subsequent documentation commit.
+
+## Resume only when authorised
+
+Next phase is the brief's Phase1 allocator audit. Rulings1–3 all remain binding:
+read-only static review plus per-run before/after audit; named canonical/option_b_live;
+raw probabilities for every model, no per-model fitted calibration; plain_kelly0.25
+retained. Historical is validation only, **not a fourth Phase3 grid policy**.
+
+No scenario allocator validation/change, five-model×snapshot×policy grid, CLV,
+liquidity analysis, bootstrap intervals or final report questions are complete.
+Existing KellyLogUtility produced only the Phase0 references. No claims about
+qs_marketobs profitability are available. No cells are NOT_AVAILABLE merely because
+later phases have not run. Broader test suite not run; no src changes.

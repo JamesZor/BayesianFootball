@@ -1,0 +1,3 @@
+arm,run_id,as_of_minutes,max_staleness_minutes,initial_bankroll,final_bankroll,final_wealth,return_pct,n_bets,n_slates,n_books,n_build_errors,converged,failed_gates,expected_wealth,expected_bets,wealth_tolerance,parity_status
+experiment07_historical,132df5c2-c742-4e95-8693-3aeb2b2cbaef,-25.0,90.0,1000.0,2515.204600600047,2.515204600600047,151.52046006000467,1127,99,608,0,true,,2.5152,1127,5.0e-5,PASS
+option_b_live,132df5c2-c742-4e95-8693-3aeb2b2cbaef,-25.0,90.0,1.0,2.207736087761667,2.207736087761667,120.7736087761667,1172,99,611,0,true,,,,,NOT_APPLICABLE

@@ -1,13 +1,14 @@
 # Wave 4 progress
 
-- Phase: 0 — IN_PROGRESS, manager ruling 3 authorised historical reproduction.
-- Done: exact m12/raw/B0_canonical/prod recipe reconstructed with runner/loader/CSV line citations; historical raw identity proven equivalent to raw saved rates; ruling recorded before execution. Static read-path gate PASS.
-- Target: 1127 bets, normalised terminal wealth 2.5152 ±0.00005. Historical bankroll reporting scale £1000; market/trust/shrink/execution recipe fixed, no fitting/tuning.
-- Canonical: retain measured 2.773493294562897 / 1132 from source8018dacf as a separate arm; former failed gate superseded by manager. Do not rerun completed canonical work.
-- Same inputs: saved m12 UUID/cache hash; require 710-ID and T−25-book equality with committed canonical inputs. betdb never connected; no SQL fallback. Static SELECT/SHOW reads plus before/after audit still required on every runner.
-- Next: commit/push source; detached checkout only in owned beast worktree; fresh owned pi_qsbt_phase0 REPL. Run historical first; if fail compare available committed dated evidence with equivalence warnings and stop. If pass, fixed Option B raw reference and three snapshot coverage inventories (plus T−24h sensitivity if low coverage), then hand over Phase 0. No Phase 1.
-- Output directory: `results/phase0_historical/` (new); beast log `/root/BF_runs/logs/qs_backtest/phase0_historical.log`. Previous canonical results/audits/logs remain preserved.
-- Reference inventory: no exact runner-3 daily/slate artefact in 17 committed experiment07 CSVs; forensic ledger has a different flat/full-market policy (see HISTORICAL_REPRODUCTION_RECIPE.md).
-- Open panes/jobs: NONE yet. Old %451/%452 closed. No sampling permitted.
-- Beast worktree: `/root/BF_runs/qs_backtest_phase0`, currently source8018dacf; cache hash remains c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4.
-- Definition of done: historical gate accepted, unchanged DB audit, all three snapshot coverage/staleness reports, settings difference reported. Not yet met.
+- Phase 0: PASS, definition of done met. STOP at boundary: PHASEBT_HANDOVER.
+- Historical gate: source72cd5496 reproduces 2.515204600600047 unit wealth /1127 bets/99 slates/608 books, matching the committed experiment07 m12/raw/B0_canonical/prod headline exactly; converged=true, zero build errors. Required tolerance unchanged. Recipe/source lines in HISTORICAL_REPRODUCTION_RECIPE.md.
+- Canonical measurement retained without rerun: source8018dacf, wealth2.773493294562897/1132. Wrong target association superseded under ruling3. Historical is validation only, not another Phase3 policy.
+- Fixed Option B raw m12 reference: wealth2.207736087761667/1172. No fitted calibration, tuning, fitting or new src changes.
+- Three snapshot books complete at90-minute bound, fixed710 denominator: any archive fixtures T−25=611, T−6h=295, T−24h=53; complete1X2=545/182/47. T−24h/360-minute sensitivity complete:190 fixtures,170 complete1X2. Coverage/staleness CSV has36 market-line rows across4 snapshot/bound settings, zeros included.
+- Safety: static PASS locally/on beast; actual SHOW off logged once; before/after audit byte-identical,10/10 unchanged. Same input IDs/T−25 book byte-identical to committed canonical inputs. No betdb connection, cache SQL fallback, DB writes or PGOPTIONS debugging.
+- New output: results/phase0_historical/; policy role/source comparison in results/phase0_policy_reference.csv; log logs/phase0_historical.log; local exact-headline/daily/snapshot checks logs/historical_result_checks.log. Previous attempts/artifacts remain preserved.
+- Owned pane%453/pi_qsbt_phase0 CLOSED and verified absent. Prior%451/%452 already closed. No remaining owned Julia job; unrelated sessions untouched. Beast worktree /root/BF_runs/qs_backtest_phase0 @72cd5496 detached, Julia1.12.4/16 threads/core-pinned/BLAS1.
+- Checkout collision resolved without force: nine owned untracked canonical outputs hash-matched to committed copies, archived at /root/BF_runs/qsbt_canonical_artifacts_8018dacf. Cache hash unchanged: c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4.
+- Current README/REPORT/HANDOVER and chronology/arm statuses updated; TODO043 Phase0 criterion checked, overall IN_PROGRESS/paused for manager. Tracker/diff/result checks pass; final evidence commit/push recorded by git log.
+- Price-source caveat: last-traded archive prices, not verified executable touch/depth. Historical policy selected using these same seasons. Phase0 references use existing KellyLogUtility, not yet validated scenario-native allocation.
+- Later phases NOT_RUN: allocator audit/change, five-model grid, CLV/liquidity, bootstrap and final questions. No qs_marketobs profitability claim. Await manager-authorised Phase1 continuation.

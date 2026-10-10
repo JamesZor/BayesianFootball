@@ -1,0 +1,16 @@
+SOURCE l00_phase0_inventory.jl sha256=0b4e0d6dc3ce0f6b489893d05cd4a42398e08937066869aeb5030d472f97671c
+SOURCE r00_phase0_inventory.jl sha256=e96e462fe853600f169e4ade2bee4fbdc9d673e7359d2d85431b7ac6171f7588
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+INPUT_PARITY_PASS fixtures=710 T25_book_unchanged=true
+REPRODUCTION_START experiment07_historical
+REPRODUCTION_RESULT arm=experiment07_historical wealth=2.515204600600047 bets=1127 slates=99 books=608 parity=PASS converged=true build_errors=0
+REPRODUCTION_START option_b_live
+REPRODUCTION_RESULT arm=option_b_live wealth=2.207736087761667 bets=1172 slates=99 books=611 parity=NOT_APPLICABLE converged=true build_errors=0
+SNAPSHOT_RESULT minutes=-25.0 bound=90 fixtures=611 selections=3723 x1x2=545
+SNAPSHOT_RESULT minutes=-360.0 bound=90 fixtures=295 selections=1062 x1x2=182
+SNAPSHOT_RESULT minutes=-1440.0 bound=90 fixtures=53 selections=153 x1x2=47
+SNAPSHOT_RESULT minutes=-1440.0 bound=360 fixtures=190 selections=562 x1x2=170
+DB_AUDIT_AFTER unchanged=true tables=10
+PHASE0_PASS — stop at phase boundary; no allocator audit has run.

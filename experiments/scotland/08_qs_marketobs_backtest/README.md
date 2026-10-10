@@ -1,11 +1,11 @@
 # 08 — qs_marketobs executable-price backtest
 
-**Phase 0 resumed under ruling 3:** reproduce experiment 07's own historical cell,
-not today's canonical stack. [Exact recipe and line citations](HISTORICAL_REPRODUCTION_RECIPE.md).
-Canonical's measured **2.7734933 / 1132** remains a separate policy result, no rerun.
-Historical gate remains **2.5152 ±0.00005 / 1127**; all other rulings remain fixed.
-New audited execution and three-snapshot coverage are pending. No later phase is authorised.
-The preceding blocked report/handback is historical until this authorised run finishes.
+**Phase 0 PASS under ruling 3:** exact experiment07 historical cell reproduced
+**2.515204600600047 wealth / 1127 bets**. [Recipe and line citations](HISTORICAL_REPRODUCTION_RECIPE.md).
+Canonical **2.7734933 / 1132** is retained separately, no rerun; raw Option B reference
+**2.2077361 / 1172**. All three snapshots plus T−24h sensitivity are complete;
+10/10 DB audits unchanged. Owned pane closed, no later phase ran.
+**PHASEBT_HANDOVER** — see [REPORT.md](REPORT.md) and [HANDOVER.md](HANDOVER.md).
 
 ## Scope and source of truth
 
@@ -20,8 +20,8 @@ The frozen stack and distinction between canonical defaults, Option B and experi
 - Runner: [r00_phase0_inventory.jl](r00_phase0_inventory.jl), Phase 0 only, no server or ledger.
 - Run in an owned beast persistent tmux REPL with `julia --project -t 16 -i`.
 - The runner pins cores, fixes BLAS to 1, statically checks read paths and audits DB counts/timestamp maxima before/after (including failure exits). See [READ_PATH_AUDIT.md](READ_PATH_AUDIT.md).
-- Outputs: `results/phase0_*`; beast log: `/root/BF_runs/logs/qs_backtest/phase0_resume.log`.
-- Failed reproduction prevents subsequent snapshots and every later phase from running.
+- Current outputs: `results/phase0_historical/`; beast log: `/root/BF_runs/logs/qs_backtest/phase0_historical.log`. Prior canonical outputs/logs preserved separately; `results/phase0_policy_reference.csv` distinguishes gate/policy roles and executed sources.
+- Failed historical reproduction prevents snapshots and later phases; a pass still stops at the Phase0 boundary.
 
 ## Interpretation limits
 

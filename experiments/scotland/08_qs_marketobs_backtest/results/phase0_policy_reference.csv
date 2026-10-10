@@ -1,0 +1,4 @@
+arm,run_id,final_wealth,return_pct,n_bets,n_slates,n_books,n_build_errors,converged,role,execution_source,gate_status
+canonical,132df5c2-c742-4e95-8693-3aeb2b2cbaef,2.773493294562897,177.3493294562897,1132,99,611,0,true,POLICY_REFERENCE,8018dacf,NOT_APPLICABLE
+option_b_live,132df5c2-c742-4e95-8693-3aeb2b2cbaef,2.207736087761667,120.7736087761667,1172,99,611,0,true,POLICY_REFERENCE,72cd5496,NOT_APPLICABLE
+experiment07_historical,132df5c2-c742-4e95-8693-3aeb2b2cbaef,2.515204600600047,151.52046006000467,1127,99,608,0,true,REPRODUCTION_GATE,72cd5496,PASS

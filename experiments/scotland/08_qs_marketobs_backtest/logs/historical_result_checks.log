@@ -1,0 +1,13 @@
+cells,exact_historical_cell
+1,true
+daily_rows,bets,min_unit_open,last_idx,terminal_wealth
+99,1127,1.0,99,2.515204600600047
+filename,selections,fixtures,staleness_min,staleness_max
+experiments/scotland/08_qs_marketobs_backtest/results/phase0_historical/phase0_t1440_book.csv,153,53,0.5632166666666762,88.87175000000002
+experiments/scotland/08_qs_marketobs_backtest/results/phase0_historical/phase0_t1440_sensitivity360_book.csv,562,190,0.05131666666670753,359.9016999999999
+experiments/scotland/08_qs_marketobs_backtest/results/phase0_historical/phase0_t25_book.csv,3723,611,0.002300000000001745,89.53393333333334
+experiments/scotland/08_qs_marketobs_backtest/results/phase0_historical/phase0_t360_book.csv,1062,295,0.1585499999999911,89.92846666666668
+rows,snapshots,market_lines
+36,4,9
+selections,books,outside_fixed_universe,staleness_violations,instant_violations
+5500,4,0,0,0

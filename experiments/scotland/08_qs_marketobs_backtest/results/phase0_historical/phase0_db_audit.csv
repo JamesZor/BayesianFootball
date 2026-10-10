@@ -1,0 +1,11 @@
+table_name,unchanged
+config_registry,true
+configs,true
+fit_artifacts,true
+fit_fold_artifacts,true
+fold_results,true
+harness_checks,true
+harness_experiments,true
+harness_scores,true
+match_latents,true
+runs,true

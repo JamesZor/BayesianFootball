@@ -17,7 +17,7 @@ Backtest five saved models against T−25m/T−6h/T−24h Betfair archive prices
 
 ## Acceptance Criteria
 
-- [ ] Phase 0: canonical and option_b_live inventories, historical experiment 07 m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
+- [x] Phase 0: canonical and option_b_live inventories, historical experiment 07 m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
 - [ ] Phase 1 allocator audit with source line references; Phase 2 scenario allocator tested or unnecessary.
 - [ ] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
 - [ ] Reports answer all five brief questions with numbers traceable to committed CSVs.
@@ -38,9 +38,20 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 
 - [2026-10-10 @pi] Ruling 3: manager corrected historical target association. Reconstructed runner-3 m12/raw/B0_canonical/prod from runner/loader/CSV with line citations; FractionalKelly0.30/min0.001/tradeable markets, λ23/cap0.25/canonical geometric trust. It is now the sole reproduction gate. Canonical measurement retained separately, no rerun/tuning. New outputs preserve prior audits; same cached inputs/710 IDs/T−25 book required. Static checker PASS; next execute historical gate, fixed Option B reference and snapshot inventory if accepted.
 
+- [2026-10-10 @pi] Source72cd5496 PASS exact historical reproduction: unit wealth2.515204600600047 /1127 bets/99 slates/608 books; committed CSV headline matches exactly, zero build errors, converged=true. Same710 IDs/T−25 book byte-identical to canonical; static gate PASS, SHOW off logged once, finally DB audit10/10 unchanged/byte-identical. OptionB raw reference2.207736087761667 /1172. All snapshot coverage/staleness complete: T−25 any=611/1X2=545; T−6h any=295/1X2=182; T−24h any=53/1X2=47; 360-minute sensitivity any=190/1X2=170 (denominator710). Canonical2.773493294562897 /1132 retained separately, wrong-target failure superseded, no rerun. Pane%453 closed; phase0 criterion met. STOP at boundary, no Phase1+. Overall task remains IN_PROGRESS pending manager continuation; PHASEBT_HANDOVER.
+
 ## Verification & Findings
 
-### Current resumed attempt
+### Current ruling 3 attempt — Phase0 accepted
+
+- Actual beast run72cd5496, persistent Julia1.12.4/16 threads/core-pinned/BLAS1, owned pane%453 now closed.
+- Exact historical recipe and source lines: HISTORICAL_REPRODUCTION_RECIPE.md. CSV asserts unique target/config and runtime accepted fixed tolerance/bets; local DuckDB compares headline to committed experiment07 row to1e-12.
+- Historical £1000 reporting scale normalised to unitwealth; 99 daily rows sum1127 bets and end2.515204600600047. Canonical source8018dacf preserved without rerun, no longer a reproduction gate.
+- Before/after audit byte-identical,10/10 unchanged; same input IDs/T−25 book byte-identical; static positive check passes (unchanged checker previously rejected four negative fixtures).
+- Four snapshot/bound settings,36 per-market rows including zeros; staleness maxima respect bounds. Last-traded price observations are NOT verified executable touch/depth; no profitability claim for qs_marketobs.
+- New evidence: results/phase0_historical/ and logs/phase0_historical.log, policy-reference comparison and result checks. REPORT/HANDOVER current, previous failures preserved in chronology. No src changes or later phases; no broad test suite run.
+
+### Preceding wrong-target attempt — superseded by ruling3
 
 - Executed `8018dacf` in beast persistent Julia 1.12.4, 16 threads, pinned cores, BLAS 1, owned pane %452 (now closed).
 - Static read-path checker PASS; four negative fixtures rejected. Actual session default off recorded. DB counts/maxima unchanged across all 10 audited fit/config/harness tables, including failure exit; snapshots byte-identical.
@@ -53,7 +64,7 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 - Beast `julia --project -t 16 -i`, pinned cores, BLAS 1; include `r00_phase0_inventory.jl` in owned pane `%451`.
 - Attempt 1 `8c4fccec`: startup MethodError/world-age warning, no gate reached; corrected module include once.
 - Attempt 2 `9249fbcd`: FAIL `assert_readonly` (`SHOW default_transaction_read_only`), before m12 load_fit. No parity/coverage/wealth/CLV or bootstrap evidence.
-- Historical target 2.5152 unit wealth / 1127 bets is committed experiment 07 evidence, NOT a fresh reproduction.
-- No fits, source allocator changes, or DB writes. m12 UUID remains `132df5c2-c742-4e95-8693-3aeb2b2cbaef` (not loaded).
+- At those earlier stops, target2.5152/1127 was committed experiment07 evidence, not yet freshly reproduced (ruling3 run now reproduces it).
+- No fits, source allocator changes, or DB writes. At those earlier stops, m12 UUID `132df5c2-c742-4e95-8693-3aeb2b2cbaef` had not been loaded.
 - Evidence and resume requirements: `experiments/scotland/08_qs_marketobs_backtest/{REPORT,HANDOVER,PROGRESS,DECISIONS_LOG}.md`, committed attempt logs and execution-status CSV.
 - `scripts/todo.sh check` and `git diff --check` passed before the source commits; final checks recorded in handoff commit. Owned session closed and verified absent.
