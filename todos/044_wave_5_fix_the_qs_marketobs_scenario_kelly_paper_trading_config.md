@@ -21,8 +21,8 @@ paper-trading config for 26/27. No fits, no DB writes, src frozen. Julia on mcmc
 
 ## Acceptance Criteria
 
-- [ ] Phase 0: wave-5 runner reproduces bit-identical m12 × canonical × T−25m (2.773493294562897 / 1132) and qs × scenario_kelly × T−25m (2.154029744590488 / 952); per-season MDDs match to 0.01 pp; DB audit unchanged.
-- [ ] Phase 1: per-direction table, λ curves for B1–B4 (+ explored baskets), ruling-4 sensitivity, FREEZE.md committed and pushed before any 25/26 wave-5 number exists.
+- [x] Phase 0: wave-5 runner reproduces bit-identical m12 × canonical × T−25m (2.773493294562897 / 1132) and qs × scenario_kelly × T−25m (2.154029744590488 / 952); per-season MDDs match to 0.01 pp; DB audit unchanged.
+- [x] Phase 1: per-direction table, λ curves for B1–B4 (+ explored baskets), ruling-4 sensitivity, FREEZE.md committed and pushed before any 25/26 wave-5 number exists.
 - [ ] Phase 2: 25/26 (and 24/25) scoring of frozen, m12, fallback and every candidate; T−6h rows; ruling-8 decision; REPORT.md and PAPER_TRADING_CONFIG.md with traceable numbers; CSVs committed.
 - [ ] DB audit unchanged around every runner; beast panes closed; everything pushed.
 
@@ -38,3 +38,4 @@ paper-trading config for 26/27. No fits, no DB writes, src frozen. Julia on mcmc
 ## Verification & Findings
 
 Not run yet.
+- [2026-10-10 @claude] Phase 1 done on 24/25 only (runner `6d779be2`; attempt 1 at `ccddaa79` stopped on a B4-filter bug before any basket was scored). 6 baskets looked at; ruling 6 selects B1_canonical at λ 12 (g 17.520×10⁻³, MDD −13.07% vs target −13.60%). FREEZE.md pushed in `04fdba71`; stopped with W5_HANDOVER.
