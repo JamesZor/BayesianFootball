@@ -1,10 +1,12 @@
 # 08 — qs_marketobs executable-price backtest
 
-**Phase 0 resumed under manager rulings:** canonical is the reproduction target;
-option_b_live is a separate raw-probability policy; fitted calibration is out of scope.
-Static read-path checks plus before/after DB audits replace the previous session assertion.
-Numerical reproduction and coverage remain pending; no Phase 1 work is authorised.
-The old blocked report/handback is historical and will be updated after this run.
+**Phase 0 BLOCKED at canonical parity:** m12 wealth **2.7734933**, **1132 bets**;
+required **2.5152 ±0.00005**, **1127 bets**. No retry or retuning.
+Static read-path checks passed and all ten before/after DB table audits were unchanged.
+SHOW default was `off`, recorded rather than asserted under the manager ruling.
+Both canonical and option_b_live policy inventories are reported; fitted calibration is out of scope.
+Option B's numerical run, remaining snapshots and later phases stopped at the failed gate.
+TODO 043 remains BLOCKED; owned beast pane closed. See [REPORT.md](REPORT.md) and [HANDOVER.md](HANDOVER.md).
 
 ## Scope and source of truth
 

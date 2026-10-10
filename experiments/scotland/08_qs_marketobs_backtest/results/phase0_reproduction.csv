@@ -1,0 +1,2 @@
+arm,run_id,as_of_minutes,max_staleness_minutes,final_wealth,return_pct,n_bets,n_slates,n_books,n_build_errors,converged,failed_gates,expected_wealth,expected_bets,wealth_tolerance,parity_status
+canonical,132df5c2-c742-4e95-8693-3aeb2b2cbaef,-25.0,90.0,2.773493294562897,177.3493294562897,1132,99,611,0,true,,2.5152,1127,5.0e-5,FAIL

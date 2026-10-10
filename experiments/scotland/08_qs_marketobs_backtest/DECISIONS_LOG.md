@@ -36,3 +36,12 @@
 - option_b_live: exact MD.option_b_system(), raw probabilities, canonical markets, FractionalKelly(0.30), min=0.001, full trust Home/Under2.5 and 1/1.4 Draw/Away/Over1.5, lambda=28, cap=0.25, commission=0.02, budget=0.99, DailySlate, KeepAll. Report its inventory even if the canonical gate stops its numerical run.
 - plain_kelly remains FractionalKelly(0.25), FlatTrust(1.0), 1X2/O-U2.5/BTTS, lambda=23, cap=0.25, commission=0.02, min=0.0001, budget=0.99, per-selection max=0.50, DailySlate/KeepAll. This holds the canonical caps/execution/drawdown defaults; its grid is Phase 3 work, not run now.
 - No other settings, thresholds, fixtures, sampling or market selection change. Resume Phase 0 only. A passing canonical gate permits Option B's fixed m12 T−25 reference and the three snapshot coverage inventories. Any failure stops; a successful Phase 0 ends with PHASEBT_HANDOVER, not Phase 1.
+
+## 2026-10-10 11:10Z — canonical reproduction failed; STOP
+
+- Executed source `8018dacf` in fresh beast pane %452. Static gate PASS; four prior injected negative fixtures rejected. Actual SHOW value `off` logged once, accepted by manager ruling. No further PGOPTIONS debugging.
+- Loaded saved m12 once by UUID and restricted to 710 held-out IDs. Canonical T−25 produced wealth **2.773493294562897**, return **177.3493294562897%**, **1132 bets**, **99 daily slates**, **611 built books**, converged=true, zero build errors. Required wealth 2.5152 ±0.00005 and exactly 1127 bets both FAIL.
+- Finally audit ran after the reproduction failure: counts/maxima unchanged in all ten fit/config/harness tables. Before/after CSVs are byte-identical. No DB write paths called; betdb not connected; saved cache hash unchanged.
+- No retry, alternative baseline, tuning or attribution experiment. Remove no gates. Option B's policy inventory is reported, but its numerical arm is NOT_RUN. The T−25 book used for reproduction is preserved; all snapshot aggregate reports and T−6h/T−24h books remain pending. No later phase started.
+- Current blocker is canonical parity, not the superseded session-default assertion. Historical policy differences remain documented but were not tested as the cause. Manager must review the target/stack relationship before authorising further Phase 0 work.
+- Closed owned pane %452 and verified its session absent; no Julia job remains. Save/push evidence, keep TODO 043 BLOCKED with all phase acceptance criteria open. This is a failed-gate handback, not a successful phase boundary.

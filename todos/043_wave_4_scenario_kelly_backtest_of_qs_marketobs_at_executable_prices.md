@@ -4,7 +4,7 @@
 |---|---|
 | ID | 043 |
 | Title | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P2 |
 | Assignee | pi |
 | Created | 2026-10-10 |
@@ -17,7 +17,7 @@ Backtest five saved models against T−25m/T−6h/T−24h Betfair archive prices
 
 ## Acceptance Criteria
 
-- [ ] Phase 0: exact production inventory, m12 experiment 07 wealth/bet parity, three snapshot coverage reports.
+- [ ] Phase 0: canonical and option_b_live inventories, canonical m12 wealth/bet parity, unchanged DB audits, three snapshot coverage reports.
 - [ ] Phase 1 allocator audit with source line references; Phase 2 scenario allocator tested or unnecessary.
 - [ ] All five-model × snapshot × policy cells computed or NOT_AVAILABLE with reasons, block-bootstrap intervals and paired m12 differences.
 - [ ] Reports answer all five brief questions with numbers traceable to committed CSVs.
@@ -34,7 +34,19 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 
 - [2026-10-10 @pi] Manager authorised Phase 0 resume: static read-path verification plus before/after table-wide DB audit replaces session-default assertion; actual SHOW value logged once, no PGOPTIONS debugging. Canonical alone targets 1127 bets / 2.5152 ±0.00005. Both canonical and option_b_live inventories reported; raw probabilities, no fitted calibration; plain_kelly 0.25 retained. Updated loader to audit even failure exits and to deserialize cache with no SQL fallback. Static gate passes, four injected negative fixtures rejected.
 
+- [2026-10-10 @pi] Resumed runner `8018dacf` FAIL canonical parity: wealth 2.773493294562897 / 1132 bets versus 2.5152 ±0.00005 / 1127. 710 saved OOS IDs, 99 slates, 611 books, converged=true, zero build errors. Static gate PASS and finally before/after DB audit unchanged 10/10 (byte-identical); SHOW default off logged once. No retry/tuning/fit/write; numerical Option B and remaining snapshot inventory stopped. Pane %452 closed. Dependency: Claude reviews canonical target/stack mismatch before authorising further Phase 0 work.
+
 ## Verification & Findings
+
+### Current resumed attempt
+
+- Executed `8018dacf` in beast persistent Julia 1.12.4, 16 threads, pinned cores, BLAS 1, owned pane %452 (now closed).
+- Static read-path checker PASS; four negative fixtures rejected. Actual session default off recorded. DB counts/maxima unchanged across all 10 audited fit/config/harness tables, including failure exit; snapshots byte-identical.
+- m12 UUID loaded once, restricted to 710 OOS IDs. Canonical parity FAIL: wealth 2.773493294562897 / 1132 bets; no build errors, converged=true. No alternative stack or relaxed threshold tested.
+- T−25 book and 99 canonical daily rows committed; all aggregate snapshot coverage and remaining cutoffs pending. Option B inventory reported, numerical arm NOT_RUN. No later phase.
+- Current evidence/report/handover under `experiments/scotland/08_qs_marketobs_backtest/`. Static/tracker/diff checks pass; all owned panes/jobs closed.
+
+### Earlier stops (historical, superseded safety assertion)
 
 - Beast `julia --project -t 16 -i`, pinned cores, BLAS 1; include `r00_phase0_inventory.jl` in owned pane `%451`.
 - Attempt 1 `8c4fccec`: startup MethodError/world-age warning, no gate reached; corrected module include once.

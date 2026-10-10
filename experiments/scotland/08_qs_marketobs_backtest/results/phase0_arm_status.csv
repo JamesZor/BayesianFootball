@@ -1,0 +1,8 @@
+model,policy,snapshot,status,reason
+m12,canonical,T-25m,FAILED_REPRODUCTION,wealth=2.773493294562897 vs 2.5152 +/-0.00005; bets=1132 vs 1127
+m12,option_b_live,T-25m,NOT_RUN,canonical reproduction gate failed; stop rule
+all,plain_kelly,all,NOT_RUN,Phase 3 not reached
+all,canonical,T-6h,NOT_RUN,Phase 0 failed before snapshot inventory
+all,canonical,T-24h,NOT_RUN,Phase 0 failed before snapshot inventory
+all,option_b_live,T-6h,NOT_RUN,Phase 0 failed before snapshot inventory
+all,option_b_live,T-24h,NOT_RUN,Phase 0 failed before snapshot inventory

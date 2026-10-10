@@ -1,3 +1,4 @@
-attempt,source_commit,stage,status,fit_loaded,backtest_computed,snapshots_built,evidence
-1,8c4fccec,startup,FAILED_METHODERROR,false,false,false,logs/phase0_inventory_attempt1.log
-2,9249fbcd,experiment_db_readonly_gate,FAILED_ASSERTION,false,false,false,logs/phase0_inventory_attempt2.log
+attempt,source_commit,stage,status,fit_loaded,backtest_computed,any_snapshot_built,all_snapshots_complete,evidence
+1,8c4fccec,startup,FAILED_METHODERROR,false,false,false,false,logs/phase0_inventory_attempt1.log
+2,9249fbcd,experiment_db_readonly_gate,FAILED_ASSERTION,false,false,false,false,logs/phase0_inventory_attempt2.log
+3,8018dacf,canonical_reproduction,FAILED_PARITY,true,true,true,false,logs/phase0_resume.log

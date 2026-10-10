@@ -1,0 +1,23 @@
+table_name,table_present,column_name,column_present,n_rows,max_timestamp
+config_registry,true,created_at,true,459,2026-10-10 02:53:25.258
+config_registry,true,updated_at,true,459,2026-10-10 04:54:15.566
+configs,true,created_at,false,347,
+configs,true,updated_at,false,347,
+fit_artifacts,true,created_at,false,347,
+fit_artifacts,true,updated_at,false,347,
+fit_fold_artifacts,true,created_at,false,464,
+fit_fold_artifacts,true,updated_at,false,464,
+fold_results,true,created_at,false,6693,
+fold_results,true,updated_at,false,6693,
+harness_checks,true,at,true,637,2026-10-10 05:47:21.051+00
+harness_checks,true,created_at,false,637,
+harness_checks,true,updated_at,false,637,
+harness_experiments,true,created_at,false,30,
+harness_experiments,true,updated_at,false,30,
+harness_scores,true,created_at,false,74550,
+harness_scores,true,updated_at,false,74550,
+match_latents,true,created_at,false,131013,
+match_latents,true,updated_at,false,131013,
+runs,true,created_at,true,347,2026-10-10 05:45:37.068
+runs,true,finished_at,true,347,2026-10-10 05:46:25.471
+runs,true,updated_at,false,347,
