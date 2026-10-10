@@ -20,3 +20,10 @@
 - **Recovery, pre-declared.** Arms: fusion_grw_bias (index 1), fusion_qs_bias (2), fusion_qs_nobias (3), fold 40 geometry and real masks (pxG availability, full books), 2×(200+200), accept 0.65, depth 10, 90% intervals. Seeds s = 1,2,3: data `20261113 + index + 10(s−1)`, sampler `20261117 + index + 10(s−1)`. Truths: dynamics as wave 2 (GRW α σ [.12,.06,.03], β σ [.20,.11,.024]; QS τ [.16,.085,.027], r [.4,.4,.3]); intercept log 1.2, home 0.15 (not scored, as wave 2); ν = 4.0, log κ = 0.05, σ_obs = 0.07; bias arms κ_D = 0.85, δ_D = 0.03, δ_M = −0.05; the nobias arm is generated and fitted with bias off. Gate (wave 2): no parameter misses all 3 seeds; pooled coverage ≥ 80%.
 - Outputs to `/root/BF_runs/qs_experiment_w3_out/phase1` through `QSX3_TEST_OUTPUT` (default is the w3 path, never wave 2's).
 - Phase 1 PASS at `01f42219` attempt a1 (`PHASE1.md`): fusion 4256/4256, tape 184 (24 new, 0 B), regressions unchanged. Recovery 84/99 pooled (gate met); qs_nobias alone 21/27, reported, not re-run or re-tuned.
+
+## 2026-10-10 — Phase 2 smoke plan (frozen before any fit)
+
+- Manager accepted Phase 1 and asked for Phase 2 smoke on all three arms, then AskUserQuestion before the grid.
+- `candidates.jl`: wave 2's scope `lower`, W2 sampler 4×(500+1000) accept .65 depth 10, joint config `make_joint_observation()` and weak-r QS, both unchanged; the market table comes from wave 2's `l01_market_table.jl` (SHA-checked; loads `Main.QSMarketArm` at top level). Arms: `fusion_qs_bias` (**control**), `fusion_qs_nobias` (all three bias priors `nothing`), `fusion_grw_bias` (MultiScaleGRW). Bias priors as the brief.
+- Smoke = `Harness.smoke`, unchanged: folds 1 and 40 at 2×(200+200), hard checks (gradient, tape_allocation, filtration, latents, score_grid_coherence, fit_parity), 16-chain 50+50 performance probe. Adapter `l03_smoke.jl` is wave 2's with wave-3 seeds/tags/TODO only. Fresh beast REPL per arm, order qs_bias → qs_nobias → grw_bias; root seeds 20261151/52/53, pre-declared, no smoke seed tuning.
+- ETA = probe window × (40×4×1500)/(16×100), as wave 2 (largest fold, excludes overhead).
