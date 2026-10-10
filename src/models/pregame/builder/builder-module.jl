@@ -48,7 +48,7 @@ export predictor_name, predictor_features, predictor_design, predictor_sites,
 export covariate_name, covariate_role, covariate_prior, covariate_features,
        covariate_column, covariate_oos, covariate_sides
 export AbstractRateGuard, ClampGuard, NoGuard
-export AbstractObservationConfig, PoissonObservation, MarketRateObservation, NegativeBinomialObservation,
+export AbstractObservationConfig, PoissonObservation, MarketRateObservation, JointMarketFusionObservation, NegativeBinomialObservation,
        NegBinObservation,
        GlobalDispersion, HomeAwayDispersion,
        DixonColesCorrelation, FrankCopulaCorrelation,

@@ -99,6 +99,8 @@ _assemble(o::MarketRateObservation, i, t, h, c, g)       = PoissonCountModel(i, 
 # prediction family as a plain Poisson. Its Gamma arm is a fit-time likelihood and never touches a
 # score grid — which is why widening `O` above is safe rather than a loophole.
 _assemble(o::JointGammaPoissonObservation, i, t, h, c, g) = PoissonCountModel(i, t, h, c, o, g)
+# Priced from the joint goals arm on the true rates; the market arm never touches a score grid.
+_assemble(o::JointMarketFusionObservation, i, t, h, c, g) = PoissonCountModel(i, t, h, c, o, g)
 _assemble(o::NegativeBinomialObservation, i, t, h, c, g) = NegBinCountModel(i, t, h, c, o, g)
 # And the mirror image: the two-arm joint whose GOALS arm is the negative binomial prices from that
 # arm, so it belongs to the NegBin prediction family. Its Gamma arm never touches a score grid.
@@ -443,6 +445,13 @@ function validate(b::CountModelBuilder)
         market_prior_valid ? "nonnegative scale prior with finite upper tail" :
         "MarketRateObservation needs a nonnegative sigma_prior with a finite upper tail"))
 
+    # The fusion observation inherits the joint's η floor and priors and the market's σ_obs prior;
+    # the supremacy scale κ_D must stay positive (a sign flip would reverse every favourite).
+    fusion_valid, fusion_detail = obs isa JointMarketFusionObservation ?
+        _cb_fusion_validity(obs, guard) : (true, "not a fusion observation")
+    push!(out, cb_result("fusion observation parts and market-bias priors are well posed",
+        fusion_valid, fusion_detail))
+
     # A half-open σ_κ prior is what makes the deltas shrink to zero when there is nothing to find.
     # A prior with support below 0 would let σ_κ flip sign, which reflects the delta set through
     # the origin and leaves the likelihood invariant — a label-switching mode, not a wider prior.
@@ -639,10 +648,41 @@ _sites_observation(::SharedKappaJoint) = [Symbol("obs.ν"), Symbol("obs.log_κ")
 # ... and inside `_joint_hierarchical_kappa_params`, which extends it rather than reordering it.
 _sites_observation(::HierarchicalKappaJoint) =
     [Symbol("obs.ν"), Symbol("obs.log_κ"), Symbol("obs.σ_κ"), Symbol("obs.κ_team_raw")]
+# Declaration order inside `_market_fusion_params`; a bias term switched off has no site.
+_sites_observation(o::JointMarketFusionObservation) = vcat(
+    [Symbol("obs.ν"), Symbol("obs.log_κ"), Symbol("obs.σ_obs")],
+    o.kappa_D_prior === nothing ? Symbol[] : [Symbol("obs.κ_D")],
+    o.delta_D_prior === nothing ? Symbol[] : [Symbol("obs.δ_D")],
+    o.delta_M_prior === nothing ? Symbol[] : [Symbol("obs.δ_M")])
 _sites_observation(::CompetitionKappaJoint) =
     [Symbol("obs.ν"), Symbol("obs.log_κ"), Symbol("obs.intercept_raw"), Symbol("obs.kappa_raw")]
 _sites_observation(o::NegativeBinomialObservation) = _sites_dispersion(o.dispersion)
 _sites_dispersion(::CB_PG.GlobalDispersion)   = [Symbol("disp.log_r")]
+
+_cb_finite_location(prior) = prior === nothing ||
+    (isfinite(quantile(prior, 0.01)) && isfinite(quantile(prior, 0.99)))
+function _cb_fusion_validity(o::JointMarketFusionObservation, guard)
+    j, m = o.joint, o.market
+    checks = (
+        (guard isa ClampGuard && isfinite(guard.lo),
+         "the joint Gamma arm needs a ClampGuard with a finite lo"),
+        (minimum(j.shape_prior) > 0.0, "joint shape_prior must have strictly positive support"),
+        (j.feature isa CB_Features.MatchProxyXGFeature, "joint feature must be a MatchProxyXGFeature"),
+        (minimum(m.sigma_prior) >= 0.0 && isfinite(quantile(m.sigma_prior, 0.99)),
+         "market sigma_prior must be nonnegative with a finite upper tail"),
+        (o.kappa_D_prior === nothing ||
+            (minimum(o.kappa_D_prior) >= 0.0 && isfinite(quantile(o.kappa_D_prior, 0.99))),
+         "kappa_D_prior must have nonnegative support and a finite upper tail"),
+        (_cb_finite_location(o.delta_D_prior), "delta_D_prior must have finite central quantiles"),
+        (_cb_finite_location(o.delta_M_prior), "delta_M_prior must have finite central quantiles"),
+    )
+    failed = [message for (ok, message) in checks if !ok]
+    isempty(failed) || return (false, join(failed, "; "))
+    on = [name for (name, prior) in (("κ_D", o.kappa_D_prior), ("δ_D", o.delta_D_prior),
+                                     ("δ_M", o.delta_M_prior)) if prior !== nothing]
+    return (true, "η floor $(guard.lo); bias terms learned: " *
+                  (isempty(on) ? "none (κ_D = 1, δ_D = δ_M = 0)" : join(on, ", ")))
+end
 _sites_dispersion(::CB_PG.HomeAwayDispersion) = [Symbol("disp.log_r"), Symbol("disp.δ_r_home")]
 
 """

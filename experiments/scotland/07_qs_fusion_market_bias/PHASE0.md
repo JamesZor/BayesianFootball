@@ -33,6 +33,19 @@ MarketRateObservation evidence: exact AD max 4.05e-16 (GRW) / 4.11e-16 (QS) on f
 parameters; recovery 39/42 (92.9%), as in wave 2. The count is 3815, not wave 2's 3831,
 because wave 2's array revalidation set `QSX2_RERUN_RECOVERY_FIRST=true` (three seeds rerun, 42
 truth-anchor checks) while this run used the default (first seed read from the immutable CSV,
-seeds 2–3 rerun, 28 anchor checks): 14 of the 16 are accounted for this way. The other 2 are not
-explained by inspection; there were zero failures or errors.
+seeds 2–3 rerun, 28 anchor checks): 14 of the 16 are accounted for this way. The other 2 are
+`@test length(boundaries) == 40` inside `mro_real_features`, which runs once per real-fold build:
+2 AD builds + 6 recovery fits = 8 in wave 2, 2 + 4 = 6 here. 14 + 2 = 16, so the gap is fully
+accounted for (addendum below); there were zero failures or errors.
+
+**Addendum (Phase 1, on the manager's request).** Julia printed only the top-level row in both
+logs, because every nested testset passed: wave 2 `qs_experiment_w2/phase1_arrays_market.log`
+`MarketRateObservation | 3831 3831 7m22.8s`; here `qs_experiment_w3/phase0/market_rate.log`
+`MarketRateObservation | 3815 3815 6m15.4s`. So the per-testset comparison is structural, from the
+test file and the flag each log actually used: the wave-2 log contains
+`ENV["QSX2_RERUN_RECOVERY_FIRST"] = "true"`; the wave-3 phase-0 launcher never set it (default
+`false`). Per testset, only "synthetic recovery" differs: seed-1 truth anchors
+(`baseline.truth == truth[name]`, 7 parameters × 2 arms = 14) and the fold-count check inside the
+two seed-1 refits (2). The injected-feature testset, the real-table checks and both real-fold AD
+testsets are flag-independent and identical; both logs print 42 `RECOVERY` lines.
 Per-gate wall times: `results/phase0_gates.csv`.

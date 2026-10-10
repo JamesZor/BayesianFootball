@@ -373,6 +373,112 @@ decay weight in its own broadcast — see docs/tickets/T002.
 end
 
 """
+The fusion block: the shared-κ joint's two scalars, then the market scale, then each market-bias
+term that is switched on — `obs.ν`, `obs.log_κ`, `obs.σ_obs`, `obs.κ_D`, `obs.δ_D`, `obs.δ_M`, in
+that declaration order (the θ layout `cb_varinfo_sites` reports). A term whose prior is `nothing`
+has no site and is returned as `nothing`; the branch is on the TYPE of the config, resolved before
+the tape exists, never on a value.
+"""
+@model function _market_fusion_params(o::JointMarketFusionObservation)
+    ν ~ o.joint.shape_prior
+    log_κ ~ o.joint.log_kappa_prior
+    σ_obs ~ o.market.sigma_prior
+    if o.kappa_D_prior === nothing
+        κ_D = nothing
+    else
+        κ_D ~ o.kappa_D_prior
+    end
+    if o.delta_D_prior === nothing
+        δ_D = nothing
+    else
+        δ_D ~ o.delta_D_prior
+    end
+    if o.delta_M_prior === nothing
+        δ_M = nothing
+    else
+        δ_M ~ o.delta_M_prior
+    end
+    return (; ν, log_κ, σ_obs, κ_D, δ_D, δ_M)
+end
+
+# An off term is the identity, emitted as no instruction at all.
+_fusion_scale(::Nothing, x) = x
+_fusion_scale(κ, x) = κ .* x
+_fusion_twice(::Nothing) = nothing
+_fusion_twice(δ) = 2 * δ
+# Σ w (r − δ)² from Σ w r² and Σ w r, so the sampled shift touches only scalars (AD guide Rule 7).
+_fusion_shifted_ss(ss, s, ::Nothing, W) = ss
+_fusion_shifted_ss(ss, s, δ, W) = ss - 2 * δ * s + δ^2 * W
+
+"""
+    _biased_market_rate_ll(ζ_h, ζ_a, σ_obs, κ_D, δ_D, δ_M, d) -> scalar
+
+The market arm with learned static bias, on the TRUE goal log-rates `ζ`. Per match, with
+residuals `r = log λ̃ − m` and `m` the biased market mean,
+
+    r_h² + r_a² = (r_h − r_a)² / 2 + (r_h + r_a)² / 2
+    r_h − r_a   = D̃ − κ_D·D − δ_D          D = ζ_h − ζ_a
+    r_h + r_a   = T̃ − T − 2δ_M             T = ζ_h + ζ_a
+
+so the i.i.d. Normal(σ_obs) density on the two log-rates is evaluated exactly in supremacy/total
+coordinates. `κ_D .* D` is an unfused scalar–array product (its own preallocated kernel); the
+shifts δ enter only after the reductions. The normalising constant is `MarketRateObservation`'s.
+"""
+function _biased_market_rate_ll(ζ_h, ζ_a, σ_obs, κ_D, δ_D, δ_M, d::MarketFusionDesign)
+    w = d.market.mask_weights
+    W = d.market.weight_sum
+    supremacy = ζ_h .- ζ_a
+    scaled = _fusion_scale(κ_D, supremacy)
+    r_D = d.supremacy_obs .- scaled
+    r_T = d.total_obs .- (ζ_h .+ ζ_a)
+    ss_D = _fusion_shifted_ss(sum((r_D .* r_D) .* w), sum(r_D .* w), δ_D, W)
+    ss_T = _fusion_shifted_ss(sum((r_T .* r_T) .* w), sum(r_T .* w), _fusion_twice(δ_M), W)
+    rss = (ss_D + ss_T) / 2
+    return -rss / (2 * σ_obs^2) - 2 * W * (log(σ_obs) + log(2π) / 2)
+end
+
+# All bias off: EXACTLY `MarketRateObservation`'s density, evaluated on the true rates.
+_fusion_market_ll(::UnbiasedMarketFusion, p, ζ_h, ζ_a, d::MarketFusionDesign) =
+    _market_rate_ll(ζ_h, ζ_a, p.σ_obs, d.market)
+_fusion_market_ll(::JointMarketFusionObservation, p, ζ_h, ζ_a, d::MarketFusionDesign) =
+    _biased_market_rate_ll(ζ_h, ζ_a, p.σ_obs, p.κ_D, p.δ_D, p.δ_M, d)
+
+"""
+Three measurements of one latent `μ = exp(η)`.
+
+    ARM 1   pxg ~ Gamma(ν, μ/ν)                    masked to the matches with a measurement
+    ARM 2   y   ~ Poisson(κ · μ)                   every match in the fold
+    ARM 3   log λ̃ ~ Normal(biased(ζ), σ_obs)       masked to the matches with a full book
+
+Arms 1 and 2 are `_observe(::SharedKappaJoint, …)` term for term, so with every bias term off the
+returned value is the joint's value plus `MarketRateObservation`'s value on `ζ = η + log κ`, to the
+last bit. Arm 3 reads the TRUE goal rates `ζ` — the rates the score grid prices — so the bias is
+the market's departure from the goals model, not from the xG latent.
+"""
+@model function _observe(o::JointMarketFusionObservation,
+                         η_h, η_a,
+                         yh::Vector{Int}, ya::Vector{Int}, wts::Vector{Float64},
+                         lfh::Vector{Float64}, lfa::Vector{Float64},
+                         n_teams::Int, n_months::Int, d::MarketFusionDesign)
+    obs ~ to_submodel(_market_fusion_params(o))
+
+    # --- ARM 2: Poisson goals on λ = κ·μ, over the whole fold ------------------
+    ζ_h = η_h .+ obs.log_κ
+    ζ_a = η_a .+ obs.log_κ
+    ll_h = yh .* ζ_h .- exp.(ζ_h) .- lfh
+    ll_a = ya .* ζ_a .- exp.(ζ_a) .- lfa
+    goals_ll = sum(ll_h .* wts) + sum(ll_a .* wts)
+
+    # --- ARM 1: Gamma proxy xG on μ, over the covered matches only -------------
+    proxy_ll = _gamma_proxy_ll(obs.ν, η_h, η_a, d.joint)
+
+    # --- ARM 3: market log-rates on the true rates, over the full books only ----
+    market_ll = _fusion_market_ll(o, obs, ζ_h, ζ_a, d)
+
+    return goals_ll + proxy_ll + market_ll
+end
+
+"""
 The same two arms, with the finishing factor read PER TEAM.
 
     ARM 1   pxg ~ Gamma(ν, μ/ν)              unchanged — the Gamma arm never sees κ
@@ -738,6 +844,20 @@ function _cb_extract_observation(::SharedKappaJoint, chain, n_teams)
     return (; ν, κ)
 end
 
+# The joint's draws (what the rates path reads), plus the market scale and each bias term; an off
+# term is reported at its fixed no-bias value so every fold's table has the same columns.
+_cb_fusion_draws(::Nothing, chain, site, fixed, n) = fill(fixed, n)
+_cb_fusion_draws(prior, chain, site, fixed, n) = vec(Array(chain[Symbol(site)]))
+function _cb_extract_observation(o::JointMarketFusionObservation, chain, n_teams)
+    joint = _cb_extract_observation(o.joint, chain, n_teams)
+    σ_obs = vec(Array(chain[Symbol("obs.σ_obs")]))
+    n = length(σ_obs)
+    return (; joint..., σ_obs,
+              κ_D = _cb_fusion_draws(o.kappa_D_prior, chain, "obs.κ_D", 1.0, n),
+              δ_D = _cb_fusion_draws(o.delta_D_prior, chain, "obs.δ_D", 0.0, n),
+              δ_M = _cb_fusion_draws(o.delta_M_prior, chain, "obs.δ_M", 0.0, n))
+end
+
 """
 The hierarchical block, reconstructed from the SAME two transformations the engine applied, in the
 same order. `κ` is kept as the league factor so every caller that only knows about the shared mode
@@ -908,6 +1028,11 @@ falls back to the LEAGUE factor rather than to 1.0. Zero is already how the dyna
 an unknown team — no attack or defence effect — and the analogue here is "we have no reason to
 think this club finishes unlike the league", which is `κ_global`, not "this club does not finish".
 """
+# Predictions use the TRUE rates: the joint goals arm's λ = κ·μ, through the double-Poisson grid.
+# The market bias never reaches a score grid.
+_cb_rates(o::JointMarketFusionObservation, μ_h, μ_a, obs_nt, h_idx, a_idx, m_idx) =
+    _cb_rates(o.joint, μ_h, μ_a, obs_nt, h_idx, a_idx, m_idx)
+
 function _cb_rates(::HierarchicalKappaJoint, μ_h, μ_a, obs_nt, h_idx, a_idx, m_idx)
     κ_h = h_idx > 0 ? obs_nt.κ_team[:, h_idx] : obs_nt.κ
     κ_a = a_idx > 0 ? obs_nt.κ_team[:, a_idx] : obs_nt.κ

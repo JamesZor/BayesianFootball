@@ -250,4 +250,32 @@ end
         result.bytes == 0 || @info "Allocating market-rate instructions" result.rows
     end
 end
+@testset "JointMarketFusionObservation zero-allocation compiled gradients" begin
+    pooled = _ta_pooled_store()
+    rows = _ta_rows()
+    feature = TA_F.MarketRatesFeature(DataFrame(match_id = rows.match_id,
+        log_lambda_h = [0.1 * sin(i) for i in 1:nrow(rows)],
+        log_lambda_a = [0.1 * cos(i) for i in 1:nrow(rows)],
+        full_book = [isodd(i) for i in 1:nrow(rows)]))
+    biases = [
+        ("bias", (;)),
+        ("nobias", (; kappa_D_prior = nothing, delta_D_prior = nothing, delta_M_prior = nothing)),
+        ("kappa_only", (; delta_D_prior = nothing, delta_M_prior = nothing)),
+        ("shifts_only", (; kappa_D_prior = nothing)),
+    ]
+    for dynamics in (MultiScaleGRW(), QualityStyleGRW()), (bias_name, bias) in biases
+        observation = JointMarketFusionObservation(; joint = _ta_joint(SharedKappa()),
+            market = MarketRateObservation(feature = feature), bias...)
+        # The joint Gamma arm needs a finite η floor, so NoGuard is rejected by the builder.
+        @test _ta_build("market_fusion_noguard", dynamics, (), observation, NoGuard()) === nothing
+        model = _ta_build("market_fusion", dynamics, (), observation, ClampGuard())
+        fs = TA_F.create_features(TA_BOUNDARY, pooled, model, :match_biweek)
+        result = _ta_compiled_bytes(model, fs)
+        @test result.bytes == 0
+        @test result.n_parameters > 0
+        println("FUSION_TAPE dynamics=", nameof(typeof(dynamics)), " bias=", bias_name,
+            " bytes=", result.bytes)
+        result.bytes == 0 || @info "Allocating market-fusion instructions" result.rows
+    end
+end
 println("TAPE_ALLOCATION_TESTS_DONE")

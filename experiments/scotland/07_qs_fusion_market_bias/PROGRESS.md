@@ -11,7 +11,7 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 0 (branch health), running.
-- **Done:** TODO 042 created; `phase0_gate.sh` written.
-- **Next action:** wait for `PHASE0_ALL_PASS` / `PHASE0_BLOCKED` in the launcher log, then write PHASE0.md.
-- **Open beast panes:** launcher `claude_qsx3_launcher0`; one `claude_qsx3_gate_*` at a time.
+- **Phase:** 1 (fusion observation), in progress. Phase 0 PASS and accepted by the manager (`PHASE0.md`).
+- **Done:** Phase 0; the 3815 vs 3831 MarketRateObservation count reconciled (PHASE0.md addendum).
+- **Next action:** implement `JointMarketFusionObservation` in `src/`, add `test/test_market_fusion_observation.jl` and tape cases, freeze recovery seeds/truths in DECISIONS_LOG, run the Phase 1 gate on the beast.
+- **Open beast panes:** none.

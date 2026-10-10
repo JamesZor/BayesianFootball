@@ -1285,6 +1285,89 @@ step by hand across six methods.
 const JointGammaObservation = Union{JointGammaPoissonObservation, JointGammaNegBinObservation}
 
 """
+    JointMarketFusionObservation(; joint, market, kappa_D_prior, delta_D_prior, delta_M_prior)
+
+THREE MEASUREMENTS OF ONE LATENT. The shared-κ joint observation (goals and proxy xG) and the
+market-rate observation, read off the same linear predictors, with a learned static market bias
+between the TRUE goal rates and the rates the market quotes.
+
+The true goal log-rates are the joint goals arm's `ζ = η + log κ`; predictions use exactly these,
+through the double-Poisson grid. With `D = ζ_h − ζ_a` (supremacy) and `T = ζ_h + ζ_a` (twice the
+level), the market quotes
+
+    D̃ = δ_D + κ_D · D + e_D,     T̃ / 2 = δ_M + T / 2 + e_M
+
+which is the same as observing each log-rate with i.i.d. `Normal(0, σ_obs)` noise:
+
+    log λ̃_h = δ_M + δ_D/2 + T/2 + κ_D·D/2,     log λ̃_a = δ_M − δ_D/2 + T/2 − κ_D·D/2
+
+κ_D < 1 is a market that compresses favourites, δ_D its home tilt beyond the true home advantage,
+δ_M its totals offset.
+
+THE OFF SWITCHES. Each bias prior may be `nothing`, which fixes that term at its no-bias value
+(κ_D = 1, δ_D = 0, δ_M = 0) and removes its site. With all three off the market arm is exactly
+`MarketRateObservation`'s density on `ζ` and the goals/xG arms are exactly the shared-κ joint's.
+
+FIELDS
+  * `joint`          — a `SharedKappa` `JointGammaPoissonObservation` (feature and its priors).
+  * `market`         — a `MarketRateObservation` (the frozen rates feature and the σ_obs prior).
+  * `kappa_D_prior`  — prior on κ_D, positive support; `nothing` fixes κ_D = 1.
+  * `delta_D_prior`  — prior on δ_D; `nothing` fixes δ_D = 0.
+  * `delta_M_prior`  — prior on δ_M; `nothing` fixes δ_M = 0.
+"""
+Base.@kwdef struct JointMarketFusionObservation{
+    J<:SharedKappaJoint,
+    R<:MarketRateObservation,
+    KD<:Union{Nothing,ContinuousUnivariateDistribution},
+    DD<:Union{Nothing,ContinuousUnivariateDistribution},
+    DM<:Union{Nothing,ContinuousUnivariateDistribution},
+} <: AbstractObservationConfig
+    joint::J
+    market::R
+    kappa_D_prior::KD = LogNormal(0.0, 0.2)
+    delta_D_prior::DD = Normal(0.0, 0.1)
+    delta_M_prior::DM = Normal(0.0, 0.1)
+end
+
+"The fusion observation with every market-bias term fixed off."
+const UnbiasedMarketFusion =
+    JointMarketFusionObservation{J,R,Nothing,Nothing,Nothing} where {J,R}
+
+market_bias_off(o::JointMarketFusionObservation) =
+    o.kappa_D_prior === nothing && o.delta_D_prior === nothing && o.delta_M_prior === nothing
+
+# The recipe identity carries every input and prior: the joint's feed and priors, the market
+# table's canonical digest and σ_obs prior, and each bias prior (or `off`).
+_cb_bias_display(::Nothing) = "off"
+_cb_bias_display(prior) = repr(prior)
+# Fields spelled out rather than `repr`, which module-qualifies the type name by session context.
+_cb_proxy_feature_display(f) = string(nameof(typeof(f)))
+_cb_proxy_feature_display(f::CB_Features.MatchProxyXGFeature) =
+    "MatchProxyXGFeature(k=$(f.k),fallback=$(f.fallback),floor=$(f.floor),dummy=$(f.dummy))"
+_cb_observation_display(o::JointMarketFusionObservation) =
+    "JointMarketFusionObservation(joint=JointGammaPoissonObservation(feature=$(_cb_proxy_feature_display(o.joint.feature))," *
+    "shape_prior=$(repr(o.joint.shape_prior)),log_kappa_prior=$(repr(o.joint.log_kappa_prior))," *
+    "kappa=$(nameof(typeof(o.joint.kappa))));market=$(_cb_observation_display(o.market));" *
+    "kappa_D_prior=$(_cb_bias_display(o.kappa_D_prior))," *
+    "delta_D_prior=$(_cb_bias_display(o.delta_D_prior))," *
+    "delta_M_prior=$(_cb_bias_display(o.delta_M_prior)))"
+
+"""
+    MarketFusionDesign
+
+The joint arms' design and the market arm's design, each built by its own component unchanged,
+plus the market quotes rotated into supremacy `D̃ = log λ̃_h − log λ̃_a` and total
+`T̃ = log λ̃_h + log λ̃_a` for the biased arm. Uncovered rows hold finite dummies whose terms are
+multiplied by the market arm's exact-zero weights.
+"""
+struct MarketFusionDesign
+    joint::JointGammaPoissonDesign
+    market::MarketRateDesign
+    supremacy_obs::Vector{Float64}
+    total_obs::Vector{Float64}
+end
+
+"""
     FrankCopulaCorrelation
 
 Frank copula joint likelihood over the two negative-binomial marginals.
@@ -1304,7 +1387,8 @@ The observations whose SCORE GRID is the double-Poisson grid, and which therefor
 struct's type parameter reads it, and `_assemble` dispatches on it.
 """
 const CBPoissonFamilyObservation =
-    Union{PoissonObservation, JointGammaPoissonObservation, MarketRateObservation}
+    Union{PoissonObservation, JointGammaPoissonObservation, MarketRateObservation,
+          JointMarketFusionObservation}
 
 """
     CBNegBinFamilyObservation
@@ -1341,12 +1425,15 @@ observation_family(::JointGammaPoissonObservation)  = :poisson
 # carrying `r_h`/`r_a`, which `compute_score_grid!` evaluates as the 12x12 double-negative-binomial
 # grid. 1X2, every totals line and BTTS are then three partitions of that one tensor.
 observation_family(::JointGammaNegBinObservation)   = :negbin
+# Priced from the joint goals arm on the TRUE rates; the market arm is a fit-time likelihood.
+observation_family(::JointMarketFusionObservation)  = :poisson
 
 "Is the observation density implemented in the production builder engine?"
 observation_wired(::AbstractObservationConfig)     = false
 observation_wired(::PoissonObservation)            = true
 observation_wired(::MarketRateObservation)         = true
 observation_wired(::JointGammaPoissonObservation)  = true
+observation_wired(::JointMarketFusionObservation)  = true
 # The two scalar dispersion variants return a plain `(h, a)` pair, which the engine can
 # broadcast without a branch. `AdvancedVolatilityDispersion` returns per-team and per-month
 # volatility components that have to be re-assembled per match, and the `src` NegBin engine
@@ -1366,6 +1453,7 @@ observation_prefixes(::NegativeBinomialObservation) = [:disp]
 observation_prefixes(::DixonColesCorrelation)       = [:dc]
 observation_prefixes(::FrankCopulaCorrelation)      = [:cop]
 observation_prefixes(::JointGammaPoissonObservation) = [:obs]
+observation_prefixes(::JointMarketFusionObservation) = [:obs]
 # BOTH blocks. The joint NegBin arm owns the Gamma/kappa sites under `obs.` and the dispersion
 # sites under `disp.`, so the site-collision check has to know about both or a covariate named
 # `:disp` would silently collide with `disp.log_r`.
@@ -1405,6 +1493,8 @@ observation_features(o::JointGammaPoissonObservation) =
     _joint_observation_features(o.kappa, o)
 observation_features(o::JointGammaNegBinObservation) =
     CB_Features.AbstractFeatureConfig[o.feature]
+observation_features(o::JointMarketFusionObservation) =
+    vcat(observation_features(o.joint), observation_features(o.market))
 
 """
     observation_design(o, feature_set, n_matches, match_weights) -> Any
@@ -1496,3 +1586,12 @@ observation_design(o::JointGammaPoissonObservation, feature_set, n_matches::Int,
 observation_design(o::JointGammaNegBinObservation, feature_set, n_matches::Int,
                    match_weights::Vector{Float64}) =
     _joint_observation_design(o, feature_set, n_matches, match_weights)
+
+# Both parts are built by their own components' methods, unchanged, on the SAME decay weights.
+function observation_design(o::JointMarketFusionObservation, feature_set, n_matches::Int,
+                            match_weights::Vector{Float64})
+    joint = observation_design(o.joint, feature_set, n_matches, match_weights)
+    market = observation_design(o.market, feature_set, n_matches, match_weights)
+    return MarketFusionDesign(joint, market, market.log_h .- market.log_a,
+                              market.log_h .+ market.log_a)
+end
