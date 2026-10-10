@@ -11,7 +11,7 @@
 9. Learning κ_D makes predictions more compressed: the market-on-model slope is 1.277 with bias vs 1.106 without (GRW with bias: 1.483). κ_D absorbs the market's extra spread instead of passing it to the latent.
 10. Six of 60 interval rows have a circular class that disagrees with the prescribed noncircular class. None is a primary pair; the one prescribed noncircular "worse" (qs_bias − grw_bias, all markets, +0.00072) is n.d. under circular.
 11. The leakage audit passes: 3 arms × 40 folds have 0 market rows in target or after the cutoff, and all 1430 table rows are built from their own close only. All 120 folds have 0 divergences and R̂ ≤ 1.0194; the control's fold-40 tail ESS (330.7) is flagged.
-12. **Decision: no promotion.** fusion_qs_bias does not beat the market close on the prescribed interval, and the bias terms add nothing detectable. Phase 5 reproduction is pending.
+12. **Decision: no promotion.** fusion_qs_bias does not beat the market close on the prescribed interval, and the bias terms add nothing detectable. Phase 5's frozen-seed reproductions are byte-identical (REPRODUCIBILITY.md).
 
 ## Fixed panel, score law and traceability
 

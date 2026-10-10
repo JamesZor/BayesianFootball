@@ -46,7 +46,7 @@ References are used, never refit:
 | 2 smoke | PASS `79f003e0`, 6/6 hard checks per arm; grid approved as frozen | [PHASE2.md](PHASE2.md) |
 | 3 grid | PASS `dde8a441`, 2.7 h, no reruns | [PHASE3.md](PHASE3.md) |
 | 4 scoring, leakage, record | PASS `4f7ee7bc` / `9cf7d0de` | [PHASE4.md](PHASE4.md), [REPORT.md](REPORT.md) |
-| 5 reproduction | pending | — |
+| 5 reproduction | PASS `8998b355`: fold 1 of each arm byte-identical (chains and latents) | [REPRODUCIBILITY.md](REPRODUCIBILITY.md) |
 
 **Phase 4 scripts:**
 - [r06_score.jl](r06_score.jl): scores, intervals, common-panel 3-way scores, bias and r posteriors, and the SVG.
@@ -54,10 +54,12 @@ References are used, never refit:
 - [r08_record.jl](r08_record.jl): the register row and boards.
 - [phase4_gate.sh](phase4_gate.sh): the gate.
 
+**Phase 5 scripts:** [r07_reproduce.jl](r07_reproduce.jl) (one-fold frozen-seed refit and byte comparison) and [phase5_gate.sh](phase5_gate.sh).
+
 ## Decision
 
 **No promotion.** The primary comparison, fusion_qs_bias − market close, is −0.000325 1X2 LogLoss with noncircular 90% interval [−0.00707, 0.00113]: no detectable difference. The bias terms give no detectable gain over fusion_qs_nobias.
 
 The market's supremacy is wider than the fused latent's, not compressed: κ_D is 1.17 (QS) / 1.33 (GRW) and above 1 in all 40 folds. Learning κ_D therefore leaves the predictions more compressed. Neither δ_D nor δ_M is distinguishable from 0.
 
-Register status: `scored`. It becomes `completed` after Phase 5's frozen-seed reproduction.
+Register status: `completed`. The frozen-seed reproductions are byte-identical (Phase 5).

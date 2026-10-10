@@ -11,8 +11,8 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 4 COMPLETE (a1 PASS, `PHASE4.md`, `REPORT.md`). QF3_HANDOVER printed.
-- **Done:** Phases 0–3 (see PHASE0–3.md); Phase 3 runs fusion_qs_bias `26de19bf-fc29-4818-bfdf-7bf76535901f` (control), fusion_qs_nobias `5afdfeb3-abad-4d23-82fb-1bfe6babe797`, fusion_grw_bias `b2e5a527-e51e-4913-b7bb-e1b94a4d1ff2`. Phase 4: score+leakage at 4f7ee7bc, record at 9cf7d0de; references exact; primary −0.000325 1X2 LogLoss n.d.; κ_D > 1 in 40/40 folds; leakage PASS; register status `scored`; boards regenerated (additions only).
-- **Flags for manager:** control fold-40 tail ESS 330.7 (bias posteriors typical); qs_nobias recovery 21/27; 6 circular contradictions (none primary), incl. one noncircular "worse" (qs_bias − grw_bias, all markets) and a context-only noncircular "better" (grw_bias − close, all markets).
-- **Next action:** on manager approval, Phase 5: refit 1 fold per new arm from the frozen seed in a fresh REPL, byte-for-byte compare (wave 2 `r07_reproduce.jl` pattern), REPRODUCIBILITY.md, record status `completed` (`QSX3_RECORD_STATUS=completed`, r08 expects `phase5/<arm>/reproduction.csv`), then QF3_DONE. Background waits: `ssh -n` until-grep with an explicit long Bash timeout.
-- **Open beast panes:** none.
+- **Phase:** 5 COMPLETE — package COMPLETE (TODO 042 COMPLETED). QF3_DONE printed.
+- **Done:** Phases 0–4 (PHASE0–4.md, REPORT.md). Phase 3 runs fusion_qs_bias `26de19bf-fc29-4818-bfdf-7bf76535901f` (control), fusion_qs_nobias `5afdfeb3-abad-4d23-82fb-1bfe6babe797`, fusion_grw_bias `b2e5a527-e51e-4913-b7bb-e1b94a4d1ff2`. Phase 4: primary −0.000325 1X2 LogLoss n.d.; decision no promotion. Phase 5 a1 PASS at `8998b355` (REPRODUCIBILITY.md): fold 1 of each arm byte-identical (chains and latents, max abs 0), 123 grid checkpoints unchanged, runs count unchanged; register status `completed`.
+- **Flags carried into TODO 042 follow-ups:** control fold-40 tail ESS 330.7; qs_nobias recovery 21/27; 6 circular contradictions (none primary).
+- **Next action:** none in this package. Follow-ups are listed in TODO 042.
+- **Open beast panes:** none; beast checkout clean at `8998b355`.
