@@ -52,6 +52,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [041](041_wave_2_qs_on_joint_goals_xg_and_grw_qs_with_market_rate_observation.md) | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation | COMPLETED | P1 | pi | 2026-10-10 |
 | [042](042_wave_3_fusion_of_goals_xg_and_market_rates_with_learned_market_bias.md) | Wave 3: fusion of goals+xG and market rates with learned market bias | COMPLETED | P1 | claude | 2026-10-10 |
 | [043](043_wave_4_scenario_kelly_backtest_of_qs_marketobs_at_executable_prices.md) | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices | COMPLETED | P2 | claude | 2026-10-10 |
+| [044](044_wave_5_fix_the_qs_marketobs_scenario_kelly_paper_trading_config.md) | Wave 5: fix the qs_marketobs + scenario Kelly paper-trading config for 26/27 | IN_PROGRESS | P2 | claude | 2026-10-10 |
 <!-- TASKS:END -->
 
 **039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast
