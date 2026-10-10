@@ -19,8 +19,12 @@ discover the boundary by backtracking.
 """
 struct KellyLogUtility <: AbstractAllocator end
 
-function allocate(::KellyLogUtility, p::AbstractVector{Float64}, R::AbstractMatrix{Float64},
-                  exec::ExecutionConfig)
+allocate(::KellyLogUtility, p::AbstractVector{Float64}, R::AbstractMatrix{Float64},
+         exec::ExecutionConfig) = _allocate_log_utility(p, R, exec)
+
+# The legacy default starting point is unchanged; joint slates may need a smaller interior start.
+function _allocate_log_utility(p::AbstractVector{Float64}, R::AbstractMatrix{Float64},
+                               exec::ExecutionConfig; initial_stake::Float64 = 1e-3)
     n = size(R, 2)
     n == 0 && return (a = Float64[], kkt = 0.0, converged = true)
 
@@ -45,13 +49,72 @@ function allocate(::KellyLogUtility, p::AbstractVector{Float64}, R::AbstractMatr
         return g
     end
 
-    res = Optim.optimize(obj, grad!, zeros(n), fill(ub, n), fill(1e-3, n),
+    res = Optim.optimize(obj, grad!, zeros(n), fill(ub, n), fill(initial_stake, n),
                          Optim.Fminbox(Optim.LBFGS()))
     a = copy(Optim.minimizer(res))
     a[a .< exec.min_selection_stake] .= 0.0
 
     return (a = a, kkt = kkt_residual(a, p, R, exec), converged = Optim.converged(res))
 end
+
+export ScenarioKelly, ScenarioWeights
+
+"""
+    ScenarioKelly(; n_scenarios = 1000, seed = 20261010)
+
+Opt-in simultaneous-slate expected-log allocator. The caller supplies joint scoreline
+scenario rows in a commission-net payoff matrix and explicit `ScenarioWeights`.
+For equally weighted Monte Carlo scenarios this maximises mean(log(1 + R * a)),
+with nonnegative stakes, one slate budget <= 1 and ExecutionConfig per-bet caps.
+The solver uses the same budget barrier and minimum-stake trimming as KellyLogUtility.
+
+This is NOT a stock BookSpec plug-in: its builder calls allocation per fixture and
+has discarded shared posterior draws by daily grouping. A daily-slate adapter must
+construct correlated scenarios first, solve once, then apply the existing policy
+steps. Ordinary per-match probability vectors fail loudly rather than silently
+claiming joint posterior integration. No production defaults/layouts are changed.
+
+`n_scenarios` bounds the supplied scenario rows; the adapter also uses it and `seed`
+to generate reproducible outcomes. Shared posterior column alignment is the caller's
+responsibility, not something inferable from a payoff matrix or its row count.
+"""
+struct ScenarioKelly <: AbstractAllocator
+    n_scenarios::Int
+    seed::Int
+    function ScenarioKelly(; n_scenarios::Integer = 1000, seed::Integer = 20261010)
+        1 <= n_scenarios <= 1000 || throw(ArgumentError("scenario count must be in 1:1000"))
+        seed >= 0 || throw(ArgumentError("seed must be nonnegative"))
+        new(Int(n_scenarios), Int(seed))
+    end
+end
+
+"Explicit joint-scenario weights; a tag prevents accidental stock mean-grid allocation."
+struct ScenarioWeights <: AbstractVector{Float64}
+    values::Vector{Float64}
+    ScenarioWeights(p::AbstractVector{<:Real}) = new(collect(Float64, p))
+end
+Base.size(p::ScenarioWeights) = size(p.values)
+Base.getindex(p::ScenarioWeights, i::Int) = p.values[i]
+Base.IndexStyle(::Type{ScenarioWeights}) = Base.IndexLinear()
+
+function allocate(alloc::ScenarioKelly, p::ScenarioWeights, R::AbstractMatrix{Float64},
+                  exec::ExecutionConfig)
+    length(p) == size(R, 1) || throw(DimensionMismatch("scenario weights and payoff rows differ"))
+    1 <= length(p) <= alloc.n_scenarios || throw(ArgumentError("too many or no scenarios"))
+    all(isfinite, p) && all(>=(0.0), p) && abs(sum(p) - 1.0) <= 1e-10 ||
+        throw(ArgumentError("scenario weights must be a finite probability vector"))
+    all(isfinite, R) && all(>=(-1.0), R) || throw(ArgumentError("invalid net payoff matrix"))
+    0 < exec.budget <= 1 && 0 < exec.max_selection_stake <= 1 ||
+        throw(ArgumentError("scenario budget and per-bet cap must be in (0,1]"))
+    isfinite(exec.barrier_mu) && exec.barrier_mu >= 0 &&
+        0 <= exec.min_selection_stake <= exec.max_selection_stake ||
+        throw(ArgumentError("invalid scenario barrier or minimum stake"))
+    n = size(R, 2)
+    initial = n == 0 ? 1e-3 : min(1e-3, exec.max_selection_stake / 2, exec.budget / (2n))
+    return _allocate_log_utility(p, R, exec; initial_stake = initial)
+end
+allocate(::ScenarioKelly, ::AbstractVector, ::AbstractMatrix, ::ExecutionConfig) =
+    throw(ArgumentError("joint ScenarioWeights required; stock per-match builders are not scenario Kelly"))
 
 """
     kkt_residual(a, p, R, exec) -> Float64

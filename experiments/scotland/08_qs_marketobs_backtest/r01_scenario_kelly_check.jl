@@ -34,6 +34,8 @@ open(joinpath(QSBT1_LOG_DIR, "phase2_" * (QSBT1_NATIVE ? "native" : "prototype")
                 Base.run(`python3 $(joinpath(@__DIR__, "check_read_paths.py")) l01_scenario_kelly.jl l01_scenario_kelly_tests.jl r01_scenario_kelly_check.jl`)
                 println("NO_DATABASE_ACCESS — no touched tables; runtime DB audit not applicable")
                 println("VERIFICATION_CONFIG scenarios=1000 seed=20261010 native=", QSBT1_NATIVE)
+                println("RUNTIME version=", VERSION, " threads=", Threads.nthreads(),
+                        " BLAS=", BLAS.get_num_threads(), " package_root=", pkgdir(BayesianFootball))
                 Base.invokelatest(QSBacktestScenario.verify_scenario_allocator, QSBT1_OUTPUT;
                                   native = QSBT1_NATIVE, regression = QSBT1_NATIVE)
             catch e

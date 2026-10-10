@@ -1,0 +1,4 @@
+SOURCE l01_scenario_kelly.jl sha256=1335adb4af51164d95187be4fc26b3cdccaeda36fc0bf959a764e77afec0164a
+SOURCE l01_scenario_kelly_tests.jl sha256=c0094510f88bad66e0810161e79e7eab25c46e27d5cc6e87801cb87b909330bc
+SOURCE r01_scenario_kelly_check.jl sha256=01c0be24ca1139e88b6f4827234a2213c6baaa44cc47a2f14c9343f770fb10cf
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback

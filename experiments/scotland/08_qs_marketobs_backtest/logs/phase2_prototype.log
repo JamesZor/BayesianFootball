@@ -1,0 +1,9 @@
+SOURCE l01_scenario_kelly.jl sha256=1335adb4af51164d95187be4fc26b3cdccaeda36fc0bf959a764e77afec0164a
+SOURCE l01_scenario_kelly_tests.jl sha256=c0094510f88bad66e0810161e79e7eab25c46e27d5cc6e87801cb87b909330bc
+SOURCE r01_scenario_kelly_check.jl sha256=c307be58b9d1170eabce277543a16b0978895e7d7161729160fe66405497979c
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+NO_DATABASE_ACCESS — no touched tables; runtime DB audit not applicable
+VERIFICATION_CONFIG scenarios=1000 seed=20261010 native=false
+Test Summary:            | Pass  Total  Time
+Scenario Kelly prototype |   44     44  1.5s
+PROTOTYPE_PASS — validate before src graduation; no backtest ran
