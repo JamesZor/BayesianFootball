@@ -13,3 +13,8 @@
 - T−25 uses last-traded archive prices with 90-minute staleness, complete market and [0.9,1.10] overround gates. These are price proxies, not guaranteed executable touch prices or depth. No liquidity/fill claim.
 - If reproduction passes, build T−25/T−6h/T−24h on the same 710 IDs; report market-level fixture/selection coverage and staleness quantiles. If T−24h fixture coverage <50%, add fixed 360-minute sensitivity. No favourable subset.
 - Compute uses a new isolated remote worktree and an owned `pi_qsbt_*` persistent Julia REPL, 16 threads, BLAS 1. Existing beast sessions/worktrees remain untouched. Enforce PostgreSQL default_transaction_read_only via PGOPTIONS before any connection. Outputs only to files.
+
+## 2026-10-10 10:47Z — startup-only failure, before any gate
+
+- Attempt 1 stopped at the runner's access to the freshly included module with `MethodError` and Julia 1.12 world-age warning. No `REPRODUCTION_START`, fixture CSV, or backtest number was produced. Preserved `logs/phase0_inventory_attempt1.log`.
+- Move the loader include to top level with an actual module-binding guard; leave all scientific settings and tolerances unchanged. Add safe method/argument-type diagnostics without printing credential-bearing exception values. One corrected startup attempt only; a repeated identical failure stops the task.

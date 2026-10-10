@@ -22,15 +22,21 @@ mkpath(QSBT0_LOG_DIR)
 # ===================================================================
 # 3. Load saved OOS predictions, reproduce, then inventory snapshots
 # ===================================================================
+# Include at top level: Julia 1.12 module bindings inside a closure obey world age too.
+if !isdefined(Main, :QSBacktestPhase0)
+    include(joinpath(@__DIR__, "l00_phase0_inventory.jl"))
+end
 open(joinpath(QSBT0_LOG_DIR, "phase0_inventory.log"), "w") do io
     redirect_stdout(io) do
         redirect_stderr(io) do
             try
-                include(joinpath(@__DIR__, "l00_phase0_inventory.jl"))
                 Base.invokelatest(QSBacktestPhase0.run, QSBT0_RESULTS)
             catch err
                 # Do not print credential-bearing connection exceptions or environment URLs.
                 println("PHASE0_STOP exception_type=", typeof(err))
+                if err isa MethodError
+                    println("method=", err.f, " argument_types=", map(typeof, err.args))
+                end
                 for frame in stacktrace(catch_backtrace())
                     println(frame)
                 end
