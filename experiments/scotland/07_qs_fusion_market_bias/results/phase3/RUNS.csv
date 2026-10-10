@@ -1,0 +1,4 @@
+label,experiment,run_id,sampling_git_sha
+fusion_qs_bias,scottish_lower_qs_wave3_2426,26de19bf-fc29-4818-bfdf-7bf76535901f,dde8a441
+fusion_qs_nobias,scottish_lower_qs_wave3_2426,5afdfeb3-abad-4d23-82fb-1bfe6babe797,dde8a441
+fusion_grw_bias,scottish_lower_qs_wave3_2426,b2e5a527-e51e-4913-b7bb-e1b94a4d1ff2,dde8a441
