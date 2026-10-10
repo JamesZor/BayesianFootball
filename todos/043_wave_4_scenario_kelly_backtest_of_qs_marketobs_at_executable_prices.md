@@ -40,6 +40,8 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 
 - [2026-10-10 @pi] Source72cd5496 PASS exact historical reproduction: unit wealth2.515204600600047 /1127 bets/99 slates/608 books; committed CSV headline matches exactly, zero build errors, converged=true. Same710 IDs/T−25 book byte-identical to canonical; static gate PASS, SHOW off logged once, finally DB audit10/10 unchanged/byte-identical. OptionB raw reference2.207736087761667 /1172. All snapshot coverage/staleness complete: T−25 any=611/1X2=545; T−6h any=295/1X2=182; T−24h any=53/1X2=47; 360-minute sensitivity any=190/1X2=170 (denominator710). Canonical2.773493294562897 /1132 retained separately, wrong-target failure superseded, no rerun. Pane%453 closed; phase0 criterion met. STOP at boundary, no Phase1+. Overall task remains IN_PROGRESS pending manager continuation; PHASEBT_HANDOVER.
 
+- [2026-10-10 @pi] Manager accepted Phase0 and authorised allocator check/conditional Phase2. Phase1 audit complete with line references: per-match posterior-mean joint score-grid Kelly, coherent same-match payoff correlations; BakerMcHale per-match re-solves/scalar shrink; risk/cap do not jointly optimise daily expected log wealth. Shared posterior daily objective missing; Phase2 required. MatchBook/stake_slate do not retain/receive draw-level inputs, so pending confirmation of an opt-in experiment daily-slate adapter within src-allocator-only scope. No src changes/tests/DB/panes yet. T−6h and both labelled T−24h bounds remain low-coverage unpooled strata. Audit in PHASE1_ALLOCATOR_AUDIT.md and DECISIONS_LOG.md.
+
 ## Verification & Findings
 
 ### Current ruling 3 attempt — Phase0 accepted

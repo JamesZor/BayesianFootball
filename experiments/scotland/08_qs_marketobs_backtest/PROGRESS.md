@@ -1,6 +1,7 @@
 # Wave 4 progress
 
-- Phase 0: PASS, definition of done met. STOP at boundary: PHASEBT_HANDOVER.
+- Current: Phase1 audit COMPLETE, joint daily posterior-draw Kelly MISSING. User approved opt-in experiment adapter. Phase2 prototype implemented, not yet executed; src untouched pending prototype validation. Audit source e4b95a19. No current panes/jobs/DB connections.
+- Phase0: PASS and accepted by manager; evidence unchanged.
 - Historical gate: source72cd5496 reproduces 2.515204600600047 unit wealth /1127 bets/99 slates/608 books, matching the committed experiment07 m12/raw/B0_canonical/prod headline exactly; converged=true, zero build errors. Required tolerance unchanged. Recipe/source lines in HISTORICAL_REPRODUCTION_RECIPE.md.
 - Canonical measurement retained without rerun: source8018dacf, wealth2.773493294562897/1132. Wrong target association superseded under ruling3. Historical is validation only, not another Phase3 policy.
 - Fixed Option B raw m12 reference: wealth2.207736087761667/1172. No fitted calibration, tuning, fitting or new src changes.
@@ -11,4 +12,7 @@
 - Checkout collision resolved without force: nine owned untracked canonical outputs hash-matched to committed copies, archived at /root/BF_runs/qsbt_canonical_artifacts_8018dacf. Cache hash unchanged: c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4.
 - Current README/REPORT/HANDOVER and chronology/arm statuses updated; TODO043 Phase0 criterion checked, overall IN_PROGRESS/paused for manager. Tracker/diff/result checks pass; final evidence commit/push recorded by git log.
 - Price-source caveat: last-traded archive prices, not verified executable touch/depth. Historical policy selected using these same seasons. Phase0 references use existing KellyLogUtility, not yet validated scenario-native allocation.
-- Later phases NOT_RUN: allocator audit/change, five-model grid, CLV/liquidity, bootstrap and final questions. No qs_marketobs profitability claim. Await manager-authorised Phase1 continuation.
+- Phase1 finding: per-match posterior-mean joint score grid, coherent same-match markets; BakerMcHale per-match draw re-solves/scalar shrink, downstream scalar risk/cap. Single-match mean-grid integration is valid; missing is simultaneous daily objective and shared-draw predictive cross-match dependence. MatchBook/stake_slate interfaces discard/do not receive joint draw information.
+- Next: commit/push prototype, owned beast REPL verification with1000 scenarios/seed20261010; then src graduation/native checks and pure portfolio regression only if prototype passes. Stop at any failed gate. Existing pipeline/defaults/layout untouched; no Phase3 authorisation. New l01/r01 pair and l01 test helper; static read gate PASS.
+- Coverage rule: T−6h low-coverage subset; T−24h90-minute primary and360-minute sensitivity separately labelled low-coverage subsets. Never pool with T−25m or substitute sensitivity for primary; future paired metrics/intervals within each stratum.
+- Later phases NOT_RUN: scenario allocator implementation/tests, five-model grid, CLV/liquidity, bootstrap and final questions. No qs_marketobs profitability claim.

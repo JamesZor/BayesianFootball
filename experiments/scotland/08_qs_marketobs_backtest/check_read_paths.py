@@ -11,7 +11,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parent
-FILES = ("l00_phase0_inventory.jl", "r00_phase0_inventory.jl")
+FILES = tuple(sys.argv[1:]) or ("l00_phase0_inventory.jl", "r00_phase0_inventory.jl")
 FORBIDDEN_SQL = re.compile(r"\b(?:INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRUNCATE|MERGE|CALL|COPY|GRANT|REVOKE)\b", re.I)
 FORBIDDEN_CALL = re.compile(r"\b(?:save\w*|record\w*|persist\w*|extend\w*|migrate\w*|ensure\w*|fit_model|run_tasks|run_experiment|_db_exec\w*|load_datastore_sql|load_datastore_cached)\s*\(")
 TRAINING_CALL = re.compile(r"BF\.Training\.([\w.]+)\s*\(")
