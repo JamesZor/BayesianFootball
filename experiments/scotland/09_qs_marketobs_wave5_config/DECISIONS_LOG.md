@@ -80,3 +80,27 @@ launching Claude session. Scope set by James.
   for Phase 1 is m12 canonical's 24/25 MDD **−13.595231252994628%** (`results/phase0/phase0_half_check.csv`).
 - `results/phase0/phase0_gate_daily.csv` holds the two wave-4 configs' full-period daily paths (already
   public in wave 4's `phase3_daily.csv`); no wave-5 candidate has been scored on either half.
+
+## 2026-10-10 — Phase 1: decisions written before any basket is scored
+
+- **Per-direction table.** The ungated run solves every canonical-markets leg jointly and stakes
+  every direction at a flat 0.25 (brief: "every direction eligible at trust 0.25"), λ 23. The
+  canonical SK row uses the same solve with the canonical overlay (wave-4 style). m12 canonical
+  is context. Columns follow EDA §0/§2: money rescaled by the slate's opening bankroll; Kelly ROI
+  = Σpnl_unit/Σstake_unit; flat ROI = mean per-bet return per unit staked; cap share = share of
+  rescaled turnover; efficiency = direction Kelly ROI / whole-run Kelly ROI; standalone MDD = the
+  direction's own compounding stream (Σ of its pnl fractions per slate), plus its drawdown in
+  units; CLV against the T−20m→kickoff TWA close (wave-4 `close_index`, selection ids only).
+- **B4 rule (fixed now, applied by code):** the EDA §2 KEEP rule on the ungated table:
+  Kelly ROI > 0 AND efficiency ≥ 0.50 AND bets ≥ 100. If no direction passes, B4 is not scored.
+  The §5.1 caveat stands: the A/B (λ curve at matched MDD) decides, not the rule.
+- **Explored baskets (fixed now, to keep the count of looks honest):** B5 = all 13 directions
+  (ruling-4 tiers); B6 = Home + U2.5 (the two 0.35 tiers). Total baskets looked at = 6 (5 if B4
+  is empty or duplicates another basket; a duplicate is still counted as a look).
+- **Matched λ.** Grid ascending; the chosen λ is the smallest λ with MDD ≥ target (MDD is
+  negative, so "within target") at it and every larger λ. A basket that misses the target at λ 30
+  is infeasible and cannot be selected.
+- **Ruling 6 ties.** If several smaller baskets fall within 0.5×10⁻³/day of the best g, take the
+  one with the fewest directions; ties on size go to the higher g.
+- **Target re-check.** Phase 1 recomputes m12 canonical's 24/25 MDD and stops unless it equals
+  −13.595231252994628 exactly.

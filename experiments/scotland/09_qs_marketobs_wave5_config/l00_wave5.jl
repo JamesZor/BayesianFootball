@@ -313,5 +313,6 @@ function with_audit(f, out::AbstractString, label::AbstractString, files)
 end
 
 include(joinpath(@__DIR__, "l01_phase0_gate.jl"))
+include(joinpath(@__DIR__, "l02_phase1_select.jl"))
 
 end # module
