@@ -4,7 +4,7 @@
 |---|---|
 | ID | 043 |
 | Title | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P2 |
 | Assignee | pi |
 | Created | 2026-10-10 |
@@ -31,6 +31,8 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 
 - [2026-10-10 @pi] Claimed Phase 0 in `BayesianFootball-qs-experiment`, branch `exp/qs-goal-vs-market`. Recorded exact canonical defaults and experiment 07 historical target before running any reproduction; Option B is a distinct configuration. Next: test parity on beast and stop at failure or boundary.
 - [2026-10-10 @pi] STOP at Phase 0 read-only-session assertion on corrected startup (`9249fbcd`). No fit loaded or numerical backtest computed. Startup world-age failure preserved separately. Dependency: Claude authorises verified read-only connection setup and resolves canonical/Option B/historical policy discrepancy. Owned beast pane `%451` closed; reports/logs handed over. No acceptance criterion closed.
+
+- [2026-10-10 @pi] Manager authorised Phase 0 resume: static read-path verification plus before/after table-wide DB audit replaces session-default assertion; actual SHOW value logged once, no PGOPTIONS debugging. Canonical alone targets 1127 bets / 2.5152 ±0.00005. Both canonical and option_b_live inventories reported; raw probabilities, no fitted calibration; plain_kelly 0.25 retained. Updated loader to audit even failure exits and to deserialize cache with no SQL fallback. Static gate passes, four injected negative fixtures rejected.
 
 ## Verification & Findings
 

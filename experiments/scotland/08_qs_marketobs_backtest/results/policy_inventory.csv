@@ -1,0 +1,4 @@
+policy,markets,price,allocator,shrink,kelly_fraction,trust,lambda,slate_cap,commission,per_bet_cap,min_stake,budget,grouping,filter,calibration
+canonical,1X2|BTTS|OU0.5|OU1.5|OU2.5|OU3.5,DeArb,KellyLogUtility,BakerMcHale,,Home=0.35|Under2.5=0.35|Draw=0.25|Away=0.25|else=0,23,0.25,0.02,0.50,0.0001,0.99,DailySlate,KeepAll,none_raw_probabilities
+option_b_live,1X2|BTTS|OU0.5|OU1.5|OU2.5|OU3.5,DeArb,KellyLogUtility,FractionalKelly,0.30,Home=1|Under2.5=1|Draw=1/1.4|Away=1/1.4|Over1.5=1/1.4|else=0,28,0.25,0.02,0.50,0.001,0.99,DailySlate,KeepAll,none_raw_probabilities
+plain_kelly,1X2|BTTS|OU2.5,DeArb,KellyLogUtility,FractionalKelly,0.25,FlatTrust=1,23,0.25,0.02,0.50,0.0001,0.99,DailySlate,KeepAll,none_raw_probabilities

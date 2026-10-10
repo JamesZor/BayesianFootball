@@ -1,10 +1,10 @@
 # 08 — qs_marketobs executable-price backtest
 
-**Phase 0 BLOCKED:** the experiment DB connection failed the read-only-session assertion.
-No saved fit was loaded and no reproduction, snapshot coverage or betting result was computed.
-The policy inventory is complete; the backtest is not. No new fits or database writes occurred.
-TODO 043 remains open; the owned beast pane is closed. See [REPORT.md](REPORT.md) and
-[HANDOVER.md](HANDOVER.md) for the evidence and decisions required before resuming.
+**Phase 0 resumed under manager rulings:** canonical is the reproduction target;
+option_b_live is a separate raw-probability policy; fitted calibration is out of scope.
+Static read-path checks plus before/after DB audits replace the previous session assertion.
+Numerical reproduction and coverage remain pending; no Phase 1 work is authorised.
+The old blocked report/handback is historical and will be updated after this run.
 
 ## Scope and source of truth
 
@@ -18,8 +18,8 @@ The frozen stack and distinction between canonical defaults, Option B and experi
 - Loader: [l00_phase0_inventory.jl](l00_phase0_inventory.jl), definitions only.
 - Runner: [r00_phase0_inventory.jl](r00_phase0_inventory.jl), Phase 0 only, no server or ledger.
 - Run in an owned beast persistent tmux REPL with `julia --project -t 16 -i`.
-- The runner pins cores, fixes BLAS to 1, and enforces PostgreSQL read-only sessions.
-- Outputs: `results/phase0_*`; beast log: `/root/BF_runs/logs/qs_backtest/phase0_inventory.log`.
+- The runner pins cores, fixes BLAS to 1, statically checks read paths and audits DB counts/timestamp maxima before/after (including failure exits). See [READ_PATH_AUDIT.md](READ_PATH_AUDIT.md).
+- Outputs: `results/phase0_*`; beast log: `/root/BF_runs/logs/qs_backtest/phase0_resume.log`.
 - Failed reproduction prevents subsequent snapshots and every later phase from running.
 
 ## Interpretation limits

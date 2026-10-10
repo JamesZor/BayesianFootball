@@ -12,11 +12,10 @@ pinthreads(:cores)
 @assert Threads.nthreads() == 16
 
 # ===================================================================
-# 2. Fixed paths and read-only database sessions
+# 2. Fixed paths; manager-authorised static read paths plus before/after audit
 # ===================================================================
 const QSBT0_LOG_DIR = "/root/BF_runs/logs/qs_backtest"
 const QSBT0_RESULTS = joinpath(@__DIR__, "results")
-ENV["PGOPTIONS"] = "-c default_transaction_read_only=on"
 mkpath(QSBT0_LOG_DIR)
 
 # ===================================================================
@@ -26,7 +25,7 @@ mkpath(QSBT0_LOG_DIR)
 if !isdefined(Main, :QSBacktestPhase0)
     include(joinpath(@__DIR__, "l00_phase0_inventory.jl"))
 end
-open(joinpath(QSBT0_LOG_DIR, "phase0_inventory.log"), "w") do io
+open(joinpath(QSBT0_LOG_DIR, "phase0_resume.log"), "w") do io
     redirect_stdout(io) do
         redirect_stderr(io) do
             try
@@ -36,6 +35,10 @@ open(joinpath(QSBT0_LOG_DIR, "phase0_inventory.log"), "w") do io
                 println("PHASE0_STOP exception_type=", typeof(err))
                 if err isa MethodError
                     println("method=", err.f, " argument_types=", map(typeof, err.args))
+                elseif err isa AssertionError
+                    println("assertion=", err.msg)
+                elseif err isa ErrorException && startswith(err.msg, "PHASE0_REPRODUCTION_FAILED")
+                    println(err.msg)
                 end
                 for frame in stacktrace(catch_backtrace())
                     println(frame)
@@ -46,4 +49,4 @@ open(joinpath(QSBT0_LOG_DIR, "phase0_inventory.log"), "w") do io
         end
     end
 end
-println("Phase 0 stopped; inspect /root/BF_runs/logs/qs_backtest/phase0_inventory.log")
+println("Phase 0 stopped; inspect /root/BF_runs/logs/qs_backtest/phase0_resume.log")
