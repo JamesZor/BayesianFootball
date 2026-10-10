@@ -37,6 +37,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 
 [2026-10-10 @claude] Created; Phase 0 started.
 [2026-10-10 @claude] Phase 0 PASS at 122cbc37: 16/16 gates in fresh beast REPLs, pins match (see 07_.../PHASE0.md).
+[2026-10-10 @claude] Phase 1 PASS at 01f42219 (PHASE1.md): JointMarketFusionObservation; fusion tests 4256/4256, exact AD ≤ 2.3e-15, Richardson ≤ 2.6e-22, 0 B tapes, recovery 84/99 pooled (qs_nobias 21/27 flagged). Phase 0 count gap reconciled.
 Include session/worktree when claiming. Example (replace with actual facts):
 
 <!-- - [2026-10-09 @pi] Claimed in session <id>, worktree <path>; next action: ... -->
@@ -46,4 +47,3 @@ Include session/worktree when claiming. Example (replace with actual facts):
 Not run yet. Record commands, pass/fail or skips, wall time, benchmark metrics,
 R-hat / bulk and tail ESS / divergences / predictive scores as applicable, and
 links to artifacts and immutable run IDs. Distinguish hypotheses from findings.
-- 2026-10-10: Phase 1 PASS at 01f42219 (PHASE1.md): JointMarketFusionObservation; fusion tests 4256/4256, exact AD ≤ 2.3e-15, Richardson ≤ 2.6e-22, 0 B tapes, recovery 84/99 pooled (qs_nobias 21/27 flagged). Phase 0 count gap reconciled.
