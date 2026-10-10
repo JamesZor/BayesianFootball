@@ -107,10 +107,11 @@ function phase1(out, target)
     println("M12_CONTEXT g=", mrow.g, " mdd=", mrow.mdd_pct, " target=", target)
     mrow.mdd_pct == target || error("m12 canonical 24/25 MDD no longer equals the Phase 0 target")
 
-    keep = filter(r -> r.run == "qs_sk_ungated_t025_l23" && r.direction != "ALL" && r.verdict == "KEEP", dir_rows)
+    keep = dtab.direction[(dtab.run .== "qs_sk_ungated_t025_l23") .& (dtab.direction .!= "ALL") .&
+                          (dtab.verdict .== "KEEP")]
     lab2key = Dict(direction_label(k) => k for k in dirs)
-    b4 = [lab2key[r.direction] for r in keep]
-    println("B4_RULE keep=", join([r.direction for r in keep], ","))
+    b4 = Tuple{String,Float64,Symbol}[lab2key[d] for d in keep]
+    println("B4_RULE keep=", join(keep, ","))
     flush(stdout)
 
     # 2. Lambda curve per basket (one solve per basket; lambda does not enter the solve).
