@@ -206,7 +206,7 @@ function cell_tables(key, result, books, report, close, season_of)
         pnl_unit = money_pnl, mdd_pct = s.mdd, sharpe = s.sharpe, sharpe_ann = s.sharpe_ann,
         calmar = s.calmar, n_slates = s.n_slates, n_books = length(books),
         n_build_errors = report === nothing ? 0 : length(report.errored),
-        converged = report === nothing ? missing : report.converged, clv_stats(bets)...)
+        converged = report === nothing ? missing : something(report.converged, missing), clv_stats(bets)...)
     markets = NamedTuple[]
     for g in DF.groupby(bets, :market; sort = true)
         st, pl = sum(g.stake_unit), sum(g.pnl_unit)
