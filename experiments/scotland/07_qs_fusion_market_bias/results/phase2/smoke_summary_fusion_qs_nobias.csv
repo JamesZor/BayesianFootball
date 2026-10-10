@@ -1,0 +1,2 @@
+candidate,run_id,recipe_hash,git_sha,root_seed,wall_seconds,hard_pass,convergence_status,max_rhat,min_ess_bulk,min_ess_tail,divergences,divergence_rate,estimated_grid_seconds,performance_status
+fusion_qs_nobias,f74d00ed-d56b-49aa-a290-2f7c21925f7c,58a630b0fc12ab2a01adc163f30d2a2a1f87eca89358dab807185bdebacf8d52,79f003e0,20261152,257.92191791534424,true,fail,1.1029145203491406,24.262618966802712,24.000926045916056,0,0.0,15922.26259695,review
