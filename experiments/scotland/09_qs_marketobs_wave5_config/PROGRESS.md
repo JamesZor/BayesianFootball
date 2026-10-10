@@ -2,7 +2,7 @@
 
 Brief: `experiments/claude_qs_wave5_config_brief.md`. Sentinels: W5_HANDOVER / W5_BLOCKED / W5_DONE.
 
-## Phase 0 — setup and gate (PASS, awaiting manager)
+## Phase 0 — setup and gate (PASS, accepted by manager)
 - [x] Folder, TODO 044 (registry row), DECISIONS_LOG (rulings 1–10 + implementation decisions).
 - [x] Runner: `l00_wave5.jl` (module QSWave5), `l01_phase0_gate.jl`, entry `r00_phase0_gate.jl`.
 - [x] Beast checkout `/root/BF_runs/qs_wave5` at `21f3514f`; datastore cache copied (sha256 c786e2fc…, same as wave 4).
@@ -12,6 +12,15 @@ Brief: `experiments/claude_qs_wave5_config_brief.md`. Sentinels: W5_HANDOVER / W
   - 24/25-only runs equal the full runs' first 49 slates exactly (bankroll path, MDD, bets: m12 2.08953 / 575, qs SK 1.65279 / 503).
   - Basket column-subset == problem rebuilt on leg-filtered books (B1, B2; 6 days each).
   - Seal refuses the evaluation half. DB audit unchanged (10 tables).
+
+## Phase 1 — selection half, 24/25 only (DONE, awaiting manager release)
+- [x] Runner `l02_phase1_select.jl` + `r01_phase1_select.jl`; final run `6d779be2` (log `logs/phase1.log`;
+  attempt 1 `ccddaa79` stopped on a B4-filter bug, `logs/phase1_attempt1.log`). DB audit unchanged both runs.
+- [x] Per-direction table `results/phase1/phase1_directions.csv` (ungated flat 0.25, canonical SK, m12).
+- [x] λ curves for 6 baskets `phase1_lambda_curve.csv`; matched λ + selection `phase1_selection.csv`;
+  sensitivity `phase1_sensitivity.csv`; per-day solve diagnostics `phase1_basket_diag.csv`.
+- [x] Selected **B1_canonical at λ 12** (g 17.520×10⁻³, MDD −13.07%); fallback B1 at λ 23. `FREEZE.md` pushed.
+- [ ] Phase 2 waits for the manager. Runner must call `QSWave5.release!` (FREEZE.md committed).
 
 ## Beast
 - Checkout: `/root/BF_runs/qs_wave5` (detached worktree of `/root/BayesianFootball`).

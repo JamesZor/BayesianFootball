@@ -104,3 +104,36 @@ launching Claude session. Scope set by James.
   one with the fewest directions; ties on size go to the higher g.
 - **Target re-check.** Phase 1 recomputes m12 canonical's 24/25 MDD and stops unless it equals
   −13.595231252994628 exactly.
+
+## 2026-10-10 — Phase 1 result (24/25 only; runner `6d779be2`, log `logs/phase1.log`)
+
+- Attempt 1 (`ccddaa79`) stopped after writing `phase1_directions.csv` on a FieldError in the B4
+  filter (it read `verdict` from the raw rows); no basket was scored. Fixed in `6d779be2` and rerun
+  from scratch; the rerun's direction table is the one committed. DB audit unchanged on both runs.
+- Target re-check: m12 canonical 24/25 MDD = −13.595231252994628 (equal). B4 rule kept away, home.
+- **Baskets looked at: 6** (all scored on the same 49 selection days; g = mean daily log growth):
+
+  | Basket | Directions | Matched λ | g ×10⁻³ | MDD % | g@λ23 ×10⁻³ | MDD@λ23 % |
+  |---|---|---:|---:|---:|---:|---:|
+  | B1_canonical | H, D, A, U2.5 | 12 | 17.520 | −13.07 | 9.903 | −7.14 |
+  | B2_1x2 | H, D, A | 14 | 14.742 | −12.71 | 9.527 | −7.99 |
+  | B3_1x2_ou25 | H, D, A, O2.5, U2.5 | 14 | 17.087 | −12.16 | 10.964 | −7.64 |
+  | B4_eda_keep | H, A | 14 | 12.943 | −13.01 | 8.365 | −8.21 |
+  | B5_all13 | all 13 | 16 | 13.826 | −12.50 | 9.958 | −8.92 |
+  | B6_home_u25 | H, U2.5 | 16 | 6.062 | −12.66 | 4.349 | −9.17 |
+
+- **Ruling 6:** best g at matched λ = B1 (17.520). Smaller baskets within 0.5×10⁻³: none (B2
+  14.742, B4 12.943, B6 6.062). **Selected: B1_canonical at λ 12.**
+- Grid caveat: B3 beats B1 at every common λ, but its MDD at λ 12 (−13.78) misses the target by
+  0.19 pp, so its matched λ is 14 and B1 wins by 0.43×10⁻³/day. The coarse grid decides between B1
+  and B3; the rule was applied as written.
+- At λ 12, B1's budget binds on 12% of days, the 0.25 cap on 0%, and the drawdown constraint is
+  active on 65%; λ is the active dial. Mean exposure 7.6%.
+- Ruling-4 sensitivity (canonical basket, λ 23): wave-4 all-legs-then-trust g 10.254×10⁻³, MDD
+  −7.81, budget binding 41% of days, mean joint raw 0.727; basket-only legs g 9.903×10⁻³, MDD −7.14,
+  budget binding 12%, mean joint raw 0.628. Filtering frees the budget but does not raise g at λ 23
+  on 24/25 (−0.35×10⁻³/day).
+- Per-direction (ungated, flat 0.25, λ 23): home and away carry the book (Kelly ROI +29.8%, eff
+  1.52–1.53); draw Kelly ROI −4.9% (flat +13.7%); U2.5 +18.6% (eff 0.95, 54 bets); O2.5 +13.8%
+  (65 bets); every other OU line and BTTS-yes negative; BTTS-no +38.9% on 21 bets. The A/B
+  disagrees with the per-direction rule: B4 (the rule's H + A, dropping draw and U2.5) is 4.6×10⁻³/day below B1.
