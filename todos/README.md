@@ -51,7 +51,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [040](040_quality_style_goal_model_vs_market_model_40_fold_scottish_lower_experiment.md) | Quality/style goal model vs market model: 40-fold Scottish Lower experiment | COMPLETED | P1 | pi | 2026-10-09 |
 | [041](041_wave_2_qs_on_joint_goals_xg_and_grw_qs_with_market_rate_observation.md) | Wave 2: QS on joint goals+xG and GRW/QS with market-rate observation | COMPLETED | P1 | pi | 2026-10-10 |
 | [042](042_wave_3_fusion_of_goals_xg_and_market_rates_with_learned_market_bias.md) | Wave 3: fusion of goals+xG and market rates with learned market bias | COMPLETED | P1 | claude | 2026-10-10 |
-| [043](043_wave_4_scenario_kelly_backtest_of_qs_marketobs_at_executable_prices.md) | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices | IN_PROGRESS | P2 | pi | 2026-10-10 |
+| [043](043_wave_4_scenario_kelly_backtest_of_qs_marketobs_at_executable_prices.md) | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices | IN_PROGRESS | P2 | Claude CLI | 2026-10-10 |
 <!-- TASKS:END -->
 
 **039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast
