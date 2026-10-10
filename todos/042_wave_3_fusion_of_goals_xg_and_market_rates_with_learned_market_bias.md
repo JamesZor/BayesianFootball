@@ -25,7 +25,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 - [x] Phase 0: branch health on the beast, frozen table SHA confirmed.
 - [x] Phase 1: fusion observation in src with the six test groups passing (likelihood 1e-12, bias-off equality, exact AD 1e-10 + FD convergence, 0 B tapes, 3-seed recovery gate).
 - [x] Phase 2: candidates + smoke for fusion_qs_bias / fusion_qs_nobias / fusion_grw_bias; manager approval before grid.
-- [ ] Phase 3: 40-fold grid, R̂ ≤ 1.05 rerun policy, divergences ≤ 0.1%.
+- [x] Phase 3: 40-fold grid, R̂ ≤ 1.05 rerun policy, divergences ≤ 0.1%.
 - [ ] Phase 4: scoring with wave-2 metric set and intervals, bias posteriors, leakage audit, README/REPORT/leaderboard.
 - [ ] Phase 5: one-fold byte-for-byte reproduction per arm.
 
@@ -39,6 +39,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 [2026-10-10 @claude] Phase 0 PASS at 122cbc37: 16/16 gates in fresh beast REPLs, pins match (see 07_.../PHASE0.md).
 [2026-10-10 @claude] Phase 1 PASS at 01f42219 (PHASE1.md): JointMarketFusionObservation; fusion tests 4256/4256, exact AD ≤ 2.3e-15, Richardson ≤ 2.6e-22, 0 B tapes, recovery 84/99 pooled (qs_nobias 21/27 flagged). Phase 0 count gap reconciled.
 [2026-10-10 @claude] Phase 2 smoke PASS at 79f003e0 (PHASE2.md): 6/6 hard checks on all three arms, 0 divergences; short-smoke R̂ 1.081/1.103/1.059 (review); ETA 13.343 h. Manager approved the grid as frozen.
+[2026-10-10 @claude] Phase 3 grid a1 PASS at dde8a441 (PHASE3.md), 2.7 h: fusion_qs_bias 26de19bf (control), fusion_qs_nobias 5afdfeb3, fusion_grw_bias b2e5a527; max R̂ 1.019/1.012/1.015, no reruns, 0 divergences, control score parity exact; tail ESS < 400 only control fold 40 (330.7).
 Include session/worktree when claiming. Example (replace with actual facts):
 
 <!-- - [2026-10-09 @pi] Claimed in session <id>, worktree <path>; next action: ... -->

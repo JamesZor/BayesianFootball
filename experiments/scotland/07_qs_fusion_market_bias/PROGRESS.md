@@ -11,8 +11,8 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 3 RUNNING — `phase3_gate.sh a1` at dde8a441 launched 01:04 UTC 2026-10-10; queue check PASS (10/10); fusion_qs_bias PASS 01:59 UTC (run `26de19bf-fc29-4818-bfdf-7bf76535901f`, 54 min, max R̂ 1.0194, no reruns, 0 divergences, tail ESS < 400 on fold 40 only: 330.7); fusion_qs_nobias PASS 02:53 UTC (run `5afdfeb3-abad-4d23-82fb-1bfe6babe797`, 53 min, max R̂ 1.0123, no reruns, 0 divergences, min tail ESS 764.6; control score parity exact, 664 rows); fusion_grw_bias started 02:53 UTC.
-- **Done:** Phase 0; Phase 2 smoke a1 (UUIDs in `PHASE2.md`); Phase 1 fusion observation at 01f42219, all 8 gates pass (attempt a1); evidence in `results/phase1/`.
-- **Flag for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%).
-- **Next action:** wait for `PHASE3_GRIDS_PASS` / `PHASE3_BLOCKED` in `/root/BF_runs/logs/qs_experiment_w3/phase3_launcher_a1.log` (background `ssh -n` until-grep with an explicit long Bash timeout: without one, background commands die at the 120 s default). On a block, resume with a fresh attempt label (checkpoints and receipts resume). Full ETA 13.343 h.
-- **Open beast panes:** `claude_qsx3_p3_<arm>` (one at a time, owned by the gate).
+- **Phase:** 3 COMPLETE (grid a1 PASS, `PHASE3.md`). QF3_HANDOVER printed.
+- **Done:** Phase 0; Phase 1 at 01f42219 (`PHASE1.md`); Phase 2 smoke a1 (`PHASE2.md`); Phase 3 grid a1 at dde8a441, 01:04–03:48 UTC: fusion_qs_bias `26de19bf-fc29-4818-bfdf-7bf76535901f` (control), fusion_qs_nobias `5afdfeb3-abad-4d23-82fb-1bfe6babe797`, fusion_grw_bias `b2e5a527-e51e-4913-b7bb-e1b94a4d1ff2`; no reruns, 0 divergences, control parity exact; evidence `results/phase3/`.
+- **Flags for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%); control fold 40 tail ESS 330.7 < 400 (R̂ 1.0194, not rerun).
+- **Next action:** on manager approval, Phase 4 scoring (wave 2 `r06_score.jl` / `r06_interval_audit.jl` / `r10_leakage_audit.jl` pattern), bias posteriors by fold (read δ_M and log κ jointly). Background waits: `ssh -n` until-grep with an explicit long Bash timeout.
+- **Open beast panes:** none.

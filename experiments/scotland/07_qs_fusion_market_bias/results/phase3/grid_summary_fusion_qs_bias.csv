@@ -1,0 +1,2 @@
+candidate,primary_run_id,final_run_id,rerun_folds,max_rhat,min_ess_tail,git_sha
+fusion_qs_bias,26de19bf-fc29-4818-bfdf-7bf76535901f,26de19bf-fc29-4818-bfdf-7bf76535901f,,1.019383038336919,330.7449317873221,dde8a441
