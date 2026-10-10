@@ -1,0 +1,4 @@
+arm,point,high_precision_ad_relative_error
+qs_nobias,1,7.142381968427414e-16
+qs_nobias,2,2.8409101607156357e-16
+qs_nobias,3,3.1881949624912e-16

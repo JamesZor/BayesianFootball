@@ -23,7 +23,7 @@ D = log λ_h − log λ_a and M = mean log-rate. Priors κ_D ~ LogNormal(0, 0.2)
 ## Acceptance Criteria
 
 - [x] Phase 0: branch health on the beast, frozen table SHA confirmed.
-- [ ] Phase 1: fusion observation in src with the six test groups passing (likelihood 1e-12, bias-off equality, exact AD 1e-10 + FD convergence, 0 B tapes, 3-seed recovery gate).
+- [x] Phase 1: fusion observation in src with the six test groups passing (likelihood 1e-12, bias-off equality, exact AD 1e-10 + FD convergence, 0 B tapes, 3-seed recovery gate).
 - [ ] Phase 2: candidates + smoke for fusion_qs_bias / fusion_qs_nobias / fusion_grw_bias; manager approval before grid.
 - [ ] Phase 3: 40-fold grid, R̂ ≤ 1.05 rerun policy, divergences ≤ 0.1%.
 - [ ] Phase 4: scoring with wave-2 metric set and intervals, bias posteriors, leakage audit, README/REPORT/leaderboard.
@@ -46,3 +46,4 @@ Include session/worktree when claiming. Example (replace with actual facts):
 Not run yet. Record commands, pass/fail or skips, wall time, benchmark metrics,
 R-hat / bulk and tail ESS / divergences / predictive scores as applicable, and
 links to artifacts and immutable run IDs. Distinguish hypotheses from findings.
+- 2026-10-10: Phase 1 PASS at 01f42219 (PHASE1.md): JointMarketFusionObservation; fusion tests 4256/4256, exact AD ≤ 2.3e-15, Richardson ≤ 2.6e-22, 0 B tapes, recovery 84/99 pooled (qs_nobias 21/27 flagged). Phase 0 count gap reconciled.

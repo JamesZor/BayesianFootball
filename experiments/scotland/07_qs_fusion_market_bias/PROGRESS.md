@@ -11,7 +11,8 @@ outputs `/root/BF_runs/qs_experiment_w3_out/`. Namespace `scottish_lower_qs_wave
 
 ## Current
 
-- **Phase:** 1 (fusion observation), in progress. Phase 0 PASS and accepted by the manager (`PHASE0.md`).
-- **Done:** Phase 0; the 3815 vs 3831 MarketRateObservation count reconciled (PHASE0.md addendum).
-- **Next action:** implement `JointMarketFusionObservation` in `src/`, add `test/test_market_fusion_observation.jl` and tape cases, freeze recovery seeds/truths in DECISIONS_LOG, run the Phase 1 gate on the beast.
+- **Phase:** 1 COMPLETE (PASS, `PHASE1.md`). Awaiting manager: QF3_HANDOVER printed.
+- **Done:** Phase 0; Phase 1 fusion observation at 01f42219, all 8 gates pass (attempt a1); evidence in `results/phase1/`.
+- **Flag for manager:** recovery pooled 84.8% passes, but qs_nobias alone is 21/27 (77.8%).
+- **Next action:** Phase 2 — `candidates.jl` (fusion_qs_bias control, fusion_qs_nobias, fusion_grw_bias), smoke every arm, then AskUserQuestion before the grid.
 - **Open beast panes:** none.
