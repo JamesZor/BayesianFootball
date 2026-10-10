@@ -1,0 +1,25 @@
+JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16]3008;start=134a273e-f54a-4a86-b64f-2cbdc8396b4c;machineid=8ed18d1d13c94a57a1774e208462fff6;user=root;hostname=mcmc-beast;bootid=d72b73bc-fa4a-47f7-ae98-e04bfd454229;pid=00000000000001267883;type=shell;cwd=/root/BF_runs/qs_experiment\]0;root@mcmc-beast:~/BF_runs/qs_experiment[root@mcmc-beast qs_experiment]# JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+]3008;start=fa4abafe-370a-4e6c-8286-a59141d5d82a;machineid=8ed18d1d13c94a57a1774e208462fff6;user=root;hostname=mcmc-beast;bootid=d72b73bc-fa4a-47f7-ae98-e04bfd454229;pid=00000000000001267883;type=command;cwd=/root/BF_runs/qs_experiment\]0;Julia]0;Julia  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("exp
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_I
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/B
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") c
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("P
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_run
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "FAIL") end; w
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "FAIL") end; write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.notif
+started = time(); try ENV["QSX3_ONLY"] = "fusion_qs_nobias"; include("experiments/scotland/07_qs_fusion_market_bias/r07_reproduce.jl"); println("PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_repro_fusion_qs_nobias wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.status", "FAIL") end; write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.notify", read("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/repro_fusion_qs_nobias.s
+QS_MARKET_ARM_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 351.3 hours)...
+[FOLD_CHECKPOINT] arm=fusion_qs_nobias fold=1 attempt=0 at=2026-10-10T06:13:52.789
+PHASE5_REPRODUCTION_ARM_PASS arm=fusion_qs_nobias fold=1 chains_and_latents_bytes=true
+PHASE5_INCLUDE_RETURNED_repro_fusion_qs_nobias wall_s=122.89812684059143

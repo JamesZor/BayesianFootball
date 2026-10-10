@@ -1,0 +1,34 @@
+JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16]3008;start=03aee4fc-fb08-4958-8e44-a05d5e77e998;machineid=8ed18d1d13c94a57a1774e208462fff6;user=root;hostname=mcmc-beast;bootid=d72b73bc-fa4a-47f7-ae98-e04bfd454229;pid=00000000000001269618;type=shell;cwd=/root/BF_runs/qs_experiment\]0;root@mcmc-beast:~/BF_runs/qs_experiment[root@mcmc-beast qs_experiment]# JULIA_PKG_PRECOMPILE_AUTO=0 /root/.juliaup/bin/julia --project -t 16
+]3008;start=46e55485-1208-4175-b57a-0279bed91eb1;machineid=8ed18d1d13c94a57a1774e208462fff6;user=root;hostname=mcmc-beast;bootid=d72b73bc-fa4a-47f7-ae98-e04bfd454229;pid=00000000000001269618;type=command;cwd=/root/BF_runs/qs_experiment\]0;Julia]0;Julia  🦋 Kaimon gate connected (qs_experiment)
+  host REPL mirroring enabled
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.12.4 (2026-01-06)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release
+|__/                   |
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("e
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_IN
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_ex
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "PASS") catch err; showerror(stderr, err, 
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_record wall_s=", time(
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status",
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "FAIL") end; write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.notify
+started = time(); try ENV["QSX3_RECORD_STATUS"] = "completed"; include("experiments/scotland/07_qs_fusion_market_bias/r08_record.jl"); println("PHASE5_INCLUDE_RETURNED_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "PASS") catch err; showerror(stderr, err, catch_backtrace()); println(stderr); println("PHASE5_FAIL_record wall_s=", time()-started); write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", "FAIL") end; write("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.notify", read("/root/BF_runs/logs/qs_experiment_w3/phase5/a1/record.status", String) *
+QS_MARKET_ARM_LOADED
+NOTICE:  relation "harness_scores" already exists, skipping
+NOTICE:  column "control_run_id" of relation "harness_scores" already exists, skipping
+NOTICE:  column "panel" of relation "harness_scores" already exists, skipping
+NOTICE:  constraint "harness_scores_pkey" of relation "harness_scores" does not exist, skipping
+NOTICE:  relation "harness_scores_unique_idx" already exists, skipping
+NOTICE:  relation "harness_scores_lookup_idx" already exists, skipping
+NOTICE:  relation "harness_experiments" already exists, skipping
+NOTICE:  column "run_commits" of relation "harness_experiments" already exists, skipping
+NOTICE:  relation "harness_checks" already exists, skipping
+NOTICE:  relation "harness_checks_recipe_stage_idx" already exists, skipping
+NOTICE:  relation "harness_checks_run_idx" already exists, skipping
+Wrote experiments/LEADERBOARD.csv, experiments/LEADERBOARD.md, experiments/REGISTER.md
+PHASE4_RECORD_PASS status=completed arms=3 exact_phase3_scores=true
+PHASE5_INCLUDE_RETURNED_record wall_s=36.89620089530945
