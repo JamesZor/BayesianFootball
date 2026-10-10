@@ -1,0 +1,4 @@
+arm,rows,cells,exact,max_abs_diff,passed,mismatches
+fusion_qs_bias,664,9960,true,0.0,true,
+fusion_qs_nobias,664,9960,true,0.0,true,
+fusion_grw_bias,664,9960,true,0.0,true,

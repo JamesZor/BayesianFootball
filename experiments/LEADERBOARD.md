@@ -220,8 +220,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | Target LL | 1X2 LL | ECE | Compression | Control | Δ LL vs control [95% CI] | Run UUID |
 |---|---:|---:|---:|---:|---|---:|---|
+| `fusion_grw_bias` | 0.64031 | 0.61260 | 0.00894 | 1.483 | `fusion_qs_bias` | -0.00072 [-0.00225, 0.00075] | `b2e5a527-e51e-4913-b7bb-e1b94a4d1ff2` |
 | `grw_marketobs` | 0.64044 | 0.61175 | 0.02951 | 1.097 | `grw_joint` | -0.00314 [-0.00866, 0.00258] | `e47a71a7-52eb-4aa5-b747-e64099ea9977` |
+| `fusion_qs_nobias` | 0.64079 | 0.61256 | 0.00673 | 1.106 | `fusion_qs_bias` | -0.00024 [-0.00153, 0.00110] | `5afdfeb3-abad-4d23-82fb-1bfe6babe797` |
 | `qs_marketobs` | 0.64079 | 0.61192 | 0.00911 | 1.070 | `grw_joint` | -0.00279 [-0.00847, 0.00311] | `81fdf817-f82d-4f66-9bfd-5f456c4fe29f` |
+| `fusion_qs_bias` | 0.64102 | 0.61279 | 0.00729 | 1.277 | `fusion_qs_bias` | 0.00000 [0.00000, 0.00000] | `26de19bf-fc29-4818-bfdf-7bf76535901f` |
 | `td_spfl_cups_joint` | 0.64291 | 0.61710 | 0.00801 | 1.498 | `m12_td` | -0.00046 [-0.00471, 0.00379] | `4346604b-85ca-4d5b-9f92-b4732512a0c4` |
 | `td_spfl_cups_joint` | 0.64291 | 0.61710 | 0.00801 | 1.498 | `td_lower_joint` | -0.00084 [-0.00441, 0.00277] | `4346604b-85ca-4d5b-9f92-b4732512a0c4` |
 | `m05_joint_td` | 0.64299 | 0.61611 | 0.01493 | 1.870 | `m12_td` | -0.00038 [-0.00232, 0.00151] | `ed541a7c-01e2-447e-a771-783517728d47` |
@@ -273,8 +276,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |
 |---|---:|---:|---:|---:|
+| `fusion_grw_bias` | — (n=0) | — (n=0) | — (n=0) | — (n=0) |
 | `grw_marketobs` | — (n=0) | — (n=0) | — (n=0) | — (n=0) |
+| `fusion_qs_nobias` | — (n=0) | — (n=0) | — (n=0) | — (n=0) |
 | `qs_marketobs` | — (n=0) | — (n=0) | — (n=0) | — (n=0) |
+| `fusion_qs_bias` | — (n=0) | — (n=0) | — (n=0) | — (n=0) |
 | `td_spfl_cups_joint` | 0.66374 (n=28) | -6.937 pp (n=27) | 0.65914 (n=57) | -7.541 pp (n=54) |
 | `td_spfl_cups_joint` | 0.66374 (n=28) | -6.937 pp (n=27) | 0.65914 (n=57) | -7.541 pp (n=54) |
 | `m05_joint_td` | 0.66691 (n=28) | -1.963 pp (n=27) | 0.65103 (n=57) | -3.414 pp (n=54) |
@@ -324,8 +330,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |
 |---|---:|---:|---:|---:|
+| `fusion_grw_bias` | 0.63448 (n=37) | 1.953 pp (n=36) | 0.63369 (n=74) | 1.848 pp (n=71) |
 | `grw_marketobs` | 0.63330 (n=37) | 1.553 pp (n=36) | 0.63195 (n=74) | 1.591 pp (n=71) |
+| `fusion_qs_nobias` | 0.63871 (n=37) | 1.676 pp (n=36) | 0.63161 (n=74) | 1.802 pp (n=71) |
 | `qs_marketobs` | 0.63515 (n=37) | 1.256 pp (n=36) | 0.62937 (n=74) | 1.435 pp (n=71) |
+| `fusion_qs_bias` | 0.64018 (n=37) | 1.697 pp (n=36) | 0.63322 (n=74) | 1.757 pp (n=71) |
 | `td_spfl_cups_joint` | 0.63581 (n=37) | 7.097 pp (n=36) | 0.63673 (n=74) | 5.842 pp (n=71) |
 | `td_spfl_cups_joint` | 0.63581 (n=37) | 7.097 pp (n=36) | 0.63673 (n=74) | 5.842 pp (n=71) |
 | `m05_joint_td` | 0.64093 (n=37) | 5.327 pp (n=36) | 0.63765 (n=74) | 4.457 pp (n=71) |
@@ -375,8 +384,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |
 |---|---:|---:|---:|---:|
+| `fusion_grw_bias` | 0.65649 (n=36) | -1.080 pp (n=34) | 0.64373 (n=74) | -1.480 pp (n=69) |
 | `grw_marketobs` | 0.65260 (n=36) | 0.978 pp (n=34) | 0.64243 (n=74) | 1.070 pp (n=69) |
+| `fusion_qs_nobias` | 0.66444 (n=36) | 1.027 pp (n=34) | 0.64874 (n=74) | 1.022 pp (n=69) |
 | `qs_marketobs` | 0.66069 (n=36) | 1.162 pp (n=34) | 0.64511 (n=74) | 1.394 pp (n=69) |
+| `fusion_qs_bias` | 0.66350 (n=36) | -0.099 pp (n=34) | 0.64710 (n=74) | -0.300 pp (n=69) |
 | `td_spfl_cups_joint` | 0.66188 (n=8) | -9.249 pp (n=7) | 0.67455 (n=17) | -8.955 pp (n=15) |
 | `td_spfl_cups_joint` | 0.66188 (n=8) | -9.249 pp (n=7) | 0.67455 (n=17) | -8.955 pp (n=15) |
 | `m05_joint_td` | 0.68937 (n=8) | -16.385 pp (n=7) | 0.67695 (n=17) | -14.850 pp (n=15) |
@@ -426,8 +438,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |
 |---|---:|---:|---:|---:|
+| `fusion_grw_bias` | 0.64241 (n=69) | 2.858 pp (n=66) | 0.64438 (n=140) | 2.131 pp (n=132) |
 | `grw_marketobs` | 0.64326 (n=69) | 2.847 pp (n=66) | 0.64773 (n=140) | 1.847 pp (n=132) |
+| `fusion_qs_nobias` | 0.64847 (n=69) | 2.523 pp (n=66) | 0.64728 (n=140) | 1.626 pp (n=132) |
 | `qs_marketobs` | 0.64474 (n=69) | 2.418 pp (n=66) | 0.64699 (n=140) | 1.565 pp (n=132) |
+| `fusion_qs_bias` | 0.64630 (n=69) | 2.519 pp (n=66) | 0.64610 (n=140) | 1.775 pp (n=132) |
 | `td_spfl_cups_joint` | 0.64543 (n=69) | 4.788 pp (n=66) | 0.64672 (n=140) | 3.852 pp (n=132) |
 | `td_spfl_cups_joint` | 0.64543 (n=69) | 4.788 pp (n=66) | 0.64672 (n=140) | 3.852 pp (n=132) |
 | `m05_joint_td` | 0.64096 (n=69) | 3.433 pp (n=66) | 0.64128 (n=140) | 3.076 pp (n=132) |
@@ -477,8 +492,11 @@ Scorecard `v1.2`; reference: de-vigged Betfair TWA (−20, 0] close. Lower LogLo
 
 | Model | first 10 LL | first 10 bias (pp) | first 20 LL | first 20 bias (pp) |
 |---|---:|---:|---:|---:|
+| `fusion_grw_bias` | 0.64241 (n=69) | 2.858 pp (n=66) | 0.64438 (n=140) | 2.131 pp (n=132) |
 | `grw_marketobs` | 0.64326 (n=69) | 2.847 pp (n=66) | 0.64773 (n=140) | 1.847 pp (n=132) |
+| `fusion_qs_nobias` | 0.64847 (n=69) | 2.523 pp (n=66) | 0.64728 (n=140) | 1.626 pp (n=132) |
 | `qs_marketobs` | 0.64474 (n=69) | 2.418 pp (n=66) | 0.64699 (n=140) | 1.565 pp (n=132) |
+| `fusion_qs_bias` | 0.64630 (n=69) | 2.519 pp (n=66) | 0.64610 (n=140) | 1.775 pp (n=132) |
 | `td_spfl_cups_joint` | 0.65146 (n=90) | 1.404 pp (n=86) | 0.65049 (n=183) | 0.580 pp (n=173) |
 | `td_spfl_cups_joint` | 0.65146 (n=90) | 1.404 pp (n=86) | 0.65049 (n=183) | 0.580 pp (n=173) |
 | `m05_joint_td` | 0.64624 (n=90) | 1.875 pp (n=86) | 0.64334 (n=183) | 1.212 pp (n=173) |
