@@ -4,7 +4,7 @@
 |---|---|
 | ID | 043 |
 | Title | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P2 |
 | Assignee | pi |
 | Created | 2026-10-10 |
@@ -30,9 +30,14 @@ Freeze policy before viewing results. Distinguish canonical MatchDay defaults fr
 ## Work Log & Progress
 
 - [2026-10-10 @pi] Claimed Phase 0 in `BayesianFootball-qs-experiment`, branch `exp/qs-goal-vs-market`. Recorded exact canonical defaults and experiment 07 historical target before running any reproduction; Option B is a distinct configuration. Next: test parity on beast and stop at failure or boundary.
+- [2026-10-10 @pi] STOP at Phase 0 read-only-session assertion on corrected startup (`9249fbcd`). No fit loaded or numerical backtest computed. Startup world-age failure preserved separately. Dependency: Claude authorises verified read-only connection setup and resolves canonical/Option B/historical policy discrepancy. Owned beast pane `%451` closed; reports/logs handed over. No acceptance criterion closed.
 
 ## Verification & Findings
 
-Not run yet. Record commands, pass/fail or skips, wall time, benchmark metrics,
-R-hat / bulk and tail ESS / divergences / predictive scores as applicable, and
-links to artifacts and immutable run IDs. Distinguish hypotheses from findings.
+- Beast `julia --project -t 16 -i`, pinned cores, BLAS 1; include `r00_phase0_inventory.jl` in owned pane `%451`.
+- Attempt 1 `8c4fccec`: startup MethodError/world-age warning, no gate reached; corrected module include once.
+- Attempt 2 `9249fbcd`: FAIL `assert_readonly` (`SHOW default_transaction_read_only`), before m12 load_fit. No parity/coverage/wealth/CLV or bootstrap evidence.
+- Historical target 2.5152 unit wealth / 1127 bets is committed experiment 07 evidence, NOT a fresh reproduction.
+- No fits, source allocator changes, or DB writes. m12 UUID remains `132df5c2-c742-4e95-8693-3aeb2b2cbaef` (not loaded).
+- Evidence and resume requirements: `experiments/scotland/08_qs_marketobs_backtest/{REPORT,HANDOVER,PROGRESS,DECISIONS_LOG}.md`, committed attempt logs and execution-status CSV.
+- `scripts/todo.sh check` and `git diff --check` passed before the source commits; final checks recorded in handoff commit. Owned session closed and verified absent.

@@ -1,9 +1,10 @@
 # 08 — qs_marketobs executable-price backtest
 
-Phase 0 only is currently authorised for this session. No new fits or database writes.
-The prerequisite is reproduction of experiment 07's m12 T−25 baseline using the exact
-canonical MatchDay default stack. Numerical results and status will be recorded here
-when that gate finishes; no new backtest-grid conclusions are available yet.
+**Phase 0 BLOCKED:** the experiment DB connection failed the read-only-session assertion.
+No saved fit was loaded and no reproduction, snapshot coverage or betting result was computed.
+The policy inventory is complete; the backtest is not. No new fits or database writes occurred.
+TODO 043 remains open; the owned beast pane is closed. See [REPORT.md](REPORT.md) and
+[HANDOVER.md](HANDOVER.md) for the evidence and decisions required before resuming.
 
 ## Scope and source of truth
 

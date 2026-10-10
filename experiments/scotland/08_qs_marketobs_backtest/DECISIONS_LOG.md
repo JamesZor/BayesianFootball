@@ -18,3 +18,10 @@
 
 - Attempt 1 stopped at the runner's access to the freshly included module with `MethodError` and Julia 1.12 world-age warning. No `REPRODUCTION_START`, fixture CSV, or backtest number was produced. Preserved `logs/phase0_inventory_attempt1.log`.
 - Move the loader include to top level with an actual module-binding guard; leave all scientific settings and tolerances unchanged. Add safe method/argument-type diagnostics without printing credential-bearing exception values. One corrected startup attempt only; a repeated identical failure stops the task.
+
+## 2026-10-10 10:53Z — failed safety gate, STOP
+
+- Attempt 2 reached datastore-cache loading but failed `assert_readonly` at loader line 25. The `SHOW default_transaction_read_only` value did not satisfy the `on` assertion despite PGOPTIONS; the actual value was not logged. No fit load or numerical gate followed.
+- Do not remove the assertion, relax database safety, run coverage separately, or attempt later phases. Root cause remains undiagnosed. Claude must authorise the connection setup and resolve the canonical/Option B/historical stack discrepancy before resume.
+- All historical target values remain cited evidence only, not newly reproduced. No model is declared a winner or loser, and no missing Phase 3 cell is classified NOT_AVAILABLE.
+- Owned beast pane %451 was closed and its session verified absent. Preserve isolated source and logs for the manager. TODO 043 is BLOCKED with unmet acceptance criteria.

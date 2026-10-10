@@ -1,0 +1,54 @@
+WARNING: Detected access to binding `Main.QSBacktestPhase0` in a world prior to its definition world.
+  Julia 1.12 has introduced more strict world age semantics for global bindings.
+  !!! This code may malfunction under Revise.
+  !!! This code will error in future versions of Julia.
+Hint: Add an appropriate `invokelatest` around the access to this binding.
+To make this warning an error, and hence obtain a stack trace, use `julia --depwarn=error`.
+Precompiling packages...
+Info Given BayesianFootball was explicitly requested, output will be shown live [0K
+[0KWARNING: Imported binding Portfolio.TurnoverCommission was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.IndependentKelly was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.StaticFamilyTrust was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.ShrinkToMarketTrust was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.MatchDrawdown was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.FixedFraction was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.PerMatchCap was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.WeeklySlate was undeclared at import time during import to BayesianFootball.
+[0KWARNING: Imported binding Portfolio.MatchSlate was undeclared at import time during import to BayesianFootball.
+  16751.9 ms  ✓ BayesianFootball
+  1 dependency successfully precompiled in 19 seconds. 573 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└  
+PHASE0_STOP exception_type=MethodError
+(::var"#8#9"{IOStream})() at r00_phase0_inventory.jl:30
+(::Base.RedirectStdStream)(thunk::var"#8#9"{IOStream}, stream::IOStream) at stream.jl:1464
+#6 at r00_phase0_inventory.jl:27 [inlined]
+(::Base.RedirectStdStream)(thunk::var"#6#7"{IOStream}, stream::IOStream) at stream.jl:1464
+#4 at r00_phase0_inventory.jl:26 [inlined]
+open(::var"#4#5", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:410
+open(::Function, ::String, ::String) at io.jl:407
+top-level scope at r00_phase0_inventory.jl:25
+eval(m::Module, e::Any) at boot.jl:489
+include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:2870
+_include(mapexpr::Function, mod::Module, _path::String) at loading.jl:2930
+include(mapexpr::Function, mod::Module, _path::String) at Base.jl:307
+(::Base.IncludeInto)(fname::String) at Base.jl:308
+top-level scope at REPL[1]:1
+__repl_entry_eval_expanded_with_loc(mod::Module, ast::Any, toplevel_file::Ref{Ptr{UInt8}}, toplevel_line::Ref{Int32}) at REPL.jl:301
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:308
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks at REPL.jl:305 [inlined]
+eval_user_input(ast::Any, backend::REPL.REPLBackend, mod::Module) at REPL.jl:330
+repl_backend_loop(backend::REPL.REPLBackend, get_module::Function) at REPL.jl:452
+start_repl_backend(backend::REPL.REPLBackend, consumer::Any; get_module::Function) at REPL.jl:427
+start_repl_backend at REPL.jl:424 [inlined]
+run_repl(repl::REPL.AbstractREPL, consumer::Any; backend_on_current_task::Bool, backend::Any) at REPL.jl:653
+run_repl(repl::REPL.AbstractREPL, consumer::Any) at REPL.jl:639
+run_std_repl(REPL::Module, quiet::Bool, banner::Symbol, history_file::Bool) at client.jl:478
+run_main_repl(interactive::Bool, quiet::Bool, banner::Symbol, history_file::Bool) at client.jl:499
+repl_main at client.jl:586 [inlined]
+_start() at client.jl:561

@@ -1,0 +1,35 @@
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.1 hours)...
+PHASE0_STOP exception_type=AssertionError
+assert_readonly(db::BayesianFootball.Training.Inference.PostgresStorage) at l00_phase0_inventory.jl:25
+load_context() at l00_phase0_inventory.jl:37
+run(out::String) at l00_phase0_inventory.jl:118
+(::var"#17#18"{IOStream})() at r00_phase0_inventory.jl:33
+(::Base.RedirectStdStream)(thunk::var"#17#18"{IOStream}, stream::IOStream) at stream.jl:1464
+#15 at r00_phase0_inventory.jl:31 [inlined]
+(::Base.RedirectStdStream)(thunk::var"#15#16"{IOStream}, stream::IOStream) at stream.jl:1464
+#13 at r00_phase0_inventory.jl:30 [inlined]
+open(::var"#13#14", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:410
+open(::Function, ::String, ::String) at io.jl:407
+top-level scope at r00_phase0_inventory.jl:29
+eval(m::Module, e::Any) at boot.jl:489
+include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:2870
+_include(mapexpr::Function, mod::Module, _path::String) at loading.jl:2930
+include(mapexpr::Function, mod::Module, _path::String) at Base.jl:307
+(::Base.IncludeInto)(fname::String) at Base.jl:308
+top-level scope at REPL[1]:1
+__repl_entry_eval_expanded_with_loc(mod::Module, ast::Any, toplevel_file::Ref{Ptr{UInt8}}, toplevel_line::Ref{Int32}) at REPL.jl:301
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:308
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks(mod::Module, ast::Any, toplevel_file::Any, toplevel_line::Any) at REPL.jl:312
+toplevel_eval_with_hooks at REPL.jl:305 [inlined]
+eval_user_input(ast::Any, backend::REPL.REPLBackend, mod::Module) at REPL.jl:330
+repl_backend_loop(backend::REPL.REPLBackend, get_module::Function) at REPL.jl:452
+start_repl_backend(backend::REPL.REPLBackend, consumer::Any; get_module::Function) at REPL.jl:427
+start_repl_backend at REPL.jl:424 [inlined]
+run_repl(repl::REPL.AbstractREPL, consumer::Any; backend_on_current_task::Bool, backend::Any) at REPL.jl:653
+run_repl(repl::REPL.AbstractREPL, consumer::Any) at REPL.jl:639
+run_std_repl(REPL::Module, quiet::Bool, banner::Symbol, history_file::Bool) at client.jl:478
+run_main_repl(interactive::Bool, quiet::Bool, banner::Symbol, history_file::Bool) at client.jl:499
+repl_main at client.jl:586 [inlined]
+_start() at client.jl:561
