@@ -1,0 +1,3 @@
+model,snapshot,policy,final_wealth,n_bets,n_slates,expected_wealth,expected_bets,abs_gap,bit_identical,status
+m12,T-25m_s90,canonical,2.773493294562897,1132,99,2.773493294562897,1132,0.0,true,PASS
+qs_marketobs,T-25m_s90,scenario_kelly,2.154029744590488,952,99,2.154029744590488,952,0.0,true,PASS

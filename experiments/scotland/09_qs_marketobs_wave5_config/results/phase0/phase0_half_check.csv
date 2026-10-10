@@ -1,0 +1,3 @@
+model,policy,half,n_slates,wealth,n_bets,mdd_pct,full_slice_identical,season_mdd_pct,season_bets,mdd_equal,bets_equal
+m12,canonical,selection,49,2.089527866020839,575,-13.595231252994628,true,-13.595231252994628,575,true,true
+qs_marketobs,scenario_kelly,selection,49,1.6527896317765625,503,-7.806604767249857,true,-7.806604767249857,503,true,true

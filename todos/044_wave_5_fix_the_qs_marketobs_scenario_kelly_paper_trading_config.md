@@ -33,6 +33,7 @@ paper-trading config for 26/27. No fits, no DB writes, src frozen. Julia on mcmc
 ## Work Log & Progress
 
 - [2026-10-10 @claude] Claimed as the wave-5 Claude CLI implementer in worktree `.worktrees/BayesianFootball-qs-experiment`, branch `exp/qs-goal-vs-market`; manager is the launching Claude session. Phase 0 started.
+- [2026-10-10 @claude] Phase 0 PASS (`21f3514f`, beast pane %458): both wave-4 T−25m cells bit-identical, per-season MDDs within 0.01 pp, 24/25-only runs equal the full runs' first season, basket subset equivalence holds, seal refuses 25/26, DB audit unchanged. Stopped with W5_HANDOVER.
 
 ## Verification & Findings
 

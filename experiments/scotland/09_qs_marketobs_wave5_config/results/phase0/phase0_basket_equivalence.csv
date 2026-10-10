@@ -1,0 +1,13 @@
+basket,date,n_legs,equal
+B1_canonical,2024-08-03,22,true
+B1_canonical,2024-08-10,24,true
+B1_canonical,2024-08-17,24,true
+B1_canonical,2024-08-24,21,true
+B1_canonical,2024-08-31,24,true
+B1_canonical,2024-09-14,35,true
+B2_1x2,2024-08-03,15,true
+B2_1x2,2024-08-10,21,true
+B2_1x2,2024-08-17,21,true
+B2_1x2,2024-08-24,18,true
+B2_1x2,2024-08-31,21,true
+B2_1x2,2024-09-14,27,true

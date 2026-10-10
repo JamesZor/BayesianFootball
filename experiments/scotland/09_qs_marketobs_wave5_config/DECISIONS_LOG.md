@@ -73,3 +73,10 @@ launching Claude session. Scope set by James.
 - **Binding shares.** Budget-binding day: joint raw total ≥ 0.99 − 1e-3 (the barrier stops 1e-5 to
   1e-3 short of the bound; wave 4 REPORT §joint diagnostics). Cap-binding day: `capped` in the daily
   state (the 0.25 FixedCap rescaled the slate). Also reported: risk-active day, `k_risk < 1`.
+
+## 2026-10-10 — Phase 0 result
+
+- Gate PASS, runner `21f3514f` in pane %458. Both wave-4 cells reproduce bit-identically; the λ target
+  for Phase 1 is m12 canonical's 24/25 MDD **−13.595231252994628%** (`results/phase0/phase0_half_check.csv`).
+- `results/phase0/phase0_gate_daily.csv` holds the two wave-4 configs' full-period daily paths (already
+  public in wave 4's `phase3_daily.csv`); no wave-5 candidate has been scored on either half.
