@@ -1,0 +1,28 @@
+check,pass_,detail
+date embargo,True,all outcome-bearing fixtures precede 2026-07-01
+W2 cohort gate,True,canonical 5/6/2
+accepted inventory,True,"{54: 956, 55: 477, 56: 835, 57: 693}"
+unique accepted IDs,True,one quote inversion per fixture
+all DB audits unchanged,True,7 audits; ten tables each
+heldout vintage td_lower_base,True,"lower target 1070 fixtures, all assigned exactly once"
+bias parity td_lower_base relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity td_lower_base promoted_into_L1,True,CSV decomposition equals harness gate mean
+heldout vintage td_lower_a2full_carry_jump,True,"lower target 1070 fixtures, all assigned exactly once"
+bias parity td_lower_a2full_carry_jump relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity td_lower_a2full_carry_jump promoted_into_L1,True,CSV decomposition equals harness gate mean
+heldout vintage grw_base,True,"lower target 1070 fixtures, all assigned exactly once"
+bias parity grw_base relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity grw_base promoted_into_L1,True,CSV decomposition equals harness gate mean
+heldout vintage grw_step_a2_carry_jump,True,"lower target 1070 fixtures, all assigned exactly once"
+bias parity grw_step_a2_carry_jump relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity grw_step_a2_carry_jump promoted_into_L1,True,CSV decomposition equals harness gate mean
+heldout vintage m12_td_ref,True,"lower target 1070 fixtures, all assigned exactly once"
+bias parity m12_td_ref relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity m12_td_ref promoted_into_L1,True,CSV decomposition equals harness gate mean
+heldout vintage qs_marketobs,True,"lower target 710 fixtures, all assigned exactly once"
+bias parity qs_marketobs relegated_into_L1,True,CSV decomposition equals harness gate mean
+bias parity qs_marketobs promoted_into_L1,True,CSV decomposition equals harness gate mean
+prior source chronology,True,all source seasons/dates precede boundary
+prior parameter chronology,True,expanding-season hyperparameter labels only
+every question artifact,True,Q9/Q11 optional scope explicitly recorded
+season-frozen prior hashes,True,"source values and parameter values, not IDs alone"

@@ -180,6 +180,11 @@ raw=[];cutoffcheck=[];trainingclubs={}
 for model in MODELS:
     ff={int(r['match_id']):r for r in read('folds_'+model+'.csv')}
     lat={int(r['match_id']):r for r in read('rates_'+model+'.csv')}
+    historical_ids=defaultdict(set)
+    for h in read('history_'+model+'.csv'):
+        mid=int(h['match_id']);f=fixtures.get(mid)
+        if f and dt(f['match_date'])<date(2000+int(h['target_season'][:2]),7,1):historical_ids[int(h['fold'])].add(mid)
+    historical_counts={fold:Counter(c for mid in ids for c in [fixtures[mid]['home_team'],fixtures[mid]['away_team']]) for fold,ids in historical_ids.items()}
     for r in read('observations_'+model+'.csv'):
         mid=int(r['match_id'])
         if r['family']!='1X2' or r['selection'] not in ('home','away') or mid not in fixtures:continue
@@ -192,11 +197,12 @@ for model in MODELS:
         age=(dt(f['match_date'])-dt(meta['cutoff'])).days if valid else -1
         nown=sum(dt(meta['cutoff'])<d<dt(f['match_date']) for _,d,_ in clubapps[(c,s)]) if valid else -1
         g=game[(mid,c)];pm=float(r['p_model']);pk=float(r['p_market']);y=float(r['y'])
-        oldscope=sum(1 for m,cc,ss,tt,gg,d,sd_,opp in apps if cc==c and ss<s and tt in (56,57))
+        oldscope=historical_counts.get(int(meta['fold']),Counter())[c] if valid else 0
+        oldloweravailable=sum(1 for m,cc,ss,tt,gg,d,sd_,opp in apps if cc==c and ss<s and tt in (56,57))
         oldall=sum(len(qq) for (cc,ss),qq in quoteclub.items() if cc==c and ss<s)
         llm=-(y*math.log(max(pm,1e-12))+(1-y)*math.log(max(1-pm,1e-12)))
         llk=-(y*math.log(max(pk,1e-12))+(1-y)*math.log(max(1-pk,1e-12)))
-        raw.append(dict(model=model,match_id=mid,club=c,season=s,tier=t,side=side,group=group(c,s),broad=broad(c,s),game=g,game_bin=bins(g),fold=int(meta['fold']),cutoff=meta['cutoff'] if valid else '',age_days=age,age_bin='0-7' if age<=7 else '8-14' if age<=14 else '15+' if age>=0 else 'missing',own_since_cutoff=nown,p_model=pm,p_market=pk,y=y,delta=pm-pk,absolute_delta=abs(pm-pk),market_residual=y-pk,model_residual=y-pm,ll_delta=llm-llk,brier_delta=(pm-y)**2-(pk-y)**2,old_in_scope=oldscope,old_alltier_quotes=oldall,history_class='no_lower_history' if oldscope==0 else 'has_lower_history',old_previous_quotes=a['n']))
+        raw.append(dict(model=model,match_id=mid,club=c,season=s,tier=t,side=side,group=group(c,s),broad=broad(c,s),game=g,game_bin=bins(g),fold=int(meta['fold']),cutoff=meta['cutoff'] if valid else '',age_days=age,age_bin='0-7' if age<=7 else '8-14' if age<=14 else '15+' if age>=0 else 'missing',own_since_cutoff=nown,p_model=pm,p_market=pk,y=y,delta=pm-pk,absolute_delta=abs(pm-pk),market_residual=y-pk,model_residual=y-pm,ll_delta=llm-llk,brier_delta=(pm-y)**2-(pk-y)**2,old_in_scope=oldscope,old_lower_roster_available=oldloweravailable,old_alltier_quotes=oldall,history_class='no_fitted_history' if oldscope==0 else 'has_fitted_history',old_previous_quotes=a['n']))
 write('q1_club_observations.csv',raw)
 write('q12_prediction_chronology.csv',cutoffcheck)
 assert all(r['valid'] for r in cutoffcheck),'prediction cutoff manifest invalid'

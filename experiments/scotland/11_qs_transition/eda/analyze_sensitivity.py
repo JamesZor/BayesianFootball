@@ -22,9 +22,9 @@ for r in read('q6_coverage.csv'):
     if dates:
         last=max(dates);w=np.array([math.exp(-math.log(2)*(last-d).days/180) for d in dates]);ess=w.sum()**2/(w@w)
     else:ess=0
-    counts.append(dict(r,effective_n_decay180=ess,rejection_rate=int(r['rejected'])/max(1,int(r['inversion_rows'])),recency_rule='diagnostic half-life 180d, not tuned or used in prior reconstruction'))
+    counts.append(dict(r,in_market_era=r['season']>='21/22',effective_n_decay180=ess,rejection_rate=int(r['rejected'])/max(1,int(r['inversion_rows'])),recency_rule='diagnostic half-life 180d, not tuned or used in prior reconstruction'))
 write('q6_coverage.csv',counts)
-write('q6_quote_totals.csv',[dict(tier=t,accepted=sum(int(r['accepted']) for r in counts if int(r['tournament_id'])==t)//2,n_club_seasons=sum(int(r['tournament_id'])==t for r in counts),no_history_club_seasons=sum(int(r['tournament_id'])==t and int(r['accepted'])==0 for r in counts)) for t in range(54,58)])
+write('q6_quote_totals.csv',[dict(tier=t,accepted=sum(int(r['accepted']) for r in counts if int(r['tournament_id'])==t and r['in_market_era'])//2,n_club_seasons=sum(int(r['tournament_id'])==t and r['in_market_era'] for r in counts),no_history_club_seasons=sum(int(r['tournament_id'])==t and int(r['accepted'])==0 and r['in_market_era'] for r in counts),source_seasons='21/22-25/26') for t in range(54,58)])
 # Q6 prior and bias coverage cuts, explicit counts.
 rows=read('q1_club_observations.csv');out=[]
 for model in sorted(set(r['model'] for r in rows)):

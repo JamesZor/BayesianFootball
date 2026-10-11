@@ -1,0 +1,5 @@
+candidate,control,market,n_fixtures,n_observations,delta_logloss,lo,hi,method
+td_lower_a2full_carry_jump,td_lower_base,all,938,4406,-0.0014018655064209772,-0.002975599083884065,0.00022508455858604953,paired common observation Bernoulli log loss; fixture-clustered bootstrap
+td_lower_a2full_carry_jump,td_lower_base,1X2,898,2692,-0.001897815586273154,-0.004360809864320911,0.0004961080915230278,paired common observation Bernoulli log loss; fixture-clustered bootstrap
+grw_step_a2_carry_jump,grw_base,all,938,4406,-0.002613609724155508,-0.004600325464890851,-0.0006516156157044332,paired common observation Bernoulli log loss; fixture-clustered bootstrap
+grw_step_a2_carry_jump,grw_base,1X2,898,2692,-0.003312796227647286,-0.005859672380671739,-0.000921065254256832,paired common observation Bernoulli log loss; fixture-clustered bootstrap
