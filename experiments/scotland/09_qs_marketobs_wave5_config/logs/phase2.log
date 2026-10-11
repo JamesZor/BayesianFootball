@@ -1,0 +1,56 @@
+SOURCE ../09_qs_marketobs_wave5_config/l00_wave5.jl sha256=3aa24882cbeccf4ff5860eae74ad428ef73c3416d5ecf688007ee27adea107f4
+SOURCE ../09_qs_marketobs_wave5_config/l01_phase0_gate.jl sha256=f35331b1b58edfc84a39dc639a1a191622e68f01f3f4c72d78a6e9bb95ff5024
+SOURCE ../09_qs_marketobs_wave5_config/l02_phase1_select.jl sha256=7e1225648672ce783e8acaef6c1309756799077e0c0100d35cecd1774b4812ca
+SOURCE ../09_qs_marketobs_wave5_config/l03_phase2_eval.jl sha256=3e80a2785e500fa8828f02c6c4a514df539cae09aa1d3b9f8e5a1d6247f449c2
+SOURCE ../09_qs_marketobs_wave5_config/r02_phase2_eval.jl sha256=8bd0c0f9dce8e756e04da9f1e6a800701acb5c854b8110887f52c5011c3bba2d
+SOURCE l00_phase0_inventory.jl sha256=0b4e0d6dc3ce0f6b489893d05cd4a42398e08937066869aeb5030d472f97671c
+SOURCE l01_scenario_kelly.jl sha256=1335adb4af51164d95187be4fc26b3cdccaeda36fc0bf959a764e77afec0164a
+SOURCE l02_phase3_grid.jl sha256=42fd9f5056367c57b9e34d3d9bd832ee35ca5e2d90552f4a8285b65a0209eded
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+RUNTIME version=1.12.4 threads=16 BLAS=1 package_root=/root/BF_runs/qs_wave5 head=716c84a10d1f9e029ee1d930c6fc7ae3d53ece8d
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+FREEZE.md
+SEAL_RELEASED freeze_commit=04fdba71fbb89f87afa694ca5b9613669474f477
+DATASTORE_CACHE sha256=c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+MODEL qs_marketobs run=81fdf817-f82d-4f66-9bfd-5f456c4fe29f draws=4000 layout=4chains_x_1000
+MODEL m12 run=132df5c2-c742-4e95-8693-3aeb2b2cbaef draws=3200 layout=4chains_x_800
+INPUT_PARITY_PASS snapshot=T-25m_s90 selections=3723
+INPUT_PARITY_PASS snapshot=T-6h_s90 selections=1062
+PHASE2_BASKETS B1_canonical@12.0 B2_1x2@14.0 B3_1x2_ou25@14.0 B4_eda_keep@14.0 B5_all13@16.0 B6_home_u25@16.0
+HALF_INPUTS snapshot=T-25m_s90 half=selection qs_books=309 m12_books=309 days=49
+CELL snapshot=T-25m_s90 half=selection cell=m12_canonical_l23 wealth=2.089527866020839 g=0.015039553857790069 mdd=-13.595231252994628 bets=575
+CELL snapshot=T-25m_s90 half=selection cell=frozen_B1_l12 wealth=2.3595662030073425 g=0.0175199548950397 mdd=-13.06647331898508 bets=529
+CELL snapshot=T-25m_s90 half=selection cell=fallback_B1_l23 wealth=1.6245565698517854 g=0.009902753029631525 mdd=-7.140698716108695 bets=529
+CELL snapshot=T-25m_s90 half=selection cell=cand_B2_1x2_l14 wealth=2.0593098750634105 g=0.014742263562597096 mdd=-12.708437684238499 bets=476
+CELL snapshot=T-25m_s90 half=selection cell=cand_B3_1x2_ou25_l14 wealth=2.310010365718206 g=0.017086775751990465 mdd=-12.156267585201428 bets=601
+CELL snapshot=T-25m_s90 half=selection cell=cand_B4_eda_keep_l14 wealth=1.8855414422056125 g=0.012943163610196156 mdd=-13.011245542776065 bets=354
+CELL snapshot=T-25m_s90 half=selection cell=cand_B5_all13_l16 wealth=1.9688985723593218 g=0.013826005838159426 mdd=-12.50189463645873 bets=693
+CELL snapshot=T-25m_s90 half=selection cell=cand_B6_home_u25_l16 wealth=1.345851145234508 g=0.006061768053923582 mdd=-12.660834131971457 bets=204
+CELL snapshot=T-25m_s90 half=selection cell=wave4_sk_all_legs_l23 wealth=1.6527896317765625 g=0.010254378494634411 mdd=-7.806604767249857 bets=503
+PHASE0_SEASON_CHECK half=selection model=m12 wealth=2.089527866020839 ref=2.089527866020839 mdd=-13.595231252994628 ref=-13.595231252994628 pass=true
+PHASE0_SEASON_CHECK half=selection model=qs_marketobs wealth=1.6527896317765625 ref=1.6527896317765625 mdd=-7.806604767249857 ref=-7.806604767249857 pass=true
+HALF_INPUTS snapshot=T-25m_s90 half=evaluation qs_books=302 m12_books=302 days=50
+CELL snapshot=T-25m_s90 half=evaluation cell=m12_canonical_l23 wealth=1.327330130248303 g=0.005663390075958622 mdd=-16.152340000013453 bets=557
+CELL snapshot=T-25m_s90 half=evaluation cell=frozen_B1_l12 wealth=1.6241209548752367 g=0.009699334371379936 mdd=-19.25691425131652 bets=494
+CELL snapshot=T-25m_s90 half=evaluation cell=fallback_B1_l23 wealth=1.3208208815934512 g=0.005565068466121686 mdd=-11.221085404837137 bets=496
+CELL snapshot=T-25m_s90 half=evaluation cell=cand_B2_1x2_l14 wealth=1.2823355868997819 g=0.004973661849914149 mdd=-19.826691685866873 bets=410
+CELL snapshot=T-25m_s90 half=evaluation cell=cand_B3_1x2_ou25_l14 wealth=1.5111384668733727 g=0.008257266366397915 mdd=-17.26124323997984 bets=535
+CELL snapshot=T-25m_s90 half=evaluation cell=cand_B4_eda_keep_l14 wealth=1.2467407520680052 g=0.004410654955702933 mdd=-19.40843787366941 bets=289
+CELL snapshot=T-25m_s90 half=evaluation cell=cand_B5_all13_l16 wealth=1.3753859349422328 g=0.006374687433865437 mdd=-18.12983281963816 bets=727
+CELL snapshot=T-25m_s90 half=evaluation cell=cand_B6_home_u25_l16 wealth=1.3583304959462017 g=0.006125127382971464 mdd=-7.7521484228952735 bets=218
+CELL snapshot=T-25m_s90 half=evaluation cell=wave4_sk_all_legs_l23 wealth=1.303269153664251 g=0.005297516828077027 mdd=-10.474184619989005 bets=449
+PHASE0_SEASON_CHECK half=evaluation model=m12 wealth=1.327330130248303 ref=1.327330130248302 mdd=-16.152340000013453 ref=-16.15234000001348 pass=true
+PHASE0_SEASON_CHECK half=evaluation model=qs_marketobs wealth=1.303269153664251 ref=1.30326915366425 mdd=-10.474184619989005 ref=-10.474184619989027 pass=true
+HALF_INPUTS snapshot=T-6h_s90 half=selection qs_books=155 m12_books=155 days=44
+CELL snapshot=T-6h_s90 half=selection cell=m12_canonical_l23 wealth=1.3325796431600188 g=0.0065253782954049185 mdd=-6.822648551257202 bets=193
+CELL snapshot=T-6h_s90 half=selection cell=frozen_B1_l12 wealth=1.0511715192832445 g=0.0011342107921149215 mdd=-17.73404091211826 bets=176
+CELL snapshot=T-6h_s90 half=selection cell=fallback_B1_l23 wealth=1.0605986704024943 g=0.0013371257293735908 mdd=-9.948074104393326 bets=176
+HALF_INPUTS snapshot=T-6h_s90 half=evaluation qs_books=136 m12_books=136 days=44
+CELL snapshot=T-6h_s90 half=evaluation cell=m12_canonical_l23 wealth=1.2412589311375803 g=0.00491195753700824 mdd=-6.5149233584016475 bets=158
+CELL snapshot=T-6h_s90 half=evaluation cell=frozen_B1_l12 wealth=1.1565412572999645 g=0.0033053153711101457 mdd=-12.993596029962507 bets=151
+CELL snapshot=T-6h_s90 half=evaluation cell=fallback_B1_l23 wealth=1.1009774555308298 g=0.002186326844859018 mdd=-6.889931532596593 bets=151
+DECISION PAPER_TRADE_FROZEN g=0.009699334371379936 mdd=-19.25691425131652 bound=-20.39284687949194 g_fail=false mdd_fail=false
+PHASE2_DONE
+DB_AUDIT_AFTER unchanged=true tables=10
+PHASE2_END
