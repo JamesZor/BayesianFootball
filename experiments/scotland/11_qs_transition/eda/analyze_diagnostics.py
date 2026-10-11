@@ -118,4 +118,25 @@ for model in models:
             if a['fold']==b['fold']:continue
             events.append(dict(model=model,club=club,season=s,group=b['group'],match_before=a['match_id'],match_id=b['match_id'],game_before=a['game'],game_after=b['game'],age_before=a['age_days'],age_after=b['age_days'],absolute_change_pp=100*(float(b['absolute_delta'])-float(a['absolute_delta'])),signed_change_pp=100*(float(b['delta'])-float(a['delta'])),limitation='different opponents/fixtures across refit; exploratory event, not weekly-refit effect'))
 write('q5_refit_events.csv',events)
+# Canonical club-season gate plus a shared-fixture connected-cluster sensitivity.
+def components(rr):
+    parent={}
+    def find(k):
+        parent.setdefault(k,k)
+        if parent[k]!=k:parent[k]=find(parent[k])
+        return parent[k]
+    fixtures=defaultdict(list)
+    for r in rr:
+        k=(r['club'],r['season']);find(k);fixtures[r['match_id']].append(k)
+    for ks in fixtures.values():
+        for k in ks[1:]:parent[find(k)]=find(ks[0])
+    return {k:find(k) for k in list(parent)}
+sensitivity=[]
+for model in models:
+    for group in ['relegated_into_L1','promoted_into_L1','entered_spfl']:
+        rr=[r for r in bias if r['model']==model and r['group']==group and int(r['game'])<=20]
+        if not rr:continue
+        comp=components(rr);vals=[float(r['delta']) for r in rr];keys=[comp[(r['club'],r['season'])] for r in rr];lo,hi=bootstrap_mean(vals,keys)
+        sensitivity.append(dict(model=model,group=group,bias_pp=100*np.mean(vals),lo=100*lo,hi=100*hi,n_club_seasons=len(comp),n_connected_clusters=len(set(comp.values())),n_fixtures=len({r['match_id'] for r in rr}),method='merge club-season clusters linked by a shared fixture; conservative dependence sensitivity to canonical harness bootstrap'))
+write('q1_joint_fixture_sensitivity.csv',sensitivity)
 print('DIAGNOSTICS_OK prior_unique=',len(rows),'paired_windows=',len(pairedwindows),'age_regressions=',len(q5),'refit_events=',len(events))

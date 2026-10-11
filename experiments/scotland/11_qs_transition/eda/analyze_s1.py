@@ -133,10 +133,14 @@ def reconstruct(qs,tier,season,window):
     tq=np.column_stack([contrast,np.zeros(n)])
     ts=np.column_stack([contrast,np.ones(n)/2])
     qv=tq@bd;sv=ts@bs-bd[-1]/2
-    vq=tq@vd@tq.T;vstyle=ts@vs@ts.T+vd[-1,-1]/4
-    result=dict(clubs=clubs,q=qv,s=sv,vq=vq,vs=vstyle,gamma=2*bd[-1],mu=bs[-1]-bd[-1],dates=[dt(q['date']) for q in qs],ids=[int(q['match_id']) for q in qs],resid_q=sd(ed),resid_s=sd(es))
+    cov_ds=float(ed@es)/(len(qs)-n)*np.linalg.inv(xd.T@xd)@xd.T@xs@np.linalg.inv(xs.T@xs)
+    gamma_style_cov=(ts@cov_ds.T)[:,-1]
+    vq=tq@vd@tq.T
+    vstyle=ts@vs@ts.T+vd[-1,-1]/4-.5*(gamma_style_cov[:,None]+gamma_style_cov[None,:])
+    cov_qs=tq@cov_ds@ts.T-.5*(tq@vd)[:,-1][:,None]
+    result=dict(clubs=clubs,q=qv,s=sv,vq=vq,vs=vstyle,cov_qs=cov_qs,gamma=2*bd[-1],mu=bs[-1]-bd[-1],dates=[dt(q['date']) for q in qs],ids=[int(q['match_id']) for q in qs],resid_q=sd(ed),resid_s=sd(es))
     for i,c in enumerate(clubs):
-        reconrows.append(dict(club=c,season=season,tier=tier,window=window,n_quotes=len(qs),n_own_quotes=sum(c in (q['home'],q['away']) for q in qs),q=qv[i],s=sv[i],q_se=math.sqrt(vq[i,i]),s_se=math.sqrt(vstyle[i,i]),gamma=result['gamma'],mu=result['mu'],first_date=min(result['dates']),last_date=max(result['dates'])))
+        reconrows.append(dict(club=c,season=season,tier=tier,window=window,n_quotes=len(qs),n_own_quotes=sum(c in (q['home'],q['away']) for q in qs),q=qv[i],s=sv[i],q_se=math.sqrt(vq[i,i]),s_se=math.sqrt(vstyle[i,i]),q_s_cov=cov_qs[i,i],gamma=result['gamma'],mu=result['mu'],first_date=min(result['dates']),last_date=max(result['dates'])))
     return result
 
 
@@ -471,13 +475,13 @@ for t in transitions:
     if not old or not new or c not in old['clubs'] or c not in new['clubs']:continue
     i=old['clubs'].index(c);j=new['clubs'].index(c)
     dq=float(new['q'][j]-old['q'][i]);ds=float(new['s'][j]-old['s'][i])
-    shifts.append(dict(t,dq=dq,ds=ds,dalpha=dq+ds,dbeta=ds-dq,vq=old['vq'][i,i]+new['vq'][j,j],vs=old['vs'][i,i]+new['vs'][j,j],label='descriptive whole-destination-season; never used as opening prior training label'))
+    shifts.append(dict(t,dq=dq,ds=ds,dalpha=dq+ds,dbeta=ds-dq,vq=old['vq'][i,i]+new['vq'][j,j],vs=old['vs'][i,i]+new['vs'][j,j],q_s_measurement_cov=old['cov_qs'][i,i]+new['cov_qs'][j,j],label='descriptive whole-destination-season; never used as opening prior training label'))
 write('q7_mover_shifts.csv',shifts)
 q7=[]
 for g in sorted(set(r['broad'] for r in shifts)):
     rr=[r for r in shifts if r['broad']==g];dq=[r['dq'] for r in rr];ds=[r['ds'] for r in rr]
     vq=max(0,sd(dq)**2-mean([r['vq'] for r in rr]));vs=max(0,sd(ds)**2-mean([r['vs'] for r in rr]))
-    q7.append(dict(broad=g,n_club_seasons=len(rr),mean_dq=mean(dq),mean_ds=mean(ds),q_sd=sd(dq),s_sd=sd(ds),noise_adjusted_q_sd=math.sqrt(vq),noise_adjusted_s_sd=math.sqrt(vs),style_quality_sd_ratio=math.sqrt(vs/vq) if vq else float('nan'),dq_ds_cov=float(np.cov(dq,ds)[0,1]) if len(rr)>1 else float('nan'),mean_attack_share=mean([r['dalpha']/(2*r['dq']) for r in rr if abs(r['dq'])>.05]),limitations='division-relative q shift confounds tier rebase and club jump; plug-in uncertainty, not independent club samples'))
+    q7.append(dict(broad=g,n_club_seasons=len(rr),mean_dq=mean(dq),mean_ds=mean(ds),q_sd=sd(dq),s_sd=sd(ds),noise_adjusted_q_sd=math.sqrt(vq),noise_adjusted_s_sd=math.sqrt(vs),style_quality_sd_ratio=math.sqrt(vs/vq) if vq else float('nan'),dq_ds_cov=float(np.cov(dq,ds)[0,1]) if len(rr)>1 else float('nan'),noise_adjusted_dq_ds_cov=(float(np.cov(dq,ds)[0,1])-mean([r['q_s_measurement_cov'] for r in rr])) if len(rr)>1 else float('nan'),mean_attack_share=mean([r['dalpha']/(2*r['dq']) for r in rr if abs(r['dq'])>.05]),limitations='division-relative q shift confounds tier rebase and club jump; plug-in uncertainty, not independent club samples'))
 write('q7_shift_summary.csv',q7)
 # Opening direct quote minus frozen old fixture prediction, oriented for moving club.
 open_shift=[]
@@ -526,7 +530,7 @@ for model in ['qs_marketobs','td_lower_base','td_lower_a2full_carry_jump']:
 plt.figure(figsize=(7,4))
 rr=read('q2_prior_summary.csv')
 for coord in ['D','U']:
-    part=[r for r in rr if r['coordinate']==coord and r['checkpoint']=='1' and r['method'] in ['league_mean','A2_step','P1','P2','P2_carry_est']]
+    part=[r for r in rr if r['coordinate']==coord and r['checkpoint']=='1' and r['method'] in ['league_mean','A2_step','P1','P2','P2_A2shrink','P2_carry_est']]
     plt.plot([r['method'] for r in part],[float(r['rmse']) for r in part],marker='o',label=coord)
 plt.ylabel('First accepted quote RMSE (log-rate rotation units)');plt.xticks(rotation=15);plt.legend();plt.tight_layout();plt.savefig(FIG/'q2_prior_rmse.png',dpi=150);plt.close()
 plt.figure(figsize=(6,4))

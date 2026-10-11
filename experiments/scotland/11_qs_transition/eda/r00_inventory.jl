@@ -1,5 +1,6 @@
 # Stage 1 read-only inventory. Execute only on beast via jl.
 ENV["JULIA_PKG_PRECOMPILE_AUTO"] = "0"
+ENV["PGOPTIONS"] = "-c default_transaction_read_only=on"
 using BayesianFootball, CSV, DataFrames, Dates, LinearAlgebra, Serialization, LibPQ
 BLAS.set_num_threads(1)
 if !isdefined(Main, :QSBacktestPhase0)
