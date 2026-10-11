@@ -23,7 +23,8 @@ legacy_inputs = Harness._fold_inputs(legacy_candidate, legacy_ds; stage=:grid)
 Harness._filtration_check(legacy_candidate, legacy_inputs)
 legacy_one = (; feature_sets=legacy_inputs.feature_sets[1:1], oos=legacy_inputs.oos[1:1])
 legacy_config = Harness.fit_config(legacy_candidate; stage=:grid, experiment=LEGACY.EXPERIMENT)
-legacy_dir = joinpath(@__DIR__, "legacy_checkpoints")
+legacy_tag = get(ENV,"S2_LEGACY_TAG","pre_src")
+legacy_dir = joinpath(@__DIR__, "legacy_checkpoints_"*legacy_tag)
 isdir(legacy_dir) && error("legacy checkpoint directory must be fresh")
 Wave2Grid.manifest!(legacy_dir, legacy_candidate, 4, 0)
 
@@ -49,12 +50,13 @@ for (channel, a, b) in (("chains", legacy_fresh_chain, legacy_saved_chain),
                        ("latents", legacy_fresh_lat, legacy_saved_lat))
     size(a) == size(b) || error("$channel shape differs")
     push!(legacy_evidence, (; arm="qs_marketobs", fold=1, run_id=string(legacy_id), channel,
+        source_tag=legacy_tag,git_sha=Training.git_commit_id(),
         identical=legacy_bytes(a)==legacy_bytes(b),
         fresh_sha=bytes2hex(sha256(legacy_bytes(a))), saved_sha=bytes2hex(sha256(legacy_bytes(b))),
         n_values=length(a), max_abs=maximum(abs.(a .- b)), seconds=time()-legacy_start,
         chain_seeds=join([Wave2Grid.chain_seed(4, 1, 0, c) for c in 1:4], ";"),
         post_seed=Wave2Grid.post_seed(4, 0)))
 end
-CSV.write(joinpath(@__DIR__, "legacy_reproduction.csv"), DataFrame(legacy_evidence))
+CSV.write(joinpath(@__DIR__, "legacy_reproduction_"*legacy_tag*".csv"), DataFrame(legacy_evidence))
 all(r -> r.identical, legacy_evidence) || error("REPRODUCTION_BYTE_MISMATCH; stop Stage 2")
 println("S2_LEGACY_PASS chains_and_latents_bytes=true seconds=$(time()-legacy_start)")
