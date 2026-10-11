@@ -1,0 +1,4 @@
+cell,n_back,n_mid,n_ltp,back_and_mid,back_and_ltp,all_three,back_not_mid,mid_not_back,back_not_ltp,ltp_not_back,fixtures_back,fixtures_mid,fixtures_ltp
+frozen_B1_l12,91,118,100,90,74,73,1,28,17,26,50,56,47
+fallback_B1_l23,91,118,100,90,74,73,1,28,17,26,50,56,47
+m12_canonical_l23,124,144,114,121,98,95,3,23,26,16,54,60,48
