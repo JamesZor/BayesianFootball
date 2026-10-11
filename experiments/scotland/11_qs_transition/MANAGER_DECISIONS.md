@@ -48,3 +48,13 @@ Each gate decision the manager took for James, with its reason. James reviews th
 - **D8 S3 arm design: one factor at a time** vs the control on W2's panel: F3, F1+F2 (entrant prior),
   F4, F6 (if separable). Combinations of the passing factors go to S4. James was unsure; this is the
   manager's recommendation from DESIGN §5.
+- **D9 (2026-10-11 ~23:55, S2 question) Overlap rule for F1F2.** **Zero overlap applies to the
+  entrant's own endpoint quotes** (its out-of-scope 54/55 closes). The **transport (shift) parameters
+  keep S1's estimation from earlier movers' new-tier quotes**, in seasons before the target season.
+  Their overlap with the fold's market likelihood is **reported separately**, and the arm is labelled
+  "exact entrant endpoint, EB transport hyperparameters".
+  - Reason: a shift into League One can only be estimated from movers' League One quotes. Using
+    54/55 only would estimate a different transition (Premiership ↔ Championship).
+  - Those quotes set a population-level hyperparameter, not the entrant club's own state. That is
+    ordinary empirical-Bayes use, not double-counting a club's evidence.
+  - No look-ahead either way.
