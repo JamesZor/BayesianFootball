@@ -6,7 +6,7 @@
 | Title | QS transition experiment: tier movers, market-informed priors and scope |
 | Status | IN_PROGRESS |
 | Priority | P1 |
-| Assignee | pi (stages), claude (manager) |
+| Assignee | pi |
 | Created | 2026-10-11 |
 | Updated | 2026-10-11 |
 | Related Files / Commits / PRs | `experiments/scotland/11_qs_transition/DESIGN.md`; continues TODO 031 W2 (`04_pyramid_tier_transition_arms`); evidence from TODO 045 |
@@ -35,3 +35,7 @@ See DESIGN.md §3 (F1–F7).
 
 - [2026-10-11 @claude] Scope agreed with James over three AskUserQuestion rounds. DESIGN.md written.
   The S0 research brief (gpt-6-astra) is drafted.
+
+## Verification & Findings
+
+Not run yet. Each stage records its results in `experiments/scotland/11_qs_transition/REPORT_S<n>.md`.
