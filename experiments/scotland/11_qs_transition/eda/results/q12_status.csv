@@ -1,0 +1,8 @@
+check,violations,status
+source season and source date before target boundary,0,pass
+prediction fixture after actual latest training row,0,pass
+"prior fixed by target season, not refit",0,pass by construction
+naive prior plus existing historical market likelihood,40,BLOCK; implementation dependency
+future-informed historical window initial node,40,BLOCK placement at historical initial node
+cup quote archive timestamp available,1,unresolved; cups descriptive only
+26/27 outcome/performance diagnostics,0,not performed; calendar-year cup labels removed by date embargo

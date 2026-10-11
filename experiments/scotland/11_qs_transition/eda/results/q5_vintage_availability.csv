@@ -1,0 +1,7 @@
+model,n_unique_fixtures,successive_vintages,interpretation
+td_lower_base,898,0,one held-out vintage per fixture; no causal refit event pairing
+td_lower_a2full_carry_jump,898,0,one held-out vintage per fixture; no causal refit event pairing
+grw_base,898,0,one held-out vintage per fixture; no causal refit event pairing
+grw_step_a2_carry_jump,898,0,one held-out vintage per fixture; no causal refit event pairing
+m12_td_ref,898,0,one held-out vintage per fixture; no causal refit event pairing
+qs_marketobs,595,0,one held-out vintage per fixture; no causal refit event pairing

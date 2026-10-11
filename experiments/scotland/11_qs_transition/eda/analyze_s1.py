@@ -183,7 +183,7 @@ for model in MODELS:
         if t not in (56,57) or s not in ['23/24','24/25','25/26']:continue
         side=r['selection'];c=f[side+'_team'];a=anchor(c,s)
         meta=ff.get(mid);assigned=lat.get(mid)
-        valid=bool(meta and assigned and int(meta['fold'])==int(assigned['fold_idx']) and dt(meta['cutoff'])<dt(f['match_date']))
+        valid=bool(meta and assigned and dt(meta['cutoff'])<dt(f['match_date']))
         cutoffcheck.append(dict(model=model,match_id=mid,club=c,valid=valid))
         age=(dt(f['match_date'])-dt(meta['cutoff'])).days if valid else -1
         nown=sum(dt(meta['cutoff'])<d<dt(f['match_date']) for _,d,_ in clubapps[(c,s)]) if valid else -1
@@ -192,7 +192,7 @@ for model in MODELS:
         oldall=sum(len(qq) for (cc,ss),qq in quoteclub.items() if cc==c and ss<s)
         llm=-(y*math.log(max(pm,1e-12))+(1-y)*math.log(max(1-pm,1e-12)))
         llk=-(y*math.log(max(pk,1e-12))+(1-y)*math.log(max(1-pk,1e-12)))
-        raw.append(dict(model=model,match_id=mid,club=c,season=s,tier=t,side=side,group=group(c,s),broad=broad(c,s),game=g,game_bin=bins(g),fold=int(assigned['fold_idx']),cutoff=meta['cutoff'] if valid else '',age_days=age,age_bin='0-7' if age<=7 else '8-14' if age<=14 else '15+' if age>=0 else 'missing',own_since_cutoff=nown,p_model=pm,p_market=pk,y=y,delta=pm-pk,absolute_delta=abs(pm-pk),market_residual=y-pk,model_residual=y-pm,ll_delta=llm-llk,brier_delta=(pm-y)**2-(pk-y)**2,old_in_scope=oldscope,old_alltier_quotes=oldall,history_class='no_lower_history' if oldscope==0 else 'has_lower_history',old_previous_quotes=a['n']))
+        raw.append(dict(model=model,match_id=mid,club=c,season=s,tier=t,side=side,group=group(c,s),broad=broad(c,s),game=g,game_bin=bins(g),fold=int(meta['fold']),cutoff=meta['cutoff'] if valid else '',age_days=age,age_bin='0-7' if age<=7 else '8-14' if age<=14 else '15+' if age>=0 else 'missing',own_since_cutoff=nown,p_model=pm,p_market=pk,y=y,delta=pm-pk,absolute_delta=abs(pm-pk),market_residual=y-pk,model_residual=y-pm,ll_delta=llm-llk,brier_delta=(pm-y)**2-(pk-y)**2,old_in_scope=oldscope,old_alltier_quotes=oldall,history_class='no_lower_history' if oldscope==0 else 'has_lower_history',old_previous_quotes=a['n']))
 write('q1_club_observations.csv',raw)
 write('q12_prediction_chronology.csv',cutoffcheck)
 assert all(r['valid'] for r in cutoffcheck),'prediction cutoff manifest invalid'

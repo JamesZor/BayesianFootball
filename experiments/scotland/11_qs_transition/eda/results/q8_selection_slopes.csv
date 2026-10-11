@@ -1,0 +1,5 @@
+broad,coordinate,n,slope_naive,old_measurement_reliability,slope_error_corrected,old_min,old_max,interpretation
+relegated,q,16,0.19898389889503,0.9845129894027005,0.20211404119284662,-0.6436322855271167,-0.009326780033899668,whole-destination descriptive slope only; forward carry choice in q8_carry_forward
+promoted,q,18,0.3680041407755394,0.9832873863069257,0.37425898664042223,-0.1284294084910777,0.5825310202936703,whole-destination descriptive slope only; forward carry choice in q8_carry_forward
+relegated,s,16,0.536832263580128,0.9424501947654285,0.569613404041731,-0.023912946539095106,0.1871696777349779,whole-destination descriptive slope only; forward carry choice in q8_carry_forward
+promoted,s,18,0.43488192684922417,0.8766070907119989,0.4960967478554204,0.010074957242727431,0.17645324222518535,whole-destination descriptive slope only; forward carry choice in q8_carry_forward
