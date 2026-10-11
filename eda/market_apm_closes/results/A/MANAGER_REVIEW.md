@@ -21,7 +21,7 @@ current-match coefficient is unchanged:
 | **sco_league_two** | 523 | 0.656 | −0.0277 | −0.0164 | **+0.0020** | **−0.0291** |
 | sco_premiership | 774 | 0.550 | −0.0327 | −0.0208 | −0.0045 | −0.0302 |
 
-These are point estimates only, from OLS without an intercept adjustment beyond centring (`covar_pop`).
+These are point estimates only, from OLS with an intercept, from centred moments (`covar_pop`).
 No standard errors were computed here. Phase B should report the joint model with season-block
 intervals.
 
