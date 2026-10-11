@@ -40,7 +40,8 @@ function p27_phase2(out)
     DF.nrow(cells.summary) == 9 || error("expected 9 cells, got $(DF.nrow(cells.summary))")
 
     unc = X.uncertainty(cells)
-    summary = DF.leftjoin(cells.summary, DF.select(unc, DF.Not([:n_days, :n_bets, :clv_mean_pp])), on = [:price, :cell])
+    summary = DF.leftjoin(cells.summary, DF.select(unc, :price, :cell, :g_lo95, :g_hi95, :wealth_lo95, :wealth_hi95,
+                                                   :roi_lo95, :roi_hi95, :clv_lo95, :clv_hi95), on = [:price, :cell])
     w("phase2_summary.csv", summary)
     w("phase2_uncertainty.csv", unc)
     w("phase2_paired.csv", X.paired(cells))
