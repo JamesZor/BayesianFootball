@@ -373,7 +373,7 @@ function rates_2627(ds, closebook)
     rates = MM.invert_panel(ds, closebook; config, seasons = [SEASON])
     table = rates_table(rates, config)
     println("RATES_2627 fixtures=", DF.nrow(table), " accepted=", count(rates.accepted), " full_book=",
-            count(table.full_book), " refusals=", join(["$(k)=$(v)" for (k, v) in
+            count(table.full_book), " refusals=", join(["$(isempty(k) ? "accepted" : k)=$(v)" for (k, v) in
             sort!(collect(pairs(Dict(r => count(==(r), rates.reason) for r in unique(rates.reason)))))], ";"))
     return rates, table
 end
