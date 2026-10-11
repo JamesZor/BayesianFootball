@@ -70,3 +70,13 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - Zero-centring stays over incumbents only (or the entrant offset is subtracted), proved by a test
     that incumbents' fitted states don't move when the entrant prior mean moves.
   - Opt-in, with all src gates. If it isn't feasible in S2, the stage stops PHASES2_BLOCKED.
+- **D11 (2026-10-12 ~00:05, S2 question) Zero-allocation regression in the unchanged control.**
+  - The harness smoke fails `tape_allocation`: 57,568 B per gradient on the 23/24 opening fold, and
+    the original wave-2 config allocates 86,544 B. Wave 2 passed this same check at 0 B
+    (`06_.../PHASE0.md:16`), so this is a regression in code or packages.
+  - Ruling: investigate and repair, time-boxed to 60 minutes. First environment vs code (run the
+    audit on the wave-2 src, compare Manifests), then bisect, or pin a package if that is the
+    documented fix.
+  - **Gates are not weakened:** no limit change, no skipped check, no gate-code change. If it isn't
+    fixed in time, S2 stops PHASES2_BLOCKED with `build/ALLOCATION_BLOCKER.md`, and the chain stops
+    there for James.
