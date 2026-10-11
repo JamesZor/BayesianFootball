@@ -144,7 +144,7 @@ for s in SEASONS:
     for t in range(54,58):
         qq=sorted([q for q in quotes if int(q['tournament'])==t and q['season']==s],key=lambda q:(q['date'],int(q['match_id'])))
         if len(qq)<25:continue
-        for name,part in [('whole',qq),('late80',qq[-80:]),('early60',qq[:60]),('late60',qq[-60:]),('mid60',qq[max(0,len(qq)//2-30):len(qq)//2+30])]:
+        for name,part in [('whole',qq),('late80',qq[-80:]),('early60',qq[:60]),('late60',qq[-60:]),('mid60',qq[-120:-60])]:
             recons[(s,t,name)]=reconstruct(part,t,s,name)
 write('q3_reconstruction_graph.csv',graphrows)
 write('market_team_reconstruction.csv',reconrows)
@@ -339,10 +339,11 @@ def learn(s,coord,method):
         if method=='P2_carry_est':f=np.r_[f,old]
         x.append(f);y.append(target(q,coord)-base)
     nparam=4 if method=='P2_carry_est' else 3
-    if not x:return dict(offset=np.zeros(3),carry=carry,sigma=.35 if coord=='D' else .2,cov=np.eye(3)*(.35 if coord=='D' else .2)**2,n=0,seasons=[],status='unlearned broad fallback')
+    center=np.array([.235,-.235,0.]) if method=='P2_A2shrink' and coord=='D' else np.zeros(3)
+    if not x:return dict(offset=center,carry=carry,sigma=.35 if coord=='D' else .2,cov=np.eye(3)*(.35 if coord=='D' else .2)**2,n=0,seasons=[],status='unlearned A2-centered fallback' if method=='P2_A2shrink' else 'unlearned broad fallback')
     x=np.array(x);y=np.array(y)
     ridge=np.eye(nparam)*2
-    beta=np.linalg.solve(x.T@x+ridge,x.T@y)
+    beta=np.linalg.solve(x.T@x+ridge,x.T@y+(ridge@center if nparam==3 else np.zeros(nparam)))
     if method=='P2_carry_est':
         newcarry=float(np.clip(1+beta[-1],0,1))
         # Re-estimate offsets conditional on clipped carry.
@@ -358,11 +359,11 @@ def learn(s,coord,method):
     return dict(offset=beta,carry=carry,sigma=sigma,cov=cov,n=len(training),seasons=sorted(set(q['season'] for q in training)),status='earlier seasons only')
 
 
-methods=['league_mean','no_shift','A2_step','P1','P2','P2_carry_est','P3_fixed_step_residual','results_tier']
+methods=['league_mean','no_shift','A2_step','P1','P2','P2_A2shrink','P2_carry_est','P3_fixed_step_residual','results_tier']
 params=[];priorrows=[];manifest=[]
 # A2 comparison is STEP-ONLY: no selected W2 posterior carry/jump constants.
 for s in SEASONS[1:]:
-    for method in ['P1','P2','P2_carry_est']:
+    for method in ['P1','P2','P2_A2shrink','P2_carry_est']:
         for coord in ['D','U']:
             p=learn(s,coord,method)
             for i,g in enumerate(GROUPS):params.append(dict(target_season=s,method=method,coordinate=coord,group=g,carry=p['carry'],offset=p['offset'][i],sigma_predictive=p['sigma'],offset_se=math.sqrt(p['cov'][i,i]),n_training_fixtures=p['n'],training_seasons=','.join(p['seasons']),status=p['status']))
@@ -382,8 +383,8 @@ for s in SEASONS[1:]:
                 actual=target(q,coord)
                 for method in methods:
                     base,f,old,var=feature(q,coord,1)
-                    p=learn(s,coord,'P2' if method not in ['P1','P2_carry_est'] else method)
-                    if method in ['P1','P2','P2_carry_est']:
+                    p=learn(s,coord,'P2' if method not in ['P1','P2_carry_est','P2_A2shrink'] else method)
+                    if method in ['P1','P2','P2_carry_est','P2_A2shrink']:
                         base,f,old,var=feature(q,coord,p['carry']);pred=base+f@p['offset'];sig=math.sqrt(p['sigma']**2+f@p['cov']@f)
                     else:
                         pred=base;sig=math.sqrt(p['sigma']**2+var)
@@ -415,8 +416,10 @@ for s in SEASONS[1:]:
                 rr=recons.get((prev(s),tiers.get((club,prev(s))),'late80'))
                 if rr:stateids.update(rr['ids'])
             labelids={int(x['match_id']) for x in opening if x['season']<s}
-            allids=stateids|labelids
-            manifest.append(dict(target_season=s,club=c,match_id=mid,source_ids=';'.join(map(str,sorted(allids))),state_source_ids=';'.join(map(str,sorted(stateids))),hyper_label_ids=';'.join(map(str,sorted(labelids))),max_source_date=max([quote_by_id[m]['date'] for m in allids],default=''),source_seasons=','.join(sorted({quote_by_id[m]['season'] for m in allids})),target_node_date=f'20{s[:2]}-07-01',violations=sum(quote_by_id[m]['season']>=s or dt(quote_by_id[m]['date'])>=date(2000+int(s[:2]),7,1) for m in allids),fallback=anchor(c,s)['missing'],input_hash=hashlib.sha256(json.dumps(sorted(allids)).encode()).hexdigest(),gauge='q sum-zero by old division; s mu_ref=0; destination relative (pooled mapping unresolved)'))
+            # Historical gamma and fallback division-style estimates also use earlier quotes.
+            normalizationids={int(x['match_id']) for x in quotes if x['season']<s}
+            allids=stateids|labelids|normalizationids
+            manifest.append(dict(target_season=s,club=c,match_id=mid,source_ids=';'.join(map(str,sorted(allids))),state_source_ids=';'.join(map(str,sorted(stateids))),hyper_label_ids=';'.join(map(str,sorted(labelids))),normalization_source_ids=';'.join(map(str,sorted(normalizationids))),max_source_date=max([quote_by_id[m]['date'] for m in allids],default=''),source_seasons=','.join(sorted({quote_by_id[m]['season'] for m in allids})),target_node_date=f'20{s[:2]}-07-01',violations=sum(quote_by_id[m]['season']>=s or dt(quote_by_id[m]['date'])>=date(2000+int(s[:2]),7,1) for m in allids),fallback=anchor(c,s)['missing'],input_hash=hashlib.sha256(json.dumps(sorted(allids)).encode()).hexdigest(),gauge='q sum-zero by old division; s mu_ref=0; destination relative (pooled mapping unresolved)'))
 write('q2_prior_predictions.csv',priorrows)
 write('q2_prior_parameters.csv',params)
 write('q12_source_manifest.csv',manifest)
@@ -446,10 +449,10 @@ for q in opening:
         if broad(c,s)=='nonmover' or game[(mid,c)]>5:continue
         for coord in ['D','U']:
             y=target(q,coord)
-            for method in ['league_mean','A2_step','no_shift','P1','P2','P2_carry_est']:
-                p=learn(s,coord,method if method in ['P1','P2','P2_carry_est'] else 'P2')
+            for method in ['league_mean','A2_step','no_shift','P1','P2','P2_A2shrink','P2_carry_est']:
+                p=learn(s,coord,method if method in ['P1','P2','P2_A2shrink','P2_carry_est'] else 'P2')
                 base,f,old,var=feature(q,coord,p['carry'] if method in ['P1','P2_carry_est'] else 1)
-                pred=base+(f@p['offset'] if method in ['P1','P2','P2_carry_est'] else 0)
+                pred=base+(f@p['offset'] if method in ['P1','P2','P2_A2shrink','P2_carry_est'] else 0)
                 sign=-1 if coord=='D' else 1
                 for club,sgn in [(q['home'],1),(q['away'],sign)]:
                     if broad(club,s)=='nonmover':continue
