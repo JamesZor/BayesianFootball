@@ -1,0 +1,2 @@
+total_step,attack_share,concession_share,attack_improvement,concession_improvement,q_improvement,s_change,warning
+0.47,0.48,0.52,0.2256,0.2444,0.235,-0.0094,"compare q contrasts with .235, never with .47"

@@ -41,7 +41,7 @@ y=np.array([r['book_z'] for r in bridge]);beta=np.linalg.lstsq(x,y,rcond=None)[0
 bridge_slope=float(beta[1]);bridge_intercept=float(beta[0]);res=y-x@beta
 write('q9_source_bridge.csv',[dict(n_matches=len(bridge),intercept=bridge_intercept,slope=bridge_slope,residual_sd=float(np.std(res,ddof=2)),correlation=float(np.corrcoef(x[:,1],y)[0,1]),timestamp_alignment='unverified; not a source-identification pass')])
 goals={int(r['match_id']):r for r in read('q3_cup_regulation.csv')}
-rows=[];coverage=defaultdict(Counter if False else dict)
+rows=[]
 counts=defaultdict(lambda:defaultdict(int))
 for mid,r in fixtures.items():
     cup=int(r['tournament_id'])
@@ -58,7 +58,7 @@ for mid,r in fixtures.items():
     gr=goals.get(mid,{});gh=gr.get('home_regulation');ga=gr.get('away_regulation')
     if gh and ga:counts[cup]['regulation_scores']+=1
     pp=book.get(mid)
-    rows.append(dict(match_id=mid,competition=cup,season=s,home=h,away=a,home_tier=th,away_tier=ta,gap=abs(th-ta),q_home=qh,q_away=qa,s_home=sh,s_away=sa,book_z=.5*math.log(pp['1']/pp['2']) if pp else '',home_reg=int(gh) if gh else '',away_reg=int(ga) if ga else '',old_firm=('Celtic' in [h,a] or 'Rangers' in [h,a]),date=r['match_date'],label='same-season league ratings, descriptive only; no cup prior production input'))
+    rows.append(dict(match_id=mid,competition=cup,season=s,home=h,away=a,home_tier=th,away_tier=ta,gap=abs(th-ta),q_home=qh,q_away=qa,s_home=sh,s_away=sa,book_z=.5*math.log(pp['1']/pp['2']) if pp else '',home_reg=int(gh) if gh else '',away_reg=int(ga) if ga else '',old_firm=('celtic' in [h.lower(),a.lower()] or 'rangers' in [h.lower(),a.lower()]),date=r['match_date'],label='same-season league ratings, descriptive only; no cup prior production input'))
 write('q3_cup_rows.csv',rows)
 write('q3_cup_coverage.csv',[dict(competition=k,**v) for k,v in sorted(counts.items())])
 # Quotient slope is learned on same-source league bridge, not pretending 1X2 identifies U.

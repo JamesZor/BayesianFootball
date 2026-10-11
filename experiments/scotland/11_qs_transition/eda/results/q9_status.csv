@@ -1,0 +1,4 @@
+diagnostic,status,n_matches,limitation
+bookmaker vs Betfair source bridge,run descriptively,2955,timestamp alignment unavailable
+cup source/competition sensitivity,run descriptively,303,same-season reconstructed anchors; no timestamped prior eligibility
+lineup retention bins,not run (optional),0,squad data not exported; cannot isolate rotation
