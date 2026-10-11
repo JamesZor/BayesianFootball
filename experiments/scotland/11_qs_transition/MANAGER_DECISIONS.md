@@ -80,3 +80,11 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - **Gates are not weakened:** no limit change, no skipped check, no gate-code change. If it isn't
     fixed in time, S2 stops PHASES2_BLOCKED with `build/ALLOCATION_BLOCKER.md`, and the chain stops
     there for James.
+- **D12 (2026-10-12 ~00:40) The beast is unreachable over Tailscale.**
+  - S2's control and QS+A2 smokes had passed all hard checks, which implies D11's allocation problem
+    was resolved; see S2's report.
+  - The new components (`e2e956cf`) are committed but ungated.
+  - The manager diagnosed it: the beast is up (sshd answers on the public IP, key not authorised
+    there), but the Tailscale path returns nothing (rx 0).
+  - Ruling: wait until 03:30, with a low-cadence connectivity watch, then continue; otherwise
+    `HANDOVER.md` and PHASES2_BLOCKED.
