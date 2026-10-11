@@ -7,7 +7,7 @@ using Statistics, UUIDs
 BayesianFootball.DotEnv.load!(ENV, joinpath(pkgdir(BayesianFootball), ".env"))
 s1audit("auxiliary") do conn
     # Processed SofaScore source; never confuse this with Betfair close.
-    ids=Set(Int.(filter(r->String(r.season)<="25/26",s1ds.matches).match_id))
+    ids=Set(Int.(filter(r->String(r.season)<="25/26" && Date(r.match_date)<Date(2026,7,1),s1ds.matches).match_id))
     CSV.write(joinpath(S1OUT,"bookmaker_odds.csv"),filter(r->Int(r.match_id) in ids,s1ds.odds))
     ENV["PGOPTIONS"]="-c default_transaction_read_only=on"
     betconn=LibPQ.Connection(ENV["BF_DB_URL"])

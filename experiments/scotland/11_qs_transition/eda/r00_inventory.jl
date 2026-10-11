@@ -2,7 +2,9 @@
 ENV["JULIA_PKG_PRECOMPILE_AUTO"] = "0"
 using BayesianFootball, CSV, DataFrames, Dates, LinearAlgebra, Serialization, LibPQ
 BLAS.set_num_threads(1)
-include(joinpath(@__DIR__, "../../08_qs_marketobs_backtest/l00_phase0_inventory.jl"))
+if !isdefined(Main, :QSBacktestPhase0)
+    include(joinpath(@__DIR__, "../../08_qs_marketobs_backtest/l00_phase0_inventory.jl"))
+end
 const S1OUT = joinpath(@__DIR__, "results")
 const S1CACHE = "/root/BF_runs/a76a65df/.cache/datastore_ScottishPyramid.jls"
 function s1audit(f, label)
@@ -29,7 +31,8 @@ end
 s1audit("inventory") do conn
     global s1ds = Serialization.deserialize(S1CACHE)
     println("CACHE matches=", nrow(s1ds.matches), " fields=", join(string.(propertynames(s1ds.matches)),","))
-    m = filter(r->String(r.season) <= "25/26", s1ds.matches)
+    # Cup season labels can be calendar years; enforce the actual date embargo too.
+    m = filter(r->String(r.season) <= "25/26" && Date(r.match_date) < Date(2026,7,1), s1ds.matches)
     CSV.write(joinpath(S1OUT,"fixtures.csv"),m)
     coverage = combine(groupby(s1ds.matches, [:season,:tournament_id]), nrow=>:n_fixtures)
     CSV.write(joinpath(S1OUT,"q6_fixture_inventory.csv"),coverage)
