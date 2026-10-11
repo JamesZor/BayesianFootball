@@ -13,3 +13,38 @@ Each gate decision the manager took for James, with its reason. James reviews th
     bookmaker odds, lineup minutes) for secondary questions.
 - **D3 (2026-10-11) S1 runs on gpt-6.1-sol with thinking high** (diagnosis). Astra used about 24%
   of the 5h window in 10 minutes, so it is not used for the build stages.
+- **D4 (2026-10-11 ~23:55) S1 accepted** (commits up to `e319eb1f`). Reproduction checks pass: W2
+  cohorts 5 / 6 / 2, 1,070 and 710 fixtures, 8 DB audits unchanged, 0 chronology violations.
+  - **Cause verdict as S1 reports it.** For the W2 bases, (b) tier transport is the main cause, with
+    some (a) cold start for clubs without history. For QS on its shorter panel, the bias is small
+    and **positive in both directions** (+1.50 relegated, +1.44 promoted). There is
+    promotion-specific (d) lag (+1.68 pp/week). (c), a summer step, is not securely identified.
+  - The cohorts are tiny (QS 3 / 4), so none of this is a powered mechanism test. That is why
+    the S3 arms on W2's longer panel matter.
+- **D5 Evidence policy for the market prior (S1's open blocker): an "entrant prior".**
+  - The market prior applies **only to clubs with no in-scope history in the fold's training
+    window**, i.e. clubs entering League One/Two from the Championship or Premiership.
+  - It is built from their **out-of-scope (54/55) closes** of seasons strictly before the target
+    season. QS's market likelihood is lower-scope only, so the overlap with the likelihood is zero
+    **by construction**; S2 must verify that count = 0 as a hard check.
+  - Clubs moving between League One and League Two already have in-scope history and get no market
+    prior. They are handled by A2 (F3) and the likelihood.
+  - Clubs with no out-of-scope market history fall back to the A2 tier position.
+  - Reason: this is disjoint and exact, not empirical Bayes; it removes S1's double-counting
+    blocker; and it targets exactly the clubs that start cold. An overlapping EB arm is not built.
+- **D6 Prior form.** S1's A2-centred P2 mean transport: the club's last out-of-scope market q/s plus a
+  direction shift, centred on A2's step, with parameters from movers in earlier seasons only. Unit
+  carry first; no free q/s covariance. The SD comes from S1's prior-only residuals.
+- **D7 S2 build list, in S1's order with D5 applied:**
+  1. the control (qs_marketobs) on W2's panel;
+  2. QS+A2 composition (F3);
+  3. the entrant prior (F1+F2) with a provenance manifest;
+  4. the QS target-season step (F4, opt-in);
+  5. a check whether weekly refits (F6) can be separated from the weekly dynamics clock.
+
+  Pooled scope, cups and pxG (F5/F7) are deferred, because S1 found the cup identification not
+  cleared. The manager revisits one pooled arm (lower + Championship, goals only) at the S3 → S4
+  gate, since James asked for scope arms.
+- **D8 S3 arm design: one factor at a time** vs the control on W2's panel: F3, F1+F2 (entrant prior),
+  F4, F6 (if separable). Combinations of the passing factors go to S4. James was unsure; this is the
+  manager's recommendation from DESIGN §5.
