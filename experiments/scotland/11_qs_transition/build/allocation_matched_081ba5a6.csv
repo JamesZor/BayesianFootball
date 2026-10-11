@@ -1,0 +1,4 @@
+source_label,fold,rows,parameters,instructions,allocated_bytes,gradient_ms
+081ba5a6,1,720,99,658,0,0.044643
+081ba5a6,21,720,99,658,0,0.043551
+081ba5a6,41,720,95,642,0,0.04295

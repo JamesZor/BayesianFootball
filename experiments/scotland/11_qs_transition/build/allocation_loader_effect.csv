@@ -1,0 +1,4 @@
+source_label,fold,rows,parameters,instructions,allocated_bytes,gradient_ms
+current_after_wave2_loader,1,720,99,658,0,0.04332
+current_after_wave2_loader,21,720,99,658,0,0.044282
+current_after_wave2_loader,41,720,95,642,0,0.043900999999999996

@@ -1,0 +1,4 @@
+source_label,fold,rows,parameters,instructions,allocated_bytes,gradient_ms
+current,1,720,99,658,0,0.046746
+current,21,720,99,658,0,0.044312
+current,41,720,95,642,0,0.043832

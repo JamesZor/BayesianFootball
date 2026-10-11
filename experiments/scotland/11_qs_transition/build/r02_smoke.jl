@@ -20,7 +20,6 @@ CSV.write(joinpath(@__DIR__,"panel.csv"),DataFrame([(; folds=60,fixtures=1070,
     first_season=last(first(s2boundaries)).target_season,last_season=last(last(s2boundaries)).target_season)]))
 
 # %% 3. Model / training / gates / diagnostics / persistence
-s2only = get(ENV,"S2_ONLY","qs_control,qs_a2")
-for candidate in filter(c -> c.name in split(s2only,","), S2C.CANDIDATES)
-    S2Smoke.run(candidate,s2ds,S2C.EXPERIMENT)
-end
+s2only = get(ENV,"S2_ONLY","qs_control")
+s2candidate = only(filter(c -> c.name==s2only, S2C.CANDIDATES))
+S2Smoke.run(s2candidate,s2ds,S2C.EXPERIMENT)

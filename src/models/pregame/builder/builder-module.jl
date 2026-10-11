@@ -26,6 +26,7 @@ include("engine.jl")
 # dynamics hooks that file declares.
 include("grw_dynamics.jl")
 include("quality_style_dynamics.jl")
+include("quality_style_transition.jl")
 include("equations.jl")
 
 export CountModelBuilder, PoissonCountModel, NegBinCountModel, ComposableCountModel

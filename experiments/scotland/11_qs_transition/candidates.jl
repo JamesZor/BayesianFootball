@@ -24,10 +24,23 @@ function qs_recipe(name; dynamics=weak_qs(), tiers=nothing)
     tiers === nothing || add!(builder, tiers)
     return builder |> add(MarketRateObservation(feature=MARKET_FEATURE)) |> build
 end
+if !isdefined(Main,:QSTransitionInputs)
+    Base.include(Main,joinpath(@__DIR__,"l01_entrant_prior.jl"))
+end
+const ENTRANT_FEATURE = Main.QSTransitionInputs.EntrantPriorFeature()
 const CANDIDATES = [
     Harness.Candidate(name="qs_control", model=qs_recipe("qs_control"), scope=SCOPE,
         sampler=DEFAULT_SAMPLER, role=:control, hypothesis="Unchanged wave-2 QS goals+market observation on W2 panel."),
     Harness.Candidate(name="qs_a2", model=qs_recipe("qs_a2"; tiers=PyramidTiers(
         anchor=:full_pyramid, carry=EstimatedCarry(), jump=EstimatedJump())), scope=SCOPE,
         sampler=DEFAULT_SAMPLER, role=:candidate, hypothesis="F3: one full-pyramid A2 term, 0.48 attack / 0.52 concession."),
+    Harness.Candidate(name="qs_entrant", model=qs_recipe("qs_entrant";
+        dynamics=weak_qs(entrant_feature=ENTRANT_FEATURE)),scope=SCOPE,
+        sampler=DEFAULT_SAMPLER,role=:candidate,
+        hypothesis="F1F2/D10: persistent, disjoint-endpoint entrant prior at the first target-season node; incumbents centre alone."),
+    Harness.Candidate(name="qs_summer",model=qs_recipe("qs_summer";
+        dynamics=weak_qs(target_season_step=true)),scope=SCOPE,
+        sampler=DEFAULT_SAMPLER,role=:candidate,
+        hypothesis="F4: independent target-season macro uncertainty, integrated at the opening fold."),
 ]
+# F6 intentionally absent: cadence/clock are tied; see build/F6_DECISION.md.

@@ -1,0 +1,2 @@
+candidate	fold	fold_index	rows	params	instructions	bytes	gradient_ms	recipe_hash	recipe_hash_before	worst_ld	worst_compiled	worst_fresh
+qs_control	opening	41	720	95	642	0	0.044592	f75623499919dd9e2e045595bdbe3735c1b2e7748b0655602844ba68a0f46ba7		NaN	NaN	NaN

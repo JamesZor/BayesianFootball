@@ -33,8 +33,14 @@ function QualityStyleGRW(;
     r₀::ContinuousUnivariateDistribution = LogNormal(log(0.3), 0.35),
     rₛ::ContinuousUnivariateDistribution = LogNormal(log(0.4), 0.6),
     rₖ::ContinuousUnivariateDistribution = LogNormal(log(0.3), 0.35),
+    target_season_step::Bool = false,
+    entrant_feature = nothing,
 )
-    return QualityStyleGRW(z₀, zₛ, zₖ, τ₀, τₛ, τₖ, r₀, rₛ, rₖ)
+    base = QualityStyleGRW(z₀, zₛ, zₖ, τ₀, τₛ, τₖ, r₀, rₛ, rₖ)
+    target_season_step && entrant_feature !== nothing && throw(ArgumentError(
+        "combined QS entry/summer factors are not yet validated"))
+    entrant_feature === nothing || return EntrantQualityStyleGRW(base, entrant_feature)
+    return target_season_step ? TargetSeasonQualityStyleGRW(base) : base
 end
 
 "Compute one centred non-centred walk with observed target steps."
@@ -121,7 +127,8 @@ end
 
 "Reconstruct q or s from a chain, using pooled τ and r sites at each scale."
 function _qs_reconstruct_trajectory(chain::Chains, prefix::String, n_teams::Int,
-                                    n_history::Int, n_target::Int; style::Bool = false)
+                                    n_history::Int, n_target::Int; style::Bool = false,
+                                    target_season_step::Bool = false)
     n_samples = size(chain, 1) * size(chain, 3)
     base = first(split(prefix, "."))
     scale(label) = begin
@@ -134,8 +141,9 @@ function _qs_reconstruct_trajectory(chain::Chains, prefix::String, n_teams::Int,
     for team in 1:n_teams
         z_init[:, team, 1] = vec(Array(chain[_grw_chain_symbol(chain, "$prefix.z_init", team)]))
     end
-    z_season = Array{Float64}(undef, n_samples, n_teams, n_history - 1)
-    for step in 1:(n_history - 1), team in 1:n_teams
+    n_season = n_history - 1 + Int(target_season_step && n_target > 0)
+    z_season = Array{Float64}(undef, n_samples, n_teams, n_season)
+    for step in 1:n_season, team in 1:n_teams
         z_season[:, team, step] = vec(Array(chain[_grw_chain_symbol(chain, "$prefix.z_season", team, step)]))
     end
     z_target = Array{Float64}(undef, n_samples, n_teams, n_target)
@@ -144,16 +152,16 @@ function _qs_reconstruct_trajectory(chain::Chains, prefix::String, n_teams::Int,
     end
     increments = n_target == 0 ? cat(z_init .* scale("₀"), z_season .* scale("ₛ"); dims = 3) :
         cat(z_init .* scale("₀"), z_season .* scale("ₛ"), z_target .* scale("ₖ"); dims = 3)
-    acc = grw_accumulators(n_history, n_target)
+    acc = grw_accumulators(n_history, n_target; target_season_step)
     # Multiply by the same accumulator maps as the in-model walk: zero-width
     # season/target matrices are safe, unlike a state-count off-by-one cumsum.
     raw = reshape(increments[:, :, 1], n_samples, n_teams, 1) .* reshape(acc.initial, 1, 1, :)
-    for step in 1:(n_history - 1)
+    for step in 1:n_season
         raw .+= reshape(increments[:, :, step + 1], n_samples, n_teams, 1) .*
                  reshape(acc.season[step, :], 1, 1, :)
     end
     for step in 1:n_target
-        raw .+= reshape(increments[:, :, n_history + step], n_samples, n_teams, 1) .*
+        raw .+= reshape(increments[:, :, 1 + n_season + step], n_samples, n_teams, 1) .*
                  reshape(acc.target[step, :], 1, 1, :)
     end
     return permutedims(raw .- mean(raw, dims = 2), (2, 3, 1))
