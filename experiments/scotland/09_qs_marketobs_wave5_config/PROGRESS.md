@@ -20,7 +20,15 @@ Brief: `experiments/claude_qs_wave5_config_brief.md`. Sentinels: W5_HANDOVER / W
 - [x] λ curves for 6 baskets `phase1_lambda_curve.csv`; matched λ + selection `phase1_selection.csv`;
   sensitivity `phase1_sensitivity.csv`; per-day solve diagnostics `phase1_basket_diag.csv`.
 - [x] Selected **B1_canonical at λ 12** (g 17.520×10⁻³, MDD −13.07%); fallback B1 at λ 23. `FREEZE.md` pushed.
-- [ ] Phase 2 waits for the manager. Runner must call `QSWave5.release!` (FREEZE.md committed).
+- [x] Manager released FREEZE `04fdba71`.
+
+## Phase 2: evaluation, decision, paper-trading spec (DONE)
+- [x] Runner `l03_phase2_eval.jl` + `r02_phase2_eval.jl` (`716c84a1`), the only `release!` caller. DB audit unchanged.
+- [x] Results `results/phase2/` (`0f600b92`): summary (all wave-4 columns, both bootstrap intervals,
+  paired d), directions, markets, daily, bets (gz), solve diag, decision.
+- [x] Ruling 8: **paper-trade the frozen config** (25/26 g 9.70×10⁻³, MDD −19.26% vs bound −20.39%).
+- [x] `REPORT.md`, `PAPER_TRADING_CONFIG.md`.
+- [x] TODO 044 closed; beast pane %458 closed.
 
 ## Beast
 - Checkout: `/root/BF_runs/qs_wave5` (detached worktree of `/root/BayesianFootball`).

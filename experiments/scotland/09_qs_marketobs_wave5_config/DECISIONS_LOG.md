@@ -159,3 +159,16 @@ launching Claude session. Scope set by James.
   Phase 2 asserts the half of each table's dates.
 - **Ruling 8** is applied in code to the T−25m 25/26 frozen row: fallback iff g ≤ 0 or MDD < 1.5 ×
   target (−20.3928%). The result goes to `phase2_decision.csv`.
+
+## 2026-10-11: Phase 2 result (runner `716c84a1`, results `0f600b92`, log `logs/phase2.log`)
+
+- `SEAL_RELEASED freeze_commit=04fdba71`. DB audit unchanged (10 tables).
+- All integrity checks passed: every basket's 24/25 g equals its Phase-1 g; m12 and wave-4 SK reproduce
+  Phase 0's per-season numbers on both halves.
+- 25/26, T−25m: frozen B1 λ 12 g 9.70×10⁻³ [1.90, 21.89], MDD −19.26%; m12 5.66, −16.15%; fallback
+  5.57, −11.22%; d vs m12 +4.04 [−10.52, 14.54].
+- Candidate ranking on 25/26: B1 9.70 > B3 8.26 > B5 6.37 > B6 6.13 > B2 4.97 > B4 4.41.
+- **Ruling 8: PAPER_TRADE_FROZEN** (g > 0; MDD −19.26 is inside −20.39, a 1.13 pp margin).
+- T−6h (report only): frozen trails m12 on both halves (1.13 vs 6.53; 3.31 vs 4.91).
+- Logs: `phase2.log` is tracked. The Phase 0/1 logs exist locally and on the beast but are untracked
+  (`logs/` is gitignored). Their key lines are reproduced in PROGRESS/DECISIONS and in the results CSVs.
