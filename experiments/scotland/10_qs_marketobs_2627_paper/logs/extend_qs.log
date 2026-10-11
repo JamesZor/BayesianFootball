@@ -1,0 +1,34 @@
+SOURCE ../10_qs_marketobs_2627_paper/l00_p27.jl sha256=e8c725eb1b2a4f3ce31a0c070abb68276ac97b82aad77ad96a68dded385505ae
+SOURCE ../10_qs_marketobs_2627_paper/l01_sampling.jl sha256=070bad68f992ab3fe5c33373a6fd04f38a10805c7b16321b7b9f555d0c164f8e
+SOURCE ../10_qs_marketobs_2627_paper/r01_extend_qs.jl sha256=d59bfe079c83e8f3940c26ab9d5be0f5c4a98a5a16aa4523c0b3b022a90eae1c
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+RUNTIME version=1.12.4 threads=16 BLAS=1 package_root=/root/BF_runs/qs_2627 head=21b755645aad6297addd6f7268f9335907dfbe1a
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+DATASTORE_2627 sha256=f407a1b4c3188472b803804245dd7dbb0011aafc6471390e67038bb8c426c2b6 matches=2049 last=2026-09-19
+FIXTURES_2627 rows=79 played=79 first=2026-08-01 last=2026-09-19
+TRANSITION_CLUBS airdrieonians,east-kilbride,kelty-hearts-fc,ross-county fixtures=28
+ORDERBOOK_2627 sha256=2adb12715f9bfd73b06ae0a71bda5724fdd4b298776789670b5e4bd9f8a5443a markets=420 snapshots=35234 fixtures=70
+PINNED_DATASTORE sha256=c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+RATES_2627 fixtures=79 accepted=56 full_book=56 refusals=accepted=56;no Betfair book=19;summed KL > 0.01=4
+W2_MARKET_TABLE sha256=680bc2283e9c0fc7a896bf01b4ba209cb3aae06f50d00667c98b02f379872549
+QS_MODEL_2627 fit_feature_sha=1c8f47491336db2c8f66dac2668a913693d83e19a3cb9fd933389357bf012fb7 ext_feature_sha=17b3ceb3d1cf9f99a49a80531c722cb50db79be328f5d557f8960f59001cb2f6 rows=1509 new_rows=79 new_full=56
+POSITIONS_1_40 model=qs_marketobs equal=40/40 union_equal=true n_union=710 pass=true
+FILTRATION model=qs_marketobs fold=41 heldout=2026-08-01 2026-08-08 n_heldout=20 train_last=2026-04-25 n_train=710 n_train_2627=0 pass=true
+FILTRATION model=qs_marketobs fold=42 heldout=2026-08-15 2026-08-22 n_heldout=19 train_last=2026-08-08 n_train=730 n_train_2627=20 pass=true
+FILTRATION model=qs_marketobs fold=43 heldout=2026-08-28 2026-08-29 2026-09-05 n_heldout=20 train_last=2026-08-22 n_train=749 n_train_2627=39 pass=true
+FILTRATION model=qs_marketobs fold=44 heldout=2026-09-12 2026-09-15 2026-09-19 n_heldout=20 train_last=2026-09-05 n_train=769 n_train_2627=59 pass=true
+PLAN model=qs_marketobs positions=41,42,43,44 sampler=BayesianFootball.Samplers.QueuedNUTSConfig(1000, 4, 500, 0.65, 10, UniformInit(range=[-0.001, 0.001]), false, true) seed_rule=wave-2 l05_grid.jl chain_seed/post_seed, arm 4 uptime= 11:35:59 up 128 days, 21:23, 36 users,  load average: 0.66, 0.35, 0.30
+SAMPLED model=qs_marketobs positions=41,42,43,44 attempt=0 minutes=1.52 seeds=203104101;203104201;203104301;203104401;203104102;203104202;203104302;203104402;203104103;203104203;203104303;203104403;203104104;203104204;203104304;203104404
+SAMPLED_FILTRATION model=qs_marketobs fold=41 attempt=0 n_train=710 train_last=2026-04-25 heldout_first=2026-08-01 market_obs=517 market_obs_2627=0 pass=true
+SAMPLED_FILTRATION model=qs_marketobs fold=42 attempt=0 n_train=730 train_last=2026-08-08 heldout_first=2026-08-15 market_obs=534 market_obs_2627=17 pass=true
+SAMPLED_FILTRATION model=qs_marketobs fold=43 attempt=0 n_train=749 train_last=2026-08-22 heldout_first=2026-08-28 market_obs=543 market_obs_2627=26 pass=true
+SAMPLED_FILTRATION model=qs_marketobs fold=44 attempt=0 n_train=769 train_last=2026-09-05 heldout_first=2026-09-12 market_obs=554 market_obs_2627=37 pass=true
+CONVERGENCE model=qs_marketobs fold=41 attempt=0 rhat=1.0056 (dyn.r₀) ess_bulk=994.0 ess_tail=1522.0 divergent=0/4000 rerun_due=false
+CONVERGENCE model=qs_marketobs fold=42 attempt=0 rhat=1.0072 (dyn.q.z_season[16, 1]) ess_bulk=629.0 ess_tail=1097.0 divergent=0/4000 rerun_due=false
+CONVERGENCE model=qs_marketobs fold=43 attempt=0 rhat=1.0061 (dyn.τ₀) ess_bulk=718.0 ess_tail=1174.0 divergent=0/4000 rerun_due=false
+CONVERGENCE model=qs_marketobs fold=44 attempt=0 rhat=1.0115 (dyn.q.z_init[13]) ess_bulk=504.0 ess_tail=768.0 divergent=0/4000 rerun_due=false
+EXTENSION_FILE model=qs_marketobs path=/root/BF_runs/qs_2627/out/ext_qs_marketobs_2627.jls sha256=5f6a7e280ab80c254562473dd5f79f85d0d1c18c63310da229528699ab1c04ab heldout=79
+EXTEND_QS_DONE
+DB_AUDIT_AFTER unchanged=true tables=10
+EXTEND_QS_END

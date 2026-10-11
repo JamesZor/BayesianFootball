@@ -1,0 +1,5 @@
+model,fold,attempt,n_train,train_equals_plan,train_last,heldout_first,n_heldout,latents_equal_heldout,n_market_obs,n_market_obs_2627,pass
+qs_marketobs,41,0,710,true,2026-04-25,2026-08-01,20,true,517,0,true
+qs_marketobs,42,0,730,true,2026-08-08,2026-08-15,19,true,534,17,true
+qs_marketobs,43,0,749,true,2026-08-22,2026-08-28,20,true,543,26,true
+qs_marketobs,44,0,769,true,2026-09-05,2026-09-12,20,true,554,37,true

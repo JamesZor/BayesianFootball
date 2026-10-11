@@ -121,3 +121,64 @@ Brief: `experiments/claude_qs_2627_paper_brief.md` (`57cf058e`). Manager: the wa
     `GroupedCVConfig` with 26/27 and its sampler 4 × (800 + 800)) is needed. That is a second sampling job,
     so it needs the manager's go. Its dry run passes: positions 1–40 equal 40/40 with union 710, the
     filtration passes, and it covers 79/79.
+
+## Manager rulings after Phase 0 (2026-10-11)
+
+- Phase 0 accepted. Sampling job 1 (qs, in-memory positions 41–44) and job 2 (m12, in-memory positions 41–44
+  for all 79 fixtures) approved; the m12 DB folds are kept as a check on the 69 shared fixtures only.
+- D12 approved: each price cell decides and settles at its own price; back is primary; report the differing
+  bet sets and the LTP loss of 08-01.
+- m12 condition: held-out 26/27 fixtures must take their XI by exactly the rule of positions 1–40 (no
+  LastHistorical-style shortcut); state which XI they use and list it as a caveat if it is the played XI.
+- Run qs first, then m12, one blocking wait each.
+
+## Phase 1 implementation decisions
+
+- **D14 (2026-10-11) Sampling path.** `l01_sampling.jl` copies `c4_extend_inmemory` and
+  `c4_convergence_table`, with one change: the chain fan-out is wave 2's `sample_pending!` loop (copied, no
+  checkpoints), so each chain runs in its own task after `Random.seed!(seed)`. The rest is unchanged:
+  `Features.create_features` → `Training.sample_fold` per chain → `FoldFit` → `Inference.audit_convergence`
+  (the fit's thresholds) → `Inference._extension_extract_latents`, after `Random.seed!(post_seed)`.
+  Training internals are called through the aliases `TR = BF.Training` and `TI = TR.Inference`. The
+  checker's `BF.Training.` allowlist does not see these alias calls, so they are listed here: `sample_fold`,
+  `FoldFit`, `_inf_narrow`, `audit_convergence`, `sampler_max_depth`, `_extension_extract_latents` and
+  `merge_latents`. None of them persists anything. The before/after DB audit is the guard, and it was
+  unchanged around both jobs.
+- **D15 (2026-10-11) Seed rules.**
+  - **qs** uses the fit's own wave-2 schedule (`06_.../l05_grid.jl`, REPRODUCIBILITY.md), arm 4: chain seed
+    202700000 + 400000 + 100·fold + 10·attempt + chain (fold 41 → 203104101…), post seed 203109000 + attempt.
+  - **m12** has no recorded seed rule; its DB extensions ran `extend_fit` on the task RNG. So a schedule was
+    frozen before sampling: 2026101100 + 100·fold + 10·attempt + chain, post 2026101100 + 9000 + attempt.
+  - The sampler is each fit's own: qs 4 × (500 + 1000); m12 4 × (800 + 800), matching its 800-draw folds as
+    `extend_fit` requires.
+- **D16 (2026-10-11) Results of the jobs.**
+  - **qs** sampled in 1.5 min: max R̂ 1.0056 / 1.0072 / 1.0061 / 1.0115, min tail ESS 1522 / 1097 / 1174 / 768,
+    0 divergences out of 4000 per fold.
+  - **m12** sampled in 0.5 min: max R̂ 1.0061 / 1.0084 / 1.0044 / 1.0053, min tail ESS 1085 / 873 / 1387 / 1504,
+    0 divergences out of 3200 per fold.
+  - No rerun was due. The extensions are at `out/ext_qs_marketobs_2627.jls` (sha `5f6a7e28…`) and
+    `out/ext_m12_2627.jls` (sha `f7328646…`).
+  - The sampled-fold filtration re-checks what actually went into each feature set (`ordered_match_ids`):
+    the training set equals the plan, there is no overlap, the last training day is strictly before the
+    first held-out day, and the latents cover exactly the held-out set. It passes for all 8 folds.
+  - qs market observations per fold: 517 / 534 / 543 / 554. The 26/27 ones among them: 0 / 17 / 26 / 37.
+- **D17 (2026-10-11) m12 held-out XI (manager condition).** The 26/27 held-out fixtures take the **played XI**:
+  the starting rows of `ds.lineups` for that fixture.
+  - The rule lives in the src feature builder (`features/extractors/plus_minus_extractors.jl`). The RAPM
+    ratings are fitted only on the fold's history (`fit_on = :history`). The starting-XI map is then built
+    over every match in the store, and the held-out fixture is looked up in it.
+  - Positions 1–40 used the same builder, so the rule is identical. No MatchDay `LastHistorical` source is
+    involved.
+  - All 79 held-out fixtures have 11 + 11 starters and an entry in the lineup map.
+  - **Caveat for the report:** m12's 26/27 predictions use the confirmed starting XI. That XI is normally
+    published about 60 min before the off, so it is known at T−25m. It still is not a forecast XI, and any
+    change after T−25m would leak.
+- **D18 (2026-10-11) m12 DB-fold check (69 shared fixtures).** The chain shapes are identical (67 / 71 / 71 / 71
+  params × 3200 draws). In-memory vs DB 1X2 probabilities differ by a mean |Δp| of 0.00043 (max 0.0027), with
+  corr(p_home) 0.99992 and mean |Δ log λ| 0.0015. The difference is Monte Carlo only.
+- **D19 (2026-10-11) Log loss (ruling 8).**
+  - The 1X2 per-selection binary log loss and the 3-way log loss come from posterior-mean probabilities
+    through the production double-Poisson grid. The close is the de-vigged mid TWA (D5).
+  - Intervals are slate-clustered 95%, resampling match days (napkin `cn_summary`: B 2000, seed 20260928).
+  - Model minus close is reported only on the 60 fixtures that have a close.
+  - In `phase1_logloss.csv`, the `mid_close` rows under panel `all_79` cover only the 60 fixtures with a close.

@@ -1,0 +1,31 @@
+SOURCE ../10_qs_marketobs_2627_paper/l00_p27.jl sha256=e8c725eb1b2a4f3ce31a0c070abb68276ac97b82aad77ad96a68dded385505ae
+SOURCE ../10_qs_marketobs_2627_paper/l01_sampling.jl sha256=070bad68f992ab3fe5c33373a6fd04f38a10805c7b16321b7b9f555d0c164f8e
+SOURCE ../10_qs_marketobs_2627_paper/r02_extend_m12.jl sha256=35722edeef9be0f3e3ac5fb33a0a61f9bb0184cdaa8535f64682480d4c370ef9
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+RUNTIME version=1.12.4 threads=16 BLAS=1 package_root=/root/BF_runs/qs_2627 head=21b755645aad6297addd6f7268f9335907dfbe1a
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+DATASTORE_2627 sha256=f407a1b4c3188472b803804245dd7dbb0011aafc6471390e67038bb8c426c2b6 matches=2049 last=2026-09-19
+FIXTURES_2627 rows=79 played=79 first=2026-08-01 last=2026-09-19
+TRANSITION_CLUBS airdrieonians,east-kilbride,kelty-hearts-fc,ross-county fixtures=28
+ORDERBOOK_2627 sha256=2adb12715f9bfd73b06ae0a71bda5724fdd4b298776789670b5e4bd9f8a5443a markets=420 snapshots=35234 fixtures=70
+PINNED_DATASTORE sha256=c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+POSITIONS_1_40 model=m12 equal=40/40 union_equal=true n_union=710 pass=true
+FILTRATION model=m12 fold=41 heldout=2026-08-01 2026-08-08 n_heldout=20 train_last=2026-04-25 n_train=710 n_train_2627=0 pass=true
+FILTRATION model=m12 fold=42 heldout=2026-08-15 2026-08-22 n_heldout=19 train_last=2026-08-08 n_train=730 n_train_2627=20 pass=true
+FILTRATION model=m12 fold=43 heldout=2026-08-28 2026-08-29 2026-09-05 n_heldout=20 train_last=2026-08-22 n_train=749 n_train_2627=39 pass=true
+FILTRATION model=m12 fold=44 heldout=2026-09-12 2026-09-15 2026-09-19 n_heldout=20 train_last=2026-09-05 n_train=769 n_train_2627=59 pass=true
+PLAN model=m12 positions=41,42,43,44 sampler=BayesianFootball.Samplers.QueuedNUTSConfig(800, 4, 800, 0.65, 10, UniformInit(range=[-0.001, 0.001]), false, true) seed_rule=new frozen schedule 2026101100 + 100 fold + 10 attempt + chain uptime= 11:38:03 up 128 days, 21:25, 36 users,  load average: 3.49, 1.72, 0.82
+SAMPLED model=m12 positions=41,42,43,44 attempt=0 minutes=0.51 seeds=2026105201;2026105301;2026105401;2026105501;2026105202;2026105302;2026105402;2026105502;2026105203;2026105303;2026105403;2026105503;2026105204;2026105304;2026105404;2026105504
+SAMPLED_FILTRATION model=m12 fold=41 attempt=0 n_train=710 train_last=2026-04-25 heldout_first=2026-08-01 market_obs=missing market_obs_2627=missing pass=true
+SAMPLED_FILTRATION model=m12 fold=42 attempt=0 n_train=730 train_last=2026-08-08 heldout_first=2026-08-15 market_obs=missing market_obs_2627=missing pass=true
+SAMPLED_FILTRATION model=m12 fold=43 attempt=0 n_train=749 train_last=2026-08-22 heldout_first=2026-08-28 market_obs=missing market_obs_2627=missing pass=true
+SAMPLED_FILTRATION model=m12 fold=44 attempt=0 n_train=769 train_last=2026-09-05 heldout_first=2026-09-12 market_obs=missing market_obs_2627=missing pass=true
+CONVERGENCE model=m12 fold=41 attempt=0 rhat=1.0061 (dyn.raw_d[11]) ess_bulk=802.0 ess_tail=1085.0 divergent=0/3200 rerun_due=false
+CONVERGENCE model=m12 fold=42 attempt=0 rhat=1.0084 (dyn.raw_d[14]) ess_bulk=1167.0 ess_tail=873.0 divergent=0/3200 rerun_due=false
+CONVERGENCE model=m12 fold=43 attempt=0 rhat=1.0044 (dyn.raw_a[2]) ess_bulk=1289.0 ess_tail=1387.0 divergent=0/3200 rerun_due=false
+CONVERGENCE model=m12 fold=44 attempt=0 rhat=1.0053 (dyn.raw_a[22]) ess_bulk=1368.0 ess_tail=1504.0 divergent=0/3200 rerun_due=false
+EXTENSION_FILE model=m12 path=/root/BF_runs/qs_2627/out/ext_m12_2627.jls sha256=f7328646d8eac9ec9a831aa67a61e816d169a8b56a2fc6f9a69efee218c97a1d heldout=79
+EXTEND_M12_DONE
+DB_AUDIT_AFTER unchanged=true tables=10
+EXTEND_M12_END

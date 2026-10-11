@@ -1,0 +1,44 @@
+SOURCE ../10_qs_marketobs_2627_paper/l00_p27.jl sha256=e8c725eb1b2a4f3ce31a0c070abb68276ac97b82aad77ad96a68dded385505ae
+SOURCE ../10_qs_marketobs_2627_paper/l01_sampling.jl sha256=070bad68f992ab3fe5c33373a6fd04f38a10805c7b16321b7b9f555d0c164f8e
+SOURCE ../10_qs_marketobs_2627_paper/l02_predictions.jl sha256=e4888f78b52a0d20f59d566ae66e23d831a125f86143bcaddcbd2edfbc865417
+SOURCE ../10_qs_marketobs_2627_paper/r03_phase1_predictions.jl sha256=86dc269ad0f6855793d0f60c24e0ac147dfd7b8c332718688cd228d354098d64
+STATIC_READ_PATHS_PASS: only allowlisted fit reads; SQL executes through SELECT/SHOW guard; no SQL cache fallback
+RUNTIME version=1.12.4 threads=16 head=1e0f4ca5f98909706289efe99e1131462f6a6238
+SESSION_DEFAULT_TRANSACTION_READ_ONLY=off
+DB_AUDIT_BEFORE tables=10
+DATASTORE_2627 sha256=f407a1b4c3188472b803804245dd7dbb0011aafc6471390e67038bb8c426c2b6 matches=2049 last=2026-09-19
+FIXTURES_2627 rows=79 played=79 first=2026-08-01 last=2026-09-19
+TRANSITION_CLUBS airdrieonians,east-kilbride,kelty-hearts-fc,ross-county fixtures=28
+ORDERBOOK_2627 sha256=2adb12715f9bfd73b06ae0a71bda5724fdd4b298776789670b5e4bd9f8a5443a markets=420 snapshots=35234 fixtures=70
+PINNED_DATASTORE sha256=c786e2fc03be0494ae3b9d447f0ad1840a787de19c171ea929b1f8cb46b423b4
+M12_DB_CHECK (n_shared = 69, mean_abs_dp_1x2 = 0.0004321836644887048, max_abs_dp_1x2 = 0.0027088636469339566, cor_p_home = 0.9999156493883501, mean_abs_dlog_lambda = 0.0014584832919722365)
+M12_CHAIN_SHAPE fold=41 mem=67x3200 db=67x3200
+M12_CHAIN_SHAPE fold=42 mem=71x3200 db=71x3200
+M12_CHAIN_SHAPE fold=43 mem=71x3200 db=71x3200
+M12_CHAIN_SHAPE fold=44 mem=71x3200 db=71x3200
+M12_HELDOUT_XI fixtures=79 both_11_starters=79 in_lineup_map=79 min_starters=11
+18×12 DataFrame
+ Row │ panel     group       source        n_fixtures  n_days  sel_ll    sel_ll_lo95  sel_ll_hi95  ll3       d_sel_ll          d_lo95            d_hi95
+     │ String    String      String        Int64       Int64   Float64   Float64      Float64      Float64   Float64?          Float64?          Float64?
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ all_79    all         m12                   79      10  0.594089     0.56068      0.621433  1.017     missing           missing           missing
+   2 │ all_79    all         mid_close             60       8  0.557614     0.505615     0.599569  0.947921  missing           missing           missing
+   3 │ all_79    all         qs_marketobs          79      10  0.566088     0.522323     0.601242  0.964536  missing           missing           missing
+   4 │ all_79    transition  m12                   28       9  0.587126     0.535209     0.629639  1.0025    missing           missing           missing
+   5 │ all_79    transition  mid_close             22       7  0.491776     0.418922     0.560302  0.826973  missing           missing           missing
+   6 │ all_79    transition  qs_marketobs          28       9  0.528587     0.466494     0.582962  0.893092  missing           missing           missing
+   7 │ all_79    other       m12                   51       9  0.597911     0.569787     0.624927  1.02496   missing           missing           missing
+   8 │ all_79    other       mid_close             38       7  0.595731     0.545781     0.642617  1.01794   missing           missing           missing
+   9 │ all_79    other       qs_marketobs          51       9  0.586676     0.543355     0.629521  1.00376   missing           missing           missing
+  10 │ close_60  all         m12                   60       8  0.59118      0.547113     0.629909  1.01048         0.033566          0.00792609        0.0624511
+  11 │ close_60  all         mid_close             60       8  0.557614     0.505615     0.599569  0.947921  missing           missing           missing
+  12 │ close_60  all         qs_marketobs          60       8  0.560384     0.503674     0.60664   0.953114        0.0027696        -0.0117373         0.0172371
+  13 │ close_60  transition  m12                   22       7  0.574522     0.508234     0.625195  0.978918        0.0827465         0.0261854         0.150677
+  14 │ close_60  transition  mid_close             22       7  0.491776     0.418922     0.560302  0.826973  missing           missing           missing
+  15 │ close_60  transition  qs_marketobs          22       7  0.522052     0.443431     0.585766  0.881646        0.0302757         0.00539982        0.0526872
+  16 │ close_60  other       m12                   38       7  0.600824     0.565433     0.635786  1.02875         0.00509314       -0.0242647         0.0383919
+  17 │ close_60  other       mid_close             38       7  0.595731     0.545781     0.642617  1.01794   missing           missing           missing
+  18 │ close_60  other       qs_marketobs          38       7  0.582576     0.533435     0.631894  0.99449        -0.013155         -0.0258465        -0.00164586
+PHASE1_PREDICTIONS_DONE
+DB_AUDIT_AFTER unchanged=true tables=10
+PHASE1_PREDICTIONS_END

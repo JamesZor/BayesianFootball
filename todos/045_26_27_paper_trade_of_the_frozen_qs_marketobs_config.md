@@ -46,6 +46,9 @@ price beside the fallback (λ 23) and m12 canonical. No DB writes; src frozen.
   at T−25m. Inversion gate PASS (Δ = 0). Engine gate PASS bit-identical. qs plan: positions 41–44, 1–40 equal,
   filtration PASS. m12 DB folds miss the 09-05 round, so an in-memory m12 extension is proposed. DB audit
   unchanged. P27_HANDOVER; waiting for approval of the sampling jobs.
+- [2026-10-11 @claude] Manager approved both jobs and D12. Phase 1 done: qs and m12 in-memory positions 41–44
+  (R̂ ≤ 1.0115, 0 divergences, no reruns), sampled filtration PASS, m12 played-XI rule documented (D17),
+  m12 DB check mean |Δp| 0.0004, log loss vs mid close in `results/phase1/`. P27_HANDOVER.
 
 ## Verification & Findings
 
