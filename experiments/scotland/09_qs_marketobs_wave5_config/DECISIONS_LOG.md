@@ -137,3 +137,25 @@ launching Claude session. Scope set by James.
   1.52–1.53); draw Kelly ROI −4.9% (flat +13.7%); U2.5 +18.6% (eff 0.95, 54 bets); O2.5 +13.8%
   (65 bets); every other OU line and BTTS-yes negative; BTTS-no +38.9% on 21 bets. The A/B
   disagrees with the per-direction rule: B4 (the rule's H + A, dropping draw and U2.5) is 4.6×10⁻³/day below B1.
+
+## 2026-10-11: Phase 2 decisions (manager released FREEZE `04fdba71`; written before any 25/26 wave-5 number)
+
+- **Runner.** `l03_phase2_eval.jl` + `r02_phase2_eval.jl`, the only caller of `release!`. Order: T−25m
+  selection, T−25m evaluation, T−6h selection, T−6h evaluation; each half from bankroll 1.0.
+- **Cells at T−25m:**
+  - `frozen_B1_l12`, `fallback_B1_l23`, `m12_canonical_l23`;
+  - `cand_<basket>_l<λ>` for B2–B6 at their Phase-1 matched λ (B1's candidate row *is* the frozen row);
+  - `wave4_sk_all_legs_l23` (role `check`): wave-4-style SK, already public. It must reproduce Phase 0's
+    per-season numbers (wealth rtol 1e-9, MDD 1e-7 pp, bets equal). m12 is checked the same way.
+- **Cells at T−6h (ruling 9):** frozen, m12 canonical, and the fallback (the same solve; report only).
+- **Consistency checks on 24/25 at T−25m:** m12 MDD equals the target exactly, and every basket's g
+  equals its Phase-1 g exactly. If either fails, the run stops.
+- **Bootstrap.** The noncircular column is `P3.block_bootstrap` (wave 4) unchanged. The circular
+  column is a copy with wrap-around block starts (`block_bootstrap_circular`). It is copied because
+  the start rule changes; the scheme is wave 4's x04 numpy sensitivity in Julia, with the same seed and
+  quantiles. Each half is one season, so blocks are 8 weeks within the half. Paired d vs
+  `m12_canonical_l23` uses the same snapshot and half over the union of days (missing day = 0; `unmatched_days` reported).
+- **`direction_table`** (l02) takes a `half` keyword (default `:selection`, so Phase 1 is unchanged);
+  Phase 2 asserts the half of each table's dates.
+- **Ruling 8** is applied in code to the T−25m 25/26 frozen row: fallback iff g ≤ 0 or MDD < 1.5 ×
+  target (−20.3928%). The result goes to `phase2_decision.csv`.

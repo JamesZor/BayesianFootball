@@ -29,10 +29,10 @@ function direction_ledger(result, books, close)
 end
 
 # EDA section 2 columns per direction; money figures rescaled by the slate's opening bankroll.
-function direction_table(key, result, books, close)
+function direction_table(key, result, books, close; half::Symbol = :selection)
     bets = direction_ledger(result, books, close)
     dates = result.trajectory.dates
-    assert_selection_dates(dates)
+    all(d -> half_of(d) === half, dates) || error("SEAL: a direction-table date lies outside the $half half")
     tot_stake, tot_pnl = sum(bets.stake_unit), sum(bets.pnl_unit)
     book_roi = 100 * tot_pnl / tot_stake
     rows = NamedTuple[]
