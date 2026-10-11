@@ -1,0 +1,6 @@
+season,n,n_full,flags_equal,max_abs_dlog_h,max_abs_dlog_a,zero_dummies_equal,tolerance,pass
+22/23,360,325,true,0.0,0.0,true,1.0e-12,true
+23/24,360,265,true,0.0,0.0,true,1.0e-12,true
+24/25,360,244,true,0.0,0.0,true,1.0e-12,true
+25/26,350,273,true,0.0,0.0,true,1.0e-12,true
+all,1430,1107,true,0.0,0.0,true,1.0e-12,true

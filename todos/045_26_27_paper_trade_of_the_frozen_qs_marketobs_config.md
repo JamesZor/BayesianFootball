@@ -42,6 +42,10 @@ price beside the fallback (λ 23) and m12 canonical. No DB writes; src frozen.
 
 - [2026-10-11 @claude] Claimed (Claude CLI implementer, worktree `.worktrees/BayesianFootball-qs-experiment`,
   branch `exp/qs-goal-vs-market`; manager pane %114). Phase 0 started.
+- [2026-10-11 @claude] Phase 0 done (runner `aace7998`, `results/phase0/`, `logs/phase0.log`). Coverage 79/70/60
+  at T−25m. Inversion gate PASS (Δ = 0). Engine gate PASS bit-identical. qs plan: positions 41–44, 1–40 equal,
+  filtration PASS. m12 DB folds miss the 09-05 round, so an in-memory m12 extension is proposed. DB audit
+  unchanged. P27_HANDOVER; waiting for approval of the sampling jobs.
 
 ## Verification & Findings
 

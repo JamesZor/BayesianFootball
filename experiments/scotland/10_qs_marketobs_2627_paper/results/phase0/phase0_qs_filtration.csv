@@ -1,0 +1,5 @@
+model,fold,time_step,n_train,train_last,heldout_first,heldout_last,n_heldout,n_heldout_l1l2,heldout_days,n_train_2627,n_train_2627_full_book,overlap,scope_ok,strictly_before,pass
+qs_marketobs,41,0,710,2026-04-25,2026-08-01,2026-08-08,20,20,2026-08-01 2026-08-08,0,0,false,true,true,true
+qs_marketobs,42,1,730,2026-08-08,2026-08-15,2026-08-22,19,19,2026-08-15 2026-08-22,20,17,false,true,true,true
+qs_marketobs,43,2,749,2026-08-22,2026-08-28,2026-09-05,20,20,2026-08-28 2026-08-29 2026-09-05,39,26,false,true,true,true
+qs_marketobs,44,3,769,2026-09-05,2026-09-12,2026-09-19,20,20,2026-09-12 2026-09-15 2026-09-19,59,37,false,true,true,true

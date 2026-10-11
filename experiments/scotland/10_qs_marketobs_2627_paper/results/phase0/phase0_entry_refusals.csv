@@ -1,0 +1,19 @@
+match_id,market_name,market_line,reason
+16362413,BTTS,0.0,"mid overround outside [0.90, 1.10]"
+16362433,BTTS,0.0,one-sided
+16362433,OverUnder,0.5,one-sided
+16362436,BTTS,0.0,one-sided
+16362437,BTTS,0.0,stale
+16362444,OverUnder,0.5,stale
+16362448,OverUnder,1.5,stale
+16362587,BTTS,0.0,"mid overround outside [0.90, 1.10]"
+16362587,OverUnder,0.5,one-sided
+16362587,OverUnder,2.5,one-sided
+16362588,OverUnder,2.5,one-sided
+16362588,OverUnder,3.5,stale
+16362591,BTTS,0.0,one-sided
+16362591,OverUnder,0.5,one-sided
+16362608,OverUnder,1.5,stale
+16362608,OverUnder,2.5,stale
+16362608,OverUnder,3.5,stale
+16362613,OverUnder,0.5,one-sided
