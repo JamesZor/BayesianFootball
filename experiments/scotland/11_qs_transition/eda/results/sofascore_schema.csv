@@ -1,0 +1,38 @@
+table_name,column_name,data_type
+match_odds,match_id,integer
+match_odds,market_id,integer
+match_odds,choice_group,character varying
+match_odds,choice_name,character varying
+match_odds,market_name,character varying
+match_odds,is_live,boolean
+match_odds,suspended,boolean
+match_odds,initial_fraction_num,integer
+match_odds,initial_fraction_den,integer
+match_odds,fraction_num,integer
+match_odds,fraction_den,integer
+match_odds,winning,boolean
+match_odds,change,integer
+match_odds,raw_data,jsonb
+matches,match_id,integer
+matches,tournament_id,integer
+matches,season_id,integer
+matches,name,character varying
+matches,start_timestamp,timestamp with time zone
+matches,home_team,character varying
+matches,away_team,character varying
+matches,status_type,character varying
+matches,injury_time1,integer
+matches,injury_time2,integer
+matches,home_score_ht,integer
+matches,home_score,integer
+matches,away_score_ht,integer
+matches,away_score,integer
+matches,round,integer
+matches,winner_code,integer
+matches,manager_home,character varying
+matches,manager_away,character varying
+matches,venue_name_home,character varying
+matches,venue_name_away,character varying
+matches,venue_city_home,character varying
+matches,venue_city_away,character varying
+matches,raw_data,jsonb
