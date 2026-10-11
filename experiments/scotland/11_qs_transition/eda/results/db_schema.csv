@@ -1,0 +1,59 @@
+table_name,column_name,data_type
+fit_fold_artifacts,run_id,uuid
+fit_fold_artifacts,fold_idx,integer
+fit_fold_artifacts,fold_blob,bytea
+fold_results,fold_id,uuid
+fold_results,run_id,uuid
+fold_results,fold_idx,integer
+fold_results,r_hat_max,double precision
+fold_results,ess_bulk_min,integer
+fold_results,ess_tail_min,integer
+fold_results,divergences,integer
+fold_results,converged,boolean
+fold_results,logloss,double precision
+fold_results,brier,double precision
+fold_results,rps,double precision
+fold_results,runtime_seconds,double precision
+fold_results,n_matches,integer
+fold_results,first_match_date,date
+fold_results,last_match_date,date
+harness_scores,run_id,uuid
+harness_scores,model,text
+harness_scores,stage,text
+harness_scores,scorecard_version,text
+harness_scores,subset,text
+harness_scores,market,text
+harness_scores,metric,text
+harness_scores,value,double precision
+harness_scores,lo,double precision
+harness_scores,hi,double precision
+harness_scores,n_obs,integer
+harness_scores,n_fixtures,integer
+harness_scores,reference,text
+harness_scores,control_run_id,uuid
+harness_scores,panel,text
+match_latents,latent_id,bigint
+match_latents,fold_id,uuid
+match_latents,match_id,integer
+match_latents,mean_lambda_h,double precision
+match_latents,std_lambda_h,double precision
+match_latents,p10_h,double precision
+match_latents,p50_h,double precision
+match_latents,p90_h,double precision
+match_latents,mean_lambda_a,double precision
+match_latents,std_lambda_a,double precision
+match_latents,p10_a,double precision
+match_latents,p50_a,double precision
+match_latents,p90_a,double precision
+match_latents,draws_blob,bytea
+runs,run_id,uuid
+runs,experiment_name,character varying
+runs,status,character varying
+runs,git_commit,character varying
+runs,git_branch,character varying
+runs,created_at,timestamp without time zone
+runs,finished_at,timestamp without time zone
+runs,duration_seconds,double precision
+runs,id,bigint
+runs,name,character varying
+runs,ad_backend,character varying

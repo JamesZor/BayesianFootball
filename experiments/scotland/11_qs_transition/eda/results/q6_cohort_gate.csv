@@ -1,0 +1,4 @@
+direction,expected,n_club_seasons,n_fixtures,pass
+relegated_into_L1,5,5,96,true
+promoted_into_L1,6,6,114,true
+entered_spfl,2,2,40,true
