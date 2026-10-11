@@ -132,3 +132,18 @@ decided after the EDA. The manager recommends one factor, then combine.
     season.
   - No 26/27 tuning.
   - The read-only DB audit wraps every runner.
+
+## 8. Overnight run (James, 2026-10-11 evening)
+
+James asked for **all stages in order, without waiting for his sign-off**. He reviews the results in
+the morning with an agent.
+- The manager (Claude, `%113`) takes each gate decision: the prior form after S1, the arm design
+  (default: one factor, then combine), and the winner after S4. Each decision is logged with its
+  reason in `MANAGER_DECISIONS.md` (this folder) and in the night log.
+- **Every stage writes `REPORT_S<n>.md`** in this folder: a summary of at most 12 lines, then its
+  numbers with sources. The morning review starts from those.
+- Each stage gets a fresh pi (S0 gpt-6-astra; S1–S5 gpt-6.1-sol). If a 5-hour limit is hit, the
+  manager resumes at the reset on the same model.
+- The 26/27 test still runs once, at the end of S5, on the frozen winner.
+- Stop rules: any failed reproduction or leakage gate stops the chain at that stage, with a report.
+  No merges to other branches. Push `exp/qs-transition` only.
