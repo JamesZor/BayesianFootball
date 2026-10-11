@@ -182,3 +182,46 @@ Brief: `experiments/claude_qs_2627_paper_brief.md` (`57cf058e`). Manager: the wa
   - Intervals are slate-clustered 95%, resampling match days (napkin `cn_summary`: B 2000, seed 20260928).
   - Model minus close is reported only on the 60 fixtures that have a close.
   - In `phase1_logloss.csv`, the `mid_close` rows under panel `all_79` cover only the 60 fixtures with a close.
+
+## Phase 2 implementation decisions
+
+- **D20 (2026-10-11) The 26/27 model inputs to the replay.** `l03_paper.jl::model_2627` builds the NamedTuple
+  that `W5.day_problems` / `Q.replay_cells` expect (as `P3.goal_model` returns) from the Phase 1 extension files,
+  after checking their sha256 against the Phase 1 logs:
+  - `source = latents = ext.latents` (79 fixtures, merged folds 41–44);
+  - the witness groups draws by fold: `"<label>|<run>+mem2627|fold=<k>|<layout>"`, with layouts 4chains_x_1000
+    (qs) and 4chains_x_800 (m12);
+  - `converged = true`, because every fold's used attempt has R̂ ≤ 1.05. The flag is only carried into the
+    report; it does not change stakes.
+  - The engine gate (ruling 9) was run again at the Phase 2 head before any 26/27 number: bit-identical on all
+    three cells. The odds frames were rebuilt from the pinned order book and checked equal to the committed
+    Phase 0 CSVs.
+- **D21 (2026-10-11) Bankroll path and MDD.** Each cell starts at 1.0 on its first day with a book (2026-08-01
+  for back and mid, 2026-08-08 for LTP). MDD is measured on the path including the opening point
+  (`W5.drawdown_pct(trajectory.bankroll)`). It equals the PF summary's MDD in every cell.
+- **D22 (2026-10-11) Settlement price.** Bets settle at `odds_used` (the `DeArb` price), as in every backtest.
+  - At the back price, no bet was de-arbed (back overround > 1 on every book).
+  - At the mid, 62 of the frozen cell's 118 bets were settled below the quoted mid, because the mid book's
+    overround can fall below 1. LTP had 45 of 100.
+  - The ledger keeps both the quoted and the settled price.
+- **D23 (2026-10-11) Fill check (ruling 7).** It covers the frozen back-price bets only.
+  - The money stake is the stake fraction × the opening bankroll on the paper path × the notional (£1,000 or £200).
+  - The shares compare this stake with the best-level back size and with the 3-level depth (`back_depth3`) of
+    the entry snapshot.
+  - The capped wealth re-runs the bankroll path day by day, with each bet's stake capped at the available size
+    and its P&L scaled by the filled share.
+  - **Approximation:** the policy's stake fractions are kept from the uncapped run, so the SlateDrawdown state
+    is not re-solved on the capped path.
+  - The depth-3 cap settles the whole fill at the best price, so it is optimistic about price.
+  - The uncapped re-run reproduces the cell's final wealth bit-identically (`FILL_REPRODUCES`).
+- **D24 (2026-10-11) Intervals (ruling 8).** All intervals resample match days with replacement (B 2000, seed
+  20260928, as in Phase 1). They cover:
+  - g, the mean daily log growth;
+  - wealth, as exp of the summed resampled daily log growth;
+  - money ROI, as a ratio of sums over the resampled days' bets;
+  - mean CLV in pp against the mid close.
+  The paired frozen − other daily log growth uses zero for a day missing from one path. It is reported only to
+  show the width; no ranking is drawn from it.
+- **D25 (2026-10-11) Bet sets.** Frozen and fallback share one joint solve and the same basket, so their bet sets
+  are identical at every price; λ only scales the stakes. The back, mid and LTP sets differ (D12), as shown in
+  `phase2_bet_sets.csv`.

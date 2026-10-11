@@ -17,7 +17,7 @@ Brief: `experiments/claude_qs_2627_paper_brief.md`. Sentinels: P27_HANDOVER / P2
   extension planned (positions 1–40 equal, filtration PASS).
 - [x] Sampling plan in the P27_HANDOVER message (qs 4 folds; m12 4 folds needs manager go).
 
-## Phase 1: walk-forward predictions (DONE; awaiting manager review)
+## Phase 1: walk-forward predictions (DONE; accepted by the manager)
 - [x] Loader `l01_sampling.jl`, `l02_predictions.jl`; runners `r01_extend_qs.jl`, `r02_extend_m12.jl` (head `21b75564`),
   `r03_phase1_predictions.jl` (head `1e0f4ca5`). Logs `logs/extend_qs.log`, `logs/extend_m12.log`,
   `logs/phase1_predictions.log`; outputs `results/phase1/`. DB audit unchanged around all three.
@@ -27,6 +27,14 @@ Brief: `experiments/claude_qs_2627_paper_brief.md`. Sentinels: P27_HANDOVER / P2
 - [x] Sampled-fold filtration PASS (8 folds). Per-fixture probabilities (79 × 2) with fold and cut-off.
 - [x] 1X2 log loss vs the mid close (60 fixtures): qs − close +0.0028 [−0.012, +0.017]; m12 − close +0.034
   [+0.008, +0.062]; transition vs other split in `phase1_logloss.csv`.
+
+## Phase 2: paper trade, report (DONE)
+- [x] Loader `l03_paper.jl`, runner `r04_phase2.jl` (head `d61c4dfc`); log `logs/phase2.log`; outputs `results/phase2/`,
+  `PAPER_LEDGER.csv`, `REPORT.md`. Static check PASS; DB audit unchanged; engine gate re-run bit-identical.
+- [x] 9 cells (frozen / fallback / m12 × back / mid / LTP). Frozen back: wealth 0.9639 [0.70, 1.32], MDD −10.56 %
+  (watch −20.39 % not breached), 91 bets, CLV −0.69 pp. Fallback back 0.9834; m12 back 0.8670. LTP has 7 days (no 08-01).
+- [x] Fill check (£1,000: 29.7 % > best level, 5.5 % > 3 levels; £200: 6.6 % / 0 %), capped paths in `phase2_fill.csv`.
+- [x] Slate-clustered intervals; no ranking (8 match days). TODO 045 closed with follow-ups.
 
 ## Beast
 - Checkout: `/root/BF_runs/qs_2627`. Logs: `/root/BF_runs/logs/qs_2627/`. Outputs: `/root/BF_runs/qs_2627/out/`
