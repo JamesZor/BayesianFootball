@@ -58,3 +58,15 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - Those quotes set a population-level hyperparameter, not the entrant club's own state. That is
     ordinary empirical-Bayes use, not double-counting a club's evidence.
   - No look-ahead either way.
+- **D10 (2026-10-11 ~23:56, S2 question) The entrant prior lives in the model, at the club's entry
+  node, not as an OOS override.**
+  - pi proposed drawing the prior only at prediction time for clubs with no training rows. That acts
+    only in the club's first fold. From the second fold the club has rows and QS restarts it at the
+    league mean, so the cold start returns. S1 found the bias persists to games 11–20.
+  - Rule: eligible = no in-scope matches in seasons **before the target season**. For every fold of
+    that season, the club's first in-scope state (its entry node at its first target-season period,
+    never backdated to the window start) gets the transported mean and SD instead of the zero-centred
+    `z_init` draw.
+  - Zero-centring stays over incumbents only (or the entrant offset is subtracted), proved by a test
+    that incumbents' fitted states don't move when the entrant prior mean moves.
+  - Opt-in, with all src gates. If it isn't feasible in S2, the stage stops PHASES2_BLOCKED.
