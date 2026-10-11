@@ -1,0 +1,13 @@
+[ Info: Loading DataStore for MarketModelEnglish from local cache (Age: 0.2 hours)...
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.2 hours)...
+[ Info: Loading DataStore for ScottishUpper from local cache (Age: 0.2 hours)...
+sco_league_one: accepted=835 joined=809 loss=3.11%
+sco_league_two: accepted=693 joined=647 loss=6.64%
+sco_premiership: accepted=956 joined=955 loss=0.1%
+sco_championship: accepted=477 joined=477 loss=0.0%
+eng_premier: accepted=1507 joined=1507 loss=0.0%
+eng_championship: accepted=2194 joined=2194 loss=0.0%
+eng_league_one: accepted=2183 joined=2181 loss=0.09%
+eng_league_two: accepted=2173 joined=2173 loss=0.0%
+@@JLDONE 013327-19065 ok
+jl: job 013327-19065 ok

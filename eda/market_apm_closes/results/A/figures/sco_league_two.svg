@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="800" height="450" fill="white"/>
+<text x="70" y="30" font-family="sans-serif" font-size="19">sco_league_two</text>
+<path d="M70 65V350H720" fill="none" stroke="black"/>
+<path d="M70 296.4160613137546H720" stroke="#aaa" stroke-dasharray="5 5"/>
+<path d="M115.71428571428572 309.1647877092114V309.1647877092114" stroke="#2866a0"/><circle cx="115.71428571428572" cy="309.1647877092114" r="5" fill="#2866a0"/>
+<text x="110.71428571428572" y="370" font-family="sans-serif" font-size="12">-7</text><text x="105.71428571428572" y="297.1647877092114" font-family="sans-serif" font-size="10">n=1</text>
+<path d="M161.42857142857144 79.27225440538297V79.27225440538297" stroke="#2866a0"/><circle cx="161.42857142857144" cy="79.27225440538297" r="5" fill="#2866a0"/>
+<text x="156.42857142857144" y="370" font-family="sans-serif" font-size="12">-6</text><text x="151.42857142857144" y="67.27225440538297" font-family="sans-serif" font-size="10">n=1</text>
+<path d="M207.14285714285714 287.60600041926824V218.50764456351843" stroke="#2866a0"/><circle cx="207.14285714285714" cy="253.05682249139335" r="5" fill="#2866a0"/>
+<text x="202.14285714285714" y="370" font-family="sans-serif" font-size="12">-5</text><text x="197.14285714285714" y="241.05682249139335" font-family="sans-serif" font-size="10">n=5</text>
+<path d="M252.85714285714286 281.68688922492566V245.84883468716242" stroke="#2866a0"/><circle cx="252.85714285714286" cy="263.76786195604404" r="5" fill="#2866a0"/>
+<text x="247.85714285714286" y="370" font-family="sans-serif" font-size="12">-4</text><text x="242.85714285714286" y="251.76786195604404" font-family="sans-serif" font-size="10">n=20</text>
+<path d="M298.57142857142856 293.736065856495V265.74223787793505" stroke="#2866a0"/><circle cx="298.57142857142856" cy="279.739151867215" r="5" fill="#2866a0"/>
+<text x="293.57142857142856" y="370" font-family="sans-serif" font-size="12">-3</text><text x="288.57142857142856" y="267.739151867215" font-family="sans-serif" font-size="10">n=36</text>
+<path d="M344.2857142857143 296.98928556083183V283.06666440841474" stroke="#2866a0"/><circle cx="344.2857142857143" cy="290.02797498462326" r="5" fill="#2866a0"/>
+<text x="339.2857142857143" y="370" font-family="sans-serif" font-size="12">-2</text><text x="334.2857142857143" y="278.02797498462326" font-family="sans-serif" font-size="10">n=62</text>
+<path d="M390.0 297.87703278237143V286.02006534020734" stroke="#2866a0"/><circle cx="390.0" cy="291.9485490612893" r="5" fill="#2866a0"/>
+<text x="385.0" y="370" font-family="sans-serif" font-size="12">-1</text><text x="380.0" y="279.9485490612893" font-family="sans-serif" font-size="10">n=102</text>
+<path d="M435.7142857142857 302.34235696434797V290.49503944342985" stroke="#2866a0"/><circle cx="435.7142857142857" cy="296.41869820388894" r="5" fill="#2866a0"/>
+<text x="430.7142857142857" y="370" font-family="sans-serif" font-size="12">0</text><text x="425.7142857142857" y="284.41869820388894" font-family="sans-serif" font-size="10">n=120</text>
+<path d="M481.42857142857144 314.3688000170597V300.9711739040039" stroke="#2866a0"/><circle cx="481.42857142857144" cy="307.6699869605318" r="5" fill="#2866a0"/>
+<text x="476.42857142857144" y="370" font-family="sans-serif" font-size="12">1</text><text x="471.42857142857144" y="295.6699869605318" font-family="sans-serif" font-size="10">n=95</text>
+<path d="M527.1428571428571 317.464238999433V300.1188622948722" stroke="#2866a0"/><circle cx="527.1428571428571" cy="308.7915506471526" r="5" fill="#2866a0"/>
+<text x="522.1428571428571" y="370" font-family="sans-serif" font-size="12">2</text><text x="517.1428571428571" y="296.7915506471526" font-family="sans-serif" font-size="10">n=56</text>
+<path d="M572.8571428571429 316.39910376789976V295.04661091509263" stroke="#2866a0"/><circle cx="572.8571428571429" cy="305.7228573414962" r="5" fill="#2866a0"/>
+<text x="567.8571428571429" y="370" font-family="sans-serif" font-size="12">3</text><text x="562.8571428571429" y="293.7228573414962" font-family="sans-serif" font-size="10">n=42</text>
+<path d="M618.5714285714286 340.72774559461703V295.02611528302947" stroke="#2866a0"/><circle cx="618.5714285714286" cy="317.87693043882325" r="5" fill="#2866a0"/>
+<text x="613.5714285714286" y="370" font-family="sans-serif" font-size="12">4</text><text x="608.5714285714286" y="305.87693043882325" font-family="sans-serif" font-size="10">n=17</text>
+<path d="M664.2857142857143 299.36354126875267V281.6846072604642" stroke="#2866a0"/><circle cx="664.2857142857143" cy="290.52407426460843" r="5" fill="#2866a0"/>
+<text x="659.2857142857143" y="370" font-family="sans-serif" font-size="12">5</text><text x="654.2857142857143" y="278.52407426460843" font-family="sans-serif" font-size="10">n=2</text>
+<text x="10" y="354.0" font-family="sans-serif" font-size="12">-0.29</text>
+<text x="10" y="284.0" font-family="sans-serif" font-size="12">0.09</text>
+<text x="10" y="214.0" font-family="sans-serif" font-size="12">0.47</text>
+<text x="10" y="144.00000000000003" font-family="sans-serif" font-size="12">0.84</text>
+<text x="10" y="74.0" font-family="sans-serif" font-size="12">1.22</text>
+<text x="180" y="405" font-family="sans-serif" font-size="15">Missing regulars: home minus away</text><text x="70" y="435" font-family="sans-serif" font-size="12">Team-season residual log supremacy; bars: descriptive 95% mean intervals</text></svg>

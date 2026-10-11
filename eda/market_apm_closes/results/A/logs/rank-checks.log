@@ -1,0 +1,15 @@
+[ Info: Loading DataStore for MarketModelEnglish from local cache (Age: 0.1 hours)...
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.1 hours)...
+[ Info: Loading DataStore for ScottishUpper from local cache (Age: 0.1 hours)...
+sco_league_one rank audit ok
+sco_league_two rank audit ok
+sco_premiership rank audit ok
+sco_championship rank audit ok
+eng_premier rank audit ok
+eng_championship rank audit ok
+eng_league_one rank audit ok
+eng_league_two rank audit ok
+Test Summary:                        | Pass  Total  Time
+Rank tolerance and dense cross-check |   16     16  4.3s
+@@JLDONE 013135-6144 ok
+jl: job 013135-6144 ok

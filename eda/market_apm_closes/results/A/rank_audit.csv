@@ -1,0 +1,9 @@
+league,absorbed_rank_tol_1e6,absorbed_rank_tol_1e10,dense_check_matches,subsample_sparse_absorbed_rank,subsample_dense_absorbed_rank
+sco_league_one,1456,1456,60,100,100
+sco_league_two,1206,1206,60,102,102
+sco_premiership,1686,1686,60,96,96
+sco_championship,890,890,60,96,96
+eng_premier,1778,1778,60,80,80
+eng_championship,2744,2744,60,73,73
+eng_league_one,2994,2994,60,73,73
+eng_league_two,3046,3046,60,73,73

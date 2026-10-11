@@ -1,0 +1,6 @@
+Test Summary:            | Pass  Total  Time
+Phase A causal histories |   11     11  0.8s
+Test Summary:                     | Pass  Total  Time
+Phase A committed-output contract |   97     97  0.2s
+@@JLDONE 013549-7917 ok
+jl: job 013549-7917 ok

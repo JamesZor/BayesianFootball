@@ -1,0 +1,2 @@
+julia,csv,dataframes,distributions,blas_threads
+1.12.4,0.10.16,1.8.2,0.25.126,1

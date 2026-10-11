@@ -1,0 +1,65 @@
+league,season,stage,reason,n
+sco_league_one,21/22,inversion_rejected,no complete 1X2 market,10
+sco_league_one,21/22,inversion_rejected,no Betfair book,5
+sco_league_one,22/23,inversion_rejected,no complete 1X2 market,4
+sco_league_one,23/24,inversion_rejected,no complete 1X2 market,8
+sco_league_one,23/24,inversion_rejected,no Betfair book,9
+sco_league_one,24/25,inversion_rejected,no complete 1X2 market,6
+sco_league_one,24/25,inversion_rejected,no Betfair book,4
+sco_league_one,25/26,inversion_rejected,no complete 1X2 market,13
+sco_league_one,25/26,inversion_rejected,no Betfair book,1
+sco_league_two,21/22,inversion_rejected,no Betfair book,39
+sco_league_two,21/22,inversion_rejected,no complete 1X2 market,16
+sco_league_two,22/23,inversion_rejected,no Betfair book,4
+sco_league_two,22/23,inversion_rejected,no complete 1X2 market,11
+sco_league_two,23/24,inversion_rejected,no Betfair book,39
+sco_league_two,23/24,inversion_rejected,no complete 1X2 market,3
+sco_league_two,24/25,inversion_rejected,no Betfair book,36
+sco_league_two,24/25,inversion_rejected,no complete 1X2 market,10
+sco_league_two,25/26,inversion_rejected,no Betfair book,37
+sco_league_two,25/26,inversion_rejected,no complete 1X2 market,7
+sco_premiership,21/22,inversion_rejected,no complete 1X2 market,17
+sco_premiership,21/22,inversion_rejected,no Betfair book,1
+sco_premiership,22/23,inversion_rejected,no complete 1X2 market,2
+sco_premiership,23/24,inversion_rejected,no complete 1X2 market,5
+sco_premiership,24/25,inversion_rejected,no complete 1X2 market,4
+sco_premiership,25/26,inversion_rejected,no complete 1X2 market,5
+sco_championship,21/22,inversion_rejected,no Betfair book,175
+sco_championship,21/22,inversion_rejected,no complete 1X2 market,3
+sco_championship,22/23,inversion_rejected,no complete 1X2 market,23
+sco_championship,23/24,inversion_rejected,no Betfair book,1
+sco_championship,23/24,inversion_rejected,no complete 1X2 market,4
+sco_championship,24/25,inversion_rejected,no Betfair book,33
+sco_championship,24/25,inversion_rejected,no complete 1X2 market,4
+eng_premier,22/23,inversion_rejected,no Betfair book,3
+eng_premier,22/23,inversion_rejected,no complete 1X2 market,1
+eng_premier,23/24,inversion_rejected,no Betfair book,6
+eng_premier,23/24,inversion_rejected,no complete 1X2 market,1
+eng_premier,24/25,inversion_rejected,no Betfair book,1
+eng_premier,24/25,inversion_rejected,no complete 1X2 market,1
+eng_championship,22/23,inversion_rejected,no complete 1X2 market,3
+eng_championship,23/24,inversion_rejected,no complete 1X2 market,1
+eng_championship,23/24,inversion_rejected,no Betfair book,9
+eng_championship,25/26,inversion_rejected,no complete 1X2 market,1
+eng_league_one,22/23,inversion_rejected,no complete 1X2 market,2
+eng_league_one,23/24,inversion_rejected,no complete 1X2 market,4
+eng_league_one,23/24,inversion_rejected,no Betfair book,11
+eng_league_one,24/25,inversion_rejected,no complete 1X2 market,3
+eng_league_one,25/26,inversion_rejected,no complete 1X2 market,5
+eng_league_two,22/23,inversion_rejected,summed KL > 0.01,1
+eng_league_two,23/24,inversion_rejected,no Betfair book,11
+eng_league_two,23/24,inversion_rejected,no complete 1X2 market,3
+eng_league_two,24/25,inversion_rejected,no complete 1X2 market,7
+eng_league_two,25/26,inversion_rejected,no complete 1X2 market,13
+sco_league_one,21/22,accepted_join,starter_count_not_11,1
+sco_league_one,22/23,accepted_join,starter_count_not_11,8
+sco_league_one,23/24,accepted_join,starter_count_not_11,4
+sco_league_one,25/26,accepted_join,starter_count_not_11,13
+sco_league_two,21/22,accepted_join,starter_count_not_11,10
+sco_league_two,21/22,accepted_join,duplicate_or_shared_player_id,1
+sco_league_two,22/23,accepted_join,starter_count_not_11,7
+sco_league_two,23/24,accepted_join,starter_count_not_11,8
+sco_league_two,24/25,accepted_join,starter_count_not_11,4
+sco_league_two,25/26,accepted_join,starter_count_not_11,16
+sco_premiership,24/25,accepted_join,starter_count_not_11,1
+eng_league_one,22/23,accepted_join,starter_count_not_11,2

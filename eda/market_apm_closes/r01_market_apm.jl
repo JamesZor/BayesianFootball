@@ -24,3 +24,7 @@ mkpath(out)
 # ===================================================================
 blocked = MarketAPMPhaseA.coverage(root, out)
 blocked && error("STOP: >15% join loss; ask user before downstream work. See coverage_gate.csv")
+# ===================================================================
+# 4. Team-season headroom, design diagnostics, cheap absence tests
+# ===================================================================
+MarketAPMPhaseA.analyze(root, out)
