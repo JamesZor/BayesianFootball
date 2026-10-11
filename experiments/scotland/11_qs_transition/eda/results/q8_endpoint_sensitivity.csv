@@ -1,0 +1,9 @@
+window,coordinate,checkpoint,n_fixtures,bias,rmse,mae,selection
+late80,D,1,32,0.05240280954111973,0.1599118026549377,0.12717444814354603,fixed sensitivity only; not used to retune main candidate
+late80,D,mean_first5,146,-0.002857752054634794,0.169910542144647,0.13609284869355567,fixed sensitivity only; not used to retune main candidate
+late80,U,1,32,-0.023424633118381596,0.084278369078127,0.06777971913822592,fixed sensitivity only; not used to retune main candidate
+late80,U,mean_first5,146,-0.016725656346896954,0.07603859961502732,0.05785244801364634,fixed sensitivity only; not used to retune main candidate
+whole,D,1,32,0.041485565547343846,0.15963105754548543,0.12342464979305166,fixed sensitivity only; not used to retune main candidate
+whole,D,mean_first5,146,-0.0005493188213523297,0.16935367468198517,0.13587782643845542,fixed sensitivity only; not used to retune main candidate
+whole,U,1,32,-0.022882906020146733,0.07928298059451609,0.061279804936186684,fixed sensitivity only; not used to retune main candidate
+whole,U,mean_first5,146,-0.017302783943615185,0.07305945888445758,0.0557202457871839,fixed sensitivity only; not used to retune main candidate

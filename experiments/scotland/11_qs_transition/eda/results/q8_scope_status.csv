@@ -2,5 +2,5 @@ check,status
 carry=0/1/estimated forward scoring,run
 measurement reliability sensitivity,run descriptive seasonal labels
 source-strength-matched non-movers,overlap inventory only; no causal comparison
-whole-old-season endpoint sensitivity,not run; chosen late80 endpoint fixed
+whole-old-season endpoint sensitivity,run fixed late80/whole forward comparison; late80 retained without retuning
 results-only cohorts back to 2008,not run; separate optional historical robustness panel

@@ -105,8 +105,8 @@ QS/W2-panel comparisons; `q1_paired_a2.csv` uses identical fixtures.
 
 | Cause | Verdict and numerical signature |
 |---|---|
-| **a. Cold start** | **Contributes to QS promotion entry error; not a universal explanation.** QS promotion: +5.02 at game 1, +1.91 at 2–5, −0.25 at 6–10, +1.61 at 11–20. Relegation is −0.11, +4.08, +0.01, +1.40 respectively. Not monotone decay. Old in-scope/all-tier history cross-tabs are in `q1_history_bias.csv` and the raw club observations. |
-| **b. Tier scale / transport** | **Strongest explanation of W2's directional persistence.** TD base is still −5.80 / +3.41 at games 11–20; A2 reduces these to −3.18 / +0.88. Market opening re-ratings have the expected opposite signs. This supports a transport/tier correction, but mover-only data cannot separate tier value from summer/selection jumps. QS has largely absorbed the W2 relegation sign; do not apply a blanket positive relegation probability correction to it. |
+| **a. Cold start** | **Supported for history-poor W2 clubs; not isolated as QS's main cause.** Across relegation directions, TD clubs without fitted history have −5.22 pp versus −0.52 with history. QS's corresponding means are +0.29 versus +2.22. QS promotion: +5.02 at game 1, +1.91 at 2–5, −0.25 at 6–10, +1.61 at 11–20; those clubs have fitted old history, so the opening signature can be tier transport rather than a pure no-data cold start. Relegation is −0.11, +4.08, +0.01, +1.40 respectively. Not monotone decay. Sources: `q1_history_bias.csv`, `q1_bias_bins.csv`; direction/strength selection prevents a causal subgroup contrast. |
+| **b. Tier scale / transport** | **Strongest explanation of W2's directional persistence.** Full-pyramid GRW has fitted old history yet still has the negative L1-relegation bias; it is not simply a no-data entrant effect. TD base is still −5.80 / +3.41 at games 11–20; A2 reduces these to −3.18 / +0.88. Market opening re-ratings have the expected opposite signs. This supports a transport/tier correction, but mover-only data cannot separate tier value from summer/selection jumps. QS has largely absorbed the W2 relegation sign; do not apply a blanket positive relegation probability correction to it. |
 | **c. Summer step** | **Plausible uncertainty misspecification, weak explanation of mean transition bias.** QS non-movers are −0.41 pp at game 1, −0.70 at 2–5, +0.88 at 6–10, +1.04 at 11–20; there is no large uniform signed opening lag. Noise-adjusted summer q/s SD is 0.092/0.044 versus 0.053/0.026 within-season. But calendar-normalised ratios are only 1.22 [0.93,1.54] and 1.18 [0.84,1.63]. A distinct summer process is not securely identified. |
 | **d. Refit lag** | **Some promotion-specific evidence; not the general cause.** QS absolute-error age slope is +1.68 pp/week [0.15,3.22] for promoted clubs, −0.18 [−1.70,1.35] for relegated clubs, +0.25 [−0.30,0.80] for non-movers. Signed slopes are inconclusive. These are cross-fixture associations, not the gain from weekly refitting. |
 
@@ -183,8 +183,11 @@ Q8's estimated q carry contracts from **0.734** to **0.668** as earlier training
 but the estimated-carry candidate does not improve pooled forward first-quote error over the
 selected conservative prior. Measurement-error sensitivity and source-strength overlap are in
 `q8_selection_slopes.csv` and `q8_nonmover_overlap.csv`. Missing overlap is not extrapolated into
-a causal selection effect. Whole-old-season endpoint and pre-market-era results-only robustness
-were not run; `q8_scope_status.csv` records those limits.
+a causal selection effect. Fixed whole-old-season versus late80 sensitivity gives essentially
+identical first-quote D RMSE (**0.1596 / 0.1599**), with better whole-season U RMSE
+(**0.0793 / 0.0843**). The chosen endpoint was not retuned from this comparison. Source:
+`q8_endpoint_sensitivity.csv`. Pre-market-era results-only robustness was not run;
+`q8_scope_status.csv` records that limit.
 
 ## 4. Proposed prior: A2-centred P2, with explicit evidence-policy gate
 
@@ -319,6 +322,9 @@ No ROI mining and no held-back performance check were performed.
 5. Defer pooled cups, league-pxG adjustments and squad-dependent priors until their independent
    source/identification checks pass. Q9 does not justify F7.
 
+All new components must be opt-in/off by default and pass DESIGN's exact-AD, zero-allocation tape,
+three-seed recovery, unit-test and legacy-config reproduction gates before S3.
+
 ### S3, one factor at a time on the frozen W2 panel
 - Control: unchanged `qs_marketobs` recipe, reproduced on the longer panel in S3 before comparisons.
 - **F3: QS+A2**, the lowest-risk first corrective arm.
@@ -343,8 +349,8 @@ motivation, not independent validation of the proposed QS arm.
   law. Repeat prior-only tests if the evidence policy, source table or gauge changes.
 - Cup adjacent-gap nonlinearity is credible descriptively, but source timestamps, rotation, neutral
   venues and inherited league-anchor error prevent a production cup prior from being cleared.
-- Q11 and Q9 rotation bins were skipped. Q8 endpoint/older-results robustness is incomplete, explicitly
-  recorded rather than converted into a negative finding.
+- Q11 and Q9 rotation bins were skipped. Q8 older-results robustness and a causal matched-nonmover
+  analysis remain incomplete, explicitly recorded rather than converted into a negative finding.
 - The existing QS run has no 23/24 predictions. S3 needs a longer-panel control and a frozen shared
   market-input recipe; the EDA did not fabricate those missing QS predictions.
 - No paired successive prediction vintages exist here; Q5 cannot quantify weekly-refit benefits.

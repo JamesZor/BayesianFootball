@@ -3,7 +3,7 @@ date embargo,True,all outcome-bearing fixtures precede 2026-07-01
 W2 cohort gate,True,canonical 5/6/2
 accepted inventory,True,"{54: 956, 55: 477, 56: 835, 57: 693}"
 unique accepted IDs,True,one quote inversion per fixture
-all DB audits unchanged,True,7 audits; ten tables each
+all DB audits unchanged,True,8 audits; ten tables each
 heldout vintage td_lower_base,True,"lower target 1070 fixtures, all assigned exactly once"
 bias parity td_lower_base relegated_into_L1,True,CSV decomposition equals harness gate mean
 bias parity td_lower_base promoted_into_L1,True,CSV decomposition equals harness gate mean
