@@ -1,0 +1,7 @@
+19d3ad4d Stage 2: source units/AD/FD/zero-byte tapes and post-source legacy identity pass
+ba33e752 Stage 2: hand back blocked at D12 network deadline; source remains ungated
+19d3ad4d reset: moving to HEAD
+19d3ad4d 
+ba33e752 reset: moving to HEAD
+ba33e752 
+a1e89da1a25aaaa8bc7476307338b9e29a58d5d33beee8e25e25e6126989fe12  .cache/datastore_ScottishPyramid.jls

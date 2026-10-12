@@ -39,6 +39,8 @@ See DESIGN.md §3 (F1–F7).
 
 - [2026-10-12 @pi] S2 resumed after beast recovery: fresh owned REPL, synced `ba33e752` including source `e2e956cf`. New/legacy units 419/419, synthetic and real-fold exact AD/FD/0-byte tapes, post-src chain/latent bit identity, endpoint overlap0 and fold1→2 prior persistence PASS. Three-seed recovery running; entrant/summer normal smokes next. F6 deferred; no grids.
 
+- [2026-10-12 @pi] S2 build complete (F6 explicitly deferred for James): all src gates PASS, all four normal two-fold latest smoke hard checks PASS. Recovery86/90 intervals, no all-three misses; post-src legacy byte identity preserved. REPORT_S2 includes UUIDs, Rhat/ESS/divergences, gate commands and22.37h four-arm timing projection. Convergence/performance review failures retained. Read-only S3 audit archives sole stale control failed check832; manager must approve targeted cleanup before control grid. No DB cleanup, grids, pushes or merges; owned s2 stopped.
+
 ## Verification & Findings
 
-S2 partial verification: `experiments/scotland/11_qs_transition/REPORT_S2.md` and build CSVs. New-source AD, allocation, recovery, units, post-src legacy identity and entrant/summer smokes remain outstanding; S2 is not complete. Dependency: restored beast SSH followed by all S2 gates. Acceptance criteria remain open.
+S2 verified: `experiments/scotland/11_qs_transition/REPORT_S2.md`, `build/gate_commands.csv` and evidence CSVs/logs. All source gates and four-arm hard smokes pass; F6 deferred by resume scope. S3 readiness still needs manager review and authorised narrow cleanup of stale control check832; no cleanup performed. S3–S5 acceptance criteria remain open; task stays IN_PROGRESS.

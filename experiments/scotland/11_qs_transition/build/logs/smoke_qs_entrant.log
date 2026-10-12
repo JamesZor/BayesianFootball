@@ -1,0 +1,40 @@
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+S2_SMOKE (candidate = "qs_entrant", run_id = "8ac3ccfa-3aa8-4721-9e17-7216e394a2f1", recipe_hash = "bf713bd121faad5d7bf63312bb438196444eb05199caf73d082a5cd08239a4be", hard_pass = true, wall_seconds = 241.9393310546875, convergence_status = "fail", passed = false, max_rhat = 1.0801502266120164, min_e
+@@JLDONE 092926-16179 ok

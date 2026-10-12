@@ -4,8 +4,8 @@ const EXPERIMENT = "scottish_lower_qs_transition_2326"
 const TODO = 46
 const QUESTION = "Which opt-in transition fix improves QS on W2's panel?"
 const DIMENSION = "qs_transition"
-const STATUS = "building"
-const DECISION = "Stage 2 smokes only; S3 grids are not authorised in Stage 2."
+const STATUS = "smoked"
+const DECISION = "S2 source gates and four hard smokes pass; S3 requires manager review and stale control check832 cleanup. F6 deferred for James."
 const README = joinpath(@__DIR__, "REPORT_S2.md")
 const CONTROL = "qs_control"
 const SCOPE = Data.DataScope(name="lower", train_tournaments=[56,57], cups=:none,

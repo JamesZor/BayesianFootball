@@ -1,0 +1,9 @@
+id,run_id,candidate,check,status,brief_detail
+832,NULL,qs_control,tape_allocation,fail,"fold 1 allocates 57568 B per compiled gradient (limit 1024 B): #1 96 B getindex(T99, ProductIterator) -> T1; #2 96 B getindex(T99, ProductIterator) -> T1; #3 96 B getindex(T99, ProductIterator) -> T96; #4 96 B getindex(T99, ProductIterator) -> T1; #5 96 B getindex(T1, ProductIterator) -> T1; #6 96 B -(TReal, Real) -> TReal; #7 96 B /(TReal, Real) -"
+candidate,has_passing_smoke,historical_failed_hard_checks,failed_check_ids
+qs_control,false,1,832
+qs_a2,true,0,NULL
+qs_entrant,true,0,NULL
+qs_summer,true,0,NULL
+candidate,check,status,gc_share,efficiency_ratio
+qs_summer,sampling_performance,fail,0.3222978499055563,4.0513051350885405

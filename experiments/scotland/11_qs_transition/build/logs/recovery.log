@@ -1,0 +1,8 @@
+S2_RECOVERY arm=qs_entrant seed=1 seconds=70.82027292251587 covered=17
+S2_RECOVERY arm=qs_entrant seed=2 seconds=26.166676998138428 covered=16
+S2_RECOVERY arm=qs_entrant seed=3 seconds=28.243982076644897 covered=17
+S2_RECOVERY arm=qs_summer seed=1 seconds=37.98574209213257 covered=13
+S2_RECOVERY arm=qs_summer seed=2 seconds=29.80407190322876 covered=11
+S2_RECOVERY arm=qs_summer seed=3 seconds=28.024095058441162 covered=12
+S2_RECOVERY_THREE_SEEDS_PASS NamedTuple[(arm = "qs_entrant", intervals = 51, covered = 50, pooled_coverage = 0.9803921568627451, all_three_misses = "", passed = true), (arm = "qs_summer", intervals = 39, covered = 36, pooled_coverage = 0.9230769230769231, all_three_misses = "", passed = true)]
+@@JLDONE 092346-28511 ok

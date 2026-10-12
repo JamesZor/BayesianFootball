@@ -1,0 +1,8 @@
+candidate,hard_checks,failed_hard
+qs_a2,6,0
+qs_control,6,0
+qs_entrant,6,0
+qs_summer,6,0
+source_gate_cases,passed_cases
+10,10
+arm,parameter,seeds

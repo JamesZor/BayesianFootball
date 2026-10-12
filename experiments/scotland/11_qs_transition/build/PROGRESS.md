@@ -1,6 +1,6 @@
 # Stage 2 progress
 
-Phase: RESUMED after beast connectivity recovery, 2026-10-12 09:10 BST.
+Phase: S2 DONE (F6 explicitly deferred for James); final records committed locally after verification.
 Branch/worktree: exp/qs-transition, /home/james/bet_project/.worktrees/BayesianFootball-qs-transition.
 Owned beast checkout: /root/BF_runs/qs_transition. Source e2e956cf; synced branch ba33e752.
 
@@ -15,11 +15,16 @@ Owned beast checkout: /root/BF_runs/qs_transition. Source e2e956cf; synced branc
 - Post-src legacy job091659-1391 in FRESH REPL: byte identity PASS, no pre-src checkpoints reused (legacy_reproduction_post_src.csv, logs/legacy_post_src.log).
 - Real-fold job092037-32396 in FRESH REPL: entrant/summer folds1/2/60 exact AD≤1.34e-15, FD convergence,0 B (real_fold_gates.csv). Endpoint overlap0, all source chronology assertions PASS, entry first-biweek rule PASS, fold1→2 moments/source IDs persistent (provenance_gates.csv, prior_manifests/). Hyper overlap separately reported under D9.
 
-## Running / next
-- Owned REPL: jl s2, beast16, BLAS1, checkout above.
-- Recovery job092346-28511, watch s2-recovery-three-seeds; r09_recovery.jl. First attempt. No recovery result yet.
-- Next: retrieve recovery outputs; if pass, fresh REPL normal2-fold qs_entrant smoke, then fresh REPL qs_summer smoke via r02_smoke.jl with S2_ONLY.
-- Finish timing/report/exact S3 commands, todo check, local commits, stop owned REPL, HANDOVER.md and PHASES2_DONE. No S3 grid in S2.
+- Recovery job092346-28511 PASS first attempt: entrant50/51 (98.04%), summer36/39 (92.31%) 90% intervals; no parameter misses all3. CSVs and log retrieved. Runner committed19d3ad4d.
+
+## Completion / next owner
+- Owned REPL: STOPPED after audit; tmux confirms jl-s2 absent. No active watches or Julia jobs. Other REPLs untouched.
+- Runs used synced19d3ad4d (rsync reassigns folder ownership; chown own checkout root before git operations).
+- Entrant normal2-fold smoke job092926-16179 PASS hard checks first attempt: 8ac3ccfa-3aa8-4721-9e17-7216e394a2f1; Rhat1.08015, ESS19.40/62.59, divergences0, convergence/performance REVIEW fail. Summary/checks/manifests/perf report retrieved. Normal harness smoke is2 chains200+200 per fold (old handover's4-chain description was wrong); recipes' S3 budget is4 chains500+1000.
+- Summer normal2-fold smoke job093506-27894 hard PASS first attempt: 55c33930-2e27-418f-ba7d-9e330fdd6095; Rhat1.13926, ESS15.10/37.00, divergences0. Convergence/performance REVIEW fail; records retrieved.
+- Read-only audit job094308-29566 completed: control has_passing_smoke=false solely due stale D11 failed hard check832 (run_id NULL); other3 true. Full archived history in CSVs. NO DB cleanup authorised/performed.
+- Next owner: review convergence/performance flags; explicit manager/operator go-prod needed for narrow stale-check832 cleanup before control grid. No bypass. James decides F6. REPORT_S2 has exact S3 commands and frozen cache hash.
+- Timing: four60-fold grids projected22.3715h sampling, no fifth-arm estimate while F6 deferred. All source gates and four latest smoke hard checks complete. TODO check PASS; local commits only; HANDOVER.md final. No S3 grid in S2.
 - F6 remains deferred for James: fold cadence tied to dynamics_col; no fake weekly-refit arm, no src separation authorised. See F6_DECISION.md.
 
 ## Stop rules

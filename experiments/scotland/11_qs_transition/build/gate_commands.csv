@@ -2,4 +2,7 @@ gate,job_id,source_commit,checkout_commit,command,result
 component_units_AD_FD_allocation,091418-14872,e2e956cf,ba33e752,jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r07_component_gates.jl --bg,PASS
 post_src_legacy,091659-1391,e2e956cf,ba33e752,"jl eval s2 'ENV[""S2_LEGACY_TAG""]=""post_src""' then jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r00_legacy.jl --bg",PASS
 real_fold_provenance_AD_FD_allocation,092037-32396,e2e956cf,ba33e752,jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r08_real_fold_gates.jl --bg,PASS
-recovery,092346-28511,e2e956cf,ba33e752,jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r09_recovery.jl --bg,RUNNING
+recovery,092346-28511,e2e956cf,ba33e752,jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r09_recovery.jl --bg,PASS
+smoke_entrant,092926-16179,e2e956cf,19d3ad4d,"jl eval s2 'ENV[""S2_ONLY""]=""qs_entrant""' then jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r02_smoke.jl --bg",PASS
+smoke_summer,093506-27894,e2e956cf,19d3ad4d,"jl eval s2 'ENV[""S2_ONLY""]=""qs_summer""' then jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r02_smoke.jl --bg",PASS
+s3_history_read_only_audit,094308-29566,e2e956cf,19d3ad4d,jl run s2 /root/BF_runs/qs_transition/experiments/scotland/11_qs_transition/build/r10_s3_readiness.jl --timeout 180,COMPLETED_control_stale_check832_blocker

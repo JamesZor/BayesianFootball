@@ -1,0 +1,6 @@
+candidate,run_id,folds,grid_chains,grid_warmup,grid_samples,whole_smoke_wall_seconds,probe_window_seconds,projected_full_fold_seconds,projected_grid_seconds,projected_grid_hours,status
+qs_a2,9374341b-66aa-4460-83fe-af45f8d5a01b,60,4,500,1000,242.09631514549255,91.389128412,342.709231545,20562.5538927,5.71182052575,measured_probe_projection
+qs_control,b58afafc-80ee-4ee6-920b-d5df860b4483,60,4,500,1000,208.94822812080383,89.921449759,337.20543659625,20232.326195775,5.6200906099375,measured_probe_projection
+qs_entrant,8ac3ccfa-3aa8-4721-9e17-7216e394a2f1,60,4,500,1000,241.9393310546875,86.582897286,324.68586482250004,19481.151889350003,5.411431080375001,measured_probe_projection
+qs_summer,55c33930-2e27-418f-ba7d-9e330fdd6095,60,4,500,1000,224.84991812705994,90.050991468,337.69121800500005,20261.473080300002,5.62818696675,measured_probe_projection
+qs_weekly,,,,,,,,,,,deferred_for_James
