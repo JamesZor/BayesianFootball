@@ -4,11 +4,11 @@
 |---|---|
 | ID | 046 |
 | Title | QS transition experiment: tier movers, market-informed priors and scope |
-| Status | IN_PROGRESS |
+| Status | BLOCKED |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-11 |
-| Updated | 2026-10-11 |
+| Updated | 2026-10-12 |
 | Related Files / Commits / PRs | `experiments/scotland/11_qs_transition/DESIGN.md`; continues TODO 031 W2 (`04_pyramid_tier_transition_arms`); evidence from TODO 045 |
 
 ## Context & Problem Statement
@@ -35,7 +35,8 @@ See DESIGN.md §3 (F1–F7).
 
 - [2026-10-11 @claude] Scope agreed with James over three AskUserQuestion rounds. DESIGN.md written.
   The S0 research brief (gpt-6-astra) is drafted.
+- [2026-10-12 @pi] S2 blocked under manager D12: beast Tailscale SSH still unavailable at deadline. Pre-src legacy byte identity, W2 panel/input parity and control/QS+A2 normal smoke hard gates passed; convergence review failures remain. Opt-in entrant/summer source at `e2e956cf` is ungated. No full grids. Continuation: `experiments/scotland/11_qs_transition/build/HANDOVER.md`.
 
 ## Verification & Findings
 
-Not run yet. Each stage records its results in `experiments/scotland/11_qs_transition/REPORT_S<n>.md`.
+S2 partial verification: `experiments/scotland/11_qs_transition/REPORT_S2.md` and build CSVs. New-source AD, allocation, recovery, units, post-src legacy identity and entrant/summer smokes remain outstanding; S2 is not complete. Dependency: restored beast SSH followed by all S2 gates. Acceptance criteria remain open.

@@ -54,7 +54,7 @@ not replace experiment records, issue trackers, or `docs/tickets/`.
 | [043](043_wave_4_scenario_kelly_backtest_of_qs_marketobs_at_executable_prices.md) | Wave 4: scenario-Kelly backtest of qs_marketobs at executable prices | COMPLETED | P2 | claude | 2026-10-10 |
 | [044](044_wave_5_fix_the_qs_marketobs_scenario_kelly_paper_trading_config.md) | Wave 5: fix the qs_marketobs + scenario Kelly paper-trading config for 26/27 | COMPLETED | P2 | claude | 2026-10-11 |
 | [045](045_26_27_paper_trade_of_the_frozen_qs_marketobs_config.md) | 26/27 paper trade of the frozen qs_marketobs scenario-Kelly config | COMPLETED | P2 | claude | 2026-10-11 |
-| [046](046_qs_transition_experiment_tier_movers_priors_and_scope.md) | QS transition experiment: tier movers, market-informed priors and scope | IN_PROGRESS | P1 | pi | 2026-10-11 |
+| [046](046_qs_transition_experiment_tier_movers_priors_and_scope.md) | QS transition experiment: tier movers, market-informed priors and scope | BLOCKED | P1 | pi | 2026-10-12 |
 <!-- TASKS:END -->
 
 **039:** Revision8 HANDOVER / IN_PROGRESS (2026-10-06): source70336b07 fast
