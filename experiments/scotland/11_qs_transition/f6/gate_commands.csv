@@ -9,3 +9,5 @@ splits_final,102500-17978,4,PASS 1368 signatures,r00_split_identity.jl,fbfb86a1
 panel_wrapper_initial,102547-28677,4,FAIL test introspection (getfield),r01_panel.jl,fbfb86a1
 legacy_final,102604-1090,4,PASS exact raw bytes,r03_legacy.jl,fbfb86a1-dirty (generated gate CSVs only)
 panel_final,102849-9259,4,PASS 115 folds 1070 fixtures,r01_panel.jl (getproperty fix),fbfb86a1 plus runner fix
+smoke_final,103140-600,4,PASS six hard checks (two REVIEW flags),r04_smoke.jl,91bcd7d8-dirty (untracked legacy checkpoints)
+smoke_receipt,103819-27315,4,PASS exactly0 B and DB ready,r05_receipt.jl,91bcd7d8 plus read-only receipt runner

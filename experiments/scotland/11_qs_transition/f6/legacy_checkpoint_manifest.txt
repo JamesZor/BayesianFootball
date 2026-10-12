@@ -1,0 +1,5 @@
+recipe=be5576a8e2441cf48284aa3b186113496b767ee80ae9be5a3c69324714221109
+arm=4
+attempt=0
+sampler=QueuedNUTSConfig(1000, 4, 500, 0.65, 10, UniformInit(range=[-0.001, 0.001]), false, true)
+seed=202700000+100000arm+100fold+10attempt+chain
