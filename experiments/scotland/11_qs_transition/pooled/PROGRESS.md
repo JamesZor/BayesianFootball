@@ -7,7 +7,7 @@ Done: fresh smoke111837-5647 PASS all6 hard checks, exactly0B both tapes; run5cb
 Read-only readiness112326-22778: false solely due initial null-run tape_allocation failed row890; CSV full history/failure backup exists locally.
 Done: user authorised deleting only backed-up890; guarded cleanup142552-13251 removed exactly1row. Post-cleanup audit142633-6373 PASS has_passing_smoke=true. Original/current histories and backup SHA receipt preserved.
 Done: REPORT_POOLED.md written (9line summary, gates/recovery caveat/review/timing/exact unexecuted grid command); todo check and git diff --check pass. pool STOPPED, tmux absence verified in logs/repl_stop.log.
-Next: final local commits and HANDOVER; manager decides S4/promotion after convergence review. Never run a grid as part of this prep.
+Final report/evidence committedc01caac6; HANDOVER written and committed next. Manager decides S4/promotion after convergence review. Never run a grid as part of this prep.
 Open REPL/job: none; no panes or watches outstanding.
 Recovery evidence/runner fixes committed8915cb8d and beast HEAD updated before smoke. No production source changes.
 Recovery105617-11589 failed before draws (empty jump design/Vector{Real}); retry105905-31549 failed before sampling (BoundsError: tier delta matrix overwritten by QS increment vector). Brief stop rule reached; user selected fix-and-continue. Fixed tier_delta name, restarted only pool, passed panel again to reconstruct session inputs.
