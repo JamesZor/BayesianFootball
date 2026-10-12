@@ -15,8 +15,10 @@ try
         CSV.write(joinpath(S3_OUT,"archived_harness_check_832.csv"),rows)
         println("ARCHIVED row832; no DB mutation")
     elseif only(ARGS)=="cleanup"
-        archived=CSV.read(joinpath(S3_OUT,"archived_harness_check_832.csv"),DataFrame)
-        isequal(rows,archived) || error("Archive differs from current row")
+        archive_bytes=read(joinpath(S3_OUT,"archived_harness_check_832.csv"))
+        current_csv=IOBuffer()
+        CSV.write(current_csv,rows)
+        take!(current_csv)==archive_bytes || error("Archive differs from current row")
         Training.Inference._db_exec(s3conn,"BEGIN;")
         try
             before=Training.Inference._db_rows(s3conn,"SELECT count(*) AS n FROM harness_checks WHERE recipe_hash='$S3_HASH';")
