@@ -1,0 +1,14 @@
+QS_MARKET_ARM_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 9.4 hours)...
+[FOLD_CHECKPOINT] arm=qs_marketobs fold=1 attempt=0 at=2026-10-12T10:16:17.763
+fatal: detected dubious ownership in repository at '/root/BF_runs/qs_transition'
+To add an exception for this directory, call:
+	git config --global --add safe.directory /root/BF_runs/qs_transition
+fatal: detected dubious ownership in repository at '/root/BF_runs/qs_transition'
+To add an exception for this directory, call:
+	git config --global --add safe.directory /root/BF_runs/qs_transition
+fatal: detected dubious ownership in repository at '/root/BF_runs/qs_transition'
+To add an exception for this directory, call:
+	git config --global --add safe.directory /root/BF_runs/qs_transition
+S2_LEGACY_PASS chains_and_latents_bytes=true seconds=65.57111287117004
+@@JLDONE 091659-1391 ok

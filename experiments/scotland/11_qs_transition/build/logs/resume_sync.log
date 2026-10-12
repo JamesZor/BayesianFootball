@@ -1,0 +1,4 @@
+fatal: detected dubious ownership in repository at '/root/BF_runs/qs_transition'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /root/BF_runs/qs_transition

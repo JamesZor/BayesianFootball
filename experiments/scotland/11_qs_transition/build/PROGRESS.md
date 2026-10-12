@@ -1,13 +1,28 @@
 # Stage 2 progress
 
-Phase: BLOCKED / handed back under D12. D11 resolved within its budget (~00:20+01).
-Deadline: 2026-10-12 03:30 BST (02:30 UTC). Watch woke at its next 600-second check; final SSH confirmation at 03:38:59 BST still timed out. No model calls between checks. REPORT_S2.md and HANDOVER.md record partial results and ungated e2e956cf. Stop PHASES2_BLOCKED; no Stage 3 clearance.
-Done: unchanged wave-2 fold 1 chain/latent byte identity PASS; expanded market input frozen (1790 rows, 1361 full books, all 1430 legacy rows retained exactly); control/A2 recipes committed; W2 panel 60 folds/1070 fixtures verified. First control smoke failed tape_allocation before sampling (57,568 B). Diagnostic old legacy fold also nonzero at that point, before source changes. Later baseline recovery and current ungated source drafts are recorded below.
-Next after connectivity recovery: reconcile own remote .git state, sync local commits/source, restart s2 (new types), run build/r07_component_gates.jl; then write/run 3-seed recovery, post-src legacy identity, real-fold exact AD, and entrant/summer normal 2-fold smokes. WIP commit e2e956cf is UNGATED. New code was not confirmed synced and no component-gate job started.
-Transfer preparation: valid complete-history bundle /tmp/qs-transition-s2.bundle (301 MB), contains e2e956cf. The long transfer/bootstrap command timed out when SSH stopped responding; do not assume remote git init or sync executed. Only touch /root/BF_runs/qs_transition. Local r00_legacy.jl now supports S2_LEGACY_TAG (default pre_src); use post_src for a fresh checkpoint/evidence file.
-D11 evidence: identical Manifests; archived/current src both 0 B at matched folds1/21/41, old loader remains0. Fresh normal control and A2 smokes hard PASS, convergence REVIEW failures retained. UUID control b58afafc-80ee-4ee6-920b-d5df860b4483; A2 9374341b-66aa-4460-83fe-af45f8d5a01b. No gate or package changes. See ALLOCATION_INVESTIGATION.md.
-Source drafts: separate opt-in QS wrappers; in-model entry draw at first target node, incumbent-only centring; independent target-season macro map; S1 prior feature with endpoint and hyper manifests. Not yet validated.
-Open REPLs/jobs: last confirmed jl s2 (beast16) in /root/BF_runs/qs_transition, job 001011-15246 complete ok. No Julia jobs active at loss of SSH. Cannot confirm REPL stopped/restarted while unreachable. Connectivity watch s2-beast-d12 completed at the deadline condition; no active watch or Julia job. Owned REPL shutdown remains unconfirmed because SSH is down. No other sessions touched.
-New rulings: D9 endpoint-only overlap hard check, report hyper source overlap separately. D10 in-model entry node, eligibility by pre-target seasons, persistent across target-season folds. D11 time-box repair, no gate changes; if unresolved write ALLOCATION_BLOCKER.md, commit and stop PHASES2_BLOCKED.
-Stop rules: no grids; failed reproduction/leakage stops stage; gate fails twice -> ask manager. All Julia on beast, src options off by default.
-Records: this build directory (hub absent by brief); local commits only.
+Phase: RESUMED after beast connectivity recovery, 2026-10-12 09:10 BST.
+Branch/worktree: exp/qs-transition, /home/james/bet_project/.worktrees/BayesianFootball-qs-transition.
+Owned beast checkout: /root/BF_runs/qs_transition. Source e2e956cf; synced branch ba33e752.
+
+## Verified (do not redo)
+- Expanded frozen market input1790 rows/1361 full books, all1430 legacy rows unchanged; panel60 folds/1070 fixtures.
+- Pre-src legacy identity: chains396000/latents160000 bit-identical to wave2 81fdf817-f82d-4f66-9bfd-5f456c4fe29f.
+- Control normal2-fold smoke hard PASS: b58afafc-80ee-4ee6-920b-d5df860b4483; Rhat1.0625, ESS67.1/75.5, divergences0; convergence REVIEW fail.
+- A2 normal2-fold smoke hard PASS: 9374341b-66aa-4460-83fe-af45f8d5a01b; Rhat1.0533, ESS50.9/72.0, divergences2; convergence REVIEW fail.
+- D11 baseline allocation recovery: fresh old/current/loader REPLs0 B, no source/package/gate changes; process-state cause unproved (ALLOCATION_INVESTIGATION.md).
+- Resume: stopped owned s2, fixed only own remote invalid .git pointer, synced ba33e752, fresh beast16 REPL. Root checkout ownership fixed after legacy git metadata warnings.
+- Component job091418-14872: new46 + existing373 unit checks PASS; opening/observed-target exact AD ≤1.56e-16, FD convergence, exactly0 B for entrant/summer (component_gates.csv, fd_convergence.csv).
+- Post-src legacy job091659-1391 in FRESH REPL: byte identity PASS, no pre-src checkpoints reused (legacy_reproduction_post_src.csv, logs/legacy_post_src.log).
+- Real-fold job092037-32396 in FRESH REPL: entrant/summer folds1/2/60 exact AD≤1.34e-15, FD convergence,0 B (real_fold_gates.csv). Endpoint overlap0, all source chronology assertions PASS, entry first-biweek rule PASS, fold1→2 moments/source IDs persistent (provenance_gates.csv, prior_manifests/). Hyper overlap separately reported under D9.
+
+## Running / next
+- Owned REPL: jl s2, beast16, BLAS1, checkout above.
+- Recovery job092346-28511, watch s2-recovery-three-seeds; r09_recovery.jl. First attempt. No recovery result yet.
+- Next: retrieve recovery outputs; if pass, fresh REPL normal2-fold qs_entrant smoke, then fresh REPL qs_summer smoke via r02_smoke.jl with S2_ONLY.
+- Finish timing/report/exact S3 commands, todo check, local commits, stop owned REPL, HANDOVER.md and PHASES2_DONE. No S3 grid in S2.
+- F6 remains deferred for James: fold cadence tied to dynamics_col; no fake weekly-refit arm, no src separation authorised. See F6_DECISION.md.
+
+## Stop rules
+All Julia beast via jl; options off by default; no 26/27 outcomes; no grids; only normal smoke DB writes.
+Reproduction/leakage failure stops stage. A gate fails twice => stop and ask manager. No source gate failed on resume to date.
+Records live here (hub absent); local commits only, no push/merge/other-worktree changes.

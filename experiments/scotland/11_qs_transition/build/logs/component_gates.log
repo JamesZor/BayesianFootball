@@ -1,0 +1,40 @@
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 18 seconds. 573 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└  
+Test Summary:         | Pass  Total   Time
+Opt-in QS transitions |   46     46  15.0s
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 9.4 hours)...
+Test Summary:   | Pass  Total   Time
+QualityStyleGRW |  373    373  35.8s
+QUALITY_STYLE_GRW_TESTS_DONE
+S2_COMPONENT_GATE arm=summer target_steps=0 AD=6.998612715420654e-17 bytes=0 FD=5.596774378459623e-11
+S2_COMPONENT_GATE arm=summer target_steps=2 AD=1.364185823053915e-16 bytes=0 FD=3.8398995094723887e-10
+S2_COMPONENT_GATE arm=entrant target_steps=0 AD=1.0541034963755736e-16 bytes=0 FD=2.5068027465864514e-11
+S2_COMPONENT_GATE arm=entrant target_steps=2 AD=1.5537718366015295e-16 bytes=0 FD=1.1500977947775937e-10
+S2_COMPONENT_UNITS_AD_FD_ZERO_ALLOC_PASS
+@@JLDONE 091418-14872 ok

@@ -1,5 +1,10 @@
 # Stage 2 decisions
 
+- Resume 2026-10-12 09:10: user authorises continuing S2, not S3; F6 explicitly stays deferred for James. Stop owned s2 first, replace only own remote invalid git pointer, sync ba33e752 including e2e956cf, fresh REPL. Root checkout ownership corrected after legacy git metadata warnings; no source/gate changes or rerun of verified sampling.
+- Source gate results: 46 new +373 existing unit checks PASS; four synthetic and six actual-fold (1/2/60) linked exact-AD/FD/0-byte cases PASS. Post-src original wave-2 fold1 chains396000/latents160000 are byte-identical. Source tag is post_src; its CSV git_sha=unknown reflects ownership warnings, not an unknown checkout (sync log records ba33e752).
+- D9 manifests: endpoint overlaps0 in each fold; reported hyper overlap counts1158/1158/509 across fold1/2/60 entrant records (sum of per-club counts, not unique-source counts). Means/SDs/source IDs persist identically from fold1 to2. No chronology or first-period assertion failures.
+- Recovery protocol fixed before results: independent equation-based 16-team/5-history/4-target synthetic panel, two entrants for F1F2, 3 fixed data/sampler seeds per arm, 2 chains400+400, 90% intervals for all6 QS scales/ratios, observation SD, interception/HA, entry z draws (entrant), and q/s boundary state/change. Require ≥80% per arm and no monitored parameter misses all3; no target-panel tuning.
+
 - Follow D4–D8 and the S2 brief where they supersede DESIGN/S1 (five arms, disjoint entrant prior, no pooled/cup/pxG arms).
 - Record all Stage 2 work here; no external hub and no pushes.
 - Establish the legacy reproduction before src edits so a missing reference or mismatch cannot be masked by later changes.

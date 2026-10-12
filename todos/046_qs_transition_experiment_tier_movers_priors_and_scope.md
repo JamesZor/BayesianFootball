@@ -4,7 +4,7 @@
 |---|---|
 | ID | 046 |
 | Title | QS transition experiment: tier movers, market-informed priors and scope |
-| Status | BLOCKED |
+| Status | IN_PROGRESS |
 | Priority | P1 |
 | Assignee | pi |
 | Created | 2026-10-11 |
@@ -36,6 +36,8 @@ See DESIGN.md §3 (F1–F7).
 - [2026-10-11 @claude] Scope agreed with James over three AskUserQuestion rounds. DESIGN.md written.
   The S0 research brief (gpt-6-astra) is drafted.
 - [2026-10-12 @pi] S2 blocked under manager D12: beast Tailscale SSH still unavailable at deadline. Pre-src legacy byte identity, W2 panel/input parity and control/QS+A2 normal smoke hard gates passed; convergence review failures remain. Opt-in entrant/summer source at `e2e956cf` is ungated. No full grids. Continuation: `experiments/scotland/11_qs_transition/build/HANDOVER.md`.
+
+- [2026-10-12 @pi] S2 resumed after beast recovery: fresh owned REPL, synced `ba33e752` including source `e2e956cf`. New/legacy units 419/419, synthetic and real-fold exact AD/FD/0-byte tapes, post-src chain/latent bit identity, endpoint overlap0 and fold1→2 prior persistence PASS. Three-seed recovery running; entrant/summer normal smokes next. F6 deferred; no grids.
 
 ## Verification & Findings
 
