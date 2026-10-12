@@ -2,7 +2,7 @@
 Base.@kwdef struct Candidate{M,S}
     name::String
     model::M
-    scope::Data.DataScope
+    scope::Data.ScopedDataPolicy
     sampler::S = Samplers.QueuedNUTSConfig(
         n_samples = 1_000, n_warmup = 500, n_chains = 4, accept_rate = 0.65)
     role::Symbol = :candidate

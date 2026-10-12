@@ -4,22 +4,21 @@ const SCOTTISH_SPFL_TOURNAMENTS = (54, 55, 56, 57)
 const SCOTTISH_CUP_TOURNAMENTS = (73, 982, 1520)
 const DATA_SCOPE_CUP_POLICIES = (:none, :senior_spfl_ties)
 
-"A declarative data policy with an optional fold cadence independent of its state clock."
-Base.@kwdef struct DataScope
+"A declarative data policy; retain its nine-field layout for saved-fit compatibility."
+struct DataScope
     name::String
-    train_tournaments::Vector{Int} = [56, 57]
-    cups::Symbol = :none
-    target_tournaments::Vector{Int} = [56, 57]
-    monitor_tournaments::Vector{Int} = Int[]
-    clock_tournaments::Vector{Int} = [56, 57]
-    target_seasons::Vector{String} = ["24/25", "25/26"]
-    history_seasons::Int = 2
-    dynamics_col::Symbol = :match_biweek
-    fold_col::Symbol = dynamics_col
+    train_tournaments::Vector{Int}
+    cups::Symbol
+    target_tournaments::Vector{Int}
+    monitor_tournaments::Vector{Int}
+    clock_tournaments::Vector{Int}
+    target_seasons::Vector{String}
+    history_seasons::Int
+    dynamics_col::Symbol
 
     function DataScope(name, train_tournaments, cups, target_tournaments,
                        monitor_tournaments, clock_tournaments, target_seasons,
-                       history_seasons, dynamics_col, fold_col)
+                       history_seasons, dynamics_col)
         train = unique(Int.(train_tournaments))
         target = unique(Int.(target_tournaments))
         monitor = unique(Int.(monitor_tournaments))
@@ -39,23 +38,50 @@ Base.@kwdef struct DataScope
         history_seasons >= 0 || throw(ArgumentError("DataScope history_seasons must be non-negative"))
         dynamics_col in keys(CALENDAR_DYNAMICS_WIDTH_WEEKS) || throw(ArgumentError(
             "DataScope dynamics_col must be one of $(sort!(collect(keys(CALENDAR_DYNAMICS_WIDTH_WEEKS)))); got :$dynamics_col"))
-        fold_col in keys(CALENDAR_DYNAMICS_WIDTH_WEEKS) || throw(ArgumentError(
-            "DataScope fold_col must be one of $(sort!(collect(keys(CALENDAR_DYNAMICS_WIDTH_WEEKS)))); got :$fold_col"))
         return new(String(name), train, cups, target, monitor, clock,
-                   String.(target_seasons), Int(history_seasons), Symbol(dynamics_col), Symbol(fold_col))
+                   String.(target_seasons), Int(history_seasons), Symbol(dynamics_col))
     end
 end
 
-# Preserve callers of the original positional constructor.
-DataScope(name, train, cups, target, monitor, clock, seasons, history, dynamics) =
-    DataScope(name, train, cups, target, monitor, clock, seasons, history, dynamics, dynamics)
+"Opt-in fold cadence, separate from the wrapped scope's unchanged dynamics clock."
+struct FoldCadenceScope
+    base::DataScope
+    fold_col::Symbol
+
+    function FoldCadenceScope(base::DataScope, fold_col::Symbol)
+        fold_col in keys(CALENDAR_DYNAMICS_WIDTH_WEEKS) || throw(ArgumentError(
+            "DataScope fold_col must be one of $(sort!(collect(keys(CALENDAR_DYNAMICS_WIDTH_WEEKS)))); got :$fold_col"))
+        return new(base, fold_col)
+    end
+end
+
+const ScopedDataPolicy = Union{DataScope,FoldCadenceScope}
+
+# Default scopes keep their exact legacy type, representation and serialized layout.
+Base.getproperty(scope::DataScope, key::Symbol) =
+    getfield(scope, key === :fold_col ? :dynamics_col : key)
+Base.propertynames(::DataScope, private::Bool = false) = (fieldnames(DataScope)..., :fold_col)
+Base.getproperty(scope::FoldCadenceScope, key::Symbol) =
+    key in (:base, :fold_col) ? getfield(scope, key) : getproperty(getfield(scope, :base), key)
+Base.propertynames(scope::FoldCadenceScope, private::Bool = false) =
+    private ? (:base, propertynames(scope.base)...) : propertynames(scope.base)
+
+function DataScope(; name, train_tournaments = [56,57], cups = :none,
+                   target_tournaments = [56,57], monitor_tournaments = Int[],
+                   clock_tournaments = [56,57], target_seasons = ["24/25","25/26"],
+                   history_seasons = 2, dynamics_col = :match_biweek,
+                   fold_col = dynamics_col)
+    base = DataScope(name, train_tournaments, cups, target_tournaments,
+        monitor_tournaments, clock_tournaments, target_seasons, history_seasons, dynamics_col)
+    return fold_col == dynamics_col ? base : FoldCadenceScope(base, fold_col)
+end
 
 "A canonical grouped walk-forward split whose fitted rows are widened by its scope."
 struct ScopedWalkForwardCV <: AbstractSplitter
-    scope::DataScope
+    scope::ScopedDataPolicy
 end
 
-_scope_grouped(scope::DataScope) = GroupedCVConfig(
+_scope_grouped(scope::ScopedDataPolicy) = GroupedCVConfig(
     tournament_groups = [copy(scope.clock_tournaments)],
     target_seasons = copy(scope.target_seasons),
     history_seasons = scope.history_seasons,
@@ -116,7 +142,7 @@ Return a detached store containing only the scope's training, target, monitor an
 cup fixtures. Cup season labels are rewritten to football seasons before point-in-time SPFL
 membership is evaluated. The input store and every cached DataFrame remain untouched.
 """
-function apply_scope(ds::DataStore, scope::DataScope)
+function apply_scope(ds::DataStore, scope::ScopedDataPolicy)
     matches = copy(ds.matches)
     required = (:match_id, :tournament_id, :season, :match_date, :home_team, :away_team)
     all(column -> column in propertynames(matches), required) || error(
@@ -168,7 +194,7 @@ function apply_scope(ds::DataStore, scope::DataScope)
         _scope_copy_domain(ds.bbc_events, kept_ids))
 end
 
-function _scope_step_map(matches::AbstractDataFrame, scope::DataScope, season;
+function _scope_step_map(matches::AbstractDataFrame, scope::ScopedDataPolicy, season;
                          dynamics_col::Symbol = scope.dynamics_col)
     clock_map = _effective_step_map(
         matches, scope.clock_tournaments, season, dynamics_col)

@@ -47,7 +47,7 @@ export
     ScottishLower, ScottishUpper, ScottishAll, ScottishPyramid,
     Ireland, IrelandFirstDivision, IrelandAll,
     SouthKorea, Norway, Veikkausliiga,
-    DataScope, ScopedWalkForwardCV,
+    DataScope, FoldCadenceScope, ScopedWalkForwardCV,
     
     # Functions
     load_datastore_sql, load_datastore_cached, apply_scope, club_season_tiers,

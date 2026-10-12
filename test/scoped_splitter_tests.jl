@@ -2,6 +2,7 @@ using Test
 using BayesianFootball
 using DataFrames
 using Dates
+using Serialization
 
 const ScopedData = BayesianFootball.Data
 const ScopedFeatures = BayesianFootball.Features
@@ -172,6 +173,9 @@ end
 
 @testset "Opt-in weekly folds retain the biweekly state clock" begin
     @test ScopedData.DataScope(name="default").fold_col == :match_biweek
+    @test typeof(ScopedData.DataScope(name="default")) === ScopedData.DataScope
+    @test fieldcount(ScopedData.DataScope) == 9
+    @test typeof(ScopedData.DataScope(name="default", fold_col=:match_biweek)) === ScopedData.DataScope
     @test ScopedData.DataScope(name="weekly_clock", dynamics_col=:match_week).fold_col == :match_week
     @test ScopedData.DataScope("positional", [56,57], :none, [56,57], Int[],
         [56,57], ["24/25"], 1, :match_month).fold_col == :match_month
@@ -184,6 +188,15 @@ end
     end
     scope = ScopedData.DataScope(name="weekly_refit", target_seasons=["24/25"],
         history_seasons=1, dynamics_col=:match_biweek, fold_col=:match_week)
+    @test scope isa ScopedData.FoldCadenceScope
+    @test scope.base isa ScopedData.DataScope
+    @test :fold_col in propertynames(scope) && :base in propertynames(scope, true)
+    buffer = IOBuffer()
+    serialize(buffer, ScopedData.ScopedWalkForwardCV(scope))
+    seekstart(buffer)
+    restored = deserialize(buffer).scope
+    @test restored.fold_col == :match_week && restored.dynamics_col == :match_biweek
+    @test restored.base.name == scope.name
     ds = ScopedData.apply_scope(scoped_store(matches), scope)
     splitter = ScopedData.ScopedWalkForwardCV(scope)
     boundaries = ScopedData.create_id_boundaries(ds, splitter)
