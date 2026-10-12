@@ -132,3 +132,8 @@ Each gate decision the manager took for James, with its reason. James reviews th
     entrant prior would double-count it. Pooling is an alternative route for clubs relegated from the
     Championship.
   - Cups and pxG stay out (S1 did not clear the cup identification).
+- **D18 (2026-10-12 ~11:02, pooled-prep question)** The recovery runner failed twice before
+  producing draws, both from bugs in its own synthetic generator (an empty jump array typed
+  `Vector{Real}`; a reused `delta` variable). Neither was a model or gate failure. Ruling: fix the
+  generator and continue. The stop-after-two-failures rule protects against weakening gates, not
+  against fixing test-harness bugs.
