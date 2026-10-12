@@ -17,7 +17,7 @@ function synthetic(ntiers,rng)
     # exercise EstimatedJump (and avoid Turing's empty filldist Vector{Real}).
     current=repeat(tier,1,nh+nt)
     current[1,(nh+1):end].+=1
-    delta=1.0 .- current .- anchor
+    tier_delta=1.0 .- current .- anchor
     truth=Dict("pyramid_tiers.step"=>step,"pyramid_tiers.κ"=>carry,"obs.σ_obs"=>0.07,
         "inter.μ"=>log(1.2),"ha.γ_global"=>0.15)
     for (j,suffix) in enumerate(("₀","ₛ","ₖ"))
@@ -49,8 +49,8 @@ function synthetic(ntiers,rng)
     eta_a=log(1.2) .+ q[ia].-q[ih].+s[ih].+s[ia].+
         step.*(0.48.*anchor[a].-0.52.*anchor[h])
     event_h=Float64.((h.==1).&(times.>nh)); event_a=Float64.((a.==1).&(times.>nh))
-    eta_h .+= step.*carry.*(0.48.*delta[ih].-0.52.*delta[ia]).+jump_alpha.*event_h.+jump_beta.*event_a
-    eta_a .+= step.*carry.*(0.48.*delta[ia].-0.52.*delta[ih]).+jump_alpha.*event_a.+jump_beta.*event_h
+    eta_h .+= step.*carry.*(0.48.*tier_delta[ih].-0.52.*tier_delta[ia]).+jump_alpha.*event_h.+jump_beta.*event_a
+    eta_a .+= step.*carry.*(0.48.*tier_delta[ia].-0.52.*tier_delta[ih]).+jump_alpha.*event_a.+jump_beta.*event_h
     m=length(h); mask=Float64.(current[ih].>=3)
     d=Dict{Symbol,Any}(:flat_home_ids=>h,:flat_away_ids=>a,:time_indices=>times,
         :season_indices=>ones(Int,m),:flat_months=>ones(Int,m),
@@ -62,7 +62,7 @@ function synthetic(ntiers,rng)
         :n_history_steps=>nh,:n_target_steps=>nt,:grw_oos_seed=>46,
         :team_map=>Dict("t$i"=>i for i in 1:n),:ordered_match_ids=>collect(1:m),
         :pyramid_anchor_home=>anchor[h],:pyramid_anchor_away=>anchor[a],
-        :pyramid_delta_home=>delta[ih],:pyramid_delta_away=>delta[ia],
+        :pyramid_delta_home=>tier_delta[ih],:pyramid_delta_away=>tier_delta[ia],
         :pyramid_old_firm_home=>zeros(m),:pyramid_old_firm_away=>zeros(m),
         :pyramid_events=>[(;club="t1",season="target",α_mean=0.0,α_sd=0.0,β_mean=0.0,β_sd=0.0)],
         :pyramid_events_home=>reshape(event_h,m,1),:pyramid_events_away=>reshape(event_a,m,1))
