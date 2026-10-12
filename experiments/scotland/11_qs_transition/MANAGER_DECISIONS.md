@@ -122,3 +122,13 @@ Each gate decision the manager took for James, with its reason. James reviews th
     scored against `qs_control` in the same harness namespace.
   - **The branch is merged into `exp/qs-transition` only after S3 finishes,** so S3's worktree isn't
     changed under a running agent.
+- **D17 (2026-10-12 ~11:00) Pooled-scope arm design** (S4 prep, built in parallel on branch
+  `exp/qs-transition-pooled`, 4 beast threads):
+  - `qs_pooled_a2` = `qs_a2` trained on League One/Two **and Championship goals**, scored on
+    56/57. Market observation stays 56/57 only.
+  - A2's tier term is required, because W1 showed that pooling without tier structure compresses
+    tiers and worsens the transition bias.
+  - **Not combined with the entrant prior.** Pooling observes the Championship directly, so the
+    entrant prior would double-count it. Pooling is an alternative route for clubs relegated from the
+    Championship.
+  - Cups and pxG stay out (S1 did not clear the cup identification).
