@@ -1,0 +1,11 @@
+gate,job_id,threads,result,runner,source_commit
+baseline,095934-15788,4,PASS,r00_split_identity.jl (F6_SPLIT_MODE=record),c9a969cb
+units_initial,100427-24646,4,PASS,r02_units.jl,bb12dee7
+splits_initial,100902-14374,4,PASS,r00_split_identity.jl,bb12dee7
+panel_initial,100959-25700,4,PASS,r01_panel.jl,bb12dee7
+legacy_initial,101337-6824,4,FAIL before sampling (serialized layout),r03_legacy.jl,bb12dee7
+units_final,102021-15514,4,PASS 505 assertions,r02_units.jl,fbfb86a1
+splits_final,102500-17978,4,PASS 1368 signatures,r00_split_identity.jl,fbfb86a1
+panel_wrapper_initial,102547-28677,4,FAIL test introspection (getfield),r01_panel.jl,fbfb86a1
+legacy_final,102604-1090,4,PASS exact raw bytes,r03_legacy.jl,fbfb86a1-dirty (generated gate CSVs only)
+panel_final,102849-9259,4,PASS 115 folds 1070 fixtures,r01_panel.jl (getproperty fix),fbfb86a1 plus runner fix

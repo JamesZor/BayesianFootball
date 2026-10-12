@@ -1,0 +1,41 @@
+WARNING: Imported binding Portfolio.PerMatchCap was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.WeeklySlate was undeclared at import time during import to BayesianFootball.
+WARNING: Imported binding Portfolio.MatchSlate was undeclared at import time during import to BayesianFootball.
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 19 seconds. 573 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└  
+F6_SPLIT_BASELINE rows=1368
+@@JLDONE 095934-15788 ok
+jl: job 095934-15788 ok

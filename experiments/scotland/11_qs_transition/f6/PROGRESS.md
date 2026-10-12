@@ -1,6 +1,6 @@
 # F6 progress
 Phase: legacy reproduction, then normal smoke.
 Done: opt-in fold_col + positional compatibility; separate held-out clock; same-state QS forecasts without innovation draws; qs_weekly identical control model/sampler. Units PASS 497 assertions; baseline vs post-source splits PASS 1368 folds across 4 existing policies × 2 panels × 3 clocks. Weekly panel PASS 115 folds/1070 fixtures, 55 same-state folds, strict day filtration all folds.
-Next: re-gate wrapper compatibility fix (approved by James), restart f6 because scope struct layout changed; rerun units/split/panel then second wave-2 reproduction attempt and smoke. First legacy attempt failed BEFORE sampling at old-fit deserialize; no checkpoints exist.
-Open REPLs/jobs: beast jl f6, four threads, /root/BF_runs/qs_transition_f6; no active job. Unit100427-24646, split100902-14374, panel100959-25700 all ok on first source. Legacy101337-6824 err during load_fit, recorded legacy_attempt1.log; stop/ask if legacy fails again.
+Next: normal two-fold weekly smoke, then timing/report/handover and stop f6. Final wrapper units PASS505, split identity PASS1368, panel PASS115 folds/1070 fixtures (55 same-state folds,531 same-state fixtures), strict filtration all folds. Legacy PASS396000 chain values +160000 latent values byte-identical, max difference0; reference81fdf817-f82d-4f66-9bfd-5f456c4fe29f.
+Open REPLs/jobs: beast jl f6, four threads, /root/BF_runs/qs_transition_f6; restarted after legacy, no active job. Legacy102604-1090 ok, panel102849-9259 ok. First legacy failure and wrapper panel test introspection failure are resolved and preserved in logs. No gate failed twice.
 Constraints: only f6 REPL, four threads, no grids; stop/ask if any gate fails twice. Records here (hub directory absent).

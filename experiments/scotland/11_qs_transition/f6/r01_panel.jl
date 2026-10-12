@@ -11,7 +11,7 @@ Harness._structural_equal(control.model, weekly.model) || error("weekly model di
 Harness._structural_equal(control.sampler, weekly.sampler) || error("weekly sampler differs")
 for field in fieldnames(Data.DataScope)
     field == :fold_col && continue
-    getfield(control.scope, field) == getfield(weekly.scope, field) || error("scope changed: $field")
+    getproperty(control.scope, field) == getproperty(weekly.scope, field) || error("scope changed: $field")
 end
 panel = Data.apply_scope(ds, weekly.scope)
 splitter = Data.ScopedWalkForwardCV(weekly.scope)

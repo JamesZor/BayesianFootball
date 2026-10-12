@@ -1,0 +1,5 @@
+QS_MARKET_ARM_LOADED
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.5 hours)...
+[FOLD_CHECKPOINT] arm=qs_marketobs fold=1 attempt=0 at=2026-10-12T11:25:18.198
+F6_LEGACY_PASS chains_and_latents_bytes=true seconds=85.32388997077942
+@@JLDONE 102604-1090 ok

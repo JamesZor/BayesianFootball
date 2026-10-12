@@ -1,0 +1,12 @@
+QS_MARKET_ARM_LOADED
+LoadError: TypeError: in new, expected Symbol, got a value of type QueuedNUTSConfig
+in expression starting at /root/BF_runs/qs_transition_f6/experiments/scotland/11_qs_transition/f6/r03_legacy.jl:16
+  deserialize(s::Serializer{IOBuffer}, t::DataType) at Serialization.jl:1664
+  handle_deserialize(s::Serializer{IOBuffer}, b::Int32) at Serialization.jl:915
+  deserialize(s::Serializer{IOBuffer}, t::DataType) at Serialization.jl:1658
+  handle_deserialize(s::Serializer{IOBuffer}, b::Int32) at Serialization.jl:915
+  deserialize(s::Serializer{IOBuffer}, t::DataType) at Serialization.jl:1658
+  handle_deserialize(s::Serializer{IOBuffer}, b::Int32) at Serialization.jl:915
+  deserialize(s::Serializer{IOBuffer}, t::DataType) at Serialization.jl:1658
+  handle_deserialize(s::Serializer{IOBuffer}, b::Int32) at Serialization.jl:915
+@@JLDONE 101337-6824 err

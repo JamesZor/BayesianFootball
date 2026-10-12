@@ -1,0 +1,13 @@
+LoadError: FieldError: type BayesianFootball.Data.FoldCadenceScope has no field `name`, available fields: `base`, `fold_col`
+Available properties: `name`, `train_tournaments`, `cups`, `target_tournaments`, `monitor_tournaments`, `clock_tournaments`, `target_seasons`, `history_seasons`, `dynamics_col`
+in expression starting at /root/BF_runs/qs_transition_f6/experiments/scotland/11_qs_transition/f6/r01_panel.jl:12
+  top-level scope at r01_panel.jl:14
+  eval(m::Module, e::Any) at boot.jl:489
+  include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:2870
+  _include(mapexpr::Function, mod::Module, _path::String) at loading.jl:2930
+  include(mapexpr::Function, mod::Module, _path::String) at Base.jl:307
+  IncludeInto at Base.jl:308 [inlined]
+  top-level scope at run-102547-28677.jl:4
+  eval(m::Module, e::Any) at boot.jl:489
+@@JLDONE 102547-28677 err
+jl: job 102547-28677 failed
