@@ -150,3 +150,17 @@ Each gate decision the manager took for James, with its reason. James reviews th
   feature extractor (world age / loading order). Ruling: diagnose the loading and retry with the
   prototype preloaded, with no src or recipe change. If it fails again, document it and run summer
   first.
+- **D21 (2026-10-12 ~14:40) Interim S3 result, and the pooled prep accepted.**
+  - **Control (qs_marketobs) on W2's panel**, transition bias over the first 20 games:
+    relegated into L1 **+0.07 pp** [−2.69, +2.48]; promoted into L1 **+1.29** [+0.78, +1.91].
+    That is far smaller than W2's bases (−4 to −5 / +3 to +4.5). The market observation already
+    removes most of the in-panel bias.
+  - **QS+A2 fails gate 2.** Promoted improves (+0.54; Δ|bias| −0.75 [−1.16, −0.37]), but relegated
+    worsens (+1.26; Δ|bias| +1.19 [−1.85, +1.53]). Gate 1 passes (ΔLL +0.0003 [−0.0004, +0.0011]).
+  - **Pooled prep accepted** (`exp/qs-transition-pooled` at `c127e362`, pushed): panel 1,070;
+    Championship goals market-masked; 3-seed tier recovery 83/90; smoke hard checks pass at 0 B;
+    grid estimated at 4–6 h. Row 890 was removed under D19.
+  - **Grid queue after S3:** weekly (F6 checkout), then pooled (pooled checkout). Both are scored
+    against `qs_control`.
+  - Note for S4: A2 failed gate 2 on QS, and the pooled arm includes A2 by design (D17). Interpret
+    the pooled result with that in mind.
