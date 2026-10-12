@@ -106,3 +106,10 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - S3 runs **all four arms** sequentially, control first (about 22 h);
   - **build F6** (an opt-in fold-cadence field) **alongside S3**, as a fifth arm afterwards;
   - **plan a pooled scope arm** (League One/Two + Championship, goals only) for S4.
+- **D15 (2026-10-12 ~10:17, F6 question) Weekly fold cadence goes in a backward-compatible scope
+  wrapper, not a new `DataScope` field.**
+  - Appending a field broke Julia deserialisation of saved fits: the wave-2 `load_fit` read the next
+    object as the new field.
+  - A wrapper keeps the legacy type, the serialized layout and the default recipe hashes exact for
+    unset scopes. It needs only small dispatch changes in the splitter and harness.
+  - The same lesson as the 2026-09-03 joint-obs artifact drift.
