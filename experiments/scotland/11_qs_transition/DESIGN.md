@@ -147,3 +147,27 @@ the morning with an agent.
 - The 26/27 test still runs once, at the end of S5, on the frozen winner.
 - Stop rules: any failed reproduction or leakage gate stops the chain at that stage, with a report.
   No merges to other branches. Push `exp/qs-transition` only.
+
+## 9. Metric amendment (James, 2026-10-12 ~17:45): absolute transition error
+
+**Why.** The frozen gate 2 asks the signed mean bias to move toward zero in both directions. The
+control's relegated mean (+0.07 pp) is near zero only because errors cancel, over time (+1.91 at
+games 2–5, −0.47 at 11–20) and across clubs (Inverness −0.36, Hamilton +4.05). So the gate penalises
+fixes that reduce per-club misses. The market is the reference (S1 Q10 found no evidence that it
+misprices movers), so model − market in **either** direction is error.
+
+**Metric** (for relegated_into_L1 and promoted_into_L1; also reported for entered-SPFL):
+- **Primary, MAE_club:** for each transitioning club-season, the mean of |P_model(club win) −
+  P_market(club win)| over its first 20 league games; then the mean across club-seasons.
+  - Δ vs `qs_control` is paired, with a club-season-clustered bootstrap (B = 10,000, 95%).
+  - **Pass:** neither direction's Δ is positive in point estimate, and at least one direction's Δ CI
+    upper is < 0.
+- **Secondary:**
+  - worst club: the maximum over club-seasons of |mean signed error over its first 20 games|;
+  - the primary metric over games 1–10 and 11–20 separately.
+- **Gate 1** (log-loss non-inferiority) is unchanged and still required.
+
+**Status.**
+- **Post hoc** on the 23/24–25/26 panel (chosen after S3). It is reported next to the frozen gate,
+  which stays in the record.
+- **Pre-registered** for the one-time 26/27 test (S5). This commit predates any 26/27 scoring.
