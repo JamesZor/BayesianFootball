@@ -1,0 +1,2 @@
+folds,fixtures,control_folds,same_state_folds,same_state_fixtures,filtration_pass,model_identical,sampler_identical,dynamics_col,fold_col
+115,1070,60,55,531,true,true,true,match_biweek,match_week

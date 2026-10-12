@@ -1,0 +1,3 @@
+folds,probe_threads,target_threads,probe_window_seconds,grid_chain_iterations,projected_seconds_at4,estimated_seconds_at16,estimated_hours_at16,estimate_only
+60,4,16,47.153839282,360000,42438.455353800004,10609.613838450001,2.9471149551250004,True
+115,4,16,47.153839282,690000,81340.37276145,20335.0931903625,5.6486369973229165,True

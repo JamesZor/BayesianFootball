@@ -5,12 +5,17 @@ const TODO = 46
 const QUESTION = "Which opt-in transition fix improves QS on W2's panel?"
 const DIMENSION = "qs_transition"
 const STATUS = "smoked"
-const DECISION = "S2 source gates and four hard smokes pass; S3 requires manager review and stale control check832 cleanup. F6 deferred for James."
+const DECISION = "S2 source gates and four hard smokes pass; F6 weekly-refit arm is gated separately in f6/REPORT_F6.md. Grids require manager scheduling/review."
 const README = joinpath(@__DIR__, "REPORT_S2.md")
 const CONTROL = "qs_control"
 const SCOPE = Data.DataScope(name="lower", train_tournaments=[56,57], cups=:none,
     target_tournaments=[56,57], monitor_tournaments=Int[], clock_tournaments=[56,57],
     target_seasons=["23/24","24/25","25/26"], history_seasons=2, dynamics_col=:match_biweek)
+const WEEKLY_SCOPE = Data.DataScope(name=SCOPE.name,
+    train_tournaments=copy(SCOPE.train_tournaments), cups=SCOPE.cups,
+    target_tournaments=copy(SCOPE.target_tournaments), monitor_tournaments=copy(SCOPE.monitor_tournaments),
+    clock_tournaments=copy(SCOPE.clock_tournaments), target_seasons=copy(SCOPE.target_seasons),
+    history_seasons=SCOPE.history_seasons, dynamics_col=SCOPE.dynamics_col, fold_col=:match_week)
 const DEFAULT_SAMPLER = Samplers.QueuedNUTSConfig(n_samples=1000, n_warmup=500,
     n_chains=4, accept_rate=0.65, max_depth=10, initialisation=nothing,
     show_progress=false, silence_initial_stepsize=true)
@@ -31,6 +36,9 @@ const ENTRANT_FEATURE = Main.QSTransitionInputs.EntrantPriorFeature()
 const CANDIDATES = [
     Harness.Candidate(name="qs_control", model=qs_recipe("qs_control"), scope=SCOPE,
         sampler=DEFAULT_SAMPLER, role=:control, hypothesis="Unchanged wave-2 QS goals+market observation on W2 panel."),
+    Harness.Candidate(name="qs_weekly", model=qs_recipe("qs_control"), scope=WEEKLY_SCOPE,
+        sampler=DEFAULT_SAMPLER, role=:candidate,
+        hypothesis="F6: weekly refits only; unchanged control model, priors, sampler and biweekly state clock."),
     Harness.Candidate(name="qs_a2", model=qs_recipe("qs_a2"; tiers=PyramidTiers(
         anchor=:full_pyramid, carry=EstimatedCarry(), jump=EstimatedJump())), scope=SCOPE,
         sampler=DEFAULT_SAMPLER, role=:candidate, hypothesis="F3: one full-pyramid A2 term, 0.48 attack / 0.52 concession."),

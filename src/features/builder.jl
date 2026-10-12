@@ -189,6 +189,15 @@ function _align_scoped_time!(feature_set::FeatureSet, boundary::Data.SplitBounda
     feature_set.data[:n_rounds] = length(history_steps) + length(raw_target_steps)
     feature_set.data[:effective_target_steps] = Dict(
         Int(id) => raw_step_by_id[Int(id)] for id in target_df.match_id)
+    if splitter.scope.fold_col != splitter.scope.dynamics_col
+        # A refit within an already observed state period must forecast that state,
+        # not invent a new dynamics innovation. Zero denotes an unseen next period.
+        heldout = Data.get_next_matches(ds, meta, splitter)
+        feature_set.data[:qs_oos_state_indices] = Dict(
+            Int(id) => (haskey(target_state, raw_step_by_id[Int(id)]) ?
+                length(history_steps) + target_state[raw_step_by_id[Int(id)]] : 0)
+            for id in heldout.match_id)
+    end
     return feature_set
 end
 

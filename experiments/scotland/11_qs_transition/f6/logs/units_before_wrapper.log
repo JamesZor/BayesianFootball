@@ -1,0 +1,41 @@
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◓ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◑ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◒ BayesianFootball
+Precompiling packages  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/1
+  ◐ BayesianFootball
+Precompiling packages  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+Precompiling BayesianFootball finished.
+  1 dependency successfully precompiled in 43 seconds. 573 already precompiled.
+  1 dependency had output during precompilation:
+┌ BayesianFootball
+│  [Output was shown above]
+└  
+[ Info: Loading DataStore for ScottishLower from local cache (Age: 0.1 hours)...
+QUALITY_STYLE_GRW_TESTS_DONE
+Test Summary:                           | Pass  Total     Time
+F6 scoped clock and QS regression gates |  497    497  4m09.4s
+F6_UNITS_PASS Test.TestCounts(true, 0, 0, 0, 0, 497, 0, 0, 0, "4m09.4s")
+@@JLDONE 100427-24646 ok
+jl: job 100427-24646 ok

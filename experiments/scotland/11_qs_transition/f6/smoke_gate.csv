@@ -1,0 +1,2 @@
+pass,run_id,recipe_hash,hard_checks,tape_bytes,db_has_passing_smoke
+true,9346d3b3-874c-49eb-9bc3-0db9f07de477,aaed32f47a4c97e032bfb067b6debd2e4ccc14d934df58301955f4bccffae952,6,0,true
