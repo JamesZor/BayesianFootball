@@ -137,3 +137,16 @@ Each gate decision the manager took for James, with its reason. James reviews th
   `Vector{Real}`; a reused `delta` variable). Neither was a model or gate failure. Ruling: fix the
   generator and continue. The stop-after-two-failures rule protects against weakening gates, not
   against fixing test-harness bugs.
+- **D19 (James, 2026-10-12 ~11:30) Standing rule for stale allocation rows.**
+  - A stale failed `tape_allocation` harness check may be removed only if all of these hold: it is
+    backed up to CSV, its `run_id` is NULL, and a later smoke of the same recipe hash passes every
+    hard check at 0 B. Each removal is logged here.
+  - Removed under this rule: **row 890** (pooled arm's first attempt). Row 832 was removed under D14.
+  - **Harness follow-up:** the first allocation measurement in a fresh REPL sometimes reports
+    allocation, and a rerun is 0 B (twice now: D11/832 and 890). The check probably needs a warm-up
+    call before measuring.
+- **D20 (2026-10-12 ~14:45, S3 question)** The control and QS+A2 grids are complete and scored. The
+  entrant grid failed twice before sampling with a dispatch error in the experiment-local prototype
+  feature extractor (world age / loading order). Ruling: diagnose the loading and retry with the
+  prototype preloaded, with no src or recipe change. If it fails again, document it and run summer
+  first.
