@@ -113,3 +113,12 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - A wrapper keeps the legacy type, the serialized layout and the default recipe hashes exact for
     unset scopes. It needs only small dispatch changes in the splitter and harness.
   - The same lesson as the 2026-09-03 joint-obs artifact drift.
+- **D16 (2026-10-12 ~10:50) F6 accepted** (`exp/qs-transition-f6` at `db9f089b`, pushed).
+  - 505 units; 1,368 legacy split signatures unchanged; wave-2 bit identity; 115 weekly folds with
+    the same 1,070 fixtures; strict filtration; the smoke passes its hard checks at 0 B.
+  - Estimated weekly grid: 5.65 h.
+  - **The weekly grid is queued after S3's four arms,** run from the F6 beast checkout
+    `/root/BF_runs/qs_transition_f6`, so the S3 worktree and checkout stay untouched mid-run. It is
+    scored against `qs_control` in the same harness namespace.
+  - **The branch is merged into `exp/qs-transition` only after S3 finishes,** so S3's worktree isn't
+    changed under a running agent.
