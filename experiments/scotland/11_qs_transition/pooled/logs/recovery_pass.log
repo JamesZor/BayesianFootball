@@ -1,0 +1,8 @@
+POOL_RECOVERY tiers=2 seed=1 seconds=131.92197704315186
+POOL_RECOVERY tiers=2 seed=2 seconds=29.75662088394165
+POOL_RECOVERY tiers=2 seed=3 seconds=36.22222304344177
+POOL_RECOVERY tiers=3 seed=1 seconds=48.604327917099
+POOL_RECOVERY tiers=3 seed=2 seconds=50.3673460483551
+POOL_RECOVERY tiers=3 seed=3 seconds=48.95389699935913
+POOL_RECOVERY_PASS NamedTuple[(ntiers = 2, intervals = 45, covered = 42, coverage = 0.9333333333333333, tier_step_covered = 3, all_three_misses = "", passed = true), (ntiers = 3, intervals = 45, covered = 41, coverage = 0.9111111111111111, tier_step_covered = 3, all_three_misses = "", passed = true)
+@@JLDONE 110414-13920 ok

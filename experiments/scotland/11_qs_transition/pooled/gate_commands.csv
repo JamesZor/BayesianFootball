@@ -1,0 +1,13 @@
+phase,job_id,command,status
+panel,105114-5553,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,fail_target_filter_included_monitors
+panel,105342-32107,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,pass
+recovery,105617-11589,jl run pool experiments/scotland/11_qs_transition/pooled/r02_recovery.jl --bg,fail_empty_jump_type
+recovery,105905-31549,jl run pool experiments/scotland/11_qs_transition/pooled/r02_recovery.jl --bg,fail_generator_variable_reuse_user_authorised_fix
+panel,110242-14719,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,pass_fresh_repl
+recovery,110414-13920,jl run pool experiments/scotland/11_qs_transition/pooled/r02_recovery.jl --bg,pass_83of90_intervals_step6of6
+smoke,111329-30562,jl run pool experiments/scotland/11_qs_transition/pooled/r03_smoke.jl --bg,fail_tape_allocation2464B
+panel,111755-24322,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,pass_fresh_smoke_repl
+smoke,111837-5647,jl run pool experiments/scotland/11_qs_transition/pooled/r03_smoke.jl --bg,pass_allhard_0B_convergence_review
+readiness,112326-22778,jl run pool experiments/scotland/11_qs_transition/pooled/r04_readiness.jl,blocked_only_stale890
+cleanup,142552-13251,jl run pool experiments/scotland/11_qs_transition/pooled/r05_authorised_cleanup.jl,authorised_deleted_only890_backup_sha_receipted
+readiness,142633-6373,jl run pool experiments/scotland/11_qs_transition/pooled/r04_readiness.jl,pass_has_passing_smoke_true

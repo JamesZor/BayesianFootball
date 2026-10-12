@@ -1,0 +1,59 @@
+LoadError: TaskFailedException
+    nested task error: TaskFailedException
+    
+        nested task error: TypeError: in PhasePoint, in T, expected T<:(AbstractVecOrMat{<:AbstractFloat}), got Type{Vector{Real}}
+        Stacktrace:
+          [1] AdvancedHMC.PhasePoint(θ::Vector{Real}, r::Vector{Real}, ℓπ::AdvancedHMC.DualValue{Float64, Vector{Float64}}, ℓκ::AdvancedHMC.DualValue{Float64, Vector{Float64}})
+            @ AdvancedHMC ~/.julia/packages/AdvancedHMC/4lo5Y/src/hamiltonian.jl:105
+          [2] phasepoint(h::AdvancedHMC.Hamiltonian{AdvancedHMC.DiagEuclideanMetric{Float64, Vector{Float64}}, AdvancedHMC.GaussianKinetic, Base.Fix1{typeof(LogDensityProblems.logdensity), DynamicPPL.LogDensityFunction{DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_
+            @ AdvancedHMC ~/.julia/packages/AdvancedHMC/4lo5Y/src/hamiltonian.jl:132
+          [3] phasepoint(h::AdvancedHMC.Hamiltonian{AdvancedHMC.DiagEuclideanMetric{Float64, Vector{Float64}}, AdvancedHMC.GaussianKinetic, Base.Fix1{typeof(LogDensityProblems.logdensity), DynamicPPL.LogDensityFunction{DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_
+            @ AdvancedHMC ~/.julia/packages/AdvancedHMC/4lo5Y/src/hamiltonian.jl:124
+          [4] phasepoint(rng::Random.Xoshiro, θ::Vector{Real}, h::AdvancedHMC.Hamiltonian{AdvancedHMC.DiagEuclideanMetric{Float64, Vector{Float64}}, AdvancedHMC.GaussianKinetic, Base.Fix1{typeof(LogDensityProblems.logdensity), DynamicPPL.LogDensityFunction{DynamicPPL.Model{typeof(BayesianFootball.M
+            @ AdvancedHMC ~/.julia/packages/AdvancedHMC/4lo5Y/src/hamiltonian.jl:205
+          [5] find_initial_params(rng::Random.Xoshiro, model::DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_weights, :dynamics_data, :predictor_designs, :log_fact_h, :log_fact
+            @ Turing.Inference ~/.julia/packages/Turing/EThRU/src/mcmc/hmc.jl:162
+          [6] find_initial_params(rng::Random.Xoshiro, model::DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_weights, :dynamics_data, :predictor_designs, :log_fact_h, :log_fact
+            @ Turing.Inference ~/.julia/packages/Turing/EThRU/src/mcmc/hmc.jl:150
+          [7] initialstep(rng::Random.Xoshiro, model::DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_weights, :dynamics_data, :predictor_designs, :log_fact_h, :log_fact_a, :obs
+            @ Turing.Inference ~/.julia/packages/Turing/EThRU/src/mcmc/hmc.jl:214
+          [8] step(rng::Random.Xoshiro, model::DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_weights, :dynamics_data, :predictor_designs, :log_fact_h, :log_fact_a, :observatio
+            @ Turing.Inference ~/.julia/packages/Turing/EThRU/src/mcmc/abstractmcmc.jl:180
+          [9] step
+            @ ~/.julia/packages/Turing/EThRU/src/mcmc/abstractmcmc.jl:162 [inlined]
+         [10] step_warmup
+            @ ~/.julia/packages/AbstractMCMC/C1aKp/src/interface.jl:118 [inlined]
+         [11] #_step_or_step_warmup#25
+            @ ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:126 [inlined]
+         [12] _step_or_step_warmup
+            @ ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:124 [inlined]
+         [13] macro expansion
+            @ ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:223 [inlined]
+         [14] macro expansion
+            @ ~/.julia/packages/AbstractMCMC/C1aKp/src/logging.jl:137 [inlined]
+         [15] mcmcsample(rng::Random.Xoshiro, model::DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_weights, :dynamics_data, :predictor_designs, :log_fact_h, :log_fact_a, :obse
+            @ AbstractMCMC ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:204
+         [16] #sample#40
+            @ ~/.julia/packages/Turing/EThRU/src/mcmc/hmc.jl:119 [inlined]
+         [17] (::AbstractMCMC.var"#62#63"{Turing.Inference.NUTS{ADTypes.AutoReverseDiff{true}, AdvancedHMC.DiagEuclideanMetric}, DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.Builder.composable_count_engine), (:home_ids, :away_ids, :season_ids, :month_ids, :home_goals, :away_goals, :match_
+            @ AbstractMCMC ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:684
+    
+    ...and 1 more exception.
+    
+    Stacktrace:
+     [1] sync_end(c::Channel{Any})
+       @ Base ./task.jl:630
+     [2] macro expansion
+       @ ./task.jl:663 [inlined]
+     [3] (::AbstractMCMC.var"#60#61"{Vector{DynamicPPL.InitFromUniform{Float64}}, Nothing, Int64, Vector{Any}, Vector{UInt64}, Int64, Int64, Vector{Turing.Inference.NUTS{ADTypes.AutoReverseDiff{true}, AdvancedHMC.DiagEuclideanMetric}}, Vector{DynamicPPL.Model{typeof(BayesianFootball.Models.PreGame.B
+       @ AbstractMCMC ~/.julia/packages/AbstractMCMC/C1aKp/src/sample.jl:641
+in expression starting at /root/BF_runs/qs_transition_pooled/experiments/scotland/11_qs_transition/pooled/r02_recovery.jl:9
+  sync_end(c::Channel{Any}) at task.jl:630
+  macro expansion at task.jl:663 [inlined]
+  macro expansion at sample.jl:616 [inlined]
+  (::AbstractMCMC.var"#54#55"{String, Vector{DynamicPPL.InitFromUniform{Float64}}, Nothing, Int64, Int64, Vector{Any}, Vector{UInt64}, Int64, Int64, Vector{Turing.Inference.NUTS{ADTypes.AutoReverseDiff{true}, AdvancedHMC.DiagEuclideanMetric}}, Vector{DynamicPPL.Model{typeof(BayesianFootball.Models.P
+  with_logstate(f::AbstractMCMC.var"#54#55"{String, Vector{DynamicPPL.InitFromUniform{Float64}}, Nothing, Int64, Int64, Vector{Any}, Vector{UInt64}, Int64, Int64, Vector{Turing.Inference.NUTS{ADTypes.AutoReverseDiff{true}, AdvancedHMC.DiagEuclideanMetric}}, Vector{DynamicPPL.Model{typeof(BayesianFoo
+  with_logger(f::Function, logger::LoggingExtras.TeeLogger{Tuple{LoggingExtras.EarlyFilteredLogger{TerminalLoggers.TerminalLogger, AbstractMCMC.var"#with_progresslogger##0#with_progresslogger##1"{Module}}, LoggingExtras.EarlyFilteredLogger{Base.CoreLogging.ConsoleLogger, AbstractMCMC.var"#with_progr
+  with_progresslogger(f::Function, _module::Module, logger::Base.CoreLogging.ConsoleLogger) at logging.jl:157
+  macro expansion at logging.jl:133 [inlined]
+@@JLDONE 105617-11589 err

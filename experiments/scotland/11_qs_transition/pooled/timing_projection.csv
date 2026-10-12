@@ -1,0 +1,2 @@
+measured_threads,estimated_threads,folds,chains_per_fold,warmup,samples,probe_window_seconds,four_thread_grid_seconds,ideal_sixteen_thread_grid_seconds,assumption
+4,16,60,4,500,1000,56.295624419,50666.0619771,12666.515494275,Ideal 4x throughput from4 to16 threads; excludes overhead; shared S3 load may inflate probe

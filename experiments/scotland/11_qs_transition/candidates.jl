@@ -1,4 +1,5 @@
-# Stage 2/S3: one factor at a time on the frozen W2 panel. Default QS unchanged.
+# Stage 2/S3 plus D17 S4 pooled prep: one factor at a time on the frozen W2 panel.
+# Pooled recipe gates/review: pooled/REPORT_POOLED.md. Default QS unchanged.
 using BayesianFootball, Distributions, CSV, DataFrames, SHA
 const EXPERIMENT = "scottish_lower_qs_transition_2326"
 const TODO = 46
@@ -16,6 +17,9 @@ const WEEKLY_SCOPE = Data.DataScope(name=SCOPE.name,
     target_tournaments=copy(SCOPE.target_tournaments), monitor_tournaments=copy(SCOPE.monitor_tournaments),
     clock_tournaments=copy(SCOPE.clock_tournaments), target_seasons=copy(SCOPE.target_seasons),
     history_seasons=SCOPE.history_seasons, dynamics_col=SCOPE.dynamics_col, fold_col=:match_week)
+const POOLED_SCOPE = Data.DataScope(name="pooled_championship", train_tournaments=[55,56,57],
+    cups=:none, target_tournaments=[56,57], monitor_tournaments=[55], clock_tournaments=[56,57],
+    target_seasons=["23/24","24/25","25/26"], history_seasons=2, dynamics_col=:match_biweek)
 const DEFAULT_SAMPLER = Samplers.QueuedNUTSConfig(n_samples=1000, n_warmup=500,
     n_chains=4, accept_rate=0.65, max_depth=10, initialisation=nothing,
     show_progress=false, silence_initial_stepsize=true)
@@ -42,6 +46,10 @@ const CANDIDATES = [
     Harness.Candidate(name="qs_a2", model=qs_recipe("qs_a2"; tiers=PyramidTiers(
         anchor=:full_pyramid, carry=EstimatedCarry(), jump=EstimatedJump())), scope=SCOPE,
         sampler=DEFAULT_SAMPLER, role=:candidate, hypothesis="F3: one full-pyramid A2 term, 0.48 attack / 0.52 concession."),
+    Harness.Candidate(name="qs_pooled_a2", model=qs_recipe("qs_pooled_a2"; tiers=PyramidTiers(
+        anchor=:first_in_window, carry=EstimatedCarry(), jump=EstimatedJump())), scope=POOLED_SCOPE,
+        sampler=DEFAULT_SAMPLER, role=:candidate,
+        hypothesis="D17: QS+A2 with Championship goals, frozen lower-only market observations; no entrant prior."),
     Harness.Candidate(name="qs_entrant", model=qs_recipe("qs_entrant";
         dynamics=weak_qs(entrant_feature=ENTRANT_FEATURE)),scope=SCOPE,
         sampler=DEFAULT_SAMPLER,role=:candidate,
@@ -51,4 +59,4 @@ const CANDIDATES = [
         sampler=DEFAULT_SAMPLER,role=:candidate,
         hypothesis="F4: independent target-season macro uncertainty, integrated at the opening fold."),
 ]
-# F6 intentionally absent: cadence/clock are tied; see build/F6_DECISION.md.
+# F6 is qs_weekly (opt-in FoldCadenceScope, see f6/REPORT_F6.md); qs_pooled_a2 per D17 (pooled/REPORT_POOLED.md).

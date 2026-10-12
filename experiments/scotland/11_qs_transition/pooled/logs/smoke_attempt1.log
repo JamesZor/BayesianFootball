@@ -1,0 +1,87 @@
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  column "layout" of relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "fit_fold_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+NOTICE:  relation "harness_scores" already exists, skipping
+NOTICE:  column "control_run_id" of relation "harness_scores" already exists, skipping
+NOTICE:  column "panel" of relation "harness_scores" already exists, skipping
+NOTICE:  constraint "harness_scores_pkey" of relation "harness_scores" does not exist, skipping
+NOTICE:  relation "harness_scores_unique_idx" already exists, skipping
+NOTICE:  relation "harness_scores_lookup_idx" already exists, skipping
+NOTICE:  relation "harness_experiments" already exists, skipping
+NOTICE:  column "run_commits" of relation "harness_experiments" already exists, skipping
+NOTICE:  relation "harness_checks" already exists, skipping
+NOTICE:  relation "harness_checks_recipe_stage_idx" already exists, skipping
+NOTICE:  relation "harness_checks_run_idx" already exists, skipping
+NOTICE:  relation "harness_scores" already exists, skipping
+NOTICE:  column "control_run_id" of relation "harness_scores" already exists, skipping
+NOTICE:  column "panel" of relation "harness_scores" already exists, skipping
+NOTICE:  constraint "harness_scores_pkey" of relation "harness_scores" does not exist, skipping
+NOTICE:  relation "harness_scores_unique_idx" already exists, skipping
+NOTICE:  relation "harness_scores_lookup_idx" already exists, skipping
+NOTICE:  relation "harness_experiments" already exists, skipping
+NOTICE:  column "run_commits" of relation "harness_experiments" already exists, skipping
+NOTICE:  relation "harness_checks" already exists, skipping
+NOTICE:  relation "harness_checks_recipe_stage_idx" already exists, skipping
+NOTICE:  relation "harness_checks_run_idx" already exists, skipping
+LoadError: harness check `tape_allocation` failed: fold 1 allocates 2464 B per compiled gradient (limit 1024 B): #31 48 B +(TReal, Real) -> TReal; #45 48 B +(TReal, Real) -> TReal; #59 48 B +(TReal, Real) -> TReal; #77 48 B +(TReal, Real) -> TReal; #371 48 B broadcast,*(T32, TReal) -> T32; #651 48 B
+in expression starting at /root/BF_runs/qs_transition_pooled/experiments/scotland/11_qs_transition/pooled/r03_smoke.jl:10
+  _run_hard_check!(records::Vector{NamedTuple}, base::@NamedTuple{run_id::Nothing, recipe_hash::String, experiment::String, candidate::String, stage::String, git_sha::String}, check::String, f::BayesianFootball.Harness.var"#253#254"{BayesianFootball.Harness.Candidate{PoissonCountModel{GlobalIntercep
+  _run_hard_check!(f::Function, records::Vector{NamedTuple}, base::@NamedTuple{run_id::Nothing, recipe_hash::String, experiment::String, candidate::String, stage::String, git_sha::String}, check::String) at checks.jl:54
+  smoke(candidate::BayesianFootball.Harness.Candidate{PoissonCountModel{GlobalInterception, QualityStyleGRW, GlobalHomeAdvantage, Tuple{PyramidTiers{Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64, Float64, Float64}, Distributions.Truncated{Distributions.Norm
+  smoke at stages.jl:104 [inlined]
+  (::Main.PooledSmoke.var"#run")(candidate::BayesianFootball.Harness.Candidate{PoissonCountModel{GlobalInterception, QualityStyleGRW, GlobalHomeAdvantage, Tuple{PyramidTiers{Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64, Float64, Float64}, Distributions.Tru
+  kwcall(::@NamedTuple{output::String}, ::Main.PooledSmoke.var"#run", candidate::BayesianFootball.Harness.Candidate{PoissonCountModel{GlobalInterception, QualityStyleGRW, GlobalHomeAdvantage, Tuple{PyramidTiers{Distributions.Truncated{Distributions.Normal{Float64}, Distributions.Continuous, Float64,
+  top-level scope at r03_smoke.jl:10
+  eval(m::Module, e::Any) at boot.jl:489
+@@JLDONE 111329-30562 err
