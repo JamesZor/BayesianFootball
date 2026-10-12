@@ -1,0 +1,26 @@
+ M experiments/scotland/11_qs_transition/build/harness_history_qs_control.csv
+ M experiments/scotland/11_qs_transition/build/historical_failed_hard_qs_control.csv
+ M experiments/scotland/11_qs_transition/build/prior_manifests/summary_1.csv
+ M experiments/scotland/11_qs_transition/build/prior_manifests/summary_2.csv
+ M experiments/scotland/11_qs_transition/grid/runs.csv
+?? .git.local-worktree-pointer
+?? allocation_sources/
+?? experiments/scotland/11_qs_transition/build/legacy_checkpoints/
+?? experiments/scotland/11_qs_transition/build/legacy_checkpoints_post_src/
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold10.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold11.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold12.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold13.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold14.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold15.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold16.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold17.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold18.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold19.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold20.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold3.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold4.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold5.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold6.csv
+?? experiments/scotland/11_qs_transition/build/prior_manifests/23-24_fold7.csv
+S3_FROZEN_CODE_DIFF_CLEAN

@@ -1,0 +1,16 @@
+Updating d3f86b29..cb861f9f
+Fast-forward
+ .../11_qs_transition/grid/DECISIONS_LOG.md         |  7 ++++
+ .../scotland/11_qs_transition/grid/PROGRESS.md     |  7 ++++
+ .../grid/archived_harness_check_832.csv            |  2 +
+ .../11_qs_transition/grid/r01_stale_check.jl       | 44 ++++++++++++++++++++++
+ .../11_qs_transition/grid/s3_readiness.csv         |  5 +++
+ .../11_qs_transition/grid/stale_check_counts.csv   |  2 +
+ 6 files changed, 67 insertions(+)
+ create mode 100644 experiments/scotland/11_qs_transition/grid/DECISIONS_LOG.md
+ create mode 100644 experiments/scotland/11_qs_transition/grid/PROGRESS.md
+ create mode 100644 experiments/scotland/11_qs_transition/grid/archived_harness_check_832.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/r01_stale_check.jl
+ create mode 100644 experiments/scotland/11_qs_transition/grid/s3_readiness.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/stale_check_counts.csv
+.cache/datastore_ScottishPyramid.jls: OK

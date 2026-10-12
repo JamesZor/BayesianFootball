@@ -1,0 +1,9 @@
+From .git/s3.bundle
+ * remote-tracking branch origin/exp/qs-transition -> FETCH_HEAD
+Updating f471fd63..d3f86b29
+Fast-forward
+ .../scotland/11_qs_transition/MANAGER_DECISIONS.md |  18 ++++
+ .../11_qs_transition/grid/S3_GRID_BRIEF.md         | 110 +++++++++++++++++++++
+ 2 files changed, 128 insertions(+)
+ create mode 100644 experiments/scotland/11_qs_transition/grid/S3_GRID_BRIEF.md
+.cache/datastore_ScottishPyramid.jls: OK

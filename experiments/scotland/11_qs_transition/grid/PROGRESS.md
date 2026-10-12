@@ -1,15 +1,19 @@
-# S3 progress
+# S3 progress — COMPLETE
 
-Phase: summer grid running; control/A2/entrant completed/scored.
-Owned REPL: fresh s3 beast16, /root/BF_runs/qs_transition; checkout c5948a16, SHA checked.
-Entrant first job133204-24475 failed before sampling: no extractor method for Main.QSTransitionInputs.EntrantPriorFeature (possible Julia world age after dynamic candidate include).
-Retry133352-18711 failed identically before sampling. User authorised diagnose/retry. Fresh s3 prototype preload142459-9074 and method dispatch142526-28554 PASS.
-Entrant job142543-15880 completed1h13m wall (~76min job); UUIDc6118c34-a2a5-46fd-b4d6-21ef7b795b49; Rhat1.0358, bulkESS262, div1/240000; no bad folds/no rerun. Hard/review PASS. Scored vs control154226-18070. Fresh owned s3 beast16; checkout08759330, prototype preloaded154408-21500.
-Active summer job154435-670; start2026-10-12 15:44:35 BST; ETA~17:05 BST (uncertain); SHA verified. Rerun130952-11594 succeeded~19min; final scoring133007-15380 succeeded.
-A2 initial grid112704-30834 done1h35m; UUID21ab856f-7c72-46be-8732-dc6122a58dc4, Rhat1.0365, div293/240000, hardPASS/reviewFAIL. Initial paired scores exported job130716-10483.
-One seeded rerun completed for folds6,15,25,35,38,42,44,53,57. Final UUID2e13b786-7d47-47c0-8e04-1529e705c663; maxRhat1.0255, ESSbulk290, div66/240000. Fold53 still25div/4000 (review blocker), no second rerun. Initial CSVs retained *_initial.csv.
-Control job100145-31050 completed ok (1h15m reported wall; ~79min job).
-Done: pushed checkout d3f86b29 synced; frozen cache SHA verified; row832 archived/committed31a20acb; cleanup095941-23352 recipe rows14→13; readiness095948-15911 all four true.
-Control: 866a947c-be65-467d-8dfd-c58aed0ad1f9;60 folds, Rhat1.022804, bulkESS277, tailESS414, div0/240000; no offending folds/no rerun required. Hard/review PASS. W2 score export112304-23673:664 v1.2 score rows (B10000), CSVs saved.
-Next: watch154435-670; export summer UUID/diagnostics/paired scores, one rerun per bad fold; then gate tables/bias bins/report. No src/recipe changes. Gates/bins/report due. Gates/bias-bin curves assembled after paired arm scoring.
-Run UUIDs: control866a947c-be65-467d-8dfd-c58aed0ad1f9. Others not started.
+Phase: four grids, one-factor gates, diagnostics and REPORT_S3.md complete.
+Owned REPL s3: STOPPED; no active jobs/watches. No other REPL/checkout touched.
+
+| Arm | Scored UUID | Grid job | Outcome |
+|---|---|---|---|
+| qs_control | 866a947c-be65-467d-8dfd-c58aed0ad1f9 | 100145-31050 | completed; no rerun |
+| qs_a2 | 2e13b786-7d47-47c0-8e04-1529e705c663 | 112704-30834 | completed; one seeded rerun for9 folds, final fold53 review blocker |
+| qs_entrant | c6118c34-a2a5-46fd-b4d6-21ef7b795b49 | 142543-15880 | completed after authorised preload retry; no rerun |
+| qs_summer | 13b5d0fb-0f6a-43f0-a9bf-9d5b6efb856c | 154435-670 | completed; no rerun |
+
+A2 original21ab856f-7c72-46be-8732-dc6122a58dc4 preserved; rerun130952-11594.
+All3 fixes Gate1 PASS, Gate2 FAIL; no qualifying S4 factor.
+Stale832 archive committed31a20acb before targeted deletion095941-23352: recipe14→13, global684→683. Readiness095948-15911 all four true.
+Frozen datastore SHA checked before every grid; no source/recipe/sampler tuning or26/27 outcomes.
+Final W2 score export170809-1508:2656 v1.2 rows; bias bins171027-26163; initial A2 timing171134-12060.
+Report: ../REPORT_S3.md. CSVs: runs, scores per arm, fold diagnostics, reruns, gate_table, cohort_bias, target_metrics, bias_game_bins, timing, raw observations; entrant manifests preserved.
+Next action: none in S3. See HANDOVER.md for S4 decision. Local commits only; manager pushes.

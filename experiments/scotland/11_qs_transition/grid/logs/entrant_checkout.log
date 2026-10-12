@@ -1,0 +1,27 @@
+From .git/s3.bundle
+ * branch              exp/qs-transition -> FETCH_HEAD
+Updating c5948a16..ca65dcc3
+Fast-forward
+ .../11_qs_transition/grid/DECISIONS_LOG.md         |   2 +
+ .../scotland/11_qs_transition/grid/PROGRESS.md     |   9 +-
+ .../11_qs_transition/grid/checks_qs_a2.csv         |   1 +
+ .../11_qs_transition/grid/checks_qs_a2_initial.csv |   9 +
+ .../grid/fold_diagnostics_qs_a2.csv                |  61 ++
+ .../grid/fold_diagnostics_qs_a2_initial.csv        |  61 ++
+ .../11_qs_transition/grid/r03_seeded_rerun.jl      |  40 ++
+ .../11_qs_transition/grid/rerun_run_qs_a2.csv      |   2 +
+ .../11_qs_transition/grid/reruns_qs_a2.csv         |  10 +
+ .../scotland/11_qs_transition/grid/runs.csv        |   1 +
+ .../11_qs_transition/grid/scores_qs_a2.csv         | 665 +++++++++++++++++++++
+ .../11_qs_transition/grid/scores_qs_a2_initial.csv | 665 +++++++++++++++++++++
+ 12 files changed, 1523 insertions(+), 3 deletions(-)
+ create mode 100644 experiments/scotland/11_qs_transition/grid/checks_qs_a2.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/checks_qs_a2_initial.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/fold_diagnostics_qs_a2.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/fold_diagnostics_qs_a2_initial.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/r03_seeded_rerun.jl
+ create mode 100644 experiments/scotland/11_qs_transition/grid/rerun_run_qs_a2.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/reruns_qs_a2.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/scores_qs_a2.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/scores_qs_a2_initial.csv
+.cache/datastore_ScottishPyramid.jls: OK

@@ -1,0 +1,16 @@
+From .git/s3.bundle
+ * branch              exp/qs-transition -> FETCH_HEAD
+Updating ca65dcc3..08759330
+Fast-forward
+ .../scotland/11_qs_transition/MANAGER_DECISIONS.md |  27 +
+ .../11_qs_transition/grid/DECISIONS_LOG.md         |   3 +
+ .../scotland/11_qs_transition/grid/PROGRESS.md     |   8 +-
+ .../11_qs_transition/grid/checks_qs_entrant.csv    |   9 +
+ .../grid/fold_diagnostics_qs_entrant.csv           |  61 ++
+ .../scotland/11_qs_transition/grid/runs.csv        |   1 +
+ .../11_qs_transition/grid/scores_qs_entrant.csv    | 665 +++++++++++++++++++++
+ 7 files changed, 771 insertions(+), 3 deletions(-)
+ create mode 100644 experiments/scotland/11_qs_transition/grid/checks_qs_entrant.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/fold_diagnostics_qs_entrant.csv
+ create mode 100644 experiments/scotland/11_qs_transition/grid/scores_qs_entrant.csv
+.cache/datastore_ScottishPyramid.jls: OK

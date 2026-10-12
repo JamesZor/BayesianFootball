@@ -1,0 +1,6 @@
+[ Info: Loading DataStore for ScottishPyramid from local cache (Age: 13.0 hours)...
+S3_EXPORT qs_control run=866a947c-be65-467d-8dfd-c58aed0ad1f9 folds=60 rerun_folds=
+S3_EXPORT qs_a2 run=21ab856f-7c72-46be-8732-dc6122a58dc4 folds=60 rerun_folds=6;15;25;35;38;42;44;53;57
+S3_W2_SCORE_EXPORT_DONE rows=1328
+@@JLDONE 130716-10483 ok
+jl: job 130716-10483 ok
