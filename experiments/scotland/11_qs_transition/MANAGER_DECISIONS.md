@@ -88,3 +88,21 @@ Each gate decision the manager took for James, with its reason. James reviews th
     there), but the Tailscale path returns nothing (rx 0).
   - Ruling: wait until 03:30, with a low-cadence connectivity watch, then continue; otherwise
     `HANDOVER.md` and PHASES2_BLOCKED.
+- **D13 (2026-10-12 ~09:55) S2 accepted** (`f471fd63`). Every source gate passed on the first resume
+  attempt:
+  - units 46 + 373 assertions;
+  - exact AD ≤ 1.6e-15;
+  - FD convergence;
+  - 0 B tapes;
+  - 3-seed recovery 86/90;
+  - post-src legacy bit identity;
+  - entrant overlap 0;
+  - incumbent invariance.
+
+  All four smokes pass their hard checks. Smoke R̂ of 1.05–1.14 at 2 × (200 + 200) is expected; S3
+  uses 4 × (500 + 1,000).
+- **D14 (James, 2026-10-12 ~10:00):**
+  - archive the stale harness row `harness_checks.id=832` (back it up to CSV first; nothing else);
+  - S3 runs **all four arms** sequentially, control first (about 22 h);
+  - **build F6** (an opt-in fold-cadence field) **alongside S3**, as a fifth arm afterwards;
+  - **plan a pooled scope arm** (League One/Two + Championship, goals only) for S4.
