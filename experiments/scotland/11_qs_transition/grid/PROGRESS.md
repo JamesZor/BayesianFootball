@@ -1,6 +1,6 @@
 # S3 progress — COMPLETE
 
-## S3b — both grids and D23 metrics complete; report/commit next
+## S3b — COMPLETE
 - Confirmed unchanged weekly115 folds, pooled60 folds (James clarification); same1070 fixtures.
 - Owned checkout /root/BF_runs/qs_transition fast-forwarded52c87cba; frozen cache and pooled smoke cache both match approved SHA. Both recipe hashes match; readiness true, no stale-row removals.
 - Fresh owned s3 beast16 running; separate entrant preload completed. Readiness172219-11336 ok; CSV evidence local.
@@ -9,7 +9,7 @@
 - W2 export195252-9846 and bins195447-1978 ok, weekly score/folds/checks/raw observations committed with five-arm summaries. Gate1PASS/Gate2FAIL. r02/summary only adapt weekly count115; scoring/gates unchanged.
 - Weekly commit ecb4321d. Weekly REPL stopped; fresh s3 beast16 with separate preload195611-20748 ok. Pooled195701-7327 ok, initial0fa6219a-97cc-47c9-95bf-aec0235c89ef,60folds/1605 total latents/1070 target. Rhat1.0236,215div; offending41,45,51,53. Initial score222745-25190 ok; initial folds/checks/scores archived. Rerun223346-26600 ok, finaledf3138e-ec55-4e14-aa35-bb624b16f6c4: replacement div0,0,1,2 on41,45,51,53; aggregate38, Rhat1.0236. Final scoring/bins224438-5675 completed; r05 in that job initially rejected extra Championship monitor observations. Explicit frozen lower-panel restriction fixed export224813-23506:1326 paired rows, cohort means/counts parityPASS. No sampling/score change.
 - D23 metrics complete:54 CSV rows, all6 posthoc criterionFAIL. Frozen gate all5 candidates Gate1PASS/Gate2FAIL. Synthetic equal-club weighting/abs-before-mean/pairing/single-cluster/self checks pass; all18 raw cohort signed means/counts match scorer.
-- Owned s3r STOPPED; James's s3 left untouched as instructed. Final cache/source diff receipt clean. Next pooled evidence commit, REPORT_S3B render/validate, HANDOVER, final commit and PHASES3B_DONE.
+- Owned s3r STOPPED; James's s3 left untouched as instructed. No active worker watches/jobs. Final cache/source diff receipt clean. Pooled+D23 evidence committed31050d01; REPORT_S3B.md rendered/validated, HANDOVER updated. All requested outputs complete; no next S3b action. Local commits only; manager pushes.
 - Manager says leave s3 untouched (James may be attached). Submissions223036-3592/223106-21125 timed out before start; no further s3 commands, no stop. End phase by stopping s3r only.
 - Added task D23: DESIGN9 read; compute posthoc MAE_club (equal club-season weighting), paired cluster bootstrap B10000, worst-club signed-mean magnitude and1–10/11–20 splits for all6 arms/3 cohorts. Frozen gate unchanged. Original S3 evidence below remains final.
 
