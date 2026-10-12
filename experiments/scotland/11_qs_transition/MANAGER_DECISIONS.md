@@ -181,3 +181,15 @@ Each gate decision the manager took for James, with its reason. James reviews th
   measures are the worst club and the splits for games 1–10 and 11–20. It is post hoc on the panel
   and pre-registered for 26/27, and the frozen gate stays reported. S3b computes it for all six arms
   after its grids.
+- **D24 (2026-10-12 ~22:55) S3b accepted** (`6b1fdaa4`).
+  - Weekly (115 folds) and pooled A2 (60 folds, one seeded rerun on 4 folds) both pass gate 1 and
+    fail gate 2.
+  - **None of the six arms passes the post hoc §9 MAE criterion either.**
+  - Per-match MAE vs the market is about 5–6 pp in every arm, and every Δ is ≤ 0.33 pp. Weekly is
+    relegated −0.33 [−0.86, +0.20]. Summer worsens relegated (+0.21 [+0.03, +0.43]).
+  - A2 and pooled cut the worst-club error (promoted 2.71 → 1.14; relegated 5.04 → 4.07), but not
+    the mean.
+  - **Conclusion:** none of the fixes changes the transition tracking error materially. Per S3,
+    S4 combines nothing. The next step (the 26/27 test vs a new learned-transition experiment) is
+    James's decision. The theory report (`9cdfa06f`) recommends a learned, partially pooled
+    boundary-state transition.
