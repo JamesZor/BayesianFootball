@@ -164,3 +164,15 @@ Each gate decision the manager took for James, with its reason. James reviews th
     against `qs_control`.
   - Note for S4: A2 failed gate 2 on QS, and the pooled arm includes A2 by design (D17). Interpret
     the pooled result with that in mind.
+- **D22 (2026-10-12 ~17:25) S3 accepted** (`92400e87`). Every fix passes gate 1; **none passes gate 2.**
+  - A2: relegated +1.26 / promoted +0.54.
+  - Entrant: +0.76 / +1.17.
+  - Summer: −0.46 / +0.68.
+  - Control: +0.07 / +1.29.
+  - S3 notes that the control's near-zero signed relegated bias comes from cancellation: early games
+    are over-rated (+0.63 first 10), later games under-rated. The frozen |mean| gate therefore
+    penalises any change. **The gate stays frozen.** A possible secondary metric (|bias| by game bin)
+    is James's decision and must be labelled post hoc.
+  - F6 and the pooled branch were merged into `exp/qs-transition` (`60d9a81b`, one trivial conflict in
+    candidates.jl: both scopes kept).
+  - **S3b launched:** the weekly and pooled grids in `%118`, scored identically vs `qs_control`.
