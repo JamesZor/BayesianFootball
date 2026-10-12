@@ -169,3 +169,39 @@ end
     @test [Set(ScopedData.get_next_matches(ds, pair, scoped).match_id) for pair in left] ==
           [Set(ScopedData.get_next_matches(ds, pair, canonical).match_id) for pair in right]
 end
+
+@testset "Opt-in weekly folds retain the biweekly state clock" begin
+    @test ScopedData.DataScope(name="default").fold_col == :match_biweek
+    @test ScopedData.DataScope(name="weekly_clock", dynamics_col=:match_week).fold_col == :match_week
+    @test ScopedData.DataScope("positional", [56,57], :none, [56,57], Int[],
+        [56,57], ["24/25"], 1, :match_month).fold_col == :match_month
+    @test_throws ArgumentError ScopedData.DataScope(name="bad", fold_col=:unknown)
+    original = scoped_fixture_rows()
+    matches = filter(row -> row.tournament_id in (56,57) && row.season == "23/24", original)
+    template = NamedTuple(only(eachrow(original[original.match_id .== 11, :])))
+    for (i, date) in enumerate((Date(2024,8,3), Date(2024,8,10), Date(2024,8,17), Date(2024,8,24)))
+        push!(matches, merge(template, (; match_id=100+i, match_date=date)))
+    end
+    scope = ScopedData.DataScope(name="weekly_refit", target_seasons=["24/25"],
+        history_seasons=1, dynamics_col=:match_biweek, fold_col=:match_week)
+    ds = ScopedData.apply_scope(scoped_store(matches), scope)
+    splitter = ScopedData.ScopedWalkForwardCV(scope)
+    boundaries = ScopedData.create_id_boundaries(ds, splitter)
+    @test length(boundaries) == 4
+    @test [b.target_match_ids for (b, _) in boundaries] == [Int[], [101], [101,102], [101,102,103]]
+    @test [Int.(ScopedData.get_next_matches(ds, pair, splitter).match_id) for pair in boundaries] == [[101],[102],[103],[104]]
+    features = ScopedFeatures.create_features(boundaries, ds, ScopedClockProbe(), splitter)
+    @test [fs.data[:n_target_steps] for (fs, _) in features] == [0,1,1,2]
+    @test [fs.data[:qs_oos_state_indices][100+i] for (i,(fs,_)) in enumerate(features)] == [0,2,0,3]
+    @test features[3][1].data[:time_indices][end-1:end] == [2,2]
+    for (boundary, meta) in boundaries
+        held = ScopedData.get_next_matches(ds, meta, splitter)
+        fitted = Set(vcat(boundary.history_match_ids, boundary.target_match_ids))
+        @test all(row.match_date < minimum(held.match_date) for row in eachrow(ds.matches) if row.match_id in fitted)
+    end
+    default_scope = ScopedData.DataScope(name="default", target_seasons=["24/25"], history_seasons=1)
+    default_splitter = ScopedData.ScopedWalkForwardCV(default_scope)
+    default_features = ScopedFeatures.create_features(
+        ScopedData.create_id_boundaries(ds, default_splitter), ds, ScopedClockProbe(), default_splitter)
+    @test all(!haskey(fs.data, :qs_oos_state_indices) for (fs, _) in default_features)
+end

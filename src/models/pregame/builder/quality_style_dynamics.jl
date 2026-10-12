@@ -42,9 +42,18 @@ function _cb_extract_dynamics(chain::Chains, config::CB_PG.QualityStyleGRW,
     states = CB_PG.extract_dynamics(chain, config, prefix, n_teams,
                                      counts.n_history, counts.n_target)
     seed = Int(get(feature_set.data, :grw_oos_seed, 0))
-    innovations = CB_PG._qs_oos_innovations(chain, config, prefix, n_teams,
-                                             seed, counts.n_target)
-    return merge(states, innovations)
+    state_indices = get(feature_set.data, :qs_oos_state_indices, nothing)
+    if state_indices !== nothing && all(>(0), values(state_indices))
+        # All held-out fixtures belong to fitted biweeks: no new innovation draw.
+        n_samples = size(states.α, 3)
+        innovations = (; oos_q = zeros(n_samples, n_teams),
+                          oos_s = zeros(n_samples, n_teams))
+    else
+        innovations = CB_PG._qs_oos_innovations(chain, config, prefix, n_teams,
+                                                 seed, counts.n_target)
+    end
+    draw = merge(states, innovations)
+    return state_indices === nothing ? draw : merge(draw, (; oos_state_indices = state_indices))
 end
 
 _cb_extract_dynamics(chain::Chains, config::CB_PG.QualityStyleGRW,
@@ -52,11 +61,18 @@ _cb_extract_dynamics(chain::Chains, config::CB_PG.QualityStyleGRW,
     _cb_extract_dynamics(chain, config, prefix, n_teams,
                          (; data = Dict{Symbol,Any}()))
 
-"Held-out next-biweek draw: final fitted state plus a σ_q,K/σ_s,K innovation."
+"Held-out QS draw: fitted biweek state, or final state plus a next-biweek innovation."
 function _cb_oos_dynamics(
     ::CB_PG.QualityStyleGRW, draw, lineup_map, match_id::Int,
     home_index::Int, away_index::Int, n_samples::Int,
 )
+    state = hasproperty(draw, :oos_state_indices) ? draw.oos_state_indices[match_id] : 0
+    if state > 0
+        att_same(team) = team > 0 ? vec(draw.α[team, state, :]) : zeros(n_samples)
+        def_same(team) = team > 0 ? vec(draw.β[team, state, :]) : zeros(n_samples)
+        return (; att_h = att_same(home_index), def_a = def_same(away_index),
+                  att_a = att_same(away_index), def_h = def_same(home_index))
+    end
     final = size(draw.α, 2)
     att(team) = team > 0 ? vec(draw.α[team, final, :]) .+
                            draw.oos_q[:, team] .+ draw.oos_s[:, team] : zeros(n_samples)

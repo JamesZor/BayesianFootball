@@ -164,6 +164,32 @@ end
         @test QSAPI._cb_oos_dynamics(config, states, Dict(), 7, 0, 3, 5).att_h == zeros(5)
         @test QSAPI._cb_extract_dynamics(chain, config, "dyn", 4, qs_features()).oos_q == states.oos_q
 
+        # Weekly refits inside a fitted biweek read that state exactly: no micro draw.
+        same_features = qs_features()
+        same_features.data[:qs_oos_state_indices] = Dict(7=>5, 8=>4)
+        same = QSAPI._cb_extract_dynamics(chain, config, "dyn", 4, same_features)
+        @test same.oos_q == same.oos_s == zeros(5,4)
+        for (id, state) in same.oos_state_indices
+            priced = QSAPI._cb_oos_dynamics(config, same, Dict(), id, 2, 3, 5)
+            @test priced.att_h == vec(states.α[2,state,:])
+            @test priced.def_a == vec(states.β[3,state,:])
+            @test priced.att_a == vec(states.α[3,state,:])
+            @test priced.def_h == vec(states.β[2,state,:])
+        end
+        @test QSAPI._cb_oos_dynamics(config, same, Dict(), 7, 0, 3, 5).att_h == zeros(5)
+        same_features.data[:grw_oos_seed] = 999
+        @test QSAPI._cb_extract_dynamics(chain, config, "dyn", 4, same_features) == same
+        next_features = qs_features()
+        next_features.data[:qs_oos_state_indices] = Dict(7=>0)
+        next = QSAPI._cb_extract_dynamics(chain, config, "dyn", 4, next_features)
+        @test next.oos_q == states.oos_q && next.oos_s == states.oos_s
+        @test QSAPI._cb_oos_dynamics(config, next, Dict(), 7, 2, 3, 5) == oos
+        mixed_features = qs_features()
+        mixed_features.data[:qs_oos_state_indices] = Dict(7=>5, 8=>0)
+        mixed = QSAPI._cb_extract_dynamics(chain, config, "dyn", 4, mixed_features)
+        @test QSAPI._cb_oos_dynamics(config, mixed, Dict(), 7, 2, 3, 5).att_h == vec(states.α[2,5,:])
+        @test QSAPI._cb_oos_dynamics(config, mixed, Dict(), 8, 2, 3, 5) == oos
+
         empty = qs_chain(4, 3, 0)
         @test QSPG.qs_step_counts(empty, "dyn") == (; n_history = 3, n_target = 0)
         held = QSAPI._cb_extract_dynamics(empty, config, "dyn", 4, qs_features(n_target = 0))

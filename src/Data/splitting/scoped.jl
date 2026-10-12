@@ -1,10 +1,10 @@
-# Scoped training and evaluation over one canonical walk-forward clock.
+# Scoped training and evaluation; fold cadence defaults to the dynamics clock.
 
 const SCOTTISH_SPFL_TOURNAMENTS = (54, 55, 56, 57)
 const SCOTTISH_CUP_TOURNAMENTS = (73, 982, 1520)
 const DATA_SCOPE_CUP_POLICIES = (:none, :senior_spfl_ties)
 
-"A declarative data policy wrapped around one canonical walk-forward clock."
+"A declarative data policy with an optional fold cadence independent of its state clock."
 Base.@kwdef struct DataScope
     name::String
     train_tournaments::Vector{Int} = [56, 57]
@@ -15,10 +15,11 @@ Base.@kwdef struct DataScope
     target_seasons::Vector{String} = ["24/25", "25/26"]
     history_seasons::Int = 2
     dynamics_col::Symbol = :match_biweek
+    fold_col::Symbol = dynamics_col
 
     function DataScope(name, train_tournaments, cups, target_tournaments,
                        monitor_tournaments, clock_tournaments, target_seasons,
-                       history_seasons, dynamics_col)
+                       history_seasons, dynamics_col, fold_col)
         train = unique(Int.(train_tournaments))
         target = unique(Int.(target_tournaments))
         monitor = unique(Int.(monitor_tournaments))
@@ -38,10 +39,16 @@ Base.@kwdef struct DataScope
         history_seasons >= 0 || throw(ArgumentError("DataScope history_seasons must be non-negative"))
         dynamics_col in keys(CALENDAR_DYNAMICS_WIDTH_WEEKS) || throw(ArgumentError(
             "DataScope dynamics_col must be one of $(sort!(collect(keys(CALENDAR_DYNAMICS_WIDTH_WEEKS)))); got :$dynamics_col"))
+        fold_col in keys(CALENDAR_DYNAMICS_WIDTH_WEEKS) || throw(ArgumentError(
+            "DataScope fold_col must be one of $(sort!(collect(keys(CALENDAR_DYNAMICS_WIDTH_WEEKS)))); got :$fold_col"))
         return new(String(name), train, cups, target, monitor, clock,
-                   String.(target_seasons), Int(history_seasons), Symbol(dynamics_col))
+                   String.(target_seasons), Int(history_seasons), Symbol(dynamics_col), Symbol(fold_col))
     end
 end
+
+# Preserve callers of the original positional constructor.
+DataScope(name, train, cups, target, monitor, clock, seasons, history, dynamics) =
+    DataScope(name, train, cups, target, monitor, clock, seasons, history, dynamics, dynamics)
 
 "A canonical grouped walk-forward split whose fitted rows are widened by its scope."
 struct ScopedWalkForwardCV <: AbstractSplitter
@@ -52,7 +59,7 @@ _scope_grouped(scope::DataScope) = GroupedCVConfig(
     tournament_groups = [copy(scope.clock_tournaments)],
     target_seasons = copy(scope.target_seasons),
     history_seasons = scope.history_seasons,
-    dynamics_col = scope.dynamics_col,
+    dynamics_col = scope.fold_col,
     warmup_period = 0,
     end_dynamics = nothing,
     stop_early = true,
@@ -161,14 +168,15 @@ function apply_scope(ds::DataStore, scope::DataScope)
         _scope_copy_domain(ds.bbc_events, kept_ids))
 end
 
-function _scope_step_map(matches::AbstractDataFrame, scope::DataScope, season)
+function _scope_step_map(matches::AbstractDataFrame, scope::DataScope, season;
+                         dynamics_col::Symbol = scope.dynamics_col)
     clock_map = _effective_step_map(
-        matches, scope.clock_tournaments, season, scope.dynamics_col)
+        matches, scope.clock_tournaments, season, dynamics_col)
     isempty(clock_map) && return Dict{Int,Int}()
     clock_rows = matches[in.(Int.(matches.tournament_id), Ref(Set(scope.clock_tournaments))) .&
                          coalesce.(matches.season .== season, false), :]
     anchor = minimum(_week_ending_sunday.(Date.(clock_rows.match_date)))
-    width = CALENDAR_DYNAMICS_WIDTH_WEEKS[scope.dynamics_col]
+    width = CALENDAR_DYNAMICS_WIDTH_WEEKS[dynamics_col]
     result = Dict{Int,Int}()
     for row in eachrow(matches[coalesce.(matches.season .== season, false), :])
         elapsed = div(Dates.value(_week_ending_sunday(Date(row.match_date)) - anchor), 7)
@@ -189,12 +197,13 @@ function get_next_matches(ds::DataStore, meta::GroupedSplitMetaData,
                           splitter::ScopedWalkForwardCV)::AbstractDataFrame
     scope = splitter.scope
     clock_steps = _effective_step_map(
-        ds.matches, scope.clock_tournaments, meta.target_season, scope.dynamics_col)
+        ds.matches, scope.clock_tournaments, meta.target_season, scope.fold_col)
     observed = sort!(unique!(collect(values(clock_steps))))
     position = findfirst(>(meta.time_step), observed)
     isnothing(position) && return ds.matches[Int[], :]
     predict_step = observed[position]
-    all_steps = _scope_step_map(ds.matches, scope, meta.target_season)
+    all_steps = _scope_step_map(ds.matches, scope, meta.target_season;
+                                dynamics_col = scope.fold_col)
     held_tournaments = union(Set(scope.target_tournaments), Set(scope.monitor_tournaments))
     return subset(ds.matches,
         :tournament_id => ByRow(tournament -> Int(tournament) in held_tournaments),
