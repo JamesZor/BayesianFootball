@@ -176,3 +176,8 @@ Each gate decision the manager took for James, with its reason. James reviews th
   - F6 and the pooled branch were merged into `exp/qs-transition` (`60d9a81b`, one trivial conflict in
     candidates.jl: both scopes kept).
   - **S3b launched:** the weekly and pooled grids in `%118`, scored identically vs `qs_control`.
+- **D23 (James, 2026-10-12 ~17:45) Absolute transition-error metric adopted** (DESIGN §9). The
+  primary measure is the mean per-club |model − market| over the first 20 games; the secondary
+  measures are the worst club and the splits for games 1–10 and 11–20. It is post hoc on the panel
+  and pre-registered for 26/27, and the frozen gate stays reported. S3b computes it for all six arms
+  after its grids.
