@@ -1,4 +1,5 @@
-# Stage 2/S3: one factor at a time on the frozen W2 panel. Default QS unchanged.
+# Stage 2/S3 plus D17 S4 pooled prep: one factor at a time on the frozen W2 panel.
+# Pooled recipe gates/review: pooled/REPORT_POOLED.md. Default QS unchanged.
 using BayesianFootball, Distributions, CSV, DataFrames, SHA
 const EXPERIMENT = "scottish_lower_qs_transition_2326"
 const TODO = 46

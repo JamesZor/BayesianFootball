@@ -7,8 +7,8 @@ ready_summary=only(eachrow(CSV.read(joinpath(@__DIR__,"smoke_summary_qs_pooled_a
 @test ready_summary.recipe_hash==ready_hash
 ready_checks=Harness.read_checks(ready_db;recipe_hash=ready_hash,stage="smoke")
 ready_failures=filter(r->r.severity=="hard" && r.status!="pass",ready_checks)
-CSV.write(joinpath(@__DIR__,"harness_history_qs_pooled_a2.csv"),ready_checks)
-CSV.write(joinpath(@__DIR__,"historical_failed_hard_qs_pooled_a2.csv"),ready_failures)
+CSV.write(joinpath(@__DIR__,"harness_history_current_qs_pooled_a2.csv"),ready_checks)
+CSV.write(joinpath(@__DIR__,"historical_failed_hard_current_qs_pooled_a2.csv"),ready_failures)
 ready=Harness.has_passing_smoke(ready_db,pool_candidate)
 CSV.write(joinpath(@__DIR__,"readiness.csv"),DataFrame([(
     candidate=pool_candidate.name,recipe_hash=ready_hash,run_id=ready_summary.run_id,

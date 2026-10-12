@@ -1,0 +1,2 @@
+deleted_id,deleted_rows,recipe_hash,latest_passing_run,archive_sha256,authorisation
+890,1,0db99f621d0e430127f62404c530f07bdbdb22a459f8a345856193e0e09df887,5cb867cd-f6b8-43ef-a4d7-3d5da9c47ca2,f094f0ef37ed50489f905a0888be7ee8e283928dddd7e74a1ded26cc4bb46ef4,ask_user_question: delete only backed-up row890
