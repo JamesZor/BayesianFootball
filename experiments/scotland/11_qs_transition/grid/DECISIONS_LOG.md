@@ -6,6 +6,10 @@
 - Both current and pooled-smoke caches have SHA256 a1e89da1a25aaaa8bc7476307338b9e29a58d5d33beee8e25e25e6126989fe12. Pooled report's cache contains Championship already; scope selects the fitting rows. Existing identical cache is available in shared owned checkout, so no copy or regeneration needed.
 - Fresh owned s3 beast16 preloaded l01_entrant_prior.jl separately; readiness job172219-11336 verifies both exact approved hashes and passing smoke. Full smoke histories committed; no stale rows removed. Source/candidates/Project/Manifest diff clean.
 
+- Weekly172312-4833 completed d62bd802-1434-4c01-a1c5-26512b776d5e:115folds,1070 fixtures, hard/reviewPASS; Rhat1.02177,2div/460000, bulk/tailESS292/542. Export195252-9846 confirms no offending folds; no reruns. Scoring unchanged v1.2/B10000/control866a947c/panel1070; only r02 and summary fold-count handling extended to115 for weekly.
+- Weekly Gate1 PASS (deltaLL−0.00034334,95%CI[−0.00120373,+0.00050678]); Gate2 FAIL (relegated delta absolute bias+0.18721pp, promoted−0.01461pp with CI crossing0). Frozen two-direction gate retained. Bins195447-1978 complete.
+- Weekly owned REPL stopped, fresh s3 beast16 started for pooled; frozen cache rechecked, entrant preload195611-20748 ok, tracked source/recipe/Project/Manifest diff clean. Reuse identical pooled-smoke cache in owned shared checkout, not another worktree.
+
 ## Original S3 decisions
 
 - 2026-10-12: D13–D14 authorise four sequential grids and removal of only stale hard check832 after full CSV archive is committed. No gate bypass, recipe/sampler tuning, src edits, F6 work or 26/27 outcomes.

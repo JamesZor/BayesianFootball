@@ -1,11 +1,13 @@
 # S3 progress — COMPLETE
 
-## S3b — preflight complete, weekly next
+## S3b — weekly complete and scored, pooled next
 - Confirmed unchanged weekly115 folds, pooled60 folds (James clarification); same1070 fixtures.
 - Owned checkout /root/BF_runs/qs_transition fast-forwarded52c87cba; frozen cache and pooled smoke cache both match approved SHA. Both recipe hashes match; readiness true, no stale-row removals.
 - Fresh owned s3 beast16 running; separate entrant preload completed. Readiness172219-11336 ok; CSV evidence local.
 - Next: launch qs_weekly alone, watch completion; score and seeded rerun offending folds once, commit. Then fresh s3 for qs_pooled_a2, report and stop.
-- No active grid yet. Original S3 evidence below remains final.
+- Weekly grid172312-4833 ok: d62bd802-1434-4c01-a1c5-26512b776d5e,115 folds/1070 fixtures, Rhat1.0218,2/460000 divergences; no possible offending fold (total div2, all Rhat<1.05). Hard/review PASS.
+- W2 export195252-9846 and bins195447-1978 ok, weekly score/folds/checks/raw observations committed with five-arm summaries. Gate1PASS/Gate2FAIL. r02/summary only adapt weekly count115; scoring/gates unchanged.
+- Weekly REPL stopped; fresh s3 beast16 ready for pooled with separate preload195611-20748 ok. Next pooled launch then export/rerun rule/score/bins/report. Original S3 evidence below remains final.
 
 ## Original S3
 

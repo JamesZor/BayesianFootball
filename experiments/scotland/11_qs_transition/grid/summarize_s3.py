@@ -2,7 +2,8 @@
 import csv
 from pathlib import Path
 P = Path(__file__).resolve().parent
-ARMS = ['qs_control', 'qs_a2', 'qs_entrant', 'qs_summer']
+with (P / 'runs.csv').open() as f:
+    ARMS = [r['label'] for r in csv.DictReader(f)]
 
 def load(name):
     with (P / name).open() as f:
@@ -44,13 +45,14 @@ for arm in ARMS:
     row.update(gate2=gate2, both_gates=gate1 and gate2)
     gates.append(row)
     folds = load(f'fold_diagnostics_{arm}.csv')
-    assert len(folds) == 60
+    n_folds = 115 if arm == 'qs_weekly' else 60
+    assert len(folds) == n_folds
     bad = [int(r['fold_idx']) for r in folds if float(r['r_hat_max']) > 1.05 or int(r['divergences']) / 4000 > .001]
-    diagnostics.append(dict(arm=arm, run_id=ll['run_id'], n_folds=60,
+    diagnostics.append(dict(arm=arm, run_id=ll['run_id'], n_folds=n_folds,
         max_rhat=max(float(r['r_hat_max']) for r in folds),
         min_ess_bulk=min(float(r['ess_bulk_min']) for r in folds),
         min_ess_tail=min(float(r['ess_tail_min']) for r in folds),
-        divergences=sum(int(r['divergences']) for r in folds), draws=240000,
+        divergences=sum(int(r['divergences']) for r in folds), draws=n_folds * 4000,
         offending_folds=';'.join(map(str,bad)), fold_review_pass=not bad))
     for r in scores[arm]:
         if r['metric'] == 'transition_bias_pp':

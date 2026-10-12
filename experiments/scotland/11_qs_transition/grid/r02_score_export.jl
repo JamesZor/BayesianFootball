@@ -18,7 +18,8 @@ try
     for ref in s3refs
         uuid=string(ref.run_id)
         folds=Training.Inference._db_rows(s3c,"SELECT * FROM fold_results WHERE run_id='$uuid' ORDER BY fold_idx;")
-        nrow(folds)==60 || error("Expected60 folds for $(ref.label)")
+        expected_folds=ref.label=="qs_weekly" ? 115 : 60
+        nrow(folds)==expected_folds || error("Expected$expected_folds folds for $(ref.label)")
         CSV.write(joinpath(@__DIR__,"fold_diagnostics_$(ref.label).csv"),folds)
         checks=Harness.read_checks(s3store;run_id=ref.run_id)
         CSV.write(joinpath(@__DIR__,"checks_$(ref.label).csv"),checks)
