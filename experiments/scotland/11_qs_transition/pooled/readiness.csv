@@ -1,0 +1,2 @@
+candidate,recipe_hash,run_id,has_passing_smoke,historical_failed_hard_checks,failed_check_ids,source_folds,first_target_season,target_fixtures,src_changed,git_sha
+qs_pooled_a2,0db99f621d0e430127f62404c530f07bdbdb22a459f8a345856193e0e09df887,5cb867cd-f6b8-43ef-a4d7-3d5da9c47ca2,false,1,890,1;60,23/24,1070,false,8915cb8d-dirty

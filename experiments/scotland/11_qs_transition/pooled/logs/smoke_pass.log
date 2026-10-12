@@ -1,0 +1,60 @@
+NOTICE:  relation "harness_checks" already exists, skipping
+NOTICE:  relation "harness_checks_recipe_stage_idx" already exists, skipping
+NOTICE:  relation "harness_checks_run_idx" already exists, skipping
+NOTICE:  relation "runs" already exists, skipping
+NOTICE:  column "ad_backend" of relation "runs" already exists, skipping
+NOTICE:  relation "configs" already exists, skipping
+NOTICE:  relation "fold_results" already exists, skipping
+NOTICE:  relation "match_latents" already exists, skipping
+NOTICE:  relation "portfolio_runs" already exists, skipping
+NOTICE:  relation "portfolio_bets" already exists, skipping
+NOTICE:  relation "config_registry" already exists, skipping
+NOTICE:  relation "fit_artifacts" already exists, skipping
+NOTICE:  column "layout" of relation "fit_artifacts" already exists, skipping
+NOTICE:  relation "fit_fold_artifacts" already exists, skipping
+NOTICE:  relation "portfolio_artifacts" already exists, skipping
+NOTICE:  relation "calibration_runs" already exists, skipping
+NOTICE:  relation "calibration_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "runs" already exists, skipping
+NOTICE:  column "name" of relation "runs" already exists, skipping
+NOTICE:  column "id" of relation "portfolio_runs" already exists, skipping
+NOTICE:  column "id" of relation "config_registry" already exists, skipping
+NOTICE:  column "n_matches" of relation "fold_results" already exists, skipping
+NOTICE:  column "first_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "last_match_date" of relation "fold_results" already exists, skipping
+NOTICE:  column "book_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "policy_spec_blob" of relation "portfolio_artifacts" already exists, skipping
+NOTICE:  column "id" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "experiment_name" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "book_as_of_minutes" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_fixtures" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "n_inverted" of relation "calibration_runs" already exists, skipping
+NOTICE:  column "diagnostics_blob" of relation "calibration_artifacts" already exists, skipping
+NOTICE:  relation "idx_runs_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_id" already exists, skipping
+NOTICE:  relation "idx_configs_config_hash" already exists, skipping
+NOTICE:  relation "idx_runs_name" already exists, skipping
+NOTICE:  relation "idx_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_match_latents_match_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_match_id" already exists, skipping
+NOTICE:  relation "idx_config_registry_name" already exists, skipping
+NOTICE:  relation "idx_config_registry_hash" already exists, skipping
+NOTICE:  relation "idx_config_registry_created_at" already exists, skipping
+NOTICE:  relation "idx_config_registry_type" already exists, skipping
+NOTICE:  relation "idx_config_registry_tags" already exists, skipping
+NOTICE:  relation "idx_fold_results_run_id" already exists, skipping
+NOTICE:  relation "idx_match_latents_fold_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_portfolio_bets_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_model_run_id" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_experiment" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_name" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_hash" already exists, skipping
+NOTICE:  relation "idx_calibration_runs_created_at" already exists, skipping
+NOTICE:  relation "idx_portfolio_runs_calibration" already exists, skipping
+POOL_SMOKE (candidate = "qs_pooled_a2", run_id = "5cb867cd-f6b8-43ef-a4d7-3d5da9c47ca2", recipe_hash = "0db99f621d0e430127f62404c530f07bdbdb22a459f8a345856193e0e09df887", hard_pass = true, wall_seconds = 235.26622915267944, convergence_status = "fail", passed = false, max_rhat = 1.09424298819619, mi
+POOL_SMOKE_PASS (candidate = "qs_pooled_a2", run_id = "5cb867cd-f6b8-43ef-a4d7-3d5da9c47ca2", recipe_hash = "0db99f621d0e430127f62404c530f07bdbdb22a459f8a345856193e0e09df887", hard_pass = true, wall_seconds = 235.26622915267944, convergence_status = "fail", passed = false, max_rhat = 1.0942429881961
+@@JLDONE 111837-5647 ok

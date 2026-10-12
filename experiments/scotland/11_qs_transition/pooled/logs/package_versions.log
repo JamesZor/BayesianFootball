@@ -1,0 +1,5 @@
+Julia 1.12.4
+Turing 0.41.4
+DynamicPPL 0.38.10
+ReverseDiff 1.17.0
+Distributions 0.25.126

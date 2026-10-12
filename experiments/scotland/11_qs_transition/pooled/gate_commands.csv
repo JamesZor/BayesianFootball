@@ -5,3 +5,6 @@ recovery,105617-11589,jl run pool experiments/scotland/11_qs_transition/pooled/r
 recovery,105905-31549,jl run pool experiments/scotland/11_qs_transition/pooled/r02_recovery.jl --bg,fail_generator_variable_reuse_user_authorised_fix
 panel,110242-14719,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,pass_fresh_repl
 recovery,110414-13920,jl run pool experiments/scotland/11_qs_transition/pooled/r02_recovery.jl --bg,pass_83of90_intervals_step6of6
+smoke,111329-30562,jl run pool experiments/scotland/11_qs_transition/pooled/r03_smoke.jl --bg,fail_tape_allocation2464B
+panel,111755-24322,jl run pool experiments/scotland/11_qs_transition/pooled/r01_panel.jl,pass_fresh_smoke_repl
+smoke,111837-5647,jl run pool experiments/scotland/11_qs_transition/pooled/r03_smoke.jl --bg,running_fresh_process_retry
