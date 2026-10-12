@@ -1,5 +1,13 @@
 # S3 decisions
 
+## S3b decisions
+- 2026-10-12: James explicitly confirmed running the unchanged 115-fold qs_weekly recipe (not the brief title's 60 folds), then 60-fold qs_pooled_a2. Both use the frozen 1,070-fixture panel; gates unchanged.
+- Owned /root/BF_runs/qs_transition synced by local git bundle/fast-forward to pushed 52c87cba (60d9a81b plus brief/D22 records). No push. Pre-sync tracked output diffs archived as /root/BF_runs/logs/qs_transition_s3b_sync/pre_sync.patch; 11 colliding untracked S3 outputs moved into its untracked/ tree before fast-forward. No research artefacts deleted.
+- Both current and pooled-smoke caches have SHA256 a1e89da1a25aaaa8bc7476307338b9e29a58d5d33beee8e25e25e6126989fe12. Pooled report's cache contains Championship already; scope selects the fitting rows. Existing identical cache is available in shared owned checkout, so no copy or regeneration needed.
+- Fresh owned s3 beast16 preloaded l01_entrant_prior.jl separately; readiness job172219-11336 verifies both exact approved hashes and passing smoke. Full smoke histories committed; no stale rows removed. Source/candidates/Project/Manifest diff clean.
+
+## Original S3 decisions
+
 - 2026-10-12: D13–D14 authorise four sequential grids and removal of only stale hard check832 after full CSV archive is committed. No gate bypass, recipe/sampler tuning, src edits, F6 work or 26/27 outcomes.
 - Owned checkout had no origin remote. Synced latest pushed exp/qs-transition d3f86b29 using a local git bundle and fast-forward in /root/BF_runs/qs_transition only (no push). Cache SHA matched a1e89da1a25aaaa8bc7476307338b9e29a58d5d33beee8e25e25e6126989fe12.
 - Fresh owned s3 beast REPL16 started. Read-only archive job095752-9899 succeeded; full row832 copied to CSV before any deletion. Cleanup asserts archived CSV byte equality and recipe/global count decrements of exactly1.

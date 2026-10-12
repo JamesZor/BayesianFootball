@@ -1,5 +1,14 @@
 # S3 progress — COMPLETE
 
+## S3b — preflight complete, weekly next
+- Confirmed unchanged weekly115 folds, pooled60 folds (James clarification); same1070 fixtures.
+- Owned checkout /root/BF_runs/qs_transition fast-forwarded52c87cba; frozen cache and pooled smoke cache both match approved SHA. Both recipe hashes match; readiness true, no stale-row removals.
+- Fresh owned s3 beast16 running; separate entrant preload completed. Readiness172219-11336 ok; CSV evidence local.
+- Next: launch qs_weekly alone, watch completion; score and seeded rerun offending folds once, commit. Then fresh s3 for qs_pooled_a2, report and stop.
+- No active grid yet. Original S3 evidence below remains final.
+
+## Original S3
+
 Phase: four grids, one-factor gates, diagnostics and REPORT_S3.md complete.
 Owned REPL s3: STOPPED; no active jobs/watches. No other REPL/checkout touched.
 
