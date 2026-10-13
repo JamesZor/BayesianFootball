@@ -1,0 +1,13 @@
+check,pass
+canonical_first20_rows_and_values,True
+win_selection_denominators,True
+target_seasons_only,True
+strict_historical_feature_dates,True
+delayed_features_strict,True
+baseline_primary_reproduced,True
+six_arms_same_direction,True
+main_holdout_denominator,True
+main_gain_numerical,True
+no_unversioned_valuation_regressions,True
+valuation_vintage_failure_recorded,True
+outcome_caution_preserved,True

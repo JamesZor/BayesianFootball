@@ -1,0 +1,15 @@
+# owen2011-dynamic-bayesian-forecasting-models-football/whole  pages 7-7  (converted Markdown)
+<!-- page: 7 -->
+
+2002/2003 and the 2003/2004 seasons. Hence the problem of dealing with choice of prior for the promoted team was not present when analysing the 2003/2004 season, effectively removing this factor from the modelling process.
+
+The sampled values, derived from deploying the model using WinBUGS, typically displayed very good mixing behaviour, and running the sampler for 10,000 iterations, with the first 2,500 iterations being discarded as a burn in, was assessed as being more than adequate for estimation purposes. The sampler was therefore subsequently run using 10,000 iterations with the last 7,500 iterations being used for estimation purposes. An example of the sample trace (iterations 2,501 to 5,000) for the latest defence parameter for Celtic, after three rounds of matches had been played during the 2003/2004 season, is shown in Figure 1(a) This is is typical of the the sample traces obtained for all parameters in the model. As mentioned previously, the convergence behaviour of the sampled values for the defence parameters was improved through the use of the parameterisation adopted here, which treats the attack and defence parameters equally and uses the additional parameter constraint. This improvement is illustrated in Figure 1(b), which shows the sample trace for the latest Celtic defence parameter, again after three rounds during 2003/2004, but using the alternative parameterisation of the model used by others where the additional constraint is not included. In this case some degree of snaking is evident which indicates that the sampler is not moving quite so freely around the sample space for that parameter.
+
+![](../../assets/owen2011-dynamic-bayesian-forecasting-models-football/figures/_page_6_Figure_2.jpeg)
+
+Figure 1: Trace Plots for Celtic Defence Parameter at Round 3 in 2003/2004 Using Our Parameterisation (a) and the Alternative Parameterisation with Just a Single Identifiability Constraint (b)
+
+The evolution variance, 2 , was initially included as a parameter in the model to be estimated. However, when first considering this parameter, little was known about the likely values and so fairly vague priors were required in this case. Unfortunately, the resulting posterior estimates for <sup>2</sup> were very sensitive to the choice of prior. Therefore, in order to aquire information about the likely optimum value of 2 , this was initially pre-specified as a known constant rather than a parameter in the model. The choice of value for 2 is critical to effectively model the stochastic changes in the attack and defence parameters, and so this was determined primarily by optimising the model's short term predictive performance.
+
+Predictive probabilities of future match outcomes, in terms of a home win, draw or away win, were derived retrospectively for matches to be played one-round ahead. This was done by sampling from the
+

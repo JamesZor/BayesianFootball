@@ -1,0 +1,16 @@
+{
+  "rows": 1795,
+  "fixtures": 898,
+  "canonical_transition_rows": 221,
+  "canonical_max_difference_pp": 0.0,
+  "target_years": [
+    2023,
+    2024,
+    2025
+  ],
+  "chronology": "all previous/lineup dates strictly earlier",
+  "ridge_penalty": 10,
+  "training": "all earlier-season club-fixtures; equal club-season weights",
+  "evaluation": "first 20 league games; equal club-season weights",
+  "seed": 20261013
+}

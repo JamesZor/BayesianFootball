@@ -1,0 +1,35 @@
+# holmes2023-forecasting-football-match-results-player/whole  pages 10-10  (converted Markdown)
+<!-- page: 10 -->
+
+Results for several betting strategies using the skellam*full* model.
+
+| Strategy | t      | N    | Accuracy (%) | Stakes  | Profits | ROI (%) | Sharpe |
+|----------|--------|------|--------------|---------|---------|---------|--------|
+| Kelly    | 0.1866 | 556  | 24.10        | 65.36   | 7.81    | 11.96   | 1.07   |
+| Kelly    | 0.0000 | 1457 | 29.44        | 105.42  | 6.03    | 5.72    | 1.02   |
+| Flat     | 0.1760 | 199  | 37.19        | 199.00  | 9.04    | 4.54    | 0.45   |
+| Flat     | 0.0000 | 568  | 45.25        | 568.00  | 16.93   | 2.98    | 0.59   |
+| Flat     |        | 1350 | 52.00        | 1350.00 | −32.56  | −2.41   | −0.87  |
+
+![](../../assets/holmes2023-forecasting-football-match-results-player/figures/_page_9_Figure_5.jpeg)
+
+**Fig. 5.** Plot displaying the ROI that would be achieved using the skellam*full* model for betting under the modified Kelly strategy for different minimum expected value thresholds.
+
+number of bets being placed. For example, Koopman and Lit (2015) placed just 50 bets over two seasons.
+
+We find that only the most basic strategy- flat staking with no value threshold- results in losses. Both Kelly strategies performed well, achieving very promising ROIs and Sharpe ratios. We highlight that these results have been obtained on a large number of bets. Whilst flat stakes with *t* = 0 and *t* = 0.1866 both achieve positive returns, the Sharpe is less than 1 indicating more risk than reward.
+
+Fig. 5 shows the relationship between the minimum expected value threshold and the ROI achieved by the skellam*full* model under the modified Kelly staking strategy. Also shown is the number of bets placed along the chart's top. The number of bets decreases as the threshold increases, but the ROI increases to very high levels.
+
+##### **8. Closing remarks**
+
+In this paper, we have presented a new model for forecasting the results of football matches. The model is a 'player-based' model as opposed to the previously published 'team-based' models of Maher (1982) and Dixon and Coles (1997). We developed a novel rating framework which adjusts publicly available player matchday ratings to ensure comparability across leagues. Further, we introduced multinomial models to account for the level of interaction between two opposing players, knowing that different formations dictate how often a player will compete against a particular opponent.
+
+Player-based models rely heavily on data but solve the major issue with team-based models. There is no need to worry about time-varying team strengths: the mechanism which causes the dynamics is modelled directly, that is, the changing line-ups of the teams and the changing short-term form of the players. Admittedly, the model is data-hungry, but databases of player ratings now exist, and access to these should become increasingly easy in the future.
+
+We have demonstrated the goodness-of-fit of the model. Scoring rules suggest the model performs very well compared to bookmakers. Even when we perform the sternest test of all forecasting models, examining the returns to betting, the results are positive to the extent that we achieve positive returns to betting on the 1X2 market.
+
+Our results have implications in economics studies of market efficiency and the practice of trading in football. For example, the player-based model may reduce, at least to some extent, the reliance of bookmakers on expert traders to adjust predictions from a team-based model in light of information about the actual line-up of players, say when a star player is injured. Currently, traders are typically required to adjust model probabilities subjectively. Our player-based model does this automatically.
+
+Future work on this type of model is promising. One could, for example, model the interactions of players on the same team. Football fans often believe some players play well together and are greater together than the sum of their abilities. A model including some interaction between players on the same team would be able to identify whether this was true. Another area for potential improvement of the model is to use 'better' player ratings. Here we use WhoScored ratings, but these ratings may be weak. For example, there may be a bias towards forward players in the WhoScored ratings (given that the top ten are exclusively forwards). One could even use this model to rate the player ratings themselves. For example, one rating of players is their pass completion percentage. This could be used as the metric feeding the forecasting model (instead of the WhoScored rating), and the model's performance is used to measure the usefulness of players' pass completion percentage as a predictor of future team performance. Many player-level metrics could be tested, compared, and rated in this framework for their usefulness.
+

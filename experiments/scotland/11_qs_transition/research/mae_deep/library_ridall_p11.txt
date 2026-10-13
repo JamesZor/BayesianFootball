@@ -1,0 +1,33 @@
+# ridall2024-bayesian-state-space-models-modelling/whole  pages 11-11  (converted Markdown)
+<!-- page: 11 -->
+
+We construct an online model on the 14 most recent seasons using the estimates obtained from the first 18 seasons of the EPL. These parameters are estimated in Section 3.3.3. In exploratory analysis, we find that the within-season forgetting parameter varies between seasons leading us to believe that some seasons are more volatile than others. In addition, there is also a possibility that the forgetting factor which expresses the volatility of the season also changes within the season.
+
+##### 3.3.2 Variation between seasons
+
+To explain the dependence on the previous season, we need to introduce several new (nuisance) parameters. Each season, for the surviving teams, we use a between season forgetting factor  $\omega_b$  to describe the increase in uncertainty caused by the break between the seasons. We also assume that there is forgetting, both within the season and between the season in the influence of the HGA. For each of the three newly promoted sides, we need four hyper-parameters, two to describe their initial ASs ( $p^{\alpha}$  and  $q^{\alpha}$ ) and two to describe their initial DSs ( $p^{\beta}$ ) and  $q^{\beta}$ ). Exploratory analysis has indicated that the performance of a newly promoted side does not have a strong dependence on the promoted side's history in the lower EFL Championship league.
+
+| $\boldsymbol{\alpha}_{1}^{s} \sim \operatorname{Gamma}\left(\tilde{\mathbf{p}}_{1}^{a,s}, \tilde{\mathbf{q}}_{1}^{a,s-1}\right)$       | , $\tilde{\mathbf{p}}_1^{a,s} = \omega_b \mathbf{p}_{N_R}^{a,s-1}$ ,            | $\tilde{\mathbf{p}}_{0}^{a,s}=\omega_{b}\mathbf{p}_{N_{R}}^{a,s},$          | (Surviving teams) |
+|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|-----------------------------------------------------------------------------|-------------------|
+| · · · ·                                                                                                                                | $=p^{\alpha},$                                                                  | $=q^{\alpha}$ ,                                                             | (Promoted sides)  |
+| $\boldsymbol{\beta}_{R}^{s} \sim \operatorname{Gamma}\left(\tilde{\mathbf{p}}_{R}^{\beta,s}, \tilde{\mathbf{q}}_{R}^{\beta,s}\right),$ | $\tilde{\mathbf{p}}_{1}^{\beta,s} = \omega_{b} \mathbf{p}_{N_{R}}^{\beta,s-1},$ | $\tilde{\mathbf{q}}_{1}^{\beta,s} = \omega_b \mathbf{q}_{N_R}^{\beta,s-1},$ | (Surviving teams) |
+|                                                                                                                                        | $=p^{\beta},$                                                                   | $=q^{\beta},$                                                               | (Promoted teams)  |
+| $\gamma_1^s \sim \text{Gamma}\left(\tilde{p}_t^{\gamma,s}, \tilde{q}_1^{\gamma,s}\right),$                                             | $\tilde{p}_1^{\gamma,s} = \omega_{bb} p_{N_G}^{\gamma,s-1},$                    | $\tilde{q}_1^{\gamma,s} = \omega_{hb} q^{\gamma,s-1}.$                      |                   |
+
+##### 3.3.3 Offline estimation of nuisance parameters for the standard model
+
+We use the first 18 seasons to estimate the following nuisance parameters so that online inference is possible for the seasons:
+
+- (a) The within season forgetting factor, assumed fixed over all seasons:  $\omega$ .
+- (b) The common between season forgetting factor for the surviving teams:  $\omega_b$ .
+- (c) The within season forgetting factor for the home ground advantage:  $\omega_h$ .
+- (d) The between season forgetting factor for the home ground advantage:  $\omega_{hb}$ .
+- (e) The correlation and overdispersion parameter:  $\kappa$ .
+- (f) The hyper-priors for the initial attacking and DSs over the three newly promoted sides p<sup>α</sup>, q<sup>α</sup>, p<sup>β</sup>, q<sup>β</sup>, where the initial AS is given by α ~ Gamma (p<sup>α</sup>, q<sup>α</sup>) and the initial DS is described by β ~ Gamma (p<sup>β</sup>, q<sup>β</sup>).
+
+We find the value of plausible values for these parameters by maximizing the out-of-sample multinomial log-likelihood discussed in Section 3.4 for the first 18 seasons of the EPL. This calculation of the nuisance parameter on the training set took about 20 min on a desktop PC. The values of these parameters in Table 2 were used to test the accuracy of our predictions. We found that it was not necessary to re-impose the identifiability constraint of  $\beta_1 = 1$  after the first season, and dropping the constraint produced better predictions.
+
+### 3.4 Evaluation of out-of-sample predictive performance
+
+Scoring methods are an established way of evaluating probabilistic predictions. The theory has its origin in meteorology (Brier, 1950). We use them to quantify the ability of our model to make out-of-sample predictions of the outcome of the next game. If we wished to predict the match score rather than the outcome we would have used a score of  $-\log (f(x_t, y_t | \alpha, \beta, \gamma, \kappa))$  given by Equation (2.3). We now outline three scoring methods for measuring the accuracy of predictions
+

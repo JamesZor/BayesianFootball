@@ -1,0 +1,12 @@
+# Decisions
+- Use control residuals as the primary diagnostic target and other arms as robustness checks, not select an arm on this EDA.
+- Reconstruct an all-club first-20 baseline with the same seasons and probability selection definition. Keep fixture/club-season/season denominators explicit.
+- Timestamp eligibility: results and statistics from completed prior matches; previous observed lineup/manager only. Historical field backfill remains a provenance limitation even when matches are lagged.
+- Use DuckDB for extraction and tabulation; lightweight chronological residual regressions are descriptive EDA only. James explicitly approved them via the clarification tool; no QS fits.
+- James removed context/web-fetch caps; all other scope restrictions remain. No git writes performed; manager owns any later commit.
+- Found unversioned player values: every positively valued player has one positive value across all historical appearances. Removed valuation features from all final association/regression outputs, including standalone probes; retained only audit fields and coverage. Older exploratory value figures are not evidence and are not in the final report.
+- Found SofaScore current-manager backfill; use lagged BBC historical match-page managers, checked against the official 23 October 2024 Inverness announcement. BBC extraction time is not an announcement-time archive.
+- Exact primary metric reproduced before interpreting results: 221 canonical rows, zero difference. Non-mover controls exclude clubs relegated into L2.
+- Prefer the small recent-GD/shots/SoT contrast over the feature kitchen sink: pooled-mover diagnostic gain 0.808 pp, robust across six arms, but opening five games do not improve. Do not retrospectively select an early-game gate.
+- Preserve outcome-score guardrails: coherent 1X2 projection improves tracking but has positive outcome-LL point changes. No new arm is declared successful or production-ready.
+- Archive bounded raw extracts in extract_snapshot.tar.gz and provide offline reproduction. Keep small CSV results, input hashes, and explicit verification. No further DB access is needed.

@@ -1,0 +1,11 @@
+table_schema,table_name,column_name,data_type
+sofascore,seasons,season_id,integer
+sofascore,seasons,tournament_id,integer
+sofascore,seasons,year,character varying
+sofascore,seasons,name,character varying
+sofascore,seasons,raw_data,jsonb
+sofascore,tournaments,tournament_id,integer
+sofascore,tournaments,name,character varying
+sofascore,tournaments,sport,character varying
+sofascore,tournaments,country,character varying
+sofascore,tournaments,raw_data,jsonb

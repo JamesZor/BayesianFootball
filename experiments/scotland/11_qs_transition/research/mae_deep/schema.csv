@@ -1,0 +1,174 @@
+table_schema,table_name,column_name,data_type
+bbc,live_poll,poll_id,bigint
+bbc,live_poll,http_status,integer
+bbc,live_poll,content_hash,character varying
+bbc,live_poll,changed,boolean
+bbc,live_poll,item_count,integer
+bbc,live_poll,payload,jsonb
+bbc,live_poll,match_id,integer
+bbc,live_poll,bbc_event_id,character varying
+bbc,live_poll,endpoint,character varying
+bbc,live_poll,polled_at,timestamp with time zone
+bbc,live_poll,event_status,character varying
+bbc,live_poll,ok,boolean
+bbc,live_poll,error_type,character varying
+bbc,live_poll,error_detail,text
+bbc,live_text,match_id,integer
+bbc,live_text,area,character varying
+bbc,live_text,team_bbc,character varying
+bbc,live_text,team,character varying
+bbc,live_text,player,character varying
+bbc,live_text,headline,character varying
+bbc,live_text,text,text
+bbc,live_text,published,timestamp with time zone
+bbc,live_text,post_index,integer
+bbc,live_text,clock,character varying
+bbc,live_text,time,integer
+bbc,live_text,added_time,integer
+bbc,live_text,event_type,character varying
+bbc,live_text,value,integer
+bbc,live_text,home_score,integer
+bbc,live_text,away_score,integer
+bbc,match_lineup,match_id,integer
+bbc,match_lineup,bbc_last_name,character varying
+bbc,match_lineup,sub_on_minute,integer
+bbc,match_lineup,sub_off_minute,integer
+bbc,match_lineup,yellow_minute,integer
+bbc,match_lineup,red_minute,integer
+bbc,match_lineup,sofascore_player_id,integer
+bbc,match_lineup,map_outcome,character varying
+bbc,match_lineup,raw,jsonb
+bbc,match_lineup,bbc_player_id,character varying
+bbc,match_lineup,is_home_team,boolean
+bbc,match_lineup,is_substitute,boolean
+bbc,match_lineup,shirt_number,integer
+bbc,match_lineup,position,character varying
+bbc,match_lineup,is_captain,boolean
+bbc,match_lineup,bbc_name,character varying
+bbc,match_lineup,bbc_first_name,character varying
+bbc,match_meta,match_id,integer
+bbc,match_meta,away_ht_score,integer
+bbc,match_meta,scores_match,boolean
+bbc,match_meta,has_live_text,boolean
+bbc,match_meta,raw_fixture,jsonb
+bbc,match_meta,raw_stats,jsonb
+bbc,match_meta,status,character varying
+bbc,match_meta,retry_count,integer
+bbc,match_meta,error_type,character varying
+bbc,match_meta,error_detail,text
+bbc,match_meta,http_status,integer
+bbc,match_meta,bbc_event_id,character varying
+bbc,match_meta,last_updated,timestamp with time zone
+bbc,match_meta,has_lineup,boolean
+bbc,match_meta,venue,character varying
+bbc,match_meta,attendance,integer
+bbc,match_meta,home_formation,character varying
+bbc,match_meta,away_formation,character varying
+bbc,match_meta,home_manager,character varying
+bbc,match_meta,away_manager,character varying
+bbc,match_meta,raw_lineup,jsonb
+bbc,match_meta,raw_header,jsonb
+bbc,match_meta,tipo_topic_id,character varying
+bbc,match_meta,kickoff,timestamp with time zone
+bbc,match_meta,bbc_home_slug,character varying
+bbc,match_meta,bbc_away_slug,character varying
+bbc,match_meta,home_score,integer
+bbc,match_meta,away_score,integer
+bbc,match_meta,home_ht_score,integer
+bbc,match_officials,match_id,integer
+bbc,match_officials,role,character varying
+bbc,match_officials,name,text
+bbc,match_officials,bbc_official_id,character varying
+bbc,match_stats,match_id,integer
+bbc,match_stats,stat_cat,character varying
+bbc,match_stats,stat_type,character varying
+bbc,match_stats,home_value,integer
+bbc,match_stats,away_value,integer
+bbc,match_stats,filled,boolean
+bbc,player_map,bbc_player_id,character varying
+bbc,player_map,bbc_name,character varying
+bbc,player_map,bbc_team_slug,character varying
+bbc,player_map,sofascore_player_id,integer
+bbc,player_map,sofascore_name,character varying
+bbc,player_map,is_verified,boolean
+bbc,player_map,notes,text
+bbc,player_map,updated_at,timestamp with time zone
+bbc,team_map,bbc_slug,character varying
+bbc,team_map,bbc_team_id,character varying
+bbc,team_map,bbc_name,character varying
+bbc,team_map,bbc_short_name,character varying
+bbc,team_map,sofascore_slug,character varying
+bbc,team_map,is_verified,boolean
+bbc,team_map,notes,text
+bbc,team_map,updated_at,timestamp with time zone
+sofascore,events,match_id,integer
+sofascore,events,hasGlobalHighlights,boolean
+sofascore,events,hasXg,boolean
+sofascore,events,hasEventPlayerStatistics,boolean
+sofascore,events,hasEventPlayerHeatMap,boolean
+sofascore,events,raw_data,jsonb
+sofascore,events,tournament_id,integer
+sofascore,events,season_id,integer
+sofascore,events,name,character varying
+sofascore,events,round,integer
+sofascore,events,home_team,character varying
+sofascore,events,away_team,character varying
+sofascore,events,status_type,character varying
+sofascore,events,start_timestamp,integer
+sofascore,match_player_lineups,match_id,integer
+sofascore,match_player_lineups,captain,boolean
+sofascore,match_player_lineups,minutes_played,integer
+sofascore,match_player_lineups,rating,double precision
+sofascore,match_player_lineups,goals,integer
+sofascore,match_player_lineups,expected_goals,double precision
+sofascore,match_player_lineups,expected_assists,double precision
+sofascore,match_player_lineups,statistics,jsonb
+sofascore,match_player_lineups,proposed_market_value,bigint
+sofascore,match_player_lineups,proposed_market_value_currency,character varying
+sofascore,match_player_lineups,raw_data,jsonb
+sofascore,match_player_lineups,player_id,integer
+sofascore,match_player_lineups,team_id,integer
+sofascore,match_player_lineups,is_home_team,boolean
+sofascore,match_player_lineups,player_name,character varying
+sofascore,match_player_lineups,player_slug,character varying
+sofascore,match_player_lineups,position,character varying
+sofascore,match_player_lineups,shirt_number,integer
+sofascore,match_player_lineups,substitute,boolean
+sofascore,match_statistics,match_id,integer
+sofascore,match_statistics,home_total,integer
+sofascore,match_statistics,away_total,integer
+sofascore,match_statistics,compare_code,integer
+sofascore,match_statistics,statistics_type,character varying
+sofascore,match_statistics,value_type,character varying
+sofascore,match_statistics,render_type,integer
+sofascore,match_statistics,period,character varying
+sofascore,match_statistics,group_name,character varying
+sofascore,match_statistics,stat_key,character varying
+sofascore,match_statistics,stat_name,character varying
+sofascore,match_statistics,home_display,character varying
+sofascore,match_statistics,away_display,character varying
+sofascore,match_statistics,home_value,double precision
+sofascore,match_statistics,away_value,double precision
+sofascore,matches,match_id,integer
+sofascore,matches,injury_time2,integer
+sofascore,matches,home_score_ht,integer
+sofascore,matches,home_score,integer
+sofascore,matches,away_score_ht,integer
+sofascore,matches,away_score,integer
+sofascore,matches,round,integer
+sofascore,matches,winner_code,integer
+sofascore,matches,manager_home,character varying
+sofascore,matches,manager_away,character varying
+sofascore,matches,venue_name_home,character varying
+sofascore,matches,tournament_id,integer
+sofascore,matches,venue_name_away,character varying
+sofascore,matches,venue_city_home,character varying
+sofascore,matches,venue_city_away,character varying
+sofascore,matches,raw_data,jsonb
+sofascore,matches,season_id,integer
+sofascore,matches,name,character varying
+sofascore,matches,start_timestamp,timestamp with time zone
+sofascore,matches,home_team,character varying
+sofascore,matches,away_team,character varying
+sofascore,matches,status_type,character varying
+sofascore,matches,injury_time1,integer
